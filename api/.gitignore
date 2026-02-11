@@ -1,0 +1,10 @@
+node_modules
+data
+
+.idea
+.nyc_output
+coverage
+build
+
+.env
+.pnpm-store/*
