@@ -1,0 +1,16 @@
+services:
+  web:
+    build:
+      context: web
+      dockerfile: dockerfile.prod
+    image: app-web-prod
+    ports:
+      - "8080:8080"
+
+  api:
+    build:
+      context: api
+      dockerfile: dockerfile.prod
+    image: app-api-prod
+    ports:
+      - "4000:4000"

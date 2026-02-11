@@ -1,0 +1,49 @@
+# =========================================
+# Stage 1: Build the Node.js API
+# =========================================
+
+ARG NODE_VERSION=24.12.0-alpine
+
+# Use a lightweight Node.js image for building
+FROM node:${NODE_VERSION} AS builder
+
+# Set the working directory inside the container
+WORKDIR /app
+
+# Enable pnpm (project uses pnpm-lock.yaml)
+RUN corepack enable && corepack prepare pnpm@latest --activate
+
+# Copy package-related files first to leverage Docker's caching mechanism
+COPY package.json pnpm-lock.yaml ./
+
+# Install project dependencies (frozen lockfile = reproducible, like npm ci)
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
+
+# Copy the rest of the application source code into the container
+COPY . .
+
+# Build the TypeScript application (outputs to /app/dist)
+RUN pnpm run build
+
+# =========================================
+# Stage 2: Run the compiled API
+# =========================================
+
+FROM node:${NODE_VERSION} AS runner
+
+WORKDIR /app
+
+# Copy the compiled output from the build stage
+COPY --from=builder /app/dist ./dist
+COPY --from=builder /app/package.json ./
+
+# Use a non-root user for security best practices
+RUN addgroup -g 1001 -S nodejs && \
+    adduser -S nodejs -u 1001
+USER nodejs
+
+# Expose port 4000 to allow HTTP traffic
+EXPOSE 4000
+
+# Start the API server
+CMD ["node", "dist/index.js"]

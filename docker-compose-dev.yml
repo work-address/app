@@ -1,0 +1,38 @@
+services:
+  web:
+    build:
+      context: web
+      dockerfile: dockerfile.dev
+    image: app-web-dev
+    ports:
+      - "5173:5173"
+    develop:
+      watch:
+        - action: sync
+          path: ./web
+          target: /app
+          ignore:
+            - node_modules
+        - action: rebuild
+          path: ./web/package.json
+        - action: rebuild
+          path: ./web/pnpm-lock.yaml
+
+  api:
+    build:
+      context: api
+      dockerfile: dockerfile.dev
+    image: app-api-dev
+    ports:
+      - "4000:4000"
+    develop:
+      watch:
+        - action: sync
+          path: ./api
+          target: /app
+          ignore:
+            - node_modules
+        - action: rebuild
+          path: ./api/package.json
+        - action: rebuild
+          path: ./api/pnpm-lock.yaml
