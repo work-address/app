@@ -4,10 +4,12 @@ All commands assume you are in the project root (the directory that contains `do
 
 ### Run services (production) locally
 
-| Service | URL |
-|---------|-----|
-| Web | http://localhost:8080 |
-| API | http://localhost:4000 |
+Nginx reverse proxy routes by subdomain: `app.*` → web (React), `api.*` → Node.js API. SSL is handled by the server provider.
+
+| Subdomain | Service |
+|-----------|---------|
+| app | Web (React) |
+| api | Node.js API |
 
 ```sh
 docker compose up --build
@@ -61,7 +63,27 @@ docker compose down --rmi local
 docker container prune
 ```
 
-Web serves the Vite app with Nginx on port 8080. API runs the Node.js server on port 4000.
+- **Port 8080:** Nginx (HTTP; SSL terminated by server provider)
+- **app subdomain** → web (React)
+- **api subdomain** → Node.js API on port 4000
+
+### Certificates and domains
+
+**Certificates** — SSL/TLS certificates are managed automatically by the server provider (e.g. Coolify, Fly.io, Cloudflare, or a hosting platform). No certificate files need to be added to this repo.
+
+**Domain configuration** — Nginx routes by subdomain using the `Host` header:
+
+| Subdomain | Example       | Points to |
+|-----------|---------------|-----------|
+| app       | app.example.com  | Web (React) |
+| api       | api.example.com  | Node.js API |
+
+**DNS** — Ensure both subdomains resolve to your server:
+
+- `app.yourdomain.com` → A or CNAME to server IP/hostname
+- `api.yourdomain.com` → A or CNAME to server IP/hostname
+
+**Frontend API calls** — Use the api subdomain as the base URL, e.g. `https://api.yourdomain.com`. CORS may need to be configured on the API if app and api use different subdomains.
 
 ---
 

@@ -1,16 +1,23 @@
 services:
+  nginx:
+    build:
+      context: nginx-proxy
+      dockerfile: dockerfile
+    image: app-nginx-proxy
+    ports:
+      - "8080:80"
+    depends_on:
+      - web
+      - api
+
   web:
     build:
       context: web
       dockerfile: dockerfile.prod
     image: app-web-prod
-    ports:
-      - "8080:8080"
 
   api:
     build:
       context: api
       dockerfile: dockerfile.prod
     image: app-api-prod
-    ports:
-      - "4000:4000"
