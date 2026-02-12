@@ -4,10 +4,6 @@ import 'dotenv/config';
 import {IConfigParameters} from '../interface/IConfigParameters';
 
 export class AppConfig {
-  public static readonly TEST_USER = `Bearer ${Buffer.from(
-    String(process.env.TEST_USER_KEY)
-  ).toString('base64')}`;
-
   public static readonly ENV = {
     test: ['test'],
     local: ['development'],

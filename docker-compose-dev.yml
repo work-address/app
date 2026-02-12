@@ -1,4 +1,14 @@
 services:
+  redis:
+    image: redis:7-alpine
+    ports:
+      - "6379:6379"
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
   web:
     build:
       context: web
@@ -25,6 +35,19 @@ services:
     image: app-api-dev
     ports:
       - "4000:4000"
+    env_file:
+      - ./api/.env
+    environment:
+      APP_HOST: "0.0.0.0"
+      APP_PORT: "4000"
+      NODE_ENV: "development"
+      APP_DB_HOST: "host.docker.internal"
+      APP_REDIS: "redis://redis:6379"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
+    depends_on:
+      redis:
+        condition: service_healthy
     develop:
       watch:
         - action: sync

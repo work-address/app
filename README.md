@@ -17,12 +17,15 @@ docker compose up --build
 
 ### Run services in development (watch mode)
 
-Uses `dockerfile.dev` and Docker Compose watch to sync file changes into containers. Source changes are synced automatically; dependency changes (`package.json`, `pnpm-lock.yaml`) trigger a rebuild.
+Uses `dockerfile.dev` and Docker Compose watch to sync file changes into containers. Includes Redis; the API connects to an **external Postgres** (configure in `api/.env`).
 
 | Service | URL |
 |---------|-----|
 | Web (Vite) | http://localhost:5173 |
 | API | http://localhost:4000 |
+| Swagger | http://localhost:4000/swagger |
+
+Prerequisite: Copy `api/.env.example` to `api/.env` and set your external DB (`APP_DB_HOST`, etc.). Use `host.docker.internal` to reach Postgres on the host.
 
 ```sh
 docker compose -f docker-compose-dev.yml up --watch
@@ -84,6 +87,19 @@ docker container prune
 - `api.yourdomain.com` → A or CNAME to server IP/hostname
 
 **Frontend API calls** — Use the api subdomain as the base URL, e.g. `https://api.yourdomain.com`. CORS may need to be configured on the API if app and api use different subdomains.
+
+### API configuration (production)
+
+The API requires PostgreSQL, Redis, and other env vars. Copy `api/.env.example` to `api/.env` and configure, or set them via your deployment platform:
+
+- `APP_HOST=0.0.0.0` — bind to all interfaces (required for Docker)
+- `APP_PORT=4000`
+- `APP_DB_*` — PostgreSQL connection
+- `APP_REDIS` — Redis URL
+- `APP_JWT_SECRET` — JWT signing secret
+- `APP_SENTRY` — optional Sentry DSN
+
+If the API returns `ERR_EMPTY_RESPONSE`, check container logs (`docker compose logs api`) for missing env vars or DB connection failures.
 
 ---
 

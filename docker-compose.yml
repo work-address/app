@@ -1,11 +1,19 @@
 services:
+  # redis:
+  #   image: redis:7-alpine
+  #   healthcheck:
+  #     test: ["CMD", "redis-cli", "ping"]
+  #     interval: 5s
+  #     timeout: 5s
+  #     retries: 5
+
   nginx:
     build:
       context: nginx-proxy
       dockerfile: dockerfile
     image: app-nginx-proxy
     ports:
-      - "8080:80"
+      - "5173:80"
     depends_on:
       - web
       - api
@@ -21,3 +29,18 @@ services:
       context: api
       dockerfile: dockerfile.prod
     image: app-api-prod
+    environment:
+      APP_HOST: "0.0.0.0"
+      APP_PORT: "4000"
+      NODE_ENV: "production"
+      APP_DB_HOST: "REDACTED"
+      APP_DB_PORT: "5432"
+      APP_DB_USERNAME: "gen_user"
+      APP_DB_PASSWORD: "<M{a1LV4cYbn&}"
+      APP_DB_NAME: "default_db"
+      APP_JWT_SECRET: "REDACTED"
+      APP_SENTRY: ""
+      APP_REDIS: "redis://redis:6379"
+    # depends_on:
+    #   redis:
+    #     condition: service_healthy
