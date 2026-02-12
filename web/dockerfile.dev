@@ -22,7 +22,7 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install
 COPY . .
 
 # Expose the port used by the Vite development server
-EXPOSE 5173
+EXPOSE 3000
 
 # Use a default command, can be overridden in docker-compose
 CMD ["pnpm", "run", "dev"]

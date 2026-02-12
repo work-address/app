@@ -1,19 +1,21 @@
-## Docker
+## Work Address
 
 All commands assume you are in the project root (the directory that contains `docker-compose.yml`).
 
 ### Run services (production) locally
 
-Nginx reverse proxy routes by subdomain: `app.*` → web (React), `api.*` → Node.js API. SSL is handled by the server provider.
+Nginx reverse proxy listens on port 8000 and routes by path: `/api` → Node.js API, `/` → web (React). SSL is handled by the server provider.
 
-| Subdomain | Service |
-|-----------|---------|
-| app | Web (React) |
-| api | Node.js API |
+| Path | Service |
+|------|---------|
+| / | Web (React) |
+| /api | Node.js API |
 
 ```sh
 docker compose up --build
 ```
+
+Access at http://localhost:8000
 
 ### Run services in development (watch mode)
 
@@ -21,7 +23,7 @@ Uses `dockerfile.dev` and Docker Compose watch to sync file changes into contain
 
 | Service | URL |
 |---------|-----|
-| Web (Vite) | http://localhost:5173 |
+| Web (Vite) | http://0.0.0.0:3000 |
 | API | http://localhost:4000 |
 | Swagger | http://localhost:4000/swagger |
 
@@ -29,6 +31,11 @@ Prerequisite: Copy `api/.env.example` to `api/.env` and set your external DB (`A
 
 ```sh
 docker compose -f docker-compose-dev.yml up --watch
+```
+
+and for running the production environment
+```sh
+docker compose -f docker-compose.yml up --watch
 ```
 
 Or use the dedicated watch command (keeps application logs separate from sync events):
@@ -65,42 +72,3 @@ docker compose down --rmi local
 # Remove all stopped containers (system-wide)
 docker container prune
 ```
-
-- **Port 8080:** Nginx (HTTP; SSL terminated by server provider)
-- **app subdomain** → web (React)
-- **api subdomain** → Node.js API on port 4000
-
-### Certificates and domains
-
-**Certificates** — SSL/TLS certificates are managed automatically by the server provider (e.g. Coolify, Fly.io, Cloudflare, or a hosting platform). No certificate files need to be added to this repo.
-
-**Domain configuration** — Nginx routes by subdomain using the `Host` header:
-
-| Subdomain | Example       | Points to |
-|-----------|---------------|-----------|
-| app       | app.example.com  | Web (React) |
-| api       | api.example.com  | Node.js API |
-
-**DNS** — Ensure both subdomains resolve to your server:
-
-- `app.yourdomain.com` → A or CNAME to server IP/hostname
-- `api.yourdomain.com` → A or CNAME to server IP/hostname
-
-**Frontend API calls** — Use the api subdomain as the base URL, e.g. `https://api.yourdomain.com`. CORS may need to be configured on the API if app and api use different subdomains.
-
-### API configuration (production)
-
-The API requires PostgreSQL, Redis, and other env vars. Copy `api/.env.example` to `api/.env` and configure, or set them via your deployment platform:
-
-- `APP_HOST=0.0.0.0` — bind to all interfaces (required for Docker)
-- `APP_PORT=4000`
-- `APP_DB_*` — PostgreSQL connection
-- `APP_REDIS` — Redis URL
-- `APP_JWT_SECRET` — JWT signing secret
-- `APP_SENTRY` — optional Sentry DSN
-
-If the API returns `ERR_EMPTY_RESPONSE`, check container logs (`docker compose logs api`) for missing env vars or DB connection failures.
-
----
-
-https://docs.docker.com/guides/reactjs/containerize/

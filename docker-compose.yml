@@ -1,34 +1,34 @@
 services:
-  # redis:
-  #   image: redis:7-alpine
-  #   healthcheck:
-  #     test: ["CMD", "redis-cli", "ping"]
-  #     interval: 5s
-  #     timeout: 5s
-  #     retries: 5
-
   nginx:
     build:
       context: nginx-proxy
       dockerfile: dockerfile
     image: app-nginx-proxy
     ports:
-      - "5173:80"
+      - "8000:8000"
     depends_on:
       - web
       - api
+    networks:
+      - app-network
 
   web:
     build:
       context: web
       dockerfile: dockerfile.prod
     image: app-web-prod
+    # ports:
+    #   - "3000:3000"
+    networks:
+      - app-network
 
   api:
     build:
       context: api
       dockerfile: dockerfile.prod
     image: app-api-prod
+    # ports:
+    #   - "4000:4000"
     environment:
       APP_HOST: "0.0.0.0"
       APP_PORT: "4000"
@@ -41,6 +41,27 @@ services:
       APP_JWT_SECRET: "REDACTED"
       APP_SENTRY: ""
       APP_REDIS: "redis://redis:6379"
-    # depends_on:
-    #   redis:
-    #     condition: service_healthy
+    depends_on:
+      redis:
+        condition: service_healthy
+    networks:
+      - app-network
+
+  redis:
+    image: redis:7-alpine
+    restart: unless-stopped
+    deploy:
+      resources:
+        limits:
+          memory: 128M
+    command: redis-server --maxmemory 100mb --maxmemory-policy allkeys-lru
+    healthcheck:
+      test: ["CMD", "redis-cli", "ping"]
+      interval: 5s
+      timeout: 5s
+      retries: 5
+
+# Docker Networks
+networks:
+  app-network:
+    driver: bridge
