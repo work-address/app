@@ -1,0 +1,20 @@
+# Ignore node_modules and build outputs (used when building from repo root)
+**/node_modules/
+**/dist/
+**/out/
+**/.next/
+**/.tmp/
+**/.cache/
+
+# Ignore Git and IDE
+.git/
+.gitignore
+.vscode/
+.idea/
+
+# Ignore logs and debug
+*.log
+*.tsbuildinfo
+
+# Ignore API (not needed for web build - reduces context size)
+api/

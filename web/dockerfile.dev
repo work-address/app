@@ -1,6 +1,7 @@
 # =========================================
 # Stage 1: Develop the React.js Application
 # =========================================
+# Build context: repository root (monorepo)
 ARG NODE_VERSION=24.12.0-alpine
 
 # Use a lightweight Node.js image for development
@@ -12,17 +13,17 @@ WORKDIR /app
 # Enable pnpm (project uses pnpm-lock.yaml)
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy package-related files first to leverage Docker's caching mechanism
-COPY package.json pnpm-lock.yaml ./
+# Copy workspace files and packages needed for @app/eslint-config
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY packages/ packages/
+COPY web/ web/
 
-# Install project dependencies
+# Install project dependencies (from monorepo root for workspace resolution)
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install
-
-# Copy the rest of the application source code into the container
-COPY . .
 
 # Expose the port used by the Vite development server
 EXPOSE 3000
 
-# Use a default command, can be overridden in docker-compose
+# Run dev server from web workspace
+WORKDIR /app/web
 CMD ["pnpm", "run", "dev"]

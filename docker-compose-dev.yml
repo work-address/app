@@ -11,8 +11,8 @@ services:
 
   web:
     build:
-      context: web
-      dockerfile: dockerfile.dev
+      context: .
+      dockerfile: web/dockerfile.dev
     image: app-web-dev
     ports:
       - "3000:3000"
@@ -20,13 +20,18 @@ services:
       watch:
         - action: sync
           path: ./web
-          target: /app
+          target: /app/web
           ignore:
             - node_modules
+        - action: sync
+          path: ./packages/eslint-config
+          target: /app/packages/eslint-config
         - action: rebuild
           path: ./web/package.json
         - action: rebuild
           path: ./web/pnpm-lock.yaml
+        - action: rebuild
+          path: ./packages/eslint-config/package.json
 
   api:
     build:
