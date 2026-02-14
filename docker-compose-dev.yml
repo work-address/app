@@ -46,7 +46,6 @@ services:
       APP_HOST: "0.0.0.0"
       APP_PORT: "4000"
       NODE_ENV: "development"
-      APP_DB_HOST: "host.docker.internal"
       APP_REDIS: "redis://redis:6379"
     extra_hosts:
       - "host.docker.internal:host-gateway"
