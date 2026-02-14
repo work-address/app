@@ -14,8 +14,8 @@ services:
 
   web:
     build:
-      context: web
-      dockerfile: dockerfile.prod
+      context: .
+      dockerfile: web/dockerfile.prod
     image: app-web-prod
     # ports:
     #   - "3000:3000"
