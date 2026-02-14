@@ -1,2 +1,9 @@
+#web
 web/node_modules
 web/dist
+
+#api
+api/dist
+api/node_modules
+
+node_modules

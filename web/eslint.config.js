@@ -1,11 +1,22 @@
+import { config, reactConfig } from '@app/eslint-config'
+
 import js from '@eslint/js'
-import globals from 'globals'
+import { globalIgnores } from 'eslint/config'
 import reactHooks from 'eslint-plugin-react-hooks'
 import reactRefresh from 'eslint-plugin-react-refresh'
+import globals from 'globals'
 import tseslint from 'typescript-eslint'
-import { defineConfig, globalIgnores } from 'eslint/config'
 
-export default defineConfig([
+
+export default [
+  ...nextConfig,
+  ...config,
+  ...reactConfig,
+  {
+    rules: {
+      'import/extensions': 'off',
+    },
+  },
   globalIgnores(['dist']),
   {
     files: ['**/*.{ts,tsx}'],
@@ -20,4 +31,5 @@ export default defineConfig([
       globals: globals.browser,
     },
   },
-])
+]
+

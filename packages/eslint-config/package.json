@@ -1,0 +1,35 @@
+{
+  "name": "@app/eslint-config",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./eslint.config.mjs",
+  "type": "module",
+  "scripts": {
+    "lint": "eslint ."
+  },
+  "dependencies": {
+    "@eslint/compat": "1.2.6",
+    "@eslint/eslintrc": "3.2.0",
+    "@eslint/js": "9.22.0",
+    "@eslint/markdown": "6.2.2",
+    "@typescript-eslint/eslint-plugin": "8.27.0",
+    "@typescript-eslint/parser": "8.27.0",
+    "eslint": "9.22.0",
+    "eslint-config-prettier": "10.0.1",
+    "eslint-import-resolver-typescript": "4.2.2",
+    "eslint-plugin-import": "2.31.0",
+    "eslint-plugin-jsx-a11y": "6.10.2",
+    "eslint-plugin-n": "17.16.2",
+    "eslint-plugin-prettier": "5.2.3",
+    "eslint-plugin-react": "7.37.4",
+    "eslint-plugin-react-hooks": "5.1.0",
+    "eslint-plugin-sonarjs": "3.0.2",
+    "eslint-plugin-unicorn": "57.0.0",
+    "globals": "16.0.0",
+    "prettier": "3.5.3",
+    "prettier-eslint": "16.3.0",
+    "prettier-plugin-tailwindcss": "0.6.11",
+    "@next/eslint-plugin-next": "16.1.1",
+    "typescript-eslint": "8.27.0"
+  }
+}
