@@ -1,38 +1,43 @@
-import { useState } from 'react'
-
-import { version } from '../package.json'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
 import './app.css'
+import Header from './components/header'
+import Dashboard from './pages/dashboard'
+import SignIn from './pages/sign-in'
+import Profile from './pages/profile'
+import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
 
 function App() {
-  const [count, setCount] = useState(0)
-
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button onClick={() => setCount((count) => count + 1)}>
-          count is {count}
-        </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-      <p className="version">v{version}</p>
-    </>
+    <Routes>
+      <Route path="/sign-in" element={<SignInRoute />} />
+      <Route path="/" element={<DashboardLayout />} />
+      <Route path="/dashboard" element={<DashboardLayout />} />
+      <Route path="/profile" element={<ProfileLayout />} />
+      <Route path="*" element={<Navigate to="/sign-in" replace />} />
+    </Routes>
   )
+}
+
+function DashboardLayout() {
+  return (
+    <div>
+      <Header active="dashboard" />
+      <Dashboard />
+    </div>
+  )
+}
+
+function ProfileLayout() {
+  return (
+    <div>
+      <Header active="profile" />
+      <Profile />
+    </div>
+  )
+}
+
+function SignInRoute() {
+  const navigate = useNavigate()
+  return <SignIn onSignIn={() => navigate('/dashboard')} />
 }
 
 export default App
