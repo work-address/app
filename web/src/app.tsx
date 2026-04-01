@@ -1,9 +1,10 @@
 import './app.css'
+import { Navigate, Route, Routes } from 'react-router-dom'
+
 import Header from './components/header'
 import Dashboard from './pages/dashboard'
-import SignIn from './pages/sign-in'
 import Profile from './pages/profile'
-import { Navigate, Route, Routes, useNavigate } from 'react-router-dom'
+import SignInPage from './pages/sign-in-page.tsx'
 
 function App() {
   return (
@@ -36,8 +37,7 @@ function ProfileLayout() {
 }
 
 function SignInRoute() {
-  const navigate = useNavigate()
-  return <SignIn onSignIn={() => navigate('/dashboard')} />
+  return <SignInPage />
 }
 
 export default App

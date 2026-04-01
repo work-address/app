@@ -1,5 +1,6 @@
-import type React from 'react'
 import styled from 'styled-components'
+
+import type React from 'react'
 
 type ButtonVariant = 'primary' | 'secondary'
 
@@ -47,7 +48,11 @@ const IconWrap = styled.span`
   }
 `
 
-export default function Button({ variant = 'primary', children, ...props }: ButtonProps) {
+export default function Button({
+  variant = 'primary',
+  children,
+  ...props
+}: ButtonProps) {
   return (
     <BaseButton $variant={variant} {...props}>
       {children}

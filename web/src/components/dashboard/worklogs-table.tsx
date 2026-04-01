@@ -24,7 +24,14 @@ type WorklogsTableProps = {
 
 function ImagePlaceholder() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg" style={{ color: 'rgba(0, 7, 20, 0.4)' }}>
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+      style={{ color: 'rgba(0, 7, 20, 0.4)' }}
+    >
       <path
         d="M4 5.5C4 4.67157 4.67157 4 5.5 4H18.5C19.3284 4 20 4.67157 20 5.5V18.5C20 19.3284 19.3284 20 18.5 20H5.5C4.67157 20 4 19.3284 4 18.5V5.5Z"
         stroke="currentColor"
@@ -37,16 +44,35 @@ function ImagePlaceholder() {
         strokeLinecap="round"
         strokeLinejoin="round"
       />
-      <path d="M9 9.25C9 9.94036 8.44036 10.5 7.75 10.5C7.05964 10.5 6.5 9.94036 6.5 9.25C6.5 8.55964 7.05964 8 7.75 8C8.44036 8 9 8.55964 9 9.25Z" fill="currentColor" />
+      <path
+        d="M9 9.25C9 9.94036 8.44036 10.5 7.75 10.5C7.05964 10.5 6.5 9.94036 6.5 9.25C6.5 8.55964 7.05964 8 7.75 8C8.44036 8 9 8.55964 9 9.25Z"
+        fill="currentColor"
+      />
     </svg>
   )
 }
 
 function CloseIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M18 6L6 18" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M6 6l12 12" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M18 6L6 18"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M6 6l12 12"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }
@@ -62,7 +88,9 @@ export default function WorklogsTable({ rows }: WorklogsTableProps) {
 
   const setAll = (checked: boolean) => {
     const next: Record<string, boolean> = {}
-    for (const r of rows) next[r.key] = checked
+    for (const r of rows) {
+      next[r.key] = checked
+    }
     setSelected(next)
   }
 
@@ -71,16 +99,24 @@ export default function WorklogsTable({ rows }: WorklogsTableProps) {
   }
 
   useEffect(() => {
-    if (!openShot) return
+    if (!openShot) {
+      return
+    }
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpenShot(null)
+      if (e.key === 'Escape') {
+        setOpenShot(null)
+      }
     }
 
     const onDown = (e: MouseEvent) => {
       const el = modalRef.current
-      if (!el) return
-      if (e.target instanceof Node && !el.contains(e.target)) setOpenShot(null)
+      if (!el) {
+        return
+      }
+      if (e.target instanceof Node && !el.contains(e.target)) {
+        setOpenShot(null)
+      }
     }
 
     document.addEventListener('keydown', onKey)
@@ -98,7 +134,10 @@ export default function WorklogsTable({ rows }: WorklogsTableProps) {
           <Thead>
             <tr>
               <CheckCell>
-                <Checkbox checked={allSelected} onChange={(e) => setAll(e.target.checked)} />
+                <Checkbox
+                  checked={allSelected}
+                  onChange={(e) => setAll(e.target.checked)}
+                />
               </CheckCell>
               <Th>Date</Th>
               <Th>Project name</Th>
@@ -116,7 +155,10 @@ export default function WorklogsTable({ rows }: WorklogsTableProps) {
             {visibleRows.map((r) => (
               <Tr key={r.key}>
                 <CheckTd>
-                  <Checkbox checked={!!selected[r.key]} onChange={(e) => setOne(r.key, e.target.checked)} />
+                  <Checkbox
+                    checked={!!selected[r.key]}
+                    onChange={(e) => setOne(r.key, e.target.checked)}
+                  />
                 </CheckTd>
                 <Td>
                   <DateCell>
@@ -124,20 +166,28 @@ export default function WorklogsTable({ rows }: WorklogsTableProps) {
                     <DateMuted>{r.date}</DateMuted>
                   </DateCell>
                 </Td>
-                <Td style={{ color: 'rgba(0, 7, 20, 0.88)' }}>{r.projectName}</Td>
+                <Td style={{ color: 'rgba(0, 7, 20, 0.88)' }}>
+                  {r.projectName}
+                </Td>
                 <Td>{r.note}</Td>
                 <Td>
                   <TimePill>{r.timeActive}</TimePill>
                 </Td>
                 <Td>
-                  <PaymentPill $status={r.paymentStatus}>{r.paymentStatus}</PaymentPill>
+                  <PaymentPill $status={r.paymentStatus}>
+                    {r.paymentStatus}
+                  </PaymentPill>
                 </Td>
                 <TdRight>{r.keyboard}</TdRight>
                 <TdRight>{r.mouse}</TdRight>
                 <TdRight>{r.mouseDistance}</TdRight>
                 <Td>
                   {r.screenshot ? (
-                    <ShotBtn type="button" aria-label="Open screenshot" onClick={() => setOpenShot(r.screenshot ?? null)}>
+                    <ShotBtn
+                      type="button"
+                      aria-label="Open screenshot"
+                      onClick={() => setOpenShot(r.screenshot ?? null)}
+                    >
                       <Shot>
                         <img src={r.screenshot} alt="Screenshot" />
                       </Shot>
@@ -176,7 +226,11 @@ export default function WorklogsTable({ rows }: WorklogsTableProps) {
               exit={{ opacity: 0, scale: 0.98, y: 10 }}
               transition={{ duration: 0.16 }}
             >
-              <CloseBtn type="button" aria-label="Close" onClick={() => setOpenShot(null)}>
+              <CloseBtn
+                type="button"
+                aria-label="Close"
+                onClick={() => setOpenShot(null)}
+              >
                 <CloseIcon />
               </CloseBtn>
               <ModalImg src={openShot} alt="Screenshot" />
@@ -193,7 +247,11 @@ const Wrap = styled.div`
   border-radius: 12px;
   overflow: hidden;
   background: #fff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 1px 4px 0 rgba(0, 0, 45, 0.09), 0 2px 1px -1px rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 1px 4px 0 rgba(0, 0, 45, 0.09),
+    0 2px 1px -1px rgba(0, 0, 0, 0.05),
+    0 1px 3px 0 rgba(0, 0, 0, 0.05);
 `
 
 const Scroll = styled.div`
@@ -337,8 +395,10 @@ const PaymentPill = styled.span<{ $status: PaymentStatus }>`
   font-size: 12px;
   line-height: 16px;
   font-weight: 500;
-  background: ${(p) => (p.$status === 'Paid' ? 'rgba(0, 164, 51, 0.1)' : 'rgba(255, 193, 7, 0.18)')};
-  color: ${(p) => (p.$status === 'Paid' ? 'rgba(0, 113, 63, 0.87)' : 'rgba(140, 93, 0, 0.9)')};
+  background: ${(p) =>
+    p.$status === 'Paid' ? 'rgba(0, 164, 51, 0.1)' : 'rgba(255, 193, 7, 0.18)'};
+  color: ${(p) =>
+    p.$status === 'Paid' ? 'rgba(0, 113, 63, 0.87)' : 'rgba(140, 93, 0, 0.9)'};
 `
 
 const ShotBtn = styled.button`

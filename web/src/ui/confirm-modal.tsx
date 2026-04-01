@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef } from 'react'
 import styled from 'styled-components'
-import Button from './button'
+
+import Button from './button.tsx'
 
 type ConfirmModalProps = {
   open: boolean
@@ -25,17 +26,27 @@ export default function ConfirmModal({
   const boxRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      return
+    }
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onCancel()
+      if (e.key === 'Escape') {
+        onCancel()
+      }
     }
 
     const onDown = (e: MouseEvent) => {
       const t = e.target as Node | null
-      if (!t) return
-      if (!boxRef.current) return
-      if (!boxRef.current.contains(t)) onCancel()
+      if (!t) {
+        return
+      }
+      if (!boxRef.current) {
+        return
+      }
+      if (!boxRef.current.contains(t)) {
+        onCancel()
+      }
     }
 
     document.addEventListener('keydown', onKey)
@@ -94,7 +105,11 @@ const Box = styled(motion.div)`
   background: #fff;
   border-radius: 12px;
   padding: 24px;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 1px 4px 0 rgba(0, 0, 45, 0.09), 0 2px 1px -1px rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 1px 4px 0 rgba(0, 0, 45, 0.09),
+    0 2px 1px -1px rgba(0, 0, 0, 0.05),
+    0 1px 3px 0 rgba(0, 0, 0, 0.05);
 `
 
 const Title = styled.div`

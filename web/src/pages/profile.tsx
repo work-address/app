@@ -1,6 +1,7 @@
 import { useMemo, useState } from 'react'
 import styled from 'styled-components'
-import Button from '../components/ui/button'
+
+import Button from '@/ui/button'
 
 type FormState = {
   address: string
@@ -41,7 +42,11 @@ export default function Profile() {
     <Wrap>
       <Top>
         <Left>
-          <BackBtn type="button" aria-label="Back" onClick={() => history.back()}>
+          <BackBtn
+            type="button"
+            aria-label="Back"
+            onClick={() => history.back()}
+          >
             ←
           </BackBtn>
           <TopTitle>My account</TopTitle>
@@ -61,24 +66,53 @@ export default function Profile() {
         <Grid>
           <Field>
             <Label>Address</Label>
-            <Input value={form.address} onChange={(e) => setForm((p) => ({ ...p, address: e.target.value }))} />
+            <Input
+              value={form.address}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, address: e.target.value }))
+              }
+            />
           </Field>
           <Field>
             <Label>Username</Label>
-            <Input value={form.username} onChange={(e) => setForm((p) => ({ ...p, username: e.target.value }))} placeholder="How should we call you?" />
+            <Input
+              value={form.username}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, username: e.target.value }))
+              }
+              placeholder="How should we call you?"
+            />
           </Field>
           <Field>
             <Label>Company</Label>
-            <Input value={form.company} onChange={(e) => setForm((p) => ({ ...p, company: e.target.value }))} placeholder="Enter your company name" />
+            <Input
+              value={form.company}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, company: e.target.value }))
+              }
+              placeholder="Enter your company name"
+            />
           </Field>
           <Field>
             <Label>Skills</Label>
-            <Input value={form.skills} onChange={(e) => setForm((p) => ({ ...p, skills: e.target.value }))} placeholder="e.g., Communication, Teamwork, Problem-solving" />
+            <Input
+              value={form.skills}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, skills: e.target.value }))
+              }
+              placeholder="e.g., Communication, Teamwork, Problem-solving"
+            />
           </Field>
           <Field>
             <Label>Price</Label>
             <PriceWrap>
-              <Input value={form.price} onChange={(e) => setForm((p) => ({ ...p, price: e.target.value }))} placeholder="0" />
+              <Input
+                value={form.price}
+                onChange={(e) =>
+                  setForm((p) => ({ ...p, price: e.target.value }))
+                }
+                placeholder="0"
+              />
               <Suffix>$</Suffix>
             </PriceWrap>
           </Field>
@@ -101,7 +135,11 @@ export default function Profile() {
                 ⛓
               </ToolBtn>
             </Toolbar>
-            <TextArea value={form.bio} onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))} placeholder="Enter your description" />
+            <TextArea
+              value={form.bio}
+              onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}
+              placeholder="Enter your description"
+            />
           </Field>
         </Grid>
       </Card>
@@ -111,15 +149,33 @@ export default function Profile() {
         <LinksGrid>
           <Field>
             <Label>Facebook</Label>
-            <Input value={form.facebook} onChange={(e) => setForm((p) => ({ ...p, facebook: e.target.value }))} placeholder="facebook.com/" />
+            <Input
+              value={form.facebook}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, facebook: e.target.value }))
+              }
+              placeholder="facebook.com/"
+            />
           </Field>
           <Field>
             <Label>Linkedin</Label>
-            <Input value={form.linkedin} onChange={(e) => setForm((p) => ({ ...p, linkedin: e.target.value }))} placeholder="linkedin.com/" />
+            <Input
+              value={form.linkedin}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, linkedin: e.target.value }))
+              }
+              placeholder="linkedin.com/"
+            />
           </Field>
           <Field>
             <Label>Telegram</Label>
-            <Input value={form.telegram} onChange={(e) => setForm((p) => ({ ...p, telegram: e.target.value }))} placeholder="t.me/" />
+            <Input
+              value={form.telegram}
+              onChange={(e) =>
+                setForm((p) => ({ ...p, telegram: e.target.value }))
+              }
+              placeholder="t.me/"
+            />
           </Field>
         </LinksGrid>
       </Card>
@@ -184,7 +240,11 @@ const Card = styled.section`
   border: 1px solid rgba(0, 0, 45, 0.09);
   border-radius: 12px;
   background: #fff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 1px 4px 0 rgba(0, 0, 45, 0.09), 0 2px 1px -1px rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 1px 4px 0 rgba(0, 0, 45, 0.09),
+    0 2px 1px -1px rgba(0, 0, 0, 0.05),
+    0 1px 3px 0 rgba(0, 0, 0, 0.05);
   padding: 16px;
 
   & + & {

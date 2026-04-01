@@ -1,5 +1,6 @@
 import styled from 'styled-components'
-import Button from '../ui/button'
+
+import Button from '@/ui/button'
 
 type DashboardEmptyStateProps = {
   imageSrc: string

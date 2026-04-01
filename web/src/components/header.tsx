@@ -27,7 +27,7 @@ export default function Header({ active = 'dashboard' }: HeaderProps) {
             <IconImg src="/img/icons/external-link.svg" alt="Github" />
           </NavLink>
           <IconLink href="#" aria-label="Github">
-              <IconImg src="/img/photo/github-logo.svg" alt="Github" />
+            <IconImg src="/img/photo/github-logo.svg" alt="Github" />
           </IconLink>
         </Nav>
 
@@ -85,13 +85,15 @@ const Nav = styled.nav`
 
 const NavLink = styled.a<{ $active?: boolean; $download?: boolean }>`
   display: flex;
-  align-items: center ;
+  align-items: center;
   gap: 6px;
   font-size: 16px;
   line-height: 20px;
   font-weight: 400;
   color: ${(p) => {
-    if (p.$download) return 'var(--download, #003482)'
+    if (p.$download) {
+      return 'var(--download, #003482)'
+    }
     return 'var(--primary)'
   }};
   opacity: ${(p) => (p.$download ? 1 : p.$active ? 1 : 0.8)};
@@ -112,7 +114,7 @@ const IconLink = styled.a`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  
+
   &:hover {
     background: rgba(28, 32, 36, 0.06);
   }

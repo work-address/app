@@ -1,3 +1,4 @@
+import { CalendarDate } from '@internationalized/date'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import {
   Button,
@@ -9,7 +10,6 @@ import {
   CalendarHeaderCell,
   Heading,
 } from 'react-aria-components'
-import { CalendarDate } from '@internationalized/date'
 import styled from 'styled-components'
 
 type DatePickerInputProps = {
@@ -19,17 +19,27 @@ type DatePickerInputProps = {
 }
 
 function toCalendarDate(value?: Date) {
-  if (!value) return undefined
-  return new CalendarDate(value.getFullYear(), value.getMonth() + 1, value.getDate())
+  if (!value) {
+    return
+  }
+  return new CalendarDate(
+    value.getFullYear(),
+    value.getMonth() + 1,
+    value.getDate(),
+  )
 }
 
 function toJsDate(value?: CalendarDate) {
-  if (!value) return undefined
+  if (!value) {
+    return
+  }
   return new Date(value.year, value.month - 1, value.day)
 }
 
 function formatDate(value?: Date) {
-  if (!value) return ''
+  if (!value) {
+    return ''
+  }
   const dd = String(value.getDate()).padStart(2, '0')
   const mm = String(value.getMonth() + 1).padStart(2, '0')
   const yyyy = value.getFullYear()
@@ -38,7 +48,13 @@ function formatDate(value?: Date) {
 
 function CalendarIcon() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
       <path
         d="M7 3v3M17 3v3"
         stroke="currentColor"
@@ -63,35 +79,71 @@ function CalendarIcon() {
 
 function ChevronLeft() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M15 18l-6-6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M15 18l-6-6 6-6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }
 
 function ChevronRight() {
   return (
-    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M9 6l6 6-6 6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <svg
+      width="16"
+      height="16"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M9 6l6 6-6 6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }
 
-export default function DatePickerInput({ value, onChange, placeholder }: DatePickerInputProps) {
+export default function DatePickerInput({
+  value,
+  onChange,
+  placeholder,
+}: DatePickerInputProps) {
   const [open, setOpen] = useState(false)
-  const [draft, setDraft] = useState<CalendarDate | undefined>(toCalendarDate(value))
+  const [draft, setDraft] = useState<CalendarDate | undefined>(
+    toCalendarDate(value),
+  )
   const [side, setSide] = useState<'left' | 'right'>('left')
   const rootRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    if (!open) setDraft(toCalendarDate(value))
+    if (!open) {
+      setDraft(toCalendarDate(value))
+    }
   }, [open, value])
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      return
+    }
 
     const el = rootRef.current
-    if (!el) return
+    if (!el) {
+      return
+    }
     const r = el.getBoundingClientRect()
     const popoverW = 340
     const padding = 16
@@ -100,12 +152,18 @@ export default function DatePickerInput({ value, onChange, placeholder }: DatePi
   }, [open, draft, value])
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      return
+    }
 
     const onDown = (e: MouseEvent) => {
       const el = rootRef.current
-      if (!el) return
-      if (e.target instanceof Node && !el.contains(e.target)) setOpen(false)
+      if (!el) {
+        return
+      }
+      if (e.target instanceof Node && !el.contains(e.target)) {
+        setOpen(false)
+      }
     }
 
     document.addEventListener('mousedown', onDown)
@@ -120,13 +178,19 @@ export default function DatePickerInput({ value, onChange, placeholder }: DatePi
         <Icon>
           <CalendarIcon />
         </Icon>
-        <InputText $hasValue={!!value}>{value ? formatDate(value) : placeholder}</InputText>
+        <InputText $hasValue={!!value}>
+          {value ? formatDate(value) : placeholder}
+        </InputText>
       </InputButton>
 
       {open ? (
         <Popover $side={side}>
           <CalendarWrap>
-            <Calendar aria-label="Calendar" value={selected} onChange={(d) => setDraft(d as CalendarDate)}>
+            <Calendar
+              aria-label="Calendar"
+              value={selected}
+              onChange={(d) => setDraft(d as CalendarDate)}
+            >
               <CalHeader>
                 <NavBtn slot="previous" aria-label="Previous month">
                   <ChevronLeft />

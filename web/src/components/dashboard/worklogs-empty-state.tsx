@@ -4,7 +4,9 @@ type WorklogsEmptyStateProps = {
   onHelp?: () => void
 }
 
-export default function WorklogsEmptyState({ onHelp }: WorklogsEmptyStateProps) {
+export default function WorklogsEmptyState({
+  onHelp,
+}: WorklogsEmptyStateProps) {
   return (
     <DashboardEmptyState
       imageSrc="/img/photo/worklogs-help.svg"

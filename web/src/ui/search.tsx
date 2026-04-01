@@ -89,13 +89,21 @@ function SearchIcon() {
   )
 }
 
-export default function Search({ value, onChange, placeholder = 'Search for projects' }: SearchProps) {
+export default function Search({
+  value,
+  onChange,
+  placeholder = 'Search for projects',
+}: SearchProps) {
   return (
     <Wrap>
       <Icon>
         <SearchIcon />
       </Icon>
-      <Input value={value} onChange={(e) => onChange(e.target.value)} placeholder={placeholder} />
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={placeholder}
+      />
       {value ? <Clear onClick={() => onChange('')}>✕</Clear> : null}
     </Wrap>
   )

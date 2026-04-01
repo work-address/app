@@ -9,7 +9,8 @@ import {
   YAxis,
 } from 'recharts'
 import styled from 'styled-components'
-import MotionSelect from '../ui/motion-select'
+
+import MotionSelect from '@/ui/motion-select'
 
 type Period = 'Week' | 'Month' | 'Year'
 
@@ -25,15 +26,21 @@ function formatDuration(hoursFloat: number) {
   const totalMin = Math.round(hoursFloat * 60)
   const h = Math.floor(totalMin / 60)
   const m = totalMin % 60
-  if (h <= 0) return `${m}m`
+  if (h <= 0) {
+    return `${m}m`
+  }
   return `${h}h ${m}m`
 }
 
 function CustomTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) return null
+  if (!active || !payload?.length) {
+    return null
+  }
   const byKey: Record<string, number> = {}
   for (const p of payload) {
-    if (p?.dataKey) byKey[p.dataKey] = p.value ?? 0
+    if (p?.dataKey) {
+      byKey[p.dataKey] = p.value ?? 0
+    }
   }
 
   const entries = [
@@ -80,27 +87,99 @@ export default function ApplicationsUsage() {
   const data = useMemo<BarDatum[]>(() => {
     if (period === 'Month') {
       return [
-        { label: 'Project 1', firefox: 0.8, figma: 1.1, terminal: 1.0, zoom: 0.8 },
-        { label: 'Project 2', firefox: 1.4, figma: 1.7, terminal: 1.1, zoom: 0.9 },
-        { label: 'Project 3', firefox: 1.2, figma: 2.1, terminal: 1.0, zoom: 0.7 },
-        { label: 'Project 4', firefox: 1.1, figma: 1.5, terminal: 1.0, zoom: 0.8 },
+        {
+          label: 'Project 1',
+          firefox: 0.8,
+          figma: 1.1,
+          terminal: 1.0,
+          zoom: 0.8,
+        },
+        {
+          label: 'Project 2',
+          firefox: 1.4,
+          figma: 1.7,
+          terminal: 1.1,
+          zoom: 0.9,
+        },
+        {
+          label: 'Project 3',
+          firefox: 1.2,
+          figma: 2.1,
+          terminal: 1.0,
+          zoom: 0.7,
+        },
+        {
+          label: 'Project 4',
+          firefox: 1.1,
+          figma: 1.5,
+          terminal: 1.0,
+          zoom: 0.8,
+        },
       ]
     }
 
     if (period === 'Year') {
       return [
-        { label: 'Project 1', firefox: 1.1, figma: 1.3, terminal: 1.2, zoom: 0.9 },
-        { label: 'Project 2', firefox: 1.8, figma: 2.0, terminal: 1.3, zoom: 1.1 },
-        { label: 'Project 3', firefox: 1.7, figma: 2.6, terminal: 1.1, zoom: 0.8 },
-        { label: 'Project 4', firefox: 1.6, figma: 2.0, terminal: 1.2, zoom: 1.0 },
+        {
+          label: 'Project 1',
+          firefox: 1.1,
+          figma: 1.3,
+          terminal: 1.2,
+          zoom: 0.9,
+        },
+        {
+          label: 'Project 2',
+          firefox: 1.8,
+          figma: 2.0,
+          terminal: 1.3,
+          zoom: 1.1,
+        },
+        {
+          label: 'Project 3',
+          firefox: 1.7,
+          figma: 2.6,
+          terminal: 1.1,
+          zoom: 0.8,
+        },
+        {
+          label: 'Project 4',
+          firefox: 1.6,
+          figma: 2.0,
+          terminal: 1.2,
+          zoom: 1.0,
+        },
       ]
     }
 
     return [
-      { label: 'Project 1', firefox: 0.7, figma: 0.9, terminal: 0.8, zoom: 0.6 },
-      { label: 'Project 2', firefox: 2.8, figma: 1.55, terminal: 0.88, zoom: 0.45 },
-      { label: 'Project 3', firefox: 1.4, figma: 2.1, terminal: 1.0, zoom: 0.6 },
-      { label: 'Project 4', firefox: 1.2, figma: 1.0, terminal: 1.1, zoom: 0.7 },
+      {
+        label: 'Project 1',
+        firefox: 0.7,
+        figma: 0.9,
+        terminal: 0.8,
+        zoom: 0.6,
+      },
+      {
+        label: 'Project 2',
+        firefox: 2.8,
+        figma: 1.55,
+        terminal: 0.88,
+        zoom: 0.45,
+      },
+      {
+        label: 'Project 3',
+        firefox: 1.4,
+        figma: 2.1,
+        terminal: 1.0,
+        zoom: 0.6,
+      },
+      {
+        label: 'Project 4',
+        firefox: 1.2,
+        figma: 1.0,
+        terminal: 1.1,
+        zoom: 0.7,
+      },
     ]
   }, [period])
 
@@ -125,7 +204,10 @@ export default function ApplicationsUsage() {
         <Plot>
           <ChartWrap>
             <ResponsiveContainer width="100%" height="100%">
-              <BarChart data={data} margin={{ top: 6, right: 8, left: 0, bottom: 0 }}>
+              <BarChart
+                data={data}
+                margin={{ top: 6, right: 8, left: 0, bottom: 0 }}
+              >
                 <CartesianGrid vertical={false} strokeDasharray="3 6" />
                 <XAxis
                   dataKey="label"
@@ -142,11 +224,38 @@ export default function ApplicationsUsage() {
                   tickFormatter={(v) => (v === 0 ? '0' : `${v}H`)}
                   width={34}
                 />
-                <Tooltip content={<CustomTooltip />} cursor={{ fill: 'var(--c-rgba-0-52-130-0_06)' }} />
-                <Bar dataKey="firefox" stackId="x" fill="var(--c-rgba-0-52-130-0_75)" barSize={80} radius={[0, 0, 0, 0]} />
-                <Bar dataKey="figma" stackId="x" fill="var(--c-rgba-0-52-130-0_50)" barSize={80} radius={[0, 0, 0, 0]} />
-                <Bar dataKey="terminal" stackId="x" fill="var(--c-rgba-0-52-130-0_28)" barSize={80} radius={[0, 0, 0, 0]} />
-                <Bar dataKey="zoom" stackId="x" fill="var(--c-rgba-0-52-130-0_14)" barSize={80} radius={[8, 8, 0, 0]} />
+                <Tooltip
+                  content={<CustomTooltip />}
+                  cursor={{ fill: 'var(--c-rgba-0-52-130-0_06)' }}
+                />
+                <Bar
+                  dataKey="firefox"
+                  stackId="x"
+                  fill="var(--c-rgba-0-52-130-0_75)"
+                  barSize={80}
+                  radius={[0, 0, 0, 0]}
+                />
+                <Bar
+                  dataKey="figma"
+                  stackId="x"
+                  fill="var(--c-rgba-0-52-130-0_50)"
+                  barSize={80}
+                  radius={[0, 0, 0, 0]}
+                />
+                <Bar
+                  dataKey="terminal"
+                  stackId="x"
+                  fill="var(--c-rgba-0-52-130-0_28)"
+                  barSize={80}
+                  radius={[0, 0, 0, 0]}
+                />
+                <Bar
+                  dataKey="zoom"
+                  stackId="x"
+                  fill="var(--c-rgba-0-52-130-0_14)"
+                  barSize={80}
+                  radius={[8, 8, 0, 0]}
+                />
               </BarChart>
             </ResponsiveContainer>
           </ChartWrap>
@@ -188,7 +297,11 @@ const Box = styled.div`
   border: 1px solid var(--c-rgba-0-0-45-0_09);
   border-radius: 12px;
   background: var(--white);
-  box-shadow: 0 0 0 1px var(--c-rgba-0-0-0-0_05), 0 1px 4px 0 var(--c-rgba-0-0-45-0_09), 0 2px 1px -1px var(--c-rgba-0-0-0-0_05), 0 1px 3px 0 var(--c-rgba-0-0-0-0_05);
+  box-shadow:
+    0 0 0 1px var(--c-rgba-0-0-0-0_05),
+    0 1px 4px 0 var(--c-rgba-0-0-45-0_09),
+    0 2px 1px -1px var(--c-rgba-0-0-0-0_05),
+    0 1px 3px 0 var(--c-rgba-0-0-0-0_05);
   padding: 12px 12px 14px;
 `
 

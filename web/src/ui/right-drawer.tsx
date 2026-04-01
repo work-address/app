@@ -1,7 +1,8 @@
 import { AnimatePresence, motion } from 'motion/react'
-import type { ReactNode } from 'react'
 import { useEffect, useRef } from 'react'
 import styled from 'styled-components'
+
+import type { ReactNode } from 'react'
 
 type RightDrawerProps = {
   open: boolean
@@ -10,21 +11,36 @@ type RightDrawerProps = {
   width?: number
 }
 
-export default function RightDrawer({ open, onClose, children, width = 420 }: RightDrawerProps) {
+export default function RightDrawer({
+  open,
+  onClose,
+  children,
+  width = 420,
+}: RightDrawerProps) {
   const panelRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      return
+    }
 
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose()
+      if (e.key === 'Escape') {
+        onClose()
+      }
     }
 
     const onDown = (e: MouseEvent) => {
       const t = e.target as Node | null
-      if (!t) return
-      if (!panelRef.current) return
-      if (!panelRef.current.contains(t)) onClose()
+      if (!t) {
+        return
+      }
+      if (!panelRef.current) {
+        return
+      }
+      if (!panelRef.current.contains(t)) {
+        onClose()
+      }
     }
 
     document.addEventListener('keydown', onKey)
@@ -72,7 +88,11 @@ const Stage = styled(motion.div)`
 const Panel = styled(motion.aside)`
   height: 100vh;
   background: #fff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 1px 4px 0 rgba(0, 0, 45, 0.09), 0 2px 1px -1px rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 1px 4px 0 rgba(0, 0, 45, 0.09),
+    0 2px 1px -1px rgba(0, 0, 0, 0.05),
+    0 1px 3px 0 rgba(0, 0, 0, 0.05);
   display: flex;
   flex-direction: column;
 `

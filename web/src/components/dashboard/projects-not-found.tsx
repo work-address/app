@@ -1,5 +1,6 @@
 import styled from 'styled-components'
-import Button from '../ui/button'
+
+import Button from '@/ui/button'
 
 type ProjectsNotFoundProps = {
   title: string
@@ -16,9 +17,9 @@ export default function ProjectsNotFound({
 }: ProjectsNotFoundProps) {
   return (
     <Root>
-        <IconInner>
-          <img src="/img/icons/featured-icon.svg" alt="Not found" />
-        </IconInner>
+      <IconInner>
+        <img src="/img/icons/featured-icon.svg" alt="Not found" />
+      </IconInner>
       <Title>{title}</Title>
       <Desc>{description}</Desc>
       <Button onClick={onAction}>{actionLabel}</Button>

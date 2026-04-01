@@ -1,9 +1,10 @@
 import { useMemo, useState } from 'react'
 import styled from 'styled-components'
-import RightDrawer from '../ui/right-drawer'
-import Button from '../ui/button'
-import ConfirmModal from '../ui/confirm-modal'
-import MotionSelect from '../ui/motion-select'
+
+import Button from '@/ui/button'
+import ConfirmModal from '@/ui/confirm-modal'
+import MotionSelect from '@/ui/motion-select'
+import RightDrawer from '@/ui/right-drawer'
 
 export type ProjectStatus = 'Active' | 'Paused' | 'Finished'
 
@@ -23,18 +24,28 @@ type ProjectsTableProps = {
   rows: ProjectRow[]
 }
 
-type SortKey = keyof Pick<ProjectRow, 'name' | 'earnings' | 'keyboard' | 'mouse' | 'mouseDistance'>
+type SortKey = keyof Pick<
+  ProjectRow,
+  'name' | 'earnings' | 'keyboard' | 'mouse' | 'mouseDistance'
+>
 type SortDir = 'asc' | 'desc'
 
 function normalizeNumberLike(value: string) {
-  const cleaned = value.replace(/[^0-9.]/g, '')
+  const cleaned = value.replaceAll(/[^\d.]/g, '')
   const parsed = Number(cleaned)
   return Number.isFinite(parsed) ? parsed : 0
 }
 
 function getSortValue(row: ProjectRow, key: SortKey) {
   const value = row[key]
-  if (key === 'earnings' || key === 'keyboard' || key === 'mouse' || key === 'mouseDistance') return normalizeNumberLike(value)
+  if (
+    key === 'earnings' ||
+    key === 'keyboard' ||
+    key === 'mouse' ||
+    key === 'mouseDistance'
+  ) {
+    return normalizeNumberLike(value)
+  }
   return value.toLowerCase()
 }
 
@@ -58,13 +69,19 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
   const allSelected = rows.length > 0 && rows.every((r) => selected[r.key])
 
   const sortedRows = useMemo(() => {
-    if (!sort) return rows
+    if (!sort) {
+      return rows
+    }
     const copy = [...rows]
     copy.sort((a, b) => {
       const av = getSortValue(a, sort.key)
       const bv = getSortValue(b, sort.key)
-      if (av < bv) return sort.dir === 'asc' ? -1 : 1
-      if (av > bv) return sort.dir === 'asc' ? 1 : -1
+      if (av < bv) {
+        return sort.dir === 'asc' ? -1 : 1
+      }
+      if (av > bv) {
+        return sort.dir === 'asc' ? 1 : -1
+      }
       return 0
     })
     return copy
@@ -72,14 +89,18 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
 
   const toggleSort = (key: SortKey) => {
     setSort((prev) => {
-      if (!prev || prev.key !== key) return { key, dir: 'desc' }
+      if (!prev || prev.key !== key) {
+        return { key, dir: 'desc' }
+      }
       return { key, dir: prev.dir === 'desc' ? 'asc' : 'desc' }
     })
   }
 
   const setAll = (checked: boolean) => {
     const next: Record<string, boolean> = {}
-    for (const r of rows) next[r.key] = checked
+    for (const r of rows) {
+      next[r.key] = checked
+    }
     setSelected(next)
   }
 
@@ -298,7 +319,11 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
             </DrawerClose>
 
             <DrawerHeadRight>
-              <DeleteIconBtn type="button" aria-label="Delete" onClick={openDelete}>
+              <DeleteIconBtn
+                type="button"
+                aria-label="Delete"
+                onClick={openDelete}
+              >
                 <img src="/img/icons/drawer-delete-icon.svg" alt="Delete" />
               </DeleteIconBtn>
               {drawerMode === 'view' ? (
@@ -309,7 +334,9 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
                   <DrawerButton
                     variant="primary"
                     onClick={() => {
-                      if (drawerRow) showDrawer(drawerRow, 'edit')
+                      if (drawerRow) {
+                        showDrawer(drawerRow, 'edit')
+                      }
                     }}
                   >
                     Edit
@@ -415,7 +442,11 @@ const Wrap = styled.div`
   border-radius: 12px;
   overflow: hidden;
   background: #fff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 1px 4px 0 rgba(0, 0, 45, 0.09), 0 2px 1px -1px rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 1px 4px 0 rgba(0, 0, 45, 0.09),
+    0 2px 1px -1px rgba(0, 0, 0, 0.05),
+    0 1px 3px 0 rgba(0, 0, 0, 0.05);
 `
 
 const Scroll = styled.div`
@@ -430,7 +461,6 @@ const TableEl = styled.table`
   border-spacing: 0;
   font-size: 13px;
   color: var(--primary);
-
 `
 
 const Thead = styled.thead`
@@ -455,7 +485,7 @@ const Td = styled.td`
   padding: 14px;
   border-bottom: 1px solid rgba(0, 0, 47, 0.15);
   white-space: nowrap;
-  color: #60646C;
+  color: #60646c;
   font-weight: 400;
   font-size: 14px;
   line-height: 143%;
@@ -538,14 +568,22 @@ const StatusPill = styled.span<{ $status: ProjectStatus }>`
   font-weight: 500;
 
   background: ${(p) => {
-    if (p.$status === 'Active') return 'rgba(0, 164, 51, 0.1)'
-    if (p.$status === 'Finished') return 'rgba(0, 52, 130, 0.12)'
+    if (p.$status === 'Active') {
+      return 'rgba(0, 164, 51, 0.1)'
+    }
+    if (p.$status === 'Finished') {
+      return 'rgba(0, 52, 130, 0.12)'
+    }
     return 'rgba(0, 0, 51, 0.06)'
   }};
 
   color: ${(p) => {
-    if (p.$status === 'Active') return 'rgba(0, 113, 63, 0.87)'
-    if (p.$status === 'Finished') return 'var(--download, #003482)'
+    if (p.$status === 'Active') {
+      return 'rgba(0, 113, 63, 0.87)'
+    }
+    if (p.$status === 'Finished') {
+      return 'var(--download, #003482)'
+    }
     return 'rgba(0, 7, 20, 0.62)'
   }};
 `
@@ -556,7 +594,8 @@ const SortBtn = styled.button<{ $active?: boolean }>`
   gap: 6px;
   font-size: 12px;
   font-weight: 500;
-  color: ${(p) => (p.$active ? 'rgba(28, 32, 36, 0.88)' : 'rgba(28, 32, 36, 0.75)')};
+  color: ${(p) =>
+    p.$active ? 'rgba(28, 32, 36, 0.88)' : 'rgba(28, 32, 36, 0.75)'};
 
   &:hover {
     color: rgba(28, 32, 36, 0.92);
@@ -580,7 +619,8 @@ const SortArrow = styled.img<{ $active?: boolean; $dir?: SortDir }>`
   height: 16px;
   display: inline-block;
   opacity: ${(p) => (p.$active ? 1 : 0.55)};
-  transform: ${(p) => (p.$active && p.$dir === 'asc' ? 'rotate(180deg)' : 'none')};
+  transform: ${(p) =>
+    p.$active && p.$dir === 'asc' ? 'rotate(180deg)' : 'none'};
 `
 
 const ActionsCell = styled(ThRight)`
@@ -699,7 +739,7 @@ const MetaGrid = styled.div`
   column-gap: 0px;
   row-gap: 10px;
   font-size: 16px;
-  `
+`
 
 const MetaLabel = styled.div`
   font-weight: 400;

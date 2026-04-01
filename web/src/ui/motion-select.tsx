@@ -19,8 +19,20 @@ type MotionSelectProps = {
 
 function ChevronDownIcon() {
   return (
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M6 9l6 6 6-6" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" />
+    <svg
+      width="18"
+      height="18"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M6 9l6 6 6-6"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
     </svg>
   )
 }
@@ -38,12 +50,18 @@ export default function MotionSelect({
   const rootRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      return
+    }
 
     const onDown = (e: MouseEvent) => {
       const el = rootRef.current
-      if (!el) return
-      if (e.target instanceof Node && !el.contains(e.target)) setOpen(false)
+      if (!el) {
+        return
+      }
+      if (e.target instanceof Node && !el.contains(e.target)) {
+        setOpen(false)
+      }
     }
 
     document.addEventListener('mousedown', onDown)
@@ -51,15 +69,23 @@ export default function MotionSelect({
   }, [open])
 
   const selectedSet = useMemo(() => {
-    if (Array.isArray(value)) return new Set(value)
+    if (Array.isArray(value)) {
+      return new Set(value)
+    }
     return new Set(value ? [value] : [])
   }, [value])
 
   const buttonText = useMemo(() => {
     if (multi) {
-      if (selectedSet.size === 0) return placeholder
-      if (selectedSet.size === options.length) return placeholder
-      const labels = options.filter((o) => selectedSet.has(o.value)).map((o) => o.label)
+      if (selectedSet.size === 0) {
+        return placeholder
+      }
+      if (selectedSet.size === options.length) {
+        return placeholder
+      }
+      const labels = options
+        .filter((o) => selectedSet.has(o.value))
+        .map((o) => o.label)
       return labels.join(', ')
     }
 
@@ -76,14 +102,21 @@ export default function MotionSelect({
     }
 
     const next = new Set(selectedSet)
-    if (next.has(v)) next.delete(v)
-    else next.add(v)
-    onChange(Array.from(next))
+    if (next.has(v)) {
+      next.delete(v)
+    } else {
+      next.add(v)
+    }
+    onChange([...next])
   }
 
   return (
     <Root ref={rootRef} className={className}>
-      <Trigger type="button" onClick={() => setOpen((s) => !s)} aria-expanded={open}>
+      <Trigger
+        type="button"
+        onClick={() => setOpen((s) => !s)}
+        aria-expanded={open}
+      >
         <TriggerText title={buttonText}>{buttonText}</TriggerText>
         <TriggerIcon $open={open}>
           <ChevronDownIcon />
@@ -103,8 +136,14 @@ export default function MotionSelect({
               {options.map((o) => {
                 const checked = selectedSet.has(o.value)
                 return (
-                  <MenuItem key={o.value} type="button" onClick={() => toggle(o.value)}>
-                    {multi ? <Checkbox aria-hidden="true" $checked={checked} /> : null}
+                  <MenuItem
+                    key={o.value}
+                    type="button"
+                    onClick={() => toggle(o.value)}
+                  >
+                    {multi ? (
+                      <Checkbox aria-hidden="true" $checked={checked} />
+                    ) : null}
                     <ItemLabel>{o.label}</ItemLabel>
                   </MenuItem>
                 )
@@ -209,7 +248,8 @@ const Checkbox = styled.span<{ $checked?: boolean }>`
   border-radius: 4px;
   border: 1px solid rgba(0, 8, 48, 0.18);
   background: ${(p) => (p.$checked ? '#3f67a4' : '#fff')};
-  box-shadow: ${(p) => (p.$checked ? 'inset 0 0 0 1px rgba(63, 103, 164, 0.25)' : 'none')};
+  box-shadow: ${(p) =>
+    p.$checked ? 'inset 0 0 0 1px rgba(63, 103, 164, 0.25)' : 'none'};
   position: relative;
 
   &::after {

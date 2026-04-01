@@ -1,29 +1,46 @@
 import { useMemo, useState } from 'react'
 import styled from 'styled-components'
+
+import ApplicationsUsage from '../components/dashboard/applications-usage'
+import DashboardEmptyState from '../components/dashboard/dashboard-empty-state'
+import ProjectsNotFound from '../components/dashboard/projects-not-found'
 import ProjectsTable, {
   type ProjectRow,
-  type ProjectStatus,
 } from '../components/dashboard/projects-table'
-import ApplicationsUsage from '../components/dashboard/applications-usage'
-import WorklogsTable from '../components/dashboard/worklogs-table'
-import DashboardEmptyState from '../components/dashboard/dashboard-empty-state'
 import WorklogsEmptyState from '../components/dashboard/worklogs-empty-state'
-import ProjectsNotFound from '../components/dashboard/projects-not-found'
-import Button from '../components/ui/button'
-import Search from '../components/ui/search'
-import DatePickerInput from '../components/ui/date-picker-input'
-import MotionSelect from '../components/ui/motion-select'
+import WorklogsTable from '../components/dashboard/worklogs-table'
 import { projectsMock } from '../mocks/projects'
 import { worklogsMock } from '../mocks/worklogs'
-import { Wrapper } from '../components/ui/wrapper'
+
+import Button from '@/ui/button'
+import DatePickerInput from '@/ui/date-picker-input'
+import MotionSelect from '@/ui/motion-select'
+import Search from '@/ui/search'
+import { Wrapper } from '@/ui/wrapper'
 
 type TabKey = 'all' | 'active' | 'finished'
 
 function PlusIcon() {
   return (
-    <svg width="20" height="20" viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path d="M12 5v14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
-      <path d="M5 12h14" stroke="currentColor" strokeWidth="2" strokeLinecap="round" />
+    <svg
+      width="20"
+      height="20"
+      viewBox="0 0 24 24"
+      fill="none"
+      xmlns="http://www.w3.org/2000/svg"
+    >
+      <path
+        d="M12 5v14"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
+      <path
+        d="M5 12h14"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+      />
     </svg>
   )
 }
@@ -32,8 +49,8 @@ export default function Dashboard() {
   const [tab, setTab] = useState<TabKey>('all')
   const [query, setQuery] = useState('')
   const [worklogQuery, setWorklogQuery] = useState('')
-  const [fromDate, setFromDate] = useState<Date | undefined>(undefined)
-  const [toDate, setToDate] = useState<Date | undefined>(undefined)
+  const [fromDate, setFromDate] = useState<Date | undefined>()
+  const [toDate, setToDate] = useState<Date | undefined>()
   const [worklogProjects, setWorklogProjects] = useState<string[]>([])
 
   const rows = useMemo(() => {
@@ -62,7 +79,9 @@ export default function Dashboard() {
   const worklogRows = useMemo(() => {
     return worklogsMock.filter((w) => {
       const q = worklogQuery.trim().toLowerCase()
-      if (!q) return true
+      if (!q) {
+        return true
+      }
       return w.note.toLowerCase().includes(q)
     })
   }, [worklogQuery])
@@ -83,14 +102,14 @@ export default function Dashboard() {
               {hasProjects ? (
                 <Search value={query} onChange={setQuery} />
               ) : null}
-              {!hasProjects ? (
+              {hasProjects ? null : (
                 <TopRight>
                   <Button>
                     <PlusIcon />
                     Create project
                   </Button>
                 </TopRight>
-              ) : null}
+              )}
             </TitleRow>
           </Top>
 
