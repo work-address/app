@@ -6,6 +6,7 @@ import { ThemeProvider } from 'styled-components'
 
 import App from './app'
 
+import { ErrorToastStyle } from '@/lib/sonner'
 import { theme } from '@/lib/theme'
 
 const rootElementId = 'root'
@@ -21,6 +22,8 @@ createRoot(rootElement).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
       <Toaster />
+      <ErrorToastStyle />
+
       <BrowserRouter>
         <App />
       </BrowserRouter>

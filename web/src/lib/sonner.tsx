@@ -13,8 +13,28 @@ type ErrorToastProps = {
   duration?: number
 }
 
+export const showErrorToast = ({
+  message,
+  title,
+  position,
+  duration,
+}: ErrorToastProps) => {
+  toast.error(
+    <div>
+      <p className={'toast-title'}>{title}</p>
+      <p className={'toast-message'}>{message}</p>
+    </div>,
+    {
+      duration,
+      className: 'error-toast',
+      position,
+      icon: <img src={ErrorIcon} alt={'Error'} />,
+    },
+  )
+}
+
 // TODO: перенести часть стилей в общий вариант
-const ErrorStyle = createGlobalStyle`
+export const ErrorToastStyle = createGlobalStyle`
   .error-toast {
     &[data-sonner-toast][data-styled=true] {
       padding: 16px;
@@ -47,24 +67,3 @@ const ErrorStyle = createGlobalStyle`
     }
   }
 `
-
-export const showErrorToast = ({
-  message,
-  title,
-  position,
-  duration,
-}: ErrorToastProps) => {
-  toast.error(
-    <div>
-      <ErrorStyle />
-      <p className={'toast-title'}>{title}</p>
-      <p className={'toast-message'}>{message}</p>
-    </div>,
-    {
-      duration,
-      className: 'error-toast',
-      position,
-      icon: <img src={ErrorIcon} alt={'Error'} />,
-    },
-  )
-}
