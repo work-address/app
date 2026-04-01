@@ -17,6 +17,9 @@
   --shadow-4: 0px 8px 40px 0px var(--overlays-black-alpha-1),
             0px 12px 32px -16px var(--neutral-alpha-3);
 
+  --error-11: rgba(206, 44, 49, 1);
+  --error-alpha-6: rgba(248, 0, 4, 0.26);
+
   --c-00d8ff: #00d8ff;
   --c-1c2024: #1c2024;
   --c-003482: #003482;

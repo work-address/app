@@ -5,6 +5,7 @@ import { useTheme } from 'styled-components'
 
 import { ProviderButton } from './provider-button'
 
+import { showErrorToast } from '@/lib/sonner.tsx'
 import Button from '@/ui/button.tsx'
 
 export const SignIn = () => {
@@ -13,7 +14,23 @@ export const SignIn = () => {
 
   const isUpMd = useMediaQuery(breakpoints.up('md'))
 
-  const onSignIn = () => () => navigate('/dashboard')
+  const onSignIn = (type: 'ton' | 'eth') => {
+    if (type === 'ton') {
+      navigate('/dashboard')
+    } else {
+      showErrorToast({
+        title: 'Connection failed!',
+        message: (
+          <>
+            We couldn&apos;t detect your Ethereum or TON wallet. Please check
+            your wallet and try again
+          </>
+        ),
+        position: 'top-center',
+        duration: Infinity,
+      })
+    }
+  }
 
   return (
     <Stage>
@@ -45,11 +62,16 @@ export const SignIn = () => {
             <ProviderButton
               iconUrl={'/img/photo/ethereum-logo.svg'}
               iconAlt={'Ethereum'}
+              onClick={() => onSignIn('eth')}
             >
               Sign in with Ethereum
             </ProviderButton>
 
-            <ProviderButton iconUrl={'/img/photo/ton-logo.svg'} iconAlt={'Ton'}>
+            <ProviderButton
+              iconUrl={'/img/photo/ton-logo.svg'}
+              iconAlt={'Ton'}
+              onClick={() => onSignIn('ton')}
+            >
               Sign in with Ton
             </ProviderButton>
           </Actions>
@@ -77,7 +99,7 @@ export const SignIn = () => {
         </Foot>
 
         <HiddenButtonRow>
-          <Button variant="secondary" onClick={() => onSignIn()}>
+          <Button variant="secondary" onClick={() => onSignIn('eth')}>
             Continue
           </Button>
         </HiddenButtonRow>

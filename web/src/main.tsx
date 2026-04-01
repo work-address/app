@@ -1,6 +1,7 @@
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
+import { Toaster } from 'sonner'
 import { ThemeProvider } from 'styled-components'
 
 import App from './app'
@@ -12,13 +13,14 @@ const rootElement = document.getElementById(rootElementId)
 
 if (rootElement === null) {
   throw new Error(
-    `No root element in the dom tree. Check if element with "${rootElementId}" id exists`,
+    `No root element in the dom tree. Check if element with id "${rootElementId}" exists`,
   )
 }
 
 createRoot(rootElement).render(
   <StrictMode>
     <ThemeProvider theme={theme}>
+      <Toaster />
       <BrowserRouter>
         <App />
       </BrowserRouter>
