@@ -60,7 +60,7 @@ export const Text = styled.div`
   line-height: 24px;
   font-family: Inter, sans-serif;
   color: var(--accent-11);
-  letter-spacing: 0;
+  letter-spacing: -0.45px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     color: rgba(0, 7, 20, 0.82);
