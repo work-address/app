@@ -86,7 +86,7 @@ export const StageContainer = styled.div`
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  margin: 48px 0 0 0;
+  margin: 44px 0 0 0;
 `
 
 export const Logo = styled.img`
@@ -106,7 +106,7 @@ export const Card = styled.section`
     0 1px 4px 0 rgba(0, 0, 45, 0.09),
     0 2px 1px -1px rgba(0, 0, 0, 0.05),
     0 1px 3px 0 rgba(0, 0, 0, 0.05);
-  padding: 21px 48px 30px 48px;
+  padding: 42px 48px 30px 48px;
   text-align: center;
 `
 
@@ -116,7 +116,7 @@ export const Title = styled.h1`
   line-height: 150%;
   letter-spacing: 1.15px;
   color: #1c2024;
-  margin: 20px 0 5px;
+  margin: 0 0 5px;
 `
 
 export const Desc = styled.p`
@@ -144,7 +144,7 @@ export const Actions = styled.div`
   display: flex;
   flex-direction: column;
   gap: 16px;
-  margin-bottom: 35px;
+  margin-bottom: 34px;
 `
 
 export const Learn = styled.a`
@@ -165,19 +165,20 @@ export const Learn = styled.a`
 export const Foot = styled.footer`
   text-align: center;
   font-size: 14px;
-  line-height: 140%;
+  line-height: 20px;
   color: rgba(0, 7, 20, 0.52);
-  margin-top: 20px;
-  letter-spacing: 0.5px;
+  letter-spacing: 0.55px;
   font-weight: 500;
+  margin-left: -2px;
+  margin-top: 20px;
 `
 
 export const FootLine = styled.div`
-  margin-top: 20px;
+  margin-top: 21px;
 `
 
 export const FootLabel = styled.span`
-  font-weight: 400;
+  font-weight: 300;
 `
 
 export const HiddenButtonRow = styled.div`
