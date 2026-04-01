@@ -27,7 +27,6 @@ export const SignIn = () => {
           </>
         ),
         position: 'top-center',
-        duration: Infinity,
       })
     }
   }
