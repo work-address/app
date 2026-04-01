@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 
-import Button from '@/ui/button'
+import { Button } from '@/features/shared'
 
 type ProjectsNotFoundProps = {
   title: string
@@ -9,12 +9,12 @@ type ProjectsNotFoundProps = {
   onAction?: () => void
 }
 
-export default function ProjectsNotFound({
+export const ProjectsNotFound = ({
   title,
   description,
   actionLabel,
   onAction,
-}: ProjectsNotFoundProps) {
+}: ProjectsNotFoundProps) => {
   return (
     <Root>
       <IconInner>

@@ -4,7 +4,7 @@ import { createGlobalStyle } from 'styled-components'
 import type { ReactNode } from 'react'
 import type { ToasterProps } from 'sonner'
 
-import ErrorIcon from '@/assets/info-icon.svg'
+import { InfoIcon } from '@/features/shared'
 
 type ErrorToastProps = {
   title: ReactNode
@@ -28,7 +28,7 @@ export const showErrorToast = ({
       duration,
       className: 'error-toast',
       position,
-      icon: <img src={ErrorIcon} alt={'Error'} />,
+      icon: <img src={InfoIcon} alt={'Error'} />,
     },
   )
 }

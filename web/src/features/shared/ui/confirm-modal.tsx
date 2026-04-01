@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef } from 'react'
 import styled from 'styled-components'
 
-import Button from './button.tsx'
+import { Button } from './button.tsx'
 
 type ConfirmModalProps = {
   open: boolean
@@ -14,7 +14,7 @@ type ConfirmModalProps = {
   onCancel: () => void
 }
 
-export default function ConfirmModal({
+export const ConfirmModal = ({
   open,
   title,
   description,
@@ -22,7 +22,7 @@ export default function ConfirmModal({
   cancelLabel,
   onConfirm,
   onCancel,
-}: ConfirmModalProps) {
+}: ConfirmModalProps) => {
   const boxRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {

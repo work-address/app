@@ -1,12 +1,10 @@
-import DashboardEmptyState from './dashboard-empty-state'
+import { DashboardEmptyState } from './dashboard-empty-state.tsx'
 
 type WorklogsEmptyStateProps = {
   onHelp?: () => void
 }
 
-export default function WorklogsEmptyState({
-  onHelp,
-}: WorklogsEmptyStateProps) {
+export const WorklogsEmptyState = ({ onHelp }: WorklogsEmptyStateProps) => {
   return (
     <DashboardEmptyState
       imageSrc="/img/photo/worklogs-help.svg"

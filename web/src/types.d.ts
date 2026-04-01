@@ -1,5 +1,5 @@
 import 'styled-components'
-import type { theme } from './lib/theme'
+import type { theme } from '@/features/shared'
 
 type CustomTheme = typeof theme
 

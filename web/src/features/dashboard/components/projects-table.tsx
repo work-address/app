@@ -1,10 +1,12 @@
 import { useMemo, useState } from 'react'
 import styled from 'styled-components'
 
-import Button from '@/ui/button'
-import ConfirmModal from '@/ui/confirm-modal'
-import MotionSelect from '@/ui/motion-select'
-import RightDrawer from '@/ui/right-drawer'
+import {
+  Button,
+  ConfirmModal,
+  MotionSelect,
+  RightDrawer,
+} from '@/features/shared'
 
 export type ProjectStatus = 'Active' | 'Paused' | 'Finished'
 
@@ -49,7 +51,7 @@ function getSortValue(row: ProjectRow, key: SortKey) {
   return value.toLowerCase()
 }
 
-export default function ProjectsTable({ rows }: ProjectsTableProps) {
+export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir } | null>(null)
   const [openDrawer, setOpenDrawer] = useState(false)

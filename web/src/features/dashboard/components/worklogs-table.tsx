@@ -77,7 +77,7 @@ function CloseIcon() {
   )
 }
 
-export default function WorklogsTable({ rows }: WorklogsTableProps) {
+export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const [openShot, setOpenShot] = useState<string | null>(null)
   const modalRef = useRef<HTMLDivElement | null>(null)

@@ -4,10 +4,9 @@ import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { ThemeProvider } from 'styled-components'
 
-import App from './app'
+import App from './app/app.tsx'
 
-import { ErrorToastStyle } from '@/lib/sonner'
-import { theme } from '@/lib/theme'
+import { ErrorToastStyle, theme } from '@/features/shared'
 
 const rootElementId = 'root'
 const rootElement = document.getElementById(rootElementId)

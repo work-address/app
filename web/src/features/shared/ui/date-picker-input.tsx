@@ -117,11 +117,11 @@ function ChevronRight() {
   )
 }
 
-export default function DatePickerInput({
+export const DatePickerInput = ({
   value,
   onChange,
   placeholder,
-}: DatePickerInputProps) {
+}: DatePickerInputProps) => {
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<CalendarDate | undefined>(
     toCalendarDate(value),

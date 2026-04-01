@@ -1,4 +1,4 @@
-@import './style/variables.css';
+@import '../features/shared/styles/variables.css';
 
 *,
 *::before,

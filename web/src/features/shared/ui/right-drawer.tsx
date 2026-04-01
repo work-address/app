@@ -11,12 +11,12 @@ type RightDrawerProps = {
   width?: number
 }
 
-export default function RightDrawer({
+export const RightDrawer = ({
   open,
   onClose,
   children,
   width = 420,
-}: RightDrawerProps) {
+}: RightDrawerProps) => {
   const panelRef = useRef<HTMLDivElement | null>(null)
 
   useEffect(() => {

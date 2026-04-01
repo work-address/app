@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import styled from 'styled-components'
 
-import Button from '@/ui/button'
+import { Button } from '@/features/shared'
 
 type FormState = {
   address: string
@@ -27,7 +27,7 @@ const initialState: FormState = {
   telegram: '',
 }
 
-export default function Profile() {
+export default function ProfilePage() {
   const [form, setForm] = useState<FormState>(initialState)
   const [baseline, setBaseline] = useState<FormState>(initialState)
 

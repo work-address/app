@@ -1,4 +1,4 @@
-import type { ProjectRow } from '../components/dashboard/ProjectsTable'
+import type { ProjectRow } from '@/features/dashboard/components'
 
 export const projectsMock: ProjectRow[] = [
   {

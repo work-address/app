@@ -10,7 +10,7 @@ import {
 } from 'recharts'
 import styled from 'styled-components'
 
-import MotionSelect from '@/ui/motion-select'
+import { MotionSelect } from '@/features/shared'
 
 type Period = 'Week' | 'Month' | 'Year'
 
@@ -81,7 +81,7 @@ function CustomTooltip({ active, payload, label }: any) {
   )
 }
 
-export default function ApplicationsUsage() {
+export const ApplicationsUsage = () => {
   const [period, setPeriod] = useState<Period>('Week')
 
   const data = useMemo<BarDatum[]>(() => {

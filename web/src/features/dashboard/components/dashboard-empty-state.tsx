@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 
-import Button from '@/ui/button'
+import { Button } from '@/features/shared'
 
 type DashboardEmptyStateProps = {
   imageSrc: string
@@ -10,13 +10,13 @@ type DashboardEmptyStateProps = {
   onAction?: () => void
 }
 
-export default function DashboardEmptyState({
+export const DashboardEmptyState = ({
   imageSrc,
   title,
   description,
   actionLabel,
   onAction,
-}: DashboardEmptyStateProps) {
+}: DashboardEmptyStateProps) => {
   return (
     <Root>
       <Hero>

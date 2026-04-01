@@ -5,8 +5,7 @@ import { useTheme } from 'styled-components'
 
 import { ProviderButton } from './provider-button'
 
-import { showErrorToast } from '@/lib/sonner.tsx'
-import Button from '@/ui/button.tsx'
+import { showErrorToast, Button } from '@/features/shared'
 
 export const SignIn = () => {
   const navigate = useNavigate()

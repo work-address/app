@@ -2,7 +2,7 @@ import styled from 'styled-components'
 
 import type { ReactNode } from 'react'
 
-export function Wrapper({ children }: { children: ReactNode }) {
+export const Wrapper = ({ children }: { children: ReactNode }) => {
   return <WrapperWhite>{children}</WrapperWhite>
 }
 
@@ -14,6 +14,6 @@ const WrapperWhite = styled.div`
   @media (max-width: 440px) {
     border-bottom-left-radius: 24px;
     border-bottom-right-radius: 24px;
-    padding-bottom: 0px;
+    padding-bottom: 0;
   }
 `

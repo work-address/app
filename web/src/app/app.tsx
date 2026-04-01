@@ -1,10 +1,10 @@
 import './app.css'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
-import Header from './components/header'
-import Dashboard from './pages/dashboard'
-import Profile from './pages/profile'
-import SignInPage from './pages/sign-in-page.tsx'
+import DashboardPage from '../pages/dashboard-page.tsx'
+import ProfilePage from '../pages/profile-page.tsx'
+import SignInPage from '../pages/sign-in-page.tsx'
+import Header from '../widgets/header.tsx'
 
 function App() {
   return (
@@ -22,7 +22,7 @@ function DashboardLayout() {
   return (
     <div>
       <Header active="dashboard" />
-      <Dashboard />
+      <DashboardPage />
     </div>
   )
 }
@@ -31,7 +31,7 @@ function ProfileLayout() {
   return (
     <div>
       <Header active="profile" />
-      <Profile />
+      <ProfilePage />
     </div>
   )
 }

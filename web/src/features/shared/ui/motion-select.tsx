@@ -37,7 +37,7 @@ function ChevronDownIcon() {
   )
 }
 
-export default function MotionSelect({
+export const MotionSelect = ({
   className,
   options,
   value,
@@ -45,7 +45,7 @@ export default function MotionSelect({
   placeholder = 'Select',
   multi,
   title,
-}: MotionSelectProps) {
+}: MotionSelectProps) => {
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement | null>(null)
 

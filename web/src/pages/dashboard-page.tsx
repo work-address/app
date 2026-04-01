@@ -1,22 +1,25 @@
 import { useMemo, useState } from 'react'
 import styled from 'styled-components'
 
-import ApplicationsUsage from '../components/dashboard/applications-usage'
-import DashboardEmptyState from '../components/dashboard/dashboard-empty-state'
-import ProjectsNotFound from '../components/dashboard/projects-not-found'
-import ProjectsTable, {
-  type ProjectRow,
-} from '../components/dashboard/projects-table'
-import WorklogsEmptyState from '../components/dashboard/worklogs-empty-state'
-import WorklogsTable from '../components/dashboard/worklogs-table'
-import { projectsMock } from '../mocks/projects'
-import { worklogsMock } from '../mocks/worklogs'
+import type { ProjectRow } from '@/features/dashboard/components'
 
-import Button from '@/ui/button'
-import DatePickerInput from '@/ui/date-picker-input'
-import MotionSelect from '@/ui/motion-select'
-import Search from '@/ui/search'
-import { Wrapper } from '@/ui/wrapper'
+import {
+  ApplicationsUsage,
+  DashboardEmptyState,
+  ProjectsNotFound,
+  WorklogsTable,
+  WorklogsEmptyState,
+  ProjectsTable,
+} from '@/features/dashboard/components'
+import {
+  Button,
+  DatePickerInput,
+  MotionSelect,
+  Search,
+  Wrapper,
+} from '@/features/shared'
+import { projectsMock } from '@/features/shared/mocks/projects'
+import { worklogsMock } from '@/features/shared/mocks/worklogs'
 
 type TabKey = 'all' | 'active' | 'finished'
 
@@ -45,7 +48,7 @@ function PlusIcon() {
   )
 }
 
-export default function Dashboard() {
+export default function DashboardPage() {
   const [tab, setTab] = useState<TabKey>('all')
   const [query, setQuery] = useState('')
   const [worklogQuery, setWorklogQuery] = useState('')

@@ -48,11 +48,11 @@ const IconWrap = styled.span`
   }
 `
 
-export default function Button({
+export const Button = ({
   variant = 'primary',
   children,
   ...props
-}: ButtonProps) {
+}: ButtonProps) => {
   return (
     <BaseButton $variant={variant} {...props}>
       {children}
