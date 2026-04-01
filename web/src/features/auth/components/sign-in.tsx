@@ -29,7 +29,8 @@ export const SignIn = () => {
 
           <Desc>
             <Desc1Row>
-              Join the future of freelancing with authentication
+              Join the future of freelancing with <MobileBreak />
+              authentication
             </Desc1Row>
 
             <Desc2Row>
@@ -100,6 +101,7 @@ const StageContainer = styled.div`
   justify-content: center;
   flex-direction: column;
   padding: 0 16px;
+  margin: 10px 0 0 0;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     padding: 0;
@@ -110,11 +112,12 @@ const StageContainer = styled.div`
 const Logo = styled.img`
   width: auto;
   display: block;
-  margin-bottom: 40px;
   height: 80px;
+  margin-bottom: 28px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     height: 40px;
+    margin-bottom: 40px;
   }
 `
 
@@ -135,31 +138,35 @@ const Card = styled.section`
 
 const Title = styled.h1`
   font-weight: 500;
-  letter-spacing: 1.15px;
+  letter-spacing: 0.45px;
   font-size: 20px;
   margin-bottom: 12px;
   color: var(--accent-11);
+  line-height: 28px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     font-size: 35px;
     color: #1c2024;
     line-height: 150%;
     margin-bottom: 5px;
+    letter-spacing: 1.15px;
   }
 `
 
 const Desc = styled.p`
   font-weight: 400;
   font-size: 14px;
-  line-height: 150%;
   margin-bottom: 24px;
   color: var(--accent-11);
+  line-height: 20px;
+  letter-spacing: 0.34px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     letter-spacing: 0.6px;
     font-size: 16px;
     margin-bottom: 40px;
     color: rgba(0, 7, 20, 0.62);
+    line-height: 150%;
   }
 `
 
@@ -207,11 +214,12 @@ const MobileBreak = styled.br`
 const Actions = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 16px;
   margin-bottom: 18px;
+  gap: 12px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     margin-bottom: 34px;
+    gap: 16px;
   }
 `
 
@@ -235,15 +243,17 @@ const Learn = styled.a`
 const Foot = styled.footer`
   text-align: center;
   font-size: 12px;
-  line-height: 20px;
   color: rgba(0, 7, 20, 0.52);
   letter-spacing: 0.55px;
   font-weight: 500;
   margin-left: -2px;
   margin-top: 20px;
+  line-height: 16px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     font-size: 14px;
+    margin-top: 20px;
+    line-height: 20px;
   }
 `
 
@@ -256,7 +266,11 @@ const DesktopBreak = styled.br`
 `
 
 const FootLine = styled.div`
-  margin-top: 21px;
+  margin-top: 14px;
+
+  ${({ theme }) => theme.breakpoints.up('md')} {
+    margin-top: 21px;
+  }
 `
 
 const FootLabel = styled.span`

@@ -57,12 +57,13 @@ export const Icon = styled.img`
 export const Text = styled.div`
   font-weight: 500;
   font-size: 18px;
-  line-height: 1;
-  letter-spacing: 0.54px;
+  line-height: 24px;
   font-family: Inter, sans-serif;
   color: var(--accent-11);
+  letter-spacing: 0px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     color: rgba(0, 7, 20, 0.82);
+    letter-spacing: 0.54px;
   }
 `
