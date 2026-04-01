@@ -47,16 +47,18 @@ export const SignIn = () => {
 
         <Foot>
           <FootLine>
-            <FootLabel>Ethereum wallets:</FootLabel>
-            WalletConnect, Metamask, TrustWallet, Coinbase Wallet, Atomic
-            Wallet, Exodus Wallet, Trezor Wallet, Edge Wallet, ZenGo Wallet,
-            Crypto Wallet, BitPay Wallet, Opera Wallet
+            <FootLabel>Ethereum wallets:&nbsp;</FootLabel>
+            WalletConnect, Metamask, TrustWallet, Coinbase Wallet,
+            <br />
+            Atomic Wallet, Exodus Wallet, Exodus Wallet, Edge Wallet, Trezor
+            Wallet
           </FootLine>
 
           <FootLine>
-            <FootLabel>Ton wallets:</FootLabel>
-            Telegram Wallet, Tonkeeper, MyTonWallet, OpenMask, TonHub, DeWallet,
-            XTONWallet, TON Wallet
+            <FootLabel>TON wallets:&nbsp;</FootLabel>
+            Telegram Wallet, Tonkeeper, MyTonWallet, OpenMask,
+            <br />
+            TonHub, DeWallet, XTONWallet, TON Wallet
           </FootLine>
         </Foot>
 
@@ -84,7 +86,7 @@ export const StageContainer = styled.div`
   align-items: center;
   justify-content: center;
   flex-direction: column;
-  margin: -8px 0 0 0;
+  margin: 48px 0 0 0;
 `
 
 export const Logo = styled.img`
@@ -104,7 +106,7 @@ export const Card = styled.section`
     0 1px 4px 0 rgba(0, 0, 45, 0.09),
     0 2px 1px -1px rgba(0, 0, 0, 0.05),
     0 1px 3px 0 rgba(0, 0, 0, 0.05);
-  padding: 23px 48px 31px 48px;
+  padding: 21px 48px 30px 48px;
   text-align: center;
 `
 
@@ -161,20 +163,21 @@ export const Learn = styled.a`
 `
 
 export const Foot = styled.footer`
-  width: min(680px, 100%);
   text-align: center;
-  font-size: 11px;
-  line-height: 150%;
+  font-size: 14px;
+  line-height: 140%;
   color: rgba(0, 7, 20, 0.52);
-  margin-top: 18px;
+  margin-top: 20px;
+  letter-spacing: 0.5px;
+  font-weight: 500;
 `
 
 export const FootLine = styled.div`
-  margin-top: 8px;
+  margin-top: 20px;
 `
 
 export const FootLabel = styled.span`
-  font-weight: 600;
+  font-weight: 400;
 `
 
 export const HiddenButtonRow = styled.div`
