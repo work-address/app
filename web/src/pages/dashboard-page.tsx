@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import styled from 'styled-components'
 
-import type { ProjectRow } from '@/features/dashboard/components'
+import type { ProjectRow } from '@/features/dashboard'
 
 import {
   ApplicationsUsage,
@@ -10,7 +10,7 @@ import {
   WorklogsTable,
   WorklogsEmptyState,
   ProjectsTable,
-} from '@/features/dashboard/components'
+} from '@/features/dashboard'
 import {
   Button,
   DatePickerInput,
@@ -18,8 +18,7 @@ import {
   Search,
   Wrapper,
 } from '@/features/shared'
-import { projectsMock } from '@/features/shared/mocks/projects'
-import { worklogsMock } from '@/features/shared/mocks/worklogs'
+import { projectsMock, worklogsMock } from '@/features/shared'
 
 type TabKey = 'all' | 'active' | 'finished'
 
