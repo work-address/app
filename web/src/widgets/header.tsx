@@ -4,7 +4,7 @@ type HeaderProps = {
   active?: 'dashboard' | 'profile' | 'help' | 'download'
 }
 
-export default function Header({ active = 'dashboard' }: HeaderProps) {
+export const Header = ({ active = 'dashboard' }: HeaderProps) => {
   return (
     <HeaderRoot>
       <HeaderInner>
