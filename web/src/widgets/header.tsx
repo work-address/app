@@ -3,7 +3,7 @@ import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-type HeaderProps = {
+export type HeaderProps = {
   active?: 'dashboard' | 'profile' | 'help' | 'download'
 }
 

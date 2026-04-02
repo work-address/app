@@ -1,0 +1,33 @@
+// import { expect, userEvent, within } from 'storybook/test'
+
+import { SignInPage } from './SignInPage.tsx'
+
+import type { Meta, StoryObj } from '@storybook/react-vite'
+
+const meta = {
+  title: 'Pages/SignIn',
+  component: SignInPage,
+  parameters: {
+    // More on how to position stories at: https://storybook.js.org/docs/configure/story-layout
+    layout: 'fullscreen',
+  },
+} satisfies Meta<typeof SignInPage>
+
+export default meta
+type Story = StoryObj<typeof meta>
+
+export const LoggedOut: Story = {}
+
+// More on component testing: https://storybook.js.org/docs/writing-tests/interaction-testing
+/* export const LoggedIn: Story = {
+    play: async ({ canvasElement }) => {
+      const canvas = within(canvasElement)
+      const loginButton = canvas.getByRole('button', { name: /log in/i })
+      await expect(loginButton).toBeInTheDocument()
+      await userEvent.click(loginButton)
+      await expect(loginButton).not.toBeInTheDocument()
+
+      const logoutButton = canvas.getByRole('button', { name: /log out/i })
+      await expect(logoutButton).toBeInTheDocument()
+    },
+}*/
