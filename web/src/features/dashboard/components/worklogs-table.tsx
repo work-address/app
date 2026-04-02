@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
+import { useTranslation } from 'react-i18next'
 
 export type PaymentStatus = 'Paid' | 'Unpaid'
 
@@ -77,10 +78,18 @@ function CloseIcon() {
   )
 }
 
-export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
+export default function WorklogsTable({ rows }: WorklogsTableProps) {
+  const { t } = useTranslation()
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const [openShot, setOpenShot] = useState<string | null>(null)
+  const [openMobile, setOpenMobile] = useState<Record<string, boolean>>({})
   const modalRef = useRef<HTMLDivElement | null>(null)
+
+  const paymentStatusLabel = (status: PaymentStatus) => {
+    if (status === 'Paid')
+      return t('dashboard.worklogsTable.paymentStatus.paid')
+    return t('dashboard.worklogsTable.paymentStatus.unpaid')
+  }
 
   const allSelected = rows.length > 0 && rows.every((r) => selected[r.key])
 
@@ -96,6 +105,10 @@ export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
 
   const setOne = (key: string, checked: boolean) => {
     setSelected((prev) => ({ ...prev, [key]: checked }))
+  }
+
+  const toggleMobileRow = (key: string) => {
+    setOpenMobile((prev) => ({ ...prev, [key]: !prev[key] }))
   }
 
   useEffect(() => {
@@ -129,87 +142,202 @@ export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
 
   return (
     <Wrap>
-      <Scroll>
-        <TableEl>
-          <Thead>
-            <tr>
-              <CheckCell>
-                <Checkbox
-                  checked={allSelected}
-                  onChange={(e) => setAll(e.target.checked)}
-                />
-              </CheckCell>
-              <Th>Date</Th>
-              <Th>Project name</Th>
-              <Th>Note</Th>
-              <Th>Time active</Th>
-              <Th>Payment status</Th>
-              <ThRight>Keyboard</ThRight>
-              <ThRight>Mouse</ThRight>
-              <ThRight>Mouse distance</ThRight>
-              <Th>Screenshot</Th>
-              <ThRight />
-            </tr>
-          </Thead>
-          <tbody>
-            {visibleRows.map((r) => (
-              <Tr key={r.key}>
-                <CheckTd>
+      <MobileList>
+        {visibleRows.map((r) => {
+          const expanded = !!openMobile[r.key]
+          return (
+            <MobileCard key={r.key}>
+              <MobileHeader>
+                <MobileLeft>
                   <Checkbox
                     checked={!!selected[r.key]}
                     onChange={(e) => setOne(r.key, e.target.checked)}
                   />
-                </CheckTd>
-                <Td>
-                  <DateCell>
-                    <DateRange>{r.dateRange}</DateRange>
-                    <DateMuted>{r.date}</DateMuted>
-                  </DateCell>
-                </Td>
-                <Td style={{ color: 'rgba(0, 7, 20, 0.88)' }}>
-                  {r.projectName}
-                </Td>
-                <Td>{r.note}</Td>
-                <Td>
-                  <TimePill>{r.timeActive}</TimePill>
-                </Td>
-                <Td>
-                  <PaymentPill $status={r.paymentStatus}>
-                    {r.paymentStatus}
-                  </PaymentPill>
-                </Td>
-                <TdRight>{r.keyboard}</TdRight>
-                <TdRight>{r.mouse}</TdRight>
-                <TdRight>{r.mouseDistance}</TdRight>
-                <Td>
-                  {r.screenshot ? (
-                    <ShotBtn
+                  <MobileTitleBox>
+                    <MobileTitleRow>
+                      <MobileTitle>{r.projectName}</MobileTitle>
+                      <PaymentPill $status={r.paymentStatus}>
+                        {paymentStatusLabel(r.paymentStatus)}
+                      </PaymentPill>
+                    </MobileTitleRow>
+                    <MobileSubRow>
+                      <MobileSub>{r.dateRange}</MobileSub>
+                      <MobileDot />
+                      <MobileSub>{r.timeActive}</MobileSub>
+                    </MobileSubRow>
+                  </MobileTitleBox>
+                </MobileLeft>
+
+                <MobileExpand
+                  type="button"
+                  aria-expanded={expanded}
+                  aria-label={t('dashboard.worklogsTable.head.note')}
+                  onClick={() => toggleMobileRow(r.key)}
+                >
+                  <ExpandIcon $open={expanded} aria-hidden="true" />
+                </MobileExpand>
+              </MobileHeader>
+
+              {expanded ? (
+                <MobileBody>
+                  <MobileStats>
+                    <StatRow>
+                      <StatLabel>{t('dashboard.worklogsTable.head.note')}</StatLabel>
+                      <StatValueMuted title={r.note}>{r.note}</StatValueMuted>
+                    </StatRow>
+                    <StatRow>
+                      <StatLabel>{t('dashboard.worklogsTable.head.keyboard')}</StatLabel>
+                      <StatValue>{r.keyboard}</StatValue>
+                    </StatRow>
+                    <StatRow>
+                      <StatLabel>{t('dashboard.worklogsTable.head.mouse')}</StatLabel>
+                      <StatValue>{r.mouse}</StatValue>
+                    </StatRow>
+                    <StatRow>
+                      <StatLabel>{t('dashboard.worklogsTable.head.mouseDistance')}</StatLabel>
+                      <StatValue>{r.mouseDistance}</StatValue>
+                    </StatRow>
+                    <StatRow>
+                      <StatLabel>{t('dashboard.worklogsTable.head.screenshot')}</StatLabel>
+                      <StatValue>
+                        {r.screenshot ? (
+                          <ShotBtn
+                            type="button"
+                            aria-label={t(
+                              'dashboard.worklogsTable.aria.openScreenshot',
+                            )}
+                            onClick={() => setOpenShot(r.screenshot ?? null)}
+                          >
+                            <Shot>
+                              <img
+                                src={r.screenshot}
+                                alt={t('dashboard.worklogsTable.screenshot')}
+                              />
+                            </Shot>
+                          </ShotBtn>
+                        ) : (
+                          <Shot>
+                            <ImagePlaceholder />
+                          </Shot>
+                        )}
+                      </StatValue>
+                    </StatRow>
+                  </MobileStats>
+
+                  <MobileActions>
+                    <MobileEditBtn
                       type="button"
-                      aria-label="Open screenshot"
-                      onClick={() => setOpenShot(r.screenshot ?? null)}
+                      aria-label={t('dashboard.worklogsTable.actions.edit')}
                     >
+                      {t('dashboard.worklogsTable.actions.edit')}
+                      <img
+                        src="/img/icons/pencil-icon-edit.svg"
+                        alt={t('dashboard.worklogsTable.actions.edit')}
+                      />
+                    </MobileEditBtn>
+                  </MobileActions>
+                </MobileBody>
+              ) : null}
+            </MobileCard>
+          )
+        })}
+      </MobileList>
+
+      <DesktopTable>
+        <Scroll>
+          <TableEl>
+            <Thead>
+              <tr>
+                <CheckCell>
+                  <Checkbox
+                    checked={allSelected}
+                    onChange={(e) => setAll(e.target.checked)}
+                  />
+                </CheckCell>
+                <Th>{t('dashboard.worklogsTable.head.date')}</Th>
+                <Th>{t('dashboard.worklogsTable.head.projectName')}</Th>
+                <Th>{t('dashboard.worklogsTable.head.note')}</Th>
+                <Th>{t('dashboard.worklogsTable.head.timeActive')}</Th>
+                <Th>{t('dashboard.worklogsTable.head.paymentStatus')}</Th>
+                <ThRight>{t('dashboard.worklogsTable.head.keyboard')}</ThRight>
+                <ThRight>{t('dashboard.worklogsTable.head.mouse')}</ThRight>
+                <ThRight>
+                  {t('dashboard.worklogsTable.head.mouseDistance')}
+                </ThRight>
+                <Th>{t('dashboard.worklogsTable.head.screenshot')}</Th>
+                <ThRight />
+              </tr>
+            </Thead>
+            <tbody>
+              {visibleRows.map((r) => (
+                <Tr key={r.key}>
+                  <CheckTd>
+                    <Checkbox
+                      checked={!!selected[r.key]}
+                      onChange={(e) => setOne(r.key, e.target.checked)}
+                    />
+                  </CheckTd>
+                  <Td>
+                    <DateCell>
+                      <DateRange>{r.dateRange}</DateRange>
+                      <DateMuted>{r.date}</DateMuted>
+                    </DateCell>
+                  </Td>
+                  <Td style={{ color: 'rgba(0, 7, 20, 0.88)' }}>
+                    {r.projectName}
+                  </Td>
+                  <Td>{r.note}</Td>
+                  <Td>
+                    <TimePill>{r.timeActive}</TimePill>
+                  </Td>
+                  <Td>
+                    <PaymentPill $status={r.paymentStatus}>
+                      {paymentStatusLabel(r.paymentStatus)}
+                    </PaymentPill>
+                  </Td>
+                  <TdRight>{r.keyboard}</TdRight>
+                  <TdRight>{r.mouse}</TdRight>
+                  <TdRight>{r.mouseDistance}</TdRight>
+                  <Td>
+                    {r.screenshot ? (
+                      <ShotBtn
+                        type="button"
+                        aria-label={t(
+                          'dashboard.worklogsTable.aria.openScreenshot',
+                        )}
+                        onClick={() => setOpenShot(r.screenshot ?? null)}
+                      >
+                        <Shot>
+                          <img
+                            src={r.screenshot}
+                            alt={t('dashboard.worklogsTable.screenshot')}
+                          />
+                        </Shot>
+                      </ShotBtn>
+                    ) : (
                       <Shot>
-                        <img src={r.screenshot} alt="Screenshot" />
+                        <ImagePlaceholder />
                       </Shot>
-                    </ShotBtn>
-                  ) : (
-                    <Shot>
-                      <ImagePlaceholder />
-                    </Shot>
-                  )}
-                </Td>
-                <TdRight>
-                  <Actions>
-                    <ActionBtn aria-label="Edit">
-                      <ActionIcon src="/img/icons/edit.svg" alt="Edit" />
-                    </ActionBtn>
-                  </Actions>
-                </TdRight>
-              </Tr>
-            ))}
-          </tbody>
-        </TableEl>
-      </Scroll>
+                    )}
+                  </Td>
+                  <TdRight>
+                    <Actions>
+                      <ActionBtn
+                        aria-label={t('dashboard.worklogsTable.actions.edit')}
+                      >
+                        <ActionIcon
+                          src="/img/icons/edit.svg"
+                          alt={t('dashboard.worklogsTable.actions.edit')}
+                        />
+                      </ActionBtn>
+                    </Actions>
+                  </TdRight>
+                </Tr>
+              ))}
+            </tbody>
+          </TableEl>
+        </Scroll>
+      </DesktopTable>
 
       <AnimatePresence>
         {openShot ? (
@@ -228,7 +356,7 @@ export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
             >
               <CloseBtn
                 type="button"
-                aria-label="Close"
+                aria-label={t('dashboard.worklogsTable.aria.close')}
                 onClick={() => setOpenShot(null)}
               >
                 <CloseIcon />
@@ -247,11 +375,189 @@ const Wrap = styled.div`
   border-radius: 12px;
   overflow: hidden;
   background: #fff;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.05),
-    0 1px 4px 0 rgba(0, 0, 45, 0.09),
-    0 2px 1px -1px rgba(0, 0, 0, 0.05),
-    0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 1px 4px 0 rgba(0, 0, 45, 0.09), 0 2px 1px -1px rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+
+  @media (max-width: 768px) {
+    box-shadow: none;
+  }
+`
+
+const DesktopTable = styled.div`
+  @media (max-width: 768px) {
+    display: none;
+  }
+`
+
+const MobileList = styled.div`
+  display: none;
+  padding: 6px;
+
+  @media (max-width: 768px) {
+    display: grid;
+    gap: 8px;
+  }
+`
+
+const MobileCard = styled.div`
+  background: #fff;
+  overflow: hidden;
+  border-bottom: 1px solid rgba(0, 0, 45, 0.09);
+
+  &:last-child {
+    border-bottom: none;
+  }
+`
+
+const MobileHeader = styled.div`
+  display: flex;
+  align-items: end;
+  justify-content: space-between;
+  gap: 10px;
+  padding: 10px;
+`
+
+const MobileLeft = styled.div`
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  min-width: 0;
+`
+
+const MobileTitleBox = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  min-width: 0;
+`
+
+const MobileTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+`
+
+const MobileTitle = styled.div`
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-weight: 500;
+  color: rgba(0, 7, 20, 0.88);
+`
+
+const MobileSubRow = styled.div`
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+`
+
+const MobileSub = styled.div`
+  font-size: 12px;
+  line-height: 16px;
+  color: rgba(0, 7, 20, 0.62);
+`
+
+const MobileDot = styled.span`
+  width: 4px;
+  height: 4px;
+  border-radius: 999px;
+  background: rgba(0, 7, 20, 0.3);
+`
+
+const MobileExpand = styled.button`
+  width: 34px;
+  height: 34px;
+  border-radius: 8px;
+  background: #fff;
+  display: grid;
+  place-items: center;
+
+  &:hover {
+    background: rgba(0, 0, 51, 0.04);
+  }
+`
+
+const ExpandIcon = styled.span<{ $open: boolean }>`
+  width: 9px;
+  height: 9px;
+  border-right: 2px solid rgba(0, 7, 20, 0.72);
+  border-bottom: 2px solid rgba(0, 7, 20, 0.72);
+  transform: ${(p) => (p.$open ? 'rotate(225deg)' : 'rotate(45deg)')};
+  transition: transform 160ms ease;
+  margin-top: ${(p) => (p.$open ? '2px' : '-2px')};
+`
+
+const MobileBody = styled.div`
+  padding: 0 10px 10px;
+`
+
+const MobileStats = styled.div`
+  display: grid;
+  gap: 8px;
+  padding: 8px 0 10px;
+  border-top: 1px solid rgba(0, 0, 51, 0.12);
+`
+
+const StatRow = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 10px;
+`
+
+const StatLabel = styled.div`
+  font-size: 12px;
+  line-height: 16px;
+  color: rgba(0, 7, 20, 0.62);
+`
+
+const StatValue = styled.div`
+  font-size: 12px;
+  line-height: 16px;
+  font-weight: 500;
+  color: rgba(0, 7, 20, 0.82);
+  text-align: right;
+`
+
+const StatValueMuted = styled(StatValue)`
+  font-weight: 400;
+  color: rgba(0, 7, 20, 0.72);
+  max-width: 62%;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+
+const MobileActions = styled.div`
+  display: grid;
+  grid-template-columns: 1fr;
+`
+
+const MobileEditBtn = styled.button`
+  height: 34px;
+  border-radius: 6px;
+  border: 1px solid rgba(0, 0, 51, 0.12);
+  background: #fff;
+  font-size: 14px;
+  line-height: 16px;
+  font-weight: 500;
+  color: var(--primary);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+
+  img {
+    width: 16px;
+    height: 16px;
+    display: block;
+  }
+
+  &:hover {
+    background: rgba(0, 0, 51, 0.04);
+  }
 `
 
 const Scroll = styled.div`

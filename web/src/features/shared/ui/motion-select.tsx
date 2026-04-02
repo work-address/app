@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import styled from 'styled-components'
+import { useTranslation } from 'react-i18next'
 
 type Option = {
   value: string
@@ -42,10 +43,12 @@ export const MotionSelect = ({
   options,
   value,
   onChange,
-  placeholder = 'Select',
+  placeholder,
   multi,
   title,
-}: MotionSelectProps) => {
+}: MotionSelectProps) {
+  const { t } = useTranslation()
+  const ph = placeholder ?? t('ui.motionSelect.placeholder')
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLDivElement | null>(null)
 
@@ -77,12 +80,8 @@ export const MotionSelect = ({
 
   const buttonText = useMemo(() => {
     if (multi) {
-      if (selectedSet.size === 0) {
-        return placeholder
-      }
-      if (selectedSet.size === options.length) {
-        return placeholder
-      }
+      if (selectedSet.size === 0) return ph
+      if (selectedSet.size === options.length) return ph
       const labels = options
         .filter((o) => selectedSet.has(o.value))
         .map((o) => o.label)
@@ -91,8 +90,8 @@ export const MotionSelect = ({
 
     const v = Array.isArray(value) ? value[0] : value
     const found = options.find((o) => o.value === v)
-    return found?.label ?? placeholder
-  }, [multi, options, placeholder, selectedSet, value])
+    return found?.label ?? ph
+  }, [multi, options, ph, selectedSet, value])
 
   const toggle = (v: string) => {
     if (!multi) {
@@ -180,6 +179,10 @@ const Trigger = styled.button`
     outline: none;
     border-color: rgba(0, 52, 130, 0.55);
   }
+
+  @media (max-width: 768px) {
+  height: 32px;
+  }
 `
 
 const TriggerText = styled.span`
@@ -210,6 +213,10 @@ const MenuWrap = styled(motion.div)`
   border-radius: 12px;
   box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
   overflow: hidden;
+
+  @media (max-width: 768px) {
+    border-radius: 4px;
+  }
 `
 
 const MenuTitle = styled.div`
@@ -223,6 +230,10 @@ const MenuList = styled.div`
   padding: 6px;
   display: flex;
   flex-direction: column;
+
+  @media (max-width: 768px) {
+    padding: 4px;
+  }
 `
 
 const MenuItem = styled.button`
@@ -239,6 +250,10 @@ const MenuItem = styled.button`
 
   &:hover {
     background: rgba(0, 0, 51, 0.04);
+  }
+
+  @media (max-width: 768px) {
+    border-radius: 4px;
   }
 `
 

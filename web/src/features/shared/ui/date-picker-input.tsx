@@ -11,6 +11,7 @@ import {
   Heading,
 } from 'react-aria-components'
 import styled from 'styled-components'
+import { useTranslation } from 'react-i18next'
 
 type DatePickerInputProps = {
   value?: Date
@@ -117,11 +118,8 @@ function ChevronRight() {
   )
 }
 
-export const DatePickerInput = ({
-  value,
-  onChange,
-  placeholder,
-}: DatePickerInputProps) => {
+export default function DatePickerInput({ value, onChange, placeholder }: DatePickerInputProps) {
+  const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const [draft, setDraft] = useState<CalendarDate | undefined>(
     toCalendarDate(value),
@@ -187,16 +185,19 @@ export const DatePickerInput = ({
         <Popover $side={side}>
           <CalendarWrap>
             <Calendar
-              aria-label="Calendar"
+              aria-label={t('ui.datePicker.calendar')}
               value={selected}
               onChange={(d) => setDraft(d as CalendarDate)}
             >
               <CalHeader>
-                <NavBtn slot="previous" aria-label="Previous month">
+                <NavBtn
+                  slot="previous"
+                  aria-label={t('ui.datePicker.previousMonth')}
+                >
                   <ChevronLeft />
                 </NavBtn>
                 <CalHeading />
-                <NavBtn slot="next" aria-label="Next month">
+                <NavBtn slot="next" aria-label={t('ui.datePicker.nextMonth')}>
                   <ChevronRight />
                 </NavBtn>
               </CalHeader>
@@ -219,7 +220,7 @@ export const DatePickerInput = ({
                 setOpen(false)
               }}
             >
-              Cancel
+              {t('ui.datePicker.cancel')}
             </ActionBtn>
             <ConfirmBtn
               type="button"
@@ -228,7 +229,7 @@ export const DatePickerInput = ({
                 setOpen(false)
               }}
             >
-              Confirm
+              {t('ui.datePicker.confirm')}
             </ConfirmBtn>
           </Actions>
         </Popover>

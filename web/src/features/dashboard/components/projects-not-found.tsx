@@ -18,7 +18,7 @@ export const ProjectsNotFound = ({
   return (
     <Root>
       <IconInner>
-        <img src="/img/icons/featured-icon.svg" alt="Not found" />
+        <img src="/img/icons/featured-icon.svg" alt={title} />
       </IconInner>
       <Title>{title}</Title>
       <Desc>{description}</Desc>

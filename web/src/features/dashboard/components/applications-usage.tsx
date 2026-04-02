@@ -9,8 +9,8 @@ import {
   YAxis,
 } from 'recharts'
 import styled from 'styled-components'
-
-import { MotionSelect } from '@/features/shared'
+import MotionSelect from '../ui/motion-select'
+import { useTranslation } from 'react-i18next'
 
 type Period = 'Week' | 'Month' | 'Year'
 
@@ -33,9 +33,9 @@ function formatDuration(hoursFloat: number) {
 }
 
 function CustomTooltip({ active, payload, label }: any) {
-  if (!active || !payload?.length) {
-    return null
-  }
+  const { t } = useTranslation()
+
+  if (!active || !payload?.length) return null
   const byKey: Record<string, number> = {}
   for (const p of payload) {
     if (p?.dataKey) {
@@ -44,10 +44,16 @@ function CustomTooltip({ active, payload, label }: any) {
   }
 
   const entries = [
-    { key: 'firefox', name: 'Firefox' },
-    { key: 'figma', name: 'Figma' },
-    { key: 'terminal', name: 'Terminal' },
-    { key: 'zoom', name: 'Zoom' },
+    {
+      key: 'firefox',
+      name: t('dashboard.applicationsUsage.tooltip.apps.firefox'),
+    },
+    { key: 'figma', name: t('dashboard.applicationsUsage.tooltip.apps.figma') },
+    {
+      key: 'terminal',
+      name: t('dashboard.applicationsUsage.tooltip.apps.terminal'),
+    },
+    { key: 'zoom', name: t('dashboard.applicationsUsage.tooltip.apps.zoom') },
   ]
 
   const colors: Record<string, string> = {
@@ -74,42 +80,48 @@ function CustomTooltip({ active, payload, label }: any) {
       </TipList>
       <TipDivider />
       <TipTotal>
-        <TipTotalLabel>Total:</TipTotalLabel>
+        <TipTotalLabel>
+          {t('dashboard.applicationsUsage.tooltip.total')}
+        </TipTotalLabel>
         <TipVal>{formatDuration(total)}</TipVal>
       </TipTotal>
     </TooltipBox>
   )
 }
 
-export const ApplicationsUsage = () => {
+export default function ApplicationsUsage() {
+  const { t } = useTranslation()
   const [period, setPeriod] = useState<Period>('Week')
 
   const data = useMemo<BarDatum[]>(() => {
+    const projectLabel = (n: number) =>
+      t('dashboard.applicationsUsage.project', { number: n })
+
     if (period === 'Month') {
       return [
         {
-          label: 'Project 1',
+          label: projectLabel(1),
           firefox: 0.8,
           figma: 1.1,
           terminal: 1.0,
           zoom: 0.8,
         },
         {
-          label: 'Project 2',
+          label: projectLabel(2),
           firefox: 1.4,
           figma: 1.7,
           terminal: 1.1,
           zoom: 0.9,
         },
         {
-          label: 'Project 3',
+          label: projectLabel(3),
           firefox: 1.2,
           figma: 2.1,
           terminal: 1.0,
           zoom: 0.7,
         },
         {
-          label: 'Project 4',
+          label: projectLabel(4),
           firefox: 1.1,
           figma: 1.5,
           terminal: 1.0,
@@ -121,28 +133,28 @@ export const ApplicationsUsage = () => {
     if (period === 'Year') {
       return [
         {
-          label: 'Project 1',
+          label: projectLabel(1),
           firefox: 1.1,
           figma: 1.3,
           terminal: 1.2,
           zoom: 0.9,
         },
         {
-          label: 'Project 2',
+          label: projectLabel(2),
           firefox: 1.8,
           figma: 2.0,
           terminal: 1.3,
           zoom: 1.1,
         },
         {
-          label: 'Project 3',
+          label: projectLabel(3),
           firefox: 1.7,
           figma: 2.6,
           terminal: 1.1,
           zoom: 0.8,
         },
         {
-          label: 'Project 4',
+          label: projectLabel(4),
           firefox: 1.6,
           figma: 2.0,
           terminal: 1.2,
@@ -153,46 +165,55 @@ export const ApplicationsUsage = () => {
 
     return [
       {
-        label: 'Project 1',
+        label: projectLabel(1),
         firefox: 0.7,
         figma: 0.9,
         terminal: 0.8,
         zoom: 0.6,
       },
       {
-        label: 'Project 2',
+        label: projectLabel(2),
         firefox: 2.8,
         figma: 1.55,
         terminal: 0.88,
         zoom: 0.45,
       },
       {
-        label: 'Project 3',
+        label: projectLabel(3),
         firefox: 1.4,
         figma: 2.1,
         terminal: 1.0,
         zoom: 0.6,
       },
       {
-        label: 'Project 4',
+        label: projectLabel(4),
         firefox: 1.2,
         figma: 1.0,
         terminal: 1.1,
         zoom: 0.7,
       },
     ]
-  }, [period])
+  }, [period, t])
 
   return (
     <Card>
       <Head>
-        <Title>Applications Usage</Title>
+        <Title>{t('dashboard.applicationsUsage.title')}</Title>
         <PeriodSelect>
           <MotionSelect
             options={[
-              { value: 'Week', label: 'Week' },
-              { value: 'Month', label: 'Month' },
-              { value: 'Year', label: 'Year' },
+              {
+                value: 'Week',
+                label: t('dashboard.applicationsUsage.period.week'),
+              },
+              {
+                value: 'Month',
+                label: t('dashboard.applicationsUsage.period.month'),
+              },
+              {
+                value: 'Year',
+                label: t('dashboard.applicationsUsage.period.year'),
+              },
             ]}
             value={period}
             onChange={(v) => setPeriod(v as Period)}

@@ -98,6 +98,10 @@ const Stage = styled(motion.div)`
   display: flex;
   align-items: center;
   justify-content: center;
+
+  @media (max-width: 768px) {
+    padding: 16px;
+  }
 `
 
 const Box = styled(motion.div)`
@@ -105,20 +109,28 @@ const Box = styled(motion.div)`
   background: #fff;
   border-radius: 12px;
   padding: 24px;
-  box-shadow:
-    0 0 0 1px rgba(0, 0, 0, 0.05),
-    0 1px 4px 0 rgba(0, 0, 45, 0.09),
-    0 2px 1px -1px rgba(0, 0, 0, 0.05),
-    0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 1px 4px 0 rgba(0, 0, 45, 0.09), 0 2px 1px -1px rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+
+  @media (max-width: 768px) {
+    width: 100%;
+    border-radius: 12px;
+    padding: 16px;
+    text-align: center;
+  }
 `
 
 const Title = styled.div`
-  font-weight: 700;
+  font-weight: 500;
   font-size: 20px;
   line-height: 140%;
   letter-spacing: 0em;
   color: #1c2024;
   margin-bottom: 12px;
+
+   @media (max-width: 768px) {
+    font-size: 16px;
+    margin-bottom: 5px;
+  }
 `
 
 const Desc = styled.div`
@@ -128,12 +140,21 @@ const Desc = styled.div`
   color: #1c2024;
   margin-bottom: 16px;
   font-family: 'SF Pro Display';
+  
+   @media (max-width: 768px) {
+    font-size: 14px;
+  }
 `
 
 const Btns = styled.div`
   display: flex;
   justify-content: flex-end;
   gap: 10px;
+
+  @media (max-width: 768px) {
+    flex-direction: column-reverse;
+    width: 100%;
+  }
 `
 
 const CancelButton = styled(Button)`
@@ -142,6 +163,11 @@ const CancelButton = styled(Button)`
   color: #60646c;
   border: none;
   background-color: rgba(0, 0, 51, 0.06);
+
+  @media (max-width: 768px) {
+    width: 100%;
+    justify-content: center;
+  }
 `
 
 const DangerBtn = styled.button`
@@ -154,6 +180,10 @@ const DangerBtn = styled.button`
   line-height: 143%;
   background: #e5484d;
   color: #fff;
+
+  @media (max-width: 768px) {
+    width: 100%;
+  }
 
   &:hover {
     filter: brightness(0.98);

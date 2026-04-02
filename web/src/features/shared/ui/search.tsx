@@ -1,4 +1,5 @@
 import styled from 'styled-components'
+import { useTranslation } from 'react-i18next'
 
 type SearchProps = {
   value: string
@@ -6,9 +7,57 @@ type SearchProps = {
   placeholder?: string
 }
 
+function SearchIcon() {
+  return (
+    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
+      <path
+        d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+      <path
+        d="m21 21-4.35-4.35"
+        stroke="currentColor"
+        strokeWidth="2"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+      />
+    </svg>
+  )
+}
+
+export default function Search({ value, onChange, placeholder }: SearchProps) {
+  const { t } = useTranslation()
+  const ph = placeholder ?? t('ui.search.placeholderProjects')
+
+  return (
+    <Wrap>
+      <Icon>
+        <SearchIcon />
+      </Icon>
+      <Input
+        value={value}
+        onChange={(e) => onChange(e.target.value)}
+        placeholder={ph}
+      />
+      {value ? (
+        <Clear
+          onClick={() => onChange('')}
+          aria-label={t('ui.search.clear')}
+          type="button"
+        >
+          ✕
+        </Clear>
+      ) : null}
+    </Wrap>
+  )
+}
+
 const Wrap = styled.div`
-  width: 280px;
-  height: 38px;
+  width: 300px;
+  height: 40px;
   display: flex;
   align-items: center;
   gap: 8px;
@@ -24,6 +73,11 @@ const Wrap = styled.div`
   &:focus-within {
     border-color: rgba(0, 52, 130, 0.55);
   }
+
+  @media (max-width: 768px) {
+    width: 100%;
+    height: 32px;
+  }
 `
 
 const Icon = styled.span`
@@ -37,6 +91,16 @@ const Icon = styled.span`
   & > svg {
     width: 18px;
     height: 18px;
+  }
+  
+  @media (max-width: 768px) {
+    width: 14px;
+    height: 14px;
+    
+    & > svg {
+      width: 14px;
+      height: 14px;
+    }
   }
 `
 
@@ -67,44 +131,3 @@ const Clear = styled.button`
     background: rgba(28, 32, 36, 0.06);
   }
 `
-
-const SearchIcon = () => {
-  return (
-    <svg viewBox="0 0 24 24" fill="none" xmlns="http://www.w3.org/2000/svg">
-      <path
-        d="M11 19a8 8 0 1 1 0-16 8 8 0 0 1 0 16Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="m21 21-4.35-4.35"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-export const Search = ({
-  value,
-  onChange,
-  placeholder = 'Search for projects',
-}: SearchProps) => {
-  return (
-    <Wrap>
-      <Icon>
-        <SearchIcon />
-      </Icon>
-      <Input
-        value={value}
-        onChange={(e) => onChange(e.target.value)}
-        placeholder={placeholder}
-      />
-      {value ? <Clear onClick={() => onChange('')}>✕</Clear> : null}
-    </Wrap>
-  )
-}

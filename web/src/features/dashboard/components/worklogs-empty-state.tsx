@@ -1,16 +1,19 @@
-import { DashboardEmptyState } from './dashboard-empty-state.tsx'
+import DashboardEmptyState from './dashboard-empty-state'
+import { useTranslation } from 'react-i18next'
 
 type WorklogsEmptyStateProps = {
   onHelp?: () => void
 }
 
-export const WorklogsEmptyState = ({ onHelp }: WorklogsEmptyStateProps) => {
+export default function WorklogsEmptyState({ onHelp }: WorklogsEmptyStateProps) {
+  const { t } = useTranslation()
+
   return (
     <DashboardEmptyState
       imageSrc="/img/photo/worklogs-help.svg"
-      title="No worklogs yet"
-      description="Looks like there’s no activity yet. Once you start tracking time on a project, your worklogs will appear here automatically."
-      actionLabel="Go to Help Centre"
+      title={t('dashboard.worklogsEmpty.title')}
+      description={t('dashboard.worklogsEmpty.description')}
+      actionLabel={t('dashboard.worklogsEmpty.action')}
       onAction={onHelp}
     />
   )

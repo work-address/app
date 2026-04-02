@@ -1,7 +1,7 @@
 import { useMemo, useState } from 'react'
 import styled from 'styled-components'
-
-import { Button } from '@/features/shared'
+import { useTranslation } from 'react-i18next'
+import Button from '../components/ui/button'
 
 type FormState = {
   address: string
@@ -27,7 +27,8 @@ const initialState: FormState = {
   telegram: '',
 }
 
-export default function ProfilePage() {
+export default function Profile() {
+  const { t } = useTranslation()
   const [form, setForm] = useState<FormState>(initialState)
   const [baseline, setBaseline] = useState<FormState>(initialState)
 
@@ -44,20 +45,20 @@ export default function ProfilePage() {
         <Left>
           <BackBtn
             type="button"
-            aria-label="Back"
+            aria-label={t('profile.aria.back')}
             onClick={() => history.back()}
           >
             ←
           </BackBtn>
-          <TopTitle>My account</TopTitle>
+          <TopTitle>{t('profile.title')}</TopTitle>
         </Left>
 
         <TopRight>
           <Button variant="secondary" onClick={reset} disabled={!dirty}>
-            Cancel
+            {t('profile.actions.cancel')}
           </Button>
           <Button onClick={save} disabled={!dirty}>
-            Save changes
+            {t('profile.actions.save')}
           </Button>
         </TopRight>
       </Top>
@@ -65,7 +66,7 @@ export default function ProfilePage() {
       <Card>
         <Grid>
           <Field>
-            <Label>Address</Label>
+            <Label>{t('profile.form.address')}</Label>
             <Input
               value={form.address}
               onChange={(e) =>
@@ -74,37 +75,37 @@ export default function ProfilePage() {
             />
           </Field>
           <Field>
-            <Label>Username</Label>
+            <Label>{t('profile.form.username')}</Label>
             <Input
               value={form.username}
               onChange={(e) =>
                 setForm((p) => ({ ...p, username: e.target.value }))
               }
-              placeholder="How should we call you?"
+              placeholder={t('profile.form.usernamePlaceholder')}
             />
           </Field>
           <Field>
-            <Label>Company</Label>
+            <Label>{t('profile.form.company')}</Label>
             <Input
               value={form.company}
               onChange={(e) =>
                 setForm((p) => ({ ...p, company: e.target.value }))
               }
-              placeholder="Enter your company name"
+              placeholder={t('profile.form.companyPlaceholder')}
             />
           </Field>
           <Field>
-            <Label>Skills</Label>
+            <Label>{t('profile.form.skills')}</Label>
             <Input
               value={form.skills}
               onChange={(e) =>
                 setForm((p) => ({ ...p, skills: e.target.value }))
               }
-              placeholder="e.g., Communication, Teamwork, Problem-solving"
+              placeholder={t('profile.form.skillsPlaceholder')}
             />
           </Field>
           <Field>
-            <Label>Price</Label>
+            <Label>{t('profile.form.price')}</Label>
             <PriceWrap>
               <Input
                 value={form.price}
@@ -117,38 +118,38 @@ export default function ProfilePage() {
             </PriceWrap>
           </Field>
           <Field $span>
-            <Label>Bio</Label>
+            <Label>{t('profile.form.bio')}</Label>
             <Toolbar>
-              <ToolBtn type="button" aria-label="Bold">
+              <ToolBtn type="button" aria-label={t('profile.aria.bold')}>
                 B
               </ToolBtn>
-              <ToolBtn type="button" aria-label="Italic">
+              <ToolBtn type="button" aria-label={t('profile.aria.italic')}>
                 I
               </ToolBtn>
-              <ToolBtn type="button" aria-label="Underline">
+              <ToolBtn type="button" aria-label={t('profile.aria.underline')}>
                 U
               </ToolBtn>
-              <ToolBtn type="button" aria-label="List">
+              <ToolBtn type="button" aria-label={t('profile.aria.list')}>
                 •
               </ToolBtn>
-              <ToolBtn type="button" aria-label="Link">
+              <ToolBtn type="button" aria-label={t('profile.aria.link')}>
                 ⛓
               </ToolBtn>
             </Toolbar>
             <TextArea
               value={form.bio}
               onChange={(e) => setForm((p) => ({ ...p, bio: e.target.value }))}
-              placeholder="Enter your description"
+              placeholder={t('profile.form.bioPlaceholder')}
             />
           </Field>
         </Grid>
       </Card>
 
       <Card>
-        <CardTitle>Links</CardTitle>
+        <CardTitle>{t('profile.links.title')}</CardTitle>
         <LinksGrid>
           <Field>
-            <Label>Facebook</Label>
+            <Label>{t('profile.links.facebook')}</Label>
             <Input
               value={form.facebook}
               onChange={(e) =>
@@ -158,7 +159,7 @@ export default function ProfilePage() {
             />
           </Field>
           <Field>
-            <Label>Linkedin</Label>
+            <Label>{t('profile.links.linkedin')}</Label>
             <Input
               value={form.linkedin}
               onChange={(e) =>
@@ -168,7 +169,7 @@ export default function ProfilePage() {
             />
           </Field>
           <Field>
-            <Label>Telegram</Label>
+            <Label>{t('profile.links.telegram')}</Label>
             <Input
               value={form.telegram}
               onChange={(e) =>
