@@ -127,7 +127,7 @@ const Title = styled.div`
   color: #1c2024;
   margin-bottom: 12px;
 
-   @media (max-width: 768px) {
+  @media (max-width: 768px) {
     font-size: 16px;
     margin-bottom: 5px;
   }
@@ -140,8 +140,8 @@ const Desc = styled.div`
   color: #1c2024;
   margin-bottom: 16px;
   font-family: 'SF Pro Display';
-  
-   @media (max-width: 768px) {
+
+  @media (max-width: 768px) {
     font-size: 14px;
   }
 `

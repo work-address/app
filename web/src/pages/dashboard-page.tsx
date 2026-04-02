@@ -1,22 +1,28 @@
-import { useEffect, useMemo, useRef, useState } from 'react'
-import { Drawer } from 'vaul'
-import styled from 'styled-components'
-import { useTranslation } from 'react-i18next'
 import { motion } from 'motion/react'
-import ProjectsTable, { type ProjectRow } from '../components/dashboard/projects-table'
-import ApplicationsUsage from '../components/dashboard/applications-usage'
-import WorklogsTable from '../components/dashboard/worklogs-table'
-import DashboardEmptyState from '../components/dashboard/dashboard-empty-state'
-import WorklogsEmptyState from '../components/dashboard/worklogs-empty-state'
-import ProjectsNotFound from '../components/dashboard/projects-not-found'
-import Button from '../components/ui/button'
-import Search from '../components/ui/search'
-import DatePickerInput from '../components/ui/date-picker-input'
-import MotionSelect from '../components/ui/motion-select'
-import CreateProjectModal from '../components/dashboard/create-project-modal'
-import { projectsMock } from '../mocks/projects'
-import { worklogsMock } from '../mocks/worklogs'
-import { Wrapper } from '../components/ui/wrapper'
+import { useEffect, useMemo, useRef, useState } from 'react'
+import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
+import { Drawer } from 'vaul'
+
+import type { ProjectRow } from '@/features/dashboard'
+
+import {
+  ApplicationsUsage,
+  DashboardEmptyState,
+  ProjectsNotFound,
+  WorklogsTable,
+  WorklogsEmptyState,
+  ProjectsTable,
+  CreateProjectModal,
+} from '@/features/dashboard'
+import {
+  Button,
+  DatePickerInput,
+  MotionSelect,
+  Search,
+  Wrapper,
+} from '@/features/shared'
+import { projectsMock, worklogsMock } from '@/features/shared'
 
 type TabKey = 'all' | 'active' | 'finished'
 
@@ -132,7 +138,9 @@ export default function Dashboard() {
   )
 
   const selectedProjectsLabel = useMemo(() => {
-    if (!worklogProjects.length) return t('dashboard.page.filters.allWorklogs')
+    if (worklogProjects.length === 0) {
+      return t('dashboard.page.filters.allWorklogs')
+    }
     const selected = projectOptions
       .filter((o) => worklogProjects.includes(o.value))
       .map((o) => o.label)
@@ -146,7 +154,9 @@ export default function Dashboard() {
     const update = () => {
       const root = tabsRef.current
       const activeEl = tabRefs.current[tab]
-      if (!root || !activeEl) return
+      if (!root || !activeEl) {
+        return
+      }
 
       const rootBox = root.getBoundingClientRect()
       const tabBox = activeEl.getBoundingClientRect()
@@ -181,7 +191,10 @@ export default function Dashboard() {
               ) : null}
               {hasProjects ? null : (
                 <TopRight>
-                  <CreateProjectButton type="button" onClick={() => setCreateProjectOpen(true)}>
+                  <CreateProjectButton
+                    type="button"
+                    onClick={() => setCreateProjectOpen(true)}
+                  >
                     <PlusIcon />
                     <CreateProjectText>
                       {t('dashboard.page.createProject')}
@@ -200,7 +213,11 @@ export default function Dashboard() {
                     <ActiveIndicator
                       aria-hidden="true"
                       animate={{ left: indicator.left, width: indicator.width }}
-                      transition={{ type: 'spring', stiffness: 520, damping: 44 }}
+                      transition={{
+                        type: 'spring',
+                        stiffness: 520,
+                        damping: 44,
+                      }}
                     />
                     <Tab
                       ref={(el) => {
@@ -232,7 +249,10 @@ export default function Dashboard() {
                   </Tabs>
 
                   <Actions>
-                    <CreateProjectButton type="button" onClick={() => setCreateProjectOpen(true)}>
+                    <CreateProjectButton
+                      type="button"
+                      onClick={() => setCreateProjectOpen(true)}
+                    >
                       <PlusIcon />
                       <CreateProjectText>
                         {t('dashboard.page.createProject')}
@@ -256,12 +276,12 @@ export default function Dashboard() {
               </TableArea>
             </>
           ) : (
-              <DashboardEmptyState
-                imageSrc="/img/photo/help.svg"
-                title={t('dashboard.page.empty.title')}
-                description={t('dashboard.page.empty.description')}
-                actionLabel={t('dashboard.page.empty.action')}
-              />
+            <DashboardEmptyState
+              imageSrc="/img/photo/help.svg"
+              title={t('dashboard.page.empty.title')}
+              description={t('dashboard.page.empty.description')}
+              actionLabel={t('dashboard.page.empty.action')}
+            />
           )}
         </Left>
         {hasProjects ? (
@@ -287,8 +307,15 @@ export default function Dashboard() {
               <Drawer.Root open={filtersOpen} onOpenChange={setFiltersOpen}>
                 <Drawer.Trigger asChild>
                   <FiltersButton type="button">
-                    <FilterImage src="/img/icons/filter-icon.svg" alt="Filter" width={20} height={20} />
-                    {t('dashboard.page.filters.title', { defaultValue: 'Filters' })}
+                    <FilterImage
+                      src="/img/icons/filter-icon.svg"
+                      alt="Filter"
+                      width={20}
+                      height={20}
+                    />
+                    {t('dashboard.page.filters.title', {
+                      defaultValue: 'Filters',
+                    })}
                   </FiltersButton>
                 </Drawer.Trigger>
                 <Drawer.Portal>
@@ -297,7 +324,9 @@ export default function Dashboard() {
                     <Sheet>
                       <SheetHandle />
                       <SheetTitle>
-                        {t('dashboard.page.filters.title', { defaultValue: 'Filters' })}
+                        {t('dashboard.page.filters.title', {
+                          defaultValue: 'Filters',
+                        })}
                       </SheetTitle>
 
                       <MobileFilters>
@@ -337,7 +366,9 @@ export default function Dashboard() {
                         </Field>
 
                         <Field>
-                          <Label>{t('dashboard.page.filters.timeActive')}</Label>
+                          <Label>
+                            {t('dashboard.page.filters.timeActive')}
+                          </Label>
                           <Range>
                             <Control
                               value={formFilters.timeActiveMin}
@@ -415,7 +446,9 @@ export default function Dashboard() {
                         </Field>
 
                         <Field>
-                          <Label>{t('dashboard.page.filters.mouseDistance')}</Label>
+                          <Label>
+                            {t('dashboard.page.filters.mouseDistance')}
+                          </Label>
                           <Range>
                             <Control
                               value={formFilters.mouseDistanceMin}
@@ -446,7 +479,9 @@ export default function Dashboard() {
                           type="button"
                           onClick={() => setFiltersOpen(false)}
                         >
-                          {t('dashboard.page.filters.apply', { defaultValue: 'Apply' })}
+                          {t('dashboard.page.filters.apply', {
+                            defaultValue: 'Apply',
+                          })}
                         </SheetApply>
                       </SheetFooter>
                     </Sheet>
@@ -495,7 +530,9 @@ export default function Dashboard() {
                           type="button"
                           onClick={() => setProjectsDrawerOpen(false)}
                         >
-                          {t('dashboard.page.filters.apply', { defaultValue: 'Apply' })}
+                          {t('dashboard.page.filters.apply', {
+                            defaultValue: 'Apply',
+                          })}
                         </SheetApply>
                       </SheetFooter>
                     </Sheet>
@@ -784,8 +821,7 @@ const Left = styled.section`
 
   @media (max-width: 1024px) {
     grid-column: 1 / -1;
-  padding-right: 8px;
-
+    padding-right: 8px;
   }
 `
 
@@ -944,9 +980,9 @@ const SheetTitle = styled.div`
 
 const SheetSubTitle = styled.div`
   font-weight: 500;
-font-size: 16px;
-line-height: 150%;
-color: #1c2024;
+  font-size: 16px;
+  line-height: 150%;
+  color: #1c2024;
   margin-bottom: 12px;
 `
 

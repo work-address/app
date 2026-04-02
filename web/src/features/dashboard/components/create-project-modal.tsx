@@ -1,8 +1,9 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import { Drawer } from 'vaul'
 import styled from 'styled-components'
-import Button from '../ui/button'
+import { Drawer } from 'vaul'
+
+import { Button } from '@/features/shared'
 
 type CreateProjectPayload = {
   name: string
@@ -16,11 +17,11 @@ type CreateProjectModalProps = {
   onCreate?: (payload: CreateProjectPayload) => void
 }
 
-export default function CreateProjectModal({
+export const CreateProjectModal = ({
   open,
   onOpenChange,
   onCreate,
-}: CreateProjectModalProps) {
+}: CreateProjectModalProps) => {
   const [name, setName] = useState('')
   const [rate, setRate] = useState('')
   const [description, setDescription] = useState('')
@@ -36,16 +37,26 @@ export default function CreateProjectModal({
   }, [])
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      return
+    }
     const onKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onOpenChange(false)
+      if (e.key === 'Escape') {
+        onOpenChange(false)
+      }
     }
 
     const onDown = (e: MouseEvent) => {
       const t = e.target as Node | null
-      if (!t) return
-      if (!boxRef.current) return
-      if (!boxRef.current.contains(t)) onOpenChange(false)
+      if (!t) {
+        return
+      }
+      if (!boxRef.current) {
+        return
+      }
+      if (!boxRef.current.contains(t)) {
+        onOpenChange(false)
+      }
     }
 
     document.addEventListener('keydown', onKey)
@@ -57,7 +68,9 @@ export default function CreateProjectModal({
   }, [open, onOpenChange])
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      return
+    }
     setName('')
     setRate('')
     setDescription('')
@@ -66,8 +79,14 @@ export default function CreateProjectModal({
   const canSubmit = useMemo(() => name.trim().length > 0, [name])
 
   const submit = () => {
-    if (!canSubmit) return
-    onCreate?.({ name: name.trim(), rate: rate.trim(), description: description.trim() })
+    if (!canSubmit) {
+      return
+    }
+    onCreate?.({
+      name: name.trim(),
+      rate: rate.trim(),
+      description: description.trim(),
+    })
     onOpenChange(false)
   }
 
@@ -83,8 +102,10 @@ export default function CreateProjectModal({
                 <Head>
                   <ModalTitle>Start a New Project</ModalTitle>
                   <ModalDesc>
-                    You&apos;re creating a personal project to track your time and progress. This project is private,
-                    meaning freelancers won&apos;t see it, and you won&apos;t be able to assign it to anyone.
+                    You&apos;re creating a personal project to track your time
+                    and progress. This project is private, meaning freelancers
+                    won&apos;t see it, and you won&apos;t be able to assign it
+                    to anyone.
                   </ModalDesc>
                 </Head>
 
@@ -123,10 +144,18 @@ export default function CreateProjectModal({
               </MobileBody>
 
               <MobileFooter>
-                <FooterBtn type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+                <FooterBtn
+                  type="button"
+                  variant="secondary"
+                  onClick={() => onOpenChange(false)}
+                >
                   Cancel
                 </FooterBtn>
-                <PrimaryFooterBtn type="button" disabled={!canSubmit} onClick={submit}>
+                <PrimaryFooterBtn
+                  type="button"
+                  disabled={!canSubmit}
+                  onClick={submit}
+                >
                   Create project
                 </PrimaryFooterBtn>
               </MobileFooter>
@@ -156,8 +185,10 @@ export default function CreateProjectModal({
             <Head>
               <ModalTitle>Start a New Project</ModalTitle>
               <ModalDesc>
-                You&apos;re creating a personal project to track your time and progress. This project is private,
-                meaning freelancers won&apos;t see it, and you won&apos;t be able to assign it to anyone.
+                You&apos;re creating a personal project to track your time and
+                progress. This project is private, meaning freelancers
+                won&apos;t see it, and you won&apos;t be able to assign it to
+                anyone.
               </ModalDesc>
             </Head>
 
@@ -195,10 +226,18 @@ export default function CreateProjectModal({
             </Form>
 
             <Footer>
-              <FooterBtn type="button" variant="secondary" onClick={() => onOpenChange(false)}>
+              <FooterBtn
+                type="button"
+                variant="secondary"
+                onClick={() => onOpenChange(false)}
+              >
                 Cancel
               </FooterBtn>
-              <PrimaryFooterBtn type="button" disabled={!canSubmit} onClick={submit}>
+              <PrimaryFooterBtn
+                type="button"
+                disabled={!canSubmit}
+                onClick={submit}
+              >
                 Create project
               </PrimaryFooterBtn>
             </Footer>
@@ -226,7 +265,9 @@ const Box = styled(motion.div)`
   border-radius: 12px;
   padding: 24px;
   border: 1px solid rgba(0, 0, 51, 0.06);
-  box-shadow: 0 12px 60px 0 rgba(0, 0, 0, 0.15), 0 12px 32px -16px rgba(0, 9, 50, 0.12);
+  box-shadow:
+    0 12px 60px 0 rgba(0, 0, 0, 0.15),
+    0 12px 32px -16px rgba(0, 9, 50, 0.12);
 `
 
 const Head = styled.div`

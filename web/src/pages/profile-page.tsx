@@ -1,7 +1,6 @@
 import { useMemo, useState } from 'react'
-import styled from 'styled-components'
 import { useTranslation } from 'react-i18next'
-import Button from '../components/ui/button'
+import styled from 'styled-components'
 
 type FormState = {
   address: string

@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import styled from 'styled-components'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
 type Option = {
   value: string
@@ -80,8 +80,12 @@ export const MotionSelect = ({
 
   const buttonText = useMemo(() => {
     if (multi) {
-      if (selectedSet.size === 0) return ph
-      if (selectedSet.size === options.length) return ph
+      if (selectedSet.size === 0) {
+        return ph
+      }
+      if (selectedSet.size === options.length) {
+        return ph
+      }
       const labels = options
         .filter((o) => selectedSet.has(o.value))
         .map((o) => o.label)

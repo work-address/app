@@ -1,11 +1,14 @@
 import { useEffect, useMemo, useState } from 'react'
-import { Drawer } from 'vaul'
-import styled from 'styled-components'
-import RightDrawer from '../ui/right-drawer'
-import Button from '../ui/button'
-import ConfirmModal from '../ui/confirm-modal'
-import MotionSelect from '../ui/motion-select'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
+import { Drawer } from 'vaul'
+
+import {
+  Button,
+  ConfirmModal,
+  MotionSelect,
+  RightDrawer,
+} from '@/features/shared'
 
 export type ProjectStatus = 'Active' | 'Paused' | 'Finished'
 
@@ -62,8 +65,12 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
   const [isMobile, setIsMobile] = useState(false)
 
   const statusLabel = (status: ProjectStatus) => {
-    if (status === 'Active') return t('dashboard.projectsTable.status.active')
-    if (status === 'Paused') return t('dashboard.projectsTable.status.paused')
+    if (status === 'Active') {
+      return t('dashboard.projectsTable.status.active')
+    }
+    if (status === 'Paused') {
+      return t('dashboard.projectsTable.status.paused')
+    }
     return t('dashboard.projectsTable.status.finished')
   }
 
@@ -140,7 +147,9 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
   const closeDelete = () => setConfirmOpen(false)
 
   useEffect(() => {
-    if (typeof window === 'undefined') return
+    if (typeof window === 'undefined') {
+      return
+    }
 
     const mq = window.matchMedia('(max-width: 768px)')
     const sync = () => setIsMobile(mq.matches)
@@ -159,7 +168,7 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
     <Wrap>
       <MobileList>
         {sortedRows.map((r) => {
-          const expanded = !!openMobile[r.key]
+          const expanded = Boolean(openMobile[r.key])
           return (
             <MobileCard key={r.key}>
               <MobileHeader>
@@ -506,13 +515,17 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
               <MobileSheet>
                 <MobileSheetHandle />
                 <DrawerRoot>
+                  {/* TODO */}
+                  {/* eslint-disable-next-line */}
                   {drawerMode === 'edit' ? (
                     <DrawerHead>
                       <DrawerTitle>{drawerRow?.name ?? ''}</DrawerTitle>
                       <DrawerHeadRight>
                         <DeleteIconBtn
                           type="button"
-                          aria-label={t('dashboard.projectsTable.drawer.delete')}
+                          aria-label={t(
+                            'dashboard.projectsTable.drawer.delete',
+                          )}
                           onClick={openDelete}
                         >
                           <img
@@ -528,7 +541,9 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
                       <DrawerHeadRight>
                         <DeleteIconBtn
                           type="button"
-                          aria-label={t('dashboard.projectsTable.drawer.delete')}
+                          aria-label={t(
+                            'dashboard.projectsTable.drawer.delete',
+                          )}
                           onClick={openDelete}
                         >
                           <img
@@ -544,16 +559,12 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
                     <DrawerBody>
                       <MetaGrid>
                         <MetaLabel>
-                          {t(
-                            'dashboard.projectsTable.drawer.meta.startDate',
-                          )}
+                          {t('dashboard.projectsTable.drawer.meta.startDate')}
                         </MetaLabel>
                         <MetaValue>Mar 16, 2025, 09:28</MetaValue>
 
                         <MetaLabel>
-                          {t(
-                            'dashboard.projectsTable.drawer.meta.publishedIn',
-                          )}
+                          {t('dashboard.projectsTable.drawer.meta.publishedIn')}
                         </MetaLabel>
                         <MetaValue>Personal</MetaValue>
 
@@ -576,7 +587,9 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
                               height={14}
                             />
                           </MobileViewStatLabel>
-                          <MobileViewStatValue>{drawerRow?.timeTotal ?? ''}</MobileViewStatValue>
+                          <MobileViewStatValue>
+                            {drawerRow?.timeTotal ?? ''}
+                          </MobileViewStatValue>
                         </MobileViewStatRow>
                         <MobileViewStatRow>
                           <MobileViewStatLabel>
@@ -588,7 +601,9 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
                               height={14}
                             />
                           </MobileViewStatLabel>
-                          <MobileViewStatValue>{drawerRow?.timeActive ?? ''}</MobileViewStatValue>
+                          <MobileViewStatValue>
+                            {drawerRow?.timeActive ?? ''}
+                          </MobileViewStatValue>
                         </MobileViewStatRow>
                         <MobileViewStatRow>
                           <MobileViewStatLabel>
@@ -600,7 +615,9 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
                               height={14}
                             />
                           </MobileViewStatLabel>
-                          <MobileViewStatValue>{drawerRow?.keyboard ?? ''}</MobileViewStatValue>
+                          <MobileViewStatValue>
+                            {drawerRow?.keyboard ?? ''}
+                          </MobileViewStatValue>
                         </MobileViewStatRow>
                         <MobileViewStatRow>
                           <MobileViewStatLabel>
@@ -612,7 +629,9 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
                               height={14}
                             />
                           </MobileViewStatLabel>
-                          <MobileViewStatValue>{drawerRow?.mouse ?? ''}</MobileViewStatValue>
+                          <MobileViewStatValue>
+                            {drawerRow?.mouse ?? ''}
+                          </MobileViewStatValue>
                         </MobileViewStatRow>
                         <MobileViewStatRow>
                           <MobileViewStatLabel>
@@ -638,9 +657,9 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
                         )}
                       </SectionTitle>
                       <DescBox>
-                        Lorem ipsum dolor sit amet, consectetur adipisicing elit,
-                        sed do eiusmod tempor incididunt ut labore et dolore
-                        magna aliqua.
+                        Lorem ipsum dolor sit amet, consectetur adipisicing
+                        elit, sed do eiusmod tempor incididunt ut labore et
+                        dolore magna aliqua.
                       </DescBox>
 
                       <MobileViewFooter>
@@ -654,13 +673,17 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
                             src="/img/icons/download-icon.svg"
                             alt={t('dashboard.projectsTable.drawer.download')}
                           />
-                          {t('dashboard.projectsTable.drawer.invoice', { defaultValue: 'Invoice' })}
+                          {t('dashboard.projectsTable.drawer.invoice', {
+                            defaultValue: 'Invoice',
+                          })}
                         </MobileViewAction>
                         <MobileViewAction
                           type="button"
                           $primary
                           onClick={() => {
-                            if (drawerRow) showDrawer(drawerRow, 'edit')
+                            if (drawerRow) {
+                              showDrawer(drawerRow, 'edit')
+                            }
                           }}
                         >
                           <img
@@ -704,7 +727,9 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
                           />
                         </Field> 
                         <Field>
-                          <Label>{t('dashboard.projectsTable.form.rate')}</Label>
+                          <Label>
+                            {t('dashboard.projectsTable.form.rate')}
+                          </Label>
                           <Input
                             value={draftRate}
                             onChange={(e) => setDraftRate(e.target.value)}
@@ -712,7 +737,7 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
                           />
                         </Field>
 
-                <Divider2 />
+                        <Divider2 />
 
                         <Field>
                           <Label>
@@ -728,13 +753,11 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
                         </Field>
                       </Form>
 
-
                       <MobileEditFooter>
-                        <MobileFooterBtn
-                          type="button"
-                          onClick={closeDrawer}
-                        >
-                          {t('dashboard.projectsTable.drawer.cancel', { defaultValue: 'Cancel' })}
+                        <MobileFooterBtn type="button" onClick={closeDrawer}>
+                          {t('dashboard.projectsTable.drawer.cancel', {
+                            defaultValue: 'Cancel',
+                          })}
                         </MobileFooterBtn>
                         <MobileFooterBtn
                           type="button"
@@ -790,7 +813,9 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
                     <DrawerButton
                       variant="primary"
                       onClick={() => {
-                        if (drawerRow) showDrawer(drawerRow, 'edit')
+                        if (drawerRow) {
+                          showDrawer(drawerRow, 'edit')
+                        }
                       }}
                     >
                       {t('dashboard.projectsTable.drawer.edit')}
@@ -845,7 +870,9 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
                 <Divider />
                 <Form>
                   <Field>
-                    <Label>{t('dashboard.projectsTable.form.projectName')}</Label>
+                    <Label>
+                      {t('dashboard.projectsTable.form.projectName')}
+                    </Label>
                     <Input
                       value={draftName}
                       onChange={(e) => setDraftName(e.target.value)}
@@ -855,7 +882,9 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
                     />
                   </Field>
                   <Field>
-                    <Label>{t('dashboard.projectsTable.form.publishedIn')}</Label>
+                    <Label>
+                      {t('dashboard.projectsTable.form.publishedIn')}
+                    </Label>
                     <MotionSelect
                       options={folderOptions}
                       value={draftFolder}
@@ -878,7 +907,9 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
                     />
                   </Field>
                   <Field>
-                    <Label>{t('dashboard.projectsTable.form.description')}</Label>
+                    <Label>
+                      {t('dashboard.projectsTable.form.description')}
+                    </Label>
                     <TextArea
                       value={draftDesc}
                       onChange={(e) => setDraftDesc(e.target.value)}
@@ -915,7 +946,11 @@ const Wrap = styled.div`
   border-radius: 12px;
   overflow: hidden;
   background: #fff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 1px 4px 0 rgba(0, 0, 45, 0.09), 0 2px 1px -1px rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 1px 4px 0 rgba(0, 0, 45, 0.09),
+    0 2px 1px -1px rgba(0, 0, 0, 0.05),
+    0 1px 3px 0 rgba(0, 0, 0, 0.05);
 
   @media (max-width: 768px) {
     box-shadow: none;
@@ -1129,7 +1164,7 @@ const MobileActions = styled.div`
 const MobileActionBtn = styled.button`
   height: 32px;
   border-radius: 4px;
-border: 1px solid rgba(0, 0, 47, 0.15);
+  border: 1px solid rgba(0, 0, 47, 0.15);
   background: #fff;
   font-size: 14px;
   line-height: 16px;
@@ -1154,7 +1189,7 @@ const MobileDeleteBtn = styled(MobileActionBtn)`
 
   &:hover {
     background: rgba(210, 0, 5, 0.06);
-  } 
+  }
 
   img {
     width: 16px;
@@ -1448,11 +1483,11 @@ const DrawerBody = styled.div`
 `
 
 const DrawerTitle = styled.h3`
- font-weight: 500;
-font-size: 18px;
-line-height: 144%;
-letter-spacing: 0em;
-color: #1c2024;
+  font-weight: 500;
+  font-size: 18px;
+  line-height: 144%;
+  letter-spacing: 0em;
+  color: #1c2024;
 `
 
 const MetaGrid = styled.div`
@@ -1487,7 +1522,6 @@ const Divider2 = styled.div`
   background: rgba(0, 0, 51, 0.12);
 `
 
-
 const SectionTitle = styled.div`
   font-weight: 500;
   font-size: 14px;
@@ -1521,9 +1555,9 @@ const Field = styled.div`
 
 const Label = styled.label`
   font-weight: 500;
-font-size: 14px;
-line-height: 143%;
-color: #1c2024;
+  font-size: 14px;
+  line-height: 143%;
+  color: #1c2024;
 `
 
 const Input = styled.input`
@@ -1614,7 +1648,7 @@ const MobileEditFooter = styled.div`
   left: 0;
   right: 0;
   border-top: 1px solid rgba(0, 0, 47, 0.15);
-padding: 8px 16px 25px;
+  padding: 8px 16px 25px;
   gap: 10px;
   margin-top: 16px;
 `

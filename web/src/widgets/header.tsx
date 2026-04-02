@@ -1,7 +1,7 @@
-import { useState, useEffect, useRef } from 'react'
-import styled from 'styled-components'
-import { useTranslation } from 'react-i18next'
 import { AnimatePresence, motion } from 'motion/react'
+import { useState, useEffect, useRef } from 'react'
+import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
 type HeaderProps = {
   active?: 'dashboard' | 'profile' | 'help' | 'download'
@@ -13,16 +13,24 @@ export default function Header({ active = 'dashboard' }: HeaderProps) {
   const rootRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
-    if (!open) return
+    if (!open) {
+      return
+    }
 
     const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') setOpen(false)
+      if (e.key === 'Escape') {
+        setOpen(false)
+      }
     }
 
     const onDown = (e: MouseEvent) => {
       const el = rootRef.current
-      if (!el) return
-      if (e.target instanceof Node && !el.contains(e.target)) setOpen(false)
+      if (!el) {
+        return
+      }
+      if (e.target instanceof Node && !el.contains(e.target)) {
+        setOpen(false)
+      }
     }
 
     window.addEventListener('keydown', onKeyDown)
@@ -121,7 +129,10 @@ export default function Header({ active = 'dashboard' }: HeaderProps) {
               <MobileMenuTop>
                 <UserBox>
                   <UserAvatar>
-                    <IconImg src="/img/icons/person.svg" alt={t('header.userAlt')} />
+                    <IconImg
+                      src="/img/icons/person.svg"
+                      alt={t('header.userAlt')}
+                    />
                   </UserAvatar>
                   <UserText>
                     <UserName>John Doe</UserName>
@@ -144,7 +155,10 @@ export default function Header({ active = 'dashboard' }: HeaderProps) {
                   $active={active === 'profile'}
                   variants={itemVariants}
                 >
-                  <IconImg src="/img/icons/person.svg" alt={t('header.nav.profile')} />
+                  <IconImg
+                    src="/img/icons/person.svg"
+                    alt={t('header.nav.profile')}
+                  />
                   <span>{t('header.nav.profile')}</span>
                 </MobileMenuItem>
 
@@ -154,7 +168,10 @@ export default function Header({ active = 'dashboard' }: HeaderProps) {
                   $active={active === 'dashboard'}
                   variants={itemVariants}
                 >
-                  <IconImg src="/img/icons/dashboard.svg" alt={t('header.nav.dashboard')} />
+                  <IconImg
+                    src="/img/icons/dashboard.svg"
+                    alt={t('header.nav.dashboard')}
+                  />
                   <span>{t('header.nav.dashboard')}</span>
                 </MobileMenuItem>
 
@@ -289,7 +306,15 @@ const NavLink = styled.a<{ $active?: boolean; $download?: boolean }>`
     }
     return 'var(--primary)'
   }};
-  opacity: ${(p) => (p.$download ? 1 : p.$active ? 1 : 0.8)};
+    
+  opacity: ${(p) => {
+    // eslint-disable-next-line
+    return p.$download
+            ? 1 
+            : (p.$active 
+                    ? 1 
+                    : 0.8)
+  }}}
 
   @media (max-width: 1024px) {
     font-size: 14px;
@@ -337,7 +362,7 @@ const BurgerButton = styled.button`
   @media (max-width: 768px) {
     width: 32px;
     height: 32px;
-  border-radius: 4px;
+    border-radius: 4px;
   }
 `
 
@@ -395,7 +420,8 @@ const MobileMenuItem = styled(motion.a)<{ $active?: boolean }>`
   display: flex;
   align-items: center;
   gap: 10px;
-  background: ${(p) => (p.$active ? 'rgba(5, 86, 205, 0.0588)' : 'transparent')};
+  background: ${(p) =>
+    p.$active ? 'rgba(5, 86, 205, 0.0588)' : 'transparent'};
 
   &:hover {
     background: rgba(28, 32, 36, 0.06);

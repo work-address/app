@@ -1,7 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useMemo, useRef, useState } from 'react'
-import styled from 'styled-components'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
 export type PaymentStatus = 'Paid' | 'Unpaid'
 
@@ -86,8 +86,9 @@ export default function WorklogsTable({ rows }: WorklogsTableProps) {
   const modalRef = useRef<HTMLDivElement | null>(null)
 
   const paymentStatusLabel = (status: PaymentStatus) => {
-    if (status === 'Paid')
+    if (status === 'Paid') {
       return t('dashboard.worklogsTable.paymentStatus.paid')
+    }
     return t('dashboard.worklogsTable.paymentStatus.unpaid')
   }
 
@@ -182,23 +183,33 @@ export default function WorklogsTable({ rows }: WorklogsTableProps) {
                 <MobileBody>
                   <MobileStats>
                     <StatRow>
-                      <StatLabel>{t('dashboard.worklogsTable.head.note')}</StatLabel>
+                      <StatLabel>
+                        {t('dashboard.worklogsTable.head.note')}
+                      </StatLabel>
                       <StatValueMuted title={r.note}>{r.note}</StatValueMuted>
                     </StatRow>
                     <StatRow>
-                      <StatLabel>{t('dashboard.worklogsTable.head.keyboard')}</StatLabel>
+                      <StatLabel>
+                        {t('dashboard.worklogsTable.head.keyboard')}
+                      </StatLabel>
                       <StatValue>{r.keyboard}</StatValue>
                     </StatRow>
                     <StatRow>
-                      <StatLabel>{t('dashboard.worklogsTable.head.mouse')}</StatLabel>
+                      <StatLabel>
+                        {t('dashboard.worklogsTable.head.mouse')}
+                      </StatLabel>
                       <StatValue>{r.mouse}</StatValue>
                     </StatRow>
                     <StatRow>
-                      <StatLabel>{t('dashboard.worklogsTable.head.mouseDistance')}</StatLabel>
+                      <StatLabel>
+                        {t('dashboard.worklogsTable.head.mouseDistance')}
+                      </StatLabel>
                       <StatValue>{r.mouseDistance}</StatValue>
                     </StatRow>
                     <StatRow>
-                      <StatLabel>{t('dashboard.worklogsTable.head.screenshot')}</StatLabel>
+                      <StatLabel>
+                        {t('dashboard.worklogsTable.head.screenshot')}
+                      </StatLabel>
                       <StatValue>
                         {r.screenshot ? (
                           <ShotBtn
@@ -375,7 +386,11 @@ const Wrap = styled.div`
   border-radius: 12px;
   overflow: hidden;
   background: #fff;
-  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.05), 0 1px 4px 0 rgba(0, 0, 45, 0.09), 0 2px 1px -1px rgba(0, 0, 0, 0.05), 0 1px 3px 0 rgba(0, 0, 0, 0.05);
+  box-shadow:
+    0 0 0 1px rgba(0, 0, 0, 0.05),
+    0 1px 4px 0 rgba(0, 0, 45, 0.09),
+    0 2px 1px -1px rgba(0, 0, 0, 0.05),
+    0 1px 3px 0 rgba(0, 0, 0, 0.05);
 
   @media (max-width: 768px) {
     box-shadow: none;

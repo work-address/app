@@ -1,5 +1,5 @@
-import styled from 'styled-components'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
 type SearchProps = {
   value: string
@@ -92,11 +92,11 @@ const Icon = styled.span`
     width: 18px;
     height: 18px;
   }
-  
+
   @media (max-width: 768px) {
     width: 14px;
     height: 14px;
-    
+
     & > svg {
       width: 14px;
       height: 14px;

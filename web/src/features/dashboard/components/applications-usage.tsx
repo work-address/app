@@ -1,4 +1,5 @@
 import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import {
   Bar,
   BarChart,
@@ -9,8 +10,8 @@ import {
   YAxis,
 } from 'recharts'
 import styled from 'styled-components'
-import MotionSelect from '../ui/motion-select'
-import { useTranslation } from 'react-i18next'
+
+import { MotionSelect } from '@/features/shared'
 
 type Period = 'Week' | 'Month' | 'Year'
 

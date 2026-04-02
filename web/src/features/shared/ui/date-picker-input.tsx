@@ -10,8 +10,8 @@ import {
   CalendarHeaderCell,
   Heading,
 } from 'react-aria-components'
-import styled from 'styled-components'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
 type DatePickerInputProps = {
   value?: Date

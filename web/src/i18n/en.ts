@@ -53,7 +53,8 @@ const en = {
   'dashboard.projectsTable.form.publishedInPlaceholder': 'Select folder',
   'dashboard.projectsTable.form.rate': 'Rate',
   'dashboard.projectsTable.form.description': 'Description',
-  'dashboard.projectsTable.form.descriptionPlaceholder': 'Enter a brief description of your project',
+  'dashboard.projectsTable.form.descriptionPlaceholder':
+    'Enter a brief description of your project',
   'dashboard.projectsTable.confirmDelete.title': 'Delete this project?',
   'dashboard.projectsTable.confirmDelete.description':
     'This action cannot be undone. All tracked time and associated data will be permanently removed.',
@@ -80,7 +81,7 @@ const en = {
 
   'dashboard.worklogsEmpty.title': 'No worklogs yet',
   'dashboard.worklogsEmpty.description':
-    "Looks like there’s no activity yet. Once you start tracking time on a project, your worklogs will appear here automatically.",
+    'Looks like there’s no activity yet. Once you start tracking time on a project, your worklogs will appear here automatically.',
   'dashboard.worklogsEmpty.action': 'Go to Help Centre',
 
   'dashboard.page.title': 'Dashboard',
@@ -91,7 +92,7 @@ const en = {
   'dashboard.page.tabs.finished': 'Finished',
   'dashboard.page.projectsNotFound.title': 'No projects found',
   'dashboard.page.projectsNotFound.description':
-    "Oops! We couldn’t find any projects matching your search. Try adjusting your keywords or create a new project to get started.",
+    'Oops! We couldn’t find any projects matching your search. Try adjusting your keywords or create a new project to get started.',
   'dashboard.page.empty.title': 'No projects yet',
   'dashboard.page.empty.description':
     'No projects yet? No problem! Start tracking time and productivity by creating your first project now.',
@@ -149,7 +150,8 @@ const en = {
   'profile.form.company': 'Company',
   'profile.form.companyPlaceholder': 'Enter your company name',
   'profile.form.skills': 'Skills',
-  'profile.form.skillsPlaceholder': 'e.g., Communication, Teamwork, Problem-solving',
+  'profile.form.skillsPlaceholder':
+    'e.g., Communication, Teamwork, Problem-solving',
   'profile.form.price': 'Price',
   'profile.form.bio': 'Bio',
   'profile.form.bioPlaceholder': 'Enter your description',
