@@ -54,6 +54,7 @@ export const RichEditor = ({ value, onChange }: RichEditorProps) => {
           variant="ghost"
           onClick={() => editor?.chain().focus().undo().run()}
           color={'gray'}
+          type={'button'}
         >
           <ResetIcon />
         </CustomIconButton>
@@ -63,6 +64,7 @@ export const RichEditor = ({ value, onChange }: RichEditorProps) => {
           onClick={() => editor?.chain().focus().redo().run()}
           style={{ transform: 'scaleX(-1)' }} // redo — зеркало reset
           color={'gray'}
+          type={'button'}
         >
           <ResetIcon />
         </CustomIconButton>
@@ -74,6 +76,7 @@ export const RichEditor = ({ value, onChange }: RichEditorProps) => {
           data-active={editor?.isActive('bold')}
           onClick={() => editor?.chain().focus().toggleBold().run()}
           color={'gray'}
+          type={'button'}
         >
           <FontBoldIcon />
         </CustomIconButton>
@@ -83,6 +86,7 @@ export const RichEditor = ({ value, onChange }: RichEditorProps) => {
           data-active={editor?.isActive('italic')}
           onClick={() => editor?.chain().focus().toggleItalic().run()}
           color={'gray'}
+          type={'button'}
         >
           <FontItalicIcon />
         </CustomIconButton>
@@ -92,6 +96,7 @@ export const RichEditor = ({ value, onChange }: RichEditorProps) => {
           data-active={editor?.isActive('underline')}
           onClick={() => editor?.chain().focus().toggleUnderline().run()}
           color={'gray'}
+          type={'button'}
         >
           <UnderlineIcon />
         </CustomIconButton>
@@ -101,6 +106,7 @@ export const RichEditor = ({ value, onChange }: RichEditorProps) => {
           data-active={editor?.isActive('strike')}
           onClick={() => editor?.chain().focus().toggleStrike().run()}
           color={'gray'}
+          type={'button'}
         >
           <StrikethroughIcon />
         </CustomIconButton>
@@ -112,6 +118,7 @@ export const RichEditor = ({ value, onChange }: RichEditorProps) => {
           data-active={editor?.isActive({ textAlign: 'left' })}
           onClick={() => editor?.chain().focus().setTextAlign('left').run()}
           color={'gray'}
+          type={'button'}
         >
           <TextAlignLeftIcon />
         </CustomIconButton>
@@ -121,6 +128,7 @@ export const RichEditor = ({ value, onChange }: RichEditorProps) => {
           data-active={editor?.isActive({ textAlign: 'center' })}
           onClick={() => editor?.chain().focus().setTextAlign('center').run()}
           color={'gray'}
+          type={'button'}
         >
           <TextAlignCenterIcon />
         </CustomIconButton>
@@ -130,6 +138,7 @@ export const RichEditor = ({ value, onChange }: RichEditorProps) => {
           data-active={editor?.isActive({ textAlign: 'right' })}
           onClick={() => editor?.chain().focus().setTextAlign('right').run()}
           color={'gray'}
+          type={'button'}
         >
           <TextAlignRightIcon />
         </CustomIconButton>
@@ -139,6 +148,7 @@ export const RichEditor = ({ value, onChange }: RichEditorProps) => {
           data-active={editor?.isActive({ textAlign: 'justify' })}
           onClick={() => editor?.chain().focus().setTextAlign('justify').run()}
           color={'gray'}
+          type={'button'}
         >
           <TextAlignJustifyIcon />
         </CustomIconButton>
@@ -155,6 +165,7 @@ export const RichEditor = ({ value, onChange }: RichEditorProps) => {
               editor?.chain().focus().setLink({ href: url }).run()
             }
           }}
+          type={'button'}
         >
           <Link2Icon />
         </CustomIconButton>

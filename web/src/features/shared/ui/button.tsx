@@ -5,10 +5,18 @@ import type { ButtonProps as RadixButtonProps } from '@radix-ui/themes'
 
 export type ButtonProps = {
   themeVariant?: 'primary' | 'secondary'
-} & Omit<RadixButtonProps, 'variant' | 'type'>
+} & Omit<RadixButtonProps, 'variant'>
 
-export const Button = ({ children, ...props }: ButtonProps) => {
-  return <StyledRadixButton {...props}>{children}</StyledRadixButton>
+export const Button = ({
+  children,
+  type = 'button',
+  ...props
+}: ButtonProps) => {
+  return (
+    <StyledRadixButton type={type} {...props}>
+      {children}
+    </StyledRadixButton>
+  )
 }
 
 const StyledRadixButton = styled(RadixButton)<ButtonProps>`
