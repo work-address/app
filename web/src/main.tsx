@@ -1,8 +1,10 @@
+import { Theme } from '@radix-ui/themes'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { BrowserRouter } from 'react-router-dom'
-import './i18n/i18n'
-import App from './app'
+import { Toaster } from 'sonner'
+import { ThemeProvider } from 'styled-components'
+import '@/features/shared/i18n/i18n'
 
 import App from './app/app.tsx'
 
@@ -19,13 +21,15 @@ if (rootElement === null) {
 
 createRoot(rootElement).render(
   <StrictMode>
-    <ThemeProvider theme={theme}>
-      <Toaster />
-      <ErrorToastStyle />
+    <Theme>
+      <ThemeProvider theme={theme}>
+        <Toaster />
+        <ErrorToastStyle />
 
-      <BrowserRouter>
-        <App />
-      </BrowserRouter>
-    </ThemeProvider>
+        <BrowserRouter>
+          <App />
+        </BrowserRouter>
+      </ThemeProvider>
+    </Theme>
   </StrictMode>,
 )

@@ -5,7 +5,7 @@ import { useTheme } from 'styled-components'
 
 import { ProviderButton } from './provider-button'
 
-import { showErrorToast, Button } from '@/features/shared'
+import { showErrorToast, Button, Card } from '@/features/shared'
 
 export const SignIn = () => {
   const navigate = useNavigate()
@@ -39,7 +39,7 @@ export const SignIn = () => {
           <Logo src="/img/photo/logo.svg" alt="work-address" />
         )}
 
-        <Card>
+        <SignInCard>
           <Title>Welcome to Work Address</Title>
 
           <Desc>
@@ -77,7 +77,7 @@ export const SignIn = () => {
           <Learn href={'#'} target={'_blank'}>
             What is Web3 Wallet?
           </Learn>
-        </Card>
+        </SignInCard>
 
         <Foot>
           <FootLine>
@@ -141,13 +141,10 @@ const Logo = styled.img`
   }
 `
 
-const Card = styled.section`
-  border: 1px solid var(--neutral-alpha-6);
-  border-radius: 20px;
+const SignInCard = styled(Card)`
   text-align: center;
   background-color: var(--accent-3);
-  box-shadow: var(--shadow-4);
-  padding: 24px 16px;
+  padding: var(--spacing-5) 16px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     width: 600px;

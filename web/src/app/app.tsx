@@ -1,4 +1,5 @@
 import './app.css'
+import '@radix-ui/themes/styles.css'
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
