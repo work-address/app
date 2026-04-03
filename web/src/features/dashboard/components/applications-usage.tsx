@@ -304,7 +304,7 @@ const Title = styled.h2`
   font-size: 24px;
   line-height: 125%;
   letter-spacing: 0em;
-  color: var(--primary);
+  color: var(--ds-primary);
 `
 
 const PeriodSelect = styled.div`
@@ -353,7 +353,7 @@ const TooltipBox = styled.div`
   border-radius: 10px;
   padding: 8px 10px;
   box-shadow: 0 1px 6px var(--c-rgba-0-0-0-0_08);
-  color: var(--primary);
+  color: var(--ds-primary);
   font-size: 12px;
   min-width: 200px;
   position: relative;

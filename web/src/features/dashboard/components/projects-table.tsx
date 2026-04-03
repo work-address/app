@@ -811,7 +811,7 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
                       />
                     </IconBtn>
                     <DrawerButton
-                      variant="primary"
+                      themeVariant="primary"
                       onClick={() => {
                         if (drawerRow) {
                           showDrawer(drawerRow, 'edit')
@@ -822,7 +822,7 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
                     </DrawerButton>
                   </>
                 ) : (
-                  <DrawerButton variant="primary">
+                  <DrawerButton themeVariant="primary">
                     {t('dashboard.projectsTable.drawer.save')}
                   </DrawerButton>
                 )}
@@ -1169,7 +1169,7 @@ const MobileActionBtn = styled.button`
   font-size: 14px;
   line-height: 16px;
   font-weight: 500;
-  color: var(--primary);
+  color: var(--ds-primary);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -1214,7 +1214,7 @@ const TableEl = styled.table`
   border-collapse: separate;
   border-spacing: 0;
   font-size: 13px;
-  color: var(--primary);
+  color: var(--ds-primary);
 `
 
 const Thead = styled.thead`

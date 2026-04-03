@@ -192,7 +192,7 @@ export default function Dashboard() {
               {hasProjects ? null : (
                 <TopRight>
                   <CreateProjectButton
-                    type="button"
+                    themeVariant="button"
                     onClick={() => setCreateProjectOpen(true)}
                   >
                     <PlusIcon />
@@ -250,7 +250,7 @@ export default function Dashboard() {
 
                   <Actions>
                     <CreateProjectButton
-                      type="button"
+                      themeVariant="button"
                       onClick={() => setCreateProjectOpen(true)}
                     >
                       <PlusIcon />
@@ -793,11 +793,11 @@ const Tab = styled.button<{ $active?: boolean }>`
   font-size: 13px;
   line-height: 16px;
   font-weight: 500;
-  color: ${(p) => (p.$active ? 'var(--primary)' : 'rgba(28, 32, 36, 0.62)')};
+  color: ${(p) => (p.$active ? 'var(--ds-primary)' : 'rgba(28, 32, 36, 0.62)')};
   border-bottom: 2px solid transparent;
 
   &:hover {
-    color: var(--primary);
+    color: var(--ds-primary);
   }
 `
 
@@ -1014,7 +1014,7 @@ const ProjectsTrigger = styled.button`
   padding: 0 10px;
   background: #fff;
   font-size: 13px;
-  color: var(--primary);
+  color: var(--ds-primary);
   text-align: left;
 `
 
@@ -1090,7 +1090,7 @@ const Control = styled.input`
   padding: 0 10px;
   background: #fff;
   font-size: 13px;
-  color: var(--primary);
+  color: var(--ds-primary);
   outline: none;
 
   &::placeholder {

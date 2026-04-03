@@ -43,7 +43,7 @@ export const ErrorToastStyle = createGlobalStyle`
       background: rgba(255, 247, 247, 1);
       border: 1px solid var(--error-alpha-6);
       font-size: 16px;
-      box-shadow: 0 2px 3px -2px var(--neutral-alpha-3) 
+      box-shadow: 0 2px 3px -2px var(--ds-neutral-alpha-3) 
       0px 3px 12px -4px rgba(0, 0, 0, 0.1)
       0px 4px 16px -8px rgba(0, 0, 0, 0.1);
         

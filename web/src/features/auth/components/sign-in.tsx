@@ -97,7 +97,7 @@ export const SignIn = () => {
         </Foot>
 
         <HiddenButtonRow>
-          <Button variant="secondary" onClick={() => onSignIn('eth')}>
+          <Button themeVariant="secondary" onClick={() => onSignIn('eth')}>
             Continue
           </Button>
         </HiddenButtonRow>
@@ -158,7 +158,7 @@ const Title = styled.h1`
   letter-spacing: 0.45px;
   font-size: 20px;
   margin-bottom: 12px;
-  color: var(--accent-11);
+  color: var(--ds-accent-11);
   line-height: 28px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
@@ -174,7 +174,7 @@ const Desc = styled.p`
   font-weight: 400;
   font-size: 14px;
   margin-bottom: 24px;
-  color: var(--accent-11);
+  color: var(--ds-accent-11);
   line-height: 20px;
   letter-spacing: 0.34px;
 

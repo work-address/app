@@ -271,7 +271,8 @@ const Icon = styled.span`
 
 const InputText = styled.span<{ $hasValue?: boolean }>`
   font-size: 13px;
-  color: ${(p) => (p.$hasValue ? 'var(--primary)' : 'rgba(28, 32, 36, 0.45)')};
+  color: ${(p) =>
+    p.$hasValue ? 'var(--ds-primary)' : 'rgba(28, 32, 36, 0.45)'};
 `
 
 const Popover = styled.div<{ $side: 'left' | 'right' }>`

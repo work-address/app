@@ -7,7 +7,7 @@ export interface ButtonProps extends Work AddressButtonProps {}
 /** Primary UI component for user interaction */
 export const Button = ({ children = 'Button', ...props }: ButtonProps) => {
   return (
-    <Work AddressButton type="button" {...props}>
+    <Work AddressButton themeVariant="button" {...props}>
       {children}
     </Work AddressButton>
   )

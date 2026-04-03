@@ -110,7 +110,7 @@ const Input = styled.input`
   border: none;
   outline: none;
   font-size: 14px;
-  color: var(--primary);
+  color: var(--ds-primary);
   background: transparent;
 
   &::placeholder {

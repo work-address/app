@@ -52,17 +52,39 @@ export const Desktop = () => {
         <FreelancerViewCard>
           <Flex direction={'column'} gap={'var(--space-5)'}>
             <Flex justify={'between'}>
-              <Flex gap={'var(--space-3)'} align={'center'}>
-                <IconButton radius={'full'}>←</IconButton>
-                <Text size={'5'}>{t('profile.title')}</Text>
+              <Flex gap={'var(--space-4)'} align={'center'}>
+                <IconButton
+                  radius={'full'}
+                  variant={'ghost'}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    boxSizing: 'border-box',
+                    cursor: 'pointer',
+                  }}
+                  color={'gray'}
+                >
+                  ←
+                </IconButton>
+                <Text size={'6'} weight={'medium'}>
+                  {t('profile.title')}
+                </Text>
               </Flex>
 
               <Flex align={'center'} gap={'var(--space-4)'}>
-                <Button variant="secondary" onClick={reset} disabled={!dirty}>
+                <Button
+                  themeVariant="secondary"
+                  onClick={reset}
+                  disabled={!dirty}
+                >
                   {t('profile.actions.cancel')}
                 </Button>
 
-                <Button onClick={save} disabled={!dirty}>
+                <Button
+                  themeVariant={'primary'}
+                  onClick={save}
+                  disabled={!dirty}
+                >
                   {t('profile.actions.save')}
                 </Button>
               </Flex>
@@ -142,7 +164,9 @@ export const Desktop = () => {
 
         <FreelancerViewCard>
           <Grid gap={'var(--space-5)'}>
-            <Text size={'5'}> {t('profile.links.title')} </Text>
+            <Text size={'6'} weight={'medium'}>
+              {t('profile.links.title')}
+            </Text>
 
             <Input
               label={t('profile.links.facebook')}

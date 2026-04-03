@@ -76,7 +76,7 @@ export const ConfirmModal = ({
             <Title>{title}</Title>
             <Desc>{description}</Desc>
             <Btns>
-              <CancelButton variant="secondary" onClick={onCancel}>
+              <CancelButton themeVariant="secondary" onClick={onCancel}>
                 {cancelLabel}
               </CancelButton>
               <DangerBtn type="button" onClick={onConfirm}>

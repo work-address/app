@@ -304,7 +304,7 @@ const NavLink = styled.a<{ $active?: boolean; $download?: boolean }>`
     if (p.$download) {
       return 'var(--download, #003482)'
     }
-    return 'var(--primary)'
+    return 'var(--ds-primary)'
   }};
     
   opacity: ${(p) => {
@@ -413,7 +413,7 @@ const MobileMenuNav = styled(motion.nav)`
 const MobileMenuItem = styled(motion.a)<{ $active?: boolean }>`
   padding: 10px 10px;
   border-radius: 10px;
-  color: var(--primary);
+  color: var(--ds-primary);
   text-decoration: none;
   font-size: 16px;
   line-height: 22px;
@@ -436,7 +436,7 @@ const MobileMenuItem = styled(motion.a)<{ $active?: boolean }>`
 const MobileMenuButton = styled(motion.button)`
   padding: 10px 10px;
   border-radius: 10px;
-  color: var(--primary);
+  color: var(--ds-primary);
   font-size: 16px;
   line-height: 22px;
   display: flex;
@@ -499,7 +499,7 @@ const UserName = styled.span`
   font-size: 14px;
   line-height: 16px;
   font-weight: 500;
-  color: var(--primary);
+  color: var(--ds-primary);
 `
 
 const UserSub = styled.span`

@@ -30,7 +30,7 @@ export const Button = styled.button`
   gap: 12px;
   height: 56px;
   padding: 0 12px;
-  color: var(--accent-11);
+  color: var(--ds-accent-11);
 
   &:hover {
     background: rgba(0, 0, 51, 0.02);
@@ -59,7 +59,7 @@ export const Text = styled.div`
   font-size: 18px;
   line-height: 24px;
   font-family: Inter, sans-serif;
-  color: var(--accent-11);
+  color: var(--ds-accent-11);
   letter-spacing: -0.45px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {

@@ -26,7 +26,7 @@ export const DashboardEmptyState = ({
         <EmptyTitle>{title}</EmptyTitle>
         <EmptyDesc>{description}</EmptyDesc>
       </Text>
-      <EmptyAction variant="secondary" onClick={onAction}>
+      <EmptyAction themeVariant="secondary" onClick={onAction}>
         {actionLabel}
       </EmptyAction>
     </Root>
