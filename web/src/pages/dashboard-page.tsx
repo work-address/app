@@ -1,7 +1,6 @@
-import { motion } from 'motion/react'
+import { Flex } from '@radix-ui/themes'
 import { useEffect, useMemo, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import styled from 'styled-components'
 import { Drawer } from 'vaul'
 
 import type { ProjectRow } from '@/features/dashboard'
@@ -14,15 +13,15 @@ import {
   WorklogsEmptyState,
   ProjectsTable,
   CreateProjectModal,
+  DashboardStyles as S,
 } from '@/features/dashboard'
 import {
-  Button,
   DatePickerInput,
-  MotionSelect,
-  Search,
   Wrapper,
+  Spinner,
+  projectsMock,
+  worklogsMock,
 } from '@/features/shared'
-import { projectsMock, worklogsMock } from '@/features/shared'
 
 type TabKey = 'all' | 'active' | 'finished'
 
@@ -79,6 +78,8 @@ export default function Dashboard() {
     mouseDistanceMin: '',
     mouseDistanceMax: '',
   })
+
+  const [initialized, setInitialized] = useState(false)
 
   const rows = useMemo(() => {
     let filtered: ProjectRow[] = projectsMock
@@ -173,44 +174,49 @@ export default function Dashboard() {
     return () => window.removeEventListener('resize', update)
   }, [tab])
 
-  return (
+  useEffect(() => {
+    setTimeout(() => {
+      setInitialized(true)
+    }, 350)
+  }, [])
+
+  return initialized ? (
     <Wrapper>
-      <Content>
-        <Left>
-          <Top>
-            <TitleRow>
-              <TitleBox>
-                <Title>{t('dashboard.page.title')}</Title>
-                <Counter>
+      <S.Content>
+        <S.Left>
+          <S.Top>
+            <S.TitleRow>
+              <S.TitleBox>
+                <S.Title>{t('dashboard.page.title')}</S.Title>
+                <S.Counter>
                   {t('dashboard.page.projectsCount', { count: totalCount })}
-                </Counter>
-              </TitleBox>
+                </S.Counter>
+              </S.TitleBox>
 
               {hasProjects ? (
-                <DashboardSearch value={query} onChange={setQuery} />
-              ) : null}
-              {hasProjects ? null : (
-                <TopRight>
-                  <CreateProjectButton
-                    themeVariant="button"
+                <S.DashboardSearch value={query} onChange={setQuery} />
+              ) : (
+                <S.TopRight>
+                  <S.CreateProjectButton
+                    themeVariant="primary"
                     onClick={() => setCreateProjectOpen(true)}
                   >
                     <PlusIcon />
-                    <CreateProjectText>
+                    <S.CreateProjectText>
                       {t('dashboard.page.createProject')}
-                    </CreateProjectText>
-                  </CreateProjectButton>
-                </TopRight>
+                    </S.CreateProjectText>
+                  </S.CreateProjectButton>
+                </S.TopRight>
               )}
-            </TitleRow>
-          </Top>
+            </S.TitleRow>
+          </S.Top>
 
           {hasProjects ? (
             <>
               {projectsFound ? (
-                <TabsRow>
-                  <Tabs ref={tabsRef}>
-                    <ActiveIndicator
+                <S.TabsRow>
+                  <S.Tabs ref={tabsRef}>
+                    <S.ActiveIndicator
                       aria-hidden="true"
                       animate={{ left: indicator.left, width: indicator.width }}
                       transition={{
@@ -219,7 +225,7 @@ export default function Dashboard() {
                         damping: 44,
                       }}
                     />
-                    <Tab
+                    <S.Tab
                       ref={(el) => {
                         tabRefs.current.all = el
                       }}
@@ -227,8 +233,8 @@ export default function Dashboard() {
                       onClick={() => setTab('all')}
                     >
                       {t('dashboard.page.tabs.all')}
-                    </Tab>
-                    <Tab
+                    </S.Tab>
+                    <S.Tab
                       ref={(el) => {
                         tabRefs.current.active = el
                       }}
@@ -236,8 +242,8 @@ export default function Dashboard() {
                       onClick={() => setTab('active')}
                     >
                       {t('dashboard.page.tabs.active')}
-                    </Tab>
-                    <Tab
+                    </S.Tab>
+                    <S.Tab
                       ref={(el) => {
                         tabRefs.current.finished = el
                       }}
@@ -245,23 +251,23 @@ export default function Dashboard() {
                       onClick={() => setTab('finished')}
                     >
                       {t('dashboard.page.tabs.finished')}
-                    </Tab>
-                  </Tabs>
+                    </S.Tab>
+                  </S.Tabs>
 
-                  <Actions>
-                    <CreateProjectButton
-                      themeVariant="button"
+                  <S.Actions>
+                    <S.CreateProjectButton
+                      themeVariant="primary"
                       onClick={() => setCreateProjectOpen(true)}
                     >
                       <PlusIcon />
-                      <CreateProjectText>
+                      <S.CreateProjectText>
                         {t('dashboard.page.createProject')}
-                      </CreateProjectText>
-                    </CreateProjectButton>
-                  </Actions>
-                </TabsRow>
+                      </S.CreateProjectText>
+                    </S.CreateProjectButton>
+                  </S.Actions>
+                </S.TabsRow>
               ) : null}
-              <TableArea>
+              <S.TableArea>
                 {projectsFound ? (
                   <ProjectsTable rows={rows} />
                 ) : (
@@ -273,7 +279,7 @@ export default function Dashboard() {
                     actionLabel={t('dashboard.page.createProject')}
                   />
                 )}
-              </TableArea>
+              </S.TableArea>
             </>
           ) : (
             <DashboardEmptyState
@@ -283,13 +289,13 @@ export default function Dashboard() {
               actionLabel={t('dashboard.page.empty.action')}
             />
           )}
-        </Left>
+        </S.Left>
         {hasProjects ? (
-          <Right>
+          <S.Right>
             <ApplicationsUsage />
-          </Right>
+          </S.Right>
         ) : null}
-      </Content>
+      </S.Content>
 
       <CreateProjectModal
         open={createProjectOpen}
@@ -299,15 +305,15 @@ export default function Dashboard() {
         }}
       />
 
-      <Section>
-        <SectionTitleRow>
-          <SectionTitle>{t('dashboard.page.worklogs.title')}</SectionTitle>
+      <S.Section>
+        <S.SectionTitleRow>
+          <S.SectionTitle>{t('dashboard.page.worklogs.title')}</S.SectionTitle>
           {hasWorklogs ? (
-            <MobileOnly>
+            <S.MobileOnly>
               <Drawer.Root open={filtersOpen} onOpenChange={setFiltersOpen}>
                 <Drawer.Trigger asChild>
-                  <FiltersButton type="button">
-                    <FilterImage
+                  <S.FiltersButton type="button">
+                    <S.FilterImage
                       src="/img/icons/filter-icon.svg"
                       alt="Filter"
                       width={20}
@@ -316,33 +322,35 @@ export default function Dashboard() {
                     {t('dashboard.page.filters.title', {
                       defaultValue: 'Filters',
                     })}
-                  </FiltersButton>
+                  </S.FiltersButton>
                 </Drawer.Trigger>
                 <Drawer.Portal>
-                  <DrawerOverlay />
-                  <DrawerContent>
-                    <Sheet>
-                      <SheetHandle />
-                      <SheetTitle>
+                  <S.DrawerOverlay />
+                  <S.DrawerContent>
+                    <S.Sheet>
+                      <S.SheetHandle />
+                      <S.SheetTitle>
                         {t('dashboard.page.filters.title', {
                           defaultValue: 'Filters',
                         })}
-                      </SheetTitle>
+                      </S.SheetTitle>
 
-                      <MobileFilters>
-                        <Field>
-                          <Label>{t('dashboard.page.filters.projects')}</Label>
-                          <ProjectsTrigger
+                      <S.MobileFilters>
+                        <S.Field>
+                          <S.Label>
+                            {t('dashboard.page.filters.projects')}
+                          </S.Label>
+                          <S.ProjectsTrigger
                             type="button"
                             onClick={() => setProjectsDrawerOpen(true)}
                           >
                             {selectedProjectsLabel}
-                          </ProjectsTrigger>
-                        </Field>
+                          </S.ProjectsTrigger>
+                        </S.Field>
 
-                        <Field>
-                          <Label>{t('dashboard.page.filters.date')}</Label>
-                          <Range>
+                        <S.Field>
+                          <S.Label>{t('dashboard.page.filters.date')}</S.Label>
+                          <S.Range>
                             <DatePickerInput
                               value={fromDate}
                               onChange={setFromDate}
@@ -353,24 +361,24 @@ export default function Dashboard() {
                               onChange={setToDate}
                               placeholder={t('dashboard.page.filters.to')}
                             />
-                          </Range>
-                        </Field>
+                          </S.Range>
+                        </S.Field>
 
-                        <Field>
-                          <Label>{t('dashboard.page.filters.note')}</Label>
-                          <Control
+                        <S.Field>
+                          <S.Label>{t('dashboard.page.filters.note')}</S.Label>
+                          <S.Control
                             value={worklogQuery}
                             onChange={(e) => setWorklogQuery(e.target.value)}
                             placeholder={t('dashboard.page.filters.searchNote')}
                           />
-                        </Field>
+                        </S.Field>
 
-                        <Field>
-                          <Label>
+                        <S.Field>
+                          <S.Label>
                             {t('dashboard.page.filters.timeActive')}
-                          </Label>
-                          <Range>
-                            <Control
+                          </S.Label>
+                          <S.Range>
+                            <S.Control
                               value={formFilters.timeActiveMin}
                               onChange={(e) =>
                                 setFormFilters((p) => ({
@@ -380,7 +388,7 @@ export default function Dashboard() {
                               }
                               placeholder={t('dashboard.page.filters.min')}
                             />
-                            <Control
+                            <S.Control
                               value={formFilters.timeActiveMax}
                               onChange={(e) =>
                                 setFormFilters((p) => ({
@@ -390,13 +398,15 @@ export default function Dashboard() {
                               }
                               placeholder={t('dashboard.page.filters.max')}
                             />
-                          </Range>
-                        </Field>
+                          </S.Range>
+                        </S.Field>
 
-                        <Field>
-                          <Label>{t('dashboard.page.filters.keyboard')}</Label>
-                          <Range>
-                            <Control
+                        <S.Field>
+                          <S.Label>
+                            {t('dashboard.page.filters.keyboard')}
+                          </S.Label>
+                          <S.Range>
+                            <S.Control
                               value={formFilters.keyboardMin}
                               onChange={(e) =>
                                 setFormFilters((p) => ({
@@ -406,7 +416,7 @@ export default function Dashboard() {
                               }
                               placeholder={t('dashboard.page.filters.min')}
                             />
-                            <Control
+                            <S.Control
                               value={formFilters.keyboardMax}
                               onChange={(e) =>
                                 setFormFilters((p) => ({
@@ -416,13 +426,13 @@ export default function Dashboard() {
                               }
                               placeholder={t('dashboard.page.filters.max')}
                             />
-                          </Range>
-                        </Field>
+                          </S.Range>
+                        </S.Field>
 
-                        <Field>
-                          <Label>{t('dashboard.page.filters.mouse')}</Label>
-                          <Range>
-                            <Control
+                        <S.Field>
+                          <S.Label>{t('dashboard.page.filters.mouse')}</S.Label>
+                          <S.Range>
+                            <S.Control
                               value={formFilters.mouseMin}
                               onChange={(e) =>
                                 setFormFilters((p) => ({
@@ -432,7 +442,7 @@ export default function Dashboard() {
                               }
                               placeholder={t('dashboard.page.filters.min')}
                             />
-                            <Control
+                            <S.Control
                               value={formFilters.mouseMax}
                               onChange={(e) =>
                                 setFormFilters((p) => ({
@@ -442,15 +452,15 @@ export default function Dashboard() {
                               }
                               placeholder={t('dashboard.page.filters.max')}
                             />
-                          </Range>
-                        </Field>
+                          </S.Range>
+                        </S.Field>
 
-                        <Field>
-                          <Label>
+                        <S.Field>
+                          <S.Label>
                             {t('dashboard.page.filters.mouseDistance')}
-                          </Label>
-                          <Range>
-                            <Control
+                          </S.Label>
+                          <S.Range>
+                            <S.Control
                               value={formFilters.mouseDistanceMin}
                               onChange={(e) =>
                                 setFormFilters((p) => ({
@@ -460,7 +470,7 @@ export default function Dashboard() {
                               }
                               placeholder={t('dashboard.page.filters.min')}
                             />
-                            <Control
+                            <S.Control
                               value={formFilters.mouseDistanceMax}
                               onChange={(e) =>
                                 setFormFilters((p) => ({
@@ -470,22 +480,22 @@ export default function Dashboard() {
                               }
                               placeholder={t('dashboard.page.filters.max')}
                             />
-                          </Range>
-                        </Field>
-                      </MobileFilters>
+                          </S.Range>
+                        </S.Field>
+                      </S.MobileFilters>
 
-                      <SheetFooter>
-                        <SheetApply
+                      <S.SheetFooter>
+                        <S.SheetApply
                           type="button"
                           onClick={() => setFiltersOpen(false)}
                         >
                           {t('dashboard.page.filters.apply', {
                             defaultValue: 'Apply',
                           })}
-                        </SheetApply>
-                      </SheetFooter>
-                    </Sheet>
-                  </DrawerContent>
+                        </S.SheetApply>
+                      </S.SheetFooter>
+                    </S.Sheet>
+                  </S.DrawerContent>
                 </Drawer.Portal>
               </Drawer.Root>
 
@@ -494,19 +504,19 @@ export default function Dashboard() {
                 onOpenChange={setProjectsDrawerOpen}
               >
                 <Drawer.Portal>
-                  <NestedDrawerOverlay />
-                  <NestedDrawerContent>
-                    <Sheet>
-                      <SheetHandle />
-                      <SheetSubTitle>
+                  <S.NestedDrawerOverlay />
+                  <S.NestedDrawerContent>
+                    <S.Sheet>
+                      <S.SheetHandle />
+                      <S.SheetSubTitle>
                         {t('dashboard.page.filters.projectsTitle')}
-                      </SheetSubTitle>
+                      </S.SheetSubTitle>
 
-                      <ProjectsList>
+                      <S.ProjectsList>
                         {projectOptions.map((opt) => {
                           const selected = worklogProjects.includes(opt.value)
                           return (
-                            <ProjectRowButton
+                            <S.ProjectRowButton
                               key={opt.value}
                               type="button"
                               $selected={selected}
@@ -518,37 +528,37 @@ export default function Dashboard() {
                                 )
                               }
                             >
-                              <ProjectRowLabel>{opt.label}</ProjectRowLabel>
-                              {selected ? <CheckIcon aria-hidden /> : null}
-                            </ProjectRowButton>
+                              <S.ProjectRowLabel>{opt.label}</S.ProjectRowLabel>
+                              {selected ? <S.CheckIcon aria-hidden /> : null}
+                            </S.ProjectRowButton>
                           )
                         })}
-                      </ProjectsList>
+                      </S.ProjectsList>
 
-                      <SheetFooter>
-                        <SheetApply
+                      <S.SheetFooter>
+                        <S.SheetApply
                           type="button"
                           onClick={() => setProjectsDrawerOpen(false)}
                         >
                           {t('dashboard.page.filters.apply', {
                             defaultValue: 'Apply',
                           })}
-                        </SheetApply>
-                      </SheetFooter>
-                    </Sheet>
-                  </NestedDrawerContent>
+                        </S.SheetApply>
+                      </S.SheetFooter>
+                    </S.Sheet>
+                  </S.NestedDrawerContent>
                 </Drawer.Portal>
               </Drawer.Root>
-            </MobileOnly>
+            </S.MobileOnly>
           ) : null}
-        </SectionTitleRow>
+        </S.SectionTitleRow>
         {hasWorklogs ? (
           <>
-            <DesktopOnly>
-              <Filters>
-                <Field $basis={180}>
-                  <Label>{t('dashboard.page.filters.projects')}</Label>
-                  <FilterMotionSelect
+            <S.DesktopOnly>
+              <S.Filters>
+                <S.Field $basis={180}>
+                  <S.Label>{t('dashboard.page.filters.projects')}</S.Label>
+                  <S.FilterMotionSelect
                     title={t('dashboard.page.filters.projectsTitle')}
                     multi
                     options={projectOptions}
@@ -556,11 +566,11 @@ export default function Dashboard() {
                     onChange={(v) => setWorklogProjects(v as string[])}
                     placeholder={t('dashboard.page.filters.allWorklogs')}
                   />
-                </Field>
+                </S.Field>
 
-                <Field $basis={200}>
-                  <Label>{t('dashboard.page.filters.date')}</Label>
-                  <Range>
+                <S.Field $basis={200}>
+                  <S.Label>{t('dashboard.page.filters.date')}</S.Label>
+                  <S.Range>
                     <DatePickerInput
                       value={fromDate}
                       onChange={setFromDate}
@@ -571,22 +581,22 @@ export default function Dashboard() {
                       onChange={setToDate}
                       placeholder={t('dashboard.page.filters.to')}
                     />
-                  </Range>
-                </Field>
+                  </S.Range>
+                </S.Field>
 
-                <Field $basis={240}>
-                  <Label>{t('dashboard.page.filters.note')}</Label>
-                  <Control
+                <S.Field $basis={240}>
+                  <S.Label>{t('dashboard.page.filters.note')}</S.Label>
+                  <S.Control
                     value={worklogQuery}
                     onChange={(e) => setWorklogQuery(e.target.value)}
                     placeholder={t('dashboard.page.filters.searchNote')}
                   />
-                </Field>
+                </S.Field>
 
-                <Field>
-                  <Label>{t('dashboard.page.filters.timeActive')}</Label>
-                  <Range>
-                    <Control
+                <S.Field>
+                  <S.Label>{t('dashboard.page.filters.timeActive')}</S.Label>
+                  <S.Range>
+                    <S.Control
                       value={formFilters.timeActiveMin}
                       onChange={(e) =>
                         setFormFilters((p) => ({
@@ -596,7 +606,7 @@ export default function Dashboard() {
                       }
                       placeholder={t('dashboard.page.filters.min')}
                     />
-                    <Control
+                    <S.Control
                       value={formFilters.timeActiveMax}
                       onChange={(e) =>
                         setFormFilters((p) => ({
@@ -606,13 +616,13 @@ export default function Dashboard() {
                       }
                       placeholder={t('dashboard.page.filters.max')}
                     />
-                  </Range>
-                </Field>
+                  </S.Range>
+                </S.Field>
 
-                <Field>
-                  <Label>{t('dashboard.page.filters.keyboard')}</Label>
-                  <Range>
-                    <Control
+                <S.Field>
+                  <S.Label>{t('dashboard.page.filters.keyboard')}</S.Label>
+                  <S.Range>
+                    <S.Control
                       value={formFilters.keyboardMin}
                       onChange={(e) =>
                         setFormFilters((p) => ({
@@ -622,7 +632,7 @@ export default function Dashboard() {
                       }
                       placeholder={t('dashboard.page.filters.min')}
                     />
-                    <Control
+                    <S.Control
                       value={formFilters.keyboardMax}
                       onChange={(e) =>
                         setFormFilters((p) => ({
@@ -632,13 +642,13 @@ export default function Dashboard() {
                       }
                       placeholder={t('dashboard.page.filters.max')}
                     />
-                  </Range>
-                </Field>
+                  </S.Range>
+                </S.Field>
 
-                <Field>
-                  <Label>{t('dashboard.page.filters.mouse')}</Label>
-                  <Range>
-                    <Control
+                <S.Field>
+                  <S.Label>{t('dashboard.page.filters.mouse')}</S.Label>
+                  <S.Range>
+                    <S.Control
                       value={formFilters.mouseMin}
                       onChange={(e) =>
                         setFormFilters((p) => ({
@@ -648,7 +658,7 @@ export default function Dashboard() {
                       }
                       placeholder={t('dashboard.page.filters.min')}
                     />
-                    <Control
+                    <S.Control
                       value={formFilters.mouseMax}
                       onChange={(e) =>
                         setFormFilters((p) => ({
@@ -658,13 +668,13 @@ export default function Dashboard() {
                       }
                       placeholder={t('dashboard.page.filters.max')}
                     />
-                  </Range>
-                </Field>
+                  </S.Range>
+                </S.Field>
 
-                <Field>
-                  <Label>{t('dashboard.page.filters.mouseDistance')}</Label>
-                  <Range>
-                    <Control
+                <S.Field>
+                  <S.Label>{t('dashboard.page.filters.mouseDistance')}</S.Label>
+                  <S.Range>
+                    <S.Control
                       value={formFilters.mouseDistanceMin}
                       onChange={(e) =>
                         setFormFilters((p) => ({
@@ -674,7 +684,7 @@ export default function Dashboard() {
                       }
                       placeholder={t('dashboard.page.filters.min')}
                     />
-                    <Control
+                    <S.Control
                       value={formFilters.mouseDistanceMax}
                       onChange={(e) =>
                         setFormFilters((p) => ({
@@ -684,426 +694,20 @@ export default function Dashboard() {
                       }
                       placeholder={t('dashboard.page.filters.max')}
                     />
-                  </Range>
-                </Field>
-              </Filters>
-            </DesktopOnly>
+                  </S.Range>
+                </S.Field>
+              </S.Filters>
+            </S.DesktopOnly>
             <WorklogsTable rows={worklogRows} />
           </>
         ) : (
           <WorklogsEmptyState />
         )}
-      </Section>
+      </S.Section>
     </Wrapper>
+  ) : (
+    <Flex justify={'center'}>
+      <Spinner size={100} style={{ marginTop: 300, textAlign: 'center' }} />
+    </Flex>
   )
 }
-
-const Top = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 14px;
-`
-
-const TitleRow = styled.div`
-  display: flex;
-  align-items: center;
-  /* justify-content: space-between; */
-  width: 100%;
-  gap: 10px;
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: start;
-  }
-`
-
-const TopRight = styled.div`
-  margin-left: auto;
-`
-
-const TitleBox = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-`
-
-const Title = styled.h1`
-  font-weight: 500;
-  font-size: 24px;
-  line-height: 125%;
-  letter-spacing: 0em;
-  color: #1c2024;
-
-  @media (max-width: 768px) {
-    font-size: 18px;
-  }
-`
-
-const Counter = styled.span`
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-weight: 500;
-  font-size: 12px;
-  line-height: 133%;
-  color: rgba(0, 7, 20, 0.62);
-  background: rgba(0, 0, 51, 0.06);
-`
-
-const DashboardSearch = styled(Search)`
-  width: 280px;
-`
-
-const Actions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 14px;
-`
-
-const TabsRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 10px;
-  margin-left: 20px;
-`
-
-const Tabs = styled.div`
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  border-bottom: 1px solid rgba(0, 8, 48, 0.12);
-`
-
-const ActiveIndicator = styled(motion.div)`
-  position: absolute;
-  left: 0;
-  bottom: -1px;
-  height: 2px;
-  border-radius: 999px;
-  background: var(--download, #003482);
-  pointer-events: none;
-`
-
-const Tab = styled.button<{ $active?: boolean }>`
-  padding: 8px 0;
-  font-size: 13px;
-  line-height: 16px;
-  font-weight: 500;
-  color: ${(p) => (p.$active ? 'var(--ds-primary)' : 'rgba(28, 32, 36, 0.62)')};
-  border-bottom: 2px solid transparent;
-
-  &:hover {
-    color: var(--ds-primary);
-  }
-`
-
-const TableArea = styled.div`
-  padding-top: 4px;
-`
-
-const Content = styled.div`
-  display: grid;
-  grid-template-columns: 1fr;
-  gap: 16px;
-  align-items: start;
-
-  &:has(> :nth-child(2)) {
-    grid-template-columns: 64% 35%;
-  }
-`
-
-const Left = styled.section`
-  min-width: 0;
-
-  @media (max-width: 1024px) {
-    grid-column: 1 / -1;
-    padding-right: 8px;
-  }
-`
-
-const Right = styled.section`
-  min-width: 0;
-
-  @media (max-width: 1024px) {
-    display: none;
-  }
-`
-
-const Section = styled.section`
-  margin-top: 48px;
-`
-
-const SectionTitle = styled.h2`
-  font-weight: 500;
-  font-size: 24px;
-  line-height: 125%;
-  letter-spacing: 0em;
-  color: #1c2024;
-  margin: 0;
-
-  @media (max-width: 768px) {
-    font-size: 18px;
-  }
-`
-
-const CreateProjectButton = styled(Button)`
-  @media (max-width: 768px) {
-    padding: 6px 10px;
-    gap: 0;
-
-    svg {
-      width: 18px;
-      height: 18px;
-    }
-  }
-`
-
-const CreateProjectText = styled.span`
-  @media (max-width: 768px) {
-    display: none;
-  }
-`
-
-const SectionTitleRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 12px;
-  margin-bottom: 14px;
-`
-
-const DesktopOnly = styled.div`
-  @media (max-width: 768px) {
-    display: none;
-  }
-`
-
-const MobileOnly = styled.div`
-  display: none;
-
-  @media (max-width: 768px) {
-    display: block;
-  }
-`
-
-const FiltersButton = styled.button`
-  font-weight: 500;
-  font-size: 12px;
-  line-height: 133%;
-  letter-spacing: 0em;
-  color: #60646c;
-  border: 1px solid rgba(0, 8, 48, 0.27);
-  border-radius: 3px;
-  padding: 0px 8px;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  img {
-    width: 16px;
-    height: 16px;
-    display: block;
-  }
-
-  &:hover {
-    background: rgba(0, 0, 51, 0.04);
-  }
-`
-
-const FilterImage = styled.img`
-  width: 16px;
-  height: 16px;
-  display: block;
-`
-
-const DrawerOverlay = styled(Drawer.Overlay)`
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  z-index: 50;
-`
-
-const DrawerContent = styled(Drawer.Content)`
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 51;
-  outline: none;
-`
-
-const NestedDrawerOverlay = styled(Drawer.Overlay)`
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  z-index: 60;
-`
-
-const NestedDrawerContent = styled(Drawer.Content)`
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 61;
-  outline: none;
-`
-
-const Sheet = styled.div`
-  background: #fff;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
-  padding: 16px;
-  max-height: 85vh;
-  overflow: auto;
-`
-
-const SheetHandle = styled.div`
-  width: 48px;
-  height: 5px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.12);
-  margin: 0 auto 10px;
-`
-
-const SheetTitle = styled.div`
-  font-weight: 500;
-  font-size: 16px;
-  line-height: 150%;
-  color: #1c2024;
-  text-align: center;
-  margin-bottom: 12px;
-`
-
-const SheetSubTitle = styled.div`
-  font-weight: 500;
-  font-size: 16px;
-  line-height: 150%;
-  color: #1c2024;
-  margin-bottom: 12px;
-`
-
-const MobileFilters = styled.div`
-  display: flex;
-  flex-direction: column;
-  /* gap: 12px; */
-`
-
-const SheetFooter = styled.div`
-  margin-top: 14px;
-`
-
-const SheetApply = styled.button`
-  width: 100%;
-  height: 32px;
-  border-radius: 4px;
-  background: #3f67a4;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 500;
-`
-
-const ProjectsTrigger = styled.button`
-  width: 100%;
-  height: 34px;
-  border-radius: 4px;
-  border: 1px solid rgba(0, 8, 48, 0.12);
-  padding: 0 10px;
-  background: #fff;
-  font-size: 13px;
-  color: var(--ds-primary);
-  text-align: left;
-`
-
-const ProjectsList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`
-
-const ProjectRowButton = styled.button<{ $selected?: boolean }>`
-  width: 100%;
-  border-radius: 8px;
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: ${(p) => (p.$selected ? 'rgba(5, 86, 205, 0.0588)' : '')};
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.08);
-  }
-`
-
-const ProjectRowLabel = styled.div`
-  font-size: 14px;
-  font-weight: 500;
-  color: #1c2024;
-`
-
-const CheckIcon = styled.span`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 12px;
-  height: 12px;
-  flex-shrink: 0;
-  background: url('/img/icons/check-icon.svg') no-repeat center;
-  background-size: contain;
-`
-
-const Filters = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: end;
-  margin-bottom: 10px;
-`
-
-const FilterMotionSelect = styled(MotionSelect)`
-  --ms-height: 34px;
-`
-
-const Field = styled.div<{ $basis?: number }>`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1 1 ${(p) => (p.$basis ? `${p.$basis}px` : '70px')};
-  min-width: 130px;
-`
-
-const Label = styled.div`
-  font-size: 14px;
-  line-height: 14px;
-  color: #1c2024;
-  font-weight: 500;
-`
-
-const Control = styled.input`
-  width: 100%;
-  height: 34px;
-  border-radius: 4px;
-  border: 1px solid rgba(0, 8, 48, 0.12);
-  padding: 0 10px;
-  background: #fff;
-  font-size: 13px;
-  color: var(--ds-primary);
-  outline: none;
-
-  &::placeholder {
-    color: rgba(0, 5, 29, 0.45);
-  }
-
-  &:focus {
-    border-color: rgba(0, 52, 130, 0.55);
-  }
-`
-
-const Range = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
-`

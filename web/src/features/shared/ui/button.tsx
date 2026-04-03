@@ -20,6 +20,8 @@ export const Button = ({
 }
 
 const StyledRadixButton = styled(RadixButton)<ButtonProps>`
+  cursor: pointer;
+
   ${(p) =>
     p.themeVariant === 'primary' &&
     `
@@ -33,7 +35,7 @@ const StyledRadixButton = styled(RadixButton)<ButtonProps>`
       background-color: var(--ds-secondary);
       color: var(--ds-neutral-11);
   `}
-    
+
   &:disabled {
     opacity: 0.68;
   }

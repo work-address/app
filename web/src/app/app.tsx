@@ -3,7 +3,8 @@ import '@radix-ui/themes/styles.css'
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
-import { Header } from '@/widgets'
+import { router } from '@/features/shared'
+import * as Layouts from '@/layouts'
 
 const DashboardPage = lazy(() => import('../pages/dashboard-page.tsx'))
 const ProfilePage = lazy(() => import('../pages/profile-page.tsx'))
@@ -13,36 +14,19 @@ function App() {
   return (
     <Suspense fallback={<> Loading... </>}>
       <Routes>
-        <Route path="/sign-in" element={<SignInRoute />} />
-        <Route path="/" element={<DashboardLayout />} />
-        <Route path="/dashboard" element={<DashboardLayout />} />
-        <Route path="/profile" element={<ProfileLayout />} />
+        <Route element={<Layouts.AuthLayout />}>
+          <Route path={router.signIn.schema} element={<SignInPage />} />
+        </Route>
+
+        <Route element={<Layouts.MainLayout />}>
+          <Route path={router.dashboard.schema} element={<DashboardPage />} />
+          <Route path={router.profile.schema} element={<ProfilePage />} />
+        </Route>
+
         <Route path="*" element={<Navigate to="/sign-in" replace />} />
       </Routes>
     </Suspense>
   )
-}
-
-function DashboardLayout() {
-  return (
-    <div>
-      <Header active="dashboard" />
-      <DashboardPage />
-    </div>
-  )
-}
-
-function ProfileLayout() {
-  return (
-    <div>
-      <Header active="profile" />
-      <ProfilePage />
-    </div>
-  )
-}
-
-function SignInRoute() {
-  return <SignInPage />
 }
 
 export default App

@@ -1,13 +1,14 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 
-export type HeaderProps = {
-  active?: 'dashboard' | 'profile' | 'help' | 'download'
-}
+import { router } from '@/features/shared'
 
-export default function Header({ active = 'dashboard' }: HeaderProps) {
+export const Header = () => {
+  const { pathname } = useLocation()
+
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLElement | null>(null)
@@ -44,28 +45,35 @@ export default function Header({ active = 'dashboard' }: HeaderProps) {
   return (
     <HeaderRoot ref={rootRef}>
       <HeaderInner>
-        <LogoLink href="/">
+        <LogoLink href={router.dashboard.schema}>
           <LogoImg src="/img/photo/logo.svg" alt={t('header.logoAlt')} />
         </LogoLink>
 
         <Nav>
-          <NavLink href="#" $active={active === 'dashboard'}>
+          <NavLink to={router.dashboard.schema} $active={pathname === '/'}>
             {t('header.nav.dashboard')}
           </NavLink>
-          <NavLink href="#" $active={active === 'profile'}>
+
+          <NavLink
+            to={router.profile.schema}
+            $active={pathname.includes('/profile')}
+          >
             {t('header.nav.profile')}
           </NavLink>
-          <NavLink href="#" $active={active === 'help'}>
+
+          <NavLink to="#" $active={pathname.includes('download')}>
             {t('header.nav.helpCenter')}
           </NavLink>
-          <NavLink href="#" $active={active === 'download'} $download>
+
+          <NavLink to="#" $active={pathname.includes('download')} $download>
             {t('header.nav.download')}
             <IconImg
               src="/img/icons/external-link.svg"
               alt={t('header.aria.github')}
             />
           </NavLink>
-          <IconLink href="#" aria-label={t('header.aria.github')}>
+
+          <IconLink to="#" aria-label={t('header.aria.github')}>
             <IconImg
               src="/img/photo/github-logo.svg"
               alt={t('header.aria.github')}
@@ -78,6 +86,7 @@ export default function Header({ active = 'dashboard' }: HeaderProps) {
             <UserAvatar>
               <IconImg src="/img/icons/person.svg" alt={t('header.userAlt')} />
             </UserAvatar>
+
             <UserText>
               <UserName>John Doe</UserName>
               <UserSub>EQCF9...NDOM</UserSub>
@@ -134,6 +143,7 @@ export default function Header({ active = 'dashboard' }: HeaderProps) {
                       alt={t('header.userAlt')}
                     />
                   </UserAvatar>
+
                   <UserText>
                     <UserName>John Doe</UserName>
                     <UserSub>EQCF9...NDOM</UserSub>
@@ -152,7 +162,7 @@ export default function Header({ active = 'dashboard' }: HeaderProps) {
                 <MobileMenuItem
                   href="#"
                   onClick={() => setOpen(false)}
-                  $active={active === 'profile'}
+                  $active={pathname.includes(router.profile.schema)}
                   variants={itemVariants}
                 >
                   <IconImg
@@ -165,7 +175,7 @@ export default function Header({ active = 'dashboard' }: HeaderProps) {
                 <MobileMenuItem
                   href="#"
                   onClick={() => setOpen(false)}
-                  $active={active === 'dashboard'}
+                  $active={pathname === router.dashboard.schema}
                   variants={itemVariants}
                 >
                   <IconImg
@@ -178,7 +188,6 @@ export default function Header({ active = 'dashboard' }: HeaderProps) {
                 <MobileMenuItem
                   href="#"
                   onClick={() => setOpen(false)}
-                  $active={active === 'help'}
                   variants={itemVariants}
                 >
                   <IconImg
@@ -250,7 +259,7 @@ const itemVariants = {
 
 const HeaderRoot = styled.header`
   width: 100%;
-  background: var(--bg);
+  background: var(--ds-secondary);
 `
 
 const HeaderInner = styled.div`
@@ -293,26 +302,46 @@ const Nav = styled.nav`
   }
 `
 
-const NavLink = styled.a<{ $active?: boolean; $download?: boolean }>`
+const NavLink = styled(Link)<{ $active?: boolean; $download?: boolean }>`
   display: flex;
   align-items: center;
   gap: 6px;
   font-size: 16px;
   line-height: 20px;
   font-weight: 400;
+  position: relative;
+
+  &:after {
+    transition: .25s;
+    content: '';
+    display: block;
+    background: rgba(0,0,0,0.12);
+    height: 2px;
+    width: 100%;
+    position: absolute;
+    bottom: -6px;
+    opacity: 0;
+  }
+
   color: ${(p) => {
     if (p.$download) {
       return 'var(--download, #003482)'
     }
     return 'var(--ds-primary)'
   }};
-    
+
+  ${(p) =>
+    p.$active &&
+    `&:after {
+      opacity: 1;
+    }`}
+
   opacity: ${(p) => {
     // eslint-disable-next-line
     return p.$download
-            ? 1 
-            : (p.$active 
-                    ? 1 
+            ? 1
+            : (p.$active
+                    ? 1
                     : 0.8)
   }}}
 
@@ -457,7 +486,7 @@ const MobileMenuButton = styled(motion.button)`
   }
 `
 
-const IconLink = styled.a`
+const IconLink = styled(Link)`
   display: inline-flex;
   align-items: center;
   justify-content: center;

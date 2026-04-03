@@ -71,6 +71,7 @@ export const Desktop = () => {
                       cursor: 'pointer',
                     }}
                     color={'gray'}
+                    type={'button'}
                   >
                     ←
                   </IconButton>
