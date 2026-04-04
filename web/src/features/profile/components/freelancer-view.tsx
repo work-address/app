@@ -67,8 +67,8 @@ export const FreelancerView = () => {
           gap={isUpMd ? 'var(--space-5)' : 'var(--space-1)'}
         >
           <FreelancerViewCard>
-            <Flex mb={'4'}>
-              <Flex gap={'var(--space-4)'}>
+            <Flex gap={'var(--space-4)'} mb={'4'} align={'center'}>
+              <Flex gap={'var(--space-4)'} align={'center'}>
                 {isUpMd && (
                   <IconButton
                     radius={'full'}
@@ -89,27 +89,27 @@ export const FreelancerView = () => {
                 <Text size={isUpMd ? '6' : '4'} weight={'medium'}>
                   {t('profile.title')}
                 </Text>
-
-                {isUpMd && (
-                  <Flex gap={'var(--space-4)'}>
-                    <Button
-                      themeVariant="secondary"
-                      onClick={() => reset()}
-                      disabled={!isDirty}
-                    >
-                      {t('profile.actions.cancel')}
-                    </Button>
-
-                    <Button
-                      themeVariant={'primary'}
-                      disabled={!isDirty}
-                      type={'submit'}
-                    >
-                      {t('profile.actions.save')}
-                    </Button>
-                  </Flex>
-                )}
               </Flex>
+
+              {isUpMd && (
+                <Flex gap={'var(--space-4)'}>
+                  <Button
+                    themeVariant="secondary"
+                    onClick={() => reset()}
+                    disabled={!isDirty}
+                  >
+                    {t('profile.actions.cancel')}
+                  </Button>
+
+                  <Button
+                    themeVariant={'primary'}
+                    disabled={!isDirty}
+                    type={'submit'}
+                  >
+                    {t('profile.actions.save')}
+                  </Button>
+                </Flex>
+              )}
             </Flex>
 
             {isUpMd && <Separator size={'4'} mb={'5'} />}
@@ -187,7 +187,7 @@ export const FreelancerView = () => {
             <Text
               size={isUpMd ? '6' : '4'}
               weight={'medium'}
-              mb={isUpMd ? '5' : '2'}
+              mb={isUpMd ? '5' : '3'}
             >
               {t('profile.links.title')}
             </Text>

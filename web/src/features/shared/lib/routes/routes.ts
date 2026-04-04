@@ -1,4 +1,9 @@
-import type { Route, IdRoute, NoChildRoutes, MappingRoute } from './types.ts'
+import type {
+  Route,
+  IdRouteParams,
+  NoChildRoutes,
+  MappingRoute,
+} from './types.ts'
 
 /* eslint-disable */
 type MainRoutes =
@@ -8,11 +13,11 @@ type MainRoutes =
   & Route<'/help', 'helpCenter'>
   & Route<'/time-tracker', 'timeTracker'>
   & Route<'/download', 'download'>
-  & Route<'/github', 'github'>
+  & Route<'https://github.com', 'github'>
 
 type ProfileRoutes =
-  & Route<'/profile/freelancer/:id', 'freelancer', NoChildRoutes,  IdRoute>
-  & Route<'/profile/customer/:id', 'customer', NoChildRoutes, IdRoute>
+  & Route<'/profile/freelancer/:id', 'freelancer', NoChildRoutes,  IdRouteParams>
+
 /* eslint-enable */
 
 /* Схема сайта. Роут выводится в меню если прописан order.
@@ -45,12 +50,6 @@ export const routes: MainRoutes = {
       freelancer: {
         schema: '/profile/freelancer/:id',
         build: ({ id }) => `/profile/freelancer/${id}`,
-        disabled: true,
-      },
-
-      customer: {
-        schema: '/profile/customer/:id',
-        build: ({ id }) => `/profile/customer/${id}`,
         disabled: true,
       },
     },
@@ -89,7 +88,7 @@ export const routes: MainRoutes = {
   },
 
   github: {
-    schema: '/github',
+    schema: 'https://github.com',
 
     desktopOrder: 4,
     mobileOrder: 4,

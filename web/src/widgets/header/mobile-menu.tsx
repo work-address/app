@@ -27,9 +27,14 @@ export const MobileMenu = ({ setOpen }: MobileMenuProps) => {
     e.preventDefault()
     setOpen(false)
     const path = e.currentTarget.getAttribute('href')
+    const target = e.currentTarget.getAttribute('target')
 
     if (path) {
-      navigate(path)
+      if (target === '_blank') {
+        window.open(path)
+      } else {
+        navigate(path)
+      }
     }
   }
 
@@ -44,6 +49,7 @@ export const MobileMenu = ({ setOpen }: MobileMenuProps) => {
           text,
           disabled,
           mobileOrder,
+          target,
         }) =>
           !disabled &&
           mobileOrder !== undefined && (
@@ -55,6 +61,7 @@ export const MobileMenu = ({ setOpen }: MobileMenuProps) => {
                 schema === '/' ? pathname === schema : pathname.includes(schema)
               }
               variants={itemVariants}
+              target={target}
             >
               <IconImg
                 src={mobileIcon}

@@ -2,7 +2,7 @@
 
 export type BuildRoute<Params extends any> = (params: Params) => string
 
-export type IdRoute = BuildRoute<{ id: string }>
+export type IdRouteParams = BuildRoute<{ id: string }>
 
 export type NoChildRoutes = undefined
 
