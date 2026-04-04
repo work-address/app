@@ -3,7 +3,7 @@ import { useMediaQuery } from 'styled-breakpoints/use-media-query'
 import { useTheme } from 'styled-components'
 
 import { AuthFormStyles as S, ProviderButton } from '@/features/auth'
-import { Button, router, showErrorToast } from '@/features/shared'
+import { Button, routes, showErrorToast } from '@/features/shared'
 
 export default function SignInPage() {
   const navigate = useNavigate()
@@ -13,7 +13,7 @@ export default function SignInPage() {
 
   const onSignIn = (type: 'ton' | 'eth') => {
     if (type === 'ton') {
-      navigate(router.dashboard.schema)
+      navigate(routes.dashboard.schema)
     } else {
       showErrorToast({
         title: 'Connection failed!',

@@ -1,14 +1,16 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { router } from '@/features/shared'
+import { IconImg, MobileMenuNav } from '../styled.ts'
+
+import { DesktopMenu } from './desktop-menu.tsx'
+import { MobileMenu, itemVariants } from './mobile-menu.tsx'
+
+import { routes } from '@/features/shared'
 
 export const Header = () => {
-  const { pathname } = useLocation()
-
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLElement | null>(null)
@@ -45,40 +47,12 @@ export const Header = () => {
   return (
     <HeaderRoot ref={rootRef}>
       <HeaderInner>
-        <LogoLink href={router.dashboard.schema}>
+        <LogoLink href={routes.dashboard.schema}>
           <LogoImg src="/img/photo/logo.svg" alt={t('header.logoAlt')} />
         </LogoLink>
 
         <Nav>
-          <NavLink to={router.dashboard.schema} $active={pathname === '/'}>
-            {t('header.nav.dashboard')}
-          </NavLink>
-
-          <NavLink
-            to={router.profile.schema}
-            $active={pathname.includes('/profile')}
-          >
-            {t('header.nav.profile')}
-          </NavLink>
-
-          <NavLink to="#" $active={pathname.includes('download')}>
-            {t('header.nav.helpCenter')}
-          </NavLink>
-
-          <NavLink to="#" $active={pathname.includes('download')} $download>
-            {t('header.nav.download')}
-            <IconImg
-              src="/img/icons/external-link.svg"
-              alt={t('header.aria.github')}
-            />
-          </NavLink>
-
-          <IconLink to="#" aria-label={t('header.aria.github')}>
-            <IconImg
-              src="/img/photo/github-logo.svg"
-              alt={t('header.aria.github')}
-            />
-          </IconLink>
+          <DesktopMenu />
         </Nav>
 
         <Right>
@@ -125,7 +99,7 @@ export const Header = () => {
 
       <AnimatePresence>
         {open ? (
-          <MobileMenu
+          <MobileMenuStyled
             id="mobile-menu"
             role="dialog"
             aria-label={t('header.mobileNavAria')}
@@ -159,67 +133,7 @@ export const Header = () => {
                 animate="animate"
                 exit="exit"
               >
-                <MobileMenuItem
-                  href="#"
-                  onClick={() => setOpen(false)}
-                  $active={pathname.includes(router.profile.schema)}
-                  variants={itemVariants}
-                >
-                  <IconImg
-                    src="/img/icons/person.svg"
-                    alt={t('header.nav.profile')}
-                  />
-                  <span>{t('header.nav.profile')}</span>
-                </MobileMenuItem>
-
-                <MobileMenuItem
-                  href="#"
-                  onClick={() => setOpen(false)}
-                  $active={pathname === router.dashboard.schema}
-                  variants={itemVariants}
-                >
-                  <IconImg
-                    src="/img/icons/dashboard.svg"
-                    alt={t('header.nav.dashboard')}
-                  />
-                  <span>{t('header.nav.dashboard')}</span>
-                </MobileMenuItem>
-
-                <MobileMenuItem
-                  href="#"
-                  onClick={() => setOpen(false)}
-                  variants={itemVariants}
-                >
-                  <IconImg
-                    src="/img/icons/question-mark-circled.svg"
-                    alt={t('header.nav.helpCenter')}
-                  />
-                  <span>{t('header.nav.helpCenter')}</span>
-                </MobileMenuItem>
-
-                <MobileMenuItem
-                  href="#"
-                  onClick={() => setOpen(false)}
-                  variants={itemVariants}
-                >
-                  <IconImg
-                    src="/img/icons/external-link.svg"
-                    alt={t('header.nav.download')}
-                  />
-                  <span>{t('header.nav.download')}</span>
-                </MobileMenuItem>
-
-                <MobileMenuItem
-                  href="#"
-                  onClick={() => setOpen(false)}
-                  variants={itemVariants}
-                >
-                  <IconImg
-                    src="/img/photo/github-logo.svg"
-                    alt={t('header.aria.github')}
-                  />
-                  <span>{t('header.aria.github')}</span>
-                </MobileMenuItem>
+                <MobileMenu setOpen={setOpen} />
 
                 <MobileMenuButton
                   type="button"
@@ -232,7 +146,7 @@ export const Header = () => {
                 </MobileMenuButton>
               </MobileMenuNav>
             </MobileMenuInner>
-          </MobileMenu>
+          </MobileMenuStyled>
         ) : null}
       </AnimatePresence>
     </HeaderRoot>
@@ -249,12 +163,6 @@ const menuVariants = {
     opacity: 1,
     transition: { staggerChildren: 0.02, staggerDirection: -1 },
   },
-}
-
-const itemVariants = {
-  initial: { opacity: 0, y: -6 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.14 } },
-  exit: { opacity: 0, y: -6, transition: { duration: 0.1 } },
 }
 
 const HeaderRoot = styled.header`
@@ -299,58 +207,6 @@ const Nav = styled.nav`
 
   @media (max-width: 770px) {
     display: none;
-  }
-`
-
-const NavLink = styled(Link)<{ $active?: boolean; $download?: boolean }>`
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  font-size: 16px;
-  line-height: 20px;
-  font-weight: 400;
-  position: relative;
-
-  &:after {
-    transition: .25s;
-    content: '';
-    display: block;
-    background: rgba(0,0,0,0.12);
-    height: 2px;
-    width: 100%;
-    position: absolute;
-    bottom: -6px;
-    opacity: 0;
-  }
-
-  color: ${(p) => {
-    if (p.$download) {
-      return 'var(--download, #003482)'
-    }
-    return 'var(--ds-primary)'
-  }};
-
-  ${(p) =>
-    p.$active &&
-    `&:after {
-      opacity: 1;
-    }`}
-
-  opacity: ${(p) => {
-    // eslint-disable-next-line
-    return p.$download
-            ? 1
-            : (p.$active
-                    ? 1
-                    : 0.8)
-  }}}
-
-  @media (max-width: 1024px) {
-    font-size: 14px;
-  }
-
-  &:hover {
-    opacity: 1;
   }
 `
 
@@ -406,7 +262,7 @@ const BurgerToggleImg = styled.img`
   }
 `
 
-const MobileMenu = styled(motion.div)`
+const MobileMenuStyled = styled(motion.div)`
   width: 100%;
   overflow: hidden;
 
@@ -433,35 +289,6 @@ const Divider = styled.div`
   margin: 12px 0;
 `
 
-const MobileMenuNav = styled(motion.nav)`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-`
-
-const MobileMenuItem = styled(motion.a)<{ $active?: boolean }>`
-  padding: 10px 10px;
-  border-radius: 10px;
-  color: var(--ds-primary);
-  text-decoration: none;
-  font-size: 16px;
-  line-height: 22px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: ${(p) =>
-    p.$active ? 'rgba(5, 86, 205, 0.0588)' : 'transparent'};
-
-  &:hover {
-    background: rgba(28, 32, 36, 0.06);
-  }
-
-  img {
-    width: 18px;
-    height: 18px;
-  }
-`
-
 const MobileMenuButton = styled(motion.button)`
   padding: 10px 10px;
   border-radius: 10px;
@@ -484,22 +311,6 @@ const MobileMenuButton = styled(motion.button)`
     width: 18px;
     height: 18px;
   }
-`
-
-const IconLink = styled(Link)`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-
-  &:hover {
-    background: rgba(28, 32, 36, 0.06);
-  }
-`
-
-const IconImg = styled.img`
-  width: 18px;
-  height: 18px;
-  display: block;
 `
 
 const UserBox = styled.div`

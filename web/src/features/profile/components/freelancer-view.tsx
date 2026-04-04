@@ -6,6 +6,8 @@ import styled, { useTheme } from 'styled-components'
 
 import { RichEditor } from './rich-editor.tsx'
 
+import type { CardProps } from '@/features/shared'
+
 import { Button, Card, Input, TextArea } from '@/features/shared'
 
 type FormState = {
@@ -65,36 +67,31 @@ export const FreelancerView = () => {
           gap={isUpMd ? 'var(--space-5)' : 'var(--space-1)'}
         >
           <FreelancerViewCard>
-            <Flex
-              direction={'column'}
-              gap={isUpMd ? 'var(--space-5)' : 'var(--space-4)'}
-            >
-              <Flex justify={'between'}>
-                <Flex gap={'var(--space-4)'} align={'center'}>
-                  {isUpMd && (
-                    <IconButton
-                      radius={'full'}
-                      variant={'ghost'}
-                      style={{
-                        width: 40,
-                        height: 40,
-                        boxSizing: 'border-box',
-                        cursor: 'pointer',
-                      }}
-                      color={'gray'}
-                      type={'button'}
-                    >
-                      ←
-                    </IconButton>
-                  )}
+            <Flex mb={'4'}>
+              <Flex gap={'var(--space-4)'}>
+                {isUpMd && (
+                  <IconButton
+                    radius={'full'}
+                    variant={'ghost'}
+                    style={{
+                      width: 40,
+                      height: 40,
+                      boxSizing: 'border-box',
+                      cursor: 'pointer',
+                    }}
+                    color={'gray'}
+                    type={'button'}
+                  >
+                    ←
+                  </IconButton>
+                )}
 
-                  <Text size={isUpMd ? '6' : '4'} weight={'medium'}>
-                    {t('profile.title')}
-                  </Text>
-                </Flex>
+                <Text size={isUpMd ? '6' : '4'} weight={'medium'}>
+                  {t('profile.title')}
+                </Text>
 
                 {isUpMd && (
-                  <Flex align={'center'} gap={'var(--space-4)'}>
+                  <Flex gap={'var(--space-4)'}>
                     <Button
                       themeVariant="secondary"
                       onClick={() => reset()}
@@ -113,9 +110,11 @@ export const FreelancerView = () => {
                   </Flex>
                 )}
               </Flex>
+            </Flex>
 
-              {isUpMd && <Separator size={'4'} />}
+            {isUpMd && <Separator size={'4'} mb={'5'} />}
 
+            <Flex direction={'column'} gap={'var(--space-5)'}>
               <Input
                 label={t('profile.form.address')}
                 labelWidth={inputLabelWidth}
@@ -184,12 +183,16 @@ export const FreelancerView = () => {
             </Flex>
           </FreelancerViewCard>
 
-          <FreelancerViewCard>
-            <Grid gap={'var(--space-5)'}>
-              <Text size={isUpMd ? '6' : '4'} weight={'medium'}>
-                {t('profile.links.title')}
-              </Text>
+          <FreelancerViewCard style={{ paddingTop: isUpMd ? undefined : 0 }}>
+            <Text
+              size={isUpMd ? '6' : '4'}
+              weight={'medium'}
+              mb={isUpMd ? '5' : '2'}
+            >
+              {t('profile.links.title')}
+            </Text>
 
+            <Grid gap={'var(--space-5)'}>
               <Input
                 label={t('profile.links.facebook')}
                 placeholder={'facebook.com/'}
@@ -248,13 +251,10 @@ const Wrapper = styled.div`
   }
 `
 
-const FreelancerViewCard = styled(Card)`
+const FreelancerViewCard = styled(Card)<CardProps>`
   box-shadow: none;
+
   ${(p) => p.theme.breakpoints.down('md')} {
     border: none;
-
-    & + & {
-      padding-top: 0;
-    }
   }
 `

@@ -1,17 +1,18 @@
 import styled from 'styled-components'
 
-import type { ReactNode } from 'react'
+import type { CSSProperties, ReactNode } from 'react'
 
-type CardProps = {
+export type CardProps = {
   className?: string
   children?: ReactNode
+  style?: CSSProperties
 }
 
-export const Card = ({ className, children }: CardProps) => {
-  return <Layer className={className}>{children}</Layer>
+export const Card = (props: CardProps) => {
+  return <Layer {...props} />
 }
 
-const Layer = styled.section`
+const Layer = styled.section<CardProps>`
   border: 1px solid var(--neutral-alpha-6);
   border-radius: var(--radius-4);
   background-color: var(--white);

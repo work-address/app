@@ -3,7 +3,7 @@ import '@radix-ui/themes/styles.css'
 import { lazy, Suspense } from 'react'
 import { Navigate, Route, Routes } from 'react-router-dom'
 
-import { router } from '@/features/shared'
+import { routes } from '@/features/shared'
 import * as Layouts from '@/layouts'
 
 const DashboardPage = lazy(() => import('../pages/dashboard-page.tsx'))
@@ -15,12 +15,12 @@ function App() {
     <Suspense fallback={<> Loading... </>}>
       <Routes>
         <Route element={<Layouts.AuthLayout />}>
-          <Route path={router.signIn.schema} element={<SignInPage />} />
+          <Route path={routes.signIn.schema} element={<SignInPage />} />
         </Route>
 
         <Route element={<Layouts.MainLayout />}>
-          <Route path={router.dashboard.schema} element={<DashboardPage />} />
-          <Route path={router.profile.schema} element={<ProfilePage />} />
+          <Route path={routes.dashboard.schema} element={<DashboardPage />} />
+          <Route path={routes.profile.schema} element={<ProfilePage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/sign-in" replace />} />
