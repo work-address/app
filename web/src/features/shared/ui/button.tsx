@@ -5,6 +5,7 @@ import type { ButtonProps as RadixButtonProps } from '@radix-ui/themes'
 
 export type ButtonProps = {
   themeVariant?: 'primary' | 'secondary'
+  stretch?: boolean
 } & Omit<RadixButtonProps, 'variant'>
 
 export const Button = ({
@@ -35,6 +36,8 @@ const StyledRadixButton = styled(RadixButton)<ButtonProps>`
       background-color: var(--ds-secondary);
       color: var(--ds-neutral-11);
   `}
+
+  ${(p) => p.stretch && `width: 100%`}
 
   &:disabled {
     opacity: 0.68;

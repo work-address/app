@@ -145,7 +145,7 @@ export const CreateProjectModal = ({
 
               <MobileFooter>
                 <FooterBtn
-                  themeVariant="button"
+                  type="button"
                   themeVariant="secondary"
                   onClick={() => onOpenChange(false)}
                 >
@@ -227,7 +227,7 @@ export const CreateProjectModal = ({
 
             <Footer>
               <FooterBtn
-                themeVariant="button"
+                type="button"
                 themeVariant="secondary"
                 onClick={() => onOpenChange(false)}
               >

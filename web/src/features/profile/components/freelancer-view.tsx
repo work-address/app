@@ -1,11 +1,12 @@
 import { Flex, Grid, IconButton, Separator, Text } from '@radix-ui/themes'
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import styled from 'styled-components'
+import { useMediaQuery } from 'styled-breakpoints/use-media-query'
+import styled, { useTheme } from 'styled-components'
 
-import { RichEditor } from '../rich-editor.tsx'
+import { RichEditor } from './rich-editor.tsx'
 
-import { Button, Card, Input } from '@/features/shared'
+import { Button, Card, Input, TextArea } from '@/features/shared'
 
 type FormState = {
   address: string
@@ -21,8 +22,11 @@ type FormState = {
 
 const inputLabelWidth = '106px'
 
-export const Desktop = () => {
+export const FreelancerView = () => {
   const { t } = useTranslation()
+
+  const { breakpoints } = useTheme()
+  const isUpMd = useMediaQuery(breakpoints.up('md'))
 
   const {
     register,
@@ -56,50 +60,61 @@ export const Desktop = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Wrapper>
-        <Grid rows={{ initial: 'auto auto' }} gap={'var(--space-5)'}>
+        <Grid
+          rows={{ initial: 'auto auto' }}
+          gap={isUpMd ? 'var(--space-5)' : 'var(--space-1)'}
+        >
           <FreelancerViewCard>
-            <Flex direction={'column'} gap={'var(--space-5)'}>
+            <Flex
+              direction={'column'}
+              gap={isUpMd ? 'var(--space-5)' : 'var(--space-4)'}
+            >
               <Flex justify={'between'}>
                 <Flex gap={'var(--space-4)'} align={'center'}>
-                  <IconButton
-                    radius={'full'}
-                    variant={'ghost'}
-                    style={{
-                      width: 40,
-                      height: 40,
-                      boxSizing: 'border-box',
-                      cursor: 'pointer',
-                    }}
-                    color={'gray'}
-                    type={'button'}
-                  >
-                    ←
-                  </IconButton>
-                  <Text size={'6'} weight={'medium'}>
+                  {isUpMd && (
+                    <IconButton
+                      radius={'full'}
+                      variant={'ghost'}
+                      style={{
+                        width: 40,
+                        height: 40,
+                        boxSizing: 'border-box',
+                        cursor: 'pointer',
+                      }}
+                      color={'gray'}
+                      type={'button'}
+                    >
+                      ←
+                    </IconButton>
+                  )}
+
+                  <Text size={isUpMd ? '6' : '4'} weight={'medium'}>
                     {t('profile.title')}
                   </Text>
                 </Flex>
 
-                <Flex align={'center'} gap={'var(--space-4)'}>
-                  <Button
-                    themeVariant="secondary"
-                    onClick={() => reset()}
-                    disabled={!isDirty}
-                  >
-                    {t('profile.actions.cancel')}
-                  </Button>
+                {isUpMd && (
+                  <Flex align={'center'} gap={'var(--space-4)'}>
+                    <Button
+                      themeVariant="secondary"
+                      onClick={() => reset()}
+                      disabled={!isDirty}
+                    >
+                      {t('profile.actions.cancel')}
+                    </Button>
 
-                  <Button
-                    themeVariant={'primary'}
-                    disabled={!isDirty}
-                    type={'submit'}
-                  >
-                    {t('profile.actions.save')}
-                  </Button>
-                </Flex>
+                    <Button
+                      themeVariant={'primary'}
+                      disabled={!isDirty}
+                      type={'submit'}
+                    >
+                      {t('profile.actions.save')}
+                    </Button>
+                  </Flex>
+                )}
               </Flex>
 
-              <Separator size={'4'} />
+              {isUpMd && <Separator size={'4'} />}
 
               <Input
                 label={t('profile.form.address')}
@@ -146,25 +161,32 @@ export const Desktop = () => {
 
               <Separator size={'4'} />
 
-              <Flex direction={'column'} gap={'var(--space-3)'}>
-                <Text size={'2'} weight={'medium'}>
-                  Bio
-                </Text>
+              {isUpMd ? (
+                <Flex direction={'column'} gap={'var(--space-3)'}>
+                  <Text size={'2'} weight={'medium'}>
+                    {t('profile.form.bio')}
+                  </Text>
 
-                <Controller
-                  control={control}
-                  render={({ field }) => (
-                    <RichEditor value={field.value} onChange={field.onChange} />
-                  )}
-                  name={'bio'}
-                />
-              </Flex>
+                  <Controller
+                    control={control}
+                    render={({ field }) => (
+                      <RichEditor
+                        value={field.value}
+                        onChange={field.onChange}
+                      />
+                    )}
+                    name={'bio'}
+                  />
+                </Flex>
+              ) : (
+                <TextArea label={t('profile.form.bio')} {...register('bio')} />
+              )}
             </Flex>
           </FreelancerViewCard>
 
           <FreelancerViewCard>
             <Grid gap={'var(--space-5)'}>
-              <Text size={'6'} weight={'medium'}>
+              <Text size={isUpMd ? '6' : '4'} weight={'medium'}>
                 {t('profile.links.title')}
               </Text>
 
@@ -188,6 +210,28 @@ export const Desktop = () => {
                 labelWidth={inputLabelWidth}
                 {...register('telegram')}
               />
+
+              {!isUpMd && (
+                <Grid columns={'1fr 1fr'} gap={'var(--space-4)'}>
+                  <Button
+                    themeVariant="secondary"
+                    onClick={() => reset()}
+                    disabled={!isDirty}
+                    stretch
+                  >
+                    {t('profile.actions.cancel')}
+                  </Button>
+
+                  <Button
+                    themeVariant={'primary'}
+                    disabled={!isDirty}
+                    type={'submit'}
+                    stretch
+                  >
+                    {t('profile.actions.save')}
+                  </Button>
+                </Grid>
+              )}
             </Grid>
           </FreelancerViewCard>
         </Grid>
@@ -197,11 +241,20 @@ export const Desktop = () => {
 }
 
 const Wrapper = styled.div`
-  max-width: 710px;
-  margin: 0 auto;
-  padding: 26px 28px 40px;
+  ${(p) => p.theme.breakpoints.up('md')} {
+    max-width: 710px;
+    margin: 0 auto;
+    padding: 26px 28px 40px;
+  }
 `
 
 const FreelancerViewCard = styled(Card)`
   box-shadow: none;
+  ${(p) => p.theme.breakpoints.down('md')} {
+    border: none;
+
+    & + & {
+      padding-top: 0;
+    }
+  }
 `

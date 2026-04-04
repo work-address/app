@@ -1,25 +1,23 @@
 import { Grid } from '@radix-ui/themes'
-import { TextField, Text } from '@radix-ui/themes'
+import { TextArea as RadixTextArea, Text } from '@radix-ui/themes'
 import { useMediaQuery } from 'styled-breakpoints/use-media-query'
 import { useTheme } from 'styled-components'
 
-import type { ReactNode } from 'react'
+import type { TextAreaProps as RadixTextAreaProps } from '@radix-ui/themes'
 
-type InputProps = TextField.RootProps & {
+type TextAreaProps = RadixTextAreaProps & {
   label?: string
   value?: string
   id?: string
   labelWidth?: string
-  addonLeft?: ReactNode
 }
 
-export const Input = ({
+export const TextArea = ({
   label,
   id,
   labelWidth = 'auto',
-  addonLeft,
   ...props
-}: InputProps) => {
+}: TextAreaProps) => {
   const { breakpoints } = useTheme()
   const isUpMd = useMediaQuery(breakpoints.up('md'))
 
@@ -33,11 +31,7 @@ export const Input = ({
         {label}
       </Text>
 
-      <TextField.Root id={id} {...props}>
-        {addonLeft && (
-          <TextField.Slot side={'left'}>{addonLeft}</TextField.Slot>
-        )}
-      </TextField.Root>
+      <RadixTextArea id={id} {...props} />
     </Grid>
   )
 }
