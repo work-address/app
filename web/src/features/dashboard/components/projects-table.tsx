@@ -1,6 +1,7 @@
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import styled from 'styled-components'
+import { useMediaQuery } from 'styled-breakpoints/use-media-query'
+import styled, { useTheme } from 'styled-components'
 import { Drawer } from 'vaul'
 
 import {
@@ -34,26 +35,7 @@ type SortKey = keyof Pick<
 >
 type SortDir = 'asc' | 'desc'
 
-function normalizeNumberLike(value: string) {
-  const cleaned = value.replaceAll(/[^\d.]/g, '')
-  const parsed = Number(cleaned)
-  return Number.isFinite(parsed) ? parsed : 0
-}
-
-function getSortValue(row: ProjectRow, key: SortKey) {
-  const value = row[key]
-  if (
-    key === 'earnings' ||
-    key === 'keyboard' ||
-    key === 'mouse' ||
-    key === 'mouseDistance'
-  ) {
-    return normalizeNumberLike(value)
-  }
-  return value.toLowerCase()
-}
-
-export default function ProjectsTable({ rows }: ProjectsTableProps) {
+export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
   const { t } = useTranslation()
   const [selected, setSelected] = useState<Record<string, boolean>>({})
   const [sort, setSort] = useState<{ key: SortKey; dir: SortDir } | null>(null)
@@ -62,7 +44,9 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
   const [drawerMode, setDrawerMode] = useState<'view' | 'edit'>('view')
   const [confirmOpen, setConfirmOpen] = useState(false)
   const [openMobile, setOpenMobile] = useState<Record<string, boolean>>({})
-  const [isMobile, setIsMobile] = useState(false)
+
+  const { breakpoints } = useTheme()
+  const isMobile = useMediaQuery(breakpoints.down('md'))
 
   const statusLabel = (status: ProjectStatus) => {
     if (status === 'Active') {
@@ -145,24 +129,6 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
 
   const openDelete = () => setConfirmOpen(true)
   const closeDelete = () => setConfirmOpen(false)
-
-  useEffect(() => {
-    if (typeof window === 'undefined') {
-      return
-    }
-
-    const mq = window.matchMedia('(max-width: 768px)')
-    const sync = () => setIsMobile(mq.matches)
-    sync()
-
-    if (typeof mq.addEventListener === 'function') {
-      mq.addEventListener('change', sync)
-      return () => mq.removeEventListener('change', sync)
-    }
-
-    mq.addListener(sync)
-    return () => mq.removeListener(sync)
-  }, [])
 
   return (
     <Wrap>
@@ -939,6 +905,25 @@ export default function ProjectsTable({ rows }: ProjectsTableProps) {
       />
     </Wrap>
   )
+}
+
+function normalizeNumberLike(value: string) {
+  const cleaned = value.replaceAll(/[^\d.]/g, '')
+  const parsed = Number(cleaned)
+  return Number.isFinite(parsed) ? parsed : 0
+}
+
+function getSortValue(row: ProjectRow, key: SortKey) {
+  const value = row[key]
+  if (
+    key === 'earnings' ||
+    key === 'keyboard' ||
+    key === 'mouse' ||
+    key === 'mouseDistance'
+  ) {
+    return normalizeNumberLike(value)
+  }
+  return value.toLowerCase()
 }
 
 const Wrap = styled.div`

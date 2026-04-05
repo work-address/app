@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useMediaQuery } from 'styled-breakpoints/use-media-query'
 import styled, { useTheme } from 'styled-components'
 
-import { RichEditor } from './rich-editor.tsx'
+import { RichEditor } from './rich-editor'
 
 import type { CardProps } from '@/features/shared'
 
@@ -24,7 +24,7 @@ type FormState = {
 
 const inputLabelWidth = '106px'
 
-export const FreelancerView = () => {
+export const FreelancerProfile = () => {
   const { t } = useTranslation()
 
   const { breakpoints } = useTheme()
@@ -67,7 +67,12 @@ export const FreelancerView = () => {
           gap={isUpMd ? 'var(--space-5)' : 'var(--space-1)'}
         >
           <FreelancerViewCard>
-            <Flex gap={'var(--space-4)'} mb={'4'} align={'center'}>
+            <Flex
+              gap={'var(--space-4)'}
+              mb={'4'}
+              align={'center'}
+              justify={'between'}
+            >
               <Flex gap={'var(--space-4)'} align={'center'}>
                 {isUpMd && (
                   <IconButton

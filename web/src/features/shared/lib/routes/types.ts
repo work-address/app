@@ -2,7 +2,7 @@
 
 export type BuildRoute<Params extends any> = (params: Params) => string
 
-export type IdRouteParams = BuildRoute<{ id: string }>
+export type IdRouteBuild = BuildRoute<{ id: string }>
 
 export type NoChildRoutes = undefined
 
@@ -31,6 +31,7 @@ export type Route<
     desktopOrder?: number
     mobileOrder?: number
     target?: '_blank'
+    desktopRender?: 'textWithIcon' | 'text' | 'icon'
   } & Optional<'build', Build> &
     Optional<'children', Children>
 }

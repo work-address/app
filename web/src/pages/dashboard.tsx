@@ -243,7 +243,7 @@ export default function DashboardPage() {
                   </Button>
                 ) : (
                   <IconButton variant={'outline'} color={'red'}>
-                    <PlusIcon />
+                    <TrashIcon />
                   </IconButton>
                 )}
 
@@ -279,18 +279,21 @@ export default function DashboardPage() {
             </S.TableArea>
           </>
 
-          <DashboardEmptyState
-            imageSrc="/img/photo/help.svg"
-            title={t('dashboard.page.empty.title')}
-            description={t('dashboard.page.empty.description')}
-            actionLabel={t('dashboard.page.empty.action')}
-          />
+          {!hasProjects && (
+            <DashboardEmptyState
+              imageSrc="/img/photo/help.svg"
+              title={t('dashboard.page.empty.title')}
+              description={t('dashboard.page.empty.description')}
+              actionLabel={t('dashboard.page.empty.action')}
+            />
+          )}
         </S.Left>
-        {hasProjects ? (
+
+        {hasProjects && (
           <S.Right>
             <ApplicationsUsage />
           </S.Right>
-        ) : null}
+        )}
       </S.Content>
 
       <CreateProjectModal
@@ -304,6 +307,7 @@ export default function DashboardPage() {
       <S.Section>
         <S.SectionTitleRow>
           <S.SectionTitle>{t('dashboard.page.worklogs.title')}</S.SectionTitle>
+
           {hasWorklogs ? (
             <S.MobileOnly>
               <Drawer.Root open={filtersOpen} onOpenChange={setFiltersOpen}>
@@ -320,11 +324,14 @@ export default function DashboardPage() {
                     })}
                   </S.FiltersButton>
                 </Drawer.Trigger>
+
                 <Drawer.Portal>
                   <S.DrawerOverlay />
+
                   <S.DrawerContent>
                     <S.Sheet>
                       <S.SheetHandle />
+
                       <S.SheetTitle>
                         {t('dashboard.page.filters.title', {
                           defaultValue: 'Filters',

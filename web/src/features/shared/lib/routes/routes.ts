@@ -1,6 +1,6 @@
 import type {
   Route,
-  IdRouteParams,
+  IdRouteBuild,
   NoChildRoutes,
   MappingRoute,
 } from './types.ts'
@@ -16,7 +16,8 @@ type MainRoutes =
   & Route<'https://github.com', 'github'>
 
 type ProfileRoutes =
-  & Route<'/profile/freelancer/:id', 'freelancer', NoChildRoutes,  IdRouteParams>
+  & Route<'/profile/freelancer/:id', 'freelancer', NoChildRoutes,  IdRouteBuild>
+  & Route<'/profile/client', 'client', NoChildRoutes>
 
 /* eslint-enable */
 
@@ -52,6 +53,10 @@ export const routes: MainRoutes = {
         build: ({ id }) => `/profile/freelancer/${id}`,
         disabled: true,
       },
+
+      client: {
+        schema: '/profile/client',
+      },
     },
   },
 
@@ -85,6 +90,8 @@ export const routes: MainRoutes = {
     desktopIcon: '/img/icons/external-link.svg',
     mobileIcon: '/img/icons/external-link.svg',
     target: '_blank',
+
+    desktopRender: 'textWithIcon',
   },
 
   github: {
@@ -98,6 +105,8 @@ export const routes: MainRoutes = {
     translateKeyDesktop: 'header.aria.github',
     translateKeyMobile: 'header.aria.github',
     target: '_blank',
+
+    desktopRender: 'icon',
   },
 
   signIn: {

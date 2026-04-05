@@ -17,6 +17,6 @@ const WrapperWhite = styled.div`
   }
 
   @media (max-width: 440px) {
-    padding-bottom: 0px;
+    padding-bottom: 0;
   }
 `

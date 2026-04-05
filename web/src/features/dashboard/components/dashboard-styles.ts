@@ -140,6 +140,11 @@ export const Right = styled.section`
 
 export const Section = styled.section`
   margin-top: 48px;
+  margin-bottom: 48px;
+
+  ${({ theme }) => theme.breakpoints.up('md')} {
+    margin-bottom: 0;
+  }
 `
 
 export const SectionTitle = styled.h2`
