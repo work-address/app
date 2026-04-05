@@ -6,7 +6,7 @@ import type { ButtonProps as RadixButtonProps } from '@radix-ui/themes'
 export type ButtonProps = {
   themeVariant?: 'primary' | 'secondary'
   stretch?: boolean
-} & Omit<RadixButtonProps, 'variant'>
+} & RadixButtonProps
 
 export const Button = ({
   children,

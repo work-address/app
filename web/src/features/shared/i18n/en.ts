@@ -87,6 +87,7 @@ const en = {
   'dashboard.page.title': 'Dashboard',
   'dashboard.page.projectsCount': '{{count}} projects',
   'dashboard.page.createProject': 'Create project',
+  'dashboard.page.deleteAll': 'Delete All',
   'dashboard.page.tabs.all': 'All',
   'dashboard.page.tabs.active': 'Active',
   'dashboard.page.tabs.finished': 'Finished',
