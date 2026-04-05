@@ -5,7 +5,7 @@ import styled from 'styled-components'
 import { Header } from '@/widgets'
 
 export const MainLayout = () => {
-  const location = useLocation()
+  const { pathname } = useLocation()
 
   return (
     <Layout>
@@ -13,13 +13,14 @@ export const MainLayout = () => {
         <Header />
       </StickyHeader>
 
-      <AnimatePresence mode={'wait'} key={location.pathname}>
+      <AnimatePresence mode={'wait'}>
         <Content>
           <motion.div
-            initial={{ opacity: 0, y: 6 }}
+            key={pathname}
+            initial={{ opacity: 0, y: 50 }}
             animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -6 }}
-            transition={{ duration: 0.2 }}
+            exit={{ opacity: 0, y: -50 }}
+            transition={{ duration: 0.35 }}
           >
             <Outlet />
           </motion.div>

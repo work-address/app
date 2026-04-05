@@ -709,8 +709,8 @@ export default function DashboardPage() {
       </S.Section>
     </Wrapper>
   ) : (
-    <Flex justify={'center'}>
-      <Spinner size={100} style={{ marginTop: 300, textAlign: 'center' }} />
+    <Flex justify={'center'} align="center" height={'80vh'}>
+      <Spinner size={100} />
     </Flex>
   )
 }
