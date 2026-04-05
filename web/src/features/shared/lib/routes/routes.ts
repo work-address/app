@@ -17,7 +17,7 @@ type MainRoutes =
 
 type ProfileRoutes =
   & Route<'/profile/freelancer/:id', 'freelancer', NoChildRoutes,  IdRouteBuild>
-  & Route<'/profile/client', 'client', NoChildRoutes>
+  & Route<'/profile/edit', 'edit', NoChildRoutes>
 
 /* eslint-enable */
 
@@ -54,8 +54,8 @@ export const routes: MainRoutes = {
         disabled: true,
       },
 
-      client: {
-        schema: '/profile/client',
+      edit: {
+        schema: '/profile/edit',
       },
     },
   },

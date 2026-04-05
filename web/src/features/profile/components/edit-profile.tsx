@@ -1,13 +1,13 @@
 import { Flex, Grid, IconButton, Separator, Text } from '@radix-ui/themes'
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import { useMediaQuery } from 'styled-breakpoints/use-media-query'
 import styled, { useTheme } from 'styled-components'
 
 import { RichEditor } from './rich-editor'
 
-import type { CardProps } from '@/features/shared'
-
+import { type CardProps, routes } from '@/features/shared'
 import { Button, Card, Input, TextArea } from '@/features/shared'
 
 type FormState = {
@@ -24,7 +24,7 @@ type FormState = {
 
 const inputLabelWidth = '106px'
 
-export const FreelancerProfile = () => {
+export const EditProfile = () => {
   const { t } = useTranslation()
 
   const { breakpoints } = useTheme()
@@ -75,20 +75,22 @@ export const FreelancerProfile = () => {
             >
               <Flex gap={'var(--space-4)'} align={'center'}>
                 {isUpMd && (
-                  <IconButton
-                    radius={'full'}
-                    variant={'ghost'}
-                    style={{
-                      width: 40,
-                      height: 40,
-                      boxSizing: 'border-box',
-                      cursor: 'pointer',
-                    }}
-                    color={'gray'}
-                    type={'button'}
-                  >
-                    ←
-                  </IconButton>
+                  <Link to={routes.profile.schema}>
+                    <IconButton
+                      radius={'full'}
+                      variant={'ghost'}
+                      style={{
+                        width: 40,
+                        height: 40,
+                        boxSizing: 'border-box',
+                        cursor: 'pointer',
+                      }}
+                      color={'gray'}
+                      type={'button'}
+                    >
+                      ←
+                    </IconButton>
+                  </Link>
                 )}
 
                 <Text size={isUpMd ? '6' : '4'} weight={'medium'}>

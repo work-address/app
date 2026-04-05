@@ -5,7 +5,7 @@ import { Description } from './description.tsx'
 import { ProfileInfo } from './profile-info.tsx'
 import { QrCode } from './qr-code.tsx'
 
-export const ClientProfile = () => (
+export const ProfileView = () => (
   <Wrapper>
     <Grid
       areas={{

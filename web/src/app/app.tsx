@@ -8,7 +8,7 @@ import * as Layouts from '@/layouts'
 
 const DashboardPage = lazy(() => import('@/pages/dashboard'))
 const ProfilePage = lazy(() => import('@/pages/profile'))
-const ProfileCleintPage = lazy(() => import('@/pages/profile/client'))
+const ProfileEditPage = lazy(() => import('@/pages/profile/edit'))
 const SignInPage = lazy(() => import('@/pages/sign-in'))
 
 function App() {
@@ -23,8 +23,8 @@ function App() {
           <Route path={routes.dashboard.schema} element={<DashboardPage />} />
           <Route path={routes.profile.schema} element={<ProfilePage />} />
           <Route
-            path={routes.profile.children.client.schema}
-            element={<ProfileCleintPage />}
+            path={routes.profile.children.edit.schema}
+            element={<ProfileEditPage />}
           />
         </Route>
 

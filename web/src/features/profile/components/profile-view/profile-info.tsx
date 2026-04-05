@@ -1,10 +1,11 @@
 import { Share1Icon, Pencil1Icon, CopyIcon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { InfoRow } from '../info-row'
 
-import { Button, Card, IconButton, Text } from '@/features/shared'
+import { Button, Card, IconButton, routes, Text } from '@/features/shared'
 
 type ProfileInfoProps = {
   gridArea?: string
@@ -46,10 +47,12 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => (
             <Share1Icon />
           </Button>
 
-          <Button themeVariant={'primary'} size={'3'}>
-            Edit
-            <Pencil1Icon />
-          </Button>
+          <Link to={routes.profile.children.edit.schema}>
+            <Button themeVariant={'primary'} size={'3'}>
+              Edit
+              <Pencil1Icon />
+            </Button>
+          </Link>
         </Flex>
       </Flex>
 

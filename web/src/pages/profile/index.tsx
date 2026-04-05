@@ -1,5 +1,5 @@
-import { FreelancerProfile } from '@/features/profile'
+import { ProfileView } from '@/features/profile'
 
-export default function FreelancerProfilePage() {
-  return <FreelancerProfile />
+export default function ProfilePage() {
+  return <ProfileView />
 }
