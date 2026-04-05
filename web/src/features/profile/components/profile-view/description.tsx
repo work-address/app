@@ -1,6 +1,9 @@
 import { Separator, Flex, Badge } from '@radix-ui/themes'
+import styled from 'styled-components'
 
-import { Card, Text } from '@/features/shared'
+import { ProfileViewCard } from './styled'
+
+import { Text } from '@/features/shared'
 
 type DescriptionProps = {
   gridArea?: string
@@ -21,7 +24,7 @@ const skills = [
 ]
 
 export const Description = ({ gridArea }: DescriptionProps) => (
-  <Card style={{ gridArea: gridArea }} shadow={false}>
+  <StyledCard gridArea={gridArea} shadow={false}>
     <Flex gap={'4'} direction={'column'}>
       <div>
         <Flex justify={'between'}>
@@ -56,7 +59,7 @@ export const Description = ({ gridArea }: DescriptionProps) => (
         </Text>
       </div>
 
-      <Flex gap={'2'}>
+      <Flex gap={'2'} wrap={'wrap'}>
         {skills.map((skill) => (
           <Badge key={skill} color={'gray'} size={'2'}>
             {skill}
@@ -64,5 +67,11 @@ export const Description = ({ gridArea }: DescriptionProps) => (
         ))}
       </Flex>
     </Flex>
-  </Card>
+  </StyledCard>
 )
+
+const StyledCard = styled(ProfileViewCard)`
+  ${(p) => p.theme.breakpoints.down('md')} {
+    margin-top: var(--space-3);
+  }
+`

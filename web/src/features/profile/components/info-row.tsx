@@ -9,9 +9,11 @@ type InfoRowProps = {
   text?: ReactNode
 }
 
-export const InfoRow = ({ text, icon }: InfoRowProps) => (
-  <Flex gap={'2'} align={'center'}>
-    {icon}
-    <Text size={'5'}>{text}</Text>
-  </Flex>
-)
+export const InfoRow = ({ text, icon }: InfoRowProps) => {
+  return (
+    <Flex gap={'2'} align={'center'}>
+      {icon}
+      <Text size={{ initial: '3', md: '5' }}>{text}</Text>
+    </Flex>
+  )
+}

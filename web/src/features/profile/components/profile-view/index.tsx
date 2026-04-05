@@ -10,20 +10,30 @@ export const ProfileView = () => (
     <Grid
       areas={{
         initial: `
-        'qrcode profile'
-        'description description'
-      `,
+          "qrcode"
+          "profile"
+          "description"
+        `,
+        md: `
+          "qrcode profile"
+          "description description"
+        `,
       }}
       columns={{
-        initial: '246px 668px',
+        initial: 'auto',
+        md: '246px 668px',
       }}
       rows={{
-        initial: 'auto auto',
+        initial: 'auto auto auto',
+        md: `auto auto`,
       }}
       gap={{
-        initial: '20px',
+        initial: '0',
+        md: '20px',
       }}
-      justify={'center'}
+      justify={{
+        md: 'center',
+      }}
     >
       <QrCode gridArea={'qrcode'} />
 
