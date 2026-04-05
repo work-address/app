@@ -160,7 +160,7 @@ export default function DashboardPage() {
   useEffect(() => {
     setTimeout(() => {
       setInitialized(true)
-    }, 350)
+    }, 700)
   }, [])
 
   return initialized ? (

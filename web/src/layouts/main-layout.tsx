@@ -1,18 +1,30 @@
-import { Outlet } from 'react-router-dom'
+import { AnimatePresence, motion } from 'motion/react'
+import { Outlet, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { Header } from '@/widgets'
 
 export const MainLayout = () => {
+  const location = useLocation()
+
   return (
     <Layout>
       <StickyHeader>
         <Header />
       </StickyHeader>
 
-      <Content>
-        <Outlet />
-      </Content>
+      <AnimatePresence mode={'wait'} key={location.pathname}>
+        <Content>
+          <motion.div
+            initial={{ opacity: 0, y: 6 }}
+            animate={{ opacity: 1, y: 0 }}
+            exit={{ opacity: 0, y: -6 }}
+            transition={{ duration: 0.2 }}
+          >
+            <Outlet />
+          </motion.div>
+        </Content>
+      </AnimatePresence>
     </Layout>
   )
 }
