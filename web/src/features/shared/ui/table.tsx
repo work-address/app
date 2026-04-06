@@ -1,10 +1,11 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Grid, Flex, Checkbox } from '@radix-ui/themes'
+import { Grid, Flex } from '@radix-ui/themes'
 import { type ReactNode, useMemo } from 'react'
 import styled from 'styled-components'
 
 import { Card } from './card'
+import { Checkbox } from './checkbox'
 import { Text } from './text'
 
 export const Table = <T extends Record<string, any>>({
@@ -46,57 +47,53 @@ export const Table = <T extends Record<string, any>>({
   }
 
   const handleToggleAllSelected = () => {
-    if (normalizedSelectedIds.length > 0) {
-      onSelectedIdsChange?.(
-        data.reduce(
-          (acc, row) => {
-            const rowId = getRowId(row)
-            acc[rowId] = false
-            return acc
-          },
-          {} as Record<string, boolean>,
-        ),
-      )
-    } else {
-      onSelectedIdsChange?.(
-        data.reduce(
-          (acc, row) => {
-            const rowId = getRowId(row)
-            acc[rowId] = true
-            return acc
-          },
-          {} as Record<string, boolean>,
-        ),
-      )
-    }
+    const allChecked = normalizedSelectedIds.length === 0
+
+    const newSelectedIds = data.reduce(
+      (acc, row) => {
+        if (allChecked) {
+          acc[getRowId(row)] = allChecked
+        }
+
+        return acc
+      },
+      {} as Record<string, boolean>,
+    )
+
+    onSelectedIdsChange?.(newSelectedIds)
   }
 
   return (
     <TableCard>
       <Grid>
         <HeaderGrid columns={{ initial: gridTemplateColumns }}>
-          {config.map((configEntry, index) => (
-            <HeaderCell key={configEntry.dataKey.toString()}>
-              <Flex
-                gap={'3'}
-                align={'center'}
-                justify={configEntry.horizontalAlign}
-              >
-                {allowSelection && index === 0 && (
-                  <Checkbox
-                    checked={
-                      isPartiallySelected ? 'indeterminate' : isAllSelected
-                    }
-                    onCheckedChange={() => handleToggleAllSelected()}
+          {config.map((configEntry, index) => {
+            const rowsSelected = isPartiallySelected
+              ? 'indeterminate'
+              : isAllSelected
+
+            return (
+              <HeaderCell key={configEntry.dataKey.toString()}>
+                <Flex
+                  gap={'3'}
+                  align={'center'}
+                  justify={configEntry.horizontalAlign}
+                >
+                  {allowSelection && index === 0 && (
+                    <Checkbox
+                      checked={rowsSelected}
+                      onCheckedChange={() => handleToggleAllSelected()}
+                    />
+                  )}
+                  <HeaderCellComponent
+                    {...configEntry}
+                    DefaultHeaderCellComponent={DefaultHeaderCellComponent}
+                    selected={rowsSelected}
                   />
-                )}
-                <HeaderCellComponent
-                  {...configEntry}
-                  DefaultHeaderCellComponent={DefaultHeaderCellComponent}
-                />
-              </Flex>
-            </HeaderCell>
-          ))}
+                </Flex>
+              </HeaderCell>
+            )
+          })}
         </HeaderGrid>
 
         <div>
@@ -109,6 +106,8 @@ export const Table = <T extends Record<string, any>>({
                 columns={{ initial: gridTemplateColumns }}
               >
                 {config.map((columnConfig, index) => {
+                  const selected = selectedIds?.[rowId] ?? false
+
                   return (
                     <BodyCell
                       key={`${columnConfig.dataKey.toString()}-${rowId}`}
@@ -118,7 +117,7 @@ export const Table = <T extends Record<string, any>>({
                       <Flex gap={'3'} align={'center'}>
                         {allowSelection && index === 0 && (
                           <Checkbox
-                            checked={selectedIds?.[rowId] ?? false}
+                            checked={selected}
                             onCheckedChange={() =>
                               rowId && handleSelectedChange(rowId.toString())
                             }
@@ -129,6 +128,7 @@ export const Table = <T extends Record<string, any>>({
                           columnConfig={columnConfig}
                           data={row}
                           DefaultBodyCellComponent={DefaultBodyCellComponent}
+                          selected={selected}
                         />
                       </Flex>
                     </BodyCell>
@@ -145,7 +145,7 @@ export const Table = <T extends Record<string, any>>({
 
 export type TableProps<T extends Record<string, any>> = {
   data: T[]
-  config: TableColumnConfig<T>[]
+  config: TableColumnConfigRecord<T>[]
   getRowId: (data: T) => string | number
   verticalAlign?: 'center' | 'start' | 'end'
   HeaderCellComponent?: (props: HeaderCellRenderProps<T>) => ReactNode
@@ -155,22 +155,27 @@ export type TableProps<T extends Record<string, any>> = {
   onSelectedIdsChange?: (data: Record<string, boolean>) => void
 }
 
-export type TableColumnConfig<T extends Record<string, any>> = {
+type TableColumnConfigRecord<T extends Record<string, any>> = {
   dataKey: keyof T
   width?: string
   headerText?: string
   horizontalAlign?: 'start' | 'center' | 'end'
 }
 
+export type TableColumnConfig<T extends Record<string, any>> =
+  TableColumnConfigRecord<T>[]
+
 export type CellRenderProps<T extends Record<string, any>> = {
   data: T
-  columnConfig: TableColumnConfig<T>
+  columnConfig: TableColumnConfigRecord<T>
   DefaultBodyCellComponent: typeof DefaultBodyCellComponent<T>
+  selected?: boolean
 }
 
 export type HeaderCellRenderProps<T extends Record<string, any>> =
-  TableColumnConfig<T> & {
+  TableColumnConfigRecord<T> & {
     DefaultHeaderCellComponent: typeof DefaultHeaderCellComponent<T>
+    selected?: 'indeterminate' | boolean
   }
 
 const DefaultHeaderCellComponent = <T extends Record<string, any>>(
