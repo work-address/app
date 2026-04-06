@@ -1,5 +1,6 @@
 import { QuestionMarkCircledIcon } from '@radix-ui/react-icons'
 import { Flex, Separator, Grid } from '@radix-ui/themes'
+import { Fragment } from 'react'
 import styled from 'styled-components'
 
 import { infoFields } from './constants'
@@ -28,7 +29,7 @@ export const TotalAmountMobile = () => {
         py={'2'}
       >
         {Object.entries(infoFields).map(([key, field]) => (
-          <>
+          <Fragment key={key}>
             <Flex align={'center'} gap={'1'}>
               <Text size={'3'} color={'gray'}>
                 {key}
@@ -38,7 +39,7 @@ export const TotalAmountMobile = () => {
             </Flex>
 
             <Text weight={'medium'}>{field.value}</Text>
-          </>
+          </Fragment>
         ))}
       </Grid>
 
