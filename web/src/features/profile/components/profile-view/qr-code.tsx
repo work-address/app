@@ -1,12 +1,13 @@
-import { CopyIcon } from '@radix-ui/react-icons'
+import { CopyIcon, Pencil1Icon, Share1Icon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
+import { Link } from 'react-router-dom'
 import { useMediaQuery } from 'styled-breakpoints/use-media-query'
 import styled, { useTheme } from 'styled-components'
 
 import QrCodeExample from './assets/qr-code-example.png'
 import { ProfileViewCard } from './styled'
 
-import { IconButton, Text } from '@/features/shared'
+import { IconButton, routes, Text } from '@/features/shared'
 import { Button } from '@/features/shared'
 
 type QrCodeProps = {
@@ -51,10 +52,22 @@ export const QrCode = ({ gridArea }: QrCodeProps) => {
 
         <QrCodeImage src={QrCodeExample} alt={'qr-code'} />
 
-        {isUpMd && (
+        {isUpMd ? (
           <Button width={'146px'} themeVariant={'primary'} size={'3'}>
             Share QR-code
           </Button>
+        ) : (
+          <Flex gap={'2'} direction={'column'} width={'100%'}>
+            <Link to={routes.profile.children.edit.schema}>
+              <Button stretch themeVariant={'primary'}>
+                Edit <Pencil1Icon />
+              </Button>
+            </Link>
+
+            <Button stretch variant={'outline'} color={'gray'}>
+              Share <Share1Icon />
+            </Button>
+          </Flex>
         )}
       </Flex>
     </StyledCard>

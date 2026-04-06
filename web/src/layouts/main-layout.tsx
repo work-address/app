@@ -1,7 +1,6 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { Outlet, useLocation } from 'react-router-dom'
-import { useMediaQuery } from 'styled-breakpoints/use-media-query'
-import styled, { useTheme } from 'styled-components'
+import styled from 'styled-components'
 
 import type { MotionProps } from 'motion/react'
 
@@ -9,17 +8,13 @@ import { Header } from '@/widgets'
 
 export const MainLayout = () => {
   const { pathname } = useLocation()
-  const { breakpoints } = useTheme()
-  const isUpMd = useMediaQuery(breakpoints.up('md'))
 
-  const motionProps: MotionProps | null = isUpMd
-    ? {
-        initial: { opacity: 0, y: 50 },
-        animate: { opacity: 1, y: 0 },
-        exit: { opacity: 0, y: -50 },
-        transition: { duration: 0.35 },
-      }
-    : null
+  const motionProps: MotionProps | null = {
+    initial: { opacity: 0, y: 50 },
+    animate: { opacity: 1, y: 0 },
+    exit: { opacity: 0, y: -50 },
+    transition: { duration: 0.35 },
+  }
 
   return (
     <Layout>
