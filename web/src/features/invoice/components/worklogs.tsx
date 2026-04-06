@@ -1,24 +1,75 @@
 import { Badge, Checkbox, Flex } from '@radix-ui/themes'
-import { useMemo } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 
 import type { TableProps } from '@/features/shared'
 
 import { Table, worklogsMock, Text } from '@/features/shared'
 
+type WorklogRow = (typeof worklogsMock)[number]
+
 export const Worklogs = () => {
+  const [selectedKeys, setSelectedKeys] = useState<Record<string, boolean>>({})
+
+  const checkedCount = useMemo(
+    () => Object.values(selectedKeys).filter(Boolean).length,
+    [selectedKeys],
+  )
+
+  const isAllChecked = checkedCount === worklogsMock.length
+
+  const handleToggleAll = useCallback(() => {
+    setSelectedKeys(() =>
+      checkedCount === 0
+        ? Object.values(worklogsMock)
+            .map(({ key }) => key)
+            .reduce(
+              (acc, curr) => {
+                acc[curr] = true
+                return acc
+              },
+              {} as Record<string, boolean>,
+            )
+        : Object.values(worklogsMock)
+            .map(({ key }) => key)
+            .reduce(
+              (acc, curr) => {
+                acc[curr] = false
+                return acc
+              },
+              {} as Record<string, boolean>,
+            ),
+    )
+  }, [checkedCount])
+
+  const handleToggleKey = useCallback((key: string) => {
+    setSelectedKeys((selectedKeys) => ({
+      ...selectedKeys,
+      [key]: !selectedKeys[key],
+    }))
+  }, [])
+
   const tableConfig = useMemo(
-    (): TableProps<(typeof worklogsMock)[number]>['config'] => [
+    (): TableProps<WorklogRow>['config'] => [
       {
         dataKey: 'date',
         getHeaderContent: () => (
           <Flex align={'center'} gap={'3'}>
-            <Checkbox />
+            <Checkbox
+              onCheckedChange={() => handleToggleAll()}
+              checked={
+                isAllChecked ? true : checkedCount > 0 ? 'indeterminate' : false
+              }
+            />
             <Text color={'gray'}>Date</Text>
           </Flex>
         ),
-        getRowContent: ({ date, dateRange }) => (
+        getRowContent: ({ date, dateRange, key }) => (
           <Flex gap={'3'} align={'center'}>
-            <Checkbox />
+            <Checkbox
+              checked={selectedKeys[key]}
+              onCheckedChange={() => handleToggleKey(key)}
+            />
+
             <Flex direction={'column'}>
               <Text>{dateRange}</Text>
               <Text color={'gray'}>{date}</Text>
@@ -64,7 +115,13 @@ export const Worklogs = () => {
         width: '155px',
       },
     ],
-    [],
+    [
+      checkedCount,
+      isAllChecked,
+      handleToggleAll,
+      handleToggleKey,
+      selectedKeys,
+    ],
   )
 
   return (
