@@ -1,4 +1,4 @@
-import { Badge, Flex } from '@radix-ui/themes'
+import { Badge, type BadgeProps, Flex } from '@radix-ui/themes'
 import { memo, useMemo } from 'react'
 
 import type { CellRenderProps, TableProps } from '@/features/shared'
@@ -66,6 +66,17 @@ export const Worklogs = () => {
   )
 }
 
+const BadgeTestColor: BadgeProps['color'][] = [
+  'gray',
+  'blue',
+  'amber',
+  'bronze',
+  'brown',
+  'crimson',
+  'cyan',
+  'gold',
+]
+
 const Cell = memo((props: CellRenderProps<WorklogRow>) => {
   switch (props.columnConfig.dataKey) {
     case 'date': {
@@ -80,7 +91,13 @@ const Cell = memo((props: CellRenderProps<WorklogRow>) => {
     case 'timeActive': {
       return (
         <Flex>
-          <Badge>{props.data.timeActive}</Badge>
+          <Badge
+            color={
+              BadgeTestColor[Math.floor(Math.random() * BadgeTestColor.length)]
+            }
+          >
+            {props.data.timeActive}
+          </Badge>
         </Flex>
       )
     }
