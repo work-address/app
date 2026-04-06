@@ -11,7 +11,7 @@ export const Worklogs = () => {
       {
         dataKey: 'date',
         getHeaderContent: () => (
-          <Flex align={'center'} gap={'2'}>
+          <Flex align={'center'} gap={'3'}>
             <Checkbox />
             <Text color={'gray'}>Date</Text>
           </Flex>
