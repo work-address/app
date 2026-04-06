@@ -1,11 +1,7 @@
 import { Badge, Checkbox, Flex } from '@radix-ui/themes'
 import { memo, useMemo } from 'react'
 
-import type {
-  CellRenderProps,
-  TableColumnConfig,
-  TableProps,
-} from '@/features/shared'
+import type { CellRenderProps, TableProps } from '@/features/shared'
 
 import { Table, worklogsMock, Text } from '@/features/shared'
 
@@ -62,27 +58,12 @@ export const Worklogs = () => {
         config={tableConfig}
         getRowKey={(row) => row.key}
         verticalAlign={'center'}
-        HeaderComponent={HeaderCell}
-        CellComponent={Cell}
+        BodyCellComponent={Cell}
+        allowSelection
       />
     </>
   )
 }
-
-const HeaderCell = memo(
-  ({ dataKey, headerText }: TableColumnConfig<WorklogRow>) => {
-    if (dataKey === 'date') {
-      return (
-        <Flex align={'center'} gap={'3'}>
-          <Checkbox />
-          <Text color={'gray'}>{headerText}</Text>
-        </Flex>
-      )
-    } else {
-      return <Text color={'gray'}>{headerText}</Text>
-    }
-  },
-)
 
 const Cell = memo(({ columnConfig, data }: CellRenderProps<WorklogRow>) => {
   switch (columnConfig.dataKey) {

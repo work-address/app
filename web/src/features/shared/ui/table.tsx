@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Grid, Flex } from '@radix-ui/themes'
+import { Grid, Flex, Checkbox } from '@radix-ui/themes'
 import { type ReactNode, useMemo } from 'react'
 import styled from 'styled-components'
 
@@ -12,8 +12,8 @@ export type TableProps<T extends Record<string, any>> = {
   config: TableColumnConfig<T>[]
   getRowKey: (data: T) => string | number
   verticalAlign?: 'center' | 'start' | 'end'
-  HeaderComponent?: (data: TableColumnConfig<T>) => ReactNode
-  CellComponent?: (props: CellRenderProps<T>) => ReactNode
+  HeaderCellComponent?: (data: TableColumnConfig<T>) => ReactNode
+  BodyCellComponent?: (props: CellRenderProps<T>) => ReactNode
   allowSelection?: boolean
 }
 
@@ -34,8 +34,8 @@ export const Table = <T extends Record<string, any>>({
   getRowKey,
   verticalAlign,
   allowSelection,
-  HeaderComponent,
-  CellComponent,
+  HeaderCellComponent,
+  BodyCellComponent,
 }: TableProps<T>) => {
   const gridTemplateColumns = useMemo(
     () => config.map(({ width }) => width || '1fr').join(' '),
@@ -46,13 +46,17 @@ export const Table = <T extends Record<string, any>>({
     <TableCard>
       <Grid>
         <HeaderGrid columns={{ initial: gridTemplateColumns }}>
-          {config.map((configEntry) => (
+          {config.map((configEntry, index) => (
             <HeaderCell key={configEntry.dataKey.toString()}>
-              {HeaderComponent ? (
-                <HeaderComponent {...configEntry} />
-              ) : (
-                <Text color={'gray'}>{configEntry.dataKey.toString()}</Text>
-              )}
+              <Flex gap={'3'} align={'center'}>
+                {allowSelection && index === 0 && <Checkbox />}
+
+                {HeaderCellComponent ? (
+                  <HeaderCellComponent {...configEntry} />
+                ) : (
+                  <Text color={'gray'}>{configEntry.headerText}</Text>
+                )}
+              </Flex>
             </HeaderCell>
           ))}
         </HeaderGrid>
@@ -69,8 +73,11 @@ export const Table = <T extends Record<string, any>>({
                     key={`${columnConfig.dataKey.toString()}-${getRowKey(row)}`}
                     align={verticalAlign}
                   >
-                    {CellComponent ? (
-                      <CellComponent columnConfig={columnConfig} data={row} />
+                    {BodyCellComponent ? (
+                      <BodyCellComponent
+                        columnConfig={columnConfig}
+                        data={row}
+                      />
                     ) : (
                       String(row[columnConfig.dataKey])
                     )}
