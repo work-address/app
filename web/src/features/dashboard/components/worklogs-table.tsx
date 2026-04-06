@@ -117,7 +117,7 @@ const BodyCellComponent = memo((props: CellRenderProps<WorklogRow>) => {
       return props.data.screenshot ? (
         <Screenshot src={props.data.screenshot} alt={props.data.projectName} />
       ) : (
-        <ImagePlaceholder />
+        <Screenshot src={'/img/photo/example-screenshot.png'} alt={'No data'} />
       )
     }
 
@@ -152,36 +152,6 @@ export type WorklogRow = {
   mouse: string
   mouseDistance: string
   screenshot?: string
-}
-
-const ImagePlaceholder = () => {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-      style={{ color: 'rgba(0, 7, 20, 0.4)' }}
-    >
-      <path
-        d="M4 5.5C4 4.67157 4.67157 4 5.5 4H18.5C19.3284 4 20 4.67157 20 5.5V18.5C20 19.3284 19.3284 20 18.5 20H5.5C4.67157 20 4 19.3284 4 18.5V5.5Z"
-        stroke="currentColor"
-        strokeWidth="1.5"
-      />
-      <path
-        d="M8 14L10.5 11.5L14.5 15.5L16.5 13.5L20 17"
-        stroke="currentColor"
-        strokeWidth="1.5"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-      <path
-        d="M9 9.25C9 9.94036 8.44036 10.5 7.75 10.5C7.05964 10.5 6.5 9.94036 6.5 9.25C6.5 8.55964 7.05964 8 7.75 8C8.44036 8 9 8.55964 9 9.25Z"
-        fill="currentColor"
-      />
-    </svg>
-  )
 }
 
 const Screenshot = styled.img`
