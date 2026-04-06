@@ -75,6 +75,7 @@ export const Worklogs = () => {
         data={worklogsMock}
         config={tableConfig}
         getRowKey={(row) => row.key}
+        verticalAlign={'center'}
       />
     </>
   )

@@ -1,4 +1,4 @@
-import { Grid } from '@radix-ui/themes'
+import { Grid, Flex } from '@radix-ui/themes'
 import { type ReactNode, useMemo } from 'react'
 import styled from 'styled-components'
 
@@ -8,6 +8,7 @@ export type TableProps<T> = {
   data: T[]
   config: TableColumnConfig<T>[]
   getRowKey: (data: T) => string | number
+  verticalAlign?: 'center' | 'start' | 'end'
 }
 
 export type TableColumnConfig<T> = {
@@ -17,7 +18,12 @@ export type TableColumnConfig<T> = {
   width?: string
 }
 
-export const Table = <T,>({ data, config, getRowKey }: TableProps<T>) => {
+export const Table = <T,>({
+  data,
+  config,
+  getRowKey,
+  verticalAlign,
+}: TableProps<T>) => {
   const gridTemplateColumns = useMemo(
     () => config.map(({ width }) => width || '1fr').join(' '),
     [config],
@@ -42,7 +48,10 @@ export const Table = <T,>({ data, config, getRowKey }: TableProps<T>) => {
             >
               {config.map(({ getRowContent, dataKey }) => {
                 return (
-                  <BodyCell key={`${dataKey.toString()}-${getRowKey(row)}`}>
+                  <BodyCell
+                    key={`${dataKey.toString()}-${getRowKey(row)}`}
+                    align={verticalAlign}
+                  >
                     {getRowContent ? getRowContent(row) : String(row[dataKey])}
                   </BodyCell>
                 )
@@ -61,7 +70,7 @@ const TableCard = styled(Card)`
 
 const HeaderCell = styled.div`
   background: var(--ds-neutral-2);
-  padding: 12px var(--space-4);
+  padding: 12px var(--space-3);
 `
 
 const HeaderGrid = styled(Grid)`
@@ -76,8 +85,8 @@ const HeaderGrid = styled(Grid)`
   border-bottom: 1px solid var(--ds-neutral-alpha-6);
 `
 
-const BodyCell = styled.div`
-  padding: 26px var(--space-4);
+const BodyCell = styled(Flex)`
+  padding: var(--space-4) var(--space-3);
   border-bottom: 1px solid var(--ds-neutral-alpha-6);
 `
 
