@@ -370,7 +370,7 @@ export const Filters = styled.div`
   flex-wrap: wrap;
   gap: 10px;
   align-items: end;
-  margin-bottom: 10px;
+  margin-bottom: var(--space-4);
 `
 
 export const FilterMotionSelect = styled(MotionSelect)`

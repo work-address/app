@@ -18,6 +18,7 @@ export const Table = <T extends Record<string, any>>({
   onSelectedIdsChange,
   HeaderCellComponent = DefaultHeaderCellComponent,
   BodyCellComponent = DefaultBodyCellComponent,
+  nowrap,
 }: TableProps<T>) => {
   const normalizedSelectedIds = useMemo(
     () => Object.entries(selectedIds || {}).filter(([_, value]) => value),
@@ -60,7 +61,7 @@ export const Table = <T extends Record<string, any>>({
 
   return (
     <TableCard>
-      <StyledTable>
+      <StyledTable $nowrap={nowrap}>
         <THead>
           <tr>
             {config.map((configEntry, index) => {
@@ -68,11 +69,13 @@ export const Table = <T extends Record<string, any>>({
                 ? 'indeterminate'
                 : isAllSelected
 
+              const key =
+                'dataKey' in configEntry
+                  ? configEntry.dataKey
+                  : configEntry.customKey
+
               return (
-                <Th
-                  key={configEntry.dataKey.toString()}
-                  width={configEntry.width}
-                >
+                <Th key={key.toString()} width={configEntry.width}>
                   <Flex
                     gap={'3'}
                     align={'center'}
@@ -105,9 +108,14 @@ export const Table = <T extends Record<string, any>>({
                 {config.map((columnConfig, index) => {
                   const selected = selectedIds?.[rowId] ?? false
 
+                  const key =
+                    'dataKey' in columnConfig
+                      ? columnConfig.dataKey
+                      : columnConfig.customKey
+
                   return (
                     <Td
-                      key={`${columnConfig.dataKey.toString()}-${rowId}`}
+                      key={`${key.toString()}-${rowId}`}
                       verticalAlign={verticalAlign}
                     >
                       <Flex
@@ -129,6 +137,16 @@ export const Table = <T extends Record<string, any>>({
                           data={row}
                           DefaultBodyCellComponent={DefaultBodyCellComponent}
                           selected={selected}
+                          dataKey={
+                            'dataKey' in columnConfig
+                              ? columnConfig.dataKey
+                              : undefined
+                          }
+                          customKey={
+                            'customKey' in columnConfig
+                              ? columnConfig.customKey
+                              : undefined
+                          }
                         />
                       </Flex>
                     </Td>
@@ -153,20 +171,29 @@ export type TableProps<T extends Record<string, any>> = {
   allowSelection?: boolean
   selectedIds?: Record<string, boolean>
   onSelectedIdsChange?: (data: Record<string, boolean>) => void
+  nowrap?: boolean
 }
 
 type TableColumnConfigRecord<T extends Record<string, any>> = {
-  dataKey: keyof T
   width?: number
   headerText?: string
   horizontalAlign?: 'start' | 'center' | 'end'
-}
+} & (
+  | {
+      dataKey: keyof T
+    }
+  | {
+      customKey: string
+    }
+)
 
 export type TableColumnConfig<T extends Record<string, any>> =
   TableColumnConfigRecord<T>[]
 
 export type CellRenderProps<T extends Record<string, any>> = {
   data: T
+  dataKey?: keyof T
+  customKey?: string
   columnConfig: TableColumnConfigRecord<T>
   DefaultBodyCellComponent: typeof DefaultBodyCellComponent<T>
   selected?: boolean
@@ -184,10 +211,11 @@ const DefaultHeaderCellComponent = <T extends Record<string, any>>(
 
 const DefaultBodyCellComponent = <T extends Record<string, any>>(
   props: CellRenderProps<T>,
-) => String(props.data[props.columnConfig.dataKey])
+) => (props.dataKey ? String(props.data[props.dataKey]) : props.customKey)
 
 const TableCard = styled(Card)`
   padding: 0;
+  overflow: auto;
 
   table {
     border-collapse: collapse;
@@ -195,8 +223,9 @@ const TableCard = styled(Card)`
   }
 `
 
-const StyledTable = styled.table`
+const StyledTable = styled.table<{ $nowrap?: boolean }>`
   min-width: 100%;
+  ${(p) => p.$nowrap && `white-space: nowrap;`}
 `
 
 const Th = styled.td<{ width?: number }>`
