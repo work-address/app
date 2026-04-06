@@ -1,40 +1,64 @@
 import { ArrowLeftIcon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
-import styled from 'styled-components'
+import { useMediaQuery } from 'styled-breakpoints/use-media-query'
+import styled, { useTheme } from 'styled-components'
 
-import { TotalAmount, Worklogs } from '@/features/invoice'
-import { IconButton, Text } from '@/features/shared'
+import {
+  InvoiceCard,
+  TotalAmountDesktop,
+  TotalAmountMobile,
+  Worklogs,
+} from '@/features/invoice'
+import { Card, IconButton, Text } from '@/features/shared'
 
 export default function InvoicePage() {
+  const { breakpoints } = useTheme()
+  const isMobile = useMediaQuery(breakpoints.down('md'))
+
   return (
-    <FlexWrapper direction={'column'} gap={'20px'}>
-      <Flex gap={'2'} direction={'column'}>
-        <Flex direction={'column'}>
-          <IconWrapper>
-            <IconButton variant={'ghost'} radius={'full'} color={'gray'}>
-              <ArrowLeftIcon />
-            </IconButton>
-          </IconWrapper>
+    <CardWrapper shadow={false}>
+      <Flex direction={'column'} gap={'20px'}>
+        {isMobile && (
+          <Flex gap={'2'} direction={'column'}>
+            <Flex direction={'column'}>
+              <IconWrapper>
+                <IconButton variant={'ghost'} radius={'full'} color={'gray'}>
+                  <ArrowLeftIcon />
+                </IconButton>
+              </IconWrapper>
 
-          <Text>Project 1</Text>
-        </Flex>
+              <Text>Project 1</Text>
+            </Flex>
 
-        <Text color={'gray'} size={'2'}>
-          0:6a5b9c7e2f3d4e5f6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2q3r4s5t6u7v8w9
-        </Text>
+            <Text color={'gray'} size={'2'}>
+              0:6a5b9c7e2f3d4e5f6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2q3r4s5t6u7v8w9
+            </Text>
+          </Flex>
+        )}
+
+        {isMobile ? (
+          <InvoiceCard shadow={false}>
+            <TotalAmountMobile />
+          </InvoiceCard>
+        ) : (
+          <TotalAmountDesktop />
+        )}
+
+        <Worklogs />
       </Flex>
-
-      <TotalAmount />
-
-      <Worklogs />
-    </FlexWrapper>
+    </CardWrapper>
   )
 }
 
-const FlexWrapper = styled(Flex)`
-  padding: 20px var(--space-3);
+const IconWrapper = styled.div`
+  padding-left: var(--space-2);
 `
 
-const IconWrapper = styled.div`
-  padding-left: 8px;
+const CardWrapper = styled(Card)`
+  padding: 20px var(--space-3);
+
+  ${(p) => p.theme.breakpoints.up('md')} {
+    width: 1196px;
+    margin: var(--space-5) auto 0;
+  }
 `
