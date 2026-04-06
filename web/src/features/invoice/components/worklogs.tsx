@@ -1,5 +1,5 @@
 import { Badge, type BadgeProps, Flex } from '@radix-ui/themes'
-import { memo, useMemo } from 'react'
+import { memo, useMemo, useState } from 'react'
 
 import type { CellRenderProps, TableProps } from '@/features/shared'
 
@@ -8,6 +8,8 @@ import { Table, worklogsMock, Text } from '@/features/shared'
 type WorklogRow = (typeof worklogsMock)[number]
 
 export const Worklogs = () => {
+  const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
+
   const tableConfig = useMemo(
     (): TableProps<WorklogRow>['config'] => [
       {
@@ -57,10 +59,15 @@ export const Worklogs = () => {
       <Table
         data={worklogsMock}
         config={tableConfig}
-        getRowKey={(row) => row.key}
+        getRowId={(row) => row.key}
         verticalAlign={'center'}
         BodyCellComponent={Cell}
         allowSelection
+        selectedIds={selectedIds}
+        onSelectedIdsChange={(news) => {
+          console.log(news)
+          setSelectedIds(news)
+        }}
       />
     </>
   )
@@ -104,7 +111,6 @@ const Cell = memo((props: CellRenderProps<WorklogRow>) => {
 
     default: {
       const { DefaultBodyCellComponent } = props
-
       return <DefaultBodyCellComponent {...props} />
     }
   }

@@ -10,9 +10,11 @@ import { Text } from './text'
 export const Table = <T extends Record<string, any>>({
   data,
   config,
-  getRowKey,
+  getRowId,
   verticalAlign,
   allowSelection,
+  selectedIds,
+  onSelectedIdsChange,
   HeaderCellComponent = DefaultHeaderCellComponent,
   BodyCellComponent = DefaultBodyCellComponent,
 }: TableProps<T>) => {
@@ -20,6 +22,54 @@ export const Table = <T extends Record<string, any>>({
     () => config.map(({ width }) => width || '1fr').join(' '),
     [config],
   )
+
+  const normalizedSelectedIds = useMemo(
+    () => Object.entries(selectedIds || {}).filter(([_, value]) => value),
+    [selectedIds],
+  )
+
+  const isPartiallySelected = useMemo(
+    () =>
+      normalizedSelectedIds.length > 0 &&
+      normalizedSelectedIds.length < data.length,
+    [normalizedSelectedIds, data],
+  )
+
+  const isAllSelected = useMemo(
+    () => normalizedSelectedIds.length === data.length,
+    [normalizedSelectedIds, data],
+  )
+
+  const handleSelectedChange = (id: string) => {
+    const newSelected = { ...selectedIds, [id]: !selectedIds?.[id] }
+    onSelectedIdsChange?.(newSelected)
+  }
+
+  const handleToggleAllSelected = () => {
+    if (normalizedSelectedIds.length > 0) {
+      onSelectedIdsChange?.(
+        data.reduce(
+          (acc, row) => {
+            const rowId = getRowId(row)
+            acc[rowId] = false
+            return acc
+          },
+          {} as Record<string, boolean>,
+        ),
+      )
+    } else {
+      onSelectedIdsChange?.(
+        data.reduce(
+          (acc, row) => {
+            const rowId = getRowId(row)
+            acc[rowId] = true
+            return acc
+          },
+          {} as Record<string, boolean>,
+        ),
+      )
+    }
+  }
 
   return (
     <TableCard>
@@ -32,7 +82,14 @@ export const Table = <T extends Record<string, any>>({
                 align={'center'}
                 justify={configEntry.horizontalAlign}
               >
-                {allowSelection && index === 0 && <Checkbox />}
+                {allowSelection && index === 0 && (
+                  <Checkbox
+                    checked={
+                      isPartiallySelected ? 'indeterminate' : isAllSelected
+                    }
+                    onCheckedChange={() => handleToggleAllSelected()}
+                  />
+                )}
                 <HeaderCellComponent
                   {...configEntry}
                   DefaultHeaderCellComponent={DefaultHeaderCellComponent}
@@ -43,32 +100,43 @@ export const Table = <T extends Record<string, any>>({
         </HeaderGrid>
 
         <div>
-          {data.map((row) => (
-            <BodyRowGrid
-              key={getRowKey(row)}
-              columns={{ initial: gridTemplateColumns }}
-            >
-              {config.map((columnConfig, index) => {
-                return (
-                  <BodyCell
-                    key={`${columnConfig.dataKey.toString()}-${getRowKey(row)}`}
-                    align={verticalAlign}
-                    justify={columnConfig.horizontalAlign}
-                  >
-                    <Flex gap={'3'} align={'center'}>
-                      {allowSelection && index === 0 && <Checkbox />}
+          {data.map((row) => {
+            const rowId = getRowId(row)
 
-                      <BodyCellComponent
-                        columnConfig={columnConfig}
-                        data={row}
-                        DefaultBodyCellComponent={DefaultBodyCellComponent}
-                      />
-                    </Flex>
-                  </BodyCell>
-                )
-              })}
-            </BodyRowGrid>
-          ))}
+            return (
+              <BodyRowGrid
+                key={rowId}
+                columns={{ initial: gridTemplateColumns }}
+              >
+                {config.map((columnConfig, index) => {
+                  return (
+                    <BodyCell
+                      key={`${columnConfig.dataKey.toString()}-${rowId}`}
+                      align={verticalAlign}
+                      justify={columnConfig.horizontalAlign}
+                    >
+                      <Flex gap={'3'} align={'center'}>
+                        {allowSelection && index === 0 && (
+                          <Checkbox
+                            checked={selectedIds?.[rowId] ?? false}
+                            onCheckedChange={() =>
+                              rowId && handleSelectedChange(rowId.toString())
+                            }
+                          />
+                        )}
+
+                        <BodyCellComponent
+                          columnConfig={columnConfig}
+                          data={row}
+                          DefaultBodyCellComponent={DefaultBodyCellComponent}
+                        />
+                      </Flex>
+                    </BodyCell>
+                  )
+                })}
+              </BodyRowGrid>
+            )
+          })}
         </div>
       </Grid>
     </TableCard>
@@ -78,11 +146,13 @@ export const Table = <T extends Record<string, any>>({
 export type TableProps<T extends Record<string, any>> = {
   data: T[]
   config: TableColumnConfig<T>[]
-  getRowKey: (data: T) => string | number
+  getRowId: (data: T) => string | number
   verticalAlign?: 'center' | 'start' | 'end'
   HeaderCellComponent?: (props: HeaderCellRenderProps<T>) => ReactNode
   BodyCellComponent?: (props: CellRenderProps<T>) => ReactNode
   allowSelection?: boolean
+  selectedIds?: Record<string, boolean>
+  onSelectedIdsChange?: (data: Record<string, boolean>) => void
 }
 
 export type TableColumnConfig<T extends Record<string, any>> = {
