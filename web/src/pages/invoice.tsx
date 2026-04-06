@@ -1,5 +1,5 @@
 import { ArrowLeftIcon } from '@radix-ui/react-icons'
-import { Flex } from '@radix-ui/themes'
+import { Flex, Separator } from '@radix-ui/themes'
 import { useMediaQuery } from 'styled-breakpoints/use-media-query'
 import styled, { useTheme } from 'styled-components'
 
@@ -16,7 +16,7 @@ export default function InvoicePage() {
   const isMobile = useMediaQuery(breakpoints.down('md'))
 
   return (
-    <CardWrapper shadow={false}>
+    <CardWrapper shadow={false} as={isMobile ? 'div' : CardWrapper}>
       <Flex direction={'column'} gap={'20px'}>
         {isMobile && (
           <Flex gap={'2'} direction={'column'}>
@@ -44,6 +44,13 @@ export default function InvoicePage() {
           <TotalAmountDesktop />
         )}
 
+        {!isMobile && (
+          <>
+            <Separator size={'4'} />
+            <Separator size={'4'} />
+          </>
+        )}
+
         <Worklogs />
       </Flex>
     </CardWrapper>
@@ -59,6 +66,6 @@ const CardWrapper = styled(Card)`
 
   ${(p) => p.theme.breakpoints.up('md')} {
     width: 1196px;
-    margin: var(--space-5) auto 0;
+    margin: var(--space-5) auto;
   }
 `

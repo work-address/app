@@ -7,17 +7,23 @@ export type CardProps = {
   children?: ReactNode
   style?: CSSProperties
   shadow?: boolean
+  rounded?: boolean
 }
 
-export const Card = ({ shadow = true, ...props }: CardProps) => {
-  return <Layer shadow={shadow} {...props} />
+export const Card = ({
+  shadow = true,
+  rounded = true,
+  ...props
+}: CardProps) => {
+  return <Layer shadow={shadow} rounded={rounded} {...props} />
 }
 
 const Layer = styled.section<CardProps>`
-  border: 1px solid var(--neutral-alpha-6);
-  border-radius: var(--radius-4);
+  border: 1px solid var(--ds-neutral-alpha-6);
   background-color: var(--white);
   padding: var(--spacing-5);
+
+  ${(p) => p.rounded && `border-radius: var(--radius-4);`}
 
   ${(p) => p.shadow && `box-shadow: var(--shadow-4);`}
 `

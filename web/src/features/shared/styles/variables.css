@@ -19,7 +19,7 @@
   --ds-neutral-11: #60646C;
 
   --ds-neutral-alpha-3: rgba(0, 0, 51, 0.06);
-  --neutral-alpha-6: rgba(0, 0, 47, 0.15);
+  --ds-neutral-alpha-6: rgba(0, 0, 47, 0.15);
 
   --shadow-4: 0px 8px 40px 0px var(--overlays-black-alpha-1),
   0px 12px 32px -16px var(--ds-neutral-alpha-3);
