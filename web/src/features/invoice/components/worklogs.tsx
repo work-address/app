@@ -1,4 +1,4 @@
-import { Badge, Checkbox, Flex } from '@radix-ui/themes'
+import { Badge, Flex } from '@radix-ui/themes'
 import { memo, useMemo } from 'react'
 
 import type { CellRenderProps, TableProps } from '@/features/shared'
@@ -69,14 +69,10 @@ const Cell = memo(({ columnConfig, data }: CellRenderProps<WorklogRow>) => {
   switch (columnConfig.dataKey) {
     case 'date': {
       return (
-        <Flex gap={'3'} align={'center'}>
-          <Checkbox />
-
-          <Flex direction={'column'}>
-            <Text>{data.dateRange}</Text>
-            <Text color={'gray'}>{data.date}</Text>
-          </Flex>
-        </Flex>
+        <div>
+          <Text>{data.dateRange}</Text>
+          <Text color={'gray'}>{data.date}</Text>
+        </div>
       )
     }
 

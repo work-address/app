@@ -67,20 +67,24 @@ export const Table = <T extends Record<string, any>>({
               key={getRowKey(row)}
               columns={{ initial: gridTemplateColumns }}
             >
-              {config.map((columnConfig) => {
+              {config.map((columnConfig, index) => {
                 return (
                   <BodyCell
                     key={`${columnConfig.dataKey.toString()}-${getRowKey(row)}`}
                     align={verticalAlign}
                   >
-                    {BodyCellComponent ? (
-                      <BodyCellComponent
-                        columnConfig={columnConfig}
-                        data={row}
-                      />
-                    ) : (
-                      String(row[columnConfig.dataKey])
-                    )}
+                    <Flex gap={'3'} align={'center'}>
+                      {allowSelection && index === 0 && <Checkbox />}
+
+                      {BodyCellComponent ? (
+                        <BodyCellComponent
+                          columnConfig={columnConfig}
+                          data={row}
+                        />
+                      ) : (
+                        String(row[columnConfig.dataKey])
+                      )}
+                    </Flex>
                   </BodyCell>
                 )
               })}
