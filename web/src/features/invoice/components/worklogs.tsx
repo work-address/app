@@ -1,127 +1,56 @@
 import { Badge, Checkbox, Flex } from '@radix-ui/themes'
-import { useCallback, useMemo, useState } from 'react'
+import { memo, useMemo } from 'react'
 
-import type { TableProps } from '@/features/shared'
+import type {
+  CellRenderProps,
+  TableColumnConfig,
+  TableProps,
+} from '@/features/shared'
 
 import { Table, worklogsMock, Text } from '@/features/shared'
 
 type WorklogRow = (typeof worklogsMock)[number]
 
 export const Worklogs = () => {
-  const [selectedKeys, setSelectedKeys] = useState<Record<string, boolean>>({})
-
-  const checkedCount = useMemo(
-    () => Object.values(selectedKeys).filter(Boolean).length,
-    [selectedKeys],
-  )
-
-  const isAllChecked = checkedCount === worklogsMock.length
-
-  const handleToggleAll = useCallback(() => {
-    setSelectedKeys(() =>
-      checkedCount === 0
-        ? Object.values(worklogsMock)
-            .map(({ key }) => key)
-            .reduce(
-              (acc, curr) => {
-                acc[curr] = true
-                return acc
-              },
-              {} as Record<string, boolean>,
-            )
-        : Object.values(worklogsMock)
-            .map(({ key }) => key)
-            .reduce(
-              (acc, curr) => {
-                acc[curr] = false
-                return acc
-              },
-              {} as Record<string, boolean>,
-            ),
-    )
-  }, [checkedCount])
-
-  const handleToggleKey = useCallback((key: string) => {
-    setSelectedKeys((selectedKeys) => ({
-      ...selectedKeys,
-      [key]: !selectedKeys[key],
-    }))
-  }, [])
-
   const tableConfig = useMemo(
     (): TableProps<WorklogRow>['config'] => [
       {
         dataKey: 'date',
-        getHeaderContent: () => (
-          <Flex align={'center'} gap={'3'}>
-            <Checkbox
-              onCheckedChange={() => handleToggleAll()}
-              checked={
-                isAllChecked ? true : checkedCount > 0 ? 'indeterminate' : false
-              }
-            />
-            <Text color={'gray'}>Date</Text>
-          </Flex>
-        ),
-        getRowContent: ({ date, dateRange, key }) => (
-          <Flex gap={'3'} align={'center'}>
-            <Checkbox
-              checked={selectedKeys[key]}
-              onCheckedChange={() => handleToggleKey(key)}
-            />
-
-            <Flex direction={'column'}>
-              <Text>{dateRange}</Text>
-              <Text color={'gray'}>{date}</Text>
-            </Flex>
-          </Flex>
-        ),
         width: '165px',
+        headerText: 'Date',
       },
       {
         dataKey: 'projectName',
-        getHeaderContent: () => <Text color={'gray'}>Project name</Text>,
         width: '240px',
+        headerText: 'Project name',
       },
       {
         dataKey: 'note',
-        getHeaderContent: () => <Text color={'gray'}>Note</Text>,
-        getRowContent: ({ note }) => <Text color={'gray'}>{note}</Text>,
         width: '240px',
+        headerText: 'Note',
       },
       {
         dataKey: 'timeActive',
-        getHeaderContent: () => <Text color={'gray'}>Time active</Text>,
-        getRowContent: ({ timeActive }) => (
-          <Flex justify={'center'}>
-            <Badge>{timeActive}</Badge>
-          </Flex>
-        ),
         width: '130px',
+        headerText: 'Time active',
       },
       {
         dataKey: 'keyboard',
-        getHeaderContent: () => <Text color={'gray'}>Keyboard</Text>,
         width: '118px',
+        headerText: 'Keyboard',
       },
       {
         dataKey: 'mouse',
-        getHeaderContent: () => <Text color="gray">Mouse</Text>,
         width: '1fr',
+        headerText: 'Mouse',
       },
       {
         dataKey: 'mouseDistance',
-        getHeaderContent: () => <Text color={'gray'}>Mouse distance</Text>,
         width: '155px',
+        headerText: 'Mouse distance',
       },
     ],
-    [
-      checkedCount,
-      isAllChecked,
-      handleToggleAll,
-      handleToggleKey,
-      selectedKeys,
-    ],
+    [],
   )
 
   return (
@@ -133,7 +62,53 @@ export const Worklogs = () => {
         config={tableConfig}
         getRowKey={(row) => row.key}
         verticalAlign={'center'}
+        HeaderComponent={HeaderCell}
+        CellComponent={Cell}
       />
     </>
   )
 }
+
+const HeaderCell = memo(
+  ({ dataKey, headerText }: TableColumnConfig<WorklogRow>) => {
+    if (dataKey === 'date') {
+      return (
+        <Flex align={'center'} gap={'3'}>
+          <Checkbox />
+          <Text color={'gray'}>{headerText}</Text>
+        </Flex>
+      )
+    } else {
+      return <Text color={'gray'}>{headerText}</Text>
+    }
+  },
+)
+
+const Cell = memo(({ columnConfig, data }: CellRenderProps<WorklogRow>) => {
+  switch (columnConfig.dataKey) {
+    case 'date': {
+      return (
+        <Flex gap={'3'} align={'center'}>
+          <Checkbox />
+
+          <Flex direction={'column'}>
+            <Text>{data.dateRange}</Text>
+            <Text color={'gray'}>{data.date}</Text>
+          </Flex>
+        </Flex>
+      )
+    }
+
+    case 'timeActive': {
+      return (
+        <Flex justify={'center'}>
+          <Badge>{data.timeActive}</Badge>
+        </Flex>
+      )
+    }
+
+    default: {
+      return <Text color={'gray'}>{data[columnConfig.dataKey]}</Text>
+    }
+  }
+})

@@ -1,28 +1,41 @@
+/* eslint-disable @typescript-eslint/no-explicit-any */
+
 import { Grid, Flex } from '@radix-ui/themes'
 import { type ReactNode, useMemo } from 'react'
 import styled from 'styled-components'
 
 import { Card } from './card'
+import { Text } from './text'
 
-export type TableProps<T> = {
+export type TableProps<T extends Record<string, any>> = {
   data: T[]
   config: TableColumnConfig<T>[]
   getRowKey: (data: T) => string | number
   verticalAlign?: 'center' | 'start' | 'end'
+  HeaderComponent?: (data: TableColumnConfig<T>) => ReactNode
+  CellComponent?: (props: CellRenderProps<T>) => ReactNode
+  allowSelection?: boolean
 }
 
-export type TableColumnConfig<T> = {
+export type TableColumnConfig<T extends Record<string, any>> = {
   dataKey: keyof T
-  getHeaderContent: () => ReactNode
-  getRowContent?: (data: T) => ReactNode
   width?: string
+  headerText?: string
 }
 
-export const Table = <T,>({
+export type CellRenderProps<T extends Record<string, any>> = {
+  data: T
+  columnConfig: TableColumnConfig<T>
+}
+
+export const Table = <T extends Record<string, any>>({
   data,
   config,
   getRowKey,
   verticalAlign,
+  allowSelection,
+  HeaderComponent,
+  CellComponent,
 }: TableProps<T>) => {
   const gridTemplateColumns = useMemo(
     () => config.map(({ width }) => width || '1fr').join(' '),
@@ -33,9 +46,13 @@ export const Table = <T,>({
     <TableCard>
       <Grid>
         <HeaderGrid columns={{ initial: gridTemplateColumns }}>
-          {config.map(({ dataKey, getHeaderContent }) => (
-            <HeaderCell key={dataKey.toString()}>
-              {getHeaderContent()}
+          {config.map((configEntry) => (
+            <HeaderCell key={configEntry.dataKey.toString()}>
+              {HeaderComponent ? (
+                <HeaderComponent {...configEntry} />
+              ) : (
+                <Text color={'gray'}>{configEntry.dataKey.toString()}</Text>
+              )}
             </HeaderCell>
           ))}
         </HeaderGrid>
@@ -46,13 +63,17 @@ export const Table = <T,>({
               key={getRowKey(row)}
               columns={{ initial: gridTemplateColumns }}
             >
-              {config.map(({ getRowContent, dataKey }) => {
+              {config.map((columnConfig) => {
                 return (
                   <BodyCell
-                    key={`${dataKey.toString()}-${getRowKey(row)}`}
+                    key={`${columnConfig.dataKey.toString()}-${getRowKey(row)}`}
                     align={verticalAlign}
                   >
-                    {getRowContent ? getRowContent(row) : String(row[dataKey])}
+                    {CellComponent ? (
+                      <CellComponent columnConfig={columnConfig} data={row} />
+                    ) : (
+                      String(row[columnConfig.dataKey])
+                    )}
                   </BodyCell>
                 )
               })}
