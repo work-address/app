@@ -4,7 +4,6 @@ import { Link } from 'react-router-dom'
 import { useMediaQuery } from 'styled-breakpoints/use-media-query'
 import styled, { useTheme } from 'styled-components'
 
-import QrCodeExample from './assets/qr-code-example.png'
 import { ProfileViewCard } from './styled'
 
 import { IconButton, routes, Text } from '@/features/shared'
@@ -50,7 +49,7 @@ export const QrCode = ({ gridArea }: QrCodeProps) => {
           </>
         )}
 
-        <QrCodeImage src={QrCodeExample} alt={'qr-code'} />
+        <QrCodeImage src={'/img/photo/qr-code-example.svg'} alt={'qr-code'} />
 
         {isUpMd ? (
           <Button width={'146px'} themeVariant={'primary'} size={'3'}>

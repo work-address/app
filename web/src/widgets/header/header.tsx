@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from 'motion/react'
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { IconImg, MobileMenuNav } from '../styled.ts'
@@ -47,7 +48,7 @@ export const Header = () => {
   return (
     <HeaderRoot ref={rootRef}>
       <HeaderInner>
-        <LogoLink href={routes.dashboard.schema}>
+        <LogoLink to={routes.dashboard.schema}>
           <LogoImg src="/img/photo/logo.svg" alt={t('header.logoAlt')} />
         </LogoLink>
 
@@ -177,7 +178,7 @@ const HeaderInner = styled.div`
   padding: 12px 28px;
 `
 
-const LogoLink = styled.a`
+const LogoLink = styled(Link)`
   display: inline-flex;
   align-items: center;
   gap: 10px;

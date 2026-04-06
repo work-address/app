@@ -1,6 +1,6 @@
 import type {
   Route,
-  IdRouteBuild,
+  IdRouteParams,
   NoChildRoutes,
   MappingRoute,
 } from './types.ts'
@@ -14,9 +14,10 @@ type MainRoutes =
   & Route<'/time-tracker', 'timeTracker'>
   & Route<'/download', 'download'>
   & Route<'https://github.com', 'github'>
+  & Route<'/invoice/:id', 'invoice', NoChildRoutes, IdRouteParams>
 
 type ProfileRoutes =
-  & Route<'/profile/freelancer/:id', 'freelancer', NoChildRoutes,  IdRouteBuild>
+  & Route<'/profile/freelancer/:id', 'freelancer', NoChildRoutes,  IdRouteParams>
   & Route<'/profile/edit', 'edit', NoChildRoutes>
 
 /* eslint-enable */
@@ -111,6 +112,11 @@ export const routes: MainRoutes = {
 
   signIn: {
     schema: '/sign-in',
+  },
+
+  invoice: {
+    schema: '/invoice/:id',
+    build: ({ id }) => `/invoice/${id}`,
   },
 }
 

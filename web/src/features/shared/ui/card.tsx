@@ -7,7 +7,6 @@ export type CardProps = {
   children?: ReactNode
   style?: CSSProperties
   shadow?: boolean
-  gridArea?: string
 }
 
 export const Card = ({ shadow = true, ...props }: CardProps) => {
@@ -21,6 +20,4 @@ const Layer = styled.section<CardProps>`
   padding: var(--spacing-5);
 
   ${(p) => p.shadow && `box-shadow: var(--shadow-4);`}
-
-  ${(p) => p.gridArea && `grid-area: ${p.gridArea};`}
 `

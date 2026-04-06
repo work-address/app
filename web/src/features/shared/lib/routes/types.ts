@@ -2,22 +2,23 @@
 
 export type BuildRoute<Params extends any> = (params: Params) => string
 
-export type IdRouteBuild = BuildRoute<{ id: string }>
+export type IdRouteParams = { id: string }
 
 export type NoChildRoutes = undefined
 
 export type Optional<
   Name extends string,
   Val extends any,
+  InjectingType extends any = Val,
 > = Val extends undefined
   ? { [key in Name]?: undefined }
-  : { [key in Name]: Val }
+  : { [key in Name]: InjectingType }
 
 export type Route<
   Schema extends string = string,
   Name extends string = string,
   Children extends Record<string, any> | undefined = undefined,
-  Build extends BuildRoute<any> | undefined = undefined,
+  BuildArgs extends Record<string, any> | undefined = undefined,
 > = {
   [key in Name]: {
     schema: Schema
@@ -32,7 +33,7 @@ export type Route<
     mobileOrder?: number
     target?: '_blank'
     desktopRender?: 'textWithIcon' | 'text' | 'icon'
-  } & Optional<'build', Build> &
+  } & Optional<'build', BuildArgs, BuildRoute<BuildArgs>> &
     Optional<'children', Children>
 }
 

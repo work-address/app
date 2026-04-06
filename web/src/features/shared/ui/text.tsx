@@ -5,6 +5,7 @@ import type { TextProps as RadixTextProps } from '@radix-ui/themes'
 
 type TextProps = {
   themeVariant?: 'primary' | 'secondary'
+  letterSpacing?: string
 } & RadixTextProps
 
 export const Text = ({ ...props }: TextProps) => {
@@ -17,4 +18,10 @@ const StyledRadixText = styled(RadixText)<TextProps>`
     `
       color: var(--ds-accent-11);
     `}
+
+  ${(p) =>
+    p.letterSpacing &&
+    `
+      letter-spacing: ${p.letterSpacing};
+  `}
 `

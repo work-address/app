@@ -10,6 +10,7 @@ const DashboardPage = lazy(() => import('@/pages/dashboard'))
 const ProfilePage = lazy(() => import('@/pages/profile'))
 const ProfileEditPage = lazy(() => import('@/pages/profile/edit'))
 const SignInPage = lazy(() => import('@/pages/sign-in'))
+const InvoicePage = lazy(() => import('@/pages/invoice'))
 
 function App() {
   return (
@@ -21,11 +22,14 @@ function App() {
 
         <Route element={<Layouts.MainLayout />}>
           <Route path={routes.dashboard.schema} element={<DashboardPage />} />
+
           <Route path={routes.profile.schema} element={<ProfilePage />} />
+
           <Route
             path={routes.profile.children.edit.schema}
             element={<ProfileEditPage />}
           />
+          <Route path={routes.invoice.schema} element={<InvoicePage />} />
         </Route>
 
         <Route path="*" element={<Navigate to="/sign-in" replace />} />
