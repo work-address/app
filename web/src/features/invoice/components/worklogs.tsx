@@ -1,4 +1,4 @@
-import { Badge, type BadgeProps, Flex } from '@radix-ui/themes'
+import { Badge, type BadgeProps } from '@radix-ui/themes'
 import { memo, useMemo, useState } from 'react'
 
 import type { CellRenderProps, TableColumnConfig } from '@/features/shared'
@@ -14,38 +14,37 @@ export const Worklogs = () => {
     (): TableColumnConfig<WorklogRow> => [
       {
         dataKey: 'date',
-        width: '165px',
+        width: 165,
         headerText: 'Date',
       },
       {
         dataKey: 'projectName',
-        width: '240px',
+        width: 240,
         headerText: 'Project name',
       },
       {
         dataKey: 'note',
-        width: '240px',
+        width: 240,
         headerText: 'Note',
       },
       {
         dataKey: 'timeActive',
-        width: '130px',
+        width: 130,
         headerText: 'Time active',
         horizontalAlign: 'center',
       },
       {
         dataKey: 'keyboard',
-        width: '118px',
+        width: 118,
         headerText: 'Keyboard',
       },
       {
         dataKey: 'mouse',
-        width: '1fr',
         headerText: 'Mouse',
       },
       {
         dataKey: 'mouseDistance',
-        width: '155px',
+        width: 155,
         headerText: 'Mouse distance',
       },
     ],
@@ -60,7 +59,7 @@ export const Worklogs = () => {
         data={worklogsMock}
         config={tableConfig}
         getRowId={(row) => row.key}
-        verticalAlign={'center'}
+        verticalAlign={'middle'}
         BodyCellComponent={Cell}
         allowSelection
         selectedIds={selectedIds}
@@ -94,15 +93,13 @@ const Cell = memo((props: CellRenderProps<WorklogRow>) => {
 
     case 'timeActive': {
       return (
-        <Flex>
-          <Badge
-            color={
-              BadgeTestColor[Math.floor(Math.random() * BadgeTestColor.length)]
-            }
-          >
-            {props.data.timeActive}
-          </Badge>
-        </Flex>
+        <Badge
+          color={
+            BadgeTestColor[Math.floor(Math.random() * BadgeTestColor.length)]
+          }
+        >
+          {props.data.timeActive}
+        </Badge>
       )
     }
 

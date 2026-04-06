@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-import { Grid, Flex } from '@radix-ui/themes'
+import { Flex } from '@radix-ui/themes'
 import { type ReactNode, useMemo } from 'react'
 import styled from 'styled-components'
 
@@ -19,11 +19,6 @@ export const Table = <T extends Record<string, any>>({
   HeaderCellComponent = DefaultHeaderCellComponent,
   BodyCellComponent = DefaultBodyCellComponent,
 }: TableProps<T>) => {
-  const gridTemplateColumns = useMemo(
-    () => config.map(({ width }) => width || '1fr').join(' '),
-    [config],
-  )
-
   const normalizedSelectedIds = useMemo(
     () => Object.entries(selectedIds || {}).filter(([_, value]) => value),
     [selectedIds],
@@ -65,56 +60,61 @@ export const Table = <T extends Record<string, any>>({
 
   return (
     <TableCard>
-      <Grid>
-        <HeaderGrid columns={{ initial: gridTemplateColumns }}>
-          {config.map((configEntry, index) => {
-            const rowsSelected = isPartiallySelected
-              ? 'indeterminate'
-              : isAllSelected
+      <StyledTable>
+        <THead>
+          <tr>
+            {config.map((configEntry, index) => {
+              const rowsSelected = isPartiallySelected
+                ? 'indeterminate'
+                : isAllSelected
 
-            return (
-              <HeaderCell key={configEntry.dataKey.toString()}>
-                <Flex
-                  gap={'3'}
-                  align={'center'}
-                  justify={configEntry.horizontalAlign}
+              return (
+                <Th
+                  key={configEntry.dataKey.toString()}
+                  width={configEntry.width}
                 >
-                  {allowSelection && index === 0 && (
-                    <Checkbox
-                      checked={rowsSelected}
-                      onCheckedChange={() => handleToggleAllSelected()}
+                  <Flex
+                    gap={'3'}
+                    align={'center'}
+                    justify={configEntry.horizontalAlign}
+                  >
+                    {allowSelection && index === 0 && (
+                      <Checkbox
+                        checked={rowsSelected}
+                        onCheckedChange={() => handleToggleAllSelected()}
+                      />
+                    )}
+                    <HeaderCellComponent
+                      {...configEntry}
+                      DefaultHeaderCellComponent={DefaultHeaderCellComponent}
+                      selected={rowsSelected}
                     />
-                  )}
-                  <HeaderCellComponent
-                    {...configEntry}
-                    DefaultHeaderCellComponent={DefaultHeaderCellComponent}
-                    selected={rowsSelected}
-                  />
-                </Flex>
-              </HeaderCell>
-            )
-          })}
-        </HeaderGrid>
+                  </Flex>
+                </Th>
+              )
+            })}
+          </tr>
+        </THead>
 
-        <div>
+        <TBody>
           {data.map((row) => {
             const rowId = getRowId(row)
 
             return (
-              <BodyRowGrid
-                key={rowId}
-                columns={{ initial: gridTemplateColumns }}
-              >
+              <Tr key={rowId}>
                 {config.map((columnConfig, index) => {
                   const selected = selectedIds?.[rowId] ?? false
 
                   return (
-                    <BodyCell
+                    <Td
                       key={`${columnConfig.dataKey.toString()}-${rowId}`}
-                      align={verticalAlign}
-                      justify={columnConfig.horizontalAlign}
+                      verticalAlign={verticalAlign}
                     >
-                      <Flex gap={'3'} align={'center'}>
+                      <Flex
+                        gap={'3'}
+                        align={'center'}
+                        justify={columnConfig.horizontalAlign}
+                      >
                         {allowSelection && index === 0 && (
                           <Checkbox
                             checked={selected}
@@ -131,14 +131,14 @@ export const Table = <T extends Record<string, any>>({
                           selected={selected}
                         />
                       </Flex>
-                    </BodyCell>
+                    </Td>
                   )
                 })}
-              </BodyRowGrid>
+              </Tr>
             )
           })}
-        </div>
-      </Grid>
+        </TBody>
+      </StyledTable>
     </TableCard>
   )
 }
@@ -147,7 +147,7 @@ export type TableProps<T extends Record<string, any>> = {
   data: T[]
   config: TableColumnConfigRecord<T>[]
   getRowId: (data: T) => string | number
-  verticalAlign?: 'center' | 'start' | 'end'
+  verticalAlign?: 'top' | 'middle' | 'bottom' | 'baseline'
   HeaderCellComponent?: (props: HeaderCellRenderProps<T>) => ReactNode
   BodyCellComponent?: (props: CellRenderProps<T>) => ReactNode
   allowSelection?: boolean
@@ -157,7 +157,7 @@ export type TableProps<T extends Record<string, any>> = {
 
 type TableColumnConfigRecord<T extends Record<string, any>> = {
   dataKey: keyof T
-  width?: string
+  width?: number
   headerText?: string
   horizontalAlign?: 'start' | 'center' | 'end'
 }
@@ -188,38 +188,55 @@ const DefaultBodyCellComponent = <T extends Record<string, any>>(
 
 const TableCard = styled(Card)`
   padding: 0;
+
+  table {
+    border-collapse: collapse;
+    border-spacing: 0;
+  }
 `
 
-const HeaderCell = styled.div`
+const StyledTable = styled.table`
+  min-width: 100%;
+`
+
+const Th = styled.td<{ width?: number }>`
   background: var(--ds-neutral-2);
   padding: 12px var(--space-3);
+  font-size: 14px;
+  font-weight: 500;
+
+  ${(p) => p.width && `width: ${p.width}px;`}
 `
 
-const HeaderGrid = styled(Grid)`
-  ${HeaderCell}:first-child {
+const THead = styled.thead`
+  ${Th}:first-child {
     border-top-left-radius: 8px;
   }
 
-  ${HeaderCell}:last-child {
+  ${Th}:last-child {
     border-top-right-radius: 8px;
   }
 
   border-bottom: 1px solid var(--ds-neutral-alpha-6);
 `
 
-const BodyCell = styled(Flex)`
+const TBody = styled.tbody``
+
+const Td = styled.td<{ verticalAlign?: TableProps<never>['verticalAlign'] }>`
   padding: var(--space-4) var(--space-3);
   border-bottom: 1px solid var(--ds-neutral-alpha-6);
+
+  ${(p) => p.verticalAlign && `vertical-align: ${p.verticalAlign};`}
 `
 
-const BodyRowGrid = styled(Grid)`
+const Tr = styled.tr`
   transition: 0.25s;
 
   &:hover {
     background-color: rgba(0, 0, 0, 0.05);
   }
 
-  &:last-child ${BodyCell} {
+  &:last-child ${Td} {
     border-bottom: none;
   }
 `
