@@ -213,6 +213,12 @@ const BodyCell = styled(Flex)`
 `
 
 const BodyRowGrid = styled(Grid)`
+  transition: 0.25s;
+
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
+  }
+
   &:last-child ${BodyCell} {
     border-bottom: none;
   }
