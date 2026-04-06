@@ -1,7 +1,11 @@
 import { Badge, Flex } from '@radix-ui/themes'
 import { memo, useMemo } from 'react'
 
-import type { CellRenderProps, TableProps } from '@/features/shared'
+import type {
+  CellRenderProps,
+  HeaderCellRenderProps,
+  TableProps,
+} from '@/features/shared'
 
 import { Table, worklogsMock, Text } from '@/features/shared'
 
@@ -59,33 +63,50 @@ export const Worklogs = () => {
         getRowKey={(row) => row.key}
         verticalAlign={'center'}
         BodyCellComponent={Cell}
+        HeaderCellComponent={HeaderCell}
         allowSelection
       />
     </>
   )
 }
 
-const Cell = memo(({ columnConfig, data }: CellRenderProps<WorklogRow>) => {
-  switch (columnConfig.dataKey) {
+const HeaderCell = memo((props: HeaderCellRenderProps<WorklogRow>) => {
+  if (props.dataKey === 'timeActive') {
+    return (
+      <Flex justify={'center'} width={'100%'}>
+        {props.headerText}
+      </Flex>
+    )
+  }
+
+  const { DefaultHeaderCellComponent } = props
+
+  return <DefaultHeaderCellComponent {...props} />
+})
+
+const Cell = memo((props: CellRenderProps<WorklogRow>) => {
+  switch (props.columnConfig.dataKey) {
     case 'date': {
       return (
         <div>
-          <Text>{data.dateRange}</Text>
-          <Text color={'gray'}>{data.date}</Text>
+          <Text>{props.data.dateRange}</Text>
+          <Text color={'gray'}>{props.data.date}</Text>
         </div>
       )
     }
 
     case 'timeActive': {
       return (
-        <Flex justify={'center'}>
-          <Badge>{data.timeActive}</Badge>
+        <Flex justify={'center'} width={'100%'}>
+          <Badge>{props.data.timeActive}</Badge>
         </Flex>
       )
     }
 
     default: {
-      return <Text color={'gray'}>{data[columnConfig.dataKey]}</Text>
+      const { DefaultBodyCellComponent } = props
+
+      return <DefaultBodyCellComponent {...props} />
     }
   }
 })

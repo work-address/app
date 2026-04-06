@@ -7,35 +7,14 @@ import styled from 'styled-components'
 import { Card } from './card'
 import { Text } from './text'
 
-export type TableProps<T extends Record<string, any>> = {
-  data: T[]
-  config: TableColumnConfig<T>[]
-  getRowKey: (data: T) => string | number
-  verticalAlign?: 'center' | 'start' | 'end'
-  HeaderCellComponent?: (data: TableColumnConfig<T>) => ReactNode
-  BodyCellComponent?: (props: CellRenderProps<T>) => ReactNode
-  allowSelection?: boolean
-}
-
-export type TableColumnConfig<T extends Record<string, any>> = {
-  dataKey: keyof T
-  width?: string
-  headerText?: string
-}
-
-export type CellRenderProps<T extends Record<string, any>> = {
-  data: T
-  columnConfig: TableColumnConfig<T>
-}
-
 export const Table = <T extends Record<string, any>>({
   data,
   config,
   getRowKey,
   verticalAlign,
   allowSelection,
-  HeaderCellComponent,
-  BodyCellComponent,
+  HeaderCellComponent = DefaultHeaderCellComponent,
+  BodyCellComponent = DefaultBodyCellComponent,
 }: TableProps<T>) => {
   const gridTemplateColumns = useMemo(
     () => config.map(({ width }) => width || '1fr').join(' '),
@@ -50,12 +29,10 @@ export const Table = <T extends Record<string, any>>({
             <HeaderCell key={configEntry.dataKey.toString()}>
               <Flex gap={'3'} align={'center'}>
                 {allowSelection && index === 0 && <Checkbox />}
-
-                {HeaderCellComponent ? (
-                  <HeaderCellComponent {...configEntry} />
-                ) : (
-                  <Text color={'gray'}>{configEntry.headerText}</Text>
-                )}
+                <HeaderCellComponent
+                  {...configEntry}
+                  DefaultHeaderCellComponent={DefaultHeaderCellComponent}
+                />
               </Flex>
             </HeaderCell>
           ))}
@@ -73,17 +50,14 @@ export const Table = <T extends Record<string, any>>({
                     key={`${columnConfig.dataKey.toString()}-${getRowKey(row)}`}
                     align={verticalAlign}
                   >
-                    <Flex gap={'3'} align={'center'}>
+                    <Flex gap={'3'} align={'center'} width={'100%'}>
                       {allowSelection && index === 0 && <Checkbox />}
 
-                      {BodyCellComponent ? (
-                        <BodyCellComponent
-                          columnConfig={columnConfig}
-                          data={row}
-                        />
-                      ) : (
-                        String(row[columnConfig.dataKey])
-                      )}
+                      <BodyCellComponent
+                        columnConfig={columnConfig}
+                        data={row}
+                        DefaultBodyCellComponent={DefaultBodyCellComponent}
+                      />
                     </Flex>
                   </BodyCell>
                 )
@@ -95,6 +69,41 @@ export const Table = <T extends Record<string, any>>({
     </TableCard>
   )
 }
+
+export type TableProps<T extends Record<string, any>> = {
+  data: T[]
+  config: TableColumnConfig<T>[]
+  getRowKey: (data: T) => string | number
+  verticalAlign?: 'center' | 'start' | 'end'
+  HeaderCellComponent?: (props: HeaderCellRenderProps<T>) => ReactNode
+  BodyCellComponent?: (props: CellRenderProps<T>) => ReactNode
+  allowSelection?: boolean
+}
+
+export type TableColumnConfig<T extends Record<string, any>> = {
+  dataKey: keyof T
+  width?: string
+  headerText?: string
+}
+
+export type CellRenderProps<T extends Record<string, any>> = {
+  data: T
+  columnConfig: TableColumnConfig<T>
+  DefaultBodyCellComponent: typeof DefaultBodyCellComponent<T>
+}
+
+export type HeaderCellRenderProps<T extends Record<string, any>> =
+  TableColumnConfig<T> & {
+    DefaultHeaderCellComponent: typeof DefaultHeaderCellComponent<T>
+  }
+
+const DefaultHeaderCellComponent = <T extends Record<string, any>>(
+  props: HeaderCellRenderProps<T>,
+) => <Text color={'gray'}>{props.headerText}</Text>
+
+const DefaultBodyCellComponent = <T extends Record<string, any>>(
+  props: CellRenderProps<T>,
+) => String(props.data[props.columnConfig.dataKey])
 
 const TableCard = styled(Card)`
   padding: 0;
