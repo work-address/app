@@ -27,7 +27,11 @@ export const Table = <T extends Record<string, any>>({
         <HeaderGrid columns={{ initial: gridTemplateColumns }}>
           {config.map((configEntry, index) => (
             <HeaderCell key={configEntry.dataKey.toString()}>
-              <Flex gap={'3'} align={'center'}>
+              <Flex
+                gap={'3'}
+                align={'center'}
+                justify={configEntry.horizontalAlign}
+              >
                 {allowSelection && index === 0 && <Checkbox />}
                 <HeaderCellComponent
                   {...configEntry}
@@ -49,8 +53,9 @@ export const Table = <T extends Record<string, any>>({
                   <BodyCell
                     key={`${columnConfig.dataKey.toString()}-${getRowKey(row)}`}
                     align={verticalAlign}
+                    justify={columnConfig.horizontalAlign}
                   >
-                    <Flex gap={'3'} align={'center'} width={'100%'}>
+                    <Flex gap={'3'} align={'center'}>
                       {allowSelection && index === 0 && <Checkbox />}
 
                       <BodyCellComponent
@@ -84,6 +89,7 @@ export type TableColumnConfig<T extends Record<string, any>> = {
   dataKey: keyof T
   width?: string
   headerText?: string
+  horizontalAlign?: 'start' | 'center' | 'end'
 }
 
 export type CellRenderProps<T extends Record<string, any>> = {
