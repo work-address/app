@@ -4,8 +4,8 @@ import styled from 'styled-components'
 import type { TextProps as RadixTextProps } from '@radix-ui/themes'
 
 type TextProps = {
-  themeVariant?: 'primary' | 'secondary'
-  letterSpacing?: string
+  $themeVariant?: 'primary' | 'secondary'
+  $letterSpacing?: string
 } & RadixTextProps
 
 export const Text = ({ ...props }: TextProps) => {
@@ -14,14 +14,14 @@ export const Text = ({ ...props }: TextProps) => {
 
 const StyledRadixText = styled(RadixText)<TextProps>`
   ${(p) =>
-    p.themeVariant === 'primary' &&
+    p.$themeVariant === 'primary' &&
     `
       color: var(--ds-accent-11);
     `}
 
   ${(p) =>
-    p.letterSpacing &&
+    p.$letterSpacing &&
     `
-      letter-spacing: ${p.letterSpacing};
+      letter-spacing: ${p.$letterSpacing};
   `}
 `

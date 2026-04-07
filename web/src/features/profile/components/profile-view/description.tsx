@@ -32,7 +32,7 @@ export const Description = ({ gridArea }: DescriptionProps) => (
             Backend Developer
           </Text>
 
-          <Text color={'blue'} themeVariant={'primary'}>
+          <Text color={'blue'} $themeVariant={'primary'}>
             <Flex gap={'1'} align={'end'}>
               <Text size={'8'}> 35 </Text>
               <Text> USDT </Text>

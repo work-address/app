@@ -3,10 +3,10 @@ import { Badge, Flex, IconButton } from '@radix-ui/themes'
 import { memo, useMemo, useState } from 'react'
 import styled from 'styled-components'
 
+import { DataTable } from '@/features/shared'
 import {
-  type CellRenderProps,
-  type TableColumnConfig,
-  Table,
+  type DesktopBodyCellRenderProps,
+  type DataTableConfig,
   Text,
 } from '@/features/shared'
 
@@ -18,14 +18,16 @@ export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
 
   const config = useMemo(
-    (): TableColumnConfig<WorklogRow> => [
+    (): DataTableConfig<WorklogRow> => [
       {
         dataKey: 'date',
         headerText: 'Date',
+        width: 165,
       },
       {
         dataKey: 'projectName',
         headerText: 'Project name',
+        width: 229,
       },
       {
         dataKey: 'note',
@@ -35,19 +37,23 @@ export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
         dataKey: 'timeActive',
         headerText: 'Time active',
         horizontalAlign: 'center',
+        width: 115,
       },
       {
         dataKey: 'paymentStatus',
         headerText: 'Payment status',
         horizontalAlign: 'center',
+        width: 138,
       },
       {
         dataKey: 'keyboard',
         headerText: 'Keyboard',
+        width: 103,
       },
       {
         dataKey: 'mouse',
         headerText: 'Mouse',
+        width: 87,
       },
       {
         dataKey: 'mouseDistance',
@@ -63,18 +69,19 @@ export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
       {
         customKey: 'actions',
         width: 64,
+        headerText: '',
       },
     ],
     [],
   )
 
   return (
-    <Table
+    <DataTable
       nowrap
       data={rows}
       config={config}
       getRowId={(row) => row.key}
-      BodyCellComponent={BodyCellComponent}
+      BodyComponent={BodyCellComponent}
       allowSelection
       selectedIds={selectedIds}
       onSelectedIdsChange={setSelectedIds}
@@ -82,61 +89,68 @@ export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
   )
 }
 
-const BodyCellComponent = memo((props: CellRenderProps<WorklogRow>) => {
-  switch (props.dataKey) {
-    case 'date': {
-      return (
-        <Flex direction={'column'}>
-          <Text>{props.data.dateRange}</Text>
-          <Text color={'gray'}>{props.data.date}</Text>
-        </Flex>
-      )
-    }
-
-    case 'note': {
-      return <Text color={'gray'}>{props.data.note}</Text>
-    }
-
-    case 'timeActive': {
-      return (
-        <Badge color={Number(props.data.key) % 3 === 0 ? 'red' : 'green'}>
-          {props.data.timeActive}
-        </Badge>
-      )
-    }
-
-    case 'paymentStatus': {
-      return (
-        <Badge color={props.data.paymentStatus === 'Paid' ? 'green' : 'red'}>
-          {props.data.paymentStatus}
-        </Badge>
-      )
-    }
-
-    case 'screenshot': {
-      return props.data.screenshot ? (
-        <Screenshot src={props.data.screenshot} alt={props.data.projectName} />
-      ) : (
-        <Screenshot src={'/img/photo/example-screenshot.png'} alt={'No data'} />
-      )
-    }
-
-    default: {
-      if (props.customKey === 'actions') {
+const BodyCellComponent = memo(
+  (props: DesktopBodyCellRenderProps<WorklogRow>) => {
+    switch (props.dataKey) {
+      case 'date': {
         return (
-          <Flex>
-            <IconButton variant={'ghost'} radius={'full'} color={'gray'}>
-              <Pencil1Icon />
-            </IconButton>
+          <Flex direction={'column'}>
+            <Text>{props.data.dateRange}</Text>
+            <Text color={'gray'}>{props.data.date}</Text>
           </Flex>
         )
       }
 
-      const { DefaultBodyCellComponent } = props
-      return <DefaultBodyCellComponent {...props} />
+      case 'note': {
+        return <Text color={'gray'}>{props.data.note}</Text>
+      }
+
+      case 'timeActive': {
+        return (
+          <Badge color={Number(props.data.key) % 3 === 0 ? 'red' : 'green'}>
+            {props.data.timeActive}
+          </Badge>
+        )
+      }
+
+      case 'paymentStatus': {
+        return (
+          <Badge color={props.data.paymentStatus === 'Paid' ? 'green' : 'red'}>
+            {props.data.paymentStatus}
+          </Badge>
+        )
+      }
+
+      case 'screenshot': {
+        return props.data.screenshot ? (
+          <Screenshot
+            src={props.data.screenshot}
+            alt={props.data.projectName}
+          />
+        ) : (
+          <Screenshot
+            src={'/img/photo/example-screenshot.png'}
+            alt={'No data'}
+          />
+        )
+      }
+
+      default: {
+        if (props.customKey === 'actions') {
+          return (
+            <Flex>
+              <IconButton variant={'ghost'} radius={'full'} color={'gray'}>
+                <Pencil1Icon />
+              </IconButton>
+            </Flex>
+          )
+        }
+
+        return <props.DefaultBodyComponent {...props} />
+      }
     }
-  }
-})
+  },
+)
 
 export type PaymentStatus = 'Paid' | 'Unpaid'
 

@@ -11,7 +11,7 @@ import {
 } from 'recharts'
 import styled from 'styled-components'
 
-import { MotionSelect } from '@/features/shared'
+import { MotionSelect, Card } from '@/features/shared'
 
 type Period = 'Week' | 'Month' | 'Year'
 
@@ -197,7 +197,7 @@ export default function ApplicationsUsage() {
   }, [period, t])
 
   return (
-    <Card>
+    <Wrapper>
       <Head>
         <Title>{t('dashboard.applicationsUsage.title')}</Title>
         <PeriodSelect>
@@ -222,7 +222,7 @@ export default function ApplicationsUsage() {
         </PeriodSelect>
       </Head>
 
-      <Box>
+      <StyledCard>
         <Plot>
           <ChartWrap>
             <ResponsiveContainer width="100%" height="100%">
@@ -282,12 +282,12 @@ export default function ApplicationsUsage() {
             </ResponsiveContainer>
           </ChartWrap>
         </Plot>
-      </Box>
-    </Card>
+      </StyledCard>
+    </Wrapper>
   )
 }
 
-const Card = styled.aside`
+const Wrapper = styled.aside`
   width: 100%;
 `
 
@@ -315,15 +315,7 @@ const PeriodSelect = styled.div`
   }
 `
 
-const Box = styled.div`
-  border: 1px solid var(--c-rgba-0-0-45-0_09);
-  border-radius: 12px;
-  background: var(--white);
-  box-shadow:
-    0 0 0 1px var(--c-rgba-0-0-0-0_05),
-    0 1px 4px 0 var(--c-rgba-0-0-45-0_09),
-    0 2px 1px -1px var(--c-rgba-0-0-0-0_05),
-    0 1px 3px 0 var(--c-rgba-0-0-0-0_05);
+const StyledCard = styled(Card)`
   padding: 12px 12px 14px;
 `
 

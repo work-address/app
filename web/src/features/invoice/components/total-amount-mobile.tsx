@@ -15,7 +15,7 @@ export const TotalAmountMobile = () => {
         <Text size={'4'} color={'gray'}>
           Total Amount
         </Text>
-        <Text size={'8'} weight={'medium'} themeVariant={'primary'}>
+        <Text size={'8'} weight={'medium'} $themeVariant={'primary'}>
           80.5 USD
         </Text>
       </Flex>

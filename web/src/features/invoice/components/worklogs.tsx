@@ -1,9 +1,13 @@
 import { Badge, Flex } from '@radix-ui/themes'
 import { memo, useMemo, useState } from 'react'
 
-import type { CellRenderProps, TableColumnConfig } from '@/features/shared'
+import type {
+  DesktopBodyCellRenderProps,
+  DataTableConfig,
+} from '@/features/shared'
 
-import { Table, worklogsMock, Text } from '@/features/shared'
+import { DataTable } from '@/features/shared'
+import { worklogsMock, Text } from '@/features/shared'
 
 type WorklogRow = (typeof worklogsMock)[number]
 
@@ -11,7 +15,7 @@ export const Worklogs = () => {
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
 
   const tableConfig = useMemo(
-    (): TableColumnConfig<WorklogRow> => [
+    (): DataTableConfig<WorklogRow> => [
       {
         dataKey: 'date',
         width: 165,
@@ -55,12 +59,12 @@ export const Worklogs = () => {
     <>
       <Text size={'5'}>Worklogs</Text>
 
-      <Table
+      <DataTable
         data={worklogsMock}
         config={tableConfig}
         getRowId={(row) => row.key}
         verticalAlign={'middle'}
-        BodyCellComponent={Cell}
+        BodyComponent={Cell}
         allowSelection
         selectedIds={selectedIds}
         onSelectedIdsChange={setSelectedIds}
@@ -70,7 +74,7 @@ export const Worklogs = () => {
   )
 }
 
-const Cell = memo((props: CellRenderProps<WorklogRow>) => {
+const Cell = memo((props: DesktopBodyCellRenderProps<WorklogRow>) => {
   switch (props.dataKey) {
     case 'date': {
       return (
@@ -98,8 +102,7 @@ const Cell = memo((props: CellRenderProps<WorklogRow>) => {
     }
 
     default: {
-      const { DefaultBodyCellComponent } = props
-      return <DefaultBodyCellComponent {...props} />
+      return <props.DefaultBodyComponent {...props} />
     }
   }
 })

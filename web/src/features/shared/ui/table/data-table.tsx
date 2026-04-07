@@ -1,14 +1,32 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 import { Flex } from '@radix-ui/themes'
 import { type ReactNode, useMemo } from 'react'
 import styled from 'styled-components'
 
-import { Card } from './card'
-import { Checkbox } from './checkbox'
-import { Text } from './text'
+import { Card } from '../card.tsx'
+import { Checkbox } from '../checkbox.tsx'
 
-export const Table = <T extends Record<string, any>>({
+import {
+  type DesktopBodyCellRenderProps,
+  DesktopBodyCellComponent,
+} from './desktop-body-cell-component.tsx'
+import {
+  DesktopHeaderCellComponent,
+  type DesktopHeaderCellRenderProps,
+} from './desktop-header-cell.component.tsx'
+
+import type { DataProps, DataTableConfig, AnyRecord } from './types'
+
+export type DataTableProps<T extends AnyRecord> = {
+  nowrap?: boolean
+  height?: string
+  verticalAlign?: 'top' | 'middle' | 'bottom' | 'baseline'
+  config: DataTableConfig<T>
+  minHeight?: string
+  HeaderComponent?: (props: DesktopHeaderCellRenderProps<T>) => ReactNode
+  BodyComponent?: (props: DesktopBodyCellRenderProps<T>) => ReactNode
+} & DataProps<T>
+
+export const DataTable = <T extends AnyRecord>({
   data,
   config,
   getRowId,
@@ -16,10 +34,12 @@ export const Table = <T extends Record<string, any>>({
   allowSelection,
   selectedIds,
   onSelectedIdsChange,
-  HeaderCellComponent = DefaultHeaderCellComponent,
-  BodyCellComponent = DefaultBodyCellComponent,
+  HeaderComponent = DesktopHeaderCellComponent,
+  BodyComponent = DesktopBodyCellComponent,
   nowrap,
-}: TableProps<T>) => {
+  minHeight,
+  height,
+}: DataTableProps<T>) => {
   const normalizedSelectedIds = useMemo(
     () => Object.entries(selectedIds || {}).filter(([_, value]) => value),
     [selectedIds],
@@ -60,7 +80,7 @@ export const Table = <T extends Record<string, any>>({
   }
 
   return (
-    <TableCard>
+    <TableCard $height={height} $minHeight={minHeight}>
       <StyledTable $nowrap={nowrap}>
         <THead>
           <tr>
@@ -75,7 +95,7 @@ export const Table = <T extends Record<string, any>>({
                   : configEntry.customKey
 
               return (
-                <Th key={key.toString()} width={configEntry.width}>
+                <Th key={key.toString()} $width={configEntry.width}>
                   <Flex
                     gap={'3'}
                     align={'center'}
@@ -87,9 +107,9 @@ export const Table = <T extends Record<string, any>>({
                         onCheckedChange={() => handleToggleAllSelected()}
                       />
                     )}
-                    <HeaderCellComponent
+                    <HeaderComponent
                       {...configEntry}
-                      DefaultHeaderCellComponent={DefaultHeaderCellComponent}
+                      DefaultHeaderComponent={DesktopHeaderCellComponent}
                       selected={rowsSelected}
                     />
                   </Flex>
@@ -116,7 +136,7 @@ export const Table = <T extends Record<string, any>>({
                   return (
                     <Td
                       key={`${key.toString()}-${rowId}`}
-                      verticalAlign={verticalAlign}
+                      $verticalAlign={verticalAlign}
                     >
                       <Flex
                         gap={'3'}
@@ -132,10 +152,10 @@ export const Table = <T extends Record<string, any>>({
                           />
                         )}
 
-                        <BodyCellComponent
+                        <BodyComponent
                           columnConfig={columnConfig}
                           data={row}
-                          DefaultBodyCellComponent={DefaultBodyCellComponent}
+                          DefaultBodyComponent={DesktopBodyCellComponent}
                           selected={selected}
                           dataKey={
                             'dataKey' in columnConfig
@@ -161,59 +181,10 @@ export const Table = <T extends Record<string, any>>({
   )
 }
 
-export type TableProps<T extends Record<string, any>> = {
-  data: T[]
-  config: TableColumnConfigRecord<T>[]
-  getRowId: (data: T) => string | number
-  verticalAlign?: 'top' | 'middle' | 'bottom' | 'baseline'
-  HeaderCellComponent?: (props: HeaderCellRenderProps<T>) => ReactNode
-  BodyCellComponent?: (props: CellRenderProps<T>) => ReactNode
-  allowSelection?: boolean
-  selectedIds?: Record<string, boolean>
-  onSelectedIdsChange?: (data: Record<string, boolean>) => void
-  nowrap?: boolean
-}
-
-type TableColumnConfigRecord<T extends Record<string, any>> = {
-  width?: number
-  headerText?: string
-  horizontalAlign?: 'start' | 'center' | 'end'
-} & (
-  | {
-      dataKey: keyof T
-    }
-  | {
-      customKey: string
-    }
-)
-
-export type TableColumnConfig<T extends Record<string, any>> =
-  TableColumnConfigRecord<T>[]
-
-export type CellRenderProps<T extends Record<string, any>> = {
-  data: T
-  dataKey?: keyof T
-  customKey?: string
-  columnConfig: TableColumnConfigRecord<T>
-  DefaultBodyCellComponent: typeof DefaultBodyCellComponent<T>
-  selected?: boolean
-}
-
-export type HeaderCellRenderProps<T extends Record<string, any>> =
-  TableColumnConfigRecord<T> & {
-    DefaultHeaderCellComponent: typeof DefaultHeaderCellComponent<T>
-    selected?: 'indeterminate' | boolean
-  }
-
-const DefaultHeaderCellComponent = <T extends Record<string, any>>(
-  props: HeaderCellRenderProps<T>,
-) => <Text color={'gray'}>{props.headerText}</Text>
-
-const DefaultBodyCellComponent = <T extends Record<string, any>>(
-  props: CellRenderProps<T>,
-) => (props.dataKey ? String(props.data[props.dataKey]) : props.customKey)
-
-const TableCard = styled(Card)`
+const TableCard = styled(Card)<{
+  $height: DataTableProps<never>['height']
+  $minHeight: DataTableProps<never>['minHeight']
+}>`
   padding: 0;
   overflow: auto;
 
@@ -221,6 +192,9 @@ const TableCard = styled(Card)`
     border-collapse: collapse;
     border-spacing: 0;
   }
+
+  ${(p) => p.$height && `height: ${p.$height};`}
+  ${(p) => p.$minHeight && `height: ${p.$minHeight};`}
 `
 
 const StyledTable = styled.table<{ $nowrap?: boolean }>`
@@ -228,7 +202,7 @@ const StyledTable = styled.table<{ $nowrap?: boolean }>`
   ${(p) => p.$nowrap && `white-space: nowrap;`}
 `
 
-const Th = styled.td<{ width?: number }>`
+const Th = styled.td<{ $width?: number }>`
   background: var(--ds-neutral-2);
   padding: 12px var(--space-3);
   font-size: 14px;
@@ -251,11 +225,13 @@ const THead = styled.thead`
 
 const TBody = styled.tbody``
 
-const Td = styled.td<{ verticalAlign?: TableProps<never>['verticalAlign'] }>`
+const Td = styled.td<{
+  $verticalAlign?: DataTableProps<never>['verticalAlign']
+}>`
   padding: var(--space-4) var(--space-3);
   border-bottom: 1px solid var(--ds-neutral-alpha-6);
 
-  ${(p) => p.verticalAlign && `vertical-align: ${p.verticalAlign};`}
+  ${(p) => p.$verticalAlign && `vertical-align: ${p.$verticalAlign};`}
 `
 
 const Tr = styled.tr`

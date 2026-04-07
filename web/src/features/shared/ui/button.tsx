@@ -11,38 +11,51 @@ export type ButtonProps = {
 
 export const Button = ({
   children,
+  themeVariant,
+  width,
+  stretch,
   type = 'button',
   ...props
 }: ButtonProps) => {
   return (
-    <StyledRadixButton type={type} {...props}>
+    <StyledRadixButton
+      $themeVariant={themeVariant}
+      $width={width}
+      $stretch={stretch}
+      type={type}
+      {...props}
+    >
       {children}
     </StyledRadixButton>
   )
 }
 
-const StyledRadixButton = styled(RadixButton)<ButtonProps>`
+const StyledRadixButton = styled(RadixButton)<{
+  $width?: string
+  $themeVariant?: ButtonProps['themeVariant']
+  $stretch?: boolean
+}>`
   cursor: pointer;
 
   &:disabled {
     opacity: 0.68;
   }
 
-  ${(p) => p.width !== undefined && `width: ${p.width};`}
+  ${(p) => p.$width !== undefined && `width: ${p.$width};`}
 
   ${(p) =>
-    p.themeVariant === 'primary' &&
+    p.$themeVariant === 'primary' &&
     `
       background-color: var(--ds-accent-11);
       color: var(--white);
     `}
 
   ${(p) =>
-    p.themeVariant === 'secondary' &&
+    p.$themeVariant === 'secondary' &&
     `
       background-color: var(--ds-secondary);
       color: var(--ds-neutral-11);
   `}
 
-  ${(p) => p.stretch && `width: 100%;`}
+  ${(p) => p.$stretch && `width: 100%;`}
 `

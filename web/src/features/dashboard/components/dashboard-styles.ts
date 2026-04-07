@@ -1,3 +1,4 @@
+import { Flex } from '@radix-ui/themes'
 import { motion } from 'motion/react'
 import styled from 'styled-components'
 import { Drawer } from 'vaul'
@@ -108,6 +109,7 @@ export const Tab = styled.button<{ $active?: boolean }>`
 
 export const TableArea = styled.div`
   padding-top: 4px;
+  flex: 1 0 auto;
 `
 
 export const Content = styled.div`
@@ -123,11 +125,18 @@ export const Content = styled.div`
 
 export const Left = styled.section`
   min-width: 0;
+  height: 100%;
+  display: flex;
+  flex-direction: column;
 
   @media (max-width: 1024px) {
     grid-column: 1 / -1;
     padding-right: 8px;
   }
+`
+
+export const TableFlex = styled(Flex)`
+  height: 100%;
 `
 
 export const Right = styled.section`

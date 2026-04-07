@@ -194,7 +194,7 @@ export default function DashboardPage() {
             </S.TitleRow>
           </S.Top>
 
-          <>
+          <S.TableFlex direction={'column'}>
             <S.TabsRow>
               <S.Tabs ref={tabsRef}>
                 <S.ActiveIndicator
@@ -277,7 +277,7 @@ export default function DashboardPage() {
                 />
               )}
             </S.TableArea>
-          </>
+          </S.TableFlex>
 
           {!hasProjects && (
             <DashboardEmptyState
@@ -555,6 +555,7 @@ export default function DashboardPage() {
             </S.MobileOnly>
           ) : null}
         </S.SectionTitleRow>
+
         {hasWorklogs ? (
           <>
             <S.DesktopOnly>

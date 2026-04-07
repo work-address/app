@@ -24,7 +24,7 @@ export const TotalAmountDesktop = () => {
 
           <Text>for</Text>
 
-          <Text themeVariant={'primary'} weight={'medium'} size={'4'}>
+          <Text $themeVariant={'primary'} weight={'medium'} size={'4'}>
             80.5 USDT
           </Text>
         </Flex>

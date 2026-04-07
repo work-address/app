@@ -33,7 +33,7 @@ export const QrCode = ({ gridArea }: QrCodeProps) => {
             </Text>
 
             <Flex gap={'2'} align={'center'}>
-              <Text themeVariant={'primary'} size={'3'} weight={'medium'}>
+              <Text $themeVariant={'primary'} size={'3'} weight={'medium'}>
                 EQCF9...NDOM
               </Text>
 

@@ -3,7 +3,7 @@ import styled from 'styled-components'
 import type { ReactNode } from 'react'
 
 export const Wrapper = ({ children }: { children: ReactNode }) => {
-  return <WrapperWhite>{children}</WrapperWhite>
+  return <WrapperWhite> {children} </WrapperWhite>
 }
 
 const WrapperWhite = styled.div`
