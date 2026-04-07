@@ -1,12 +1,10 @@
-import { TrashIcon, PlusIcon } from '@radix-ui/react-icons'
-import { Flex } from '@radix-ui/themes'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { PlusIcon } from '@radix-ui/react-icons'
+import { Badge, Flex } from '@radix-ui/themes'
+import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useMediaQuery } from 'styled-breakpoints/use-media-query'
 import { useTheme } from 'styled-components'
 import { Drawer } from 'vaul'
-
-import type { ProjectRow } from '@/features/dashboard'
 
 import {
   ApplicationsUsage,
@@ -18,31 +16,20 @@ import {
   CreateProjectModal,
   DashboardStyles as S,
 } from '@/features/dashboard'
+import { Button, Text } from '@/features/shared'
 import {
   DatePickerInput,
   Wrapper,
   Spinner,
-  projectsMock,
   worklogsMock,
-  Button,
-  IconButton,
 } from '@/features/shared'
-
-type TabKey = 'all' | 'active' | 'finished'
 
 export default function DashboardPage() {
   const { breakpoints } = useTheme()
   const isUpMd = useMediaQuery(breakpoints.up('md'))
 
   const { t } = useTranslation()
-  const [tab, setTab] = useState<TabKey>('all')
-  const tabsRef = useRef<HTMLDivElement | null>(null)
-  const tabRefs = useRef<Record<TabKey, HTMLButtonElement | null>>({
-    all: null,
-    active: null,
-    finished: null,
-  })
-  const [indicator, setIndicator] = useState({ left: 0, width: 0 })
+
   const [query, setQuery] = useState('')
   const [worklogQuery, setWorklogQuery] = useState('')
   const [fromDate, setFromDate] = useState<Date | undefined>()
@@ -62,30 +49,10 @@ export default function DashboardPage() {
     mouseDistanceMax: '',
   })
 
+  const hasProjects = true
+  const projectsFound = true
+
   const [initialized, setInitialized] = useState(false)
-
-  const rows = useMemo(() => {
-    let filtered: ProjectRow[] = projectsMock
-
-    if (tab === 'active') {
-      filtered = filtered.filter((p) => p.status === 'Active')
-    }
-
-    if (tab === 'finished') {
-      filtered = filtered.filter((p) => p.status === 'Finished')
-    }
-
-    const q = query.trim().toLowerCase()
-    if (q) {
-      filtered = filtered.filter((p) => p.name.toLowerCase().includes(q))
-    }
-
-    return filtered
-  }, [tab, query])
-
-  const totalCount = projectsMock.length
-  const hasProjects = totalCount > 0
-  const projectsFound = rows.length > 0
 
   const worklogRows = useMemo(() => {
     return worklogsMock.filter((w) => {
@@ -135,29 +102,6 @@ export default function DashboardPage() {
   }, [projectOptions, t, worklogProjects])
 
   useEffect(() => {
-    const update = () => {
-      const root = tabsRef.current
-      const activeEl = tabRefs.current[tab]
-      if (!root || !activeEl) {
-        return
-      }
-
-      const rootBox = root.getBoundingClientRect()
-      const tabBox = activeEl.getBoundingClientRect()
-
-      const minWidth = 50
-      const w = Math.max(tabBox.width, minWidth)
-      const left = tabBox.left - rootBox.left + (tabBox.width - w) / 2
-
-      setIndicator({ left, width: w })
-    }
-
-    update()
-    window.addEventListener('resize', update)
-    return () => window.removeEventListener('resize', update)
-  }, [tab])
-
-  useEffect(() => {
     setTimeout(() => {
       setInitialized(true)
     }, 700)
@@ -169,18 +113,22 @@ export default function DashboardPage() {
         <S.Left>
           <S.Top>
             <S.TitleRow>
-              <S.TitleBox>
-                <S.Title>{t('dashboard.page.title')}</S.Title>
-                <S.Counter>
-                  {t('dashboard.page.projectsCount', { count: totalCount })}
-                </S.Counter>
-              </S.TitleBox>
+              <Flex align={'center'} gap={'10px'}>
+                <Text size={isUpMd ? '6' : '4'} weight={'medium'}>
+                  {t('dashboard.page.title')}
+                </Text>
+                <Badge size={'2'} color={'gray'}>
+                  <Text weight={'medium'} size={'1'}>
+                    {t('dashboard.page.projectsCount', { count: 4 })}
+                  </Text>
+                </Badge>
+              </Flex>
 
               {hasProjects ? (
                 <S.DashboardSearch value={query} onChange={setQuery} />
               ) : (
                 <S.TopRight>
-                  <S.CreateProjectButton
+                  <Button
                     themeVariant="primary"
                     onClick={() => setCreateProjectOpen(true)}
                   >
@@ -188,96 +136,23 @@ export default function DashboardPage() {
                     <S.CreateProjectText>
                       {t('dashboard.page.createProject')}
                     </S.CreateProjectText>
-                  </S.CreateProjectButton>
+                  </Button>
                 </S.TopRight>
               )}
             </S.TitleRow>
           </S.Top>
 
-          <S.TableFlex direction={'column'}>
-            <S.TabsRow>
-              <S.Tabs ref={tabsRef}>
-                <S.ActiveIndicator
-                  aria-hidden="true"
-                  animate={{ left: indicator.left, width: indicator.width }}
-                  transition={{
-                    type: 'spring',
-                    stiffness: 520,
-                    damping: 44,
-                  }}
-                />
-                <S.Tab
-                  ref={(el) => {
-                    tabRefs.current.all = el
-                  }}
-                  $active={tab === 'all'}
-                  onClick={() => setTab('all')}
-                >
-                  {t('dashboard.page.tabs.all')}
-                </S.Tab>
-                <S.Tab
-                  ref={(el) => {
-                    tabRefs.current.active = el
-                  }}
-                  $active={tab === 'active'}
-                  onClick={() => setTab('active')}
-                >
-                  {t('dashboard.page.tabs.active')}
-                </S.Tab>
-                <S.Tab
-                  ref={(el) => {
-                    tabRefs.current.finished = el
-                  }}
-                  $active={tab === 'finished'}
-                  onClick={() => setTab('finished')}
-                >
-                  {t('dashboard.page.tabs.finished')}
-                </S.Tab>
-              </S.Tabs>
-
-              <Flex gap={'var(--space-2)'}>
-                {isUpMd ? (
-                  <Button variant={'outline'} color={'red'}>
-                    <TrashIcon />
-                    {t('dashboard.page.deleteAll')}
-                  </Button>
-                ) : (
-                  <IconButton variant={'outline'} color={'red'}>
-                    <TrashIcon />
-                  </IconButton>
-                )}
-
-                {isUpMd ? (
-                  <Button
-                    onClick={() => setCreateProjectOpen(true)}
-                    themeVariant={'primary'}
-                  >
-                    <PlusIcon />
-                    {t('dashboard.page.createProject')}
-                  </Button>
-                ) : (
-                  <IconButton
-                    themeVariant={'primary'}
-                    onClick={() => setCreateProjectOpen(true)}
-                  >
-                    <PlusIcon />
-                  </IconButton>
-                )}
-              </Flex>
-            </S.TabsRow>
-
-            <S.TableArea>
-              {projectsFound ? (
-                <ProjectsTable rows={rows} />
-              ) : (
-                <ProjectsNotFound
-                  title={t('dashboard.page.projectsNotFound.title')}
-                  description={t('dashboard.page.projectsNotFound.description')}
-                  actionLabel={t('dashboard.page.createProject')}
-                />
-              )}
-            </S.TableArea>
-          </S.TableFlex>
+          <S.TableArea>
+            {projectsFound ? (
+              <ProjectsTable />
+            ) : (
+              <ProjectsNotFound
+                title={t('dashboard.page.projectsNotFound.title')}
+                description={t('dashboard.page.projectsNotFound.description')}
+                actionLabel={t('dashboard.page.createProject')}
+              />
+            )}
+          </S.TableArea>
 
           {!hasProjects && (
             <DashboardEmptyState

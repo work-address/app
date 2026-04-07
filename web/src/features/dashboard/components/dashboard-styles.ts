@@ -1,5 +1,3 @@
-import { Flex } from '@radix-ui/themes'
-import { motion } from 'motion/react'
 import styled from 'styled-components'
 import { Drawer } from 'vaul'
 
@@ -29,87 +27,12 @@ export const TopRight = styled.div`
   margin-left: auto;
 `
 
-export const TitleBox = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-`
-
-export const Title = styled.h1`
-  font-weight: 500;
-  font-size: 24px;
-  line-height: 125%;
-  letter-spacing: 0em;
-  color: #1c2024;
-
-  @media (max-width: 768px) {
-    font-size: 18px;
-  }
-`
-
-export const Counter = styled.span`
-  border-radius: 4px;
-  padding: 4px 8px;
-  font-weight: 500;
-  font-size: 12px;
-  line-height: 133%;
-  color: rgba(0, 7, 20, 0.62);
-  background: rgba(0, 0, 51, 0.06);
-`
-
 export const DashboardSearch = styled(Search)`
   width: 280px;
 `
 
-export const Actions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 14px;
-`
-
-export const TabsRow = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 10px;
-  margin-left: 20px;
-`
-
-export const Tabs = styled.div`
-  position: relative;
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  border-bottom: 1px solid rgba(0, 8, 48, 0.12);
-`
-
-export const ActiveIndicator = styled(motion.div)`
-  position: absolute;
-  left: 0;
-  bottom: -1px;
-  height: 2px;
-  border-radius: 999px;
-  background: var(--download, #003482);
-  pointer-events: none;
-`
-
-export const Tab = styled.button<{ $active?: boolean }>`
-  padding: 8px 0;
-  font-size: 13px;
-  line-height: 16px;
-  font-weight: 500;
-  color: ${(p) => (p.$active ? 'var(--ds-primary)' : 'rgba(28, 32, 36, 0.62)')};
-  border-bottom: 2px solid transparent;
-
-  &:hover {
-    color: var(--ds-primary);
-  }
-`
-
 export const TableArea = styled.div`
   padding-top: 4px;
-  flex: 1 0 auto;
 `
 
 export const Content = styled.div`
@@ -135,10 +58,6 @@ export const Left = styled.section`
   }
 `
 
-export const TableFlex = styled(Flex)`
-  height: 100%;
-`
-
 export const Right = styled.section`
   min-width: 0;
 
@@ -160,24 +79,12 @@ export const SectionTitle = styled.h2`
   font-weight: 500;
   font-size: 24px;
   line-height: 125%;
-  letter-spacing: 0em;
+  letter-spacing: 0;
   color: #1c2024;
   margin: 0;
 
   @media (max-width: 768px) {
     font-size: 18px;
-  }
-`
-
-export const CreateProjectButton = styled(Button)`
-  @media (max-width: 768px) {
-    padding: 6px 10px;
-    gap: 0;
-
-    svg {
-      width: 18px;
-      height: 18px;
-    }
   }
 `
 
@@ -213,11 +120,11 @@ export const FiltersButton = styled.button`
   font-weight: 500;
   font-size: 12px;
   line-height: 133%;
-  letter-spacing: 0em;
+  letter-spacing: 0;
   color: #60646c;
   border: 1px solid rgba(0, 8, 48, 0.27);
   border-radius: 3px;
-  padding: 0px 8px;
+  padding: 0 8px;
   height: 24px;
   display: inline-flex;
   align-items: center;
