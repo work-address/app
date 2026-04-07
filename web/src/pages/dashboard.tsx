@@ -9,7 +9,6 @@ import { Drawer } from 'vaul'
 import {
   ApplicationsUsage,
   DashboardEmptyState,
-  ProjectsNotFound,
   WorklogsTable,
   WorklogsEmptyState,
   ProjectsTable,
@@ -50,7 +49,6 @@ export default function DashboardPage() {
   })
 
   const hasProjects = true
-  const projectsFound = true
 
   const [initialized, setInitialized] = useState(false)
 
