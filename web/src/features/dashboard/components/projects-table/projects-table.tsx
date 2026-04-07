@@ -119,6 +119,7 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
           selectedIds={selectedIds}
           onSelectedIdsChange={setSelectedIds}
           verticalAlign={'middle'}
+          nowrap
         />
       )}
     </ProjectsTableWrapper>

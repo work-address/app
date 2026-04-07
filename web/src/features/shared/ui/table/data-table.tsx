@@ -173,7 +173,7 @@ const TableCard = styled(Card)<{
   }
 
   ${(p) => p.$height && `height: ${p.$height};`}
-  ${(p) => p.$minHeight && `height: ${p.$minHeight};`}
+  ${(p) => p.$minHeight && `min-height: ${p.$minHeight};`}
 `
 
 const StyledTable = styled.table<{ $nowrap?: boolean }>`
@@ -187,7 +187,7 @@ const Th = styled.td<{ $width?: number }>`
   font-size: 14px;
   font-weight: 500;
 
-  ${(p) => p.width && `width: ${p.width}px;`}
+  ${(p) => p.$width && `width: ${p.$width}px;`}
 `
 
 const THead = styled.thead`
