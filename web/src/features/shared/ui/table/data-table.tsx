@@ -202,7 +202,9 @@ const THead = styled.thead`
   border-bottom: 1px solid var(--ds-neutral-alpha-6);
 `
 
-const TBody = styled.tbody``
+const TBody = styled.tbody`
+  border-bottom: 1px solid var(--ds-neutral-alpha-6);
+`
 
 const Td = styled.td<{
   $verticalAlign?: DataTableProps<never>['verticalAlign']
@@ -223,9 +225,9 @@ const Tr = styled.tr`
     background-color: rgba(0, 0, 0, 0.05);
   }
 
-  /* &:last-child ${Td} {
+  &:last-child ${Td} {
     border-bottom: none;
-  } */
+  }
 `
 
 export type { DataTableConfig } from './types'

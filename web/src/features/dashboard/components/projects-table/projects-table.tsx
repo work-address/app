@@ -103,7 +103,7 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
           config={mobileConfig}
           AddonBottomComponent={MobileAddonBottom}
           HeaderComponent={MobileHeader}
-          initialExpandedId={rows[0].key}
+          initialExpandedId={rows[0]?.key}
           allowSelection
           selectedIds={selectedIds}
           onSelectedIdsChange={setSelectedIds}
