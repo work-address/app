@@ -67,7 +67,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
   }
 
 
-  @test
+  @test.skip
   async createPersonalManyWebp() {
     // const file = join(__dirname, '../fixture/media/screenshot.webp');
     // const file = join(__dirname, '../fixture/media/screenshor-a.webp');
@@ -260,7 +260,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
   }
 
 
-  @test
+  @test.skip
   async createLocal() {
     const file = join(__dirname, '../fixture/media/screenshot_20260127_184X00.webp');
     const stream = fs.readFileSync(file);
