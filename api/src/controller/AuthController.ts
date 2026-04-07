@@ -37,14 +37,23 @@ export class AuthController {
   }
 
   @OpenAPI({
-    summary: 'Auth login Eth',
+    summary: 'Login with Ethereum wallet',
+    description:
+      'Verifies `signature` for the server-issued nonce for `address`. Tokens are returned in response headers, not the body.',
     requestBody: {
+      required: true,
       content: {
         'application/json': {
-          examples: {},
+          schema: {
+            type: 'object',
+            required: ['signature', 'address'],
+            properties: {
+              signature: {type: 'string', description: 'Hex signature from the wallet'},
+              address: {type: 'string', description: 'Ethereum address (checksummed or lower-case)'},
+            },
+          },
         },
       },
-      required: false,
     },
     responses: {
       200: {
@@ -90,14 +99,20 @@ export class AuthController {
   }
 
   @OpenAPI({
-    summary: 'Auth login TON',
+    summary: 'Login with TON Connect proof',
+    description:
+      'Payload shape follows TON proof / Connect flow expected by `Authenticator.loginTon`. Tokens are returned in headers.',
     requestBody: {
+      required: true,
       content: {
         'application/json': {
-          examples: {},
+          schema: {
+            type: 'object',
+            description: 'TON proof payload (see server implementation for required fields)',
+            additionalProperties: true,
+          },
         },
       },
-      required: false,
     },
     responses: {
       200: {
@@ -138,31 +153,30 @@ export class AuthController {
   }
 
   @OpenAPI({
-    summary: 'Returns nonce for web3 wallet as first step in authentication process',
+    summary: 'Request nonce for Ethereum login',
+    description:
+      'First step for `/auth/eth`: server returns a message/nonce string to sign. Response body is a plain string (JSON-encoded string), not an object.',
     requestBody: {
+      required: true,
       content: {
         'application/json': {
-          examples: {},
+          schema: {
+            type: 'object',
+            required: ['address'],
+            properties: {
+              address: {type: 'string', description: 'Wallet address to bind the nonce to'},
+            },
+          },
         },
       },
-      required: false,
     },
     responses: {
       200: {
-        description: 'Replies with nonce for user login',
+        description: 'Nonce string to sign (JSON string body)',
         content: {
           'application/json': {
-            example: {
-              nonce: faker.datatype.uuid(),
-            },
-            schema: {
-              type: 'object',
-              properties: {
-                nonce: {
-                  type: 'string',
-                },
-              },
-            },
+            schema: {type: 'string'},
+            example: faker.datatype.uuid(),
           },
         },
       },
@@ -206,7 +220,7 @@ export class AuthController {
     },
     responses: {
       200: {
-        description: 'Returns succesfully updated access and refresh tokens in headers',
+        description: 'Returns updated access and refresh tokens in response headers',
         content: {
           'application/json': {
             schema: {
@@ -247,7 +261,28 @@ export class AuthController {
   }
 
   @OpenAPI({
-    summary: 'User authentication status',
+    summary: 'Current user from JWT',
+    description:
+      'Pass `Authorization: <accessToken>`. Returns user profile when valid; behavior when missing/invalid depends on `getUserFromJwtToken`.',
+    parameters: [
+      {
+        in: 'header',
+        name: 'Authorization',
+        required: false,
+        schema: {type: 'string'},
+        description: 'JWT access token',
+      },
+    ],
+    responses: {
+      200: {
+        description: 'User entity (search + me groups) or null',
+        content: {
+          'application/json': {
+            schema: {type: 'object', nullable: true},
+          },
+        },
+      },
+    },
   })
   @Get('/status')
   @ExtendedResponseSchema(User)

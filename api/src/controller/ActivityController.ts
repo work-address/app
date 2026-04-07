@@ -28,6 +28,7 @@ import {EActivityType} from '../interface/EActivityType';
 import {Proposal} from '../entity/Proposal';
 import AccessException from '../exception/AccessException';
 import {Authenticator} from '../service/auth/Authenticator';
+import {OpenApi} from '../service/OpenApi';
 
 @JsonController('/activity')
 export class ActivityController extends AbstractController {
@@ -44,7 +45,25 @@ export class ActivityController extends AbstractController {
   }
 
   @OpenAPI({
-    summary: 'Search projects as public',
+    summary: 'Search published activities (public)',
+    description:
+      'Lists import/hourly/fixed activities in PUBLISHED state. `filter` may include `userId`, `keywords` (array, OR match), etc.',
+    requestBody: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: OpenApi.searchRequestBodySchema,
+          example: {
+            filter: {userId: 'uuid-owner', keywords: ['react', 'node']},
+            sort: {createdAt: 'ASC'},
+            page: 0,
+          },
+        },
+      },
+    },
+    responses: {
+      200: OpenApi.paginatedTupleResponse,
+    },
   })
   @HttpCode(200)
   @Post('/search')
@@ -55,21 +74,25 @@ export class ActivityController extends AbstractController {
   }
 
   @OpenAPI({
-    summary: 'Search projects as a freelancer',
+    summary: 'Search activities as freelancer (own personal projects)',
+    description:
+      'Returns hourly, personal, and fixed activities owned by the current user in PUBLISHED state.',
+    parameters: [OpenApi.bearerAuthParameter],
     requestBody: {
+      required: true,
       content: {
         'application/json': {
+          schema: OpenApi.searchRequestBodySchema,
           example: {
             filter: {},
             sort: {title: 'ASC'},
             page: 0,
           },
-          schema: {
-            properties: {},
-          },
         },
       },
-      required: false,
+    },
+    responses: {
+      200: OpenApi.paginatedTupleResponse,
     },
   })
   @Post('/search/freelancer')
@@ -82,21 +105,25 @@ export class ActivityController extends AbstractController {
   }
 
   @OpenAPI({
-    summary: 'Search projects as a business',
+    summary: 'Search activities as business (owned by current user)',
+    description:
+      '`filter` may include `state`, `activityId`, `type` to narrow down owned activities.',
+    parameters: [OpenApi.bearerAuthParameter],
     requestBody: {
+      required: true,
       content: {
         'application/json': {
+          schema: OpenApi.searchRequestBodySchema,
           example: {
-            filter: {},
-            sort: {title: 'ASC'},
+            filter: {state: 'DRAFT'},
+            sort: {createdAt: 'DESC'},
             page: 0,
-          },
-          schema: {
-            properties: {},
           },
         },
       },
-      required: false,
+    },
+    responses: {
+      200: OpenApi.paginatedTupleResponse,
     },
   })
   @Post('/search/business')
@@ -109,7 +136,29 @@ export class ActivityController extends AbstractController {
   }
 
   @OpenAPI({
-    summary: 'Accept proposal',
+    summary: 'Accept a proposal on an activity',
+    description:
+      'Business owner only. Binds the proposal as accepted, sets activity to ACTIVE and `startedAt`. Fails if already accepted or activity is not eligible.',
+    parameters: [
+      OpenApi.bearerAuthParameter,
+      {
+        in: 'path',
+        name: 'id',
+        required: true,
+        schema: {type: 'string', format: 'uuid'},
+        description: 'Activity id',
+      },
+      {
+        in: 'path',
+        name: 'proposalId',
+        required: true,
+        schema: {type: 'string', format: 'uuid'},
+        description: 'Proposal id to accept',
+      },
+    ],
+    responses: {
+      200: OpenApi.emptyObjectResponse,
+    },
   })
   @Post('/:id/accept/:proposalId')
   @HttpCode(200)
@@ -130,7 +179,51 @@ export class ActivityController extends AbstractController {
   }
 
   @OpenAPI({
-    summary: 'Project create',
+    summary: 'Create activity',
+    description:
+      'Creates HOURLY, FIXED, or PERSONAL activity for the current user. Invalid `type` returns 500 with message.',
+    parameters: [OpenApi.bearerAuthParameter],
+    requestBody: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: {
+            type: 'object',
+            required: ['title', 'text', 'type', 'state'],
+            properties: {
+              title: {type: 'string'},
+              text: {type: 'string'},
+              type: {type: 'string', description: 'HOURLY | FIXED | PERSONAL'},
+              state: {type: 'string'},
+              trackScreenshots: {type: 'boolean'},
+              trackProcesses: {type: 'boolean'},
+              location: {type: 'string'},
+              position: {type: 'string'},
+              employment: {type: 'array', items: {type: 'string'}},
+              keywords: {type: 'array', items: {type: 'string'}},
+              salary: {type: 'string'},
+              rateHour: {type: 'number'},
+            },
+          },
+        },
+      },
+    },
+    responses: {
+      201: {
+        description: 'Created; `Location` header points to `/api/activity/{id}`',
+        headers: {
+          Location: {
+            schema: {type: 'string'},
+            description: 'URI of the new activity',
+          },
+        },
+        content: {
+          'application/json': {
+            schema: {type: 'object', properties: {}},
+          },
+        },
+      },
+    },
   })
   @Post()
   @HttpCode(201)
@@ -161,7 +254,34 @@ export class ActivityController extends AbstractController {
   }
 
   @OpenAPI({
-    summary: 'Retrieve full data of a project',
+    summary: 'Get activity by id',
+    description:
+      'Visibility depends on caller: guest sees public fields; owner and assigned freelancer see more. Optional `Authorization` for authenticated view.',
+    parameters: [
+      {
+        in: 'path',
+        name: 'id',
+        required: true,
+        schema: {type: 'string', format: 'uuid'},
+      },
+      {
+        in: 'header',
+        name: 'Authorization',
+        required: false,
+        schema: {type: 'string'},
+        description: 'Optional JWT for expanded view',
+      },
+    ],
+    responses: {
+      200: {
+        description: 'Activity (search serialization group)',
+        content: {
+          'application/json': {
+            schema: {type: 'object'},
+          },
+        },
+      },
+    },
   })
   @HttpCode(200)
   @Get('/:id')
@@ -178,7 +298,28 @@ export class ActivityController extends AbstractController {
   }
 
   @OpenAPI({
-    summary: 'Project edit',
+    summary: 'Update activity',
+    description: 'Owner only. Active/closed contract activities may be restricted from editing.',
+    parameters: [
+      OpenApi.bearerAuthParameter,
+      {
+        in: 'path',
+        name: 'id',
+        required: true,
+        schema: {type: 'string', format: 'uuid'},
+      },
+    ],
+    requestBody: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: {type: 'object', description: 'Fields to update (edit validation group)'},
+        },
+      },
+    },
+    responses: {
+      200: OpenApi.emptyObjectResponse,
+    },
   })
   @Put('/:id')
   @HttpCode(200)
@@ -198,7 +339,20 @@ export class ActivityController extends AbstractController {
   }
 
   @OpenAPI({
-    summary: 'Close project without removing it',
+    summary: 'Close activity',
+    description: 'Owner only. Sets state CLOSED and `closedAt`.',
+    parameters: [
+      OpenApi.bearerAuthParameter,
+      {
+        in: 'path',
+        name: 'id',
+        required: true,
+        schema: {type: 'string', format: 'uuid'},
+      },
+    ],
+    responses: {
+      200: OpenApi.emptyObjectResponse,
+    },
   })
   @Post('/:id/close')
   @HttpCode(200)
@@ -215,7 +369,20 @@ export class ActivityController extends AbstractController {
   }
 
   @OpenAPI({
-    summary: 'Project delete',
+    summary: 'Soft-delete activity',
+    description: 'Owner only (enforced in repository).',
+    parameters: [
+      OpenApi.bearerAuthParameter,
+      {
+        in: 'path',
+        name: 'id',
+        required: true,
+        schema: {type: 'string', format: 'uuid'},
+      },
+    ],
+    responses: {
+      200: OpenApi.emptyObjectResponse,
+    },
   })
   @Delete('/:id')
   @HttpCode(200)

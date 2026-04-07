@@ -21,6 +21,7 @@ import {CurrentUser} from '../decorator/CurrentUser';
 import {UserRepository} from '../repository/UserRepository';
 import {ISearchUser} from '../interface/search/ISearchUser';
 import {ExtendedResponseSchema} from '../decorator/ExtendedResponseSchema';
+import {OpenApi} from '../service/OpenApi';
 
 @JsonController('/user')
 export class UserController extends AbstractController {
@@ -35,29 +36,23 @@ export class UserController extends AbstractController {
   }
 
   @OpenAPI({
-    summary: 'User search',
+    summary: 'Search users',
+    description: '`filter` may include `id`, `role` (see ISearchUser).',
     requestBody: {
+      required: true,
       content: {
         'application/json': {
+          schema: OpenApi.searchRequestBodySchema,
           example: {
             filter: {},
             sort: {createdAt: 'ASC'},
             page: 0,
           },
-          schema: {
-            properties: {},
-          },
         },
       },
-      required: false,
     },
     responses: {
-      200: {
-        description: 'Empty results',
-        content: {
-          'application/json': [[], 0.0],
-        },
-      },
+      200: OpenApi.paginatedTupleResponse,
     },
   })
   @Post('/search')
@@ -67,7 +62,24 @@ export class UserController extends AbstractController {
   }
 
   @OpenAPI({
-    summary: 'User profile by address',
+    summary: 'Public profile by wallet address',
+    parameters: [
+      {
+        in: 'path',
+        name: 'address',
+        required: true,
+        schema: {type: 'string'},
+        description: 'On-chain address string as stored on the user',
+      },
+    ],
+    responses: {
+      200: {
+        description: 'User (search group)',
+        content: {
+          'application/json': {schema: {type: 'object'}},
+        },
+      },
+    },
   })
   @Get('/:address/address')
   @ExtendedResponseSchema(User)
@@ -79,35 +91,36 @@ export class UserController extends AbstractController {
   @Put()
   @HttpCode(204)
   @OpenAPI({
-    summary: 'User profile edit',
+    summary: 'Update current user profile',
+    description: 'Validates body against User `edit` groups (partial updates).',
+    parameters: [OpenApi.bearerAuthParameter],
     requestBody: {
+      required: true,
       content: {
         'application/json': {
           example: {
-            bio: faker.datatype.number(),
+            bio: 'Full-stack developer',
             tz: 'America/Los_Angeles',
             phone: faker.phone.phoneNumber(),
           },
           schema: {
+            type: 'object',
+            description: 'Subset of User editable fields',
             properties: {
-              bio: {
-                type: 'number',
-              },
-              phone: {
-                type: 'number',
-              },
+              bio: {type: 'string'},
+              tz: {type: 'string'},
+              phone: {type: 'string'},
+              email: {type: 'string'},
+              region: {type: 'string'},
+              country: {type: 'string'},
             },
           },
         },
       },
-      required: false,
     },
     responses: {
       204: {
-        description: 'User profile',
-        content: {
-          'application/json': {},
-        },
+        description: 'No content',
       },
     },
   })

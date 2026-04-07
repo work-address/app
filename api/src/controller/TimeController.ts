@@ -25,6 +25,7 @@ import {EntityFromParam} from '../decorator/EntityFromParam';
 import {ITimeInsertionResult} from '../interface/ITimeInsertionResult';
 import {TimeCreateDto} from '../validator/dto/TimeCreateDto';
 import {Activity} from '../entity/Activity';
+import {OpenApi} from '../service/OpenApi';
 
 @Authorized([EUserRole.ROLE_USER])
 @JsonController('/time')
@@ -40,7 +41,30 @@ export class TimeController extends AbstractController {
   }
 
   @OpenAPI({
-    summary: 'Time search',
+    summary: 'Search personal time entries',
+    description:
+      '`filter` includes `activityId`, `fromAt`, `toAt` (Unix ms) for the current user’s PERSONAL published activities.',
+    parameters: [OpenApi.bearerAuthParameter],
+    requestBody: {
+      required: true,
+      content: {
+        'application/json': {
+          schema: OpenApi.searchRequestBodySchema,
+          example: {
+            filter: {
+              activityId: 'dd8a088d-00c1-499f-a75b-7ca45821a7e3',
+              fromAt: 1700000000000,
+              toAt: 1700086400000,
+            },
+            sort: {createdAt: 'ASC'},
+            page: 0,
+          },
+        },
+      },
+    },
+    responses: {
+      200: OpenApi.paginatedTupleResponse,
+    },
   })
   @Post('/search')
   @ExtendedResponseSchema(Time, {isPagination: true})
@@ -50,7 +74,27 @@ export class TimeController extends AbstractController {
   }
 
   @OpenAPI({
-    summary: 'Time totals',
+    summary: 'Aggregated time totals for business user',
+    description: 'Optional `activityId` scopes totals to one activity.',
+    parameters: [
+      OpenApi.bearerAuthParameter,
+      {
+        in: 'query',
+        name: 'activityId',
+        required: false,
+        schema: {type: 'string', format: 'uuid'},
+      },
+    ],
+    responses: {
+      200: {
+        description: 'Array of per-activity aggregate rows',
+        content: {
+          'application/json': {
+            schema: {type: 'array', items: {type: 'object'}},
+          },
+        },
+      },
+    },
   })
   @Get('/totals')
   @ResponseClassTransformOptions({groups: ['search']})
@@ -62,7 +106,26 @@ export class TimeController extends AbstractController {
   }
 
   @OpenAPI({
-    summary: 'Report for activity',
+    summary: 'Cached time report for an activity',
+    description: 'User must be allowed to view the activity (owner or assigned freelancer).',
+    parameters: [
+      OpenApi.bearerAuthParameter,
+      {
+        in: 'path',
+        name: 'id',
+        required: true,
+        schema: {type: 'string', format: 'uuid'},
+        description: 'Activity id',
+      },
+    ],
+    responses: {
+      200: {
+        description: 'Report payload (see TimeManager.buildAndCacheReport)',
+        content: {
+          'application/json': {schema: {type: 'object'}},
+        },
+      },
+    },
   })
   @Get('/report/:id')
   @ResponseClassTransformOptions({groups: ['search']})
@@ -74,15 +137,61 @@ export class TimeController extends AbstractController {
   }
 
   @OpenAPI({
-    summary: 'Create or update multiple time records from array',
+    summary: 'Create or update many time rows (batch)',
+    description:
+      'Each item is processed independently; failures include an `error` object instead of `id`. Optional `screenshot` and `processes` per row.',
+    parameters: [OpenApi.bearerAuthParameter],
     requestBody: {
+      required: true,
       content: {
         'application/json': {
+          schema: {
+            type: 'array',
+            items: {
+              type: 'object',
+              required: [
+                'fromIndex',
+                'toIndex',
+                'note',
+                'keyboardKeys',
+                'minutesActive',
+                'mouseKeys',
+                'mouseDistance',
+                'fromAt',
+                'toAt',
+                'activityId',
+              ],
+              properties: {
+                fromIndex: {type: 'number'},
+                toIndex: {type: 'number'},
+                note: {type: 'string'},
+                keyboardKeys: {type: 'number'},
+                minutesActive: {type: 'number'},
+                mouseKeys: {type: 'number'},
+                mouseDistance: {type: 'number'},
+                fromAt: {type: 'string', format: 'date-time'},
+                toAt: {type: 'string', format: 'date-time'},
+                activityId: {type: 'string', format: 'uuid'},
+                screenshot: {type: 'string', description: 'Base64 or data URL'},
+                processes: {
+                  type: 'array',
+                  items: {
+                    type: 'object',
+                    properties: {
+                      name: {type: 'string'},
+                      description: {type: 'string'},
+                      timeMin: {type: 'number'},
+                    },
+                  },
+                },
+              },
+            },
+          },
           example: [
             {
               fromIndex: 1000,
               toIndex: 2000,
-              note: 'your note',
+              note: 'Focus block',
               keyboardKeys: 3,
               minutesActive: 4,
               mouseKeys: 3,
@@ -91,53 +200,33 @@ export class TimeController extends AbstractController {
               toAt: '2024-01-21T09:10:00.000Z',
               activityId: 'dd8a088d-00c1-499f-a75b-7ca45821a7e3',
             },
-            {
-              fromIndex: 2000,
-              toIndex: 3000,
-              note: 'your note',
-              keyboardKeys: 6,
-              minutesActive: 1,
-              mouseKeys: 1,
-              mouseDistance: 5,
-              fromAt: '2024-01-21T09:10:00.000Z',
-              toAt: '2024-01-21T09:20:00.000Z',
-              activityId: 'dd8a088d-00c1-499f-a75b-7ca45821a7e3',
-              screenshot: 'data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAOEAA.....',
-              processes: [
-                {
-                  name: 'dd8a088d-00c1-499f-a75b-7ca45821a7e3',
-                  description: 'dd8a088d-00c1-499f-a75b-7ca45821a7e3',
-                  timeMin: 10,
-                },
-              ],
-            },
           ],
-          schema: {
-            properties: {},
-          },
         },
       },
-      required: false,
     },
     responses: {
       200: {
-        description: 'Echoes data passed with error property added in case of an error',
+        description:
+          'Array parallel to input: each element echoes the row with `id` on success, or `error` (e.g. validation / DB) on failure',
         content: {
-          'application/json': [
-            {
-              fromIndex: 1000,
-              toIndex: 1001,
-              fromAt: '2024-03-15T10:54:35.945Z',
-              toAt: '2024-03-15T11:04:35.945Z',
-              note: 'ce266129-7d74-4acb-98cf-7c8c6a3e2321',
-              activityId: '44c72b8c-9e06-4ddf-84ab-8ee6d1066861',
-              error: {
-                message:
-                  'null value in column "keyboardKeys" of relation "time" violates not-null constraint',
-                name: 'QueryFailedError',
+          'application/json': {
+            schema: {
+              type: 'array',
+              items: {
+                type: 'object',
+                properties: {
+                  id: {type: 'string', format: 'uuid'},
+                  error: {
+                    type: 'object',
+                    properties: {
+                      name: {type: 'string'},
+                      message: {type: 'string'},
+                    },
+                  },
+                },
               },
             },
-          ],
+          },
         },
       },
     },
@@ -158,12 +247,17 @@ export class TimeController extends AbstractController {
   }
 
   @OpenAPI({
-    summary: 'Single time read',
+    summary: 'Get one time entry',
+    description: 'Caller must be activity owner or assigned freelancer for that time row.',
+    parameters: [
+      OpenApi.bearerAuthParameter,
+      {in: 'path', name: 'id', required: true, schema: {type: 'string', format: 'uuid'}},
+    ],
     responses: {
       200: {
-        description: 'Empty object',
+        description: 'Time with activity relation',
         content: {
-          'application/json': {},
+          'application/json': {schema: {type: 'object'}},
         },
       },
     },
@@ -179,14 +273,14 @@ export class TimeController extends AbstractController {
   }
 
   @OpenAPI({
-    summary: 'Remove time',
+    summary: 'Delete time entry',
+    description: 'Freelancer must own the time row via assigned activity.',
+    parameters: [
+      OpenApi.bearerAuthParameter,
+      {in: 'path', name: 'id', required: true, schema: {type: 'string', format: 'uuid'}},
+    ],
     responses: {
-      200: {
-        description: 'Empty object',
-        content: {
-          'application/json': {},
-        },
-      },
+      200: OpenApi.emptyObjectResponse,
     },
   })
   @Delete('/:id')

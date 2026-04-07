@@ -10,6 +10,7 @@ import {App} from '../app/App';
 import {EUserRole} from '../interface/EUserRole';
 import {AuthenticatorTimeTracker} from '../service/auth/AuthenticatorTimeTracker';
 import {EAuthTimeTrackerState} from '../interface/EAuthTimeTrackerState';
+import {OpenApi} from '../service/OpenApi';
 
 @JsonController('/auth/timeTracker')
 export class AuthTimeTrackerController {
@@ -20,18 +21,27 @@ export class AuthTimeTrackerController {
   }
 
   @OpenAPI({
-    summary:
-      'Nonce generate operation as first stap of authentication process for the timetracker app',
-    requestBody: {
-      content: {
-        'application/json': {
-          example: {},
-          schema: {
-            properties: {},
+    summary: 'Start time-tracker auth: create nonce',
+    description:
+      'First step for desktop time-tracker flow. Uses client IP from the request. No JSON body required.',
+    responses: {
+      200: {
+        description: 'Nonce payload for the tracker to poll',
+        content: {
+          'application/json': {
+            schema: {
+              type: 'object',
+              required: ['nonce', 'startAt', 'state', 'ip'],
+              properties: {
+                nonce: {type: 'string'},
+                startAt: {type: 'number', description: 'Unix timestamp (ms)'},
+                state: {type: 'string'},
+                ip: {type: 'string'},
+              },
+            },
           },
         },
       },
-      required: false,
     },
   })
   @HttpCode(200)
@@ -46,7 +56,16 @@ export class AuthTimeTrackerController {
   }
 
   @OpenAPI({
-    summary: 'Login operation by the timetracker app to be after connected via website',
+    summary: 'Time-tracker: complete login for nonce',
+    description: 'Called by the tracker app after website connect flow; identifies session by path `nonce`.',
+    parameters: [
+      {
+        in: 'path',
+        name: 'nonce',
+        required: true,
+        schema: {type: 'string'},
+      },
+    ],
     requestBody: {
       content: {
         'application/json': {
@@ -57,7 +76,7 @@ export class AuthTimeTrackerController {
             properties: {
               nonce: {
                 type: 'string',
-                description: 'Nonce initially retrieved from none generate endpoint',
+                description: 'Nonce from POST /auth/timeTracker/nonce response',
               },
             },
           },
@@ -67,7 +86,7 @@ export class AuthTimeTrackerController {
     },
     responses: {
       200: {
-        description: 'On sucess replies with the empty object',
+        description: 'Empty object on success',
         content: {
           'application/json': {
             schema: {
@@ -91,7 +110,18 @@ export class AuthTimeTrackerController {
   }
 
   @OpenAPI({
-    summary: 'Used by the client(website) to authenicate and connects timetracker app',
+    summary: 'Browser: link logged-in user to time-tracker session',
+    description:
+      'Authenticated website user connects a tracker session identified by `nonce` (path). Body may repeat nonce for clarity.',
+    parameters: [
+      OpenApi.bearerAuthParameter,
+      {
+        in: 'path',
+        name: 'nonce',
+        required: true,
+        schema: {type: 'string'},
+      },
+    ],
     requestBody: {
       content: {
         'application/json': {
@@ -112,7 +142,7 @@ export class AuthTimeTrackerController {
     },
     responses: {
       200: {
-        description: 'On sucess replies with the empty object',
+        description: 'Empty object on success',
         content: {
           'application/json': {
             schema: {
@@ -138,28 +168,19 @@ export class AuthTimeTrackerController {
   }
 
   @OpenAPI({
-    summary: 'Returns authentication state from nonce',
-    requestBody: {
-      content: {
-        'application/json': {
-          example: {
-            nonce: faker.datatype.uuid(),
-          },
-          schema: {
-            properties: {
-              nonce: {
-                type: 'string',
-                description: 'Nonce used in the auth process by the timetracker or website',
-              },
-            },
-          },
-        },
+    summary: 'Poll time-tracker auth state by nonce',
+    description: 'GET with `nonce` in path; optional IP check on server.',
+    parameters: [
+      {
+        in: 'path',
+        name: 'nonce',
+        required: true,
+        schema: {type: 'string'},
       },
-      required: false,
-    },
+    ],
     responses: {
       200: {
-        description: 'On sucess replies with the state for the nonce provided',
+        description: 'State for the nonce; includes `jwt` when CONNECTED',
         content: {
           'application/json': {
             examples: {
@@ -205,9 +226,10 @@ export class AuthTimeTrackerController {
                   description: 'Authentication state',
                 },
                 jwt: {
-                  type: {
-                    accessToken: 'string',
-                    refreshToken: 'string',
+                  type: 'object',
+                  properties: {
+                    accessToken: {type: 'string'},
+                    refreshToken: {type: 'string'},
                   },
                 },
               },
