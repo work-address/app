@@ -17,10 +17,13 @@ export type DataTableColumnConfigRecord<T extends AnyRecord> = {
 
 export type MobileDataTableColumnConfigRecord<T extends AnyRecord> = {
   isTitle?: boolean
+  description?: string
 } & KeyProp<T>
 
 export type MobileDataTableConfig<T extends AnyRecord> =
   MobileDataTableColumnConfigRecord<T>[]
+
+export type MobileAddonBottomProps<T extends AnyRecord> = { data: T }
 
 export type DataTableConfig<T extends AnyRecord> =
   DataTableColumnConfigRecord<T>[]

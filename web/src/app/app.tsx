@@ -14,7 +14,7 @@ const InvoicePage = lazy(() => import('@/pages/invoice'))
 
 function App() {
   return (
-    <Suspense fallback={<> Loading... </>}>
+    <Suspense>
       <Routes>
         <Route element={<Layouts.AuthLayout />}>
           <Route path={routes.signIn.schema} element={<SignInPage />} />

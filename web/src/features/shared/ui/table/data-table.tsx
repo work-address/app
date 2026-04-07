@@ -1,5 +1,5 @@
 import { Flex } from '@radix-ui/themes'
-import { type ReactNode, useMemo } from 'react'
+import { type ReactNode } from 'react'
 import styled from 'styled-components'
 
 import { Card } from '../card.tsx'
@@ -13,6 +13,7 @@ import {
   DesktopHeaderCellComponent,
   type DesktopHeaderCellRenderProps,
 } from './desktop-header-cell.component.tsx'
+import { useSelection } from './use-selection.ts'
 
 import type { DataProps, DataTableConfig, AnyRecord } from './types'
 
@@ -40,44 +41,17 @@ export const DataTable = <T extends AnyRecord>({
   minHeight,
   height,
 }: DataTableProps<T>) => {
-  const normalizedSelectedIds = useMemo(
-    () => Object.entries(selectedIds || {}).filter(([_, value]) => value),
-    [selectedIds],
-  )
-
-  const isPartiallySelected = useMemo(
-    () =>
-      normalizedSelectedIds.length > 0 &&
-      normalizedSelectedIds.length < data.length,
-    [normalizedSelectedIds, data],
-  )
-
-  const isAllSelected = useMemo(
-    () => normalizedSelectedIds.length === data.length,
-    [normalizedSelectedIds, data],
-  )
-
-  const handleSelectedChange = (id: string) => {
-    const newSelected = { ...selectedIds, [id]: !selectedIds?.[id] }
-    onSelectedIdsChange?.(newSelected)
-  }
-
-  const handleToggleAllSelected = () => {
-    const allChecked = normalizedSelectedIds.length === 0
-
-    const newSelectedIds = data.reduce(
-      (acc, row) => {
-        if (allChecked) {
-          acc[getRowId(row)] = allChecked
-        }
-
-        return acc
-      },
-      {} as Record<string, boolean>,
-    )
-
-    onSelectedIdsChange?.(newSelectedIds)
-  }
+  const {
+    isPartiallySelected,
+    isAllSelected,
+    handleSelectedChange,
+    handleToggleAllSelected,
+  } = useSelection({
+    data,
+    getRowId,
+    onSelectedIdsChange,
+    selectedIds,
+  })
 
   return (
     <TableCard $height={height} $minHeight={minHeight}>

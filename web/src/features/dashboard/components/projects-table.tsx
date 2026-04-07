@@ -1,15 +1,18 @@
-import { Badge, Flex } from '@radix-ui/themes'
+import { TrashIcon, Pencil1Icon } from '@radix-ui/react-icons'
+import { Badge, Flex, Grid } from '@radix-ui/themes'
 import React, { type ReactNode, useMemo, useState } from 'react'
 import { NavLink } from 'react-router-dom'
 import { useMediaQuery } from 'styled-breakpoints/use-media-query'
 import styled, { useTheme } from 'styled-components'
 
-import type {
-  DesktopBodyCellRenderProps,
-  MobileDataTableConfig,
-  DataTableConfig,
+import {
+  type DesktopBodyCellRenderProps,
+  type MobileDataTableConfig,
+  type DataTableConfig,
+  type MobileAddonBottomProps,
+  Button,
+  type MobileHeaderRenderProps,
 } from '@/features/shared'
-
 import { DataTable, MobileDataTable } from '@/features/shared'
 import { Text } from '@/features/shared'
 
@@ -55,10 +58,11 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
         dataKey: 'name',
         isTitle: true,
       },
-      { dataKey: 'timeTotal' },
-      { dataKey: 'timeActive' },
-      { dataKey: 'mouse' },
-      { dataKey: 'mouseDistance' },
+      { dataKey: 'timeTotal', description: 'test' },
+      { dataKey: 'timeActive', description: 'test' },
+      { dataKey: 'keyboard', description: 'test' },
+      { dataKey: 'mouse', description: 'test' },
+      { dataKey: 'mouseDistance', description: 'test' },
     ],
     [],
   )
@@ -72,6 +76,12 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
           data={rows}
           getRowId={rowIdGetter}
           config={mobileConfig}
+          AddonBottomComponent={MobileAddonBottom}
+          HeaderComponent={MobileHeaderComponent}
+          initialExpandedId={rows[0].key}
+          allowSelection
+          selectedIds={selectedIds}
+          onSelectedIdsChange={setSelectedIds}
         />
       ) : (
         <DataTable
@@ -129,6 +139,52 @@ const BodyCellComponent = React.memo(
       <Flex py={'1'} direction={'column'}>
         {content}
       </Flex>
+    )
+  },
+)
+
+const MobileHeaderComponent = React.memo(
+  (props: MobileHeaderRenderProps<ProjectRow>) => {
+    return (
+      <Flex direction={'column'}>
+        <Flex align={'center'} gap={'2'}>
+          <NavLink to={'/test'}>
+            <Text size={'4'} $themeVariant={'primary'} weight={'medium'}>
+              {props.data.name}
+            </Text>
+          </NavLink>
+
+          <Badge color={props.data.status === 'Active' ? 'green' : 'gray'}>
+            {props.data.status}
+          </Badge>
+        </Flex>
+
+        <Text color={'gray'} size={'2'}>
+          {props.data.earnings}
+        </Text>
+      </Flex>
+    )
+  },
+)
+
+const MobileAddonBottom = React.memo(
+  ({ data }: MobileAddonBottomProps<ProjectRow>) => {
+    return (
+      <Grid columns={'1fr 1fr'} gap={'2'}>
+        <Button
+          onClick={() => alert(data.key)}
+          color={'red'}
+          variant={'outline'}
+        >
+          Delete
+          <TrashIcon />
+        </Button>
+
+        <Button color={'gray'} variant={'outline'}>
+          Edit
+          <Pencil1Icon />
+        </Button>
+      </Grid>
     )
   },
 )
