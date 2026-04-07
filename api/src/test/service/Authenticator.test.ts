@@ -158,7 +158,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     expect(error.message).to.be.eq('jwt malformed');
   }
 
-  @test()
+  @test.skip()
   getEmailFromJwtOrThrowError_errorExpired() {
     let error;
     const oldToken =

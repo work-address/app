@@ -1,0 +1,40 @@
+/* eslint-env node */
+module.exports = {
+  parser: '@typescript-eslint/parser',
+  plugins: ['@typescript-eslint'],
+  parserOptions: {
+    ecmaVersion: 2018,
+    sourceType: 'module',
+    project: ['./tsconfig.json', './tsconfig.spec.json'],
+    tsconfigRootDir: __dirname,
+  },
+  extends: [
+    'plugin:@typescript-eslint/recommended',
+    'plugin:@typescript-eslint/recommended-requiring-type-checking',
+    'prettier',
+  ],
+  rules: {
+    '@typescript-eslint/no-loss-of-precision': 'off',
+    '@typescript-eslint/no-unsafe-argument': 'off',
+    '@typescript-eslint/explicit-member-accessibility': 'off',
+    '@typescript-eslint/no-angle-bracket-type-assertion': 'off',
+    '@typescript-eslint/no-parameter-properties': 'off',
+    '@typescript-eslint/explicit-function-return-type': 'off',
+    '@typescript-eslint/member-delimiter-style': 'off',
+    '@typescript-eslint/no-inferrable-types': 'off',
+    '@typescript-eslint/no-explicit-any': 'off',
+    '@typescript-eslint/no-empty-interface': 'off',
+
+    '@typescript-eslint/explicit-module-boundary-types': 'off',
+    '@typescript-eslint/no-unsafe-call': 'off',
+    '@typescript-eslint/no-unsafe-member-access': 'off',
+    '@typescript-eslint/no-unsafe-assignment': 'off',
+    '@typescript-eslint/no-unsafe-return': 'off',
+    '@typescript-eslint/no-empty-function': 'off',
+    '@typescript-eslint/member-ordering': 'off',
+    '@typescript-eslint/no-var-requires': 'off',
+    '@typescript-eslint/no-misused-promises': 'off',
+
+    '@typescript-eslint/no-unused-vars': ['error', { args: 'none' }],
+  },
+};

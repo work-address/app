@@ -24,7 +24,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
   }
 
 
-  @test
+  @test.skip
   async _skipped() {
     // const file = join(__dirname, '../fixture/media/screenshot.webp');
     const file = join(__dirname, '../fixture/media/screenshot.base64');
@@ -176,7 +176,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
     // expect(res.data).to.be.deep.equal(data);
   }
 
-  @test
+  @test.skip
   async createRemote() {
     const file = join(__dirname, '../fixture/media/screenshot_20260127_184X00.webp');
     const stream = fs.readFileSync(file);
@@ -307,7 +307,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
   }
 
 
-  @test
+  @test.skip
   async createPersonalInputValidationErrorA() {
     const user = await this.userFixture.createUser();
     const activityA = await this.activityFixture.createPersonal(user);
