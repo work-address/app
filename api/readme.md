@@ -54,15 +54,15 @@ NODE_ENV=test pnpm run typeorm:cli -- schema:sync
 
 ## Scripts
 
-| Script | Purpose |
-|--------|---------|
-| `pnpm run dev` | Development server (`ts-node-dev`, HTTPS env flag) |
-| `pnpm run build` | Compile TypeScript to `build/` |
-| `pnpm run prod` | Run `build/server.js` (set `NODE_ENV=production`) |
-| `pnpm test` | Tests with coverage (`nyc` + `mocha` + `ts-node`) |
-| `pnpm run lint:check` / `lint:fix` | ESLint on `src/**/*.ts` |
-| `pnpm run prettier:check` / `prettier:fix` | Formatting |
-| `pnpm run typeorm:cli` | TypeORM CLI (`src/ormconfig.ts`) |
+| Script                                     | Purpose                                            |
+| ------------------------------------------ | -------------------------------------------------- |
+| `pnpm run dev`                             | Development server (`ts-node-dev`, HTTPS env flag) |
+| `pnpm run build`                           | Compile TypeScript to `build/`                     |
+| `pnpm run prod`                            | Run `build/server.js` (set `NODE_ENV=production`)  |
+| `pnpm test`                                | Tests with coverage (`nyc` + `mocha` + `ts-node`)  |
+| `pnpm run lint:check` / `lint:fix`         | ESLint on `src/**/*.ts`                            |
+| `pnpm run prettier:check` / `prettier:fix` | Formatting                                         |
+| `pnpm run typeorm:cli`                     | TypeORM CLI (`src/ormconfig.ts`)                   |
 
 ## API documentation
 
@@ -73,16 +73,16 @@ All HTTP routes are under the **`/api`** prefix.
 
 ## Controllers (overview)
 
-| Prefix | Purpose |
-|--------|---------|
-| `/api/auth` | Ethereum / TON login, nonce, refresh, status |
-| `/api/auth/timeTracker` | Time-tracker auth (nonce, login, connect) |
-| `/api/user` | User search, profile by address, updates |
-| `/api/activity` | Activities: CRUD, search, accept proposal, close |
-| `/api/proposal` | Proposals: search, create, update, delete |
-| `/api/time` | Time entries: search, create, report, totals |
-| `/api/invoice` | Invoices: search, by activity, fetch by id |
-| `/api/help` | OpenAPI export |
+| Prefix                  | Purpose                                          |
+| ----------------------- | ------------------------------------------------ |
+| `/api/auth`             | Ethereum / TON login, nonce, refresh, status     |
+| `/api/auth/timeTracker` | Time-tracker auth (nonce, login, connect)        |
+| `/api/user`             | User search, profile by address, updates         |
+| `/api/activity`         | Activities: CRUD, search, accept proposal, close |
+| `/api/proposal`         | Proposals: search, create, update, delete        |
+| `/api/time`             | Time entries: search, create, report, totals     |
+| `/api/invoice`          | Invoices: search, by activity, fetch by id       |
+| `/api/help`             | OpenAPI export                                   |
 
 For exact paths and bodies, use Swagger or the OpenAPI JSON above.
 

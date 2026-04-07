@@ -23,7 +23,6 @@ export class TimeControllerCrudTest extends BaseControllerTest {
     this.activityManager = this.container.get('ActivityManager');
   }
 
-
   @test.skip
   async _skipped() {
     // const file = join(__dirname, '../fixture/media/screenshot.webp');
@@ -31,41 +30,43 @@ export class TimeControllerCrudTest extends BaseControllerTest {
     const stream = fs.readFileSync(file);
 
     // console.log(stream.length)
-    
+
     const res = await this.http.request({
       url: `${this.url}/api/time`,
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
         // Authorization: this.authenticator.getTokens(user).accessToken,
-        Authorization: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjBhZmRjZGYzLTQyZmYtNGEzNS05MWZhLWVkOGE1Mzc2YzFlYyIsImFkZHJlc3MiOiJVUUJLWFJrakpFc0toRnA3WFlvcF9XVkxXaXA2QXpIT1dYNUVXNWpkSTZ0QUpRWkoiLCJlbWFpbE9yUGhvbmUiOm51bGwsImlhdCI6MTc2NTE4NzEwOSwiZXhwIjoxNzY2OTE1MTA5fQ.AtXIVuwaBs-1iABXAHKHbfcIRuLWj5Rp0Dgog5Ja7RU",
+        Authorization:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjBhZmRjZGYzLTQyZmYtNGEzNS05MWZhLWVkOGE1Mzc2YzFlYyIsImFkZHJlc3MiOiJVUUJLWFJrakpFc0toRnA3WFlvcF9XVkxXaXA2QXpIT1dYNUVXNWpkSTZ0QUpRWkoiLCJlbWFpbE9yUGhvbmUiOm51bGwsImlhdCI6MTc2NTE4NzEwOSwiZXhwIjoxNzY2OTE1MTA5fQ.AtXIVuwaBs-1iABXAHKHbfcIRuLWj5Rp0Dgog5Ja7RU',
       },
-      data: [{
-        fromIndex: 1000,
-        toIndex: 1001,
-        note: "SCREENSHOT TEST",
-        keyboardKeys: faker.datatype.number(9),
-        minutesActive: faker.datatype.number(9),
-        mouseKeys: faker.datatype.number(9),
-        mouseDistance: faker.datatype.number(9),
-        fromAt: moment.utc().subtract(10, 'minutes').toISOString(),
-        toAt: moment.utc().toISOString(),
-        activityId: "d650ad83-eab3-4200-9bf2-479a47c59892",
-        // TODO: use image from the test assets
-        screenshot: stream.toString(),
-        processes: [
-          {
-            name: faker.datatype.uuid(),
-            description: faker.datatype.uuid(),
-            timeMin: faker.datatype.number(9),
-          },
-        ],
-      }],
+      data: [
+        {
+          fromIndex: 1000,
+          toIndex: 1001,
+          note: 'SCREENSHOT TEST',
+          keyboardKeys: faker.datatype.number(9),
+          minutesActive: faker.datatype.number(9),
+          mouseKeys: faker.datatype.number(9),
+          mouseDistance: faker.datatype.number(9),
+          fromAt: moment.utc().subtract(10, 'minutes').toISOString(),
+          toAt: moment.utc().toISOString(),
+          activityId: 'd650ad83-eab3-4200-9bf2-479a47c59892',
+          // TODO: use image from the test assets
+          screenshot: stream.toString(),
+          processes: [
+            {
+              name: faker.datatype.uuid(),
+              description: faker.datatype.uuid(),
+              timeMin: faker.datatype.number(9),
+            },
+          ],
+        },
+      ],
     });
 
     console.log(res.data);
   }
-
 
   @test.skip
   async createPersonalManyWebp() {
@@ -138,8 +139,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
       data,
     });
 
-  
-    console.log('>>>>>',res.data);
+    console.log('>>>>>', res.data);
 
     // const timeA = await this.timeRepository.findOneByOrFail({
     //   where: {
@@ -191,55 +191,55 @@ export class TimeControllerCrudTest extends BaseControllerTest {
         activityId,
         fromIndex: 3000,
         toIndex: 3001,
-        note: "Тест 123",
-        fromAt: "2026-01-27T15:40:00",
-        toAt: "2026-01-27T15:40:00",
+        note: 'Тест 123',
+        fromAt: '2026-01-27T15:40:00',
+        toAt: '2026-01-27T15:40:00',
         keyboardKeys: 0,
         minutesActive: 0,
         mouseDistance: 0,
         mouseKeys: 0,
         procQueryId: 30,
         processes: [
-            {
-                name: "Kded6",
-                "timeMin": 10
-            },
-            {
-                "name": "Plasmashell",
-                "timeMin": 10
-            },
-            {
-                "name": "Kdeconnectd",
-                "timeMin": 10
-            },
-            {
-                "name": "Pamac-Tray-Plasma",
-                "timeMin": 10
-            },
-            {
-                "name": "AmneziaVPN",
-                "timeMin": 10
-            },
-            {
-                "name": "Xdg-Desktop-Portal-Kde",
-                "timeMin": 10
-            },
-            {
-                "name": "Qtcreator",
-                "timeMin": 10
-            },
-            {
-                "name": "Dolphin",
-                "timeMin": 10
-            },
-            {
-                "name": "Assistant",
-                "timeMin": 10
-            },
-            {
-                "name": "Time-Tracker",
-                "timeMin": 10
-            }
+          {
+            name: 'Kded6',
+            timeMin: 10,
+          },
+          {
+            name: 'Plasmashell',
+            timeMin: 10,
+          },
+          {
+            name: 'Kdeconnectd',
+            timeMin: 10,
+          },
+          {
+            name: 'Pamac-Tray-Plasma',
+            timeMin: 10,
+          },
+          {
+            name: 'AmneziaVPN',
+            timeMin: 10,
+          },
+          {
+            name: 'Xdg-Desktop-Portal-Kde',
+            timeMin: 10,
+          },
+          {
+            name: 'Qtcreator',
+            timeMin: 10,
+          },
+          {
+            name: 'Dolphin',
+            timeMin: 10,
+          },
+          {
+            name: 'Assistant',
+            timeMin: 10,
+          },
+          {
+            name: 'Time-Tracker',
+            timeMin: 10,
+          },
         ],
         screenshot: screenshotData,
       },
@@ -250,15 +250,14 @@ export class TimeControllerCrudTest extends BaseControllerTest {
       method: 'POST',
       headers: {
         'Content-Type': 'application/json',
-        Authorization: "eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjBhZmRjZGYzLTQyZmYtNGEzNS05MWZhLWVkOGE1Mzc2YzFlYyIsImFkZHJlc3MiOiJVUUJLWFJrakpFc0toRnA3WFlvcF9XVkxXaXA2QXpIT1dYNUVXNWpkSTZ0QUpRWkoiLCJlbWFpbE9yUGhvbmUiOm51bGwsImlhdCI6MTc2OTQ0ODg4MywiZXhwIjoxNzcxMTc2ODgzfQ.BIc63S3ZqsUkV3nzl6kE5pbaChoZeJtnW2lufuuXx7Y",
+        Authorization:
+          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjBhZmRjZGYzLTQyZmYtNGEzNS05MWZhLWVkOGE1Mzc2YzFlYyIsImFkZHJlc3MiOiJVUUJLWFJrakpFc0toRnA3WFlvcF9XVkxXaXA2QXpIT1dYNUVXNWpkSTZ0QUpRWkoiLCJlbWFpbE9yUGhvbmUiOm51bGwsImlhdCI6MTc2OTQ0ODg4MywiZXhwIjoxNzcxMTc2ODgzfQ.BIc63S3ZqsUkV3nzl6kE5pbaChoZeJtnW2lufuuXx7Y',
       },
       data,
     });
 
-  
-    console.log('>>>>>',res.data);
+    console.log('>>>>>', res.data);
   }
-
 
   @test.skip
   async createLocal() {
@@ -302,10 +301,8 @@ export class TimeControllerCrudTest extends BaseControllerTest {
       data,
     });
 
-  
-    console.log('>>>>>',res.data);
+    console.log('>>>>>', res.data);
   }
-
 
   @test.skip
   async createPersonalInputValidationErrorA() {

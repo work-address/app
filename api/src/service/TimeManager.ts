@@ -75,7 +75,7 @@ export class TimeManager {
         time.processes = item.processes;
 
         const savedTime = await this.timeRepository.validateAndSave(time);
-        
+
         insertionResults.push({
           ...item,
           id: savedTime.id,
@@ -95,7 +95,7 @@ export class TimeManager {
     }
 
     // console.log('>>>>', insertionResults);
-    
+
     return insertionResults;
   }
 
@@ -152,7 +152,7 @@ export class TimeManager {
     if (!screenshot) {
       return null;
     }
-    
+
     return this.imageResizer.resize(screenshot, 600);
   }
 }

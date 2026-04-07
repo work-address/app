@@ -89,7 +89,7 @@ export class App {
     );
 
     this.express.use(boolParser());
-    
+
     this.initControllers();
 
     this.express.use('/swagger', swaggerUiExpress.serve, swaggerUiExpress.setup(spec));
