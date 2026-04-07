@@ -195,6 +195,7 @@ const CardWrapper = styled(Card)`
 const Header = styled.div`
   margin: 8px 0;
   cursor: pointer;
+  width: 100%;
 `
 
 const FlexFields = styled(Flex)`
