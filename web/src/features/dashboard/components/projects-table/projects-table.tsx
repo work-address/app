@@ -130,6 +130,16 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
 
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
 
+  const allowDeleteAll = useMemo(() => {
+    const values = Object.values(selectedIds)
+
+    return (
+      values.length > 0 &&
+      processedData.length === values.length &&
+      values.every(Boolean)
+    )
+  }, [selectedIds, processedData])
+
   return (
     <Flex direction={'column'} height={'100%'}>
       <Flex direction={'row'} justify={'between'} pb={'3'} align={'center'}>
@@ -138,9 +148,11 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
             <TabsTrigger value={'all'}>
               {t('dashboard.page.tabs.all')}
             </TabsTrigger>
+
             <TabsTrigger value={'active'}>
               {t('dashboard.page.tabs.active')}
             </TabsTrigger>
+
             <TabsTrigger value={'finished'}>
               {t('dashboard.page.tabs.finished')}
             </TabsTrigger>
@@ -148,15 +160,19 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
         </TabsRoot>
 
         <Flex gap={'var(--space-2)'}>
-          {isMobile ? (
-            <IconButton variant={'outline'} color={'red'}>
-              <TrashIcon />
-            </IconButton>
-          ) : (
-            <Button variant={'outline'} color={'red'}>
-              <TrashIcon />
-              {t('dashboard.page.deleteAll')}
-            </Button>
+          {allowDeleteAll && (
+            <>
+              {isMobile ? (
+                <IconButton variant={'outline'} color={'red'}>
+                  <TrashIcon />
+                </IconButton>
+              ) : (
+                <Button variant={'outline'} color={'red'}>
+                  <TrashIcon />
+                  {t('dashboard.page.deleteAll')}
+                </Button>
+              )}
+            </>
           )}
 
           {isMobile ? (
