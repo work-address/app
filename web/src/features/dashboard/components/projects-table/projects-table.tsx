@@ -11,6 +11,7 @@ import { MobileHeader } from './mobile-header.tsx'
 
 import type { ProjectRow } from './types'
 
+import { ProjectsNotFound } from '@/features/dashboard'
 import {
   type MobileDataTableConfig,
   type DataTableConfig,
@@ -21,7 +22,11 @@ import {
   Button,
   IconButton,
 } from '@/features/shared'
-import { DataTable, MobileDataTable } from '@/features/shared'
+import {
+  DataTable,
+  MobileDataTable,
+  useDataProcessing,
+} from '@/features/shared'
 
 export type ProjectStatus = 'Active' | 'Paused' | 'Finished'
 
@@ -34,6 +39,26 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
   const isMobile = useMediaQuery(breakpoints.down('md'))
   const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState('all')
+
+  const { processedData, processDataFilter, resetFilter } = useDataProcessing({
+    data: rows,
+  })
+
+  const handleTabClick = (tab: string) => {
+    setActiveTab(tab)
+
+    switch (tab) {
+      case 'all': {
+        return resetFilter()
+      }
+      case 'active': {
+        return processDataFilter('status', 'Active', 'equals')
+      }
+      case 'finished': {
+        return processDataFilter('status', 'Finished', 'equals')
+      }
+    }
+  }
 
   const desktopConfig = useMemo(
     (): DataTableConfig<ProjectRow> => [
@@ -106,9 +131,9 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
 
   return (
-    <Flex direction={'column'}>
+    <Flex direction={'column'} height={'100%'}>
       <Flex direction={'row'} justify={'between'} pb={'3'} align={'center'}>
-        <TabsRoot value={activeTab} onValueChange={setActiveTab}>
+        <TabsRoot value={activeTab} onValueChange={handleTabClick}>
           <TabsList>
             <TabsTrigger value={'all'}>
               {t('dashboard.page.tabs.all')}
@@ -148,9 +173,15 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
       </Flex>
 
       <ProjectsTableWrapper>
-        {isMobile ? (
+        {processedData.length === 0 ? (
+          <ProjectsNotFound
+            title={t('dashboard.page.projectsNotFound.title')}
+            description={t('dashboard.page.projectsNotFound.description')}
+            actionLabel={t('dashboard.page.createProject')}
+          />
+        ) : isMobile ? (
           <MobileDataTable
-            data={rows}
+            data={processedData}
             getRowId={rowIdGetter}
             config={mobileConfig}
             AddonBottomComponent={MobileAddonBottom}
@@ -162,7 +193,7 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
           />
         ) : (
           <DataTable
-            data={rows}
+            data={processedData}
             config={desktopConfig}
             getRowId={rowIdGetter}
             allowSelection

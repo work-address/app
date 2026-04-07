@@ -1,7 +1,7 @@
 import styled from 'styled-components'
 import { Drawer } from 'vaul'
 
-import { Button, MotionSelect, Search } from '@/features/shared'
+import { MotionSelect, Search } from '@/features/shared'
 
 export const Top = styled.div`
   display: flex;
@@ -33,6 +33,7 @@ export const DashboardSearch = styled(Search)`
 
 export const TableArea = styled.div`
   padding-top: 4px;
+  flex: 1 0 auto;
 `
 
 export const Content = styled.div`

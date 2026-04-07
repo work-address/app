@@ -107,7 +107,7 @@ const StyledTabsTrigger = styled(RadixTabs.TabsTrigger)`
   color: var(--gray-10);
   position: relative;
   z-index: 1;
-  padding: 0 var(--space-2);
+  padding: 0 var(--space-3);
 
   &[data-state='active'] {
     font-weight: 500;

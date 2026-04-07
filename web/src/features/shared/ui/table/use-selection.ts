@@ -29,7 +29,7 @@ export const useSelection = <T extends AnyRecord>({
   )
 
   const isAllSelected = useMemo(
-    () => normalizedSelectedIds.length === data.length,
+    () => data.length > 0 && normalizedSelectedIds.length === data.length,
     [normalizedSelectedIds, data],
   )
 

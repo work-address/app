@@ -143,15 +143,7 @@ export default function DashboardPage() {
           </S.Top>
 
           <S.TableArea>
-            {projectsFound ? (
-              <ProjectsTable />
-            ) : (
-              <ProjectsNotFound
-                title={t('dashboard.page.projectsNotFound.title')}
-                description={t('dashboard.page.projectsNotFound.description')}
-                actionLabel={t('dashboard.page.createProject')}
-              />
-            )}
+            <ProjectsTable />
           </S.TableArea>
 
           {!hasProjects && (
