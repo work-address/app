@@ -131,3 +131,5 @@ const rowIdGetter = (row: ProjectRow) => row.key
 const ProjectsTableWrapper = styled.div`
   height: 100%;
 `
+
+export { type ProjectRow } from './types'
