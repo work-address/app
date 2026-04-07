@@ -26,14 +26,38 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
 
   const desktopConfig = useMemo(
     (): DataTableConfig<ProjectRow> => [
-      { dataKey: 'name' },
-      { dataKey: 'earnings' },
-      { dataKey: 'status' },
-      { dataKey: 'timeTotal' },
-      { dataKey: 'timeActive' },
-      { dataKey: 'keyboard' },
-      { dataKey: 'mouse' },
-      { dataKey: 'mouseDistance' },
+      {
+        dataKey: 'name',
+        width: 187,
+      },
+      {
+        dataKey: 'earnings',
+        width: 160,
+      },
+      {
+        dataKey: 'status',
+        width: 100,
+        horizontalAlign: 'center',
+      },
+      {
+        dataKey: 'timeTotal',
+        width: 180,
+      },
+      {
+        dataKey: 'timeActive',
+        width: 160,
+      },
+      {
+        dataKey: 'keyboard',
+        width: 160,
+      },
+      {
+        dataKey: 'mouse',
+        width: 160,
+      },
+      {
+        dataKey: 'mouseDistance',
+      },
     ],
     [],
   )
@@ -44,11 +68,26 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
         dataKey: 'name',
         isTitle: true,
       },
-      { dataKey: 'timeTotal', description: 'test' },
-      { dataKey: 'timeActive', description: 'test' },
-      { dataKey: 'keyboard', description: 'test' },
-      { dataKey: 'mouse', description: 'test' },
-      { dataKey: 'mouseDistance', description: 'test' },
+      {
+        dataKey: 'timeTotal',
+        description: 'test',
+      },
+      {
+        dataKey: 'timeActive',
+        description: 'test',
+      },
+      {
+        dataKey: 'keyboard',
+        description: 'test',
+      },
+      {
+        dataKey: 'mouse',
+        description: 'test',
+      },
+      {
+        dataKey: 'mouseDistance',
+        description: 'test',
+      },
     ],
     [],
   )

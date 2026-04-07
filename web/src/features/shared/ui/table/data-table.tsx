@@ -115,6 +115,7 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                     <Td
                       key={`${key.toString()}-${rowId}`}
                       $verticalAlign={verticalAlign}
+                      $width={columnConfig.width}
                     >
                       <Flex
                         gap={'3'}
@@ -205,11 +206,14 @@ const TBody = styled.tbody``
 
 const Td = styled.td<{
   $verticalAlign?: DataTableProps<never>['verticalAlign']
+  $width?: number
 }>`
   padding: var(--space-4) var(--space-3);
   border-bottom: 1px solid var(--ds-neutral-alpha-6);
 
   ${(p) => p.$verticalAlign && `vertical-align: ${p.$verticalAlign};`}
+
+  ${(p) => p.$width && `width: ${p.$width};`}
 `
 
 const Tr = styled.tr`
@@ -219,9 +223,9 @@ const Tr = styled.tr`
     background-color: rgba(0, 0, 0, 0.05);
   }
 
-  &:last-child ${Td} {
+  /* &:last-child ${Td} {
     border-bottom: none;
-  }
+  } */
 `
 
 export type { DataTableConfig } from './types'
