@@ -29,18 +29,24 @@ export type MobileDataTableProps<T extends AnyRecord> = {
   initialExpandedId?: string
 } & DataProps<T>
 
-export const MobileDataTable = <T extends AnyRecord>({
-  data,
-  HeaderComponent = MobileHeaderComponent,
-  BodyComponent = MobileBodyComponent,
-  AddonBottomComponent,
-  getRowId,
-  config,
-  initialExpandedId,
-  allowSelection,
-  onSelectedIdsChange,
-  selectedIds,
-}: MobileDataTableProps<T>) => {
+export const MobileDataTable = <T extends AnyRecord>(
+  props: MobileDataTableProps<T>,
+) => {
+  const {
+    data,
+    HeaderComponent = MobileHeaderComponent,
+    BodyComponent = MobileBodyComponent,
+    AddonBottomComponent,
+    getRowId,
+    config,
+    initialExpandedId,
+    allowSelection,
+  } = props
+
+  const selectedIds = 'selectedIds' in props ? props.selectedIds : undefined
+  const onSelectedIdsChange =
+    'onSelectedIdsChange' in props ? props.onSelectedIdsChange : undefined
+
   const { handleSelectedChange } = useSelection({
     data,
     selectedIds,

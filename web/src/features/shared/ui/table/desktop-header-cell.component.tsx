@@ -1,4 +1,4 @@
-import { normalizeDataKeyToReadableString } from './utilts'
+import { normalizeDataKeyToReadableString } from './utils.ts'
 
 import type { DataTableColumnConfigRecord, AnyRecord } from './types'
 

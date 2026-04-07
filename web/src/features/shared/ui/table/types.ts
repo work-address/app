@@ -28,10 +28,19 @@ export type MobileAddonBottomProps<T extends AnyRecord> = { data: T }
 export type DataTableConfig<T extends AnyRecord> =
   DataTableColumnConfigRecord<T>[]
 
+export type NonNullableSelectionProps = {
+  allowSelection: true
+  selectedIds: Record<string, boolean>
+  onSelectedIdsChange: (data: Record<string, boolean>) => void
+}
+
+export type SelectionProps =
+  | NonNullableSelectionProps
+  | {
+      allowSelection?: false
+    }
+
 export type DataProps<T extends AnyRecord> = {
   data: T[]
   getRowId: (data: T) => string | number
-  allowSelection?: boolean
-  selectedIds?: Record<string, boolean>
-  onSelectedIdsChange?: (data: Record<string, boolean>) => void
-}
+} & SelectionProps

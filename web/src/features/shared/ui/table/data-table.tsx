@@ -27,20 +27,24 @@ export type DataTableProps<T extends AnyRecord> = {
   BodyComponent?: (props: DesktopBodyCellRenderProps<T>) => ReactNode
 } & DataProps<T>
 
-export const DataTable = <T extends AnyRecord>({
-  data,
-  config,
-  getRowId,
-  verticalAlign,
-  allowSelection,
-  selectedIds,
-  onSelectedIdsChange,
-  HeaderComponent = DesktopHeaderCellComponent,
-  BodyComponent = DesktopBodyCellComponent,
-  nowrap,
-  minHeight,
-  height,
-}: DataTableProps<T>) => {
+export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
+  const {
+    data,
+    config,
+    getRowId,
+    verticalAlign,
+    allowSelection,
+    HeaderComponent = DesktopHeaderCellComponent,
+    BodyComponent = DesktopBodyCellComponent,
+    nowrap,
+    minHeight,
+    height,
+  } = props
+
+  const selectedIds = 'selectedIds' in props ? props.selectedIds : undefined
+  const onSelectedIdsChange =
+    'onSelectedIdsChange' in props ? props.onSelectedIdsChange : undefined
+
   const {
     isPartiallySelected,
     isAllSelected,
@@ -219,3 +223,7 @@ const Tr = styled.tr`
     border-bottom: none;
   }
 `
+
+export type { DataTableConfig } from './types'
+export { type DesktopBodyCellRenderProps } from './desktop-body-cell-component.tsx'
+export { type DesktopHeaderCellRenderProps } from './desktop-header-cell.component.tsx'

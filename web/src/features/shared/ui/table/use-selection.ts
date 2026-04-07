@@ -1,11 +1,14 @@
 import { useMemo } from 'react'
 
-import type { AnyRecord, DataProps } from './types'
+import type { AnyRecord, DataProps, NonNullableSelectionProps } from './types'
 
 type UseSelectionProps<T extends AnyRecord> = Pick<
   DataProps<T>,
-  'getRowId' | 'data' | 'selectedIds' | 'onSelectedIdsChange'
->
+  'getRowId' | 'data'
+> &
+  Partial<
+    Pick<NonNullableSelectionProps, 'selectedIds' | 'onSelectedIdsChange'>
+  >
 
 export const useSelection = <T extends AnyRecord>({
   selectedIds,
