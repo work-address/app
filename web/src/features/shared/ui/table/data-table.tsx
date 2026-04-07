@@ -177,6 +177,7 @@ const TableCard = styled(Card)<{
 `
 
 const StyledTable = styled.table<{ $nowrap?: boolean }>`
+  table-layout: fixed;
   min-width: 100%;
   ${(p) => p.$nowrap && `white-space: nowrap;`}
 `
@@ -187,7 +188,7 @@ const Th = styled.td<{ $width?: number }>`
   font-size: 14px;
   font-weight: 500;
 
-  ${(p) => p.$width && `width: ${p.$width}px;`}
+  ${(p) => p.$width && `width: ${p.$width}px; min-width: ${p.$width}px;`}
 `
 
 const THead = styled.thead`
@@ -215,7 +216,7 @@ const Td = styled.td<{
 
   ${(p) => p.$verticalAlign && `vertical-align: ${p.$verticalAlign};`}
 
-  ${(p) => p.$width && `width: ${p.$width};`}
+  ${(p) => p.$width && `width: ${p.$width}px; min-width: ${p.$width}px;`}
 `
 
 const Tr = styled.tr`
