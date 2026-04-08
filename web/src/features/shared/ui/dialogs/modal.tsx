@@ -1,4 +1,5 @@
-import { Dialog, Flex } from '@radix-ui/themes'
+import { Dialog, Flex, Separator } from '@radix-ui/themes'
+import styled from 'styled-components'
 
 import type { CommonDialogProps } from './types.ts'
 
@@ -8,22 +9,41 @@ export const Modal = ({
   open,
   onOpenChange,
   description,
+  title,
+  desktopWidth,
 }: CommonDialogProps) => {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       {trigger && <Dialog.Trigger>{trigger}</Dialog.Trigger>}
 
-      <Dialog.Content>
+      <Content $width={desktopWidth}>
+        {title && (
+          <Title>
+            {title}
+
+            <Separator size={'4'} mt={'4'} />
+          </Title>
+        )}
+
         {children}
 
         {description && (
           <Dialog.Description>
-            <Flex direction={'column'} mt={'3'}>
+            <Flex direction={'column'} mt={'4'}>
               <div>{description}</div>
             </Flex>
           </Dialog.Description>
         )}
-      </Dialog.Content>
+      </Content>
     </Dialog.Root>
   )
 }
+
+const Title = styled(Dialog.Title)`
+  font-size: var(--font-size-6);
+  font-weight: var(--font-weight-medium);
+`
+
+const Content = styled(Dialog.Content)<{ $width?: string }>`
+  padding: 40px;
+`

@@ -19,29 +19,37 @@ export const Drawer = ({
       shouldScaleBackground
     >
       {trigger && (
-        <Theme>
-          <Vaul.Drawer.Trigger asChild>{trigger}</Vaul.Drawer.Trigger>
-        </Theme>
+        <Vaul.Drawer.Trigger asChild>
+          <Theme> {trigger} </Theme>
+        </Vaul.Drawer.Trigger>
       )}
 
       <Vaul.Drawer.Portal>
-        <Theme>
-          <DrawerOverlay />
+        <DrawerOverlay />
 
-          <DrawerContent>
-            <DrawerHandle />
+        <DrawerContent>
+          <DrawerHandle />
 
-            <DrawerInner>
-              {title && <DrawerTitle>{title}</DrawerTitle>}
+          <DrawerInner>
+            {title && (
+              <Vaul.Drawer.Title>
+                <Theme>
+                  <DrawerTitle>{title}</DrawerTitle>
+                </Theme>
+              </Vaul.Drawer.Title>
+            )}
 
-              <DrawerBody>{children}</DrawerBody>
+            <DrawerBody>
+              <Theme>{children}</Theme>
+            </DrawerBody>
 
-              {description && (
-                <DrawerDescription>{description}</DrawerDescription>
-              )}
-            </DrawerInner>
-          </DrawerContent>
-        </Theme>
+            {description && (
+              <DrawerDescription>
+                <Theme>{description}</Theme>
+              </DrawerDescription>
+            )}
+          </DrawerInner>
+        </DrawerContent>
       </Vaul.Drawer.Portal>
     </Vaul.Drawer.Root>
   )
@@ -72,7 +80,7 @@ const DrawerContent = styled(Vaul.Drawer.Content)`
 `
 
 const DrawerHandle = styled.div`
-  margin: 16px auto 0;
+  margin: 20px auto 0 auto;
   height: 8px;
   width: 100px;
   border-radius: 999px;
@@ -80,11 +88,14 @@ const DrawerHandle = styled.div`
 `
 
 const DrawerInner = styled.div`
-  padding: 16px;
+  padding: 8px 16px 16px;
 `
 
-const DrawerTitle = styled(Vaul.Drawer.Title)`
+const DrawerTitle = styled.span`
   margin: 0;
+  font-weight: 500;
+  font-size: 18px;
+  width: 100%;
 `
 
 const DrawerDescription = styled(Vaul.Drawer.Description)`

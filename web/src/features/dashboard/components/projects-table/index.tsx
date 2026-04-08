@@ -260,11 +260,11 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
 
       <AdaptiveDialog
         title={
-          isMobile && (
-            <Flex justify={'between'}>
-              <Text size={'4'} weight={'medium'}>
-                {selectedRow?.name}
-              </Text>
+          isDesktop ? (
+            <span>{selectedRow?.name}</span>
+          ) : (
+            <Flex justify={'between'} align={'center'}>
+              <Text>{selectedRow?.name}</Text>
 
               <IconButton color={'red'} variant={'outline'}>
                 <TrashIcon />
@@ -274,6 +274,7 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
         }
         open={isDialogOpen}
         onOpenChange={setIsDialogOpen}
+        desktopWidth={'600px'}
         description={
           isDesktop ? (
             <Flex justify={'between'}>

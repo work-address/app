@@ -7,4 +7,5 @@ export type CommonDialogProps = {
   title?: ReactNode
   description?: ReactNode
   onOpenChange?: (open: boolean) => void
+  desktopWidth?: string
 }
