@@ -10,31 +10,30 @@ import { Text } from '@/features/shared'
 
 export type MobileBodyRenderProps<T extends AnyRecord> = {
   data: T
-  dataKey?: keyof T
-  customKey?: string
-  columnConfig: MobileDataTableColumnConfigRecord<T>
   DefaultBodyComponent: typeof MobileBodyComponent<T>
   selected?: boolean
   description?: string
-}
+} & MobileDataTableColumnConfigRecord<T>
 
 export const MobileBodyComponent = <T extends AnyRecord>(
   props: MobileBodyRenderProps<T>,
-): ReactNode => (
-  <Grid columns={'1fr 1fr'} width={'100%'}>
-    <Text color={'gray'} size={'2'} weight={'medium'}>
-      <Flex gap={'1'} align={'center'}>
-        {normalizeDataKeyToReadableString(
-          String(props.dataKey) || props.customKey,
-        )}
+): ReactNode => {
+  const dataKey = 'dataKey' in props ? String(props.dataKey) : props.customKey
 
-        {props.description && <QuestionMarkCircledIcon />}
-      </Flex>
-    </Text>
+  return (
+    <Grid columns={'1fr 1fr'} width={'100%'}>
+      <Text color={'gray'} size={'2'} weight={'medium'}>
+        <Flex gap={'1'} align={'center'}>
+          {props.headerText ?? normalizeDataKeyToReadableString(dataKey)}
+          {props.description && <QuestionMarkCircledIcon />}
+        </Flex>
+      </Text>
 
-    <Text align={'left'} size={'2'} weight={'medium'}>
-      {(props.dataKey ? String(props.data[props.dataKey]) : props.customKey) ||
-        ''}
-    </Text>
-  </Grid>
-)
+      <Text align={'left'} size={'2'} weight={'medium'}>
+        {'dataKey' in props
+          ? String(props.data[props.dataKey])
+          : props.customKey}
+      </Text>
+    </Grid>
+  )
+}

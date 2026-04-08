@@ -17,8 +17,10 @@ export const MobileHeaderComponent = <T extends AnyRecord>(
   props: MobileHeaderRenderProps<T>,
 ) => (
   <Text size={'4'} weight={'medium'}>
-    {normalizeDataKeyToReadableString(
-      String(props.dataKey ? props.data[props.dataKey] : '') || props.customKey,
-    )}
+    {props.headerText ??
+      normalizeDataKeyToReadableString(
+        String(props.dataKey ? props.data[props.dataKey] : '') ||
+          props.customKey,
+      )}
   </Text>
 )

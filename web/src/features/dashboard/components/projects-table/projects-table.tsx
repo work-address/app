@@ -40,22 +40,24 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
   const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState('all')
 
-  const { processedData, processDataFilter, resetFilter } = useDataProcessing({
-    data: rows,
-  })
+  const { processedData, processSingleDataFilter, resetFilter } =
+    useDataProcessing({
+      data: rows,
+    })
 
   const handleTabClick = (tab: string) => {
     setActiveTab(tab)
+    setSelectedIds({})
 
     switch (tab) {
       case 'all': {
         return resetFilter()
       }
       case 'active': {
-        return processDataFilter('status', 'Active', 'equals')
+        return processSingleDataFilter('status', 'Active', 'equals')
       }
       case 'finished': {
-        return processDataFilter('status', 'Finished', 'equals')
+        return processSingleDataFilter('status', 'Finished', 'equals')
       }
     }
   }

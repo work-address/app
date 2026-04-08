@@ -13,7 +13,7 @@ type FilterState<T> = {
 export const useDataProcessing = <T,>({ data }: UseDataProcessingProps<T>) => {
   const [filterState, setFilterState] = useState<FilterState<T>[]>([])
 
-  const processDataFilter = useCallback(
+  const processSingleDataFilter = useCallback(
     (
       field: keyof T,
       value: T[keyof T],
@@ -39,7 +39,7 @@ export const useDataProcessing = <T,>({ data }: UseDataProcessingProps<T>) => {
     return filtered
   }, [data, filterState])
 
-  return { processDataFilter, resetFilter, processedData, filterState }
+  return { processSingleDataFilter, resetFilter, processedData, filterState }
 }
 
 type FilterOperator = 'equals' | 'contains' | 'gt' | 'lt' | 'in' | 'between'

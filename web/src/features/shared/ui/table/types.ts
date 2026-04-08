@@ -9,16 +9,21 @@ export type KeyProp<T extends AnyRecord> =
       customKey: string
     }
 
+type CommonProps = {
+  headerText?: string
+}
+
 export type DataTableColumnConfigRecord<T extends AnyRecord> = {
   width?: number
-  headerText?: string
   horizontalAlign?: 'start' | 'center' | 'end'
-} & KeyProp<T>
+} & CommonProps &
+  KeyProp<T>
 
 export type MobileDataTableColumnConfigRecord<T extends AnyRecord> = {
   isTitle?: boolean
   description?: string
-} & KeyProp<T>
+} & CommonProps &
+  KeyProp<T>
 
 export type MobileDataTableConfig<T extends AnyRecord> =
   MobileDataTableColumnConfigRecord<T>[]
