@@ -25,7 +25,7 @@ export const Input = ({
 
   return (
     <Grid
-      columns={{ initial: '1', sm: `${labelWidth} 1fr` }}
+      columns={{ initial: '1', md: `${labelWidth} 1fr` }}
       gap={isUpMd ? '24px' : 'var(--space-2)'}
       align={'center'}
     >

@@ -10,4 +10,8 @@ export type ProjectRow = {
   keyboard: string
   mouse: string
   mouseDistance: string
+  startDate?: Date
+  publishedIn?: string
+  rate?: string
+  description?: string
 }

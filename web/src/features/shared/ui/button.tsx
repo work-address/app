@@ -57,5 +57,13 @@ const StyledRadixButton = styled(RadixButton)<{
       color: var(--ds-neutral-11);
   `}
 
+  ${(p) =>
+    p.$themeVariant === 'secondary' &&
+    p.variant === 'outline' &&
+    `
+    box-shadow: inset 0 0 0 1px var(--gray-7);
+    background-color: transparent;
+  `}
+
   ${(p) => p.$stretch && `width: 100%;`}
 `

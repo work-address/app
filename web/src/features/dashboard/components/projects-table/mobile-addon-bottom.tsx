@@ -1,31 +1,20 @@
 import { Pencil1Icon, TrashIcon } from '@radix-ui/react-icons'
 import { Grid } from '@radix-ui/themes'
-import React from 'react'
+import React, { useContext } from 'react'
 
 import type { ProjectRow } from './types.ts'
 
-import {
-  Button,
-  type MobileAddonBottomProps,
-  showErrorToast,
-} from '@/features/shared'
+import { ProjectsTableContext } from '@/features/dashboard/components/projects-table/context.ts'
+import { Button, type MobileAddonBottomProps } from '@/features/shared'
 
 export const MobileAddonBottom = React.memo(
   ({ data }: MobileAddonBottomProps<ProjectRow>) => {
+    const { handleActionClick } = useContext(ProjectsTableContext)
+
     return (
       <Grid columns={'1fr 1fr'} gap={'2'}>
         <Button
-          onClick={() =>
-            showErrorToast({
-              message: (
-                <>
-                  API is not connected.
-                  <br /> Requested to delete id {data.key}
-                </>
-              ),
-              title: 'Error',
-            })
-          }
+          onClick={() => handleActionClick(data, 'Delete')}
           color={'red'}
           variant={'outline'}
         >
@@ -33,7 +22,11 @@ export const MobileAddonBottom = React.memo(
           <TrashIcon />
         </Button>
 
-        <Button color={'gray'} variant={'outline'}>
+        <Button
+          color={'gray'}
+          variant={'outline'}
+          onClick={() => handleActionClick(data, 'Edit')}
+        >
           Edit
           <Pencil1Icon />
         </Button>

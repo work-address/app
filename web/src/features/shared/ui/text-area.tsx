@@ -9,22 +9,16 @@ type TextAreaProps = RadixTextAreaProps & {
   label?: string
   value?: string
   id?: string
-  labelWidth?: string
 }
 
-export const TextArea = ({
-  label,
-  id,
-  labelWidth = 'auto',
-  ...props
-}: TextAreaProps) => {
+export const TextArea = ({ label, id, ...props }: TextAreaProps) => {
   const { breakpoints } = useTheme()
   const isUpMd = useMediaQuery(breakpoints.up('md'))
 
   return (
     <Grid
-      columns={{ initial: '1', sm: `${labelWidth} 1fr` }}
-      gap={isUpMd ? '24px' : 'var(--space-2)'}
+      columns={{ initial: '1' }}
+      gap={isUpMd ? '12px' : 'var(--space-2)'}
       align={'center'}
     >
       <Text as={'label'} size={'2'} weight={'medium'} htmlFor={id}>

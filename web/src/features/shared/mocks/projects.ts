@@ -1,5 +1,7 @@
 import type { ProjectRow } from '../components/dashboard/projects-table'
 
+const lorem = `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`
+
 export const projectsMock: ProjectRow[] = [
   {
     key: '1',
@@ -11,6 +13,10 @@ export const projectsMock: ProjectRow[] = [
     keyboard: '4 983',
     mouse: '1 827',
     mouseDistance: '2 385 910',
+    publishedIn: 'Personal',
+    startDate: new Date(),
+    rate: '20 USD/hour',
+    description: lorem,
   },
   {
     key: '2',
@@ -22,6 +28,10 @@ export const projectsMock: ProjectRow[] = [
     keyboard: '3 854',
     mouse: '947',
     mouseDistance: '1 839 352',
+    publishedIn: 'Personal',
+    startDate: new Date(),
+    rate: '20 USD/hour',
+    description: lorem,
   },
   {
     key: '3',
@@ -33,6 +43,10 @@ export const projectsMock: ProjectRow[] = [
     keyboard: '24 093',
     mouse: '3 811',
     mouseDistance: '9 386 154',
+    publishedIn: 'Personal',
+    startDate: new Date(),
+    rate: '20 USD/hour',
+    description: lorem,
   },
   {
     key: '4',
@@ -44,5 +58,9 @@ export const projectsMock: ProjectRow[] = [
     keyboard: '3 852',
     mouse: '724',
     mouseDistance: '1 245 431',
+    publishedIn: 'Personal',
+    startDate: new Date(),
+    rate: '20 USD/hour',
+    description: lorem,
   },
 ]

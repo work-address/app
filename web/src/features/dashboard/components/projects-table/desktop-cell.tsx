@@ -1,10 +1,16 @@
+import { TrashIcon, Pencil1Icon } from '@radix-ui/react-icons'
 import { Badge, Flex } from '@radix-ui/themes'
-import React, { type ReactNode } from 'react'
+import React, { type ReactNode, useContext } from 'react'
 import { NavLink } from 'react-router-dom'
 
 import type { ProjectRow } from './types.ts'
 
-import { type DesktopBodyCellRenderProps, Text } from '@/features/shared'
+import { ProjectsTableContext } from '@/features/dashboard/components/projects-table/context.ts'
+import {
+  type DesktopBodyCellRenderProps,
+  IconButton,
+  Text,
+} from '@/features/shared'
 
 export const DesktopCell = React.memo(
   (props: DesktopBodyCellRenderProps<ProjectRow>) => {
@@ -30,6 +36,10 @@ export const DesktopCell = React.memo(
       }
 
       default: {
+        if (props.customKey === 'actions') {
+          return <Actions {...props} />
+        }
+
         content = (
           <Text color={'gray'}>
             <props.DefaultBodyComponent {...props} />
@@ -46,3 +56,42 @@ export const DesktopCell = React.memo(
     )
   },
 )
+
+const Actions = React.memo((props: DesktopBodyCellRenderProps<ProjectRow>) => {
+  const { handleActionClick } = useContext(ProjectsTableContext)
+
+  return (
+    <Flex gap={'3'} align={'center'}>
+      <IconButton
+        variant={'ghost'}
+        color={'gray'}
+        radius={'full'}
+        onClick={() => handleActionClick(props.data, 'Print')}
+      >
+        <img
+          src={'/img/icons/print.svg'}
+          alt={'Print'}
+          style={{ width: 28, height: 28, margin: -4, padding: 0 }}
+        />
+      </IconButton>
+
+      <IconButton
+        variant={'ghost'}
+        color={'gray'}
+        radius={'full'}
+        onClick={() => handleActionClick(props.data, 'Delete')}
+      >
+        <TrashIcon height={20} width={20} />
+      </IconButton>
+
+      <IconButton
+        variant={'ghost'}
+        color={'gray'}
+        radius={'full'}
+        onClick={() => handleActionClick(props.data, 'Edit')}
+      >
+        <Pencil1Icon height={20} width={20} />
+      </IconButton>
+    </Flex>
+  )
+})

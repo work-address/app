@@ -1,31 +1,39 @@
 import { TrashIcon, PlusIcon } from '@radix-ui/react-icons'
-import { Flex } from '@radix-ui/themes'
-import { useMemo, useState } from 'react'
+import { Flex, Grid } from '@radix-ui/themes'
+import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
-import { useMediaQuery } from 'styled-breakpoints/use-media-query'
-import styled, { useTheme } from 'styled-components'
+import styled from 'styled-components'
 
+import { ProjectsNotFound } from '../projects-not-found.tsx'
+
+import {
+  ProjectsTableContext,
+  type ProjectTableContextValues,
+} from './context.ts'
 import { DesktopCell } from './desktop-cell.tsx'
 import { MobileAddonBottom } from './mobile-addon-bottom.tsx'
 import { MobileHeader } from './mobile-header.tsx'
+import { ProjectDialogContent } from './project-dialog-content.tsx'
 
 import type { ProjectRow } from './types'
 
-import { ProjectsNotFound } from '@/features/dashboard'
 import {
   type MobileDataTableConfig,
   type DataTableConfig,
+  useBreakpoints,
+} from '@/features/shared'
+import {
+  DataTable,
+  MobileDataTable,
+  useDataProcessing,
+  Text,
   projectsMock,
   TabsRoot,
   TabsList,
   TabsTrigger,
   Button,
   IconButton,
-} from '@/features/shared'
-import {
-  DataTable,
-  MobileDataTable,
-  useDataProcessing,
+  AdaptiveDialog,
 } from '@/features/shared'
 
 export type ProjectStatus = 'Active' | 'Paused' | 'Finished'
@@ -35,10 +43,11 @@ type ProjectsTableProps = {
 }
 
 export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
-  const { breakpoints } = useTheme()
-  const isMobile = useMediaQuery(breakpoints.down('md'))
+  const { isDesktop, isMobile } = useBreakpoints()
   const { t } = useTranslation()
   const [activeTab, setActiveTab] = useState('all')
+  const [selectedRow, setSelectedRow] = useState<ProjectRow | null>(null)
+  const [isDialogOpen, setIsDialogOpen] = useState(false)
 
   const { processedData, processSingleDataFilter, resetFilter } =
     useDataProcessing({
@@ -61,6 +70,23 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
       }
     }
   }
+
+  const handleActionClick: ProjectTableContextValues['handleActionClick'] =
+    useCallback((row, action) => {
+      switch (action) {
+        case 'Edit': {
+          setSelectedRow(row)
+          setIsDialogOpen(true)
+          break
+        }
+
+        case 'Delete':
+        case 'Print': {
+          alert(`${row.key} ${action}`)
+          break
+        }
+      }
+    }, [])
 
   const desktopConfig = useMemo(
     (): DataTableConfig<ProjectRow> => [
@@ -95,6 +121,9 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
       },
       {
         dataKey: 'mouseDistance',
+      },
+      {
+        customKey: 'actions',
       },
     ],
     [],
@@ -133,12 +162,12 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
 
   const allowDeleteAll = useMemo(() => {
-    const values = Object.values(selectedIds)
+    const selected = Object.values(selectedIds)
 
     return (
-      values.length > 0 &&
-      processedData.length === values.length &&
-      values.every(Boolean)
+      selected.length > 0 &&
+      processedData.length === selected.length &&
+      selected.every(Boolean)
     )
   }, [selectedIds, processedData])
 
@@ -197,33 +226,84 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
             description={t('dashboard.page.projectsNotFound.description')}
             actionLabel={t('dashboard.page.createProject')}
           />
-        ) : isMobile ? (
-          <MobileDataTable
-            data={processedData}
-            getRowId={rowIdGetter}
-            config={mobileConfig}
-            AddonBottomComponent={MobileAddonBottom}
-            HeaderComponent={MobileHeader}
-            initialExpandedId={rows[0]?.key}
-            allowSelection
-            selectedIds={selectedIds}
-            onSelectedIdsChange={setSelectedIds}
-          />
         ) : (
-          <DataTable
-            data={processedData}
-            config={desktopConfig}
-            getRowId={rowIdGetter}
-            allowSelection
-            BodyComponent={DesktopCell}
-            minHeight={'100%'}
-            selectedIds={selectedIds}
-            onSelectedIdsChange={setSelectedIds}
-            verticalAlign={'middle'}
-            nowrap
-          />
+          <ProjectsTableContext value={{ handleActionClick }}>
+            {isMobile ? (
+              <MobileDataTable
+                data={processedData}
+                getRowId={rowIdGetter}
+                config={mobileConfig}
+                AddonBottomComponent={MobileAddonBottom}
+                HeaderComponent={MobileHeader}
+                initialExpandedId={rows[0]?.key}
+                allowSelection
+                selectedIds={selectedIds}
+                onSelectedIdsChange={setSelectedIds}
+              />
+            ) : (
+              <DataTable
+                data={processedData}
+                config={desktopConfig}
+                getRowId={rowIdGetter}
+                allowSelection
+                BodyComponent={DesktopCell}
+                minHeight={'100%'}
+                selectedIds={selectedIds}
+                onSelectedIdsChange={setSelectedIds}
+                verticalAlign={'middle'}
+                nowrap
+              />
+            )}
+          </ProjectsTableContext>
         )}
       </ProjectsTableWrapper>
+
+      <AdaptiveDialog
+        title={
+          isMobile && (
+            <Flex justify={'between'}>
+              <Text size={'4'} weight={'medium'}>
+                {selectedRow?.name}
+              </Text>
+
+              <IconButton color={'red'} variant={'outline'}>
+                <TrashIcon />
+              </IconButton>
+            </Flex>
+          )
+        }
+        open={isDialogOpen}
+        onOpenChange={setIsDialogOpen}
+        description={
+          isDesktop ? (
+            <Flex justify={'between'}>
+              <Button color={'red'} variant={'outline'}>
+                <TrashIcon /> Delete
+              </Button>
+
+              <Flex gap={'3'}>
+                <Button
+                  themeVariant={'secondary'}
+                  onClick={() => setIsDialogOpen(false)}
+                >
+                  Cancel
+                </Button>
+                <Button themeVariant={'primary'}> Save </Button>
+              </Flex>
+            </Flex>
+          ) : (
+            <Grid columns={'1fr 1fr'} gap={'2'}>
+              <Button themeVariant={'secondary'} variant={'outline'}>
+                Invoice
+              </Button>
+
+              <Button themeVariant={'primary'}>Edit</Button>
+            </Grid>
+          )
+        }
+      >
+        {selectedRow && <ProjectDialogContent data={selectedRow} />}
+      </AdaptiveDialog>
     </Flex>
   )
 }
