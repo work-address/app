@@ -71,8 +71,8 @@ export const CreateProjectModal = ({
       <Flex gap={'5'} direction={'column'}>
         <Text color={isMobile ? 'gray' : undefined} size={isMobile ? '2' : '3'}>
           You&#39;re creating a personal project to track your time and
-          progress. This project is private meaning freelancers won't see it,
-          and you won&#39;t be able to assign it to anyone
+          progress. This project is private meaning freelancers won&#39;t see
+          it, and you won&#39;t be able to assign it to anyone
         </Text>
 
         <Flex gap={'4'} direction={'column'}>
