@@ -11,12 +11,13 @@ export const Modal = ({
   description,
   title,
   desktopWidth,
+  desktopPadding,
 }: CommonDialogProps) => {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       {trigger && <Dialog.Trigger>{trigger}</Dialog.Trigger>}
 
-      <Content $width={desktopWidth}>
+      <Content $width={desktopWidth} $padding={desktopPadding}>
         {title && (
           <Title>
             {title}
@@ -44,6 +45,8 @@ const Title = styled(Dialog.Title)`
   font-weight: var(--font-weight-medium);
 `
 
-const Content = styled(Dialog.Content)<{ $width?: string }>`
+const Content = styled(Dialog.Content)<{ $width?: string; $padding?: string }>`
   padding: 40px;
+
+  ${(p) => p.$padding && `padding: ${p.$padding};`}
 `

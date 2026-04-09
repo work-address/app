@@ -37,10 +37,16 @@ export const ProjectDialogContent = ({
 
     return (
       <Flex direction={'column'} gap={'4'}>
-        <Input label={'Project name'} {...inputProps} {...register('name')} />
+        <Input
+          label={'Project name'}
+          {...inputProps}
+          id={'projectName'}
+          {...register('name')}
+        />
 
         <Input
           label={'Published in'}
+          id={'publishedIn'}
           {...inputProps}
           {...register('publishedIn')}
         />
@@ -48,7 +54,7 @@ export const ProjectDialogContent = ({
         <Input
           label={'Rate'}
           addonRight={'$'}
-          type={'number'}
+          id={'rate'}
           {...inputProps}
           {...register('rate')}
         />
@@ -59,6 +65,7 @@ export const ProjectDialogContent = ({
           label={'Description'}
           placeholder={'Enter a brief description of your project'}
           rows={7}
+          id={'description'}
           {...register('description')}
         />
       </Flex>

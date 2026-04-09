@@ -25,7 +25,7 @@ export const TextArea = ({ label, id, ...props }: TextAreaProps) => {
         {label}
       </Text>
 
-      <RadixTextArea id={id} {...props} />
+      <RadixTextArea id={id} {...props} size={'3'} />
     </Grid>
   )
 }

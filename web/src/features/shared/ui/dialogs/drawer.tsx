@@ -18,6 +18,7 @@ export const Drawer = ({
       open={open}
       onOpenChange={onOpenChange}
       shouldScaleBackground
+      repositionInputs={false}
     >
       {trigger && (
         <Vaul.Drawer.Trigger asChild>
@@ -72,6 +73,7 @@ const DrawerOverlay = styled(Vaul.Drawer.Overlay)`
 
 const DrawerContent = styled(Vaul.Drawer.Content)<{ $maxHeight?: string }>`
   position: fixed;
+
   left: 0;
   right: 0;
   bottom: 0;
@@ -80,14 +82,16 @@ const DrawerContent = styled(Vaul.Drawer.Content)<{ $maxHeight?: string }>`
   display: flex;
   flex-direction: column;
 
-  margin-top: 24px;
   border: 1px solid var(--ds-neutral-alpha-6);
   border-bottom: 0;
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
   background: var(--white);
   box-shadow: var(--shadow-4);
-  ${(p) => `max-height: ${p.$maxHeight || '95dvh'};`}
+
+  ${(p) => `
+    max-height: ${p.$maxHeight || '95dvh'};
+  `}
 `
 
 const DrawerHandleWrapper = styled.div`
@@ -108,7 +112,6 @@ const DrawerInner = styled.div`
   flex-direction: column;
   flex: 1;
   min-height: 0;
-  overflow: hidden;
 `
 
 const DrawerTitle = styled.span`
@@ -125,7 +128,7 @@ const DrawerDescription = styled(Vaul.Drawer.Description)`
 const DescriptionWrapper = styled.div``
 
 const DrawerBody = styled.div`
-  padding-top: 12px;
+  padding: 12px 1px 1px;
   flex: 1;
   overflow-y: auto;
   -webkit-overflow-scrolling: touch;

@@ -10,13 +10,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { CreateProjectModal } from '../create-project-modal'
 import { ProjectsNotFound } from '../projects-not-found'
 
 import {
   ProjectsTableContext,
   type ProjectTableContextValues,
 } from './context.ts'
+import { CreateProjectModal } from './create-project-modal.tsx'
 import { DesktopCell } from './desktop-cell.tsx'
 import { MobileAddonBottom } from './mobile-addon-bottom.tsx'
 import { MobileHeader } from './mobile-header.tsx'
@@ -223,7 +223,10 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
           )}
 
           {isMobile ? (
-            <IconButton themeVariant={'primary'}>
+            <IconButton
+              themeVariant={'primary'}
+              onClick={() => setIsCreateDialogOpen(true)}
+            >
               <PlusIcon />
             </IconButton>
           ) : (
