@@ -27,7 +27,7 @@ export const ProjectDialogContent = ({ data }: { data: ProjectRow }) => {
                 </Text>
 
                 {key === 'startDate' ? (
-                  <Text weight={'regular'} size={textSize}>
+                  <Text weight={'medium'} size={textSize}>
                     {data[key] && data[key].toDateString()}
                   </Text>
                 ) : (
@@ -89,6 +89,4 @@ export const ProjectDialogContent = ({ data }: { data: ProjectRow }) => {
   )
 }
 
-const StyledTextArea = styled(TextArea)`
-  padding: 5px;
-`
+const StyledTextArea = styled(TextArea)``

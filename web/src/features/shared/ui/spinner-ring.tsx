@@ -21,6 +21,6 @@ const SpinnerRing = styled.div<Pick<SpinnerProps, 'size'>>`
   height: ${({ size = 24 }) => size}px;
   border-radius: 50%;
   border: ${({ size = 24 }) => size / 16}px solid var(--ds-neutral-alpha-6);
-  border-top-color: var(--accent-10);
+  border-top-color: var(--ds-accent-11);
   animation: ${spin} 0.7s linear infinite;
 `

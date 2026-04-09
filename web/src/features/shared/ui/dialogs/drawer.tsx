@@ -11,6 +11,7 @@ export const Drawer = ({
   title,
   description,
   onOpenChange,
+  mobileHeight,
 }: CommonDialogProps) => {
   return (
     <Vaul.Drawer.Root
@@ -27,8 +28,10 @@ export const Drawer = ({
       <Vaul.Drawer.Portal>
         <DrawerOverlay />
 
-        <DrawerContent>
-          <DrawerHandle />
+        <DrawerContent $maxHeight={mobileHeight}>
+          <DrawerHandleWrapper>
+            <DrawerHandle />
+          </DrawerHandleWrapper>
 
           <DrawerInner>
             {title && (
@@ -45,7 +48,9 @@ export const Drawer = ({
 
             {description && (
               <DrawerDescription>
-                <Theme>{description}</Theme>
+                <Theme>
+                  <DescriptionWrapper>{description}</DescriptionWrapper>
+                </Theme>
               </DrawerDescription>
             )}
           </DrawerInner>
@@ -62,33 +67,45 @@ const DrawerOverlay = styled(Vaul.Drawer.Overlay)`
   background: rgba(0, 0, 0, 0.5);
 `
 
-const DrawerContent = styled(Vaul.Drawer.Content)`
+const DrawerContent = styled(Vaul.Drawer.Content)<{ $maxHeight?: string }>`
   position: fixed;
   left: 0;
   right: 0;
   bottom: 0;
   z-index: 50;
-  margin-top: 24px;
+
   display: flex;
   flex-direction: column;
+
+  margin-top: 24px;
   border: 1px solid var(--ds-neutral-alpha-6);
   border-bottom: 0;
   border-top-left-radius: 12px;
   border-top-right-radius: 12px;
   background: var(--white);
   box-shadow: var(--shadow-4);
+  ${(p) => `max-height: ${p.$maxHeight || '95dvh'};`}
+`
+
+const DrawerHandleWrapper = styled.div`
+  padding: 8px 0 0;
 `
 
 const DrawerHandle = styled.div`
-  margin: 20px auto 0 auto;
-  height: 8px;
+  margin: 0 auto;
+  height: 6px;
   width: 100px;
   border-radius: 999px;
-  background: var(--gray-100);
+  background: var(--ds-neutral-4);
 `
 
 const DrawerInner = styled.div`
   padding: 8px 16px 16px;
+  display: flex;
+  flex-direction: column;
+  flex: 1;
+  min-height: 0;
+  overflow: hidden;
 `
 
 const DrawerTitle = styled.span`
@@ -99,10 +116,16 @@ const DrawerTitle = styled.span`
 `
 
 const DrawerDescription = styled(Vaul.Drawer.Description)`
-  margin-top: 24px;
   color: var(--ds-neutral-11);
 `
 
+const DescriptionWrapper = styled.div`
+  padding-top: var(--space-5);
+`
+
 const DrawerBody = styled.div`
-  margin-top: 12px;
+  padding-top: 12px;
+  flex: 1;
+  overflow-y: auto;
+  -webkit-overflow-scrolling: touch;
 `

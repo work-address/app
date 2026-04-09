@@ -50,7 +50,7 @@ export const DesktopCell = React.memo(
     }
 
     return (
-      <Flex py={'1'} direction={'column'}>
+      <Flex py={'3.5px'} direction={'column'}>
         {content}
       </Flex>
     )

@@ -1,5 +1,6 @@
 import { TrashIcon, PlusIcon } from '@radix-ui/react-icons'
 import { Flex, Grid } from '@radix-ui/themes'
+import { AnimatePresence, motion } from 'motion/react'
 import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
@@ -220,42 +221,53 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
       </Flex>
 
       <ProjectsTableWrapper>
-        {processedData.length === 0 ? (
-          <ProjectsNotFound
-            title={t('dashboard.page.projectsNotFound.title')}
-            description={t('dashboard.page.projectsNotFound.description')}
-            actionLabel={t('dashboard.page.createProject')}
-          />
-        ) : (
-          <ProjectsTableContext value={{ handleActionClick }}>
-            {isMobile ? (
-              <MobileDataTable
-                data={processedData}
-                getRowId={rowIdGetter}
-                config={mobileConfig}
-                AddonBottomComponent={MobileAddonBottom}
-                HeaderComponent={MobileHeader}
-                initialExpandedId={rows[0]?.key}
-                allowSelection
-                selectedIds={selectedIds}
-                onSelectedIdsChange={setSelectedIds}
+        <AnimatePresence mode={'wait'}>
+          <motion.div
+            key={activeTab}
+            style={{ height: '100%' }}
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            transition={{ duration: 0.2 }}
+          >
+            {processedData.length === 0 ? (
+              <ProjectsNotFound
+                title={t('dashboard.page.projectsNotFound.title')}
+                description={t('dashboard.page.projectsNotFound.description')}
+                actionLabel={t('dashboard.page.createProject')}
               />
             ) : (
-              <DataTable
-                data={processedData}
-                config={desktopConfig}
-                getRowId={rowIdGetter}
-                allowSelection
-                BodyComponent={DesktopCell}
-                minHeight={'100%'}
-                selectedIds={selectedIds}
-                onSelectedIdsChange={setSelectedIds}
-                verticalAlign={'middle'}
-                nowrap
-              />
+              <ProjectsTableContext value={{ handleActionClick }}>
+                {isMobile ? (
+                  <MobileDataTable
+                    data={processedData}
+                    getRowId={rowIdGetter}
+                    config={mobileConfig}
+                    AddonBottomComponent={MobileAddonBottom}
+                    HeaderComponent={MobileHeader}
+                    initialExpandedId={rows[0]?.key}
+                    allowSelection
+                    selectedIds={selectedIds}
+                    onSelectedIdsChange={setSelectedIds}
+                  />
+                ) : (
+                  <DataTable
+                    data={processedData}
+                    config={desktopConfig}
+                    getRowId={rowIdGetter}
+                    allowSelection
+                    BodyComponent={DesktopCell}
+                    minHeight={'100%'}
+                    selectedIds={selectedIds}
+                    onSelectedIdsChange={setSelectedIds}
+                    verticalAlign={'middle'}
+                    nowrap
+                  />
+                )}
+              </ProjectsTableContext>
             )}
-          </ProjectsTableContext>
-        )}
+          </motion.div>
+        </AnimatePresence>
       </ProjectsTableWrapper>
 
       <AdaptiveDialog

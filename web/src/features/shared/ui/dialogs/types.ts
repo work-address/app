@@ -8,4 +8,5 @@ export type CommonDialogProps = {
   description?: ReactNode
   onOpenChange?: (open: boolean) => void
   desktopWidth?: string
+  mobileHeight?: string
 }

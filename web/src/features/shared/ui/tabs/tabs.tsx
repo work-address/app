@@ -98,7 +98,6 @@ const StyledTabsRoot = styled(RadixTabs.Root)``
 
 const StyledTabsList = styled(RadixTabs.List)`
   display: flex;
-  gap: var(--space-3);
   position: relative;
 `
 
@@ -106,20 +105,34 @@ const StyledTabsTrigger = styled(RadixTabs.TabsTrigger)`
   font-weight: 400;
   color: var(--gray-10);
   position: relative;
-  z-index: 1;
-  padding: 0 var(--space-3);
+  z-index: 3;
+  padding: 10px var(--space-4);
+  font-size: var(--font-size-2);
 
   &[data-state='active'] {
     font-weight: 500;
     color: var(--ds-neutral-12);
   }
+
+  &:after {
+    z-index: 3;
+    position: absolute;
+    content: '';
+    display: block;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    height: 1px;
+    background: var(--ds-neutral-alpha-6);
+  }
 `
 
 const ActiveTabIndicator = styled(motion.div)`
+  z-index: 2;
   position: absolute;
   left: 0;
-  bottom: -8px;
+  bottom: 0;
   height: 2px;
-  background: var(--ds-primary);
+  background: var(--ds-accent-11);
   pointer-events: none;
 `

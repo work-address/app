@@ -4,17 +4,21 @@ import styled from 'styled-components'
 
 import type { MotionProps } from 'motion/react'
 
+import { useBreakpoints } from '@/features/shared'
 import { Header } from '@/widgets'
 
 export const MainLayout = () => {
   const { pathname } = useLocation()
+  const { isDesktop } = useBreakpoints()
 
-  const motionProps: MotionProps | null = {
-    initial: { opacity: 0, y: 50 },
-    animate: { opacity: 1, y: 0 },
-    exit: { opacity: 0, y: -50 },
-    transition: { duration: 0.35 },
-  }
+  const motionProps: MotionProps | null = isDesktop
+    ? {
+        initial: { opacity: 0, y: 50 },
+        animate: { opacity: 1, y: 0 },
+        exit: { opacity: 0, y: -50 },
+        transition: { duration: 0.35 },
+      }
+    : null
 
   return (
     <Layout>
@@ -42,7 +46,7 @@ const Layout = styled.div`
 const StickyHeader = styled.div`
   position: sticky;
   top: 0;
-  z-index: 1;
+  z-index: 10;
 `
 
 const Content = styled.div`
