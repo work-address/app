@@ -1,11 +1,17 @@
-import { TrashIcon, PlusIcon } from '@radix-ui/react-icons'
+import {
+  TrashIcon,
+  PlusIcon,
+  DownloadIcon,
+  Pencil1Icon,
+} from '@radix-ui/react-icons'
 import { Flex, Grid } from '@radix-ui/themes'
 import { AnimatePresence, motion } from 'motion/react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { ProjectsNotFound } from '../projects-not-found.tsx'
+import { CreateProjectModal } from '../create-project-modal'
+import { ProjectsNotFound } from '../projects-not-found'
 
 import {
   ProjectsTableContext,
@@ -45,10 +51,15 @@ type ProjectsTableProps = {
 
 export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
   const { isDesktop, isMobile } = useBreakpoints()
+
   const { t } = useTranslation()
+
   const [activeTab, setActiveTab] = useState('all')
   const [selectedRow, setSelectedRow] = useState<ProjectRow | null>(null)
-  const [isDialogOpen, setIsDialogOpen] = useState(false)
+  const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
+  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
+  const [modalMode, setModalMode] = useState<'view' | 'edit'>('view')
 
   const { processedData, processSingleDataFilter, resetFilter } =
     useDataProcessing({
@@ -77,7 +88,7 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
       switch (action) {
         case 'Edit': {
           setSelectedRow(row)
-          setIsDialogOpen(true)
+          setIsEditDialogOpen(true)
           break
         }
 
@@ -160,8 +171,6 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
     [],
   )
 
-  const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
-
   const allowDeleteAll = useMemo(() => {
     const selected = Object.values(selectedIds)
 
@@ -171,6 +180,12 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
       selected.every(Boolean)
     )
   }, [selectedIds, processedData])
+
+  useEffect(() => {
+    if (isEditDialogOpen) {
+      setModalMode('view')
+    }
+  }, [isEditDialogOpen])
 
   return (
     <Flex direction={'column'} height={'100%'}>
@@ -212,7 +227,10 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
               <PlusIcon />
             </IconButton>
           ) : (
-            <Button themeVariant={'primary'}>
+            <Button
+              themeVariant={'primary'}
+              onClick={() => setIsCreateDialogOpen(true)}
+            >
               <PlusIcon />
               {t('dashboard.page.createProject')}
             </Button>
@@ -273,7 +291,7 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
       <AdaptiveDialog
         title={
           isDesktop ? (
-            <span>{selectedRow?.name}</span>
+            selectedRow?.name
           ) : (
             <Flex justify={'between'} align={'center'}>
               <Text>{selectedRow?.name}</Text>
@@ -284,39 +302,99 @@ export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
             </Flex>
           )
         }
-        open={isDialogOpen}
-        onOpenChange={setIsDialogOpen}
+        open={isEditDialogOpen}
+        onOpenChange={setIsEditDialogOpen}
         desktopWidth={'600px'}
         description={
           isDesktop ? (
             <Flex justify={'between'}>
-              <Button color={'red'} variant={'outline'}>
-                <TrashIcon /> Delete
+              <Button color={'red'} variant={'outline'} size={'3'}>
+                <TrashIcon />
+                Delete
               </Button>
 
               <Flex gap={'3'}>
-                <Button
-                  themeVariant={'secondary'}
-                  onClick={() => setIsDialogOpen(false)}
-                >
-                  Cancel
-                </Button>
-                <Button themeVariant={'primary'}> Save </Button>
+                {modalMode === 'view' ? (
+                  <>
+                    <Button
+                      themeVariant={'secondary'}
+                      variant={'outline'}
+                      size={'3'}
+                    >
+                      <DownloadIcon />
+                      Invoice
+                    </Button>
+
+                    <Button
+                      themeVariant={'primary'}
+                      size={'3'}
+                      onClick={() => setModalMode('edit')}
+                    >
+                      <Pencil1Icon />
+                      Edit
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      themeVariant={'secondary'}
+                      onClick={() => setModalMode('view')}
+                      size={'3'}
+                    >
+                      Cancel
+                    </Button>
+
+                    <Button themeVariant={'primary'} size={'3'}>
+                      Save
+                    </Button>
+                  </>
+                )}
               </Flex>
             </Flex>
           ) : (
             <Grid columns={'1fr 1fr'} gap={'2'}>
-              <Button themeVariant={'secondary'} variant={'outline'}>
-                Invoice
-              </Button>
+              <>
+                {modalMode === 'view' ? (
+                  <>
+                    <Button themeVariant={'secondary'} variant={'outline'}>
+                      <DownloadIcon />
+                      Invoice
+                    </Button>
 
-              <Button themeVariant={'primary'}>Edit</Button>
+                    <Button
+                      themeVariant={'primary'}
+                      onClick={() => setModalMode('edit')}
+                    >
+                      <Pencil1Icon />
+                      Edit
+                    </Button>
+                  </>
+                ) : (
+                  <>
+                    <Button
+                      themeVariant={'secondary'}
+                      onClick={() => setModalMode('view')}
+                    >
+                      Cancel
+                    </Button>
+
+                    <Button themeVariant={'primary'}>Save</Button>
+                  </>
+                )}
+              </>
             </Grid>
           )
         }
       >
-        {selectedRow && <ProjectDialogContent data={selectedRow} />}
+        {selectedRow && (
+          <ProjectDialogContent data={selectedRow} mode={modalMode} />
+        )}
       </AdaptiveDialog>
+
+      <CreateProjectModal
+        open={isCreateDialogOpen}
+        onOpenChange={setIsCreateDialogOpen}
+      />
     </Flex>
   )
 }

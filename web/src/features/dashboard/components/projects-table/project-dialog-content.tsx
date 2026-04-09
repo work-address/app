@@ -1,19 +1,69 @@
 import { QuestionMarkCircledIcon } from '@radix-ui/react-icons'
 import { Flex, Grid, Separator } from '@radix-ui/themes'
+import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import type { ProjectRow } from './types'
+import type { InputProps } from '@/features/shared'
 
-import { Text, TextArea, useBreakpoints } from '@/features/shared'
+import { Input, Text, TextArea, useBreakpoints } from '@/features/shared'
 
 type ProjectRowKeys = (keyof ProjectRow)[]
 
-export const ProjectDialogContent = ({ data }: { data: ProjectRow }) => {
+type ProjectDialogContentProps = {
+  data: ProjectRow
+  mode: 'view' | 'edit'
+}
+
+export const ProjectDialogContent = ({
+  data,
+  mode,
+}: ProjectDialogContentProps) => {
   const { t } = useTranslation()
   const { isMobile, isDesktop } = useBreakpoints()
+  const { register } = useForm({
+    values: data,
+  })
 
   const textSize = isMobile ? '2' : '3'
+
+  if (mode === 'edit') {
+    const inputProps: InputProps = {
+      rows: 'auto auto',
+      columns: '1fr',
+      gap: '2',
+    }
+
+    return (
+      <Flex direction={'column'} gap={'4'}>
+        <Input label={'Project name'} {...inputProps} {...register('name')} />
+
+        <Input
+          label={'Published in'}
+          {...inputProps}
+          {...register('publishedIn')}
+        />
+
+        <Input
+          label={'Rate'}
+          addonRight={'$'}
+          type={'number'}
+          {...inputProps}
+          {...register('rate')}
+        />
+
+        <Separator size={'4'} />
+
+        <StyledTextArea
+          label={'Description'}
+          placeholder={'Enter a brief description of your project'}
+          rows={7}
+          {...register('description')}
+        />
+      </Flex>
+    )
+  }
 
   return (
     <Flex direction={'column'} gap={isDesktop ? '4' : '3'}>
@@ -82,11 +132,16 @@ export const ProjectDialogContent = ({ data }: { data: ProjectRow }) => {
           label="Description"
           disabled={true}
           value={data.description}
-          rows={10}
+          rows={12}
         />
       </div>
     </Flex>
   )
 }
 
-const StyledTextArea = styled(TextArea)``
+const StyledTextArea = styled(TextArea)`
+  > textarea {
+    padding: var(--space-4);
+    font-size: var(--font-size-3);
+  }
+`

@@ -1,16 +1,20 @@
-import { Grid } from '@radix-ui/themes'
+import { Grid, type GridProps } from '@radix-ui/themes'
 import { TextField, Text } from '@radix-ui/themes'
 import { useMediaQuery } from 'styled-breakpoints/use-media-query'
 import { useTheme } from 'styled-components'
 
 import type { ReactNode } from 'react'
 
-type InputProps = TextField.RootProps & {
+export type InputProps = TextField.RootProps & {
   label?: string
   value?: string
   id?: string
   labelWidth?: string
   addonLeft?: ReactNode
+  addonRight?: ReactNode
+  columns?: GridProps['columns']
+  gap?: GridProps['gap']
+  rows?: GridProps['rows']
 }
 
 export const Input = ({
@@ -18,6 +22,10 @@ export const Input = ({
   id,
   labelWidth = 'auto',
   addonLeft,
+  addonRight,
+  columns,
+  gap,
+  rows,
   ...props
 }: InputProps) => {
   const { breakpoints } = useTheme()
@@ -25,17 +33,22 @@ export const Input = ({
 
   return (
     <Grid
-      columns={{ initial: '1', md: `${labelWidth} 1fr` }}
-      gap={isUpMd ? '24px' : 'var(--space-2)'}
+      columns={columns ?? { initial: '1', md: `${labelWidth} 1fr` }}
+      gap={gap ?? (isUpMd ? '24px' : 'var(--space-2)')}
+      rows={rows}
       align={'center'}
     >
       <Text as={'label'} size={'2'} weight={'medium'} htmlFor={id}>
         {label}
       </Text>
 
-      <TextField.Root id={id} {...props}>
+      <TextField.Root id={id} {...props} size={'3'}>
         {addonLeft && (
           <TextField.Slot side={'left'}>{addonLeft}</TextField.Slot>
+        )}
+
+        {addonRight && (
+          <TextField.Slot side={'right'}>{addonRight}</TextField.Slot>
         )}
       </TextField.Root>
     </Grid>

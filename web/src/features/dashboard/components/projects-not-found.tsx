@@ -20,9 +20,14 @@ export const ProjectsNotFound = ({
       <IconInner>
         <img src="/img/icons/featured-icon.svg" alt={title} />
       </IconInner>
+
       <Title>{title}</Title>
+
       <Desc>{description}</Desc>
-      <Button onClick={onAction}>{actionLabel}</Button>
+
+      <Button onClick={onAction} themeVariant={'primary'} size={'2'}>
+        {actionLabel}
+      </Button>
     </Root>
   )
 }

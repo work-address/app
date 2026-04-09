@@ -203,16 +203,13 @@ const THead = styled.thead`
   border-bottom: 1px solid var(--ds-neutral-alpha-6);
 `
 
-const TBody = styled.tbody`
-  border-bottom: 1px solid var(--ds-neutral-alpha-6);
-`
+const TBody = styled.tbody``
 
 const Td = styled.td<{
   $verticalAlign?: DataTableProps<never>['verticalAlign']
   $width?: number
 }>`
   padding: var(--space-4) var(--space-3);
-  border-bottom: 1px solid var(--ds-neutral-alpha-6);
 
   ${(p) => p.$verticalAlign && `vertical-align: ${p.$verticalAlign};`}
 
@@ -222,12 +219,12 @@ const Td = styled.td<{
 const Tr = styled.tr`
   transition: 0.25s;
 
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+  &:not(:last-child) {
+    border-bottom: 1px solid var(--ds-neutral-alpha-6);
   }
 
-  &:last-child ${Td} {
-    border-bottom: none;
+  &:hover {
+    background-color: rgba(0, 0, 0, 0.05);
   }
 `
 

@@ -1,4 +1,4 @@
-import { Theme } from '@radix-ui/themes'
+import { Separator, Theme } from '@radix-ui/themes'
 import styled from 'styled-components'
 import * as Vaul from 'vaul'
 
@@ -49,7 +49,10 @@ export const Drawer = ({
             {description && (
               <DrawerDescription>
                 <Theme>
-                  <DescriptionWrapper>{description}</DescriptionWrapper>
+                  <DescriptionWrapper>
+                    <Separator size={'4'} mt={'22px'} mb={'2'} color={'gray'} />
+                    {description}
+                  </DescriptionWrapper>
                 </Theme>
               </DrawerDescription>
             )}
@@ -119,9 +122,7 @@ const DrawerDescription = styled(Vaul.Drawer.Description)`
   color: var(--ds-neutral-11);
 `
 
-const DescriptionWrapper = styled.div`
-  padding-top: var(--space-5);
-`
+const DescriptionWrapper = styled.div``
 
 const DrawerBody = styled.div`
   padding-top: 12px;
