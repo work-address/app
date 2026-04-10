@@ -10,7 +10,11 @@ import { WorklogsMobileFilters } from './mobile-filters'
 
 import type { WorklogFormFilters, WorklogRow } from './types'
 
-import { type DataTableConfig, DataTable } from '@/features/shared'
+import {
+  type DataTableConfig,
+  DataTable,
+  useBreakpoints,
+} from '@/features/shared'
 
 const initialFormFilters = (): WorklogFormFilters => ({
   timeActiveMin: '',
@@ -29,6 +33,7 @@ type WorklogsTableProps = {
 
 export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
   const { t } = useTranslation()
+  const { isMobile, isDesktop } = useBreakpoints()
 
   const [worklogQuery, setWorklogQuery] = useState('')
   const [fromDate, setFromDate] = useState<Date | undefined>()
@@ -154,21 +159,39 @@ export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
       <S.SectionTitleRow>
         <S.SectionTitle>{t('dashboard.page.worklogs.title')}</S.SectionTitle>
 
-        <WorklogsMobileFilters
+        {isMobile && (
+          <WorklogsMobileFilters
+            projectOptions={projectOptions}
+            worklogProjects={worklogProjects}
+            onToggleProject={(value) =>
+              setWorklogProjects((prev) =>
+                prev.includes(value)
+                  ? prev.filter((v) => v !== value)
+                  : [...prev, value],
+              )
+            }
+            selectedProjectsLabel={selectedProjectsLabel}
+            filtersOpen={filtersOpen}
+            onFiltersOpenChange={setFiltersOpen}
+            projectsDrawerOpen={projectsDrawerOpen}
+            onProjectsDrawerOpenChange={setProjectsDrawerOpen}
+            fromDate={fromDate}
+            onFromDateChange={setFromDate}
+            toDate={toDate}
+            onToDateChange={setToDate}
+            worklogQuery={worklogQuery}
+            onWorklogQueryChange={setWorklogQuery}
+            formFilters={formFilters}
+            onFormFiltersChange={patchFormFilters}
+          />
+        )}
+      </S.SectionTitleRow>
+
+      {isDesktop && (
+        <WorklogsDesktopFilters
           projectOptions={projectOptions}
           worklogProjects={worklogProjects}
-          onToggleProject={(value) =>
-            setWorklogProjects((prev) =>
-              prev.includes(value)
-                ? prev.filter((v) => v !== value)
-                : [...prev, value],
-            )
-          }
-          selectedProjectsLabel={selectedProjectsLabel}
-          filtersOpen={filtersOpen}
-          onFiltersOpenChange={setFiltersOpen}
-          projectsDrawerOpen={projectsDrawerOpen}
-          onProjectsDrawerOpenChange={setProjectsDrawerOpen}
+          onWorklogProjectsChange={setWorklogProjects}
           fromDate={fromDate}
           onFromDateChange={setFromDate}
           toDate={toDate}
@@ -178,21 +201,7 @@ export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
           formFilters={formFilters}
           onFormFiltersChange={patchFormFilters}
         />
-      </S.SectionTitleRow>
-
-      <WorklogsDesktopFilters
-        projectOptions={projectOptions}
-        worklogProjects={worklogProjects}
-        onWorklogProjectsChange={setWorklogProjects}
-        fromDate={fromDate}
-        onFromDateChange={setFromDate}
-        toDate={toDate}
-        onToDateChange={setToDate}
-        worklogQuery={worklogQuery}
-        onWorklogQueryChange={setWorklogQuery}
-        formFilters={formFilters}
-        onFormFiltersChange={patchFormFilters}
-      />
+      )}
 
       {hasWorklogs ? (
         <>

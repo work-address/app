@@ -240,7 +240,6 @@ export default function DatePickerInput({ value, onChange, placeholder }: DatePi
 
 const Root = styled.div`
   position: relative;
-  width: 100%;
 `
 
 const InputButton = styled.button`

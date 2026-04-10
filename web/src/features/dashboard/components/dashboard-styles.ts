@@ -1,5 +1,4 @@
 import styled from 'styled-components'
-import { Drawer } from 'vaul'
 
 import { MotionSelect } from '@/features/shared'
 
@@ -88,134 +87,10 @@ export const SectionTitleRow = styled.div`
   margin-bottom: 14px;
 `
 
-export const DesktopOnly = styled.div`
-  @media (max-width: 768px) {
-    display: none;
-  }
-`
-
-export const MobileOnly = styled.div`
-  display: none;
-
-  @media (max-width: 768px) {
-    display: block;
-  }
-`
-
-export const FiltersButton = styled.button`
-  font-weight: 500;
-  font-size: 12px;
-  line-height: 133%;
-  letter-spacing: 0;
-  color: #60646c;
-  border: 1px solid rgba(0, 8, 48, 0.27);
-  border-radius: 3px;
-  padding: 0 8px;
-  height: 24px;
-  display: inline-flex;
-  align-items: center;
-  gap: 8px;
-  img {
-    width: 16px;
-    height: 16px;
-    display: block;
-  }
-
-  &:hover {
-    background: rgba(0, 0, 51, 0.04);
-  }
-`
-
 export const FilterImage = styled.img`
   width: 16px;
   height: 16px;
   display: block;
-`
-
-export const DrawerOverlay = styled(Drawer.Overlay)`
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  z-index: 50;
-`
-
-export const DrawerContent = styled(Drawer.Content)`
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 51;
-  outline: none;
-`
-
-export const NestedDrawerOverlay = styled(Drawer.Overlay)`
-  position: fixed;
-  inset: 0;
-  background: rgba(0, 0, 0, 0.35);
-  z-index: 60;
-`
-
-export const NestedDrawerContent = styled(Drawer.Content)`
-  position: fixed;
-  left: 0;
-  right: 0;
-  bottom: 0;
-  z-index: 61;
-  outline: none;
-`
-
-export const Sheet = styled.div`
-  background: #fff;
-  border-top-left-radius: 16px;
-  border-top-right-radius: 16px;
-  padding: 16px;
-  max-height: 85vh;
-  overflow: auto;
-`
-
-export const SheetHandle = styled.div`
-  width: 48px;
-  height: 5px;
-  border-radius: 999px;
-  background: rgba(0, 0, 0, 0.12);
-  margin: 0 auto 10px;
-`
-
-export const SheetTitle = styled.div`
-  font-weight: 500;
-  font-size: 16px;
-  line-height: 150%;
-  color: #1c2024;
-  text-align: center;
-  margin-bottom: 12px;
-`
-
-export const SheetSubTitle = styled.div`
-  font-weight: 500;
-  font-size: 16px;
-  line-height: 150%;
-  color: #1c2024;
-  margin-bottom: 12px;
-`
-
-export const MobileFilters = styled.div`
-  display: flex;
-  flex-direction: column;
-  /* gap: 12px; */
-`
-
-export const SheetFooter = styled.div`
-  margin-top: 14px;
-`
-
-export const SheetApply = styled.button`
-  width: 100%;
-  height: 32px;
-  border-radius: 4px;
-  background: #3f67a4;
-  color: #fff;
-  font-size: 14px;
-  font-weight: 500;
 `
 
 export const ProjectsTrigger = styled.button`
@@ -267,24 +142,14 @@ export const CheckIcon = styled.span`
   background-size: contain;
 `
 
-export const Filters = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: 10px;
-  align-items: end;
-  margin-bottom: var(--space-4);
-`
-
 export const FilterMotionSelect = styled(MotionSelect)`
   --ms-height: 34px;
 `
 
 export const Field = styled.div<{ $basis?: number }>`
-  display: flex;
-  flex-direction: column;
-  gap: 6px;
-  flex: 1 1 ${(p) => (p.$basis ? `${p.$basis}px` : '70px')};
   min-width: 130px;
+
+  ${(p) => p.$basis && `flex-basis: ${p.$basis};`}
 `
 
 export const Label = styled.div`
@@ -292,26 +157,6 @@ export const Label = styled.div`
   line-height: 14px;
   color: #1c2024;
   font-weight: 500;
-`
-
-export const Control = styled.input`
-  width: 100%;
-  height: 34px;
-  border-radius: 4px;
-  border: 1px solid rgba(0, 8, 48, 0.12);
-  padding: 0 10px;
-  background: #fff;
-  font-size: 13px;
-  color: var(--ds-primary);
-  outline: none;
-
-  &::placeholder {
-    color: rgba(0, 5, 29, 0.45);
-  }
-
-  &:focus {
-    border-color: rgba(0, 52, 130, 0.55);
-  }
 `
 
 export const Range = styled.div`

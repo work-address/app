@@ -1,4 +1,4 @@
-import { Grid, type GridProps } from '@radix-ui/themes'
+import { Grid, type GridProps, type TextProps } from '@radix-ui/themes'
 import { TextField, Text } from '@radix-ui/themes'
 import { useMediaQuery } from 'styled-breakpoints/use-media-query'
 import { useTheme } from 'styled-components'
@@ -15,6 +15,7 @@ export type InputProps = TextField.RootProps & {
   columns?: GridProps['columns']
   gap?: GridProps['gap']
   rows?: GridProps['rows']
+  textSize?: TextProps['size']
 }
 
 export const Input = ({
@@ -26,6 +27,7 @@ export const Input = ({
   columns,
   gap,
   rows,
+  textSize,
   ...props
 }: InputProps) => {
   const { breakpoints } = useTheme()
@@ -38,9 +40,16 @@ export const Input = ({
       rows={rows}
       align={'center'}
     >
-      <Text as={'label'} size={'2'} weight={'medium'} htmlFor={id}>
-        {label}
-      </Text>
+      {label && (
+        <Text
+          as={'label'}
+          size={textSize || '2'}
+          weight={'medium'}
+          htmlFor={id}
+        >
+          {label}
+        </Text>
+      )}
 
       <TextField.Root id={id} size={isUpMd ? undefined : '3'} {...props}>
         {addonLeft && (

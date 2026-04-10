@@ -12,3 +12,6 @@ export const AdaptiveDialog = (props: CommonDialogProps) => {
 
   return isMobile ? <Drawer {...props} /> : <Modal {...props} />
 }
+
+export { Modal } from './modal.tsx'
+export { Drawer } from './drawer.tsx'

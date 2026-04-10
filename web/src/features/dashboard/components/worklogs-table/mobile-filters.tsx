@@ -1,11 +1,12 @@
+import { Flex, Grid } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
-import { Drawer } from 'vaul'
 
 import * as S from '../dashboard-styles.ts'
 
 import type { WorklogFormFilters } from './types'
+import type { ChangeEvent } from 'react'
 
-import { DatePickerInput } from '@/features/shared'
+import { Button, DatePickerInput, Drawer, Input, Text } from '@/features/shared'
 
 type ProjectOption = { value: string; label: string }
 
@@ -41,18 +42,30 @@ export const WorklogsMobileFilters = ({
   onFromDateChange,
   toDate,
   onToDateChange,
-  worklogQuery,
-  onWorklogQueryChange,
   formFilters,
   onFormFiltersChange,
 }: WorklogsMobileFiltersProps) => {
   const { t } = useTranslation()
 
   return (
-    <S.MobileOnly>
-      <Drawer.Root open={filtersOpen} onOpenChange={onFiltersOpenChange}>
-        <Drawer.Trigger asChild>
-          <S.FiltersButton type="button">
+    <>
+      <Drawer
+        open={filtersOpen}
+        onOpenChange={onFiltersOpenChange}
+        title={
+          <Flex justify={'center'}>
+            {t('dashboard.page.filters.title', {
+              defaultValue: 'Filters',
+            })}
+          </Flex>
+        }
+        trigger={
+          <Button
+            type="button"
+            themeVariant={'secondary'}
+            size={'1'}
+            variant={'outline'}
+          >
             <S.FilterImage
               src="/img/icons/filter-icon.svg"
               alt="Filter"
@@ -62,202 +75,198 @@ export const WorklogsMobileFilters = ({
             {t('dashboard.page.filters.title', {
               defaultValue: 'Filters',
             })}
-          </S.FiltersButton>
-        </Drawer.Trigger>
+          </Button>
+        }
+        description={
+          <Button stretch themeVariant={'primary'}>
+            {t('dashboard.page.filters.apply', {
+              defaultValue: 'Apply',
+            })}
+          </Button>
+        }
+      >
+        <Flex direction={'column'} gap={'2'}>
+          <S.Field>
+            <S.Label>{t('dashboard.page.filters.projects')}</S.Label>
 
-        <Drawer.Portal>
-          <S.DrawerOverlay />
+            <S.ProjectsTrigger
+              type="button"
+              onClick={() => onProjectsDrawerOpenChange(true)}
+            >
+              {selectedProjectsLabel}
+            </S.ProjectsTrigger>
+          </S.Field>
 
-          <S.DrawerContent>
-            <S.Sheet>
-              <S.SheetHandle />
+          <S.Field>
+            <S.Label>{t('dashboard.page.filters.date')}</S.Label>
 
-              <S.SheetTitle>
-                {t('dashboard.page.filters.title', {
-                  defaultValue: 'Filters',
-                })}
-              </S.SheetTitle>
+            <S.Range>
+              <DatePickerInput
+                value={fromDate}
+                onChange={onFromDateChange}
+                placeholder={t('dashboard.page.filters.from')}
+              />
 
-              <S.MobileFilters>
-                <S.Field>
-                  <S.Label>{t('dashboard.page.filters.projects')}</S.Label>
-                  <S.ProjectsTrigger
-                    type="button"
-                    onClick={() => onProjectsDrawerOpenChange(true)}
-                  >
-                    {selectedProjectsLabel}
-                  </S.ProjectsTrigger>
-                </S.Field>
+              <DatePickerInput
+                value={toDate}
+                onChange={onToDateChange}
+                placeholder={t('dashboard.page.filters.to')}
+              />
+            </S.Range>
+          </S.Field>
 
-                <S.Field>
-                  <S.Label>{t('dashboard.page.filters.date')}</S.Label>
-                  <S.Range>
-                    <DatePickerInput
-                      value={fromDate}
-                      onChange={onFromDateChange}
-                      placeholder={t('dashboard.page.filters.from')}
-                    />
-                    <DatePickerInput
-                      value={toDate}
-                      onChange={onToDateChange}
-                      placeholder={t('dashboard.page.filters.to')}
-                    />
-                  </S.Range>
-                </S.Field>
+          <Input
+            label={'Note'}
+            placeholder={t('dashboard.page.filters.searchNote')}
+          />
 
-                <S.Field>
-                  <S.Label>{t('dashboard.page.filters.note')}</S.Label>
-                  <S.Control
-                    value={worklogQuery}
-                    onChange={(e) => onWorklogQueryChange(e.target.value)}
-                    placeholder={t('dashboard.page.filters.searchNote')}
-                  />
-                </S.Field>
+          <TwoSideInput
+            label={t('dashboard.page.filters.timeActive')}
+            leftId={'timeActiveMin'}
+            leftValue={formFilters.timeActiveMin}
+            onLeftChange={(e) =>
+              onFormFiltersChange({ timeActiveMin: e.currentTarget.value })
+            }
+            leftPlaceholder={t('dashboard.page.filters.min')}
+            rightId={'timeActiveMax'}
+            rightValue={formFilters.timeActiveMax}
+            onRightChange={(e) =>
+              onFormFiltersChange({ timeActiveMax: e.currentTarget.value })
+            }
+            rightPlaceholder={t('dashboard.page.filters.max')}
+          />
 
-                <S.Field>
-                  <S.Label>{t('dashboard.page.filters.timeActive')}</S.Label>
-                  <S.Range>
-                    <S.Control
-                      value={formFilters.timeActiveMin}
-                      onChange={(e) =>
-                        onFormFiltersChange({ timeActiveMin: e.target.value })
-                      }
-                      placeholder={t('dashboard.page.filters.min')}
-                    />
-                    <S.Control
-                      value={formFilters.timeActiveMax}
-                      onChange={(e) =>
-                        onFormFiltersChange({ timeActiveMax: e.target.value })
-                      }
-                      placeholder={t('dashboard.page.filters.max')}
-                    />
-                  </S.Range>
-                </S.Field>
+          <TwoSideInput
+            label={t('dashboard.page.filters.keyboard')}
+            leftValue={formFilters.keyboardMin}
+            leftId={'keyboardMin'}
+            onLeftChange={(e) =>
+              onFormFiltersChange({ keyboardMin: e.target.value })
+            }
+            leftPlaceholder={t('dashboard.page.filters.min')}
+            rightId={'keyboardMax'}
+            rightValue={formFilters.keyboardMax}
+            onRightChange={(e) =>
+              onFormFiltersChange({ keyboardMax: e.target.value })
+            }
+            rightPlaceholder={t('dashboard.page.filters.max')}
+          />
 
-                <S.Field>
-                  <S.Label>{t('dashboard.page.filters.keyboard')}</S.Label>
-                  <S.Range>
-                    <S.Control
-                      value={formFilters.keyboardMin}
-                      onChange={(e) =>
-                        onFormFiltersChange({ keyboardMin: e.target.value })
-                      }
-                      placeholder={t('dashboard.page.filters.min')}
-                    />
-                    <S.Control
-                      value={formFilters.keyboardMax}
-                      onChange={(e) =>
-                        onFormFiltersChange({ keyboardMax: e.target.value })
-                      }
-                      placeholder={t('dashboard.page.filters.max')}
-                    />
-                  </S.Range>
-                </S.Field>
+          <TwoSideInput
+            label={t('dashboard.page.filters.mouse')}
+            leftValue={formFilters.mouseMin}
+            leftId={'mouseMin'}
+            onLeftChange={(e) =>
+              onFormFiltersChange({ mouseMin: e.target.value })
+            }
+            leftPlaceholder={t('dashboard.page.filters.min')}
+            rightId={'mouseMax'}
+            rightValue={formFilters.mouseMax}
+            onRightChange={(e) =>
+              onFormFiltersChange({ mouseMax: e.target.value })
+            }
+            rightPlaceholder={t('dashboard.page.filters.max')}
+          />
 
-                <S.Field>
-                  <S.Label>{t('dashboard.page.filters.mouse')}</S.Label>
-                  <S.Range>
-                    <S.Control
-                      value={formFilters.mouseMin}
-                      onChange={(e) =>
-                        onFormFiltersChange({ mouseMin: e.target.value })
-                      }
-                      placeholder={t('dashboard.page.filters.min')}
-                    />
-                    <S.Control
-                      value={formFilters.mouseMax}
-                      onChange={(e) =>
-                        onFormFiltersChange({ mouseMax: e.target.value })
-                      }
-                      placeholder={t('dashboard.page.filters.max')}
-                    />
-                  </S.Range>
-                </S.Field>
+          <TwoSideInput
+            label={t('dashboard.page.filters.mouseDistance')}
+            leftValue={formFilters.mouseDistanceMin}
+            leftId={'mouseDistanceMin'}
+            onLeftChange={(e) =>
+              onFormFiltersChange({
+                mouseDistanceMin: e.target.value,
+              })
+            }
+            leftPlaceholder={t('dashboard.page.filters.min')}
+            rightId={'mouseDistanceMax'}
+            rightValue={formFilters.mouseDistanceMax}
+            onRightChange={(e) =>
+              onFormFiltersChange({
+                mouseDistanceMax: e.target.value,
+              })
+            }
+            rightPlaceholder={t('dashboard.page.filters.max')}
+          />
+        </Flex>
+      </Drawer>
 
-                <S.Field>
-                  <S.Label>{t('dashboard.page.filters.mouseDistance')}</S.Label>
-                  <S.Range>
-                    <S.Control
-                      value={formFilters.mouseDistanceMin}
-                      onChange={(e) =>
-                        onFormFiltersChange({
-                          mouseDistanceMin: e.target.value,
-                        })
-                      }
-                      placeholder={t('dashboard.page.filters.min')}
-                    />
-                    <S.Control
-                      value={formFilters.mouseDistanceMax}
-                      onChange={(e) =>
-                        onFormFiltersChange({
-                          mouseDistanceMax: e.target.value,
-                        })
-                      }
-                      placeholder={t('dashboard.page.filters.max')}
-                    />
-                  </S.Range>
-                </S.Field>
-              </S.MobileFilters>
-
-              <S.SheetFooter>
-                <S.SheetApply
-                  type="button"
-                  onClick={() => onFiltersOpenChange(false)}
-                >
-                  {t('dashboard.page.filters.apply', {
-                    defaultValue: 'Apply',
-                  })}
-                </S.SheetApply>
-              </S.SheetFooter>
-            </S.Sheet>
-          </S.DrawerContent>
-        </Drawer.Portal>
-      </Drawer.Root>
-
-      <Drawer.Root
+      <Drawer
         open={projectsDrawerOpen}
         onOpenChange={onProjectsDrawerOpenChange}
+        title={t('dashboard.page.filters.projectsTitle')}
+        description={
+          <Button stretch themeVariant={'primary'}>
+            {t('dashboard.page.filters.apply', {
+              defaultValue: 'Apply',
+            })}
+          </Button>
+        }
       >
-        <Drawer.Portal>
-          <S.NestedDrawerOverlay />
-          <S.NestedDrawerContent>
-            <S.Sheet>
-              <S.SheetHandle />
-              <S.SheetSubTitle>
-                {t('dashboard.page.filters.projectsTitle')}
-              </S.SheetSubTitle>
+        <S.ProjectsList>
+          {projectOptions.map((opt) => {
+            const selected = worklogProjects.includes(opt.value)
+            return (
+              <S.ProjectRowButton
+                key={opt.value}
+                type="button"
+                $selected={selected}
+                onClick={() => onToggleProject(opt.value)}
+              >
+                <S.ProjectRowLabel>{opt.label}</S.ProjectRowLabel>
+                {selected ? <S.CheckIcon aria-hidden /> : null}
+              </S.ProjectRowButton>
+            )
+          })}
+        </S.ProjectsList>
+      </Drawer>
+    </>
+  )
+}
 
-              <S.ProjectsList>
-                {projectOptions.map((opt) => {
-                  const selected = worklogProjects.includes(opt.value)
-                  return (
-                    <S.ProjectRowButton
-                      key={opt.value}
-                      type="button"
-                      $selected={selected}
-                      onClick={() => onToggleProject(opt.value)}
-                    >
-                      <S.ProjectRowLabel>{opt.label}</S.ProjectRowLabel>
-                      {selected ? <S.CheckIcon aria-hidden /> : null}
-                    </S.ProjectRowButton>
-                  )
-                })}
-              </S.ProjectsList>
+type TwoSideInputProps = {
+  label: string
+  leftValue: string
+  leftId: string
+  onLeftChange: (e: ChangeEvent<HTMLInputElement>) => void
+  leftPlaceholder: string
+  rightId: string
+  rightValue: string
+  onRightChange: (e: ChangeEvent<HTMLInputElement>) => void
+  rightPlaceholder: string
+}
 
-              <S.SheetFooter>
-                <S.SheetApply
-                  type="button"
-                  onClick={() => onProjectsDrawerOpenChange(false)}
-                >
-                  {t('dashboard.page.filters.apply', {
-                    defaultValue: 'Apply',
-                  })}
-                </S.SheetApply>
-              </S.SheetFooter>
-            </S.Sheet>
-          </S.NestedDrawerContent>
-        </Drawer.Portal>
-      </Drawer.Root>
-    </S.MobileOnly>
+const TwoSideInput = ({
+  label,
+  leftId,
+  onLeftChange,
+  onRightChange,
+  rightId,
+  rightValue,
+  leftValue,
+  leftPlaceholder,
+  rightPlaceholder,
+}: TwoSideInputProps) => {
+  return (
+    <Grid columns={'auto'} gap={'2'}>
+      <Text size={'2'} weight={'medium'}>
+        {label}
+      </Text>
+
+      <Grid columns={'1fr 1fr'} gap={'2'}>
+        <Input
+          id={leftId}
+          value={leftValue}
+          onChange={onLeftChange}
+          placeholder={leftPlaceholder}
+        />
+
+        <Input
+          id={rightId}
+          value={rightValue}
+          onChange={onRightChange}
+          placeholder={rightPlaceholder}
+        />
+      </Grid>
+    </Grid>
   )
 }

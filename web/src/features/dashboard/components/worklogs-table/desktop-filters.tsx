@@ -1,10 +1,17 @@
+import { Flex, Grid } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
 
 import * as S from '../dashboard-styles.ts'
 
 import type { WorklogFormFilters } from './types'
+import type { ChangeEvent } from 'react'
 
-import { DatePickerInput } from '@/features/shared'
+import {
+  DatePickerInput,
+  Input,
+  type InputProps,
+  Text,
+} from '@/features/shared'
 
 type ProjectOption = { value: string; label: string }
 
@@ -37,11 +44,19 @@ export const WorklogsDesktopFilters = ({
 }: WorklogsDesktopFiltersProps) => {
   const { t } = useTranslation()
 
+  const inputProps: InputProps = {
+    columns: 'auto',
+    rows: 'auto auto',
+    gap: '2',
+    textSize: '3',
+  }
+
   return (
-    <S.DesktopOnly>
-      <S.Filters>
-        <S.Field $basis={180}>
-          <S.Label>{t('dashboard.page.filters.projects')}</S.Label>
+    <Flex gap={'3'} mb={'4'}>
+      <S.Field $basis={180}>
+        <Flex direction={'column'} gap={'2'}>
+          <Text>{t('dashboard.page.filters.projects')}</Text>
+
           <S.FilterMotionSelect
             title={t('dashboard.page.filters.projectsTitle')}
             multi
@@ -50,113 +65,143 @@ export const WorklogsDesktopFilters = ({
             onChange={(v) => onWorklogProjectsChange(v as string[])}
             placeholder={t('dashboard.page.filters.allWorklogs')}
           />
-        </S.Field>
+        </Flex>
+      </S.Field>
 
-        <S.Field $basis={200}>
-          <S.Label>{t('dashboard.page.filters.date')}</S.Label>
-          <S.Range>
+      <S.Field $basis={200}>
+        <Flex gap={'2'} direction={'column'}>
+          <Text>{t('dashboard.page.filters.date')}</Text>
+
+          <Grid columns={'1fr 1fr'} gap={'2'}>
             <DatePickerInput
               value={fromDate}
               onChange={onFromDateChange}
               placeholder={t('dashboard.page.filters.from')}
             />
+
             <DatePickerInput
               value={toDate}
               onChange={onToDateChange}
               placeholder={t('dashboard.page.filters.to')}
             />
-          </S.Range>
-        </S.Field>
+          </Grid>
+        </Flex>
+      </S.Field>
 
-        <S.Field $basis={240}>
-          <S.Label>{t('dashboard.page.filters.note')}</S.Label>
-          <S.Control
-            value={worklogQuery}
-            onChange={(e) => onWorklogQueryChange(e.target.value)}
-            placeholder={t('dashboard.page.filters.searchNote')}
-          />
-        </S.Field>
+      <S.Field $basis={240}>
+        <Input
+          label={t('dashboard.page.filters.note')}
+          value={worklogQuery}
+          onChange={(e) => onWorklogQueryChange(e.target.value)}
+          {...inputProps}
+        />
+      </S.Field>
 
-        <S.Field>
-          <S.Label>{t('dashboard.page.filters.timeActive')}</S.Label>
-          <S.Range>
-            <S.Control
-              value={formFilters.timeActiveMin}
-              onChange={(e) =>
-                onFormFiltersChange({ timeActiveMin: e.target.value })
-              }
-              placeholder={t('dashboard.page.filters.min')}
-            />
-            <S.Control
-              value={formFilters.timeActiveMax}
-              onChange={(e) =>
-                onFormFiltersChange({ timeActiveMax: e.target.value })
-              }
-              placeholder={t('dashboard.page.filters.max')}
-            />
-          </S.Range>
-        </S.Field>
+      <S.Field>
+        <TwoSideInput
+          label={t('dashboard.page.filters.timeActive')}
+          leftValue={formFilters.timeActiveMin}
+          onLeftChange={(e) =>
+            onFormFiltersChange({ timeActiveMin: e.target.value })
+          }
+          rightValue={formFilters.timeActiveMax}
+          onRightChange={(e) =>
+            onFormFiltersChange({ timeActiveMax: e.target.value })
+          }
+          leftPlaceholder={t('dashboard.page.filters.min')}
+          rightPlaceholder={t('dashboard.page.filters.max')}
+          {...inputProps}
+        />
+      </S.Field>
 
-        <S.Field>
-          <S.Label>{t('dashboard.page.filters.keyboard')}</S.Label>
-          <S.Range>
-            <S.Control
-              value={formFilters.keyboardMin}
-              onChange={(e) =>
-                onFormFiltersChange({ keyboardMin: e.target.value })
-              }
-              placeholder={t('dashboard.page.filters.min')}
-            />
-            <S.Control
-              value={formFilters.keyboardMax}
-              onChange={(e) =>
-                onFormFiltersChange({ keyboardMax: e.target.value })
-              }
-              placeholder={t('dashboard.page.filters.max')}
-            />
-          </S.Range>
-        </S.Field>
+      <S.Field>
+        <TwoSideInput
+          label={t('dashboard.page.filters.keyboard')}
+          leftValue={formFilters.keyboardMin}
+          rightValue={formFilters.keyboardMax}
+          onLeftChange={(e) =>
+            onFormFiltersChange({ keyboardMin: e.target.value })
+          }
+          onRightChange={(e) =>
+            onFormFiltersChange({ keyboardMax: e.target.value })
+          }
+          leftPlaceholder={t('dashboard.page.filters.min')}
+          rightPlaceholder={t('dashboard.page.filters.max')}
+        />
+      </S.Field>
 
-        <S.Field>
-          <S.Label>{t('dashboard.page.filters.mouse')}</S.Label>
-          <S.Range>
-            <S.Control
-              value={formFilters.mouseMin}
-              onChange={(e) =>
-                onFormFiltersChange({ mouseMin: e.target.value })
-              }
-              placeholder={t('dashboard.page.filters.min')}
-            />
-            <S.Control
-              value={formFilters.mouseMax}
-              onChange={(e) =>
-                onFormFiltersChange({ mouseMax: e.target.value })
-              }
-              placeholder={t('dashboard.page.filters.max')}
-            />
-          </S.Range>
-        </S.Field>
+      <S.Field>
+        <TwoSideInput
+          label={t('dashboard.page.filters.mouse')}
+          leftValue={formFilters.mouseMin}
+          rightValue={formFilters.mouseMax}
+          onLeftChange={(e) =>
+            onFormFiltersChange({ mouseMin: e.target.value })
+          }
+          onRightChange={(e) =>
+            onFormFiltersChange({ mouseMax: e.target.value })
+          }
+          leftPlaceholder={t('dashboard.page.filters.min')}
+          rightPlaceholder={t('dashboard.page.filters.max')}
+        />
+      </S.Field>
 
-        <S.Field>
-          <S.Label>{t('dashboard.page.filters.mouseDistance')}</S.Label>
-          <S.Range>
-            <S.Control
-              value={formFilters.mouseDistanceMin}
-              onChange={(e) =>
-                onFormFiltersChange({ mouseDistanceMin: e.target.value })
-              }
-              placeholder={t('dashboard.page.filters.min')}
-            />
-            <S.Control
-              value={formFilters.mouseDistanceMax}
-              onChange={(e) =>
-                onFormFiltersChange({ mouseDistanceMax: e.target.value })
-              }
-              placeholder={t('dashboard.page.filters.max')}
-            />
-          </S.Range>
-        </S.Field>
-      </S.Filters>
-    </S.DesktopOnly>
+      <S.Field>
+        <TwoSideInput
+          label={t('dashboard.page.filters.mouseDistance')}
+          leftValue={formFilters.mouseDistanceMin}
+          rightValue={formFilters.mouseDistanceMax}
+          onLeftChange={(e) =>
+            onFormFiltersChange({ mouseDistanceMin: e.target.value })
+          }
+          onRightChange={(e) =>
+            onFormFiltersChange({ mouseDistanceMax: e.target.value })
+          }
+          leftPlaceholder={t('dashboard.page.filters.min')}
+          rightPlaceholder={t('dashboard.page.filters.max')}
+        />
+      </S.Field>
+    </Flex>
+  )
+}
+
+type TwoSideInputProps = {
+  label: string
+  leftValue: string
+  rightValue: string
+  onLeftChange: (e: ChangeEvent<HTMLInputElement>) => void
+  onRightChange: (e: ChangeEvent<HTMLInputElement>) => void
+  leftPlaceholder: string
+  rightPlaceholder: string
+}
+
+const TwoSideInput = ({
+  label,
+  onLeftChange,
+  onRightChange,
+  leftValue,
+  rightValue,
+  leftPlaceholder,
+  rightPlaceholder,
+}: TwoSideInputProps) => {
+  return (
+    <Flex direction={'column'} gap={'2'}>
+      <Text>{label}</Text>
+
+      <Grid columns={'1fr 1fr'} gap={'2'}>
+        <Input
+          value={leftValue}
+          onChange={onLeftChange}
+          placeholder={leftPlaceholder}
+          gap={'0'}
+        />
+        <Input
+          value={rightValue}
+          onChange={onRightChange}
+          placeholder={rightPlaceholder}
+          gap={'0'}
+        />
+      </Grid>
+    </Flex>
   )
 }
