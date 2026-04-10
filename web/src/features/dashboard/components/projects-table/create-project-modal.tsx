@@ -95,7 +95,7 @@ export const CreateProjectModal = ({
             label={'Description'}
             id={'description'}
             placeholder={'Briefly describe your project goals and tasks'}
-            rows={7}
+            rows={isMobile ? 7 : 3}
           />
         </Flex>
       </Flex>
