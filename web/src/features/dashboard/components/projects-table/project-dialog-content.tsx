@@ -2,7 +2,6 @@ import { QuestionMarkCircledIcon } from '@radix-ui/react-icons'
 import { Flex, Grid, Separator } from '@radix-ui/themes'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import styled from 'styled-components'
 
 import type { ProjectRow } from './types'
 import type { InputProps } from '@/features/shared'
@@ -33,14 +32,15 @@ export const ProjectDialogContent = ({
       rows: 'auto auto',
       columns: '1fr',
       gap: '2',
+      size: '3',
     }
 
     return (
       <Flex direction={'column'} gap={'4'}>
         <Input
           label={'Project name'}
-          {...inputProps}
           id={'projectName'}
+          {...inputProps}
           {...register('name')}
         />
 
@@ -61,11 +61,12 @@ export const ProjectDialogContent = ({
 
         <Separator size={'4'} />
 
-        <StyledTextArea
+        <TextArea
           label={'Description'}
           placeholder={'Enter a brief description of your project'}
           rows={7}
           id={'description'}
+          size={'3'}
           {...register('description')}
         />
       </Flex>
@@ -135,20 +136,14 @@ export const ProjectDialogContent = ({
       <Separator size={'4'} />
 
       <div>
-        <StyledTextArea
+        <TextArea
           label="Description"
           disabled={true}
           value={data.description}
           rows={12}
+          size={'3'}
         />
       </div>
     </Flex>
   )
 }
-
-const StyledTextArea = styled(TextArea)`
-  > textarea {
-    padding: var(--space-4);
-    font-size: var(--font-size-3);
-  }
-`
