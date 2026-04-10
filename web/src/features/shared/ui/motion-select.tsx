@@ -99,7 +99,9 @@ export const MotionSelect = ({
               onClick={() => toggle(o.value)}
             >
               {isDesktop && multi && <Checkbox checked={checked} />}
-              <Text size={'3'}>{o.label}</Text>
+              <Text size={'3'} style={{ color: '#000' }}>
+                {o.label}
+              </Text>
               {isMobile && multi && checked && <CheckIcon aria-hidden="true" />}
             </MenuItem>
           )
@@ -109,16 +111,15 @@ export const MotionSelect = ({
   )
 
   const TriggerEl = (
-    <span style={{ width: '100%' }}>
+    <InputWrapper>
       <Input
         className={className}
         label={label}
         addonRight={open ? <ChevronUpIcon /> : <ChevronDownIcon />}
         value={buttonText ? buttonText : ''}
         columns={'1fr'}
-        readOnly={false}
+        readOnly={true}
         onChange={() => {}}
-        disabled={false}
         placeholder={ph}
         style={{
           whiteSpace: 'nowrap',
@@ -126,7 +127,7 @@ export const MotionSelect = ({
           textOverflow: 'ellipsis',
         }}
       />
-    </span>
+    </InputWrapper>
   )
 
   if (isMobile) {
@@ -209,5 +210,14 @@ const MenuItem = styled.button`
     padding: 6px 12px;
     border-radius: 8px;
     justify-content: flex-start;
+  }
+`
+
+const InputWrapper = styled.span`
+  width: 100%;
+
+  & .rt-TextFieldRoot:where(:has(.rt-TextFieldInput:where(:read-only))) {
+    background: transparent !important;
+    color: #000;
   }
 `

@@ -40,11 +40,8 @@ type WorklogsMobileFiltersProps = {
 export const WorklogsMobileFilters = ({
   projectOptions,
   worklogProjects,
-  onToggleProject,
   filtersOpen,
   onFiltersOpenChange,
-  projectsDrawerOpen,
-  onProjectsDrawerOpenChange,
   fromDate,
   onFromDateChange,
   toDate,
@@ -86,7 +83,11 @@ export const WorklogsMobileFilters = ({
           </Button>
         }
         description={
-          <Button stretch themeVariant={'primary'}>
+          <Button
+            stretch
+            themeVariant={'primary'}
+            onClick={() => onFiltersOpenChange(false)}
+          >
             {t('dashboard.page.filters.apply', {
               defaultValue: 'Apply',
             })}
@@ -107,7 +108,12 @@ export const WorklogsMobileFilters = ({
           />
 
           <Flex direction={'column'} gap={'2'}>
-            <Text htmlFor={'dateFrom'} size={'2'} weight={'medium'}>
+            <Text
+              as={'label'}
+              htmlFor={fromDate ? 'dateTo' : 'dateFrom'}
+              size={'2'}
+              weight={'medium'}
+            >
               {t('dashboard.page.filters.date')}
             </Text>
 
@@ -130,6 +136,7 @@ export const WorklogsMobileFilters = ({
 
           <Input
             label={'Note'}
+            id={'note'}
             placeholder={t('dashboard.page.filters.searchNote')}
           />
 
@@ -202,37 +209,6 @@ export const WorklogsMobileFilters = ({
           />
         </Flex>
       </Drawer>
-
-      <Drawer
-        open={projectsDrawerOpen}
-        onOpenChange={onProjectsDrawerOpenChange}
-        title={t('dashboard.page.filters.projectsTitle')}
-        description={
-          <Button stretch themeVariant={'primary'}>
-            {t('dashboard.page.filters.apply', {
-              defaultValue: 'Apply',
-            })}
-          </Button>
-        }
-      >
-        <S.ProjectsList>
-          {projectOptions.map((opt) => {
-            const selected = worklogProjects.includes(opt.value)
-
-            return (
-              <S.ProjectRowButton
-                key={opt.value}
-                type="button"
-                $selected={selected}
-                onClick={() => onToggleProject(opt.value)}
-              >
-                <S.ProjectRowLabel>{opt.label}</S.ProjectRowLabel>
-                {selected ? <S.CheckIcon aria-hidden /> : null}
-              </S.ProjectRowButton>
-            )
-          })}
-        </S.ProjectsList>
-      </Drawer>
     </>
   )
 }
@@ -262,7 +238,12 @@ const TwoSideInput = ({
 }: TwoSideInputProps) => {
   return (
     <Grid columns={'auto'} gap={'2'}>
-      <Text size={'2'} weight={'medium'}>
+      <Text
+        as={'label'}
+        htmlFor={leftValue ? rightId : leftId}
+        size={'2'}
+        weight={'medium'}
+      >
         {label}
       </Text>
 
