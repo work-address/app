@@ -34,7 +34,6 @@ import {
   MobileDataTable,
   useDataProcessing,
   Text,
-  projectsMock,
   TabsRoot,
   TabsList,
   TabsTrigger,
@@ -46,10 +45,10 @@ import {
 export type ProjectStatus = 'Active' | 'Paused' | 'Finished'
 
 type ProjectsTableProps = {
-  rows?: ProjectRow[]
+  rows: ProjectRow[]
 }
 
-export const ProjectsTable = ({ rows = projectsMock }: ProjectsTableProps) => {
+export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
   const { isDesktop, isMobile } = useBreakpoints()
 
   const { t } = useTranslation()

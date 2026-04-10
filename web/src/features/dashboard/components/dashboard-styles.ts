@@ -16,11 +16,6 @@ export const TitleRow = styled.div`
   align-items: center;
   width: 100%;
   gap: 10px;
-
-  @media (max-width: 768px) {
-    flex-direction: column;
-    align-items: start;
-  }
 `
 
 export const TopRight = styled.div`
@@ -86,12 +81,6 @@ export const SectionTitle = styled.h2`
 
   @media (max-width: 768px) {
     font-size: 18px;
-  }
-`
-
-export const CreateProjectText = styled.span`
-  @media (max-width: 768px) {
-    display: none;
   }
 `
 

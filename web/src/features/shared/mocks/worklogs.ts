@@ -1,4 +1,4 @@
-import type { WorklogRow } from '../components/dashboard/worklogs-table'
+import type { WorklogRow } from '@/features/dashboard/components/worklogs-table/types'
 
 export const worklogsMock: WorklogRow[] = [
   {

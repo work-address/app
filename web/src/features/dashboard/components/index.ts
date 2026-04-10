@@ -1,4 +1,4 @@
-export * from './worklogs-table.tsx'
+export * from './worklogs-table'
 export * from './applications-usage.tsx'
 export * from './dashboard-empty-state.tsx'
 export * from './projects-not-found.tsx'
