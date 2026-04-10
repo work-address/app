@@ -71,7 +71,7 @@ export const DatePickerInput = ({
   return (
     <Popover.Root open={open} onOpenChange={handleOpenChange} modal={false}>
       <Popover.Trigger>
-        <span>
+        <span style={{ width: '100%' }}>
           <Input
             id={id}
             label={label}
@@ -79,7 +79,7 @@ export const DatePickerInput = ({
             value={value ? formatter.format(value).toString() : ''}
             placeholder={placeholder}
             addonLeft={<CalendarIcon />}
-            style={{ cursor: 'pointer' }}
+            style={{ cursor: 'pointer', pointerEvents: 'none' }}
           />
         </span>
       </Popover.Trigger>

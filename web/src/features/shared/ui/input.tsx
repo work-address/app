@@ -1,7 +1,7 @@
 import { Grid, type GridProps, type TextProps } from '@radix-ui/themes'
 import { TextField, Text } from '@radix-ui/themes'
 import { useMediaQuery } from 'styled-breakpoints/use-media-query'
-import { useTheme } from 'styled-components'
+import styled, { useTheme } from 'styled-components'
 
 import type { ReactNode } from 'react'
 
@@ -54,7 +54,7 @@ export const Input = ({
         </Text>
       )}
 
-      <TextField.Root id={id} size={isUpMd ? undefined : '3'} {...props}>
+      <TextFieldRoot id={id} size={isUpMd ? undefined : '3'} {...props}>
         {addonLeft && (
           <TextField.Slot side={'left'}>{addonLeft}</TextField.Slot>
         )}
@@ -62,7 +62,22 @@ export const Input = ({
         {addonRight && (
           <TextField.Slot side={'right'}>{addonRight}</TextField.Slot>
         )}
-      </TextField.Root>
+      </TextFieldRoot>
     </Grid>
   )
 }
+
+const TextFieldRoot = styled(TextField.Root)`
+  /* Находим внутренний input Radix */
+  & .rt-TextFieldInput {
+    text-overflow: ellipsis;
+    white-space: nowrap;
+    overflow: hidden;
+  }
+
+  /* Если используешь слоты (addonLeft/Right),
+     нужно ограничить ширину контейнера инпута */
+  & :where(.rt-TextFieldInput) {
+    min-width: 0;
+  }
+`

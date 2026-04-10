@@ -12,6 +12,7 @@ import styled from 'styled-components'
 import { useBreakpoints } from '../hooks'
 
 import { Button } from './button'
+import { Checkbox } from './checkbox'
 import { Drawer } from './dialogs/drawer'
 import { Input } from './input'
 import { Text } from './text'
@@ -45,7 +46,7 @@ export const MotionSelect = ({
   allSelectedText,
 }: MotionSelectProps) => {
   const { t } = useTranslation()
-  const { isMobile } = useBreakpoints()
+  const { isMobile, isDesktop } = useBreakpoints()
   const [open, setOpen] = useState(false)
 
   const ph = placeholder ?? t('ui.motionSelect.placeholder')
@@ -97,8 +98,9 @@ export const MotionSelect = ({
               type="button"
               onClick={() => toggle(o.value)}
             >
-              <Text>{o.label}</Text>
-              {multi && checked && <CheckIcon aria-hidden="true" />}
+              {isDesktop && multi && <Checkbox checked={checked} />}
+              <Text size={'3'}>{o.label}</Text>
+              {isMobile && multi && checked && <CheckIcon aria-hidden="true" />}
             </MenuItem>
           )
         })}
@@ -107,22 +109,24 @@ export const MotionSelect = ({
   )
 
   const TriggerEl = (
-    <Input
-      className={className}
-      label={label}
-      addonRight={open ? <ChevronUpIcon /> : <ChevronDownIcon />}
-      value={buttonText ? buttonText : ''}
-      columns={'1fr'}
-      readOnly={false}
-      onChange={() => {}}
-      disabled={false}
-      placeholder={ph}
-      style={{
-        whiteSpace: 'nowrap',
-        overflow: 'hidden',
-        textOverflow: 'ellipsis',
-      }}
-    />
+    <span style={{ width: '100%' }}>
+      <Input
+        className={className}
+        label={label}
+        addonRight={open ? <ChevronUpIcon /> : <ChevronDownIcon />}
+        value={buttonText ? buttonText : ''}
+        columns={'1fr'}
+        readOnly={false}
+        onChange={() => {}}
+        disabled={false}
+        placeholder={ph}
+        style={{
+          whiteSpace: 'nowrap',
+          overflow: 'hidden',
+          textOverflow: 'ellipsis',
+        }}
+      />
+    </span>
   )
 
   if (isMobile) {
@@ -169,10 +173,11 @@ const PopoverContent = styled(Popover.Content)`
   z-index: 60;
   width: var(--radix-popover-trigger-width);
   outline: none;
+  padding: var(--space-2);
 `
 
 const MenuTitle = styled.div`
-  padding: 14px 14px 10px;
+  padding: var(--space-2) var(--space-3);
   font-size: 12px;
   letter-spacing: 0.06em;
   color: rgba(0, 5, 29, 0.55);
@@ -189,19 +194,20 @@ const MenuItem = styled.button`
   align-items: center;
   justify-content: space-between;
   gap: 14px;
-  padding: 6px 12px;
-  border-radius: 12px;
   background: transparent;
   border: 0;
   text-align: left;
   cursor: pointer;
+  border-radius: 8px;
+  padding: 12px;
 
   &:hover {
     background: rgba(0, 0, 51, 0.04);
   }
 
-  @media (max-width: 768px) {
+  ${(p) => p.theme.breakpoints.up('md')} {
+    padding: 6px 12px;
     border-radius: 8px;
-    padding: 12px;
+    justify-content: flex-start;
   }
 `
