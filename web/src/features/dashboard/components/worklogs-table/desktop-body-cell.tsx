@@ -5,10 +5,7 @@ import styled from 'styled-components'
 
 import type { WorklogRow } from './types'
 
-import {
-  type DesktopBodyCellRenderProps,
-  Text,
-} from '@/features/shared'
+import { type DesktopBodyCellRenderProps, Text } from '@/features/shared'
 
 const BodyCellComponent = memo(
   (props: DesktopBodyCellRenderProps<WorklogRow>) => {
