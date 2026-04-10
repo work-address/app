@@ -154,32 +154,30 @@ export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
       <S.SectionTitleRow>
         <S.SectionTitle>{t('dashboard.page.worklogs.title')}</S.SectionTitle>
 
-        {hasWorklogs ? (
-          <WorklogsMobileFilters
-            projectOptions={projectOptions}
-            worklogProjects={worklogProjects}
-            onToggleProject={(value) =>
-              setWorklogProjects((prev) =>
-                prev.includes(value)
-                  ? prev.filter((v) => v !== value)
-                  : [...prev, value],
-              )
-            }
-            selectedProjectsLabel={selectedProjectsLabel}
-            filtersOpen={filtersOpen}
-            onFiltersOpenChange={setFiltersOpen}
-            projectsDrawerOpen={projectsDrawerOpen}
-            onProjectsDrawerOpenChange={setProjectsDrawerOpen}
-            fromDate={fromDate}
-            onFromDateChange={setFromDate}
-            toDate={toDate}
-            onToDateChange={setToDate}
-            worklogQuery={worklogQuery}
-            onWorklogQueryChange={setWorklogQuery}
-            formFilters={formFilters}
-            onFormFiltersChange={patchFormFilters}
-          />
-        ) : null}
+        <WorklogsMobileFilters
+          projectOptions={projectOptions}
+          worklogProjects={worklogProjects}
+          onToggleProject={(value) =>
+            setWorklogProjects((prev) =>
+              prev.includes(value)
+                ? prev.filter((v) => v !== value)
+                : [...prev, value],
+            )
+          }
+          selectedProjectsLabel={selectedProjectsLabel}
+          filtersOpen={filtersOpen}
+          onFiltersOpenChange={setFiltersOpen}
+          projectsDrawerOpen={projectsDrawerOpen}
+          onProjectsDrawerOpenChange={setProjectsDrawerOpen}
+          fromDate={fromDate}
+          onFromDateChange={setFromDate}
+          toDate={toDate}
+          onToDateChange={setToDate}
+          worklogQuery={worklogQuery}
+          onWorklogQueryChange={setWorklogQuery}
+          formFilters={formFilters}
+          onFormFiltersChange={patchFormFilters}
+        />
       </S.SectionTitleRow>
 
       <WorklogsDesktopFilters

@@ -12,6 +12,7 @@ import {
   ProjectsTable,
   CreateProjectModal,
   DashboardStyles as S,
+  Search,
 } from '@/features/dashboard'
 import {
   Button,
@@ -22,23 +23,23 @@ import {
   projectsMock,
 } from '@/features/shared'
 
+const INIT_DELAY = 700
+
 export default function DashboardPage() {
   const { breakpoints } = useTheme()
   const isUpMd = useMediaQuery(breakpoints.up('md'))
 
   const { t } = useTranslation()
 
-  const [query, setQuery] = useState('')
   const [createProjectOpen, setCreateProjectOpen] = useState(false)
+  const [initialized, setInitialized] = useState(false)
 
   const hasProjects = true
-
-  const [initialized, setInitialized] = useState(false)
 
   useEffect(() => {
     setTimeout(() => {
       setInitialized(true)
-    }, 700)
+    }, INIT_DELAY)
   }, [])
 
   return initialized ? (
@@ -62,7 +63,7 @@ export default function DashboardPage() {
               </Flex>
 
               {hasProjects ? (
-                <S.DashboardSearch value={query} onChange={setQuery} />
+                <>{isUpMd && <Search />}</>
               ) : (
                 <S.TopRight>
                   <Button

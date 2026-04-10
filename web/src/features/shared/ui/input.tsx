@@ -42,7 +42,7 @@ export const Input = ({
         {label}
       </Text>
 
-      <TextField.Root id={id} {...props} size={'3'}>
+      <TextField.Root id={id} size={isUpMd ? undefined : '3'} {...props}>
         {addonLeft && (
           <TextField.Slot side={'left'}>{addonLeft}</TextField.Slot>
         )}
