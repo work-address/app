@@ -11,6 +11,7 @@ import {
   Input,
   type InputProps,
   Text,
+  MotionSelect,
 } from '@/features/shared'
 
 type ProjectOption = { value: string; label: string }
@@ -57,13 +58,14 @@ export const WorklogsDesktopFilters = ({
         <Flex direction={'column'} gap={'2'}>
           <Text>{t('dashboard.page.filters.projects')}</Text>
 
-          <S.FilterMotionSelect
+          <MotionSelect
             title={t('dashboard.page.filters.projectsTitle')}
             multi
             options={projectOptions}
             value={worklogProjects}
             onChange={(v) => onWorklogProjectsChange(v as string[])}
             placeholder={t('dashboard.page.filters.allWorklogs')}
+            allSelectedText={'All worklogs'}
           />
         </Flex>
       </S.Field>

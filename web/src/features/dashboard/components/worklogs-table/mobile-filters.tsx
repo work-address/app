@@ -6,7 +6,14 @@ import * as S from '../dashboard-styles.ts'
 import type { WorklogFormFilters } from './types'
 import type { ChangeEvent } from 'react'
 
-import { Button, DatePickerInput, Drawer, Input, Text } from '@/features/shared'
+import {
+  Button,
+  DatePickerInput,
+  Drawer,
+  Input,
+  MotionSelect,
+  Text,
+} from '@/features/shared'
 
 type ProjectOption = { value: string; label: string }
 
@@ -25,6 +32,7 @@ type WorklogsMobileFiltersProps = {
   onToDateChange: (value: Date | null) => void
   worklogQuery: string
   onWorklogQueryChange: (value: string) => void
+  onWorklogProjectsChange: (value: string[]) => void
   formFilters: WorklogFormFilters
   onFormFiltersChange: (patch: Partial<WorklogFormFilters>) => void
 }
@@ -33,7 +41,6 @@ export const WorklogsMobileFilters = ({
   projectOptions,
   worklogProjects,
   onToggleProject,
-  selectedProjectsLabel,
   filtersOpen,
   onFiltersOpenChange,
   projectsDrawerOpen,
@@ -44,6 +51,7 @@ export const WorklogsMobileFilters = ({
   onToDateChange,
   formFilters,
   onFormFiltersChange,
+  onWorklogProjectsChange,
 }: WorklogsMobileFiltersProps) => {
   const { t } = useTranslation()
 
@@ -86,16 +94,17 @@ export const WorklogsMobileFilters = ({
         }
       >
         <Flex direction={'column'} gap={'2'}>
-          <Flex gap={'2'} direction={'column'}>
-            <S.Label>{t('dashboard.page.filters.projects')}</S.Label>
-
-            <S.ProjectsTrigger
-              type="button"
-              onClick={() => onProjectsDrawerOpenChange(true)}
-            >
-              {selectedProjectsLabel}
-            </S.ProjectsTrigger>
-          </Flex>
+          <MotionSelect
+            label={t('dashboard.page.filters.projects')}
+            options={projectOptions}
+            value={worklogProjects}
+            onChange={(v) =>
+              Array.isArray(v) ? onWorklogProjectsChange(v) : undefined
+            }
+            allSelectedText={t('dashboard.page.filters.allWorklogs')}
+            placeholder={'Select projects'}
+            multi
+          />
 
           <Flex direction={'column'} gap={'2'}>
             <Text htmlFor={'dateFrom'} size={'2'} weight={'medium'}>
@@ -209,6 +218,7 @@ export const WorklogsMobileFilters = ({
         <S.ProjectsList>
           {projectOptions.map((opt) => {
             const selected = worklogProjects.includes(opt.value)
+
             return (
               <S.ProjectRowButton
                 key={opt.value}

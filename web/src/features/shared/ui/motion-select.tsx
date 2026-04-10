@@ -1,7 +1,20 @@
+import {
+  ChevronDownIcon,
+  ChevronUpIcon,
+  CheckIcon,
+} from '@radix-ui/react-icons'
+import { Popover } from '@radix-ui/themes'
 import { AnimatePresence, motion } from 'motion/react'
-import { useEffect, useMemo, useRef, useState } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
+
+import { useBreakpoints } from '../hooks'
+
+import { Button } from './button'
+import { Drawer } from './dialogs/drawer'
+import { Input } from './input'
+import { Text } from './text'
 
 type Option = {
   value: string
@@ -16,26 +29,8 @@ type MotionSelectProps = {
   placeholder?: string
   multi?: boolean
   title?: string
-}
-
-function ChevronDownIcon() {
-  return (
-    <svg
-      width="18"
-      height="18"
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M6 9l6 6 6-6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
+  label?: string
+  allSelectedText?: string
 }
 
 export const MotionSelect = ({
@@ -46,56 +41,35 @@ export const MotionSelect = ({
   placeholder,
   multi,
   title,
-}: MotionSelectProps) {
+  label,
+  allSelectedText,
+}: MotionSelectProps) => {
   const { t } = useTranslation()
-  const ph = placeholder ?? t('ui.motionSelect.placeholder')
+  const { isMobile } = useBreakpoints()
   const [open, setOpen] = useState(false)
-  const rootRef = useRef<HTMLDivElement | null>(null)
 
-  useEffect(() => {
-    if (!open) {
-      return
-    }
-
-    const onDown = (e: MouseEvent) => {
-      const el = rootRef.current
-      if (!el) {
-        return
-      }
-      if (e.target instanceof Node && !el.contains(e.target)) {
-        setOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', onDown)
-    return () => document.removeEventListener('mousedown', onDown)
-  }, [open])
+  const ph = placeholder ?? t('ui.motionSelect.placeholder')
 
   const selectedSet = useMemo(() => {
-    if (Array.isArray(value)) {
-      return new Set(value)
-    }
-    return new Set(value ? [value] : [])
+    const arr = Array.isArray(value) ? value : value ? [value] : []
+    return new Set(arr)
   }, [value])
 
   const buttonText = useMemo(() => {
-    if (multi) {
-      if (selectedSet.size === 0) {
-        return ph
-      }
-      if (selectedSet.size === options.length) {
-        return ph
-      }
-      const labels = options
-        .filter((o) => selectedSet.has(o.value))
-        .map((o) => o.label)
-      return labels.join(', ')
+    if (selectedSet.size === 0) {
+      return null
     }
 
-    const v = Array.isArray(value) ? value[0] : value
-    const found = options.find((o) => o.value === v)
-    return found?.label ?? ph
-  }, [multi, options, ph, selectedSet, value])
+    if (multi && selectedSet.size === options.length) {
+      return allSelectedText ?? 'All selected'
+    }
+
+    const labels = options
+      .filter((o) => selectedSet.has(o.value))
+      .map((o) => o.label)
+
+    return labels.join(', ')
+  }, [multi, options, selectedSet, allSelectedText])
 
   const toggle = (v: string) => {
     if (!multi) {
@@ -105,122 +79,96 @@ export const MotionSelect = ({
     }
 
     const next = new Set(selectedSet)
-    if (next.has(v)) {
-      next.delete(v)
-    } else {
-      next.add(v)
-    }
+    next.has(v) ? next.delete(v) : next.add(v)
     onChange([...next])
   }
 
-  return (
-    <Root ref={rootRef} className={className}>
-      <Trigger
-        type="button"
-        onClick={() => setOpen((s) => !s)}
-        aria-expanded={open}
-      >
-        <TriggerText title={buttonText}>{buttonText}</TriggerText>
-        <TriggerIcon $open={open}>
-          <ChevronDownIcon />
-        </TriggerIcon>
-      </Trigger>
+  const Content = (
+    <>
+      {title && <MenuTitle>{title}</MenuTitle>}
 
-      <AnimatePresence>
-        {open ? (
-          <MenuWrap
-            initial={{ opacity: 0, y: 6, scale: 0.98 }}
-            animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 6, scale: 0.98 }}
-            transition={{ duration: 0.14 }}
-          >
-            {title ? <MenuTitle>{title}</MenuTitle> : null}
-            <MenuList>
-              {options.map((o) => {
-                const checked = selectedSet.has(o.value)
-                return (
-                  <MenuItem
-                    key={o.value}
-                    type="button"
-                    onClick={() => toggle(o.value)}
-                  >
-                    {multi ? (
-                      <Checkbox aria-hidden="true" $checked={checked} />
-                    ) : null}
-                    <ItemLabel>{o.label}</ItemLabel>
-                  </MenuItem>
-                )
-              })}
-            </MenuList>
-          </MenuWrap>
-        ) : null}
-      </AnimatePresence>
-    </Root>
+      <MenuList>
+        {options.map((o) => {
+          const checked = selectedSet.has(o.value)
+
+          return (
+            <MenuItem
+              key={o.value}
+              type="button"
+              onClick={() => toggle(o.value)}
+            >
+              <Text>{o.label}</Text>
+              {multi && checked && <CheckIcon aria-hidden="true" />}
+            </MenuItem>
+          )
+        })}
+      </MenuList>
+    </>
+  )
+
+  const TriggerEl = (
+    <Input
+      className={className}
+      label={label}
+      addonRight={open ? <ChevronUpIcon /> : <ChevronDownIcon />}
+      value={buttonText ? buttonText : ''}
+      columns={'1fr'}
+      readOnly={false}
+      onChange={() => {}}
+      disabled={false}
+      placeholder={ph}
+      style={{
+        whiteSpace: 'nowrap',
+        overflow: 'hidden',
+        textOverflow: 'ellipsis',
+      }}
+    />
+  )
+
+  if (isMobile) {
+    return (
+      <Drawer
+        open={open}
+        onOpenChange={setOpen}
+        title={title ?? ph}
+        trigger={TriggerEl}
+        description={
+          <Button stretch themeVariant="primary" onClick={() => setOpen(false)}>
+            {t('common.apply', 'Apply')}
+          </Button>
+        }
+      >
+        {Content}
+      </Drawer>
+    )
+  }
+
+  return (
+    <Popover.Root open={open} onOpenChange={setOpen}>
+      <Popover.Trigger>{TriggerEl}</Popover.Trigger>
+
+      <PopoverContent>
+        <AnimatePresence>
+          {open && (
+            <motion.div
+              initial={{ opacity: 0, y: 6, scale: 0.98 }}
+              animate={{ opacity: 1, y: 0, scale: 1 }}
+              exit={{ opacity: 0, y: 6, scale: 0.98 }}
+              transition={{ duration: 0.14 }}
+            >
+              {Content}
+            </motion.div>
+          )}
+        </AnimatePresence>
+      </PopoverContent>
+    </Popover.Root>
   )
 }
 
-const Root = styled.div`
-  position: relative;
-  width: 100%;
-  min-width: 0;
-  --ms-height: 40px;
-`
-
-const Trigger = styled.button`
-  width: 100%;
-  height: var(--ms-height);
-  border-radius: 4px;
-  border: 1px solid rgba(0, 8, 48, 0.12);
-  padding: 0 10px;
-  background: #fff;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 10px;
-  box-sizing: border-box;
-
-  &:focus {
-    outline: none;
-    border-color: rgba(0, 52, 130, 0.55);
-  }
-
-  @media (max-width: 768px) {
-  height: 32px;
-  }
-`
-
-const TriggerText = styled.span`
-  font-size: 14px;
-  color: rgba(0, 5, 29, 0.45);
-  overflow: hidden;
-  white-space: nowrap;
-  text-overflow: clip;
-`
-
-const TriggerIcon = styled.span<{ $open?: boolean }>`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(0, 5, 29, 0.62);
-  transition: transform 0.14s ease;
-  transform: rotate(${(p) => (p.$open ? '180deg' : '0deg')});
-`
-
-const MenuWrap = styled(motion.div)`
-  position: absolute;
-  left: 0;
-  top: calc(100% + 8px);
+const PopoverContent = styled(Popover.Content)`
   z-index: 60;
-  width: 100%;
-  background: #fff;
-  border: 1px solid rgba(0, 8, 48, 0.12);
-  border-radius: 12px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
-  overflow: hidden;
-
-  @media (max-width: 768px) {
-    border-radius: 4px;
-  }
+  width: var(--radix-popover-trigger-width);
+  outline: none;
 `
 
 const MenuTitle = styled.div`
@@ -231,19 +179,15 @@ const MenuTitle = styled.div`
 `
 
 const MenuList = styled.div`
-  padding: 6px;
   display: flex;
   flex-direction: column;
-
-  @media (max-width: 768px) {
-    padding: 4px;
-  }
 `
 
 const MenuItem = styled.button`
   width: 100%;
   display: flex;
   align-items: center;
+  justify-content: space-between;
   gap: 14px;
   padding: 6px 12px;
   border-radius: 12px;
@@ -257,37 +201,7 @@ const MenuItem = styled.button`
   }
 
   @media (max-width: 768px) {
-    border-radius: 4px;
+    border-radius: 8px;
+    padding: 12px;
   }
-`
-
-const Checkbox = styled.span<{ $checked?: boolean }>`
-  width: 18px;
-  height: 18px;
-  border-radius: 4px;
-  border: 1px solid rgba(0, 8, 48, 0.18);
-  background: ${(p) => (p.$checked ? '#3f67a4' : '#fff')};
-  box-shadow: ${(p) =>
-    p.$checked ? 'inset 0 0 0 1px rgba(63, 103, 164, 0.25)' : 'none'};
-  position: relative;
-
-  &::after {
-    content: '';
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 10px;
-    height: 6px;
-    border-left: 2px solid #fff;
-    border-bottom: 2px solid #fff;
-    transform: translate(-50%, -60%) rotate(-45deg);
-    opacity: ${(p) => (p.$checked ? 1 : 0)};
-  }
-`
-
-const ItemLabel = styled.span`
-  font-size: 14px;
-  line-height: 24px;
-  font-weight: 500;
-  color: #1c2024;
 `

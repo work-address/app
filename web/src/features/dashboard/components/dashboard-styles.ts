@@ -1,7 +1,5 @@
 import styled from 'styled-components'
 
-import { MotionSelect } from '@/features/shared'
-
 export const Top = styled.div`
   display: flex;
   align-items: center;
@@ -140,10 +138,6 @@ export const CheckIcon = styled.span`
   flex-shrink: 0;
   background: url('/img/icons/check-icon.svg') no-repeat center;
   background-size: contain;
-`
-
-export const FilterMotionSelect = styled(MotionSelect)`
-  --ms-height: 34px;
 `
 
 export const Field = styled.div<{ $basis?: number }>`

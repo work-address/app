@@ -183,6 +183,7 @@ export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
             onWorklogQueryChange={setWorklogQuery}
             formFilters={formFilters}
             onFormFiltersChange={patchFormFilters}
+            onWorklogProjectsChange={setWorklogProjects}
           />
         )}
       </S.SectionTitleRow>
