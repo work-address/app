@@ -36,8 +36,8 @@ export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
   const { isMobile, isDesktop } = useBreakpoints()
 
   const [worklogQuery, setWorklogQuery] = useState('')
-  const [fromDate, setFromDate] = useState<Date | undefined>()
-  const [toDate, setToDate] = useState<Date | undefined>()
+  const [fromDate, setFromDate] = useState<Date | null>(null)
+  const [toDate, setToDate] = useState<Date | null>(null)
   const [worklogProjects, setWorklogProjects] = useState<string[]>([])
   const [filtersOpen, setFiltersOpen] = useState(false)
   const [projectsDrawerOpen, setProjectsDrawerOpen] = useState(false)

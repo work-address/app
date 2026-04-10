@@ -19,10 +19,10 @@ type WorklogsDesktopFiltersProps = {
   projectOptions: ProjectOption[]
   worklogProjects: string[]
   onWorklogProjectsChange: (value: string[]) => void
-  fromDate: Date | undefined
-  onFromDateChange: (value: Date | undefined) => void
-  toDate: Date | undefined
-  onToDateChange: (value: Date | undefined) => void
+  fromDate: Date | null
+  onFromDateChange: (value: Date | null) => void
+  toDate: Date | null
+  onToDateChange: (value: Date | null) => void
   worklogQuery: string
   onWorklogQueryChange: (value: string) => void
   formFilters: WorklogFormFilters
@@ -45,7 +45,7 @@ export const WorklogsDesktopFilters = ({
   const { t } = useTranslation()
 
   const inputProps: InputProps = {
-    columns: 'auto',
+    columns: '1fr',
     rows: 'auto auto',
     gap: '2',
     textSize: '3',
@@ -53,7 +53,7 @@ export const WorklogsDesktopFilters = ({
 
   return (
     <Flex gap={'3'} mb={'4'}>
-      <S.Field $basis={180}>
+      <S.Field $basis={214}>
         <Flex direction={'column'} gap={'2'}>
           <Text>{t('dashboard.page.filters.projects')}</Text>
 
@@ -68,7 +68,7 @@ export const WorklogsDesktopFilters = ({
         </Flex>
       </S.Field>
 
-      <S.Field $basis={200}>
+      <S.Field $basis={244}>
         <Flex gap={'2'} direction={'column'}>
           <Text>{t('dashboard.page.filters.date')}</Text>
 
@@ -88,16 +88,17 @@ export const WorklogsDesktopFilters = ({
         </Flex>
       </S.Field>
 
-      <S.Field $basis={240}>
+      <S.Field $basis={214}>
         <Input
           label={t('dashboard.page.filters.note')}
           value={worklogQuery}
           onChange={(e) => onWorklogQueryChange(e.target.value)}
+          placeholder={t('dashboard.page.filters.searchNote')}
           {...inputProps}
         />
       </S.Field>
 
-      <S.Field>
+      <S.Field $basis={160}>
         <TwoSideInput
           label={t('dashboard.page.filters.timeActive')}
           leftValue={formFilters.timeActiveMin}
@@ -114,7 +115,7 @@ export const WorklogsDesktopFilters = ({
         />
       </S.Field>
 
-      <S.Field>
+      <S.Field $basis={160}>
         <TwoSideInput
           label={t('dashboard.page.filters.keyboard')}
           leftValue={formFilters.keyboardMin}
@@ -130,7 +131,7 @@ export const WorklogsDesktopFilters = ({
         />
       </S.Field>
 
-      <S.Field>
+      <S.Field $basis={160}>
         <TwoSideInput
           label={t('dashboard.page.filters.mouse')}
           leftValue={formFilters.mouseMin}
@@ -193,13 +194,11 @@ const TwoSideInput = ({
           value={leftValue}
           onChange={onLeftChange}
           placeholder={leftPlaceholder}
-          gap={'0'}
         />
         <Input
           value={rightValue}
           onChange={onRightChange}
           placeholder={rightPlaceholder}
-          gap={'0'}
         />
       </Grid>
     </Flex>

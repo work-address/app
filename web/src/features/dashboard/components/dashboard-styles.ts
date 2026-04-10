@@ -147,9 +147,7 @@ export const FilterMotionSelect = styled(MotionSelect)`
 `
 
 export const Field = styled.div<{ $basis?: number }>`
-  min-width: 130px;
-
-  ${(p) => p.$basis && `flex-basis: ${p.$basis};`}
+  ${(p) => p.$basis && `flex-basis: ${p.$basis}px;`}
 `
 
 export const Label = styled.div`
@@ -157,10 +155,4 @@ export const Label = styled.div`
   line-height: 14px;
   color: #1c2024;
   font-weight: 500;
-`
-
-export const Range = styled.div`
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 8px;
 `

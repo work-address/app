@@ -33,12 +33,15 @@ export const Input = ({
   const { breakpoints } = useTheme()
   const isUpMd = useMediaQuery(breakpoints.up('md'))
 
+  const usingGap = label ? (gap ?? (isUpMd ? '24px' : 'var(--space-2)')) : '0'
+
   return (
     <Grid
       columns={columns ?? { initial: '1', md: `${labelWidth} 1fr` }}
-      gap={gap ?? (isUpMd ? '24px' : 'var(--space-2)')}
+      gap={usingGap}
       rows={rows}
       align={'center'}
+      width={'100%'}
     >
       {label && (
         <Text

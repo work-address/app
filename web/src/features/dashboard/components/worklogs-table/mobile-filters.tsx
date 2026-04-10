@@ -19,10 +19,10 @@ type WorklogsMobileFiltersProps = {
   onFiltersOpenChange: (open: boolean) => void
   projectsDrawerOpen: boolean
   onProjectsDrawerOpenChange: (open: boolean) => void
-  fromDate: Date | undefined
-  onFromDateChange: (value: Date | undefined) => void
-  toDate: Date | undefined
-  onToDateChange: (value: Date | undefined) => void
+  fromDate: Date | null
+  onFromDateChange: (value: Date | null) => void
+  toDate: Date | null
+  onToDateChange: (value: Date | null) => void
   worklogQuery: string
   onWorklogQueryChange: (value: string) => void
   formFilters: WorklogFormFilters
@@ -86,7 +86,7 @@ export const WorklogsMobileFilters = ({
         }
       >
         <Flex direction={'column'} gap={'2'}>
-          <S.Field>
+          <Flex gap={'2'} direction={'column'}>
             <S.Label>{t('dashboard.page.filters.projects')}</S.Label>
 
             <S.ProjectsTrigger
@@ -95,25 +95,29 @@ export const WorklogsMobileFilters = ({
             >
               {selectedProjectsLabel}
             </S.ProjectsTrigger>
-          </S.Field>
+          </Flex>
 
-          <S.Field>
-            <S.Label>{t('dashboard.page.filters.date')}</S.Label>
+          <Flex direction={'column'} gap={'2'}>
+            <Text htmlFor={'dateFrom'} size={'2'} weight={'medium'}>
+              {t('dashboard.page.filters.date')}
+            </Text>
 
-            <S.Range>
+            <Flex gap={'2'}>
               <DatePickerInput
+                id={'dateFrom'}
                 value={fromDate}
                 onChange={onFromDateChange}
                 placeholder={t('dashboard.page.filters.from')}
               />
 
               <DatePickerInput
+                id={'dateTo'}
                 value={toDate}
                 onChange={onToDateChange}
                 placeholder={t('dashboard.page.filters.to')}
               />
-            </S.Range>
-          </S.Field>
+            </Flex>
+          </Flex>
 
           <Input
             label={'Note'}

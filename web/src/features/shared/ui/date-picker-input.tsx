@@ -1,416 +1,240 @@
-import { CalendarDate } from '@internationalized/date'
-import { useEffect, useMemo, useRef, useState } from 'react'
 import {
-  Button,
-  Calendar,
-  CalendarCell,
-  CalendarGrid,
-  CalendarGridBody,
-  CalendarGridHeader,
-  CalendarHeaderCell,
-  Heading,
-} from 'react-aria-components'
-import { useTranslation } from 'react-i18next'
+  CalendarIcon,
+  ChevronLeftIcon,
+  ChevronRightIcon,
+} from '@radix-ui/react-icons'
+import { Popover, Text } from '@radix-ui/themes'
+import {
+  addMonths,
+  eachDayOfInterval,
+  endOfMonth,
+  endOfWeek,
+  format,
+  isSameDay,
+  isSameMonth,
+  isToday,
+  startOfMonth,
+  startOfWeek,
+  subMonths,
+} from 'date-fns'
+import { useState } from 'react'
 import styled from 'styled-components'
 
-type DatePickerInputProps = {
-  value?: Date
-  onChange: (value?: Date) => void
+import { Button } from './button'
+import { Input } from './input'
+
+type DatePickerProps = {
+  value?: Date | null
+  onChange?: (date: Date | null) => void
+  label?: string
   placeholder?: string
+  id?: string
+  labelWidth?: string
 }
 
-function toCalendarDate(value?: Date) {
-  if (!value) {
-    return
-  }
-  return new CalendarDate(
-    value.getFullYear(),
-    value.getMonth() + 1,
-    value.getDate(),
-  )
-}
+const formatter = new Intl.DateTimeFormat()
 
-function toJsDate(value?: CalendarDate) {
-  if (!value) {
-    return
-  }
-  return new Date(value.year, value.month - 1, value.day)
-}
-
-function formatDate(value?: Date) {
-  if (!value) {
-    return ''
-  }
-  const dd = String(value.getDate()).padStart(2, '0')
-  const mm = String(value.getMonth() + 1).padStart(2, '0')
-  const yyyy = value.getFullYear()
-  return `${dd}.${mm}.${yyyy}`
-}
-
-function CalendarIcon() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M7 3v3M17 3v3"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M4 9h16"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-      />
-      <path
-        d="M6 5h12a2 2 0 0 1 2 2v13a2 2 0 0 1-2 2H6a2 2 0 0 1-2-2V7a2 2 0 0 1 2-2Z"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-function ChevronLeft() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M15 18l-6-6 6-6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-function ChevronRight() {
-  return (
-    <svg
-      width="16"
-      height="16"
-      viewBox="0 0 24 24"
-      fill="none"
-      xmlns="http://www.w3.org/2000/svg"
-    >
-      <path
-        d="M9 6l6 6-6 6"
-        stroke="currentColor"
-        strokeWidth="2"
-        strokeLinecap="round"
-        strokeLinejoin="round"
-      />
-    </svg>
-  )
-}
-
-export default function DatePickerInput({ value, onChange, placeholder }: DatePickerInputProps) {
-  const { t } = useTranslation()
+export const DatePickerInput = ({
+  value,
+  onChange,
+  label,
+  placeholder = 'Pick a date',
+  id,
+  labelWidth,
+}: DatePickerProps) => {
   const [open, setOpen] = useState(false)
-  const [draft, setDraft] = useState<CalendarDate | undefined>(
-    toCalendarDate(value),
-  )
-  const [side, setSide] = useState<'left' | 'right'>('left')
-  const rootRef = useRef<HTMLDivElement | null>(null)
+  const [viewDate, setViewDate] = useState(value ?? new Date())
+  const [pendingDate, setPendingDate] = useState<Date | null>(value ?? null)
 
-  useEffect(() => {
-    if (!open) {
-      setDraft(toCalendarDate(value))
+  const handleConfirm = () => {
+    onChange?.(pendingDate)
+    setOpen(false)
+  }
+
+  const handleCancel = () => {
+    setPendingDate(value ?? null)
+    setOpen(false)
+  }
+
+  const handleOpenChange = (next: boolean) => {
+    if (!next) {
+      setPendingDate(value ?? null)
     }
-  }, [open, value])
+    setOpen(next)
+  }
 
-  useEffect(() => {
-    if (!open) {
-      return
-    }
-
-    const el = rootRef.current
-    if (!el) {
-      return
-    }
-    const r = el.getBoundingClientRect()
-    const popoverW = 340
-    const padding = 16
-    const overflowRight = r.left + popoverW > window.innerWidth - padding
-    setSide(overflowRight ? 'right' : 'left')
-  }, [open, draft, value])
-
-  useEffect(() => {
-    if (!open) {
-      return
-    }
-
-    const onDown = (e: MouseEvent) => {
-      const el = rootRef.current
-      if (!el) {
-        return
-      }
-      if (e.target instanceof Node && !el.contains(e.target)) {
-        setOpen(false)
-      }
-    }
-
-    document.addEventListener('mousedown', onDown)
-    return () => document.removeEventListener('mousedown', onDown)
-  }, [open])
-
-  const selected = useMemo(() => draft ?? toCalendarDate(value), [draft, value])
+  const days = eachDayOfInterval({
+    start: startOfWeek(startOfMonth(viewDate)),
+    end: endOfWeek(endOfMonth(viewDate)),
+  })
 
   return (
-    <Root ref={rootRef}>
-      <InputButton type="button" onClick={() => setOpen((v) => !v)}>
-        <Icon>
-          <CalendarIcon />
-        </Icon>
-        <InputText $hasValue={!!value}>
-          {value ? formatDate(value) : placeholder}
-        </InputText>
-      </InputButton>
+    <Popover.Root open={open} onOpenChange={handleOpenChange} modal={false}>
+      <Popover.Trigger>
+        <span>
+          <Input
+            id={id}
+            label={label}
+            labelWidth={labelWidth}
+            value={value ? formatter.format(value).toString() : ''}
+            placeholder={placeholder}
+            addonLeft={<CalendarIcon />}
+            style={{ cursor: 'pointer' }}
+          />
+        </span>
+      </Popover.Trigger>
 
-      {open ? (
-        <Popover $side={side}>
-          <CalendarWrap>
-            <Calendar
-              aria-label={t('ui.datePicker.calendar')}
-              value={selected}
-              onChange={(d) => setDraft(d as CalendarDate)}
-            >
-              <CalHeader>
-                <NavBtn
-                  slot="previous"
-                  aria-label={t('ui.datePicker.previousMonth')}
+      <Popover.Content
+        style={{ padding: 0, width: 340, zIndex: 100 }}
+        align="start"
+        sideOffset={4}
+        container={document.body}
+      >
+        <CalendarWrapper>
+          <CalendarHeader>
+            <NavButton onClick={() => setViewDate(subMonths(viewDate, 1))}>
+              <ChevronLeftIcon width={18} height={18} />
+            </NavButton>
+
+            <MonthLabel>
+              <Text size="4" weight="bold">
+                {format(viewDate, 'MMMM yyyy')}
+              </Text>
+            </MonthLabel>
+
+            <NavButton onClick={() => setViewDate(addMonths(viewDate, 1))}>
+              <ChevronRightIcon width={18} height={18} />
+            </NavButton>
+          </CalendarHeader>
+
+          <CalendarGrid>
+            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
+              <WeekDay key={d}>
+                <Text size="1" color="gray" weight="medium">
+                  {d}
+                </Text>
+              </WeekDay>
+            ))}
+
+            {days.map((day) => {
+              const isSelected = pendingDate
+                ? isSameDay(day, pendingDate)
+                : false
+              const isCurrentMonth = isSameMonth(day, viewDate)
+              const isTodayDate = isToday(day)
+
+              return (
+                <DayCell
+                  key={day.toISOString()}
+                  $selected={isSelected}
+                  $otherMonth={!isCurrentMonth}
+                  $today={isTodayDate && !isSelected}
+                  onClick={() => setPendingDate(day)}
                 >
-                  <ChevronLeft />
-                </NavBtn>
-                <CalHeading />
-                <NavBtn slot="next" aria-label={t('ui.datePicker.nextMonth')}>
-                  <ChevronRight />
-                </NavBtn>
-              </CalHeader>
-              <CalendarGrid>
-                <CalGridHeader>
-                  {(day) => <CalHeaderCell>{day}</CalHeaderCell>}
-                </CalGridHeader>
-                <CalendarGridBody>
-                  {(date) => <CalCell date={date}>{date.day}</CalCell>}
-                </CalendarGridBody>
-              </CalendarGrid>
-            </Calendar>
-          </CalendarWrap>
+                  <Text size="2" weight={isSelected ? 'bold' : 'regular'}>
+                    {format(day, 'd')}
+                  </Text>
+                </DayCell>
+              )
+            })}
+          </CalendarGrid>
 
-          <Actions>
-            <ActionBtn
-              type="button"
-              onClick={() => {
-                setDraft(toCalendarDate(value))
-                setOpen(false)
-              }}
-            >
-              {t('ui.datePicker.cancel')}
-            </ActionBtn>
-            <ConfirmBtn
-              type="button"
-              onClick={() => {
-                onChange(toJsDate(draft))
-                setOpen(false)
-              }}
-            >
-              {t('ui.datePicker.confirm')}
-            </ConfirmBtn>
-          </Actions>
-        </Popover>
-      ) : null}
-    </Root>
+          <CalendarFooter>
+            <Button themeVariant="secondary" onClick={handleCancel}>
+              Cancel
+            </Button>
+            <Button themeVariant="primary" onClick={handleConfirm}>
+              Confirm
+            </Button>
+          </CalendarFooter>
+        </CalendarWrapper>
+      </Popover.Content>
+    </Popover.Root>
   )
 }
 
-const Root = styled.div`
-  position: relative;
+const CalendarWrapper = styled.div`
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
 `
 
-const InputButton = styled.button`
-  width: 100%;
-  height: 34px;
-  border-radius: 4px;
-  border: 1px solid rgba(0, 8, 48, 0.12);
-  padding: 0 10px;
-  background: #fff;
+const CalendarHeader = styled.div`
   display: flex;
   align-items: center;
-  gap: 8px;
-
-  &:focus {
-    outline: none;
-    border-color: rgba(0, 52, 130, 0.55);
-  }
+  justify-content: space-between;
 `
 
-const Icon = styled.span`
-  width: 16px;
-  height: 16px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(28, 32, 36, 0.55);
-`
-
-const InputText = styled.span<{ $hasValue?: boolean }>`
-  font-size: 13px;
-  color: ${(p) =>
-    p.$hasValue ? 'var(--ds-primary)' : 'rgba(28, 32, 36, 0.45)'};
-`
-
-const Popover = styled.div<{ $side: 'left' | 'right' }>`
-  position: absolute;
-  left: ${(p) => (p.$side === 'left' ? '0' : 'auto')};
-  right: ${(p) => (p.$side === 'right' ? '0' : 'auto')};
-  top: calc(100% + 8px);
-  z-index: 50;
-  width: 340px;
-  max-width: calc(100vw - 40px);
-  background: #fff;
-  border: 1px solid rgba(0, 0, 51, 0.12);
-  border-radius: 16px;
-  box-shadow: 0 12px 32px rgba(0, 0, 0, 0.12);
-  overflow: hidden;
-`
-
-const CalendarWrap = styled.div`
-  padding: 14px 16px 10px;
-
-  [data-react-aria-calendar] {
-    width: 100%;
-  }
-
-  [data-react-aria-calendar-grid] {
-    width: 100%;
-    border-collapse: collapse;
-  }
-
-  [data-react-aria-calendar-grid] td {
-    padding: 0;
-  }
-`
-
-const CalHeader = styled.header`
-  display: grid;
-  grid-template-columns: 32px 1fr 32px;
-  align-items: center;
-  margin-bottom: 12px;
-`
-
-const CalHeading = styled(Heading)`
-  justify-self: center;
-  font-weight: 600;
-  font-size: 16px;
-  color: rgba(0, 7, 20, 0.88);
-`
-
-const NavBtn = styled(Button)`
-  width: 32px;
-  height: 32px;
-  border-radius: 12px;
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  color: rgba(0, 7, 20, 0.6);
-
-  background: transparent;
-  border: 0;
-  padding: 0;
-
-  &:hover {
-    background: rgba(0, 0, 51, 0.06);
-  }
-`
-
-const CalGridHeader = styled(CalendarGridHeader)`
-  font-size: 12px;
-  font-weight: 500;
-  color: rgba(0, 7, 20, 0.55);
-`
-
-const CalHeaderCell = styled(CalendarHeaderCell)`
-  padding: 10px 0 8px;
+const MonthLabel = styled.div`
+  flex: 1;
   text-align: center;
 `
 
-const CalCell = styled(CalendarCell)`
-  width: 40px;
-  height: 40px;
-  border-radius: 999px;
-  display: inline-flex;
+const NavButton = styled.button`
+  background: none;
+  border: none;
+  cursor: pointer;
+  display: flex;
   align-items: center;
   justify-content: center;
-  font-size: 14px;
-  font-weight: 500;
-  color: rgba(0, 7, 20, 0.88);
-  margin: 3px 0;
+  width: 32px;
+  height: 32px;
+  border-radius: var(--radius-2);
+  color: var(--ds-neutral-11);
+  transition: background 0.15s;
 
-  &[data-outside-month] {
-    color: rgba(0, 7, 20, 0.22);
-  }
-
-  &[data-selected] {
-    background: #3f67a4;
-    color: #fff;
-  }
-
-  &[data-today] {
-    box-shadow: inset 0 0 0 2px rgba(0, 52, 130, 0.22);
-  }
-
-  &[data-hovered] {
-    background: rgba(0, 52, 130, 0.08);
-  }
-
-  &[data-disabled] {
-    color: rgba(0, 7, 20, 0.22);
+  &:hover {
+    background: var(--ds-neutral-alpha-3);
   }
 `
 
-const Actions = styled.div`
-  padding: 12px 16px;
-  border-top: 1px solid rgba(0, 0, 51, 0.12);
+const CalendarGrid = styled.div`
+  display: grid;
+  grid-template-columns: repeat(7, 1fr);
+  gap: 2px 0;
+`
+
+const WeekDay = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 36px;
+`
+
+const DayCell = styled.div<{
+  $selected?: boolean
+  $otherMonth?: boolean
+  $today?: boolean
+}>`
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  height: 44px;
+  border-radius: 50%;
+  cursor: pointer;
+  transition: background 0.15s;
+  opacity: ${({ $otherMonth }) => ($otherMonth ? 0.3 : 1)};
+
+  background: ${({ $selected }) =>
+    $selected ? 'var(--ds-accent-11)' : 'transparent'};
+
+  color: ${({ $selected }) =>
+    $selected ? 'var(--white)' : 'var(--ds-neutral-12)'};
+
+  outline: ${({ $today }) =>
+    $today ? '1.5px solid var(--ds-accent-11)' : 'none'};
+
+  &:hover {
+    background: ${({ $selected }) =>
+      $selected ? 'var(--ds-accent-11)' : 'var(--ds-neutral-alpha-3)'};
+  }
+`
+
+const CalendarFooter = styled.div`
   display: flex;
   justify-content: flex-end;
-  gap: 10px;
-`
-
-const ActionBtn = styled.button`
-  height: 34px;
-  padding: 0 14px;
-  border-radius: 8px;
-  border: 1px solid rgba(0, 0, 51, 0.14);
-  background: #fff;
-  color: rgba(0, 7, 20, 0.88);
-  font-size: 13px;
-
-  &:hover {
-    background: rgba(0, 0, 51, 0.04);
-  }
-`
-
-const ConfirmBtn = styled(ActionBtn)`
-  background: #3f67a4;
-  border-color: #3f67a4;
-  color: #fff;
-
-  &:hover {
-    background: rgba(0, 52, 130, 0.92);
-  }
+  gap: var(--space-2);
+  padding-top: var(--space-4);
+  border-top: 1px solid var(--ds-neutral-alpha-6);
 `
