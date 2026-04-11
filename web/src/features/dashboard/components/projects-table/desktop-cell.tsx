@@ -3,9 +3,10 @@ import { Badge, Flex } from '@radix-ui/themes'
 import React, { type ReactNode, useContext } from 'react'
 import { NavLink } from 'react-router-dom'
 
+import { ProjectsTableContext } from './context.ts'
+
 import type { ProjectRow } from './types.ts'
 
-import { ProjectsTableContext } from '@/features/dashboard/components/projects-table/context.ts'
 import {
   type DesktopBodyCellRenderProps,
   IconButton,

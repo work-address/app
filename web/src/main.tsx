@@ -1,14 +1,13 @@
 import { Theme } from '@radix-ui/themes'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
-import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { ThemeProvider } from 'styled-components'
 import '@/features/shared/i18n/i18n'
 
-import App from './app/app.tsx'
+import { App } from './app/app'
 
-import { ErrorToastStyle, theme } from '@/features/shared'
+import { ErrorToastStyle, theme, Confirm } from '@/features/shared'
 
 const rootElementId = 'root'
 const rootElement = document.getElementById(rootElementId)
@@ -23,12 +22,12 @@ createRoot(rootElement).render(
   <StrictMode>
     <Theme>
       <ThemeProvider theme={theme}>
+        <Confirm />
+
         <Toaster />
         <ErrorToastStyle />
 
-        <BrowserRouter>
-          <App />
-        </BrowserRouter>
+        <App />
       </ThemeProvider>
     </Theme>
   </StrictMode>,

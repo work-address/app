@@ -2,9 +2,10 @@ import { Pencil1Icon, TrashIcon } from '@radix-ui/react-icons'
 import { Grid } from '@radix-ui/themes'
 import React, { useContext } from 'react'
 
+import { ProjectsTableContext } from './context.ts'
+
 import type { ProjectRow } from './types.ts'
 
-import { ProjectsTableContext } from '@/features/dashboard/components/projects-table/context.ts'
 import { Button, type MobileAddonBottomProps } from '@/features/shared'
 
 export const MobileAddonBottom = React.memo(

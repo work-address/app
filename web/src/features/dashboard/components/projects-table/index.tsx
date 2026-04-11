@@ -28,6 +28,7 @@ import {
   type MobileDataTableConfig,
   type DataTableConfig,
   useBreakpoints,
+  useConfirm,
 } from '@/features/shared'
 import {
   DataTable,
@@ -50,6 +51,7 @@ type ProjectsTableProps = {
 
 export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
   const { isDesktop, isMobile } = useBreakpoints()
+  const { confirm } = useConfirm()
 
   const { t } = useTranslation()
 
@@ -91,7 +93,15 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
           break
         }
 
-        case 'Delete':
+        case 'Delete': {
+          void confirm({
+            title: t('dashboard.projectsTable.confirmDelete.title'),
+            description: t('dashboard.projectsTable.confirmDelete.description'),
+            confirmLabel: t('dashboard.projectsTable.confirmDelete.confirm'),
+          })
+          break
+        }
+
         case 'Print': {
           alert(`${row.key} ${action}`)
           break

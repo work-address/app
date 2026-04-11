@@ -8,7 +8,13 @@ import styled, { useTheme } from 'styled-components'
 import { RichEditor } from './rich-editor'
 
 import { type CardProps, routes } from '@/features/shared'
-import { Button, Card, Input, TextArea } from '@/features/shared'
+import {
+  Button,
+  Card,
+  Input,
+  TextArea,
+  useLeaveConfirm,
+} from '@/features/shared'
 
 type FormState = {
   address: string
@@ -58,6 +64,8 @@ export const EditProfile = () => {
         .join('\n'),
     )
   }
+
+  useLeaveConfirm({ when: isDirty })
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>

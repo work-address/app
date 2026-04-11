@@ -11,7 +11,10 @@ export const MobileHeader = React.memo(
     return (
       <Flex direction={'column'}>
         <Flex align={'center'} gap={'2'}>
-          <NavLink to={routes.invoice.build({ id: props.data.key })}>
+          <NavLink
+            to={routes.invoice.build({ id: props.data.key })}
+            onClick={(e) => e.stopPropagation()}
+          >
             <Text size={'4'} $themeVariant={'primary'} weight={'medium'}>
               {props.data.name}
             </Text>

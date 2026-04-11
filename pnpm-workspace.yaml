@@ -1,5 +1,11 @@
 packages:
-  - 'api'
-  - 'web'
-  - 'packages/*'
+  - api
+  - web
+  - packages/*
   - '!**/.next/**'
+
+onlyBuiltDependencies:
+  - '@scarf/scarf'
+  - bcrypt
+  - esbuild
+  - sharp
