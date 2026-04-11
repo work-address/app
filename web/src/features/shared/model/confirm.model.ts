@@ -41,16 +41,16 @@ const handleConfirmOrCancel = createEffect(
     switch (type) {
       case 'confirm': {
         {
-          entry?.resolve && (await entry.resolve(entry.props))
           entry?.props.onConfirm && (await entry.props.onConfirm())
+          entry?.resolve && (await entry.resolve(entry.props))
         }
         break
       }
 
       case 'cancel': {
         {
-          entry?.reject && (await entry.reject(entry.props))
           entry?.props.onCancel && (await entry.props.onCancel())
+          entry?.reject && (await entry.reject(entry.props))
         }
         break
       }

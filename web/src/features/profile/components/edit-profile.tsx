@@ -7,13 +7,15 @@ import styled, { useTheme } from 'styled-components'
 
 import { RichEditor } from './rich-editor'
 
-import { type CardProps, routes } from '@/features/shared'
+import { type CardProps } from '@/features/shared'
 import {
   Button,
   Card,
   Input,
   TextArea,
   useLeaveConfirm,
+  routes,
+  useConfirm,
 } from '@/features/shared'
 
 type FormState = {
@@ -35,6 +37,7 @@ export const EditProfile = () => {
 
   const { breakpoints } = useTheme()
   const isUpMd = useMediaQuery(breakpoints.up('md'))
+  const { confirm } = useConfirm()
 
   const {
     register,
@@ -63,6 +66,10 @@ export const EditProfile = () => {
         .map(([key, value]) => `${key}: ${value}`)
         .join('\n'),
     )
+  }
+
+  const onReset = () => {
+    confirm().then(() => reset())
   }
 
   useLeaveConfirm({ when: isDirty })
@@ -110,7 +117,7 @@ export const EditProfile = () => {
                 <Flex gap={'var(--space-4)'}>
                   <Button
                     themeVariant="secondary"
-                    onClick={() => reset()}
+                    onClick={onReset}
                     disabled={!isDirty}
                   >
                     {t('profile.actions.cancel')}
@@ -230,10 +237,10 @@ export const EditProfile = () => {
               />
 
               {!isUpMd && (
-                <Grid columns={'1fr 1fr'} gap={'var(--space-4)'}>
+                <BottomSheet columns={'1fr 1fr'} gap={'var(--space-4)'}>
                   <Button
                     themeVariant="secondary"
-                    onClick={() => reset()}
+                    onClick={onReset}
                     disabled={!isDirty}
                     stretch
                   >
@@ -248,7 +255,7 @@ export const EditProfile = () => {
                   >
                     {t('profile.actions.save')}
                   </Button>
-                </Grid>
+                </BottomSheet>
               )}
             </Grid>
           </FreelancerViewCard>
@@ -259,6 +266,8 @@ export const EditProfile = () => {
 }
 
 const Wrapper = styled.div`
+  padding-bottom: 50px;
+
   ${(p) => p.theme.breakpoints.up('md')} {
     max-width: 710px;
     margin: 0 auto;
@@ -272,4 +281,13 @@ const FreelancerViewCard = styled(Card)<CardProps>`
   ${(p) => p.theme.breakpoints.down('md')} {
     border: none;
   }
+`
+
+const BottomSheet = styled(Grid)`
+  position: fixed;
+  padding: var(--space-4) var(--space-5);
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: #fff;
 `
