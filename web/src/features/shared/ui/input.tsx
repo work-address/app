@@ -28,6 +28,7 @@ export const Input = ({
   gap,
   rows,
   textSize,
+  size,
   ...props
 }: InputProps) => {
   const { breakpoints } = useTheme()
@@ -54,7 +55,11 @@ export const Input = ({
         </Text>
       )}
 
-      <TextFieldRoot id={id} size={isUpMd ? undefined : '3'} {...props}>
+      <TextFieldRoot
+        id={id}
+        size={size ?? (isUpMd ? undefined : '3')}
+        {...props}
+      >
         {addonLeft && (
           <TextField.Slot side={'left'}>{addonLeft}</TextField.Slot>
         )}

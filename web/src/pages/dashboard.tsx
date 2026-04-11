@@ -68,10 +68,7 @@ export default function DashboardPage() {
 
             {hasProjects ? (
               <Flex mb={{ initial: '3', sm: '0' }}>
-                <Search
-                  radius={isUpMd ? 'large' : undefined}
-                  size={isUpMd ? '3' : '2'}
-                />
+                <Search radius={isUpMd ? 'large' : undefined} size={'3'} />
               </Flex>
             ) : (
               <S.TopRight>
