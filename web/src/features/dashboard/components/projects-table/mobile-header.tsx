@@ -4,14 +4,14 @@ import { NavLink } from 'react-router-dom'
 
 import type { ProjectRow } from './types.ts'
 
-import { type MobileHeaderRenderProps, Text } from '@/features/shared'
+import { type MobileHeaderRenderProps, routes, Text } from '@/features/shared'
 
 export const MobileHeader = React.memo(
   (props: MobileHeaderRenderProps<ProjectRow>) => {
     return (
       <Flex direction={'column'}>
         <Flex align={'center'} gap={'2'}>
-          <NavLink to={'/test'}>
+          <NavLink to={routes.invoice.build({ id: props.data.key })}>
             <Text size={'4'} $themeVariant={'primary'} weight={'medium'}>
               {props.data.name}
             </Text>

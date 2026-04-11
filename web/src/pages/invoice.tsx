@@ -1,5 +1,6 @@
 import { ArrowLeftIcon } from '@radix-ui/react-icons'
 import { Flex, Separator } from '@radix-ui/themes'
+import { NavLink } from 'react-router-dom'
 import { useMediaQuery } from 'styled-breakpoints/use-media-query'
 import styled, { useTheme } from 'styled-components'
 
@@ -9,7 +10,7 @@ import {
   TotalAmountMobile,
   Worklogs,
 } from '@/features/invoice'
-import { Card, IconButton, Text } from '@/features/shared'
+import { Card, IconButton, routes, Text } from '@/features/shared'
 
 export default function InvoicePage() {
   const { breakpoints } = useTheme()
@@ -21,7 +22,7 @@ export default function InvoicePage() {
         {isMobile && (
           <Flex gap={'2'} direction={'column'}>
             <Flex direction={'column'}>
-              <IconWrapper>
+              <IconWrapper to={routes.dashboard.schema}>
                 <IconButton variant={'ghost'} radius={'full'} color={'gray'}>
                   <ArrowLeftIcon />
                 </IconButton>
@@ -57,7 +58,7 @@ export default function InvoicePage() {
   )
 }
 
-const IconWrapper = styled.div`
+const IconWrapper = styled(NavLink)`
   padding-left: var(--space-2);
 `
 

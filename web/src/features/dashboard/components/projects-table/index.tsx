@@ -251,11 +251,7 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
             transition={{ duration: 0.2 }}
           >
             {processedData.length === 0 ? (
-              <ProjectsNotFound
-                title={t('dashboard.page.projectsNotFound.title')}
-                description={t('dashboard.page.projectsNotFound.description')}
-                actionLabel={t('dashboard.page.createProject')}
-              />
+              <ProjectsNotFound />
             ) : (
               <ProjectsTableContext value={{ handleActionClick }}>
                 {isMobile ? (

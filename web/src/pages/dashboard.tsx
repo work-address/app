@@ -46,38 +46,46 @@ export default function DashboardPage() {
     <Wrapper>
       <S.Content>
         <S.Left>
-          <S.Top>
-            <S.TitleRow>
-              <Flex align={'center'} gap={'10px'}>
-                <Text size={isUpMd ? '6' : '4'} weight={'medium'}>
-                  {t('dashboard.page.title')}
-                </Text>
+          <Flex
+            gap={'10px'}
+            align={{ md: 'center' }}
+            direction={{ initial: 'column', md: 'row' }}
+            mb={{ sm: '3' }}
+          >
+            <Flex align={'center'} gap={'10px'}>
+              <Text size={isUpMd ? '6' : '4'} weight={'medium'}>
+                {t('dashboard.page.title')}
+              </Text>
 
-                {hasProjects && !isUpMd && (
-                  <Badge size={'2'} color={'gray'}>
-                    <Text weight={'medium'} size={'1'}>
-                      {t('dashboard.page.projectsCount', { count: 4 })}
-                    </Text>
-                  </Badge>
-                )}
-              </Flex>
-
-              {hasProjects ? (
-                <>{isUpMd && <Search />}</>
-              ) : (
-                <S.TopRight>
-                  <Button
-                    themeVariant="primary"
-                    onClick={() => setCreateProjectOpen(true)}
-                  >
-                    <PlusIcon />
-
-                    <Text>{t('dashboard.page.createProject')}</Text>
-                  </Button>
-                </S.TopRight>
+              {hasProjects && (
+                <Badge size={'2'} color={'gray'}>
+                  <Text weight={'medium'} size={'1'}>
+                    {t('dashboard.page.projectsCount', { count: 4 })}
+                  </Text>
+                </Badge>
               )}
-            </S.TitleRow>
-          </S.Top>
+            </Flex>
+
+            {hasProjects ? (
+              <Flex mb={{ initial: '3', sm: '0' }}>
+                <Search
+                  radius={isUpMd ? 'large' : undefined}
+                  size={isUpMd ? '3' : '2'}
+                />
+              </Flex>
+            ) : (
+              <S.TopRight>
+                <Button
+                  themeVariant="primary"
+                  onClick={() => setCreateProjectOpen(true)}
+                >
+                  <PlusIcon />
+
+                  <Text>{t('dashboard.page.createProject')}</Text>
+                </Button>
+              </S.TopRight>
+            )}
+          </Flex>
 
           {hasProjects && (
             <S.TableArea>

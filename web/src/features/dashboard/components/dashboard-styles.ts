@@ -1,20 +1,5 @@
 import styled from 'styled-components'
 
-export const Top = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 16px;
-  margin-bottom: 14px;
-`
-
-export const TitleRow = styled.div`
-  display: flex;
-  align-items: center;
-  width: 100%;
-  gap: 10px;
-`
-
 export const TopRight = styled.div`
   margin-left: auto;
 `
@@ -89,55 +74,6 @@ export const FilterImage = styled.img`
   width: 16px;
   height: 16px;
   display: block;
-`
-
-export const ProjectsTrigger = styled.button`
-  width: 100%;
-  height: 34px;
-  border-radius: 4px;
-  border: 1px solid rgba(0, 8, 48, 0.12);
-  padding: 0 10px;
-  background: #fff;
-  font-size: 13px;
-  color: var(--ds-primary);
-  text-align: left;
-`
-
-export const ProjectsList = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-`
-
-export const ProjectRowButton = styled.button<{ $selected?: boolean }>`
-  width: 100%;
-  border-radius: 8px;
-  padding: 12px;
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  background: ${(p) => (p.$selected ? 'rgba(5, 86, 205, 0.0588)' : '')};
-
-  &:hover {
-    background: rgba(0, 0, 0, 0.08);
-  }
-`
-
-export const ProjectRowLabel = styled.div`
-  font-size: 14px;
-  font-weight: 500;
-  color: #1c2024;
-`
-
-export const CheckIcon = styled.span`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  width: 12px;
-  height: 12px;
-  flex-shrink: 0;
-  background: url('/img/icons/check-icon.svg') no-repeat center;
-  background-size: contain;
 `
 
 export const Field = styled.div<{ $basis?: number }>`

@@ -9,6 +9,7 @@ import { ProjectsTableContext } from '@/features/dashboard/components/projects-t
 import {
   type DesktopBodyCellRenderProps,
   IconButton,
+  routes,
   Text,
 } from '@/features/shared'
 
@@ -20,7 +21,9 @@ export const DesktopCell = React.memo(
       case 'name': {
         content = (
           <Text $themeVariant={'primary'}>
-            <NavLink to={'/test'}>{props.data.name}</NavLink>
+            <NavLink to={routes.invoice.build({ id: props.data.key })}>
+              {props.data.name}
+            </NavLink>
           </Text>
         )
         break

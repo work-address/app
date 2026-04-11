@@ -1,32 +1,36 @@
+import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { Button } from '@/features/shared'
+import { Button, routes } from '@/features/shared'
 
-type ProjectsNotFoundProps = {
-  title: string
-  description: string
-  actionLabel: string
-  onAction?: () => void
-}
+export const ProjectsNotFound = () => {
+  const { t } = useTranslation()
+  const navigate = useNavigate()
 
-export const ProjectsNotFound = ({
-  title,
-  description,
-  actionLabel,
-  onAction,
-}: ProjectsNotFoundProps) => {
   return (
     <Root>
       <IconInner>
-        <img src="/img/icons/featured-icon.svg" alt={title} />
+        <img
+          src="/img/icons/featured-icon.svg"
+          alt={t('dashboard.page.projectsNotFound.title')}
+        />
       </IconInner>
 
-      <Title>{title}</Title>
+      <Title>{t('dashboard.page.projectsNotFound.title')}</Title>
 
-      <Desc>{description}</Desc>
+      <Desc>{t('dashboard.page.projectsNotFound.description')}</Desc>
 
-      <Button onClick={onAction} themeVariant={'primary'} size={'2'}>
-        {actionLabel}
+      <Button
+        onClick={() => navigate(routes.helpCenter.schema)}
+        variant={'outline'}
+        color={'gray'}
+        size={'2'}
+        style={{
+          color: 'black',
+        }}
+      >
+        {t('dashboard.page.empty.action')}
       </Button>
     </Root>
   )
