@@ -8,7 +8,8 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
-    ignores: ['dist'],
+    // storybook-static contains large bundled JS; linting it looks like a hang.
+    ignores: ['dist/**', 'storybook-static/**', 'coverage/**'],
   },
   ...appBaseConfig,
   ...reactConfig,
@@ -18,7 +19,6 @@ export default tseslint.config(
       'unicorn/filename-case': 'off',
       'unicorn/no-nested-ternary': 'off',
     },
-    ignores: ['dist'],
   },
   {
     files: ['**/*.{ts,tsx}'],

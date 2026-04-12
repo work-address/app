@@ -6,6 +6,7 @@ import {
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
+  type TooltipContentProps,
   XAxis,
   YAxis,
 } from 'recharts'
@@ -33,14 +34,18 @@ function formatDuration(hoursFloat: number) {
   return `${h}h ${m}m`
 }
 
-function CustomTooltip({ active, payload, label }: any) {
+type CustomTooltipProps = Partial<
+  Pick<TooltipContentProps<number, string>, 'active' | 'payload' | 'label'>
+>
+
+function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
   const { t } = useTranslation()
 
   if (!active || !payload?.length) return null
   const byKey: Record<string, number> = {}
   for (const p of payload) {
-    if (p?.dataKey) {
-      byKey[p.dataKey] = p.value ?? 0
+    if (p?.dataKey != null) {
+      byKey[String(p.dataKey)] = Number(p.value ?? 0)
     }
   }
 
