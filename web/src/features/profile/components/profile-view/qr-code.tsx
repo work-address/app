@@ -1,12 +1,11 @@
 import { CopyIcon, Pencil1Icon, Share1Icon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
 import { Link } from 'react-router-dom'
-import { useMediaQuery } from 'styled-breakpoints/use-media-query'
-import styled, { useTheme } from 'styled-components'
+import styled from 'styled-components'
 
 import { ProfileViewCard } from './styled'
 
-import { IconButton, routes, Text } from '@/features/shared'
+import { IconButton, routes, Text, useBreakpoints } from '@/features/shared'
 import { Button } from '@/features/shared'
 
 type QrCodeProps = {
@@ -15,25 +14,24 @@ type QrCodeProps = {
 }
 
 export const QrCode = ({ gridArea }: QrCodeProps) => {
-  const { breakpoints } = useTheme()
-  const isUpMd = useMediaQuery(breakpoints.up('md'))
+  const { isMobile } = useBreakpoints()
 
   return (
     <StyledCard gridArea={gridArea} shadow={false}>
       <Flex
         direction={'column'}
-        gap={'3'}
+        gap={{ initial: '4' }}
         align={'center'}
         style={{ height: '100%' }}
       >
-        {!isUpMd && (
-          <>
-            <Text size={'7'} weight={'medium'}>
+        {isMobile && (
+          <Flex direction={'column'} align={'center'} gap={{ initial: '2' }}>
+            <Text size={'6'} weight={'medium'}>
               John Doe
             </Text>
 
             <Flex gap={'2'} align={'center'}>
-              <Text $themeVariant={'primary'} size={'3'} weight={'medium'}>
+              <Text $themeVariant={'primary'} size={'2'} weight={'medium'}>
                 EQCF9...NDOM
               </Text>
 
@@ -46,16 +44,12 @@ export const QrCode = ({ gridArea }: QrCodeProps) => {
                 <CopyIcon />
               </IconButton>
             </Flex>
-          </>
+          </Flex>
         )}
 
         <QrCodeImage src={'/img/photo/qr-code-example.svg'} alt={'qr-code'} />
 
-        {isUpMd ? (
-          <Button width={'146px'} themeVariant={'primary'} size={'3'}>
-            Share QR-code
-          </Button>
-        ) : (
+        {isMobile ? (
           <Flex gap={'2'} direction={'column'} width={'100%'}>
             <Link to={routes.profile.children.edit.schema}>
               <Button stretch themeVariant={'primary'}>
@@ -67,6 +61,10 @@ export const QrCode = ({ gridArea }: QrCodeProps) => {
               Share <Share1Icon />
             </Button>
           </Flex>
+        ) : (
+          <Button width={'146px'} themeVariant={'primary'} size={'3'}>
+            Share QR-code
+          </Button>
         )}
       </Flex>
     </StyledCard>
@@ -90,6 +88,11 @@ const StyledCard = styled(ProfileViewCard)`
 `
 
 const QrCodeImage = styled.img`
-  width: 180px;
-  height: 180px;
+  width: 140px;
+  height: 140px;
+
+  ${(p) => p.theme.breakpoints.up('md')} {
+    width: 180px;
+    height: 180px;
+  }
 `

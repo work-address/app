@@ -1,5 +1,5 @@
 import { Share1Icon, Pencil1Icon, CopyIcon } from '@radix-ui/react-icons'
-import { Flex } from '@radix-ui/themes'
+import { Flex, type FlexProps } from '@radix-ui/themes'
 import { Link } from 'react-router-dom'
 import { useMediaQuery } from 'styled-breakpoints/use-media-query'
 import styled, { useTheme } from 'styled-components'
@@ -8,7 +8,7 @@ import { InfoRow } from '../info-row'
 
 import { ProfileViewCard } from './styled'
 
-import { Button, IconButton, routes, Text } from '@/features/shared'
+import { Button, routes, Text } from '@/features/shared'
 
 type ProfileInfoProps = {
   gridArea?: string
@@ -18,10 +18,15 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
   const { breakpoints } = useTheme()
   const isUpMd = useMediaQuery(breakpoints.up('md'))
 
+  const infoRowGap: FlexProps['gap'] = {
+    initial: '2px',
+    md: '1',
+  }
+
   return (
     <StyledCard gridArea={gridArea} shadow={false}>
       <Flex
-        gap={'5'}
+        gap={{ initial: '4', md: '5' }}
         direction={'column'}
         justify={'between'}
         style={{ height: '100%' }}
@@ -35,18 +40,17 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
                 </Text>
 
                 <Flex gap={'2'} align={'center'}>
-                  <Text $themeVariant={'primary'} size={'3'} weight={'medium'}>
-                    EQCF9...NDOM
-                  </Text>
+                  <Button variant={'ghost'}>
+                    <Text
+                      $themeVariant={'primary'}
+                      size={'3'}
+                      weight={'medium'}
+                    >
+                      EQCF9...NDOM
+                    </Text>
 
-                  <IconButton
-                    variant={'ghost'}
-                    radius={'medium'}
-                    themeVariant={'primary'}
-                    size={'1'}
-                  >
                     <CopyIcon />
-                  </IconButton>
+                  </Button>
                 </Flex>
               </Flex>
 
@@ -65,41 +69,45 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
               </Flex>
             </>
           ) : (
-            <Flex />
+            <div />
           )}
         </Flex>
 
-        <Flex direction={'column'} gap={'3'}>
+        <Flex direction={'column'} gap={{ initial: '3', md: '4' }}>
           <InfoRow
             icon={<img src={'/img/icons/case.svg'} alt={'Case'} />}
             text={
-              <Text>
-                <Text color={'gray'}>Works at</Text> Continue
-              </Text>
+              <Flex gap={infoRowGap}>
+                <Text color={'gray'}>Works at</Text>
+                <Text weight={'medium'}>Continue</Text>
+              </Flex>
             }
           />
           <InfoRow
             icon={<img src={'/img/icons/linkedin.svg'} alt={'Linkedin'} />}
             text={
-              <Text>
-                <Text color={'gray'}>linkedin.com/</Text>johndoe
-              </Text>
+              <Flex gap={infoRowGap}>
+                <Text color={'gray'}>linkedin.com/</Text>
+                <Text weight={'medium'}>johndoe</Text>
+              </Flex>
             }
           />
           <InfoRow
             icon={<img src={'/img/icons/facebook.svg'} alt={'Facebook'} />}
             text={
-              <Text>
-                <Text color={'gray'}>facebook.com/</Text>johndoe
-              </Text>
+              <Flex gap={infoRowGap}>
+                <Text color={'gray'}>facebook.com/</Text>
+                <Text weight={'medium'}>johndoe</Text>
+              </Flex>
             }
           />
           <InfoRow
             icon={<img src={'/img/icons/telegram.svg'} alt={'Telegram'} />}
             text={
-              <Text>
-                <Text color={'gray'}>t.me/</Text>johndoe
-              </Text>
+              <Flex gap={infoRowGap}>
+                <Text color={'gray'}>t.me/</Text>
+                <Text weight={'medium'}>johndoe</Text>
+              </Flex>
             }
           />
         </Flex>
@@ -109,7 +117,9 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
 }
 
 const StyledCard = styled(ProfileViewCard)`
-  padding: 24px 16px;
+  ${(p) => p.theme.breakpoints.up('md')} {
+    padding-bottom: var(--space-6);
+  }
 
   ${(p) => p.theme.breakpoints.down('md')} {
     border-top: none;

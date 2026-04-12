@@ -13,7 +13,7 @@ export const InfoRow = ({ text, icon }: InfoRowProps) => {
   return (
     <Flex gap={'2'} align={'center'}>
       {icon}
-      <Text size={{ initial: '3', md: '5' }}>{text}</Text>
+      <Text size={{ initial: '2', md: '4' }}>{text}</Text>
     </Flex>
   )
 }

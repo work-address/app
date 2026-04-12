@@ -22,9 +22,10 @@ import styled from 'styled-components'
 type RichEditorProps = {
   value?: string
   onChange?: (value: string) => void
+  id?: string
 }
 
-export const RichEditor = ({ value, onChange }: RichEditorProps) => {
+export const RichEditor = ({ value, onChange, id }: RichEditorProps) => {
   const [, forceUpdate] = useReducer((x) => x + 1, 0)
 
   const editor = useEditor({
@@ -62,7 +63,7 @@ export const RichEditor = ({ value, onChange }: RichEditorProps) => {
         <CustomIconButton
           variant="ghost"
           onClick={() => editor?.chain().focus().redo().run()}
-          style={{ transform: 'scaleX(-1)' }} // redo — зеркало reset
+          style={{ transform: 'scaleX(-1)' }}
           color={'gray'}
           type={'button'}
         >
@@ -172,7 +173,7 @@ export const RichEditor = ({ value, onChange }: RichEditorProps) => {
       </FlexToolbar>
 
       <EditorWrapper>
-        <EditorContent editor={editor} />
+        <EditorContent editor={editor} id={id} />
       </EditorWrapper>
     </Wrapper>
   )

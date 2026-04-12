@@ -141,6 +141,7 @@ export const EditProfile = () => {
                 label={t('profile.form.address')}
                 labelWidth={inputLabelWidth}
                 disabled
+                id={'address'}
                 {...register('address')}
               />
 
@@ -148,6 +149,7 @@ export const EditProfile = () => {
                 label={t('profile.form.username')}
                 placeholder={t('profile.form.usernamePlaceholder')}
                 labelWidth={inputLabelWidth}
+                id={'username'}
                 {...register('username')}
               />
 
@@ -155,6 +157,7 @@ export const EditProfile = () => {
                 label={t('profile.form.company')}
                 placeholder={t('profile.form.companyPlaceholder')}
                 labelWidth={inputLabelWidth}
+                id={'company'}
                 {...register('company')}
               />
 
@@ -162,6 +165,7 @@ export const EditProfile = () => {
                 label={t('profile.form.skills')}
                 placeholder={t('profile.form.skillsPlaceholder')}
                 labelWidth={inputLabelWidth}
+                id={'skills'}
                 {...register('skills')}
               />
 
@@ -172,6 +176,7 @@ export const EditProfile = () => {
                 placeholder="0"
                 labelWidth={inputLabelWidth}
                 type={'number'}
+                id={'price'}
                 addonLeft={
                   <Text size={'2'} color={'gray'}>
                     $
@@ -184,7 +189,12 @@ export const EditProfile = () => {
 
               {isUpMd ? (
                 <Flex direction={'column'} gap={'var(--space-3)'}>
-                  <Text size={'2'} weight={'medium'}>
+                  <Text
+                    size={'2'}
+                    weight={'medium'}
+                    as={'label'}
+                    htmlFor={'bio'}
+                  >
                     {t('profile.form.bio')}
                   </Text>
 
@@ -194,6 +204,7 @@ export const EditProfile = () => {
                       <RichEditor
                         value={field.value}
                         onChange={field.onChange}
+                        id={'bio'}
                       />
                     )}
                     name={'bio'}
@@ -285,9 +296,10 @@ const FreelancerViewCard = styled(Card)<CardProps>`
 
 const BottomSheet = styled(Grid)`
   position: fixed;
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-2) var(--space-5) 14px;
   left: 0;
   right: 0;
   bottom: 0;
   background: #fff;
+  border-top: 1px solid var(--ds-neutral-alpha-6);
 `
