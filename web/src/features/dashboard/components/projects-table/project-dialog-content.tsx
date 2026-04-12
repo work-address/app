@@ -4,8 +4,8 @@ import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
 import type { ProjectRow } from './types'
-import type { InputProps } from '@/features/shared'
 
+import { type InputProps } from '@/features/shared'
 import { Input, Text, TextArea, useBreakpoints } from '@/features/shared'
 
 type ProjectRowKeys = (keyof ProjectRow)[]
@@ -21,6 +21,7 @@ export const ProjectDialogContent = ({
 }: ProjectDialogContentProps) => {
   const { t } = useTranslation()
   const { isMobile, isDesktop } = useBreakpoints()
+
   const { register } = useForm({
     values: data,
   })

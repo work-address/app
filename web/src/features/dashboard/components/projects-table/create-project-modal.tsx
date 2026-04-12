@@ -62,6 +62,7 @@ export const CreateProjectModal = ({
             >
               Cancel
             </Button>
+
             <Button themeVariant={'primary'} size={'3'}>
               Create project
             </Button>

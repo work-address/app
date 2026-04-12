@@ -2,8 +2,7 @@ import { Flex, Grid, IconButton, Separator, Text } from '@radix-ui/themes'
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
-import { useMediaQuery } from 'styled-breakpoints/use-media-query'
-import styled, { useTheme } from 'styled-components'
+import styled from 'styled-components'
 
 import { RichEditor } from './rich-editor'
 
@@ -16,6 +15,8 @@ import {
   useLeaveConfirm,
   routes,
   useConfirm,
+  showErrorToast,
+  useBreakpoints,
 } from '@/features/shared'
 
 type FormState = {
@@ -35,8 +36,7 @@ const inputLabelWidth = '106px'
 export const EditProfile = () => {
   const { t } = useTranslation()
 
-  const { breakpoints } = useTheme()
-  const isUpMd = useMediaQuery(breakpoints.up('md'))
+  const { isDesktop } = useBreakpoints()
   const { confirm } = useConfirm()
 
   const {
@@ -60,12 +60,12 @@ export const EditProfile = () => {
     },
   })
 
-  const onSubmit: SubmitHandler<FormState> = (data) => {
-    alert(
-      Object.entries(data)
-        .map(([key, value]) => `${key}: ${value}`)
-        .join('\n'),
-    )
+  const onSubmit: SubmitHandler<FormState> = () => {
+    showErrorToast({
+      message:
+        'Something went wrong. Please check your connection and try again.',
+      position: 'top-center',
+    })
   }
 
   const onReset = () => {
@@ -77,10 +77,7 @@ export const EditProfile = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Wrapper>
-        <Grid
-          rows={{ initial: 'auto auto' }}
-          gap={isUpMd ? 'var(--space-5)' : 'var(--space-1)'}
-        >
+        <Grid rows={{ initial: 'auto auto' }} gap={{ initial: '1', md: '5' }}>
           <FreelancerViewCard>
             <Flex
               gap={'var(--space-4)'}
@@ -89,7 +86,7 @@ export const EditProfile = () => {
               justify={'between'}
             >
               <Flex gap={'var(--space-4)'} align={'center'}>
-                {isUpMd && (
+                {isDesktop && (
                   <Link to={routes.profile.schema}>
                     <IconButton
                       radius={'full'}
@@ -108,13 +105,13 @@ export const EditProfile = () => {
                   </Link>
                 )}
 
-                <Text size={isUpMd ? '6' : '4'} weight={'medium'}>
+                <Text size={isDesktop ? '6' : '4'} weight={'medium'}>
                   {t('profile.title')}
                 </Text>
               </Flex>
 
-              {isUpMd && (
-                <Flex gap={'var(--space-4)'}>
+              {isDesktop && (
+                <Flex gap={'4'}>
                   <Button
                     themeVariant="secondary"
                     onClick={onReset}
@@ -134,9 +131,9 @@ export const EditProfile = () => {
               )}
             </Flex>
 
-            {isUpMd && <Separator size={'4'} mb={'5'} />}
+            {isDesktop && <Separator size={'4'} mb={'5'} />}
 
-            <Flex direction={'column'} gap={'var(--space-5)'}>
+            <Flex direction={'column'} gap={{ initial: '4', md: '5' }}>
               <Input
                 label={t('profile.form.address')}
                 labelWidth={inputLabelWidth}
@@ -187,8 +184,8 @@ export const EditProfile = () => {
 
               <Separator size={'4'} />
 
-              {isUpMd ? (
-                <Flex direction={'column'} gap={'var(--space-3)'}>
+              {isDesktop ? (
+                <Flex direction={'column'} gap={'3'}>
                   <Text
                     size={'2'}
                     weight={'medium'}
@@ -216,16 +213,16 @@ export const EditProfile = () => {
             </Flex>
           </FreelancerViewCard>
 
-          <FreelancerViewCard style={{ paddingTop: isUpMd ? undefined : 0 }}>
+          <FreelancerViewCard style={{ paddingTop: isDesktop ? undefined : 0 }}>
             <Text
-              size={isUpMd ? '6' : '4'}
+              size={isDesktop ? '6' : '4'}
               weight={'medium'}
-              mb={isUpMd ? '5' : '3'}
+              mb={{ initial: '3', md: '5' }}
             >
               {t('profile.links.title')}
             </Text>
 
-            <Grid gap={'var(--space-5)'}>
+            <Grid gap={{ initial: '4', md: '5' }}>
               <Input
                 label={t('profile.links.facebook')}
                 placeholder={'facebook.com/'}
@@ -247,7 +244,7 @@ export const EditProfile = () => {
                 {...register('telegram')}
               />
 
-              {!isUpMd && (
+              {!isDesktop && (
                 <BottomSheet columns={'1fr 1fr'} gap={'var(--space-4)'}>
                   <Button
                     themeVariant="secondary"

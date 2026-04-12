@@ -1,5 +1,5 @@
 import { toast } from 'sonner'
-import { createGlobalStyle } from 'styled-components'
+import styled, { createGlobalStyle } from 'styled-components'
 
 import type { ReactNode } from 'react'
 import type { ToasterProps } from 'sonner'
@@ -7,7 +7,7 @@ import type { ToasterProps } from 'sonner'
 import { InfoIcon } from '@/features/shared'
 
 type ErrorToastProps = {
-  title: ReactNode
+  title?: ReactNode
   message: ReactNode
   position?: ToasterProps['position']
   duration?: number
@@ -20,10 +20,10 @@ export const showErrorToast = ({
   duration,
 }: ErrorToastProps) => {
   toast.error(
-    <div>
-      <p className={'toast-title'}>{title}</p>
+    <ToastWrapper>
+      {title && <p className={'toast-title'}>{title}</p>}
       <p className={'toast-message'}>{message}</p>
-    </div>,
+    </ToastWrapper>,
     {
       duration,
       className: 'error-toast',
@@ -32,6 +32,10 @@ export const showErrorToast = ({
     },
   )
 }
+
+const ToastWrapper = styled.div<{ $nowrap?: boolean }>`
+  ${(p) => p.$nowrap && `white-space: nowrap; width: auto;`}
+`
 
 // TODO: перенести часть стилей в общий вариант
 export const ErrorToastStyle = createGlobalStyle`
@@ -43,25 +47,25 @@ export const ErrorToastStyle = createGlobalStyle`
       background: rgba(255, 247, 247, 1);
       border: 1px solid var(--error-alpha-6);
       font-size: 16px;
-      box-shadow: 0 2px 3px -2px var(--ds-neutral-alpha-3) 
+      box-shadow: 0 2px 3px -2px var(--ds-neutral-alpha-3)
       0px 3px 12px -4px rgba(0, 0, 0, 0.1)
       0px 4px 16px -8px rgba(0, 0, 0, 0.1);
-        
+
       [data-icon] {
         padding-top: 6px;
         margin-right: 12px;
       }
     }
-      
+
     .toast-title, .toast-message {
       color: var(--error-11);
     }
-    
+
     .toast-title {
       margin-bottom: 4px;
       font-weight: 500;
     }
-      
+
     .toast-message {
       font-weight: 400;
     }

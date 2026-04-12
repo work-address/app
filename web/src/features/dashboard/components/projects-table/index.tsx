@@ -111,7 +111,7 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
           }
         }
       },
-      [confirm],
+      [confirm, t],
     )
 
   const desktopConfig = useMemo(
@@ -309,7 +309,13 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
             <Flex justify={'between'} align={'center'}>
               <Text>{selectedRow?.name}</Text>
 
-              <IconButton color={'red'} variant={'outline'}>
+              <IconButton
+                color={'red'}
+                variant={'outline'}
+                onClick={() =>
+                  selectedRow && handleActionClick(selectedRow, 'Delete')
+                }
+              >
                 <TrashIcon />
               </IconButton>
             </Flex>
