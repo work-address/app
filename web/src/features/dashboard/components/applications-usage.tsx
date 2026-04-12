@@ -12,7 +12,11 @@ import {
 } from 'recharts'
 import styled from 'styled-components'
 
-import { MotionSelect, Card } from '@/features/shared'
+import {
+  formatDurationFromHoursFloat,
+  MotionSelect,
+  Card,
+} from '@/features/shared'
 
 type Period = 'Week' | 'Month' | 'Year'
 
@@ -24,21 +28,7 @@ type BarDatum = {
   zoom: number
 }
 
-function formatDuration(hoursFloat: number) {
-  const totalMin = Math.round(hoursFloat * 60)
-  const h = Math.floor(totalMin / 60)
-  const m = totalMin % 60
-  if (h <= 0) {
-    return `${m}m`
-  }
-  return `${h}h ${m}m`
-}
-
-type CustomTooltipProps = Partial<
-  Pick<TooltipContentProps<number, string>, 'active' | 'payload' | 'label'>
->
-
-function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
+function CustomTooltip({ active, payload, label }: any) {
   const { t } = useTranslation()
 
   if (!active || !payload?.length) return null
@@ -80,7 +70,9 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
               <Dot $c={colors[e.key]} />
               {e.name}
             </TipLeft>
-            <TipVal>{formatDuration(byKey[e.key] ?? 0)}</TipVal>
+            <TipVal>
+              {formatDurationFromHoursFloat(byKey[e.key] ?? 0, t)}
+            </TipVal>
           </TipRow>
         ))}
       </TipList>
@@ -89,7 +81,7 @@ function CustomTooltip({ active, payload, label }: CustomTooltipProps) {
         <TipTotalLabel>
           {t('dashboard.applicationsUsage.tooltip.total')}
         </TipTotalLabel>
-        <TipVal>{formatDuration(total)}</TipVal>
+        <TipVal>{formatDurationFromHoursFloat(total, t)}</TipVal>
       </TipTotal>
     </TooltipBox>
   )

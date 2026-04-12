@@ -1,5 +1,6 @@
 import { Share1Icon, Pencil1Icon, CopyIcon } from '@radix-ui/react-icons'
-import { Flex, type FlexProps } from '@radix-ui/themes'
+import { Flex } from '@radix-ui/themes'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
@@ -20,21 +21,9 @@ type ProfileInfoProps = {
 }
 
 export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
-  const { isDesktop } = useBreakpoints()
-  const walletAddress = 'EQCF9...NDOM'
-
-  const infoRowGap: FlexProps['gap'] = {
-    initial: '2px',
-  }
-
-  const handleCopyWalletAddress = async () => {
-    await navigator.clipboard.writeText(walletAddress)
-
-    showInfoToast({
-      message: 'Address copied to clipboard',
-      position: 'top-center',
-    })
-  }
+  const { t } = useTranslation()
+  const { breakpoints } = useTheme()
+  const isUpMd = useMediaQuery(breakpoints.up('md'))
 
   return (
     <StyledCard gridArea={gridArea} shadow={false}>
@@ -49,7 +38,7 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
             <>
               <Flex direction={'column'} gap={'2'}>
                 <Text size={'7'} weight={'medium'}>
-                  John Doe
+                  {t('profile.view.mockName')}
                 </Text>
 
                 <Flex gap={'2'} align={'center'}>
@@ -69,13 +58,13 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
 
               <Flex gap={'2'}>
                 <Button variant={'outline'} color={'gray'} size={'3'}>
-                  Share
+                  {t('common.share')}
                   <Share1Icon />
                 </Button>
 
                 <Link to={routes.profile.children.edit.schema}>
                   <Button themeVariant={'primary'} size={'3'}>
-                    Edit
+                    {t('common.edit')}
                     <Pencil1Icon />
                   </Button>
                 </Link>
@@ -88,39 +77,65 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
 
         <Flex direction={'column'} gap={{ initial: '3', md: '4' }}>
           <InfoRow
-            icon={<img src={'/img/icons/case.svg'} alt={'Case'} />}
+            icon={
+              <img
+                src={'/img/icons/case.svg'}
+                alt={t('profile.view.alt.case')}
+              />
+            }
             text={
-              <Flex gap={infoRowGap}>
-                <Text color={'gray'}>Works at</Text>
-                <Text weight={'medium'}>Continue</Text>
-              </Flex>
+              <Text>
+                <Text color={'gray'}>{t('profile.view.worksAt')}</Text>{' '}
+                {t('profile.view.mockCompany')}
+              </Text>
             }
           />
           <InfoRow
-            icon={<img src={'/img/icons/linkedin.svg'} alt={'Linkedin'} />}
+            icon={
+              <img
+                src={'/img/icons/linkedin.svg'}
+                alt={t('profile.links.linkedin')}
+              />
+            }
             text={
-              <Flex gap={infoRowGap}>
-                <Text color={'gray'}>linkedin.com/</Text>
-                <Text weight={'medium'}>johndoe</Text>
-              </Flex>
+              <Text>
+                <Text color={'gray'}>
+                  {t('profile.view.social.linkedinPrefix')}
+                </Text>
+                johndoe
+              </Text>
             }
           />
           <InfoRow
-            icon={<img src={'/img/icons/facebook.svg'} alt={'Facebook'} />}
+            icon={
+              <img
+                src={'/img/icons/facebook.svg'}
+                alt={t('profile.links.facebook')}
+              />
+            }
             text={
-              <Flex gap={infoRowGap}>
-                <Text color={'gray'}>facebook.com/</Text>
-                <Text weight={'medium'}>johndoe</Text>
-              </Flex>
+              <Text>
+                <Text color={'gray'}>
+                  {t('profile.view.social.facebookPrefix')}
+                </Text>
+                johndoe
+              </Text>
             }
           />
           <InfoRow
-            icon={<img src={'/img/icons/telegram.svg'} alt={'Telegram'} />}
+            icon={
+              <img
+                src={'/img/icons/telegram.svg'}
+                alt={t('profile.links.telegram')}
+              />
+            }
             text={
-              <Flex gap={infoRowGap}>
-                <Text color={'gray'}>t.me/</Text>
-                <Text weight={'medium'}>johndoe</Text>
-              </Flex>
+              <Text>
+                <Text color={'gray'}>
+                  {t('profile.view.social.telegramPrefix')}
+                </Text>
+                johndoe
+              </Text>
             }
           />
         </Flex>

@@ -1,3 +1,4 @@
+import i18n from 'i18next'
 import { toast } from 'sonner'
 import styled, { createGlobalStyle } from 'styled-components'
 
@@ -26,7 +27,7 @@ const showToast = (
       duration,
       className: `${type}-toast`,
       position,
-      icon: <InfoIcon />,
+      icon: <img src={InfoIcon} alt={i18n.t('common.toastErrorAlt')} />,
     },
   )
 }

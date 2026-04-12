@@ -96,48 +96,48 @@ export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
     (): DataTableConfig<WorklogRow> => [
       {
         dataKey: 'date',
-        headerText: 'Date',
+        headerText: t('dashboard.worklogsTable.head.date'),
         width: 165,
       },
       {
         dataKey: 'projectName',
-        headerText: 'Project name',
+        headerText: t('dashboard.worklogsTable.head.projectName'),
         width: 229,
       },
       {
         dataKey: 'note',
-        headerText: 'Note',
+        headerText: t('dashboard.worklogsTable.head.note'),
       },
       {
         dataKey: 'timeActive',
-        headerText: 'Time active',
+        headerText: t('dashboard.worklogsTable.head.timeActive'),
         horizontalAlign: 'center',
         width: 115,
       },
       {
         dataKey: 'paymentStatus',
-        headerText: 'Payment status',
+        headerText: t('dashboard.worklogsTable.head.paymentStatus'),
         horizontalAlign: 'center',
         width: 138,
       },
       {
         dataKey: 'keyboard',
-        headerText: 'Keyboard',
+        headerText: t('dashboard.worklogsTable.head.keyboard'),
         width: 103,
       },
       {
         dataKey: 'mouse',
-        headerText: 'Mouse',
+        headerText: t('dashboard.worklogsTable.head.mouse'),
         width: 87,
       },
       {
         dataKey: 'mouseDistance',
-        headerText: 'Mouse distance',
+        headerText: t('dashboard.worklogsTable.head.mouseDistance'),
         width: 140,
       },
       {
         dataKey: 'screenshot',
-        headerText: 'Screenshot',
+        headerText: t('dashboard.worklogsTable.head.screenshot'),
         width: 114,
         horizontalAlign: 'center',
       },
@@ -147,7 +147,7 @@ export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
         headerText: '',
       },
     ],
-    [],
+    [t],
   )
 
   const patchFormFilters = (patch: Partial<WorklogFormFilters>) => {

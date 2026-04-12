@@ -1,4 +1,5 @@
 import { Separator, Flex, Badge } from '@radix-ui/themes'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { ProfileViewCard } from './styled'
@@ -24,28 +25,21 @@ const skills = [
 ]
 
 export const Description = ({ gridArea }: DescriptionProps) => {
-  const { isMobile } = useBreakpoints()
+  const { t } = useTranslation()
 
   return (
     <StyledCard gridArea={gridArea} shadow={false}>
       <Flex gap={'4'} direction={'column'}>
         <div>
-          <Flex
-            justify={{ md: 'between' }}
-            direction={{ initial: 'column', md: 'row' }}
-            gap={{ initial: '1', md: '0' }}
-          >
-            <Text size={isMobile ? '5' : '6'} weight={'medium'}>
-              Backend Developer
+          <Flex justify={'between'}>
+            <Text size={'6'} weight={'medium'}>
+              {t('profile.view.jobTitle')}
             </Text>
 
             <Text color={'blue'} $themeVariant={'primary'}>
               <Flex gap={'1'} align={'end'}>
-                <Text size={isMobile ? '4' : '8'} weight={'medium'}>
-                  35
-                </Text>
-
-                <Text size={isMobile ? '2' : undefined}> USDT </Text>
+                <Text size={'8'}> 35 </Text>
+                <Text> {t('profile.view.usdtUnit')} </Text>
               </Flex>
             </Text>
           </Flex>
@@ -53,28 +47,20 @@ export const Description = ({ gridArea }: DescriptionProps) => {
 
         <Separator size={'4'} />
 
-        <Text size={isMobile ? '2' : '3'}>
-          A highly skilled Backend Developer with expertise in designing,
-          developing, and maintaining robust server-side applications.
-          Specializing in APIs, databases, and cloud infrastructure, I ensure
-          scalable, secure, and high-performance solutions tailored to business
-          needs.
-        </Text>
+        <Text>{t('profile.view.bio')}</Text>
 
         <Separator size={'4'} />
 
         <div>
-          <Text size={isMobile ? '3' : '4'} weight={'medium'}>
-            Skills
+          <Text size={'4'} weight={'medium'}>
+            {t('profile.form.skills')}
           </Text>
         </div>
 
         <Flex gap={'2'} wrap={'wrap'}>
           {skills.map((skill) => (
-            <Badge key={skill} color={'gray'} size={isMobile ? '1' : '2'}>
-              <Text weight={'medium'} size={'1'}>
-                {skill}
-              </Text>
+            <Badge key={skill} color={'gray'} size={'2'}>
+              {skill}
             </Badge>
           ))}
         </Flex>

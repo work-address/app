@@ -20,6 +20,7 @@ import { CreateProjectModal } from './create-project-modal.tsx'
 import { DesktopCell } from './desktop-cell.tsx'
 import { MobileAddonBottom } from './mobile-addon-bottom.tsx'
 import { MobileHeader } from './mobile-header.tsx'
+import { ProjectMobileBody } from './project-mobile-body.tsx'
 import { ProjectDialogContent } from './project-dialog-content.tsx'
 
 import type { ProjectRow } from './types'
@@ -122,40 +123,49 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
       {
         dataKey: 'name',
         width: 187,
+        headerText: t('dashboard.projectsTable.head.projectName'),
       },
       {
         dataKey: 'earnings',
         width: 160,
+        headerText: t('dashboard.projectsTable.head.earnings'),
       },
       {
         dataKey: 'status',
         width: 100,
         horizontalAlign: 'center',
+        headerText: t('dashboard.projectsTable.head.status'),
       },
       {
         dataKey: 'timeTotal',
         width: 180,
+        headerText: t('dashboard.projectsTable.head.timeTotal'),
       },
       {
         dataKey: 'timeActive',
         width: 160,
+        headerText: t('dashboard.projectsTable.head.timeActive'),
       },
       {
         dataKey: 'keyboard',
         width: 160,
+        headerText: t('dashboard.projectsTable.head.keyboard'),
       },
       {
         dataKey: 'mouse',
         width: 160,
+        headerText: t('dashboard.projectsTable.head.mouse'),
       },
       {
         dataKey: 'mouseDistance',
+        headerText: t('dashboard.projectsTable.head.mouseDistance'),
       },
       {
         customKey: 'actions',
+        headerText: '',
       },
     ],
-    [],
+    [t],
   )
 
   const mobileConfig = useMemo(
@@ -166,26 +176,26 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
       },
       {
         dataKey: 'timeTotal',
-        description: 'test',
+        description: t('dashboard.projectsTable.head.timeTotal'),
       },
       {
         dataKey: 'timeActive',
-        description: 'test',
+        description: t('dashboard.projectsTable.head.timeActive'),
       },
       {
         dataKey: 'keyboard',
-        description: 'test',
+        description: t('dashboard.projectsTable.head.keyboard'),
       },
       {
         dataKey: 'mouse',
-        description: 'test',
+        description: t('dashboard.projectsTable.head.mouse'),
       },
       {
         dataKey: 'mouseDistance',
-        description: 'test',
+        description: t('dashboard.projectsTable.head.mouseDistance'),
       },
     ],
-    [],
+    [t],
   )
 
   const allowDeleteAll = useMemo(() => {
@@ -277,6 +287,7 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
                     data={processedData}
                     getRowId={rowIdGetter}
                     config={mobileConfig}
+                    BodyComponent={ProjectMobileBody}
                     AddonBottomComponent={MobileAddonBottom}
                     HeaderComponent={MobileHeader}
                     initialExpandedId={rows[0]?.key}

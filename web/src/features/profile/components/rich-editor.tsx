@@ -17,6 +17,7 @@ import Underline from '@tiptap/extension-underline'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { useEffect, useReducer } from 'react'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 type RichEditorProps = {
@@ -25,7 +26,8 @@ type RichEditorProps = {
   id?: string
 }
 
-export const RichEditor = ({ value, onChange, id }: RichEditorProps) => {
+export const RichEditor = ({ value, onChange }: RichEditorProps) => {
+  const { t } = useTranslation()
   const [, forceUpdate] = useReducer((x) => x + 1, 0)
 
   const editor = useEditor({
@@ -161,7 +163,7 @@ export const RichEditor = ({ value, onChange, id }: RichEditorProps) => {
           data-active={editor?.isActive('link')}
           color={'gray'}
           onClick={() => {
-            const url = window.prompt('URL')
+            const url = window.prompt(t('profile.editor.linkPrompt'))
             if (url) {
               editor?.chain().focus().setLink({ href: url }).run()
             }

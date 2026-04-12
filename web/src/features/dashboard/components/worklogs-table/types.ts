@@ -6,7 +6,7 @@ export type WorklogRow = {
   date: string
   projectName: string
   note: string
-  timeActive: string
+  timeActive: number
   paymentStatus: PaymentStatus
   keyboard: string
   mouse: string

@@ -58,11 +58,7 @@ export const WorklogsMobileFilters = ({
         open={filtersOpen}
         onOpenChange={onFiltersOpenChange}
         title={
-          <Flex justify={'center'}>
-            {t('dashboard.page.filters.title', {
-              defaultValue: 'Filters',
-            })}
-          </Flex>
+          <Flex justify={'center'}>{t('dashboard.page.filters.title')}</Flex>
         }
         trigger={
           <Button
@@ -73,13 +69,11 @@ export const WorklogsMobileFilters = ({
           >
             <S.FilterImage
               src="/img/icons/filter-icon.svg"
-              alt="Filter"
+              alt={t('dashboard.page.filters.filterIconAlt')}
               width={20}
               height={20}
             />
-            {t('dashboard.page.filters.title', {
-              defaultValue: 'Filters',
-            })}
+            {t('dashboard.page.filters.title')}
           </Button>
         }
         description={
@@ -88,9 +82,7 @@ export const WorklogsMobileFilters = ({
             themeVariant={'primary'}
             onClick={() => onFiltersOpenChange(false)}
           >
-            {t('dashboard.page.filters.apply', {
-              defaultValue: 'Apply',
-            })}
+            {t('dashboard.page.filters.apply')}
           </Button>
         }
       >

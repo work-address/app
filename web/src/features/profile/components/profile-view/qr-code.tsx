@@ -1,6 +1,6 @@
 import { CopyIcon, Pencil1Icon, Share1Icon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
-import { useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
@@ -21,32 +21,27 @@ type QrCodeProps = {
 }
 
 export const QrCode = ({ gridArea }: QrCodeProps) => {
-  const { isMobile, isDesktop } = useBreakpoints()
-  const [qrModalOpened, setQrModalOpened] = useState(false)
-  const walletAddress = 'EQCF9...NDOM'
-
-  const handleCopyWalletAddress = async () => {
-    await navigator.clipboard.writeText(walletAddress)
-
-    showInfoToast({
-      message: 'Address copied to clipboard',
-      position: 'top-center',
-    })
-  }
+  const { t } = useTranslation()
+  const { breakpoints } = useTheme()
+  const isUpMd = useMediaQuery(breakpoints.up('md'))
 
   return (
-    <>
-      <StyledCard gridArea={gridArea} shadow={false}>
-        <Flex
-          direction={'column'}
-          gap={{ initial: '4' }}
-          align={'center'}
-          style={{ height: '100%' }}
-        >
-          {isMobile && (
-            <Flex direction={'column'} align={'center'} gap={{ initial: '2' }}>
-              <Text size={'6'} weight={'medium'}>
-                John Doe
+    <StyledCard gridArea={gridArea} shadow={false}>
+      <Flex
+        direction={'column'}
+        gap={'3'}
+        align={'center'}
+        style={{ height: '100%' }}
+      >
+        {!isUpMd && (
+          <>
+            <Text size={'7'} weight={'medium'}>
+              {t('profile.view.mockName')}
+            </Text>
+
+            <Flex gap={'2'} align={'center'}>
+              <Text $themeVariant={'primary'} size={'3'} weight={'medium'}>
+                EQCF9...NDOM
               </Text>
 
               <Flex gap={'2'} align={'center'}>
@@ -61,27 +56,25 @@ export const QrCode = ({ gridArea }: QrCodeProps) => {
             </Flex>
           )}
 
-          <QrCodeImage
-            src={'/img/photo/qr-code-example.svg'}
-            alt={'qr-code'}
-            onClick={() => setQrModalOpened(true)}
-          />
+        <QrCodeImage
+          src={'/img/photo/qr-code-example.svg'}
+          alt={t('profile.view.qrAlt')}
+        />
 
-          {isMobile ? (
-            <Flex gap={'2'} direction={'column'} width={'100%'}>
-              <Link to={routes.profile.children.edit.schema}>
-                <Button stretch themeVariant={'primary'}>
-                  Edit <Pencil1Icon />
-                </Button>
-              </Link>
-
-              <Button stretch variant={'outline'} color={'gray'}>
-                Share <Share1Icon />
+        {isUpMd ? (
+          <Button width={'146px'} themeVariant={'primary'} size={'3'}>
+            {t('profile.view.shareQr')}
+          </Button>
+        ) : (
+          <Flex gap={'2'} direction={'column'} width={'100%'}>
+            <Link to={routes.profile.children.edit.schema}>
+              <Button stretch themeVariant={'primary'}>
+                {t('common.edit')} <Pencil1Icon />
               </Button>
-            </Flex>
-          ) : (
-            <Button width={'146px'} themeVariant={'primary'} size={'3'}>
-              Share QR-code
+            </Link>
+
+            <Button stretch variant={'outline'} color={'gray'}>
+              {t('common.share')} <Share1Icon />
             </Button>
           )}
         </Flex>

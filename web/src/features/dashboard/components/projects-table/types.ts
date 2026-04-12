@@ -5,8 +5,8 @@ export type ProjectRow = {
   name: string
   earnings: string
   status: ProjectStatus
-  timeTotal: string
-  timeActive: string
+  timeTotal: number
+  timeActive: number
   keyboard: string
   mouse: string
   mouseDistance: string

@@ -1,14 +1,20 @@
 import { Pencil1Icon } from '@radix-ui/react-icons'
 import { Badge, Flex, IconButton } from '@radix-ui/themes'
 import { memo } from 'react'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import type { WorklogRow } from './types'
 
-import { type DesktopBodyCellRenderProps, Text } from '@/features/shared'
+import {
+  type DesktopBodyCellRenderProps,
+  formatDurationFromMinutes,
+  Text,
+} from '@/features/shared'
 
 const BodyCellComponent = memo(
   (props: DesktopBodyCellRenderProps<WorklogRow>) => {
+    const { t } = useTranslation()
     switch (props.dataKey) {
       case 'date': {
         return (
@@ -26,15 +32,18 @@ const BodyCellComponent = memo(
       case 'timeActive': {
         return (
           <Badge color={Number(props.data.key) % 3 === 0 ? 'red' : 'green'}>
-            {props.data.timeActive}
+            {formatDurationFromMinutes(props.data.timeActive, t)}
           </Badge>
         )
       }
 
       case 'paymentStatus': {
+        const paid = props.data.paymentStatus === 'Paid'
         return (
-          <Badge color={props.data.paymentStatus === 'Paid' ? 'green' : 'red'}>
-            {props.data.paymentStatus}
+          <Badge color={paid ? 'green' : 'red'}>
+            {paid
+              ? t('dashboard.worklogsTable.paymentStatus.paid')
+              : t('dashboard.worklogsTable.paymentStatus.unpaid')}
           </Badge>
         )
       }
@@ -48,7 +57,7 @@ const BodyCellComponent = memo(
         ) : (
           <Screenshot
             src={'/img/photo/example-screenshot.png'}
-            alt={'No data'}
+            alt={t('dashboard.worklogsTable.screenshotNoData')}
           />
         )
       }

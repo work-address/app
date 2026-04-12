@@ -1,22 +1,26 @@
 import { QuestionMarkCircledIcon } from '@radix-ui/react-icons'
 import { Flex, Separator, Grid } from '@radix-ui/themes'
 import { Fragment } from 'react'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { infoFields } from './constants'
+import { getInvoiceInfoFields } from './invoice-info-fields.ts'
 import { QrCodeImage } from './styled'
 
 import { Text } from '@/features/shared'
 
 export const TotalAmountMobile = () => {
+  const { t } = useTranslation()
+  const infoFields = getInvoiceInfoFields(t)
+
   return (
     <Flex gap={'3'} direction={'column'}>
       <Flex justify={'center'} align={'center'} direction={'column'} p={'4'}>
         <Text size={'4'} color={'gray'}>
-          Total Amount
+          {t('invoice.totalAmount')}
         </Text>
         <Text size={'8'} weight={'medium'} $themeVariant={'primary'}>
-          80.5 USD
+          {t('invoice.amount.mobile')}
         </Text>
       </Flex>
 
@@ -28,14 +32,18 @@ export const TotalAmountMobile = () => {
         align={'end'}
         py={'2'}
       >
-        {Object.entries(infoFields).map(([key, field]) => (
-          <Fragment key={key}>
+        {infoFields.map((field) => (
+          <Fragment key={field.id}>
             <Flex align={'center'} gap={'1'}>
               <Text size={'3'} color={'gray'}>
-                {key}
+                {t(`invoice.fields.${field.id}`)}
               </Text>
 
-              {'desc' in field && <StyledQuestionMarkCircledIcon />}
+              {field.hasDesc === true ? (
+                <StyledQuestionMarkCircledIcon
+                  aria-label={t(`invoice.fieldDesc.${field.id}`)}
+                />
+              ) : null}
             </Flex>
 
             <Text weight={'medium'}>{field.value}</Text>
@@ -50,7 +58,7 @@ export const TotalAmountMobile = () => {
       </Flex>
 
       <Text color={'gray'} weight={'regular'} align={'center'}>
-        Scan QR code and pay in USDT
+        {t('invoice.qrScan.mobile')}
       </Text>
     </Flex>
   )

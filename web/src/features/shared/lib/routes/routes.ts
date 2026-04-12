@@ -78,7 +78,7 @@ export const routes: MainRoutes = {
 
     mobileOrder: 3,
 
-    translateKeyMobile: 'heaver.nav.timeTracker',
+    translateKeyMobile: 'header.nav.timeTracker',
     mobileIcon: '/img/icons/time-tracker.svg',
   },
 

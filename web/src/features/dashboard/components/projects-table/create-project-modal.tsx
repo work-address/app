@@ -1,4 +1,5 @@
 import { Flex, Grid } from '@radix-ui/themes'
+import { useTranslation } from 'react-i18next'
 
 import {
   AdaptiveDialog,
@@ -26,6 +27,7 @@ export const CreateProjectModal = ({
   open,
   onOpenChange,
 }: CreateProjectModalProps) => {
+  const { t } = useTranslation()
   const { isMobile } = useBreakpoints()
 
   const inputProps: InputProps = {
@@ -41,7 +43,7 @@ export const CreateProjectModal = ({
       desktopWidth={'450px'}
       onOpenChange={onOpenChange}
       open={open}
-      title={<>Start a New Project</>}
+      title={<>{t('project.createModal.title')}</>}
       description={
         isMobile ? (
           <Grid gap={'3'} columns={'1fr 1fr'}>
@@ -49,9 +51,11 @@ export const CreateProjectModal = ({
               themeVariant={'secondary'}
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t('dashboard.projectsTable.confirmDelete.cancel')}
             </Button>
-            <Button themeVariant={'primary'}>Create project</Button>
+            <Button themeVariant={'primary'}>
+              {t('dashboard.page.createProject')}
+            </Button>
           </Grid>
         ) : (
           <Flex gap={'3'} justify={'end'}>
@@ -60,11 +64,11 @@ export const CreateProjectModal = ({
               size={'3'}
               onClick={() => onOpenChange(false)}
             >
-              Cancel
+              {t('dashboard.projectsTable.confirmDelete.cancel')}
             </Button>
 
             <Button themeVariant={'primary'} size={'3'}>
-              Create project
+              {t('dashboard.page.createProject')}
             </Button>
           </Flex>
         )
@@ -72,31 +76,29 @@ export const CreateProjectModal = ({
     >
       <Flex gap={'5'} direction={'column'}>
         <Text color={isMobile ? 'gray' : undefined} size={isMobile ? '2' : '3'}>
-          You&#39;re creating a personal project to track your time and
-          progress. This project is private meaning freelancers won&#39;t see
-          it, and you won&#39;t be able to assign it to anyone
+          {t('project.createModal.intro')}
         </Text>
 
         <Flex gap={'4'} direction={'column'}>
           <Input
-            label={'Project name'}
+            label={t('dashboard.projectsTable.form.projectName')}
             id={'projectName'}
-            placeholder={'E.g., "Website Redesign" or "Marketing Strategy"'}
+            placeholder={t('project.createModal.projectNamePlaceholder')}
             {...inputProps}
           />
 
           <Input
-            label={'Rate'}
+            label={t('dashboard.projectsTable.form.rate')}
             id={'rate'}
-            placeholder={'Enter your hourly rate'}
+            placeholder={t('project.createModal.ratePlaceholder')}
             addonRight={'$'}
             {...inputProps}
           />
 
           <TextArea
-            label={'Description'}
+            label={t('dashboard.projectsTable.form.description')}
             id={'description'}
-            placeholder={'Briefly describe your project goals and tasks'}
+            placeholder={t('project.createModal.descriptionPlaceholder')}
             rows={isMobile ? 7 : 3}
           />
         </Flex>

@@ -1,17 +1,23 @@
 import { Badge, Flex } from '@radix-ui/themes'
 import { memo, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import type {
   DesktopBodyCellRenderProps,
   DataTableConfig,
 } from '@/features/shared'
 
-import { DataTable } from '@/features/shared'
-import { worklogsMock, Text } from '@/features/shared'
+import {
+  DataTable,
+  formatDurationFromMinutes,
+  worklogsMock,
+  Text,
+} from '@/features/shared'
 
 type WorklogRow = (typeof worklogsMock)[number]
 
 export const Worklogs = () => {
+  const { t } = useTranslation()
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
 
   const tableConfig = useMemo(
@@ -19,45 +25,45 @@ export const Worklogs = () => {
       {
         dataKey: 'date',
         width: 165,
-        headerText: 'Date',
+        headerText: t('dashboard.worklogsTable.head.date'),
       },
       {
         dataKey: 'projectName',
         width: 240,
-        headerText: 'Project name',
+        headerText: t('dashboard.worklogsTable.head.projectName'),
       },
       {
         dataKey: 'note',
         width: 240,
-        headerText: 'Note',
+        headerText: t('dashboard.worklogsTable.head.note'),
       },
       {
         dataKey: 'timeActive',
         width: 130,
-        headerText: 'Time active',
+        headerText: t('dashboard.worklogsTable.head.timeActive'),
         horizontalAlign: 'center',
       },
       {
         dataKey: 'keyboard',
         width: 118,
-        headerText: 'Keyboard',
+        headerText: t('dashboard.worklogsTable.head.keyboard'),
       },
       {
         dataKey: 'mouse',
-        headerText: 'Mouse',
+        headerText: t('dashboard.worklogsTable.head.mouse'),
       },
       {
         dataKey: 'mouseDistance',
         width: 155,
-        headerText: 'Mouse distance',
+        headerText: t('dashboard.worklogsTable.head.mouseDistance'),
       },
     ],
-    [],
+    [t],
   )
 
   return (
     <>
-      <Text size={'5'}>Worklogs</Text>
+      <Text size={'5'}>{t('dashboard.page.worklogs.title')}</Text>
 
       <DataTable
         data={worklogsMock}
@@ -75,6 +81,7 @@ export const Worklogs = () => {
 }
 
 const Cell = memo((props: DesktopBodyCellRenderProps<WorklogRow>) => {
+  const { t } = useTranslation()
   switch (props.dataKey) {
     case 'date': {
       return (
@@ -96,7 +103,7 @@ const Cell = memo((props: DesktopBodyCellRenderProps<WorklogRow>) => {
                 : 'green'
           }
         >
-          {props.data.timeActive}
+          {formatDurationFromMinutes(props.data.timeActive, t)}
         </Badge>
       )
     }

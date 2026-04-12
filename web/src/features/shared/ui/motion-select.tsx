@@ -139,7 +139,7 @@ export const MotionSelect = ({
         trigger={TriggerEl}
         description={
           <Button stretch themeVariant="primary" onClick={() => setOpen(false)}>
-            {t('common.apply', 'Apply')}
+            {t('common.apply')}
           </Button>
         }
       >

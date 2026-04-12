@@ -5,6 +5,7 @@ import {
 } from '@radix-ui/react-icons'
 import { Popover, Text } from '@radix-ui/themes'
 import {
+  addDays,
   addMonths,
   eachDayOfInterval,
   endOfMonth,
@@ -17,7 +18,9 @@ import {
   startOfWeek,
   subMonths,
 } from 'date-fns'
-import { useState } from 'react'
+import { enUS, ru } from 'date-fns/locale'
+import { useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { Button } from './button'
@@ -32,19 +35,45 @@ type DatePickerProps = {
   labelWidth?: string
 }
 
-const formatter = new Intl.DateTimeFormat()
+function dateFnsLocaleFor(lng: string | undefined) {
+  return lng?.toLowerCase().startsWith('ru') ? ru : enUS
+}
+
+function intlLocaleFor(lng: string | undefined) {
+  return lng?.toLowerCase().startsWith('ru') ? 'ru-RU' : 'en-US'
+}
 
 export const DatePickerInput = ({
   value,
   onChange,
   label,
-  placeholder = 'Pick a date',
+  placeholder,
   id,
   labelWidth,
 }: DatePickerProps) => {
+  const { t, i18n } = useTranslation()
+  const dateFnsLocale = dateFnsLocaleFor(i18n.resolvedLanguage)
+  const resolvedPlaceholder = placeholder ?? t('ui.datePicker.pickDate')
   const [open, setOpen] = useState(false)
   const [viewDate, setViewDate] = useState(value ?? new Date())
   const [pendingDate, setPendingDate] = useState<Date | null>(value ?? null)
+
+  const inputDateFormatter = useMemo(
+    () => new Intl.DateTimeFormat(intlLocaleFor(i18n.resolvedLanguage)),
+    [i18n.resolvedLanguage],
+  )
+
+  const weekDayLabels = useMemo(() => {
+    const ref = startOfWeek(new Date(2025, 0, 15), { locale: dateFnsLocale })
+    return Array.from({ length: 7 }, (_, i) =>
+      format(addDays(ref, i), 'EEE', { locale: dateFnsLocale }),
+    )
+  }, [dateFnsLocale])
+
+  const days = eachDayOfInterval({
+    start: startOfWeek(startOfMonth(viewDate), { locale: dateFnsLocale }),
+    end: endOfWeek(endOfMonth(viewDate), { locale: dateFnsLocale }),
+  })
 
   const handleConfirm = () => {
     onChange?.(pendingDate)
@@ -63,11 +92,6 @@ export const DatePickerInput = ({
     setOpen(next)
   }
 
-  const days = eachDayOfInterval({
-    start: startOfWeek(startOfMonth(viewDate)),
-    end: endOfWeek(endOfMonth(viewDate)),
-  })
-
   return (
     <Popover.Root open={open} onOpenChange={handleOpenChange} modal={false}>
       <Popover.Trigger>
@@ -76,8 +100,8 @@ export const DatePickerInput = ({
             id={id}
             label={label}
             labelWidth={labelWidth}
-            value={value ? formatter.format(value).toString() : ''}
-            placeholder={placeholder}
+            value={value ? inputDateFormatter.format(value) : ''}
+            placeholder={resolvedPlaceholder}
             addonLeft={<CalendarIcon />}
             style={{ cursor: 'pointer', pointerEvents: 'none' }}
           />
@@ -92,24 +116,32 @@ export const DatePickerInput = ({
       >
         <CalendarWrapper>
           <CalendarHeader>
-            <NavButton onClick={() => setViewDate(subMonths(viewDate, 1))}>
+            <NavButton
+              type="button"
+              aria-label={t('ui.datePicker.previousMonth')}
+              onClick={() => setViewDate(subMonths(viewDate, 1))}
+            >
               <ChevronLeftIcon width={18} height={18} />
             </NavButton>
 
             <MonthLabel>
               <Text size="4" weight="bold">
-                {format(viewDate, 'MMMM yyyy')}
+                {format(viewDate, 'LLLL yyyy', { locale: dateFnsLocale })}
               </Text>
             </MonthLabel>
 
-            <NavButton onClick={() => setViewDate(addMonths(viewDate, 1))}>
+            <NavButton
+              type="button"
+              aria-label={t('ui.datePicker.nextMonth')}
+              onClick={() => setViewDate(addMonths(viewDate, 1))}
+            >
               <ChevronRightIcon width={18} height={18} />
             </NavButton>
           </CalendarHeader>
 
           <CalendarGrid>
-            {['Su', 'Mo', 'Tu', 'We', 'Th', 'Fr', 'Sa'].map((d) => (
-              <WeekDay key={d}>
+            {weekDayLabels.map((d, i) => (
+              <WeekDay key={`${d}-${i}`}>
                 <Text size="1" color="gray" weight="medium">
                   {d}
                 </Text>
@@ -141,10 +173,10 @@ export const DatePickerInput = ({
 
           <CalendarFooter>
             <Button themeVariant="secondary" onClick={handleCancel}>
-              Cancel
+              {t('ui.datePicker.cancel')}
             </Button>
             <Button themeVariant="primary" onClick={handleConfirm}>
-              Confirm
+              {t('ui.datePicker.confirm')}
             </Button>
           </CalendarFooter>
         </CalendarWrapper>

@@ -1,5 +1,7 @@
 import type { Preview } from '@storybook/react-vite'
 
+import '../src/features/shared/i18n/i18n'
+
 const preview: Preview = {
   parameters: {
     controls: {

@@ -5,8 +5,13 @@ import { useTranslation } from 'react-i18next'
 
 import type { ProjectRow } from './types'
 
-import { type InputProps } from '@/features/shared'
-import { Input, Text, TextArea, useBreakpoints } from '@/features/shared'
+import {
+  formatDurationFromMinutes,
+  Input,
+  Text,
+  TextArea,
+  useBreakpoints,
+} from '@/features/shared'
 
 type ProjectRowKeys = (keyof ProjectRow)[]
 
@@ -125,7 +130,9 @@ export const ProjectDialogContent = ({
                   </Flex>
 
                   <Text weight={'medium'} size={textSize}>
-                    {data[key]}
+                    {key === 'timeTotal' || key === 'timeActive'
+                      ? formatDurationFromMinutes(data[key], t)
+                      : data[key]}
                   </Text>
                 </>
               )
