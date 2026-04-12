@@ -28,8 +28,14 @@ export const useLeaveConfirm = ({
       description,
       confirmLabel: 'Leave',
       cancelLabel: 'Stay',
-      onConfirm: () => blocker.proceed(),
-      onCancel: () => blocker.reset(),
+      onConfirm: () => {
+        blocker.proceed()
+        blockedRef.current = false
+      },
+      onCancel: () => {
+        blocker.reset()
+        blockedRef.current = false
+      },
     })
 
     blockedRef.current = true
