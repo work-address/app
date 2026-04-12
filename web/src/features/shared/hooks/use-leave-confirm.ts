@@ -1,4 +1,4 @@
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useBlocker } from 'react-router-dom'
 
 import { useConfirm } from './use-confirm.ts'
@@ -16,9 +16,10 @@ export const useLeaveConfirm = ({
 }: Options) => {
   const blocker = useBlocker(when)
   const { confirm } = useConfirm()
+  const blockedRef = useRef(false)
 
   useEffect(() => {
-    if (blocker.state !== 'blocked') {
+    if (blocker.state !== 'blocked' || blockedRef.current) {
       return
     }
 
@@ -30,12 +31,7 @@ export const useLeaveConfirm = ({
       onConfirm: () => blocker.proceed(),
       onCancel: () => blocker.reset(),
     })
-  }, [
-    blocker.state,
-    blocker.proceed,
-    blocker.reset,
-    confirm,
-    description,
-    title,
-  ])
+
+    blockedRef.current = true
+  }, [blocker, confirm, description, title])
 }
