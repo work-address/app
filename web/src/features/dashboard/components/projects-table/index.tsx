@@ -101,6 +101,9 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
                 'dashboard.projectsTable.confirmDelete.description',
               ),
               confirmLabel: t('dashboard.projectsTable.confirmDelete.confirm'),
+              onConfirm: () => {
+                setIsEditDialogOpen(false)
+              },
             })
             break
           }
