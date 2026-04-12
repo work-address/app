@@ -1,3 +1,4 @@
+import { Helmet } from 'react-helmet-async'
 import { Trans, useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import { useMediaQuery } from 'styled-breakpoints/use-media-query'
@@ -7,7 +8,7 @@ import { AuthFormStyles as S, ProviderButton } from '@/features/auth'
 import { Button, routes, showErrorToast } from '@/features/shared'
 
 export default function SignInPage() {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const navigate = useNavigate()
   const { breakpoints } = useTheme()
 
@@ -27,6 +28,10 @@ export default function SignInPage() {
 
   return (
     <>
+      <Helmet
+        htmlAttributes={{ lang: i18n.language }}
+        title={t('signIn.title')}
+      />
       {isUpMd ? (
         <S.Logo src="/img/photo/logo.svg" alt={t('signIn.logoAlt')} />
       ) : (

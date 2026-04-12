@@ -1,4 +1,7 @@
 {
+  "app.documentTitle.default": "Work Address",
+  "app.documentTitle.invoice": "Счёт",
+  "app.documentTitle.profileEdit": "Редактирование профиля",
   "common.duration.hoursAndMinutes": "{{hours}} ч {{minutes}} мин",
   "common.duration.hoursOnly": "{{hours}} ч",
   "common.duration.minutesOnly": "{{minutes}} мин",

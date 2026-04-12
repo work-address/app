@@ -1,4 +1,7 @@
 {
+  "app.documentTitle.default": "Work Address",
+  "app.documentTitle.invoice": "請求書",
+  "app.documentTitle.profileEdit": "プロフィールを編集",
   "common.apply": "適用",
   "common.duration.hoursAndMinutes": "{{hours}}時間{{minutes}}分",
   "common.duration.hoursOnly": "{{hours}}時間",

@@ -1,4 +1,7 @@
 {
+  "app.documentTitle.default": "Work Address",
+  "app.documentTitle.invoice": "Factura",
+  "app.documentTitle.profileEdit": "Editar perfil",
   "common.apply": "Aplicar",
   "common.duration.hoursAndMinutes": "{{hours}} h {{minutes}} min",
   "common.duration.hoursOnly": "{{hours}} h",

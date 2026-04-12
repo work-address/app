@@ -1,8 +1,16 @@
 import type { Preview } from '@storybook/react-vite'
+import { HelmetProvider } from 'react-helmet-async'
 
 import '../src/features/shared/i18n/i18n'
 
 const preview: Preview = {
+  decorators: [
+    (Story) => (
+      <HelmetProvider>
+        <Story />
+      </HelmetProvider>
+    ),
+  ],
   parameters: {
     controls: {
       matchers: {

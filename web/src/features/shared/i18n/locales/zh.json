@@ -1,4 +1,7 @@
 {
+  "app.documentTitle.default": "Work Address",
+  "app.documentTitle.invoice": "账单",
+  "app.documentTitle.profileEdit": "编辑资料",
   "common.apply": "应用",
   "common.duration.hoursAndMinutes": "{{hours}} 小时 {{minutes}} 分钟",
   "common.duration.hoursOnly": "{{hours}} 小时",

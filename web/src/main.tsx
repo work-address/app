@@ -1,6 +1,8 @@
 import { Theme } from '@radix-ui/themes'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
+import { HelmetProvider } from 'react-helmet-async'
+import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { ThemeProvider } from 'styled-components'
 import '@/features/shared/i18n/i18n'
@@ -24,10 +26,11 @@ createRoot(rootElement).render(
       <ThemeProvider theme={theme}>
         <Confirm />
 
-        <Toaster />
-        <ToastStyle />
-
-        <App />
+        <BrowserRouter>
+          <HelmetProvider>
+            <App />
+          </HelmetProvider>
+        </BrowserRouter>
       </ThemeProvider>
     </Theme>
   </StrictMode>,

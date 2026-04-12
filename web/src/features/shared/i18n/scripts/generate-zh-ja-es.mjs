@@ -12,6 +12,9 @@ const en = JSON.parse(fs.readFileSync(path.join(localesDir, 'en.json'), 'utf8'))
 
 /** @type {Record<string, string>} */
 const zh = {
+  'app.documentTitle.default': 'Work Address',
+  'app.documentTitle.invoice': '账单',
+  'app.documentTitle.profileEdit': '编辑资料',
   'common.apply': '应用',
   'common.duration.hoursAndMinutes': '{{hours}} 小时 {{minutes}} 分钟',
   'common.duration.hoursOnly': '{{hours}} 小时',
@@ -231,6 +234,9 @@ const zh = {
 
 /** @type {Record<string, string>} */
 const ja = {
+  'app.documentTitle.default': 'Work Address',
+  'app.documentTitle.invoice': '請求書',
+  'app.documentTitle.profileEdit': 'プロフィールを編集',
   'common.apply': '適用',
   'common.duration.hoursAndMinutes': '{{hours}}時間{{minutes}}分',
   'common.duration.hoursOnly': '{{hours}}時間',
@@ -455,6 +461,9 @@ const ja = {
 
 /** @type {Record<string, string>} */
 const es = {
+  'app.documentTitle.default': 'Work Address',
+  'app.documentTitle.invoice': 'Factura',
+  'app.documentTitle.profileEdit': 'Editar perfil',
   'common.apply': 'Aplicar',
   'common.duration.hoursAndMinutes': '{{hours}} h {{minutes}} min',
   'common.duration.hoursOnly': '{{hours}} h',
