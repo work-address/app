@@ -85,29 +85,34 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
   }
 
   const handleActionClick: ProjectTableContextValues['handleActionClick'] =
-    useCallback((row, action) => {
-      switch (action) {
-        case 'Edit': {
-          setSelectedRow(row)
-          setIsEditDialogOpen(true)
-          break
-        }
+    useCallback(
+      (row, action) => {
+        switch (action) {
+          case 'Edit': {
+            setSelectedRow(row)
+            setIsEditDialogOpen(true)
+            break
+          }
 
-        case 'Delete': {
-          void confirm({
-            title: t('dashboard.projectsTable.confirmDelete.title'),
-            description: t('dashboard.projectsTable.confirmDelete.description'),
-            confirmLabel: t('dashboard.projectsTable.confirmDelete.confirm'),
-          })
-          break
-        }
+          case 'Delete': {
+            void confirm({
+              title: t('dashboard.projectsTable.confirmDelete.title'),
+              description: t(
+                'dashboard.projectsTable.confirmDelete.description',
+              ),
+              confirmLabel: t('dashboard.projectsTable.confirmDelete.confirm'),
+            })
+            break
+          }
 
-        case 'Print': {
-          alert(`${row.key} ${action}`)
-          break
+          case 'Print': {
+            alert(`${row.key} ${action}`)
+            break
+          }
         }
-      }
-    }, [])
+      },
+      [confirm],
+    )
 
   const desktopConfig = useMemo(
     (): DataTableConfig<ProjectRow> => [
