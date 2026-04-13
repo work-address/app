@@ -20,8 +20,8 @@ import { CreateProjectModal } from './create-project-modal.tsx'
 import { DesktopCell } from './desktop-cell.tsx'
 import { MobileAddonBottom } from './mobile-addon-bottom.tsx'
 import { MobileHeader } from './mobile-header.tsx'
-import { ProjectMobileBody } from './project-mobile-body.tsx'
 import { ProjectDialogContent } from './project-dialog-content.tsx'
+import { ProjectMobileBody } from './project-mobile-body.tsx'
 
 import type { ProjectRow } from './types'
 
@@ -176,23 +176,23 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
       },
       {
         dataKey: 'timeTotal',
-        description: t('dashboard.projectsTable.head.timeTotal'),
+        headerText: t('dashboard.projectsTable.head.timeTotal'),
       },
       {
         dataKey: 'timeActive',
-        description: t('dashboard.projectsTable.head.timeActive'),
+        headerText: t('dashboard.projectsTable.head.timeActive'),
       },
       {
         dataKey: 'keyboard',
-        description: t('dashboard.projectsTable.head.keyboard'),
+        headerText: t('dashboard.projectsTable.head.keyboard'),
       },
       {
         dataKey: 'mouse',
-        description: t('dashboard.projectsTable.head.mouse'),
+        headerText: t('dashboard.projectsTable.head.mouse'),
       },
       {
         dataKey: 'mouseDistance',
-        description: t('dashboard.projectsTable.head.mouseDistance'),
+        headerText: t('dashboard.projectsTable.head.mouseDistance'),
       },
     ],
     [t],

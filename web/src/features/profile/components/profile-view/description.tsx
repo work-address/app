@@ -38,8 +38,14 @@ export const Description = ({ gridArea }: DescriptionProps) => {
 
             <Text color={'blue'} $themeVariant={'primary'}>
               <Flex gap={'1'} align={'end'}>
-                <Text size={'8'}> 35 </Text>
-                <Text> {t('profile.view.usdtUnit')} </Text>
+                <Text size={isMobile ? '4' : '8'} weight={'medium'}>
+                  35
+                </Text>
+
+                <Text size={isMobile ? '2' : undefined}>
+                  {' '}
+                  {t('profile.view.usdtUnit')}{' '}
+                </Text>
               </Flex>
             </Text>
           </Flex>

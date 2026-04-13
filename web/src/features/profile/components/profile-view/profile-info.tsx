@@ -102,8 +102,8 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
                 <Text color={'gray'}>
                   {t('profile.view.social.linkedinPrefix')}
                 </Text>
-                johndoe
-              </Text>
+                <Text weight={'medium'}>johndoe</Text>
+              </Flex>
             }
           />
           <InfoRow
@@ -118,8 +118,8 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
                 <Text color={'gray'}>
                   {t('profile.view.social.facebookPrefix')}
                 </Text>
-                johndoe
-              </Text>
+                <Text weight={'medium'}>johndoe</Text>
+              </Flex>
             }
           />
           <InfoRow
@@ -134,8 +134,8 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
                 <Text color={'gray'}>
                   {t('profile.view.social.telegramPrefix')}
                 </Text>
-                johndoe
-              </Text>
+                <Text weight={'medium'}>johndoe</Text>
+              </Flex>
             }
           />
         </Flex>

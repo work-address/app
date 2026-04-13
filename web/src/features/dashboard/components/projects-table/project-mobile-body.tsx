@@ -3,13 +3,11 @@ import { Flex, Grid } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
 
 import type { ProjectRow } from './types'
-
 import type { MobileBodyRenderProps } from '@/features/shared'
+
 import { formatDurationFromMinutes, Text } from '@/features/shared'
 
-export const ProjectMobileBody = (
-  props: MobileBodyRenderProps<ProjectRow>,
-) => {
+export const ProjectMobileBody = (props: MobileBodyRenderProps<ProjectRow>) => {
   const { t } = useTranslation()
   const dataKey = 'dataKey' in props ? props.dataKey : undefined
 
