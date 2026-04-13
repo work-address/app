@@ -12,11 +12,13 @@ type ToastProps = {
   message: ReactNode
   position?: ToasterProps['position']
   duration?: number
+  closeButton?: boolean
+  icon?: () => ReactNode
 }
 
 const showToast = (
-  type: 'error' | 'warning' | 'info',
-  { message, title, position, duration }: ToastProps,
+  type: 'error' | 'warning' | 'info' | 'success',
+  { message, title, position, duration, closeButton, icon: Icon }: ToastProps,
 ) => {
   toast[type](
     <ToastWrapper>
@@ -25,9 +27,10 @@ const showToast = (
     </ToastWrapper>,
     {
       duration,
-      className: `${type}-toast`,
+      className: `${type}-toast sonner-toast`,
       position,
-      icon: <img src={InfoIcon} alt={i18n.t('common.toastErrorAlt')} />,
+      icon: Icon ? <Icon /> : <InfoIcon />,
+      closeButton,
     },
   )
 }
@@ -43,37 +46,69 @@ const ToastWrapper = styled.div``
 
 const baseToastStyle = (bg: string, border: string, color: string) => `
   &[data-sonner-toast][data-styled=true] {
-    padding: 16px;
-    justify-items: start;
-    align-items: start;
     background: ${bg};
     border: 1px solid ${border};
-    font-size: 16px;
-    box-shadow:
-      0 2px 3px -2px var(--ds-neutral-alpha-3),
-      0px 3px 12px -4px rgba(0, 0, 0, 0.1),
-      0px 4px 16px -8px rgba(0, 0, 0, 0.1);
 
     [data-icon] {
-      padding-top: 6px;
-      margin-right: 12px;
       color: ${color};
     }
 
     .toast-title {
-      margin-bottom: 4px;
-      font-weight: 500;
       color: ${color};
     }
 
     .toast-message {
-      font-weight: 400;
       color: ${color};
     }
   }
 `
 
 export const ToastStyle = createGlobalStyle`
+  .sonner-toast {
+    &[data-sonner-toast][data-styled=true] {
+      padding: 16px;
+      justify-items: start;
+      align-items: start;
+      font-size: 16px;
+      /*
+      Тень из макета работает некорректно.
+      box-shadow: 0 2px 3px -2px var(--ds-neutral-alpha-3)
+      0px 3px 12px -4px var(--overlays-black-alpha-2)
+      0px 4px 16px -8px var(--overlays-black-alpha-2);
+      */
+
+      [data-close-button] {
+        position: absolute;
+        top: 40%;
+        left: initial;
+        bottom: 50%;
+        right: var(--space-2);
+        transform: translateY(-50%);
+        background: transparent;
+        font-size: var(--font-size-4);
+
+        svg {
+          width: 18px;
+          height: 18px;
+        }
+      }
+    }
+
+    [data-icon] {
+      padding-top: 6px;
+      margin-right: 12px;
+    }
+
+    .toast-title {
+      margin-bottom: 4px;
+      font-weight: 500;
+    }
+
+    .toast-message {
+      font-weight: 400;
+    }
+  }
+
   .error-toast {
     ${baseToastStyle(
       'rgba(255, 247, 247, 1)',
@@ -91,10 +126,6 @@ export const ToastStyle = createGlobalStyle`
   }
 
   .info-toast {
-    ${baseToastStyle(
-      'rgba(245, 248, 255, 1)',
-      'var(--info-alpha-6)',
-      'var(--info-11)',
-    )}
+    ${baseToastStyle('var(--ds-accent-3)', 'var(--ds-accent-alpha-6)', '#000')}
   }
 `

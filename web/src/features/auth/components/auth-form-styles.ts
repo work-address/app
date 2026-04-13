@@ -16,7 +16,7 @@ export const Logo = styled.img`
 
 export const SignInCard = styled(Card)`
   text-align: center;
-  background-color: var(--accent-3);
+  background-color: var(--ds-accent-3);
   padding: var(--spacing-5) 16px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {

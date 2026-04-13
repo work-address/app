@@ -341,7 +341,14 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
         description={
           isDesktop ? (
             <Flex justify={'between'}>
-              <Button color={'red'} variant={'outline'} size={'3'}>
+              <Button
+                color={'red'}
+                variant={'outline'}
+                size={'3'}
+                onClick={() =>
+                  selectedRow && handleActionClick(selectedRow, 'Delete')
+                }
+              >
                 <TrashIcon />
                 Delete
               </Button>

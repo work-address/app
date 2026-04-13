@@ -8,12 +8,15 @@
   --border: #000830;
   --download: #003482;
 
-  --accent-3: #e4ebf7;
+  --ds-accent-3: #e4ebf7;
   --ds-accent-9: rgba(63, 103, 164, 1);
   --accent-10: rgba(49, 89, 149, 1);
   --ds-accent-11: rgba(57, 97, 157, 1);
 
+  --ds-accent-alpha-6: #014FBD26;
+
   --overlays-black-alpha-1: rgba(0, 0, 0, 0.05);
+  --overlays-black-alpha-2: #0000001A;
 
   --ds-neutral-2: #F9F9FB;
   --ds-neutral-4: #E8E8EC;
@@ -21,8 +24,8 @@
   --ds-neutral-12: #1C2024;
 
   --ds-neutral-alpha-3: rgba(0, 0, 51, 0.06);
-  --ds-neutral-alpha-8: #00083046;
   --ds-neutral-alpha-6: rgba(0, 0, 47, 0.15);
+  --ds-neutral-alpha-8: #00083046;
 
   --shadow-4: 0px 8px 40px 0px var(--overlays-black-alpha-1),
   0px 12px 32px -16px var(--ds-neutral-alpha-3);

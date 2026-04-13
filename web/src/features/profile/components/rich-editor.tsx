@@ -192,7 +192,7 @@ const FlexToolbar = styled(Flex)`
   border-bottom: 1px solid var(--gray-6);
 
   [data-active='true'] {
-    background-color: var(--accent-3) !important;
+    background-color: var(--ds-accent-3) !important;
     color: var(--ds-accent-11) !important;
   }
 `

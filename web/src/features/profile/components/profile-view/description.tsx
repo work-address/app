@@ -63,7 +63,7 @@ export const Description = ({ gridArea }: DescriptionProps) => {
           </Text>
         </div>
 
-        <Flex gap={'2'} wrap={'wrap'}>
+        <Flex gap={'2'} wrap={'wrap'} mb={{ initial: '0', md: '2' }}>
           {skills.map((skill) => (
             <Badge key={skill} color={'gray'} size={'2'}>
               {skill}
@@ -76,6 +76,11 @@ export const Description = ({ gridArea }: DescriptionProps) => {
 }
 
 const StyledCard = styled(ProfileViewCard)`
+  ${(p) => p.theme.breakpoints.up('md')} {
+    padding-top: 26px;
+    padding-bottom: 24px;
+  }
+
   ${(p) => p.theme.breakpoints.down('md')} {
     margin-top: var(--space-3);
     padding: var(--space-5);

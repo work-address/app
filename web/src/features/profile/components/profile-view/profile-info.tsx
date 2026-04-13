@@ -84,10 +84,10 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
               />
             }
             text={
-              <Text>
-                <Text color={'gray'}>{t('profile.view.worksAt')}</Text>{' '}
-                {t('profile.view.mockCompany')}
-              </Text>
+              <Flex gap={{ initial: '5px', md: '6px' }}>
+                <Text color={'gray'}>{t('profile.view.worksAt')}</Text>
+                <Text weight={'medium'}>{t('profile.view.mockCompany')}</Text>
+              </Flex>
             }
           />
           <InfoRow
