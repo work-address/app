@@ -16,7 +16,7 @@ type ToastProps = {
   icon?: () => ReactNode
 }
 
-const showToast = (
+export const showToast = (
   type: 'error' | 'warning' | 'info' | 'success',
   { message, title, position, duration, closeButton, icon: Icon }: ToastProps,
 ) => {
@@ -34,13 +34,6 @@ const showToast = (
     },
   )
 }
-
-export const showErrorToast = (props: ToastProps) => showToast('error', props)
-
-export const showWarningToast = (props: ToastProps) =>
-  showToast('warning', props)
-
-export const showInfoToast = (props: ToastProps) => showToast('info', props)
 
 const ToastWrapper = styled.div``
 
@@ -73,8 +66,8 @@ export const ToastStyle = createGlobalStyle`
       /*
       Тень из макета работает некорректно.
       box-shadow: 0 2px 3px -2px var(--ds-neutral-alpha-3)
-      0px 3px 12px -4px var(--overlays-black-alpha-2)
-      0px 4px 16px -8px var(--overlays-black-alpha-2);
+                  0px 3px 12px -4px var(--overlays-black-alpha-2)
+                  0px 4px 16px -8px var(--overlays-black-alpha-2);
       */
 
       [data-close-button] {

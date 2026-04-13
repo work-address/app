@@ -5,7 +5,7 @@ import { useMediaQuery } from 'styled-breakpoints/use-media-query'
 import { useTheme } from 'styled-components'
 
 import { AuthFormStyles as S, ProviderButton } from '@/features/auth'
-import { Button, routes, showErrorToast } from '@/features/shared'
+import { Button, routes, showToast } from '@/features/shared'
 
 export default function SignInPage() {
   const { t, i18n } = useTranslation()
@@ -18,7 +18,7 @@ export default function SignInPage() {
     if (type === 'ton') {
       navigate(routes.dashboard.schema)
     } else {
-      showErrorToast({
+      showToast('error', {
         title: t('signIn.error.title'),
         message: t('signIn.error.message'),
         position: 'top-center',

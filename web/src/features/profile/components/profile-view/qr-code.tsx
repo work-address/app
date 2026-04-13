@@ -13,7 +13,7 @@ import {
   useBreakpoints,
   Button,
   Modal,
-  showInfoToast,
+  showToast,
 } from '@/features/shared'
 
 type QrCodeProps = {
@@ -23,8 +23,19 @@ type QrCodeProps = {
 
 export const QrCode = ({ gridArea }: QrCodeProps) => {
   const { t } = useTranslation()
-  const { breakpoints } = useTheme()
-  const isUpMd = useMediaQuery(breakpoints.up('md'))
+
+  const [qrModalOpened, setQrModalOpened] = useState(false)
+
+  const walletAddress = 'EQCF9...NDOM'
+
+  const handleCopyWalletAddress = async () => {
+    await navigator.clipboard.writeText(walletAddress)
+
+    showToast('info', {
+      message: 'Address copied to clipboard',
+      position: 'top-center',
+    })
+  }
 
   return (
     <StyledCard gridArea={gridArea} shadow={false}>

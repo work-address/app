@@ -11,7 +11,7 @@ import { ProfileViewCard } from './styled'
 import {
   Button,
   routes,
-  showInfoToast,
+  showToast,
   Text,
   useBreakpoints,
 } from '@/features/shared'
@@ -22,8 +22,21 @@ type ProfileInfoProps = {
 
 export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
   const { t } = useTranslation()
-  const { breakpoints } = useTheme()
-  const isUpMd = useMediaQuery(breakpoints.up('md'))
+
+  const walletAddress = 'EQCF9...NDOM'
+
+  const infoRowGap: FlexProps['gap'] = {
+    initial: '2px',
+  }
+
+  const handleCopyWalletAddress = async () => {
+    await navigator.clipboard.writeText(walletAddress)
+
+    showToast('info', {
+      message: 'Address copied to clipboard',
+      position: 'top-center',
+    })
+  }
 
   return (
     <StyledCard gridArea={gridArea} shadow={false}>

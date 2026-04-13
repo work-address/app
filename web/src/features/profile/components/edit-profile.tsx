@@ -15,7 +15,7 @@ import {
   useLeaveConfirm,
   routes,
   useConfirm,
-  showErrorToast,
+  showToast,
   useBreakpoints,
 } from '@/features/shared'
 
@@ -61,7 +61,7 @@ export const EditProfile = () => {
   })
 
   const onSubmit: SubmitHandler<FormState> = () => {
-    showErrorToast({
+    showToast('error', {
       message:
         'Something went wrong. Please check your connection and try again.',
       position: 'top-center',
