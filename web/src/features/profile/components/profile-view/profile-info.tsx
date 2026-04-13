@@ -25,7 +25,6 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
 
   const infoRowGap: FlexProps['gap'] = {
     initial: '2px',
-    md: '1',
   }
 
   const handleCopyWalletAddress = async () => {
