@@ -13,7 +13,7 @@ import type { WorklogFormFilters, WorklogRow } from './types'
 import {
   type DataTableConfig,
   DataTable,
-  useBreakpoints,
+  useBreakpoint,
 } from '@/features/shared'
 
 const initialFormFilters = (): WorklogFormFilters => ({
@@ -33,7 +33,9 @@ type WorklogsTableProps = {
 
 export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
   const { t } = useTranslation()
-  const { isMobile, isDesktop } = useBreakpoints()
+
+  const isMobile = useBreakpoint('isMobile')
+  const isDesktop = useBreakpoint('isDesktop')
 
   const [worklogQuery, setWorklogQuery] = useState('')
   const [fromDate, setFromDate] = useState<Date | null>(null)

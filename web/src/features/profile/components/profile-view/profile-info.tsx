@@ -13,7 +13,7 @@ import {
   routes,
   showToast,
   Text,
-  useBreakpoints,
+  useBreakpoint,
 } from '@/features/shared'
 
 type ProfileInfoProps = {
@@ -21,6 +21,7 @@ type ProfileInfoProps = {
 }
 
 export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
+  const isDesktop = useBreakpoint('isDesktop')
   const { t } = useTranslation()
 
   const walletAddress = 'EQCF9...NDOM'

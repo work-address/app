@@ -2,7 +2,7 @@ import { Flex, Text, Button, Dialog } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import styled from 'styled-components'
 
-import { useBreakpoints } from '../../hooks'
+import { useBreakpoint } from '../../hooks'
 import { $confirmStack, confirmed, cancelled } from '../../model/confirm.model'
 
 export const Confirm = () => {
@@ -10,7 +10,7 @@ export const Confirm = () => {
   const cancelledEvent = useUnit(cancelled)
   const confirmedEvent = useUnit(confirmed)
 
-  const { isDesktop } = useBreakpoints()
+  const isDesktop = useBreakpoint('isDesktop')
 
   return (
     <>

@@ -8,7 +8,7 @@ import {
   type InputProps,
   Text,
   TextArea,
-  useBreakpoints,
+  useBreakpoint,
 } from '@/features/shared'
 
 type CreateProjectPayload = {
@@ -28,7 +28,7 @@ export const CreateProjectModal = ({
   onOpenChange,
 }: CreateProjectModalProps) => {
   const { t } = useTranslation()
-  const { isMobile } = useBreakpoints()
+  const isMobile = useBreakpoint('isMobile')
 
   const inputProps: InputProps = {
     rows: 'auto 1fr',

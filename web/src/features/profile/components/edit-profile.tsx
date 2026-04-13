@@ -16,7 +16,7 @@ import {
   routes,
   useConfirm,
   showToast,
-  useBreakpoints,
+  useBreakpoint,
 } from '@/features/shared'
 
 type FormState = {
@@ -36,7 +36,7 @@ const inputLabelWidth = '106px'
 export const EditProfile = () => {
   const { t } = useTranslation()
 
-  const { isDesktop } = useBreakpoints()
+  const isDesktop = useBreakpoint('isDesktop')
   const { confirm } = useConfirm()
 
   const {

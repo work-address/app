@@ -4,7 +4,7 @@ import styled from 'styled-components'
 
 import { ProfileViewCard } from './styled'
 
-import { Text, useBreakpoints } from '@/features/shared'
+import { Text, useBreakpoint } from '@/features/shared'
 
 type DescriptionProps = {
   gridArea?: string
@@ -25,6 +25,7 @@ const skills = [
 ]
 
 export const Description = ({ gridArea }: DescriptionProps) => {
+  const isMobile = useBreakpoint('isMobile')
   const { t } = useTranslation()
 
   return (

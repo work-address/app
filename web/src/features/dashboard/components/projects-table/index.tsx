@@ -24,13 +24,8 @@ import { ProjectDialogContent } from './project-dialog-content.tsx'
 import { ProjectMobileBody } from './project-mobile-body.tsx'
 
 import type { ProjectRow } from './types'
+import type { MobileDataTableConfig, DataTableConfig } from '@/features/shared'
 
-import {
-  type MobileDataTableConfig,
-  type DataTableConfig,
-  useBreakpoints,
-  useConfirm,
-} from '@/features/shared'
 import {
   DataTable,
   MobileDataTable,
@@ -42,6 +37,8 @@ import {
   Button,
   IconButton,
   AdaptiveDialog,
+  useBreakpoint,
+  useConfirm,
 } from '@/features/shared'
 
 export type ProjectStatus = 'Active' | 'Paused' | 'Finished'
@@ -51,7 +48,9 @@ type ProjectsTableProps = {
 }
 
 export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
-  const { isDesktop, isMobile } = useBreakpoints()
+  const isDesktop = useBreakpoint('isDesktop')
+  const isMobile = useBreakpoint('isMobile')
+
   const { confirm } = useConfirm()
 
   const { t } = useTranslation()

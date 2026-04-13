@@ -10,7 +10,8 @@ import {
   Input,
   Text,
   TextArea,
-  useBreakpoints,
+  useBreakpoint,
+  type InputProps,
 } from '@/features/shared'
 
 type ProjectRowKeys = (keyof ProjectRow)[]
@@ -25,7 +26,8 @@ export const ProjectDialogContent = ({
   mode,
 }: ProjectDialogContentProps) => {
   const { t } = useTranslation()
-  const { isMobile, isDesktop } = useBreakpoints()
+  const isMobile = useBreakpoint('isMobile')
+  const isDesktop = useBreakpoint('isDesktop')
 
   const { register } = useForm({
     values: data,

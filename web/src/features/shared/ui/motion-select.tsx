@@ -9,7 +9,7 @@ import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { useBreakpoints } from '../hooks'
+import { useBreakpoint } from '../hooks'
 
 import { Button } from './button'
 import { Checkbox } from './checkbox'
@@ -46,7 +46,8 @@ export const MotionSelect = ({
   allSelectedText,
 }: MotionSelectProps) => {
   const { t } = useTranslation()
-  const { isMobile, isDesktop } = useBreakpoints()
+  const isMobile = useBreakpoint('isMobile')
+  const isDesktop = useBreakpoint('isDesktop')
   const [open, setOpen] = useState(false)
 
   const ph = placeholder ?? t('ui.motionSelect.placeholder')

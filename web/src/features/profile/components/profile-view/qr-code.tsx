@@ -10,7 +10,7 @@ import { ProfileViewCard } from './styled'
 import {
   routes,
   Text,
-  useBreakpoints,
+  useBreakpoint,
   Button,
   Modal,
   showToast,
@@ -22,6 +22,9 @@ type QrCodeProps = {
 }
 
 export const QrCode = ({ gridArea }: QrCodeProps) => {
+  const isMobile = useBreakpoint('isMobile')
+  const isDesktop = useBreakpoint('isDesktop')
+
   const { t } = useTranslation()
 
   const [qrModalOpened, setQrModalOpened] = useState(false)

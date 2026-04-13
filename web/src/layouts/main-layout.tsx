@@ -4,12 +4,12 @@ import styled from 'styled-components'
 
 import type { MotionProps } from 'motion/react'
 
-import { useBreakpoints } from '@/features/shared'
+import { useBreakpoint } from '@/features/shared'
 import { Header } from '@/widgets'
 
 export const MainLayout = () => {
   const { pathname } = useLocation()
-  const { isDesktop } = useBreakpoints()
+  const isDesktop = useBreakpoint('isDesktop')
 
   const motionProps: MotionProps | null = isDesktop
     ? {

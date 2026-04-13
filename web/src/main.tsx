@@ -9,7 +9,12 @@ import '@/features/shared/i18n/i18n'
 
 import { App } from './app/app'
 
-import { ToastStyle, theme, Confirm } from '@/features/shared'
+import {
+  ToastStyle,
+  theme,
+  Confirm,
+  BreakpointsWatcher,
+} from '@/features/shared'
 
 const rootElementId = 'root'
 const rootElement = document.getElementById(rootElementId)
@@ -25,6 +30,7 @@ createRoot(rootElement).render(
     <Theme>
       <ThemeProvider theme={theme}>
         <Confirm />
+        <BreakpointsWatcher />
 
         <BrowserRouter>
           <HelmetProvider>
