@@ -12,7 +12,5 @@ const $breakpoints = createStore<Breakpoints>({
   isMobile: false,
 }).on(updateBreakpoints, (state, payload) => ({ ...state, ...payload }))
 
-$breakpoints.watch(console.log)
-
 export { $breakpoints, updateBreakpoints }
 export type { Breakpoints }
