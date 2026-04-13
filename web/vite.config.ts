@@ -5,6 +5,8 @@ import { playwright } from '@vitest/browser-playwright'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
+import svgr from 'vite-plugin-svgr'
+
 const dirname =
   typeof __dirname === 'undefined'
     ? path.dirname(fileURLToPath(import.meta.url))
@@ -13,7 +15,7 @@ const dirname =
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig({
   base: '/',
-  plugins: [react()],
+  plugins: [react(), svgr()],
   server: {
     host: true,
     port: 3000,

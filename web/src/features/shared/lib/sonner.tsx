@@ -26,7 +26,7 @@ const showToast = (
       duration,
       className: `${type}-toast`,
       position,
-      icon: <img src={InfoIcon} alt={type} />,
+      icon: <InfoIcon />,
     },
   )
 }
@@ -56,6 +56,7 @@ const baseToastStyle = (bg: string, border: string, color: string) => `
     [data-icon] {
       padding-top: 6px;
       margin-right: 12px;
+      color: ${color};
     }
 
     .toast-title {
