@@ -7,7 +7,15 @@ export type CommonDialogProps = {
   title?: ReactNode
   description?: ReactNode
   onOpenChange?: (open: boolean) => void
+  mobileHeight?: string
   desktopWidth?: string
   desktopPadding?: string
-  mobileHeight?: string
+  desktopShowClose?: boolean
+}
+
+export type ModalProps = {
+  width?: string
+  padding?: string
+  showClose?: boolean
+  showTitleSeparator?: boolean
 }

@@ -6,11 +6,25 @@ import { Modal } from './modal.tsx'
 
 import type { CommonDialogProps } from './types.ts'
 
-export const AdaptiveDialog = (props: CommonDialogProps) => {
+export const AdaptiveDialog = ({
+  desktopPadding,
+  desktopShowClose,
+  desktopWidth,
+  ...props
+}: CommonDialogProps) => {
   const { breakpoints } = useTheme()
   const isMobile = useMediaQuery(breakpoints.down('md'))
 
-  return isMobile ? <Drawer {...props} /> : <Modal {...props} />
+  return isMobile ? (
+    <Drawer {...props} />
+  ) : (
+    <Modal
+      width={desktopWidth}
+      showClose={desktopShowClose}
+      padding={desktopPadding}
+      {...props}
+    />
+  )
 }
 
 export { Modal } from './modal.tsx'

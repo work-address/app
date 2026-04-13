@@ -1,26 +1,40 @@
 import { Share1Icon, Pencil1Icon, CopyIcon } from '@radix-ui/react-icons'
 import { Flex, type FlexProps } from '@radix-ui/themes'
 import { Link } from 'react-router-dom'
-import { useMediaQuery } from 'styled-breakpoints/use-media-query'
-import styled, { useTheme } from 'styled-components'
+import styled from 'styled-components'
 
 import { InfoRow } from '../info-row'
 
 import { ProfileViewCard } from './styled'
 
-import { Button, routes, Text } from '@/features/shared'
+import {
+  Button,
+  routes,
+  showInfoToast,
+  Text,
+  useBreakpoints,
+} from '@/features/shared'
 
 type ProfileInfoProps = {
   gridArea?: string
 }
 
 export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
-  const { breakpoints } = useTheme()
-  const isUpMd = useMediaQuery(breakpoints.up('md'))
+  const { isDesktop } = useBreakpoints()
+  const walletAddress = 'EQCF9...NDOM'
 
   const infoRowGap: FlexProps['gap'] = {
     initial: '2px',
     md: '1',
+  }
+
+  const handleCopyWalletAddress = async () => {
+    await navigator.clipboard.writeText(walletAddress)
+
+    showInfoToast({
+      message: 'Address copied to clipboard',
+      position: 'top-center',
+    })
   }
 
   return (
@@ -32,7 +46,7 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
         style={{ height: '100%' }}
       >
         <Flex justify={'between'} gap={'5'} align={'center'}>
-          {isUpMd ? (
+          {isDesktop ? (
             <>
               <Flex direction={'column'} gap={'2'}>
                 <Text size={'7'} weight={'medium'}>
@@ -40,13 +54,13 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
                 </Text>
 
                 <Flex gap={'2'} align={'center'}>
-                  <Button variant={'ghost'}>
+                  <Button variant={'ghost'} onClick={handleCopyWalletAddress}>
                     <Text
                       $themeVariant={'primary'}
                       size={'3'}
                       weight={'medium'}
                     >
-                      EQCF9...NDOM
+                      {walletAddress}
                     </Text>
 
                     <CopyIcon />

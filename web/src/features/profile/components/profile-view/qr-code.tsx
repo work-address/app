@@ -1,12 +1,19 @@
 import { CopyIcon, Pencil1Icon, Share1Icon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
+import { useState } from 'react'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { ProfileViewCard } from './styled'
 
-import { IconButton, routes, Text, useBreakpoints } from '@/features/shared'
-import { Button } from '@/features/shared'
+import {
+  routes,
+  Text,
+  useBreakpoints,
+  Button,
+  Modal,
+  showInfoToast,
+} from '@/features/shared'
 
 type QrCodeProps = {
   gridArea?: string
@@ -14,60 +21,100 @@ type QrCodeProps = {
 }
 
 export const QrCode = ({ gridArea }: QrCodeProps) => {
-  const { isMobile } = useBreakpoints()
+  const { isMobile, isDesktop } = useBreakpoints()
+  const [qrModalOpened, setQrModalOpened] = useState(false)
+  const walletAddress = 'EQCF9...NDOM'
+
+  const handleCopyWalletAddress = async () => {
+    await navigator.clipboard.writeText(walletAddress)
+
+    showInfoToast({
+      message: 'Address copied to clipboard',
+      position: 'top-center',
+    })
+  }
 
   return (
-    <StyledCard gridArea={gridArea} shadow={false}>
-      <Flex
-        direction={'column'}
-        gap={{ initial: '4' }}
-        align={'center'}
-        style={{ height: '100%' }}
-      >
-        {isMobile && (
-          <Flex direction={'column'} align={'center'} gap={{ initial: '2' }}>
-            <Text size={'6'} weight={'medium'}>
-              John Doe
-            </Text>
-
-            <Flex gap={'2'} align={'center'}>
-              <Text $themeVariant={'primary'} size={'2'} weight={'medium'}>
-                EQCF9...NDOM
+    <>
+      <StyledCard gridArea={gridArea} shadow={false}>
+        <Flex
+          direction={'column'}
+          gap={{ initial: '4' }}
+          align={'center'}
+          style={{ height: '100%' }}
+        >
+          {isMobile && (
+            <Flex direction={'column'} align={'center'} gap={{ initial: '2' }}>
+              <Text size={'6'} weight={'medium'}>
+                John Doe
               </Text>
 
-              <IconButton
-                variant={'ghost'}
-                radius={'medium'}
-                themeVariant={'primary'}
-                size={'1'}
-              >
-                <CopyIcon />
-              </IconButton>
+              <Flex gap={'2'} align={'center'}>
+                <Button variant={'ghost'} onClick={handleCopyWalletAddress}>
+                  <Text $themeVariant={'primary'} size={'2'} weight={'medium'}>
+                    {walletAddress}
+                  </Text>
+
+                  <CopyIcon />
+                </Button>
+              </Flex>
             </Flex>
-          </Flex>
-        )}
+          )}
 
-        <QrCodeImage src={'/img/photo/qr-code-example.svg'} alt={'qr-code'} />
+          <QrCodeImage
+            src={'/img/photo/qr-code-example.svg'}
+            alt={'qr-code'}
+            onClick={() => setQrModalOpened(true)}
+          />
 
-        {isMobile ? (
-          <Flex gap={'2'} direction={'column'} width={'100%'}>
-            <Link to={routes.profile.children.edit.schema}>
-              <Button stretch themeVariant={'primary'}>
-                Edit <Pencil1Icon />
+          {isMobile ? (
+            <Flex gap={'2'} direction={'column'} width={'100%'}>
+              <Link to={routes.profile.children.edit.schema}>
+                <Button stretch themeVariant={'primary'}>
+                  Edit <Pencil1Icon />
+                </Button>
+              </Link>
+
+              <Button stretch variant={'outline'} color={'gray'}>
+                Share <Share1Icon />
               </Button>
-            </Link>
-
-            <Button stretch variant={'outline'} color={'gray'}>
-              Share <Share1Icon />
+            </Flex>
+          ) : (
+            <Button width={'146px'} themeVariant={'primary'} size={'3'}>
+              Share QR-code
             </Button>
+          )}
+        </Flex>
+      </StyledCard>
+
+      <Modal
+        open={qrModalOpened}
+        onOpenChange={setQrModalOpened}
+        showClose
+        showTitleSeparator={false}
+        title={
+          <Flex align={'center'} direction={'column'}>
+            <Text size={'4'} weight={'medium'}>
+              Scan to Pay
+            </Text>
           </Flex>
-        ) : (
-          <Button width={'146px'} themeVariant={'primary'} size={'3'}>
-            Share QR-code
-          </Button>
-        )}
-      </Flex>
-    </StyledCard>
+        }
+        width={isDesktop ? '450px' : undefined}
+      >
+        <Flex direction={'column'} align={'center'} gap={'3'}>
+          <QrCodeImageModal
+            src={'/img/photo/qr-code-example.svg'}
+            alt={'qr-code'}
+          />
+
+          <Text size={isMobile ? '1' : '2'} align={'center'}>
+            Use your crypto wallet to scan the QR code and send the payment
+            instantly. Ensure the amount and recipient details are correct
+            before confirming the transaction.
+          </Text>
+        </Flex>
+      </Modal>
+    </>
   )
 }
 
@@ -90,9 +137,20 @@ const StyledCard = styled(ProfileViewCard)`
 const QrCodeImage = styled.img`
   width: 140px;
   height: 140px;
+  cursor: pointer;
 
   ${(p) => p.theme.breakpoints.up('md')} {
     width: 180px;
     height: 180px;
+  }
+`
+
+const QrCodeImageModal = styled.img`
+  width: 200px;
+  height: 200px;
+
+  ${(p) => p.theme.breakpoints.up('md')} {
+    width: 260px;
+    height: 260px;
   }
 `
