@@ -13,19 +13,29 @@ function getInitialLanguage(): string {
   if (typeof navigator === 'undefined') {
     return 'en'
   }
+
   const lang = navigator.language.toLowerCase()
+
+  if (lang.startsWith('en')) {
+    return 'en'
+  }
+
   if (lang.startsWith('zh')) {
     return 'zh'
   }
+
   if (lang.startsWith('ja')) {
     return 'ja'
   }
+
   if (lang.startsWith('es')) {
     return 'es'
   }
+
   if (lang.startsWith('ru')) {
     return 'ru'
   }
+
   return 'ja'
 }
 

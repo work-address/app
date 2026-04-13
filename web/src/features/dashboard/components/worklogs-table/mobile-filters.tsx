@@ -76,7 +76,7 @@ export const WorklogsMobileFilters = ({
             {t('dashboard.page.filters.title')}
           </Button>
         }
-        description={
+        footer={
           <Button
             stretch
             themeVariant={'primary'}

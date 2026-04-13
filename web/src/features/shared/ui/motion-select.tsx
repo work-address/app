@@ -138,7 +138,7 @@ export const MotionSelect = ({
         onOpenChange={setOpen}
         title={title ?? ph}
         trigger={TriggerEl}
-        description={
+        footer={
           <Button stretch themeVariant="primary" onClick={() => setOpen(false)}>
             {t('common.apply')}
           </Button>

@@ -1,3 +1,4 @@
+import { useUnit } from 'effector-react/effector-react.mjs'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -9,10 +10,12 @@ import { IconImg, MobileMenuNav } from '../styled.ts'
 import { DesktopMenu } from './desktop-menu.tsx'
 import { MobileMenu, itemVariants } from './mobile-menu.tsx'
 
+import { authModel } from '@/features/auth'
 import { routes } from '@/features/shared'
 
 export const Header = () => {
   const { t } = useTranslation()
+  const logoutEvent = useUnit(authModel.logout)
   const [open, setOpen] = useState(false)
   const rootRef = useRef<HTMLElement | null>(null)
 
@@ -68,7 +71,10 @@ export const Header = () => {
             </UserText>
           </UserBox>
 
-          <ExitButton aria-label={t('header.exit')}>
+          <ExitButton
+            aria-label={t('header.exit')}
+            onClick={() => logoutEvent()}
+          >
             <IconImg src="/img/icons/exit.svg" alt={t('header.exit')} />
           </ExitButton>
         </Right>

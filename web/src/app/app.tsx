@@ -1,9 +1,10 @@
 import './app.css'
 import '@radix-ui/themes/styles.css'
-
-import { lazy, Suspense } from 'react'
+import { useUnit } from 'effector-react'
+import { lazy, Suspense, useEffect } from 'react'
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 
+import { authModel } from '@/features/auth'
 import { routes } from '@/features/shared'
 import * as Layouts from '@/layouts'
 
@@ -33,8 +34,16 @@ const router = createBrowserRouter([
   { path: '*', element: <Navigate to="/sign-in" replace /> },
 ])
 
-export const App = () => (
-  <Suspense>
-    <RouterProvider router={router} />
-  </Suspense>
-)
+export const App = () => {
+  const initAuthEvent = useUnit(authModel.initAuth)
+
+  useEffect(() => {
+    initAuthEvent()
+  }, [initAuthEvent])
+
+  return (
+    <Suspense>
+      <RouterProvider router={router} />
+    </Suspense>
+  )
+}

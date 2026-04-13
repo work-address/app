@@ -9,9 +9,10 @@ export const Drawer = ({
   children,
   open,
   title,
-  description,
+  footer,
   onOpenChange,
   mobileHeight,
+  description,
 }: CommonDialogProps) => {
   return (
     <Vaul.Drawer.Root
@@ -48,14 +49,18 @@ export const Drawer = ({
             </DrawerBody>
 
             {description && (
-              <DrawerDescription>
+              <DrawerDescription>{description}</DrawerDescription>
+            )}
+
+            {footer && (
+              <footer>
                 <Theme>
-                  <DescriptionWrapper>
+                  <FooterWrapper>
                     <Separator size={'4'} mt={'22px'} mb={'2'} color={'gray'} />
-                    {description}
-                  </DescriptionWrapper>
+                    {footer}
+                  </FooterWrapper>
                 </Theme>
-              </DrawerDescription>
+              </footer>
             )}
           </DrawerInner>
         </DrawerContent>
@@ -123,7 +128,7 @@ const DrawerDescription = styled(Vaul.Drawer.Description)`
   color: var(--ds-neutral-11);
 `
 
-const DescriptionWrapper = styled.div``
+const FooterWrapper = styled.div``
 
 const DrawerBody = styled.div`
   padding: 12px 1px 1px;

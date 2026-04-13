@@ -1,3 +1,4 @@
+import { Flex } from '@radix-ui/themes'
 import styled from 'styled-components'
 
 import { Card } from '@/features/shared'
@@ -15,6 +16,7 @@ export const Logo = styled.img`
 `
 
 export const SignInCard = styled(Card)`
+  position: relative;
   text-align: center;
   background-color: var(--ds-accent-3);
   padding: var(--spacing-5) 16px;
@@ -169,4 +171,13 @@ export const FootLabel = styled.span`
 
 export const HiddenButtonRow = styled.div`
   display: none;
+`
+
+export const FlexOverlay = styled(Flex)`
+  position: absolute;
+  background: rgba(255, 255, 255, 0.5);
+  top: 0;
+  right: 0;
+  bottom: 0;
+  left: 0;
 `

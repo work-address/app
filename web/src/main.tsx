@@ -1,4 +1,5 @@
 import { Theme } from '@radix-ui/themes'
+import { attachLogger } from 'effector-logger'
 import { StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HelmetProvider } from 'react-helmet-async'
@@ -41,3 +42,7 @@ createRoot(rootElement).render(
     </Theme>
   </StrictMode>,
 )
+
+if (import.meta.env.DEV) {
+  attachLogger()
+}

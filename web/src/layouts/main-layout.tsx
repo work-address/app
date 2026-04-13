@@ -1,14 +1,17 @@
+import { useUnit } from 'effector-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { Outlet, useLocation } from 'react-router-dom'
+import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 
 import type { MotionProps } from 'motion/react'
 
-import { useBreakpoint } from '@/features/shared'
+import { authModel } from '@/features/auth'
+import { routes, useBreakpoint } from '@/features/shared'
 import { Header } from '@/widgets'
 
 export const MainLayout = () => {
   const { pathname } = useLocation()
+  const authenticated = useUnit(authModel.$authenticated)
   const isDesktop = useBreakpoint('isDesktop')
 
   const motionProps: MotionProps | null = isDesktop
@@ -19,6 +22,10 @@ export const MainLayout = () => {
         transition: { duration: 0.35 },
       }
     : null
+
+  if (!authenticated) {
+    return <Navigate to={routes.signIn.schema} />
+  }
 
   return (
     <Layout>

@@ -1,29 +1,23 @@
+import { useUnit } from 'effector-react'
 import { Helmet } from 'react-helmet-async'
 import { Trans, useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
-import { useMediaQuery } from 'styled-breakpoints/use-media-query'
-import { useTheme } from 'styled-components'
+import { Navigate } from 'react-router-dom'
 
-import { AuthFormStyles as S, ProviderButton } from '@/features/auth'
-import { Button, routes, showToast } from '@/features/shared'
+import { AuthFormStyles as S, ProviderButton, authModel } from '@/features/auth'
+import { Button, routes, Spinner, useBreakpoint } from '@/features/shared'
 
 export default function SignInPage() {
   const { t, i18n } = useTranslation()
-  const navigate = useNavigate()
-  const { breakpoints } = useTheme()
+  const loading = useUnit(authModel.$pending)
+  const authenticated = useUnit(authModel.$authenticated)
+  const isDesktop = useBreakpoint('isDesktop')
 
-  const isUpMd = useMediaQuery(breakpoints.up('md'))
+  const onSignIn = (type: authModel.LoginMode) => {
+    authModel.login(type)
+  }
 
-  const onSignIn = (type: 'ton' | 'eth') => {
-    if (type === 'ton') {
-      navigate(routes.dashboard.schema)
-    } else {
-      showToast('error', {
-        title: t('signIn.error.title'),
-        message: t('signIn.error.message'),
-        position: 'top-center',
-      })
-    }
+  if (authenticated) {
+    return <Navigate to={routes.dashboard.schema} />
   }
 
   return (
@@ -32,13 +26,19 @@ export default function SignInPage() {
         htmlAttributes={{ lang: i18n.language }}
         title={t('signIn.title')}
       />
-      {isUpMd ? (
-        <S.Logo src="/img/photo/logo.svg" alt={t('signIn.logoAlt')} />
-      ) : (
-        <S.Logo src="/img/photo/logo.svg" alt={t('signIn.logoAlt')} />
-      )}
+
+      <S.Logo
+        src={isDesktop ? '/img/photo/logo.svg' : '/img/photo/logo.svg'}
+        alt={t('signIn.logoAlt')}
+      />
 
       <S.SignInCard>
+        {loading && (
+          <S.FlexOverlay align={'center'} justify={'center'}>
+            <Spinner size={80} />
+          </S.FlexOverlay>
+        )}
+
         <S.Title>{t('signIn.title')}</S.Title>
 
         <S.Desc>
@@ -74,6 +74,7 @@ export default function SignInPage() {
       <S.Foot>
         <S.FootLine>
           <S.FootLabel>{t('signIn.footer.ethereumWallets')}</S.FootLabel>
+
           <Trans
             i18nKey="signIn.footer.ethereumWalletsList"
             components={{ db: <S.DesktopBreak /> }}

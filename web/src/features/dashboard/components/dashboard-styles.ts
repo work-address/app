@@ -15,8 +15,10 @@ export const Content = styled.div`
   gap: 16px;
   align-items: start;
 
-  &:has(> :nth-child(2)) {
-    grid-template-columns: 64% 35%;
+  ${(p) => p.theme.breakpoints.up('md')} {
+    &:has(> :nth-child(2)) {
+      grid-template-columns: 1fr 374px;
+    }
   }
 `
 

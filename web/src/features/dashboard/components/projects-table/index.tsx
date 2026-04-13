@@ -1,12 +1,7 @@
-import {
-  TrashIcon,
-  PlusIcon,
-  DownloadIcon,
-  Pencil1Icon,
-} from '@radix-ui/react-icons'
-import { Flex, Grid } from '@radix-ui/themes'
+import { TrashIcon, PlusIcon } from '@radix-ui/react-icons'
+import { Flex } from '@radix-ui/themes'
 import { AnimatePresence, motion } from 'motion/react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -19,24 +14,26 @@ import {
 import { CreateProjectModal } from './create-project-modal.tsx'
 import { DesktopCell } from './desktop-cell.tsx'
 import { MobileAddonBottom } from './mobile-addon-bottom.tsx'
+import { MobileBody } from './mobile-body.tsx'
 import { MobileHeader } from './mobile-header.tsx'
-import { ProjectDialogContent } from './project-dialog-content.tsx'
-import { ProjectMobileBody } from './project-mobile-body.tsx'
+import { ProjectDialog } from './project-dialog.tsx'
 
 import type { ProjectRow } from './types'
-import type { MobileDataTableConfig, DataTableConfig } from '@/features/shared'
 
+import {
+  type MobileDataTableConfig,
+  type DataTableConfig,
+  showToast,
+} from '@/features/shared'
 import {
   DataTable,
   MobileDataTable,
   useDataProcessing,
-  Text,
   TabsRoot,
   TabsList,
   TabsTrigger,
   Button,
   IconButton,
-  AdaptiveDialog,
   useBreakpoint,
   useConfirm,
 } from '@/features/shared'
@@ -48,7 +45,6 @@ type ProjectsTableProps = {
 }
 
 export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
-  const isDesktop = useBreakpoint('isDesktop')
   const isMobile = useBreakpoint('isMobile')
 
   const { confirm } = useConfirm()
@@ -58,9 +54,8 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
   const [activeTab, setActiveTab] = useState('all')
   const [selectedRow, setSelectedRow] = useState<ProjectRow | null>(null)
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
-  const [isEditDialogOpen, setIsEditDialogOpen] = useState(false)
+  const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-  const [modalMode, setModalMode] = useState<'view' | 'edit'>('view')
 
   const { processedData, processSingleDataFilter, resetFilter } =
     useDataProcessing({
@@ -90,7 +85,7 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
         switch (action) {
           case 'Edit': {
             setSelectedRow(row)
-            setIsEditDialogOpen(true)
+            setIsProjectDialogOpen(true)
             break
           }
 
@@ -102,7 +97,12 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
               ),
               confirmLabel: t('dashboard.projectsTable.confirmDelete.confirm'),
               onConfirm: () => {
-                setIsEditDialogOpen(false)
+                setIsProjectDialogOpen(false)
+
+                showToast('error', {
+                  message: t('dashboard.projectsTable.deletedMessage'),
+                  position: 'top-center',
+                })
               },
             })
             break
@@ -207,12 +207,6 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
     )
   }, [selectedIds, processedData])
 
-  useEffect(() => {
-    if (isEditDialogOpen) {
-      setModalMode('view')
-    }
-  }, [isEditDialogOpen])
-
   return (
     <Flex direction={'column'} height={'100%'}>
       <Flex direction={'row'} justify={'between'} pb={'3'} align={'center'}>
@@ -286,7 +280,7 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
                     data={processedData}
                     getRowId={rowIdGetter}
                     config={mobileConfig}
-                    BodyComponent={ProjectMobileBody}
+                    BodyComponent={MobileBody}
                     AddonBottomComponent={MobileAddonBottom}
                     HeaderComponent={MobileHeader}
                     initialExpandedId={rows[0]?.key}
@@ -314,121 +308,12 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
         </AnimatePresence>
       </ProjectsTableWrapper>
 
-      <AdaptiveDialog
-        title={
-          isDesktop ? (
-            selectedRow?.name
-          ) : (
-            <Flex justify={'between'} align={'center'}>
-              <Text>{selectedRow?.name}</Text>
-
-              <IconButton
-                color={'red'}
-                variant={'outline'}
-                onClick={() =>
-                  selectedRow && handleActionClick(selectedRow, 'Delete')
-                }
-              >
-                <TrashIcon />
-              </IconButton>
-            </Flex>
-          )
-        }
-        open={isEditDialogOpen}
-        onOpenChange={setIsEditDialogOpen}
-        desktopWidth={'600px'}
-        description={
-          isDesktop ? (
-            <Flex justify={'between'}>
-              <Button
-                color={'red'}
-                variant={'outline'}
-                size={'3'}
-                onClick={() =>
-                  selectedRow && handleActionClick(selectedRow, 'Delete')
-                }
-              >
-                <TrashIcon />
-                Delete
-              </Button>
-
-              <Flex gap={'3'}>
-                {modalMode === 'view' ? (
-                  <>
-                    <Button
-                      themeVariant={'secondary'}
-                      variant={'outline'}
-                      size={'3'}
-                    >
-                      <DownloadIcon />
-                      Invoice
-                    </Button>
-
-                    <Button
-                      themeVariant={'primary'}
-                      size={'3'}
-                      onClick={() => setModalMode('edit')}
-                    >
-                      <Pencil1Icon />
-                      Edit
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      themeVariant={'secondary'}
-                      onClick={() => setModalMode('view')}
-                      size={'3'}
-                    >
-                      Cancel
-                    </Button>
-
-                    <Button themeVariant={'primary'} size={'3'}>
-                      Save
-                    </Button>
-                  </>
-                )}
-              </Flex>
-            </Flex>
-          ) : (
-            <Grid columns={'1fr 1fr'} gap={'2'}>
-              <>
-                {modalMode === 'view' ? (
-                  <>
-                    <Button themeVariant={'secondary'} variant={'outline'}>
-                      <DownloadIcon />
-                      Invoice
-                    </Button>
-
-                    <Button
-                      themeVariant={'primary'}
-                      onClick={() => setModalMode('edit')}
-                    >
-                      <Pencil1Icon />
-                      Edit
-                    </Button>
-                  </>
-                ) : (
-                  <>
-                    <Button
-                      themeVariant={'secondary'}
-                      onClick={() => setModalMode('view')}
-                    >
-                      Cancel
-                    </Button>
-
-                    <Button themeVariant={'primary'}>Save</Button>
-                  </>
-                )}
-              </>
-            </Grid>
-          )
-        }
-      >
-        {selectedRow && (
-          <ProjectDialogContent data={selectedRow} mode={modalMode} />
-        )}
-      </AdaptiveDialog>
+      <ProjectDialog
+        open={isProjectDialogOpen}
+        setOpen={setIsProjectDialogOpen}
+        row={selectedRow}
+        onDeleteClick={(row) => row && handleActionClick(row, 'Delete')}
+      />
 
       <CreateProjectModal
         open={isCreateDialogOpen}

@@ -65,6 +65,7 @@ export const EditProfile = () => {
       message:
         'Something went wrong. Please check your connection and try again.',
       position: 'top-center',
+      closeButton: true,
     })
   }
 

@@ -7,7 +7,7 @@ import type { MobileBodyRenderProps } from '@/features/shared'
 
 import { formatDurationFromMinutes, Text } from '@/features/shared'
 
-export const ProjectMobileBody = (props: MobileBodyRenderProps<ProjectRow>) => {
+export const MobileBody = (props: MobileBodyRenderProps<ProjectRow>) => {
   const { t } = useTranslation()
   const dataKey = 'dataKey' in props ? props.dataKey : undefined
 

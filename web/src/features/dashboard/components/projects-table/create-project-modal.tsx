@@ -44,7 +44,7 @@ export const CreateProjectModal = ({
       onOpenChange={onOpenChange}
       open={open}
       title={<>{t('project.createModal.title')}</>}
-      description={
+      footer={
         isMobile ? (
           <Grid gap={'3'} columns={'1fr 1fr'}>
             <Button

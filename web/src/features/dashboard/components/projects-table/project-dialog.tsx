@@ -1,0 +1,308 @@
+import {
+  QuestionMarkCircledIcon,
+  TrashIcon,
+  DownloadIcon,
+  Pencil1Icon,
+} from '@radix-ui/react-icons'
+import { Flex, Grid, Separator } from '@radix-ui/themes'
+import { Fragment, useEffect, useState } from 'react'
+import { useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
+
+import type { ProjectRow } from './types'
+
+import {
+  formatDurationFromMinutes,
+  Input,
+  Text,
+  TextArea,
+  useBreakpoint,
+  AdaptiveDialog,
+  Button,
+  IconButton,
+  type InputProps,
+} from '@/features/shared'
+
+type ProjectDialogProps = {
+  open: boolean
+  setOpen: (state: boolean) => void
+  row?: ProjectRow | null
+  onDeleteClick: (row?: ProjectRow | null) => void
+}
+
+export const ProjectDialog = ({
+  row,
+  open,
+  setOpen,
+  onDeleteClick,
+}: ProjectDialogProps) => {
+  const { t } = useTranslation()
+  const isDesktop = useBreakpoint('isDesktop')
+  const [modalMode, setModalMode] = useState<'view' | 'edit'>('view')
+
+  useEffect(() => {
+    if (open) {
+      setModalMode('view')
+    }
+  }, [open])
+
+  return (
+    <AdaptiveDialog
+      title={
+        isDesktop ? (
+          modalMode === 'view' ? (
+            row?.name
+          ) : (
+            t('dashboard.projectsTable.drawer.editProjectTitle')
+          )
+        ) : (
+          <Flex justify={'between'} align={'center'}>
+            <Text>{row?.name}</Text>
+
+            <IconButton
+              color={'red'}
+              variant={'outline'}
+              onClick={() => onDeleteClick(row)}
+            >
+              <TrashIcon />
+            </IconButton>
+          </Flex>
+        )
+      }
+      open={open}
+      onOpenChange={setOpen}
+      desktopWidth={'600px'}
+      footer={
+        isDesktop ? (
+          <Flex justify={'between'}>
+            <Button
+              color={'red'}
+              variant={'outline'}
+              size={'3'}
+              onClick={() => row && onDeleteClick(row)}
+            >
+              <TrashIcon />
+              Delete
+            </Button>
+
+            <Flex gap={'3'}>
+              {modalMode === 'view' ? (
+                <>
+                  <Button
+                    themeVariant={'secondary'}
+                    variant={'outline'}
+                    size={'3'}
+                  >
+                    <DownloadIcon />
+                    {t('dashboard.projectsTable.drawer.invoice')}
+                  </Button>
+
+                  <Button
+                    themeVariant={'primary'}
+                    size={'3'}
+                    onClick={() => setModalMode('edit')}
+                  >
+                    <Pencil1Icon />
+                    {t('dashboard.projectsTable.drawer.edit')}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    themeVariant={'secondary'}
+                    onClick={() => setModalMode('view')}
+                    size={'3'}
+                  >
+                    {t('common.cancel')}
+                  </Button>
+
+                  <Button themeVariant={'primary'} size={'3'}>
+                    {t('common.save')}
+                  </Button>
+                </>
+              )}
+            </Flex>
+          </Flex>
+        ) : (
+          <Grid columns={'1fr 1fr'} gap={'2'}>
+            <>
+              {modalMode === 'view' ? (
+                <>
+                  <Button themeVariant={'secondary'} variant={'outline'}>
+                    <DownloadIcon />
+                    {t('dashboard.projectsTable.drawer.invoice')}
+                  </Button>
+
+                  <Button
+                    themeVariant={'primary'}
+                    onClick={() => setModalMode('edit')}
+                  >
+                    <Pencil1Icon />
+                    {t('dashboard.projectsTable.drawer.edit')}
+                  </Button>
+                </>
+              ) : (
+                <>
+                  <Button
+                    themeVariant={'secondary'}
+                    onClick={() => setModalMode('view')}
+                  >
+                    {t('common.cancel')}
+                  </Button>
+
+                  <Button themeVariant={'primary'}>{t('common.save')}</Button>
+                </>
+              )}
+            </>
+          </Grid>
+        )
+      }
+    >
+      {row && <ProjectDialogContent data={row} mode={modalMode} />}
+    </AdaptiveDialog>
+  )
+}
+
+type ProjectRowKeys = (keyof ProjectRow)[]
+
+type ProjectDialogContentProps = {
+  data: ProjectRow
+  mode: 'view' | 'edit'
+}
+
+export const ProjectDialogContent = ({
+  data,
+  mode,
+}: ProjectDialogContentProps) => {
+  const { t } = useTranslation()
+  const isMobile = useBreakpoint('isMobile')
+  const isDesktop = useBreakpoint('isDesktop')
+
+  const { register } = useForm({
+    values: data,
+  })
+
+  const textSize = isMobile ? '2' : '3'
+
+  if (mode === 'edit') {
+    const inputProps: InputProps = {
+      rows: 'auto auto',
+      columns: '1fr',
+      gap: '2',
+      size: '3',
+    }
+
+    return (
+      <Flex direction={'column'} gap={'4'}>
+        <Input
+          label={'Project name'}
+          id={'projectName'}
+          {...inputProps}
+          {...register('name')}
+        />
+
+        <Input
+          label={'Published in'}
+          id={'publishedIn'}
+          {...inputProps}
+          {...register('publishedIn')}
+        />
+
+        <Input
+          label={'Rate'}
+          addonRight={'$'}
+          id={'rate'}
+          {...inputProps}
+          {...register('rate')}
+        />
+
+        <Separator size={'4'} />
+
+        <TextArea
+          label={'Description'}
+          placeholder={'Enter a brief description of your project'}
+          rows={7}
+          id={'description'}
+          size={'3'}
+          {...register('description')}
+        />
+      </Flex>
+    )
+  }
+
+  return (
+    <Flex direction={'column'} gap={isDesktop ? '4' : '3'}>
+      <Grid columns={{ initial: '125px 1fr' }} gap={isDesktop ? '4' : '3'}>
+        {(['startDate', 'publishedIn', 'rate'] satisfies ProjectRowKeys).map(
+          (key) => {
+            return (
+              <Fragment key={key}>
+                <Text color={'gray'} size={textSize}>
+                  {t(`dashboard.projectsTable.drawer.meta.${key}`)}
+                </Text>
+
+                {key === 'startDate' ? (
+                  <Text weight={'medium'} size={textSize}>
+                    {data[key] && data[key].toDateString()}
+                  </Text>
+                ) : (
+                  <Text weight={'medium'} size={textSize}>
+                    {data[key]}
+                  </Text>
+                )}
+              </Fragment>
+            )
+          },
+        )}
+      </Grid>
+
+      {isMobile && (
+        <>
+          <Separator size={'4'} />
+
+          <Grid columns={{ initial: '125px 1fr' }} gap={isDesktop ? '4' : '3'}>
+            {(
+              [
+                'timeTotal',
+                'timeActive',
+                'keyboard',
+                'mouse',
+                'mouseDistance',
+              ] satisfies ProjectRowKeys
+            ).map((key) => {
+              return (
+                <>
+                  <Flex align={'center'} gap={'2'}>
+                    <Text color={'gray'} size={textSize}>
+                      {t(`dashboard.projectsTable.head.${key}`)}
+                    </Text>
+
+                    <QuestionMarkCircledIcon />
+                  </Flex>
+
+                  <Text weight={'medium'} size={textSize}>
+                    {key === 'timeTotal' || key === 'timeActive'
+                      ? formatDurationFromMinutes(data[key], t)
+                      : data[key]}
+                  </Text>
+                </>
+              )
+            })}
+          </Grid>
+        </>
+      )}
+
+      <Separator size={'4'} />
+
+      <div>
+        <TextArea
+          label="Description"
+          disabled={true}
+          value={data.description}
+          rows={12}
+          size={'3'}
+        />
+      </div>
+    </Flex>
+  )
+}

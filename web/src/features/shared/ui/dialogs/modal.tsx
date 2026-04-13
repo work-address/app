@@ -9,12 +9,13 @@ export const Modal = ({
   trigger,
   open,
   onOpenChange,
-  description,
+  footer,
   title,
   width,
   padding,
   showClose = false,
   showTitleSeparator = true,
+  description,
 }: CommonDialogProps & ModalProps) => {
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -36,12 +37,14 @@ export const Modal = ({
 
         {children}
 
-        {description && (
-          <Dialog.Description>
+        {description && <Dialog.Description>{description}</Dialog.Description>}
+
+        {footer && (
+          <footer>
             <Flex direction={'column'} mt={'4'}>
-              <div>{description}</div>
+              <div>{footer}</div>
             </Flex>
-          </Dialog.Description>
+          </footer>
         )}
       </SContent>
     </Dialog.Root>

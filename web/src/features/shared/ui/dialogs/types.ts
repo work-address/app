@@ -5,6 +5,7 @@ export type CommonDialogProps = {
   trigger?: ReactNode
   open?: boolean
   title?: ReactNode
+  footer?: ReactNode
   description?: ReactNode
   onOpenChange?: (open: boolean) => void
   mobileHeight?: string

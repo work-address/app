@@ -14,11 +14,20 @@ type ToastProps = {
   duration?: number
   closeButton?: boolean
   icon?: () => ReactNode
+  nowrap?: boolean
 }
 
 export const showToast = (
   type: 'error' | 'warning' | 'info' | 'success',
-  { message, title, position, duration, closeButton, icon: Icon }: ToastProps,
+  {
+    message,
+    title,
+    position,
+    duration,
+    closeButton,
+    icon: Icon,
+    nowrap,
+  }: ToastProps,
 ) => {
   toast[type](
     <ToastWrapper>
@@ -27,7 +36,7 @@ export const showToast = (
     </ToastWrapper>,
     {
       duration,
-      className: `${type}-toast sonner-toast`,
+      className: `${type}-toast sonner-toast ${nowrap ? 'nowrap' : ''}`,
       position,
       icon: Icon ? <Icon /> : <InfoIcon />,
       closeButton,
@@ -57,6 +66,19 @@ const baseToastStyle = (bg: string, border: string, color: string) => `
 `
 
 export const ToastStyle = createGlobalStyle`
+  [aria-label='Notifications alt+T'] {
+    ol {
+      &:has(.nowrap) {
+        white-space: nowrap;
+        --width: fit-content !important;
+
+        li {
+          width: fit-content !important;
+        }
+      }
+    }
+  }
+
   .sonner-toast {
     &[data-sonner-toast][data-styled=true] {
       padding: 16px;
@@ -72,13 +94,14 @@ export const ToastStyle = createGlobalStyle`
 
       [data-close-button] {
         position: absolute;
-        top: 40%;
+        top: var(--space-4);
         left: initial;
         bottom: 50%;
         right: var(--space-2);
         transform: translateY(-50%);
         background: transparent;
         font-size: var(--font-size-4);
+        border: none;
 
         svg {
           width: 18px;
