@@ -40,7 +40,7 @@ export const CreateProjectModal = ({
   return (
     <AdaptiveDialog
       desktopPadding={'var(--space-5)'}
-      desktopWidth={'450px'}
+      desktopWidth={'600px'}
       onOpenChange={onOpenChange}
       open={open}
       title={<>{t('project.createModal.title')}</>}

@@ -1,5 +1,6 @@
 import { Share1Icon, Pencil1Icon, CopyIcon } from '@radix-ui/react-icons'
-import { Flex } from '@radix-ui/themes'
+import { Flex, type FlexProps } from '@radix-ui/themes'
+import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
@@ -8,12 +9,14 @@ import { InfoRow } from '../info-row'
 
 import { ProfileViewCard } from './styled'
 
+import { profileEntity } from '@/entities'
 import {
   Button,
   routes,
   showToast,
   Text,
   useBreakpoint,
+  formatWalletAddress,
 } from '@/features/shared'
 
 type ProfileInfoProps = {
@@ -23,15 +26,16 @@ type ProfileInfoProps = {
 export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
   const isDesktop = useBreakpoint('isDesktop')
   const { t } = useTranslation()
+  const user = useUnit(profileEntity.$user)
 
-  const walletAddress = 'EQCF9...NDOM'
+  const walletAddress = formatWalletAddress(user?.address || '')
 
   const infoRowGap: FlexProps['gap'] = {
     initial: '2px',
   }
 
   const handleCopyWalletAddress = async () => {
-    await navigator.clipboard.writeText(walletAddress)
+    await navigator.clipboard.writeText(user?.address || '')
 
     showToast('info', {
       message: 'Address copied to clipboard',
@@ -52,7 +56,7 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
             <>
               <Flex direction={'column'} gap={'2'}>
                 <Text size={'7'} weight={'medium'}>
-                  {t('profile.view.mockName')}
+                  {user?.userName || t('profile.view.mockName')}
                 </Text>
 
                 <Flex gap={'2'} align={'center'}>
@@ -100,7 +104,9 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
             text={
               <Flex gap={{ initial: '5px', md: '6px' }}>
                 <Text color={'gray'}>{t('profile.view.worksAt')}</Text>
-                <Text weight={'medium'}>{t('profile.view.mockCompany')}</Text>
+                <Text weight={'medium'}>
+                  {user?.company ?? t('profile.view.mockCompany')}
+                </Text>
               </Flex>
             }
           />
@@ -116,7 +122,7 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
                 <Text color={'gray'}>
                   {t('profile.view.social.linkedinPrefix')}
                 </Text>
-                <Text weight={'medium'}>johndoe</Text>
+                <Text weight={'medium'}>{user?.linkedIn ?? 'johndoe'}</Text>
               </Flex>
             }
           />
@@ -132,7 +138,7 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
                 <Text color={'gray'}>
                   {t('profile.view.social.facebookPrefix')}
                 </Text>
-                <Text weight={'medium'}>johndoe</Text>
+                <Text weight={'medium'}>{user?.facebook ?? 'johndoe'}</Text>
               </Flex>
             }
           />
@@ -148,7 +154,7 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
                 <Text color={'gray'}>
                   {t('profile.view.social.telegramPrefix')}
                 </Text>
-                <Text weight={'medium'}>johndoe</Text>
+                <Text weight={'medium'}>{user?.telegram ?? 'johndoe'}</Text>
               </Flex>
             }
           />

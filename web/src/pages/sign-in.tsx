@@ -3,17 +3,18 @@ import { Helmet } from 'react-helmet-async'
 import { Trans, useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router-dom'
 
-import { AuthFormStyles as S, ProviderButton, authModel } from '@/features/auth'
+import { profileEntity } from '@/entities'
+import { AuthFormStyles as S, ProviderButton } from '@/features/auth'
 import { Button, routes, Spinner, useBreakpoint } from '@/features/shared'
 
 export default function SignInPage() {
   const { t, i18n } = useTranslation()
-  const loading = useUnit(authModel.$pending)
-  const authenticated = useUnit(authModel.$authenticated)
+  const loading = useUnit(profileEntity.$pending)
+  const authenticated = useUnit(profileEntity.$authenticated)
   const isDesktop = useBreakpoint('isDesktop')
 
-  const onSignIn = (type: authModel.LoginMode) => {
-    authModel.login(type)
+  const onSignIn = (type: profileEntity.LoginMode) => {
+    profileEntity.login(type)
   }
 
   if (authenticated) {

@@ -1,5 +1,6 @@
 import { CopyIcon, Pencil1Icon, Share1Icon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
+import { useUnit } from 'effector-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
@@ -7,6 +8,7 @@ import styled from 'styled-components'
 
 import { ProfileViewCard } from './styled'
 
+import { profileEntity } from '@/entities'
 import {
   routes,
   Text,
@@ -14,6 +16,7 @@ import {
   Button,
   Modal,
   showToast,
+  formatWalletAddress,
 } from '@/features/shared'
 
 type QrCodeProps = {
@@ -26,13 +29,14 @@ export const QrCode = ({ gridArea }: QrCodeProps) => {
   const isDesktop = useBreakpoint('isDesktop')
 
   const { t } = useTranslation()
+  const user = useUnit(profileEntity.$user)
 
   const [qrModalOpened, setQrModalOpened] = useState(false)
 
-  const walletAddress = 'EQCF9...NDOM'
+  const walletAddress = formatWalletAddress(user?.address || '')
 
   const handleCopyWalletAddress = async () => {
-    await navigator.clipboard.writeText(walletAddress)
+    await navigator.clipboard.writeText(user?.address || '')
 
     showToast('info', {
       message: 'Address copied to clipboard',
@@ -41,22 +45,18 @@ export const QrCode = ({ gridArea }: QrCodeProps) => {
   }
 
   return (
-    <StyledCard gridArea={gridArea} shadow={false}>
-      <Flex
-        direction={'column'}
-        gap={'3'}
-        align={'center'}
-        style={{ height: '100%' }}
-      >
-        {!isUpMd && (
-          <>
-            <Text size={'7'} weight={'medium'}>
-              {t('profile.view.mockName')}
-            </Text>
-
-            <Flex gap={'2'} align={'center'}>
-              <Text $themeVariant={'primary'} size={'3'} weight={'medium'}>
-                EQCF9...NDOM
+    <>
+      <StyledCard gridArea={gridArea} shadow={false}>
+        <Flex
+          direction={'column'}
+          gap={{ initial: '4' }}
+          align={'center'}
+          style={{ height: '100%' }}
+        >
+          {isMobile && (
+            <Flex direction={'column'} align={'center'} gap={{ initial: '2' }}>
+              <Text size={'6'} weight={'medium'}>
+                {user?.userName ?? t('profile.view.mockName')}
               </Text>
 
               <Flex gap={'2'} align={'center'}>

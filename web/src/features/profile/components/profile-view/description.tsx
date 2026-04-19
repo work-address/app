@@ -1,16 +1,19 @@
 import { Separator, Flex, Badge } from '@radix-ui/themes'
+import { useUnit } from 'effector-react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { ProfileViewCard } from './styled'
 
+import { profileEntity } from '@/entities'
 import { Text, useBreakpoint } from '@/features/shared'
 
 type DescriptionProps = {
   gridArea?: string
 }
 
-const skills = [
+const mockData = [
   'Python',
   'JavaScript',
   'Java',
@@ -28,6 +31,13 @@ export const Description = ({ gridArea }: DescriptionProps) => {
   const isMobile = useBreakpoint('isMobile')
   const { t } = useTranslation()
 
+  const user = useUnit(profileEntity.$user)
+
+  const skills = useMemo(
+    () => user?.skills?.split(',') || mockData,
+    [user?.skills],
+  )
+
   return (
     <StyledCard gridArea={gridArea} shadow={false}>
       <Flex gap={'4'} direction={'column'}>
@@ -44,8 +54,7 @@ export const Description = ({ gridArea }: DescriptionProps) => {
                 </Text>
 
                 <Text size={isMobile ? '2' : undefined}>
-                  {' '}
-                  {t('profile.view.usdtUnit')}{' '}
+                  {t('profile.view.usdtUnit')}
                 </Text>
               </Flex>
             </Text>
@@ -54,7 +63,7 @@ export const Description = ({ gridArea }: DescriptionProps) => {
 
         <Separator size={'4'} />
 
-        <Text>{t('profile.view.bio')}</Text>
+        <Text>{user?.bio || t('profile.view.bio')}</Text>
 
         <Separator size={'4'} />
 

@@ -1,3 +1,3 @@
-export * from './components/rich-editor'
+export * from '../shared/ui/rich-editor.tsx'
 export * from './components/profile-view'
 export * from './components/edit-profile.tsx'

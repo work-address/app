@@ -10,43 +10,48 @@ import { IconImg, MobileMenuNav } from '../styled.ts'
 import { DesktopMenu } from './desktop-menu.tsx'
 import { MobileMenu, itemVariants } from './mobile-menu.tsx'
 
-import { authModel } from '@/features/auth'
-import { routes } from '@/features/shared'
+import { profileEntity } from '@/entities'
+import { routes, formatWalletAddress, useBreakpoint } from '@/features/shared'
 
 export const Header = () => {
   const { t } = useTranslation()
-  const logoutEvent = useUnit(authModel.logout)
-  const [open, setOpen] = useState(false)
+  const logoutEvent = useUnit(profileEntity.logout)
+  const user = useUnit(profileEntity.$user)
+  const isDesktop = useBreakpoint('isDesktop')
+  const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const rootRef = useRef<HTMLElement | null>(null)
 
   useEffect(() => {
-    if (!open) {
+    if (!mobileMenuOpen) {
       return
     }
 
     const onKeyDown = (e: KeyboardEvent) => {
       if (e.key === 'Escape') {
-        setOpen(false)
+        setMobileMenuOpen(false)
       }
     }
 
     const onDown = (e: MouseEvent) => {
       const el = rootRef.current
+
       if (!el) {
         return
       }
+
       if (e.target instanceof Node && !el.contains(e.target)) {
-        setOpen(false)
+        setMobileMenuOpen(false)
       }
     }
 
     window.addEventListener('keydown', onKeyDown)
     document.addEventListener('mousedown', onDown)
+
     return () => {
       window.removeEventListener('keydown', onKeyDown)
       document.removeEventListener('mousedown', onDown)
     }
-  }, [open])
+  }, [mobileMenuOpen])
 
   return (
     <HeaderRoot ref={rootRef}>
@@ -55,9 +60,11 @@ export const Header = () => {
           <LogoImg src="/img/photo/logo.svg" alt={t('header.logoAlt')} />
         </LogoLink>
 
-        <Nav>
-          <DesktopMenu />
-        </Nav>
+        {isDesktop && (
+          <Nav>
+            <DesktopMenu />
+          </Nav>
+        )}
 
         <Right>
           <UserBox>
@@ -66,8 +73,8 @@ export const Header = () => {
             </UserAvatar>
 
             <UserText>
-              <UserName>John Doe</UserName>
-              <UserSub>EQCF9...NDOM</UserSub>
+              <UserName>{user?.userName || ''}</UserName>
+              <UserSub>{formatWalletAddress(user?.address || '')}</UserSub>
             </UserText>
           </UserBox>
 
@@ -82,12 +89,14 @@ export const Header = () => {
         <MobileRight>
           <BurgerButton
             type="button"
-            aria-label={open ? t('header.closeMenu') : t('header.openMenu')}
-            aria-expanded={open}
+            aria-label={
+              mobileMenuOpen ? t('header.closeMenu') : t('header.openMenu')
+            }
+            aria-expanded={mobileMenuOpen}
             aria-controls="mobile-menu"
-            onClick={() => setOpen((s) => !s)}
+            onClick={() => setMobileMenuOpen((s) => !s)}
           >
-            {open ? (
+            {mobileMenuOpen ? (
               <BurgerToggleImg
                 src="/img/icons/cross-1.svg"
                 alt={t('header.closeMenu')}
@@ -104,58 +113,65 @@ export const Header = () => {
         </MobileRight>
       </HeaderInner>
 
-      <AnimatePresence>
-        {open ? (
-          <MobileMenuStyled
-            id="mobile-menu"
-            role="dialog"
-            aria-label={t('header.mobileNavAria')}
-            initial={{ height: 0, opacity: 0 }}
-            animate={{ height: 'auto', opacity: 1 }}
-            exit={{ height: 0, opacity: 0 }}
-            transition={{ duration: 0.18, ease: 'easeInOut' }}
-          >
-            <MobileMenuInner>
-              <MobileMenuTop>
-                <UserBox>
-                  <UserAvatar>
-                    <IconImg
-                      src="/img/icons/person.svg"
-                      alt={t('header.userAlt')}
-                    />
-                  </UserAvatar>
+      {!isDesktop && (
+        <AnimatePresence>
+          {mobileMenuOpen ? (
+            <MobileMenuStyled
+              id="mobile-menu"
+              role="dialog"
+              aria-label={t('header.mobileNavAria')}
+              initial={{ height: 0, opacity: 0 }}
+              animate={{ height: 'auto', opacity: 1 }}
+              exit={{ height: 0, opacity: 0 }}
+              transition={{ duration: 0.18, ease: 'easeInOut' }}
+            >
+              <MobileMenuInner>
+                <MobileMenuTop>
+                  <UserBox>
+                    <UserAvatar>
+                      <IconImg
+                        src="/img/icons/person.svg"
+                        alt={t('header.userAlt')}
+                      />
+                    </UserAvatar>
 
-                  <UserText>
-                    <UserName>John Doe</UserName>
-                    <UserSub>EQCF9...NDOM</UserSub>
-                  </UserText>
-                </UserBox>
-              </MobileMenuTop>
+                    <UserText>
+                      <UserName>{user?.userName || ''}</UserName>
+                      <UserSub>
+                        {formatWalletAddress(user?.address || '')}
+                      </UserSub>
+                    </UserText>
+                  </UserBox>
+                </MobileMenuTop>
 
-              <Divider />
+                <Divider />
 
-              <MobileMenuNav
-                variants={menuVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-              >
-                <MobileMenu setOpen={setOpen} />
-
-                <MobileMenuButton
-                  type="button"
-                  aria-label={t('header.exit')}
-                  onClick={() => setOpen(false)}
-                  variants={itemVariants}
+                <MobileMenuNav
+                  variants={menuVariants}
+                  initial="initial"
+                  animate="animate"
+                  exit="exit"
                 >
-                  <IconImg src="/img/icons/exit.svg" alt={t('header.exit')} />
-                  <span>{t('header.exit')}</span>
-                </MobileMenuButton>
-              </MobileMenuNav>
-            </MobileMenuInner>
-          </MobileMenuStyled>
-        ) : null}
-      </AnimatePresence>
+                  <MobileMenu setOpen={setMobileMenuOpen} />
+
+                  <MobileMenuButton
+                    type="button"
+                    aria-label={t('header.exit')}
+                    onClick={() => {
+                      setMobileMenuOpen(false)
+                      logoutEvent()
+                    }}
+                    variants={itemVariants}
+                  >
+                    <IconImg src="/img/icons/exit.svg" alt={t('header.exit')} />
+                    <span>{t('header.exit')}</span>
+                  </MobileMenuButton>
+                </MobileMenuNav>
+              </MobileMenuInner>
+            </MobileMenuStyled>
+          ) : null}
+        </AnimatePresence>
+      )}
     </HeaderRoot>
   )
 }

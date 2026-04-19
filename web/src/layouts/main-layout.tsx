@@ -5,13 +5,13 @@ import styled from 'styled-components'
 
 import type { MotionProps } from 'motion/react'
 
-import { authModel } from '@/features/auth'
+import { profileEntity } from '@/entities'
 import { routes, useBreakpoint } from '@/features/shared'
 import { Header } from '@/widgets'
 
 export const MainLayout = () => {
   const { pathname } = useLocation()
-  const authenticated = useUnit(authModel.$authenticated)
+  const authenticated = useUnit(profileEntity.$authenticated)
   const isDesktop = useBreakpoint('isDesktop')
 
   const motionProps: MotionProps | null = isDesktop
