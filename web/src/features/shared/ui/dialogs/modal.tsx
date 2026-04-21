@@ -67,7 +67,7 @@ const SContent = styled(Dialog.Content)<{ $width?: string; $padding?: string }>`
   ${(p) => p.$width && `width: ${p.$width};`}
 `
 
-const SClose = styled(Dialog.Close)`
+const SClose = styled(Dialog.Close).attrs({ type: 'button' })`
   position: absolute;
   right: var(--space-5);
   top: var(--space-5);

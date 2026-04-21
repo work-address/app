@@ -2,7 +2,8 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { Button, routes } from '@/features/shared'
+import { Button } from '@/features/shared'
+import { routes } from '@/routes'
 
 export const ProjectsNotFound = () => {
   const { t } = useTranslation()
@@ -22,7 +23,7 @@ export const ProjectsNotFound = () => {
       <Desc>{t('dashboard.page.projectsNotFound.description')}</Desc>
 
       <Button
-        onClick={() => navigate(routes.helpCenter.schema)}
+        onClick={() => navigate(routes.helpCenter.build())}
         variant={'outline'}
         color={'gray'}
         size={'2'}

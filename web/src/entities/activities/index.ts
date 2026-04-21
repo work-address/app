@@ -9,7 +9,13 @@ import {
   changeWorklogFilters,
   appendWorklogSort,
   resetWorklogSort,
+  setWorklogsLoading,
 } from './activities.events'
+import {
+  createActivityMutation,
+  deleteActivityMutation,
+  editActivityMutation,
+} from './activities.mutations'
 import {
   activitiesQuery,
   activitiesStatsQuery,
@@ -69,6 +75,22 @@ sample({
   target: applyWorklogFilters,
 })
 
+sample({
+  clock: changeWorklogFilters,
+  source: $breakpoints,
+  filter: (breakpoints) => breakpoints.isDesktop,
+  target: setWorklogsLoading.prepend(() => true),
+})
+
+sample({
+  clock: [
+    createActivityMutation.finished.success.map(() => void 0),
+    deleteActivityMutation.finished.success.map(() => void 0),
+    editActivityMutation.finished.success.map(() => void 0),
+  ],
+  target: [activitiesQuery.start, activitiesStatsQuery.start],
+})
+
 export {
   type ProjectWithStats,
   type ITimeTotal,
@@ -90,6 +112,12 @@ export {
 } from './activities.events'
 
 export {
+  createActivityMutation,
+  deleteActivityMutation,
+  editActivityMutation,
+} from './activities.mutations'
+
+export {
   $activities,
   $activitiesLoading,
   $allWorklogs,
@@ -99,7 +127,9 @@ export {
   $hasProjects,
   $worklogsFilters,
   $worklogSort,
+  $worklogsLoading,
   $filteredActivities,
   $activityStateFilter,
   $isWorklogsFiltering,
+  $rawActivities,
 } from './activities.stores'

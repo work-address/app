@@ -210,5 +210,7 @@
   "dashboard.projectsTable.head.keyboardKeys": "Keyboard",
   "dashboard.projectsTable.head.mouseKeys": "Mouse",
   "dashboard.projectsTable.drawer.meta.createdAt": "Start date",
-  "dashboard.projectsTable.drawer.meta.state": "Published in"
+  "dashboard.projectsTable.drawer.meta.state": "Published in",
+  "project.createModal.createSuccess": "Project created successfully",
+  "project.createModal.createError": "Project create error"
 }

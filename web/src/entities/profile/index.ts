@@ -18,7 +18,6 @@ import {
   fetchStatusFx,
   getNonceFx,
   LOCAL_STORAGE_ACCESS_TOKEN,
-  saveProfile,
   saveTokensFx,
   writeAuthenticatedToLsFx,
 } from './profile.effects'
@@ -27,7 +26,6 @@ import {
   $authenticated,
   $ethProviderData,
   $initialized,
-  $user,
 } from './profile.stores'
 import {
   disconnectTonFx,
@@ -190,12 +188,6 @@ sample({
   target: [clearTokensFx, $authenticated.reinit],
 })
 
-sample({
-  clock: saveProfile.done,
-  fn: ({ params }) => params,
-  target: $user,
-})
-
 /**
  * Toast notifications for auth events.
  * Replace with proper UI feedback or remove if handled by components.
@@ -235,10 +227,11 @@ signEthFx.fail.watch(() => {
 export { type LoginMode } from './types'
 
 export { initAuth, login, logout } from './profile.events'
+export { clearTokensFx, fetchStatusFx, saveTokensFx } from './profile.effects'
 export {
-  clearTokensFx,
-  fetchStatusFx,
-  saveTokensFx,
-  saveProfile,
-} from './profile.effects'
-export { $authenticated, $initialized, $pending, $user } from './profile.stores'
+  $authenticated,
+  $initialized,
+  $pending,
+  $normalizedUser as $user,
+} from './profile.stores'
+export { saveProfileMutation } from './profile.mutations'

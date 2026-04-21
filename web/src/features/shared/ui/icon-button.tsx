@@ -7,8 +7,18 @@ type IconButtonProps = {
   themeVariant?: 'primary' | 'secondary'
 } & RadixIconButtonProps
 
-export const IconButton = ({ themeVariant, ...props }: IconButtonProps) => {
-  return <StyledRadixIconButton $themeVariant={themeVariant} {...props} />
+export const IconButton = ({
+  themeVariant,
+  type = 'submit',
+  ...props
+}: IconButtonProps) => {
+  return (
+    <StyledRadixIconButton
+      $themeVariant={themeVariant}
+      type={type}
+      {...props}
+    />
+  )
 }
 
 const StyledRadixIconButton = styled(RadixIconButton)<

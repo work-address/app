@@ -1,10 +1,11 @@
-import { combine, createStore } from 'effector'
+import { combine, createStore, restore } from 'effector'
 
 import {
   changeWorklogFilters,
   appendWorklogSort,
   resetWorklogSort,
   changeActivityStateFilter,
+  setWorklogsLoading,
 } from './activities.events'
 import {
   activitiesQuery,
@@ -23,6 +24,7 @@ import type {
   WorklogSort,
   ActivityStateFilter,
 } from './types'
+import type { baseApi } from '@/features/shared'
 
 export const $activityStateFilter = createStore<ActivityStateFilter>('all').on(
   changeActivityStateFilter,
@@ -65,12 +67,31 @@ export const $activitiesLoading = combine(
   (...flags) => flags.some((flag) => flag),
 )
 
+export const $worklogsLoading = restore(setWorklogsLoading, false).on(
+  worklogsQuery.$pending,
+  (_, payload) => payload,
+)
+
+export const $rawActivities = activitiesQuery.$data.map(
+  (activities) =>
+    activities?.items.reduce(
+      (acc, activity) => {
+        if (activity.id) {
+          acc[activity.id] = activity
+        }
+
+        return acc
+      },
+      {} as Record<string, baseApi.Activity>,
+    ) ?? {},
+)
+
 export const $activities = combine(
   activitiesQuery.$data,
   activitiesStatsQuery.$data,
   $activityStateFilter,
   (projects, stats): ProjectWithStats[] =>
-    mapProjectsAndStats(projects?.items, stats),
+    mapProjectsAndStats(projects?.items, stats ?? undefined),
 )
 
 export const $filteredActivities = combine(

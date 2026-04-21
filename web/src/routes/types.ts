@@ -1,6 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
 
-export type BuildRoute<Params extends any> = (params: Params) => string
+export type BuildRoute<Params extends any = void> = (params: Params) => string
 
 export type IdRouteParams = { id: string }
 
@@ -17,8 +17,8 @@ export type Optional<
 export type Route<
   Schema extends string = string,
   Name extends string = string,
-  Children extends Record<string, any> | undefined = undefined,
-  BuildArgs extends Record<string, any> | undefined = undefined,
+  Children extends Record<string, any> | void = undefined,
+  BuildArgs extends Record<string, any> | void = void,
 > = {
   [key in Name]: {
     schema: Schema
@@ -33,8 +33,8 @@ export type Route<
     mobileOrder?: number
     target?: '_blank'
     desktopRender?: 'textWithIcon' | 'text' | 'icon'
-  } & Optional<'build', BuildArgs, BuildRoute<BuildArgs>> &
-    Optional<'children', Children>
+    build: BuildRoute<BuildArgs>
+  } & Optional<'children', Children>
 }
 
 export type MappingRoute = Route<

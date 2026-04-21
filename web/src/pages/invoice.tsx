@@ -15,7 +15,8 @@ import {
   TotalAmountMobile,
   Worklogs,
 } from '@/features/invoice'
-import { Card, IconButton, routes, Text } from '@/features/shared'
+import { Card, IconButton, Text } from '@/features/shared'
+import { routes } from '@/routes'
 
 export default function InvoicePage() {
   const { id } = useParams<{ id: string }>()
@@ -47,7 +48,7 @@ export default function InvoicePage() {
           {isMobile && (
             <Flex gap={'2'} direction={'column'}>
               <Flex direction={'column'}>
-                <IconWrapper>
+                <IconWrapper to={routes.dashboard.build()}>
                   <IconButton variant={'ghost'} radius={'full'} color={'gray'}>
                     <ArrowLeftIcon />
                   </IconButton>

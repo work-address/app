@@ -1,6 +1,5 @@
 export * from './theme'
 export * from './sonner'
-export * from './routes/routes.ts'
 export * from './formatters'
 export * from './wallet-provders'
 export * from './time-active-color'

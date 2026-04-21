@@ -51,9 +51,3 @@ export const getNonceFx = createEffect(async (params: GetNonceParams) => {
       .then((response) => response.data as string)
   }
 })
-
-export const saveProfile = createEffect(async (params: baseApi.User) => {
-  return await baseApi.userControllerEdit({
-    body: params,
-  })
-})

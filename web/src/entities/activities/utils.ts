@@ -2,34 +2,33 @@ import type { ITimeTotal, ITimeTotalComputed, ProjectWithStats } from './types'
 import type { baseApi } from '@/features/shared'
 
 export const mapProjectsAndStats = (
-  projects?: baseApi.Activity[] | null,
-  stats?: ITimeTotal[] | null,
+  projects: baseApi.Activity[] = [],
+  stats: ITimeTotal[] = [],
 ) => {
-  if (!projects || !stats) {
-    return []
-  }
-
-  const recordStats = stats?.reduce(
+  const recordStats = stats.reduce(
     (acc, stat) => {
-      acc[stat.activityId] = stat
+      if (stat?.activityId) {
+        acc[stat.activityId] = stat
+      }
       return acc
     },
     {} as Record<string, ITimeTotal>,
   )
 
   return projects.map((project): ProjectWithStats => {
-    const stats: ITimeTotal = project?.id
-      ? recordStats[project.id]
-      : {
-          activityId: '',
-          rateHour: 0,
-          rateTotal: 0,
-          minutes: 0,
-          keyboardKeys: 0,
-          minutesActive: 0,
-          mouseDistance: 0,
-          mouseKeys: 0,
-        }
+    const stats: ITimeTotal =
+      project?.id && recordStats[project.id]
+        ? recordStats[project.id]
+        : {
+            activityId: '',
+            rateHour: 0,
+            rateTotal: 0,
+            minutes: 0,
+            keyboardKeys: 0,
+            minutesActive: 0,
+            mouseDistance: 0,
+            mouseKeys: 0,
+          }
 
     const hoursTotal = (stats.minutes - (stats.minutes % 60)) / 60
     const minutesTotal = stats.minutes - hoursTotal * 60

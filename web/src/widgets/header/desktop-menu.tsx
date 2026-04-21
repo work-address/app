@@ -1,10 +1,12 @@
+import { useUnit } from 'effector-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation } from 'react-router-dom'
 
 import { NavLink, IconLink, IconImg } from '../styled.ts'
 
-import { defaultMappedRoutes, type MappingRoute } from '@/features/shared'
+import { $user } from '@/entities/profile'
+import { defaultMappedRoutes, routes, type MappingRoute } from '@/routes'
 
 type DesktopMenuProps = {
   mappedRoutes?: MappingRoute[]
@@ -15,6 +17,7 @@ export const DesktopMenu = ({
 }: DesktopMenuProps) => {
   const { pathname } = useLocation()
   const { t } = useTranslation()
+  const user = useUnit($user)
 
   const sorted = useMemo(() => {
     const copy = [...mappedRoutes]
@@ -39,6 +42,12 @@ export const DesktopMenu = ({
           const hasDesktopOrder = typeof desktopOrder === 'number'
           const renderText = translateKeyDesktop ? t(translateKeyDesktop) : text
 
+          let url = schema
+
+          if (schema === routes.profile.schema) {
+            url = routes.profile.build({ id: user?.id || '' })
+          }
+
           if (!hasDesktopOrder) {
             return null
           }
@@ -50,7 +59,7 @@ export const DesktopMenu = ({
               return (
                 <NavLink
                   key={key}
-                  to={schema}
+                  to={url}
                   $active={
                     schema === '/'
                       ? schema === pathname

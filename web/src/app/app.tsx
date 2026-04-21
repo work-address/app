@@ -5,8 +5,8 @@ import { lazy, Suspense, useEffect } from 'react'
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 
 import { initAuth } from '@/entities/profile'
-import { routes } from '@/features/shared'
 import * as Layouts from '@/layouts'
+import { routes } from '@/routes'
 
 const DashboardPage = lazy(() => import('@/pages/dashboard'))
 const ProfilePage = lazy(() => import('@/pages/profile'))
@@ -22,13 +22,22 @@ const router = createBrowserRouter([
   {
     element: <Layouts.MainLayout />,
     children: [
-      { path: routes.dashboard.schema, element: <DashboardPage /> },
-      { path: routes.profile.schema, element: <ProfilePage /> },
+      {
+        path: routes.dashboard.schema,
+        element: <DashboardPage />,
+      },
+      {
+        path: routes.profile.schema,
+        element: <ProfilePage />,
+      },
       {
         path: routes.profile.children.edit.schema,
         element: <ProfileEditPage />,
       },
-      { path: routes.invoice.schema, element: <InvoicePage /> },
+      {
+        path: routes.invoice.schema,
+        element: <InvoicePage />,
+      },
     ],
   },
   { path: '*', element: <Navigate to="/sign-in" replace /> },

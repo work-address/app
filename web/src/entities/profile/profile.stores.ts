@@ -12,11 +12,13 @@ import {
   LOCAL_STORAGE_AUTH_KEY,
 } from './profile.effects'
 import { login, logout, setInitialized } from './profile.events'
+import { saveProfileMutation } from './profile.mutations'
 import { disconnectTonFx, loginTonFx, tonDisconnected } from './ton.model'
 
 import type { EthModalResult } from './eth.model'
 import type { LoginMode } from './types'
-import type { baseApi } from '@/features/shared'
+
+import { toUserFriendlyTonAddress, type baseApi } from '@/features/shared'
 
 export const $loginMode = createStore<LoginMode | null>(null).on(
   login,
@@ -36,7 +38,21 @@ export const $authenticated = createStore(
 
 export const $user = createStore<baseApi.User | null>(null)
   .on(fetchStatusFx.doneData, (_, user) => user)
+  .on(saveProfileMutation.finished.success, (state, { params: user }) => ({
+    ...state,
+    ...user,
+  }))
   .reset(logout)
+
+export const $normalizedUser = $user.map((user) => ({
+  ...user,
+  // TODO: set chain property on backend after authentication
+  friendlyWalletAddress: user?.address
+    ? user.address.includes(':')
+      ? toUserFriendlyTonAddress(user.address)
+      : user.address.toLowerCase()
+    : null,
+}))
 
 export const $initialized = createStore(false).on(setInitialized, () => true)
 

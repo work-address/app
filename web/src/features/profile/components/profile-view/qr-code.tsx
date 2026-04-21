@@ -11,7 +11,6 @@ import { ProfileViewCard } from './styled'
 
 import { $user } from '@/entities/profile'
 import {
-  routes,
   Text,
   useBreakpoint,
   Button,
@@ -19,6 +18,7 @@ import {
   showToast,
   formatWalletAddress,
 } from '@/features/shared'
+import { routes } from '@/routes'
 
 type QrCodeProps = {
   gridArea?: string
@@ -34,10 +34,10 @@ export const QrCode = ({ gridArea }: QrCodeProps) => {
 
   const [qrModalOpened, setQrModalOpened] = useState(false)
 
-  const walletAddress = formatWalletAddress(user?.address || '')
+  const walletAddress = formatWalletAddress(user?.friendlyWalletAddress || '')
 
   const handleCopyWalletAddress = async () => {
-    await navigator.clipboard.writeText(user?.address || '')
+    await navigator.clipboard.writeText(user?.friendlyWalletAddress || '')
 
     showToast('info', {
       message: 'Address copied to clipboard',
@@ -74,7 +74,7 @@ export const QrCode = ({ gridArea }: QrCodeProps) => {
 
           <QrCodeWrapper onClick={() => setQrModalOpened(true)}>
             <QRCodeSVG
-              value={user?.address || ''}
+              value={user?.friendlyWalletAddress || ''}
               size={isMobile ? 140 : 180}
               level="M"
               fgColor="var(--ds-accent-11)"
@@ -83,15 +83,21 @@ export const QrCode = ({ gridArea }: QrCodeProps) => {
             />
           </QrCodeWrapper>
 
-        {isUpMd ? (
-          <Button width={'146px'} themeVariant={'primary'} size={'3'}>
-            {t('profile.view.shareQr')}
-          </Button>
-        ) : (
-          <Flex gap={'2'} direction={'column'} width={'100%'}>
-            <Link to={routes.profile.children.edit.schema}>
-              <Button stretch themeVariant={'primary'}>
-                {t('common.edit')} <Pencil1Icon />
+          {isMobile ? (
+            <Flex gap={'2'} direction={'column'} width={'100%'}>
+              <Link to={routes.profile.children.edit.build()}>
+                <Button stretch themeVariant={'primary'}>
+                  {t('common.edit')} <Pencil1Icon />
+                </Button>
+              </Link>
+
+              <Button
+                stretch
+                variant={'outline'}
+                color={'gray'}
+                onClick={handleCopyWalletAddress}
+              >
+                {t('common.share')} <Share1Icon />
               </Button>
             </Link>
 
@@ -118,7 +124,7 @@ export const QrCode = ({ gridArea }: QrCodeProps) => {
       >
         <Flex direction={'column'} align={'center'} gap={'3'}>
           <QRCodeSVG
-            value={user?.address || ''}
+            value={user?.friendlyWalletAddress || ''}
             size={isMobile ? 200 : 260}
             level="M"
             fgColor="var(--ds-accent-11)"

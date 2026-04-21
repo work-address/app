@@ -9,7 +9,7 @@ import type {
 type MainRoutes =
   & Route<'/', 'dashboard'>
   & Route<'/sign-in', 'signIn'>
-  & Route<'/profile', 'profile', ProfileRoutes>
+  & Route<'/profile/:id', 'profile', ProfileRoutes, IdRouteParams>
   & Route<'/help', 'helpCenter'>
   & Route<'/time-tracker', 'timeTracker'>
   & Route<'/download', 'download'>
@@ -20,7 +20,6 @@ type MainRoutes =
   & Route<'/invoice/:id', 'invoice', NoChildRoutes, IdRouteParams>
 
 type ProfileRoutes =
-  & Route<'/profile/freelancer/:id', 'freelancer', NoChildRoutes,  IdRouteParams>
   & Route<'/profile/edit', 'edit', NoChildRoutes>
 
 /* eslint-enable */
@@ -31,6 +30,7 @@ type ProfileRoutes =
 export const routes: MainRoutes = {
   dashboard: {
     schema: '/',
+    build: () => '/',
 
     desktopOrder: 0,
     mobileOrder: 1,
@@ -42,7 +42,8 @@ export const routes: MainRoutes = {
   },
 
   profile: {
-    schema: '/profile',
+    schema: '/profile/:id',
+    build: ({ id }) => `/profile/${id}`,
 
     desktopOrder: 1,
     mobileOrder: 0,
@@ -52,20 +53,16 @@ export const routes: MainRoutes = {
     translateKeyDesktop: 'header.nav.profile',
     translateKeyMobile: 'header.nav.profile',
     children: {
-      freelancer: {
-        schema: '/profile/freelancer/:id',
-        build: ({ id }) => `/profile/freelancer/${id}`,
-        disabled: true,
-      },
-
       edit: {
         schema: '/profile/edit',
+        build: () => '/profile/edit',
       },
     },
   },
 
   helpCenter: {
     schema: '/help',
+    build: () => '/help',
 
     translateKeyDesktop: 'header.nav.helpCenter',
     translateKeyMobile: 'header.nav.helpCenter',
@@ -78,6 +75,7 @@ export const routes: MainRoutes = {
 
   timeTracker: {
     schema: '/time-tracker',
+    build: () => '/time-tracker',
 
     mobileOrder: 3,
 
@@ -87,6 +85,7 @@ export const routes: MainRoutes = {
 
   download: {
     schema: '/download',
+    build: () => '/download',
 
     desktopOrder: 3,
 
@@ -100,6 +99,7 @@ export const routes: MainRoutes = {
 
   github: {
     schema: 'https://github.com',
+    build: () => 'https://github.com',
 
     desktopOrder: 4,
     mobileOrder: 4,
@@ -130,6 +130,7 @@ export const routes: MainRoutes = {
 
   signIn: {
     schema: '/sign-in',
+    build: () => '/sign-in',
   },
 
   invoice: {

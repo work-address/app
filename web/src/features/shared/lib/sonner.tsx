@@ -1,4 +1,4 @@
-import i18n from 'i18next'
+import { Theme } from '@radix-ui/themes'
 import { toast } from 'sonner'
 import styled, { createGlobalStyle } from 'styled-components'
 
@@ -44,6 +44,14 @@ export const showToast = (
   )
 }
 
+export const SonnerRadixTheme = styled(Theme)`
+  position: initial;
+  height: initial;
+  width: initial;
+  min-height: initial;
+  background: initial;
+`
+
 const ToastWrapper = styled.div``
 
 const baseToastStyle = (bg: string, border: string, color: string) => `
@@ -66,19 +74,6 @@ const baseToastStyle = (bg: string, border: string, color: string) => `
 `
 
 export const ToastStyle = createGlobalStyle`
-  [aria-label='Notifications alt+T'] {
-    ol {
-      &:has(.nowrap) {
-        white-space: nowrap;
-        --width: fit-content !important;
-
-        li {
-          width: fit-content !important;
-        }
-      }
-    }
-  }
-
   .sonner-toast {
     &[data-sonner-toast][data-styled=true] {
       padding: 16px;
@@ -94,10 +89,10 @@ export const ToastStyle = createGlobalStyle`
 
       [data-close-button] {
         position: absolute;
-        top: var(--space-4);
-        left: initial;
-        bottom: 50%;
-        right: var(--space-2);
+        top: var(--space-4) !important;
+        left: initial !important;
+        bottom: 50% !important;
+        right: var(--space-2) !important;
         transform: translateY(-50%);
         background: transparent;
         font-size: var(--font-size-4);

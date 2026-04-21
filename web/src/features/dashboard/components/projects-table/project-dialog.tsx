@@ -5,12 +5,18 @@ import {
   Pencil1Icon,
 } from '@radix-ui/react-icons'
 import { Flex, Grid, Separator } from '@radix-ui/themes'
-import { Fragment, useEffect, useState } from 'react'
+import { useStoreMap, useUnit } from 'effector-react'
+import { Fragment, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
-import type { ProjectWithStats } from '@/entities/activities'
+import type { baseApi } from '@/features/shared'
 
+import {
+  $rawActivities,
+  editActivityMutation,
+  type ProjectWithStats,
+} from '@/entities/activities'
 import {
   formatDurationFromMinutes,
   Input,
@@ -20,9 +26,10 @@ import {
   AdaptiveDialog,
   Button,
   IconButton,
+  Spinner,
   type InputProps,
 } from '@/features/shared'
-import { useDateFormatter } from '@/features/shared/hooks/formatters/use-date-formatter'
+import { useDateFormatter } from '@/features/shared'
 
 type ProjectDialogProps = {
   open: boolean
@@ -40,6 +47,22 @@ export const ProjectDialog = ({
   const { t } = useTranslation()
   const isDesktop = useBreakpoint('isDesktop')
   const [modalMode, setModalMode] = useState<'view' | 'edit'>('view')
+
+  const { editingStatus, resetEditingMutation } = useUnit({
+    editingStatus: editActivityMutation.$status,
+    resetEditingMutation: editActivityMutation.reset,
+  })
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    if (editingStatus === 'done') {
+      resetEditingMutation()
+      setOpen(false)
+    }
+  }, [open, editingStatus, resetEditingMutation, setOpen])
 
   useEffect(() => {
     if (open) {
@@ -64,6 +87,7 @@ export const ProjectDialog = ({
               color={'red'}
               variant={'outline'}
               onClick={() => onDeleteClick(row)}
+              type="button"
             >
               <TrashIcon />
             </IconButton>
@@ -81,6 +105,7 @@ export const ProjectDialog = ({
               variant={'outline'}
               size={'3'}
               onClick={() => row && onDeleteClick(row)}
+              type="button"
             >
               <TrashIcon />
               {t('common.delete')}
@@ -93,6 +118,7 @@ export const ProjectDialog = ({
                     themeVariant={'secondary'}
                     variant={'outline'}
                     size={'3'}
+                    type="button"
                   >
                     <DownloadIcon />
                     {t('dashboard.projectsTable.drawer.invoice')}
@@ -101,7 +127,13 @@ export const ProjectDialog = ({
                   <Button
                     themeVariant={'primary'}
                     size={'3'}
-                    onClick={() => setModalMode('edit')}
+                    onClick={(e) => {
+                      // Prevent event bubbling to avoid auto from submit
+                      e.stopPropagation()
+                      e.preventDefault()
+                      setModalMode('edit')
+                    }}
+                    type="button"
                   >
                     <Pencil1Icon />
                     {t('dashboard.projectsTable.drawer.edit')}
@@ -113,11 +145,21 @@ export const ProjectDialog = ({
                     themeVariant={'secondary'}
                     onClick={() => setModalMode('view')}
                     size={'3'}
+                    type="button"
                   >
                     {t('common.cancel')}
                   </Button>
 
-                  <Button themeVariant={'primary'} size={'3'}>
+                  <Button
+                    themeVariant={'primary'}
+                    size={'3'}
+                    form="edit-project-form"
+                    type="submit"
+                    disabled={editingStatus === 'pending'}
+                  >
+                    {editingStatus === 'pending' && (
+                      <Spinner color="#FFF" width={'3px'} />
+                    )}
                     {t('common.save')}
                   </Button>
                 </>
@@ -129,14 +171,24 @@ export const ProjectDialog = ({
             <>
               {modalMode === 'view' ? (
                 <>
-                  <Button themeVariant={'secondary'} variant={'outline'}>
+                  <Button
+                    themeVariant={'secondary'}
+                    variant={'outline'}
+                    type="button"
+                  >
                     <DownloadIcon />
                     {t('dashboard.projectsTable.drawer.invoice')}
                   </Button>
 
                   <Button
                     themeVariant={'primary'}
-                    onClick={() => setModalMode('edit')}
+                    onClick={(e) => {
+                      // Prevent event bubbling to avoid form submit
+                      e.preventDefault()
+                      e.stopPropagation()
+                      setModalMode('edit')
+                    }}
+                    type="button"
                   >
                     <Pencil1Icon />
                     {t('dashboard.projectsTable.drawer.edit')}
@@ -147,11 +199,23 @@ export const ProjectDialog = ({
                   <Button
                     themeVariant={'secondary'}
                     onClick={() => setModalMode('view')}
+                    type="button"
                   >
                     {t('common.cancel')}
                   </Button>
 
-                  <Button themeVariant={'primary'}>{t('common.save')}</Button>
+                  <Button
+                    themeVariant={'primary'}
+                    form="edit-project-form"
+                    type="submit"
+                    disabled={editingStatus === 'pending'}
+                    autoFocus={false}
+                  >
+                    {editingStatus === 'pending' && (
+                      <Spinner width="2px" color="#FFF" size={15} />
+                    )}
+                    {t('common.save')}
+                  </Button>
                 </>
               )}
             </>
@@ -171,6 +235,11 @@ type ProjectDialogContentProps = {
   mode: 'view' | 'edit'
 }
 
+type FormValues = Pick<
+  baseApi.Activity,
+  'title' | 'state' | 'rateHour' | 'text'
+>
+
 export const ProjectDialogContent = ({
   data,
   mode,
@@ -180,11 +249,48 @@ export const ProjectDialogContent = ({
   const isDesktop = useBreakpoint('isDesktop')
   const dateFormatter = useDateFormatter()
 
-  const { register } = useForm({
-    values: data,
+  const formRef = useRef<HTMLFormElement>(null)
+
+  const {
+    register,
+    handleSubmit,
+    reset: resetForm,
+  } = useForm<FormValues>({
+    values: {
+      title: data.title,
+      state: data.state,
+      rateHour: data.rateHour.toString(),
+      text: data.text,
+    },
+  })
+
+  const { editActivity, editingStatus } = useUnit({
+    editActivity: editActivityMutation.start,
+    editingStatus: editActivityMutation.$status,
   })
 
   const textSize = isMobile ? '2' : '3'
+
+  const editingActivity = useStoreMap({
+    store: $rawActivities,
+    keys: [data.id],
+    fn: (activities, [id]) => (id ? activities[id] : null),
+  })
+
+  const handleFormSubmit = (data: FormValues) => {
+    if (editingActivity) {
+      editActivity({
+        ...editingActivity,
+        ...data,
+      })
+    }
+  }
+
+  useEffect(() => {
+    if (editingStatus === 'done') {
+      resetForm()
+    }
+  }, [editingStatus, resetForm])
 
   if (mode === 'edit') {
     const inputProps: InputProps = {
@@ -195,40 +301,50 @@ export const ProjectDialogContent = ({
     }
 
     return (
-      <Flex direction={'column'} gap={'4'}>
-        <Input
-          label={'Project name'}
-          id={'projectName'}
-          {...inputProps}
-          {...register('title')}
-        />
+      <form
+        ref={formRef}
+        onSubmit={handleSubmit(handleFormSubmit)}
+        id="edit-project-form"
+      >
+        <Flex direction={'column'} gap={'4'}>
+          <Input
+            label={'Project name'}
+            id={'projectName'}
+            disabled={editingStatus === 'pending'}
+            {...inputProps}
+            {...register('title')}
+          />
 
-        <Input
-          label={'Published in'}
-          id={'publishedIn'}
-          {...inputProps}
-          {...register('createdAt')}
-        />
+          <Input
+            label={'Published in'}
+            id={'publishedIn'}
+            disabled={editingStatus === 'pending'}
+            {...inputProps}
+            {...register('state')}
+          />
 
-        <Input
-          label={'Rate'}
-          addonRight={'$'}
-          id={'rate'}
-          {...inputProps}
-          {...register('rateHour')}
-        />
+          <Input
+            label={'Rate'}
+            addonRight={'$'}
+            id={'rate'}
+            disabled={editingStatus === 'pending'}
+            {...inputProps}
+            {...register('rateHour')}
+          />
 
-        <Separator size={'4'} />
+          <Separator size={'4'} />
 
-        <TextArea
-          label={'Description'}
-          placeholder={'Enter a brief description of your project'}
-          rows={7}
-          id={'description'}
-          size={'3'}
-          {...register('text')}
-        />
-      </Flex>
+          <TextArea
+            label={'Description'}
+            placeholder={'Enter a brief description of your project'}
+            rows={7}
+            id={'description'}
+            size={'3'}
+            disabled={editingStatus === 'pending'}
+            {...register('text')}
+          />
+        </Flex>
+      </form>
     )
   }
 

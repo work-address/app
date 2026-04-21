@@ -12,6 +12,8 @@ export const fetchWorklogs = createEvent()
 
 export const changeActivityStateFilter = createEvent<ActivityStateFilter>()
 
+export const setWorklogsLoading = createEvent<boolean>()
+
 export const changeWorklogFilters = createEvent<Partial<WorklogsFilters>>()
 
 export const applyWorklogFilters = createEvent()

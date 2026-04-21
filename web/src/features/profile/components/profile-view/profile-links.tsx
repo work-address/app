@@ -12,12 +12,12 @@ import { ProfileViewCard } from './styled'
 import { $user } from '@/entities/profile'
 import {
   Button,
-  routes,
   showToast,
   Text,
   useBreakpoint,
   formatWalletAddress,
 } from '@/features/shared'
+import { routes } from '@/routes'
 
 type ProfileLinksProps = {
   gridArea?: string
@@ -28,14 +28,14 @@ export const ProfileLinks = ({ gridArea }: ProfileLinksProps) => {
   const { t } = useTranslation()
   const user = useUnit($user)
 
-  const walletAddress = formatWalletAddress(user?.address || '')
+  const walletAddress = formatWalletAddress(user?.friendlyWalletAddress || '')
 
   const infoRowGap: FlexProps['gap'] = {
     initial: '2px',
   }
 
   const handleCopyWalletAddress = async () => {
-    await navigator.clipboard.writeText(user?.address || '')
+    await navigator.clipboard.writeText(user?.friendlyWalletAddress || '')
 
     showToast('info', {
       message: 'Address copied to clipboard',
@@ -75,12 +75,17 @@ export const ProfileLinks = ({ gridArea }: ProfileLinksProps) => {
               </Flex>
 
               <Flex gap={'2'}>
-                <Button variant={'outline'} color={'gray'} size={'3'}>
+                <Button
+                  variant={'outline'}
+                  color={'gray'}
+                  size={'3'}
+                  onClick={handleCopyWalletAddress}
+                >
                   {t('common.share')}
                   <Share1Icon />
                 </Button>
 
-                <Link to={routes.profile.children.edit.schema}>
+                <Link to={routes.profile.children.edit.build()}>
                   <Button themeVariant={'primary'} size={'3'}>
                     {t('common.edit')}
                     <Pencil1Icon />

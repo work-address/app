@@ -1,3 +1,4 @@
+import { useUnit } from 'effector-react'
 import { motion } from 'motion/react'
 import React, { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -6,7 +7,8 @@ import styled from 'styled-components'
 
 import { IconImg } from '../styled.ts'
 
-import { defaultMappedRoutes } from '@/features/shared'
+import { $user } from '@/entities/profile'
+import { defaultMappedRoutes, routes } from '@/routes'
 
 type MobileMenuProps = {
   setOpen: (value: boolean) => void
@@ -16,6 +18,7 @@ export const MobileMenu = ({ setOpen }: MobileMenuProps) => {
   const { t } = useTranslation()
   const { pathname } = useLocation()
   const navigate = useNavigate()
+  const user = useUnit($user)
 
   const sorted = useMemo(() => {
     const copy = [...defaultMappedRoutes]
@@ -50,12 +53,21 @@ export const MobileMenu = ({ setOpen }: MobileMenuProps) => {
           disabled,
           mobileOrder,
           target,
-        }) =>
-          !disabled &&
-          mobileOrder !== undefined && (
+        }) => {
+          if (disabled || mobileOrder === undefined) {
+            return null
+          }
+
+          let url = schema
+
+          if (schema === routes.profile.schema) {
+            url = routes.profile.build({ id: user?.id || '' })
+          }
+
+          return (
             <MobileMenuItem
               key={key}
-              href={schema}
+              href={url}
               onClick={onClick}
               $active={
                 schema === '/' ? pathname === schema : pathname.includes(schema)
@@ -69,7 +81,8 @@ export const MobileMenu = ({ setOpen }: MobileMenuProps) => {
               />
               {translateKeyMobile && <span>{t(translateKeyMobile)}</span>}
             </MobileMenuItem>
-          ),
+          )
+        },
       )}
     </>
   )

@@ -6,7 +6,8 @@ import styled from 'styled-components'
 import type { MotionProps } from 'motion/react'
 
 import { $authenticated } from '@/entities/profile'
-import { routes, useBreakpoint } from '@/features/shared'
+import { useBreakpoint } from '@/features/shared'
+import { routes } from '@/routes'
 import { Header } from '@/widgets'
 
 export const MainLayout = () => {
@@ -24,7 +25,7 @@ export const MainLayout = () => {
     : null
 
   if (!authenticated) {
-    return <Navigate to={routes.signIn.schema} />
+    return <Navigate to={routes.signIn.build()} />
   }
 
   return (

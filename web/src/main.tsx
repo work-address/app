@@ -15,6 +15,7 @@ import {
   theme,
   Confirm,
   BreakpointsWatcher,
+  SonnerRadixTheme,
 } from '@/features/shared'
 
 const rootElementId = 'root'
@@ -32,14 +33,17 @@ createRoot(rootElement).render(
       <ThemeProvider theme={theme}>
         <Confirm />
         <BreakpointsWatcher />
+        <ToastStyle />
 
-        <BrowserRouter>
-          <HelmetProvider>
-            <App />
-          </HelmetProvider>
-        </BrowserRouter>
+        <HelmetProvider>
+          <App />
+        </HelmetProvider>
       </ThemeProvider>
     </Theme>
+
+    <SonnerRadixTheme>
+      <Toaster />
+    </SonnerRadixTheme>
   </StrictMode>,
 )
 

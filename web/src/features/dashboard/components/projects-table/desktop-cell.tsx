@@ -10,10 +10,10 @@ import type { ProjectWithStats } from '@/entities/activities'
 import {
   type DesktopBodyCellRenderProps,
   IconButton,
-  routes,
   Text,
   formatDurationFromMinutes,
 } from '@/features/shared'
+import { routes } from '@/routes'
 
 const statusTranslationKey = (status: string) => {
   const key = status.toLowerCase()
@@ -78,7 +78,7 @@ export const DesktopCell = React.memo(
     }
 
     return (
-      <Flex py={'3.5px'} direction={'column'}>
+      <Flex py={'4.5px'} direction={'column'}>
         {content}
       </Flex>
     )

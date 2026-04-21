@@ -17,6 +17,7 @@ import Underline from '@tiptap/extension-underline'
 import { useEditor, EditorContent } from '@tiptap/react'
 import StarterKit from '@tiptap/starter-kit'
 import { useEffect, useReducer } from 'react'
+import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -29,6 +30,7 @@ type RichEditorProps = {
 export const RichEditor = ({ value, onChange }: RichEditorProps) => {
   const { t } = useTranslation()
   const [, forceUpdate] = useReducer((x) => x + 1, 0)
+  const isInternalUpdateRef = useRef(false)
 
   const editor = useEditor({
     extensions: [
@@ -38,7 +40,10 @@ export const RichEditor = ({ value, onChange }: RichEditorProps) => {
       TextAlign.configure({ types: ['paragraph'] }),
     ],
     content: value,
-    onUpdate: ({ editor }) => onChange?.(editor.getHTML()),
+    onUpdate: ({ editor }) => {
+      isInternalUpdateRef.current = true
+      onChange?.(editor.getHTML())
+    },
   })
 
   useEffect(() => {
@@ -51,7 +56,12 @@ export const RichEditor = ({ value, onChange }: RichEditorProps) => {
   }, [editor])
 
   useEffect(() => {
-    editor?.commands.setContent(value || '')
+    if (isInternalUpdateRef.current) {
+      isInternalUpdateRef.current = false
+      return
+    }
+
+    editor?.commands.setContent(value ?? '')
   }, [value, editor])
 
   return (
@@ -179,7 +189,7 @@ export const RichEditor = ({ value, onChange }: RichEditorProps) => {
       </FlexToolbar>
 
       <EditorWrapper>
-        <EditorContent editor={editor} id={id} />
+        <StyledEditorContent editor={editor} id={id} />
       </EditorWrapper>
     </Wrapper>
   )
@@ -211,7 +221,6 @@ const Separator = styled(RadixSeparator)`
 
 const EditorWrapper = styled.div`
   padding: var(--space-3);
-  min-height: 120px;
 
   .tiptap {
     outline: none;
@@ -221,5 +230,11 @@ const EditorWrapper = styled.div`
     p {
       margin: 0;
     }
+  }
+`
+
+const StyledEditorContent = styled(EditorContent)`
+  div[contenteditable='true'] {
+    min-height: 120px;
   }
 `

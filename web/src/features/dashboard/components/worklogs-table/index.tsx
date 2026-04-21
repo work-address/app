@@ -12,9 +12,9 @@ import { WorklogsContext } from './worklogs-context'
 
 import {
   $allWorklogs,
-  $activitiesLoading,
   $isWorklogsFiltering,
   $worklogSort,
+  $worklogsLoading,
   type Time,
   resetWorklogSort,
 } from '@/entities/activities'
@@ -32,13 +32,13 @@ export const WorklogsTable = () => {
 
   const {
     allWorklogs: worklogRows,
-    activitiesLoading,
+    worklogsLoading: worklogsLoading,
     isWorklogsFiltering,
     worklogSort,
     resetWorklogSortEvent,
   } = useUnit({
     allWorklogs: $allWorklogs,
-    activitiesLoading: $activitiesLoading,
+    worklogsLoading: $worklogsLoading,
     isWorklogsFiltering: $isWorklogsFiltering,
     worklogSort: $worklogSort,
     resetWorklogSortEvent: resetWorklogSort,
@@ -46,7 +46,7 @@ export const WorklogsTable = () => {
 
   const [filtersOpen, setFiltersOpen] = useState(false)
 
-  const hasWorklogs = activitiesLoading || worklogRows.length > 0
+  const hasWorklogs = worklogsLoading || worklogRows.length > 0
 
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
 
@@ -155,8 +155,8 @@ export const WorklogsTable = () => {
             allowSelection
             selectedIds={selectedIds}
             onSelectedIdsChange={setSelectedIds}
-            maxHeight={isDesktop ? '67dvh' : undefined}
-            loading={activitiesLoading}
+            height={'72dvh'}
+            loading={worklogsLoading}
             isFiltering={isWorklogsFiltering}
             sort={worklogSort}
             onSortChange={handleOnSortChange}

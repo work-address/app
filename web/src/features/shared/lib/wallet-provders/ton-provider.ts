@@ -8,3 +8,5 @@ export type {
   TonProofItemReplySuccess,
   TonProofItemReply,
 } from '@tonconnect/ui'
+
+export { toUserFriendlyAddress as toUserFriendlyTonAddress } from '@tonconnect/ui'

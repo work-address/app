@@ -5,7 +5,6 @@ import { playwright } from '@vitest/browser-playwright'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
-import mkcert from 'vite-plugin-mkcert'
 import svgr from 'vite-plugin-svgr'
 
 const dirname =
@@ -31,7 +30,6 @@ export default defineConfig(({ command, mode }) => {
         },
       }),
       svgr(),
-      isDevMode ? mkcert() : null,
     ],
     server: {
       host: true,
@@ -43,7 +41,6 @@ export default defineConfig(({ command, mode }) => {
           changeOrigin: true,
         },
       },
-      https: isDevMode ? {} : false,
     },
     resolve: {
       alias: {

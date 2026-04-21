@@ -1,14 +1,22 @@
 import { Flex, Grid } from '@radix-ui/themes'
+import { useUnit } from 'effector-react'
+import { useEffect } from 'react'
+import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
+import type { baseApi } from '@/features/shared'
+
+import { createActivityMutation } from '@/entities/activities'
 import {
   AdaptiveDialog,
   Button,
   Input,
   type InputProps,
+  showToast,
   Text,
   TextArea,
   useBreakpoint,
+  Spinner,
 } from '@/features/shared'
 
 type CreateProjectPayload = {
@@ -30,12 +38,59 @@ export const CreateProjectModal = ({
   const { t } = useTranslation()
   const isMobile = useBreakpoint('isMobile')
 
+  const { createActivity, status, resetMutation, pending } = useUnit({
+    createActivity: createActivityMutation.start,
+    status: createActivityMutation.$status,
+    resetMutation: createActivityMutation.reset,
+    pending: createActivityMutation.$pending,
+  })
+
+  const {
+    register,
+    handleSubmit,
+    reset: resetForm,
+  } = useForm<baseApi.Activity>({
+    defaultValues: {
+      title: '',
+      rateHour: '',
+      text: '',
+      type: 'Personal',
+      state: 'Published',
+    },
+  })
+
   const inputProps: InputProps = {
     rows: 'auto 1fr',
     columns: '1fr',
     gap: '2',
     size: '3',
   }
+
+  const handleFormSubmit = (data: baseApi.Activity) => {
+    createActivity(data)
+  }
+
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    if (status === 'done') {
+      onOpenChange(false)
+      resetMutation()
+      resetForm()
+
+      showToast('success', {
+        message: t('project.createModal.createSuccess'),
+        position: 'top-center',
+      })
+    } else if (status === 'fail') {
+      showToast('error', {
+        message: t('project.createModal.createError'),
+        position: 'top-center',
+      })
+    }
+  }, [status, onOpenChange, t, resetMutation, open, resetForm])
 
   return (
     <AdaptiveDialog
@@ -53,7 +108,13 @@ export const CreateProjectModal = ({
             >
               {t('dashboard.projectsTable.confirmDelete.cancel')}
             </Button>
-            <Button themeVariant={'primary'}>
+            <Button
+              themeVariant={'primary'}
+              type="submit"
+              form="create-project-form"
+              disabled={pending}
+            >
+              {pending && <Spinner color="#FFF" width="2px" size={15} />}
               {t('dashboard.page.createProject')}
             </Button>
           </Grid>
@@ -67,7 +128,14 @@ export const CreateProjectModal = ({
               {t('dashboard.projectsTable.confirmDelete.cancel')}
             </Button>
 
-            <Button themeVariant={'primary'} size={'3'}>
+            <Button
+              themeVariant={'primary'}
+              size={'3'}
+              type="submit"
+              form="create-project-form"
+              disabled={pending}
+            >
+              {pending && <Spinner color="#FFF" width={'2px'} />}
               {t('dashboard.page.createProject')}
             </Button>
           </Flex>
@@ -79,29 +147,41 @@ export const CreateProjectModal = ({
           {t('project.createModal.intro')}
         </Text>
 
-        <Flex gap={'4'} direction={'column'}>
-          <Input
-            label={t('dashboard.projectsTable.form.projectName')}
-            id={'projectName'}
-            placeholder={t('project.createModal.projectNamePlaceholder')}
-            {...inputProps}
-          />
+        <form
+          id="create-project-form"
+          onSubmit={handleSubmit(handleFormSubmit)}
+        >
+          <Flex gap={'4'} direction={'column'}>
+            <Input
+              label={t('dashboard.projectsTable.form.projectName')}
+              id={'projectName'}
+              placeholder={t('project.createModal.projectNamePlaceholder')}
+              disabled={pending}
+              {...inputProps}
+              {...register('title')}
+            />
 
-          <Input
-            label={t('dashboard.projectsTable.form.rate')}
-            id={'rate'}
-            placeholder={t('project.createModal.ratePlaceholder')}
-            addonRight={'$'}
-            {...inputProps}
-          />
+            <Input
+              label={t('dashboard.projectsTable.form.rate')}
+              id={'rate'}
+              placeholder={t('project.createModal.ratePlaceholder')}
+              addonRight={'$'}
+              type="number"
+              disabled={pending}
+              {...inputProps}
+              {...register('rateHour')}
+            />
 
-          <TextArea
-            label={t('dashboard.projectsTable.form.description')}
-            id={'description'}
-            placeholder={t('project.createModal.descriptionPlaceholder')}
-            rows={isMobile ? 7 : 3}
-          />
-        </Flex>
+            <TextArea
+              label={t('dashboard.projectsTable.form.description')}
+              id={'description'}
+              placeholder={t('project.createModal.descriptionPlaceholder')}
+              rows={isMobile ? 7 : 3}
+              disabled={pending}
+              {...register('text')}
+            />
+          </Flex>
+        </form>
       </Flex>
     </AdaptiveDialog>
   )

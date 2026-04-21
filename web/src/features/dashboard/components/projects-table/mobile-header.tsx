@@ -6,7 +6,8 @@ import { ProjectsTableContext } from './context.ts'
 
 import type { ProjectWithStats } from '@/entities/activities'
 
-import { type MobileHeaderRenderProps, routes, Text } from '@/features/shared'
+import { type MobileHeaderRenderProps, Text } from '@/features/shared'
+import { routes } from '@/routes'
 
 const statusTranslationKey = (status: string) => {
   const key = status.toLowerCase()

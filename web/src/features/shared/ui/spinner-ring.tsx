@@ -7,11 +7,28 @@ type SpinnerProps = {
   color?: string
   width?: string
   style?: CSSProperties
+  useCase?: 'button'
 }
 
-export const Spinner = ({ size, style, color, width }: SpinnerProps) => (
-  <SpinnerRing size={size} style={style} $color={color} $width={width} />
-)
+export const Spinner = ({
+  size,
+  style,
+  color,
+  width,
+  useCase,
+}: SpinnerProps) => {
+  return (
+    <SpinnerRing
+      size={size}
+      style={style}
+      $color={color}
+      $width={width}
+      {...(useCase === 'button'
+        ? { size: 12, $color: '#FFF', $width: '2px' }
+        : null)}
+    />
+  )
+}
 
 const spin = keyframes`
   from { transform: rotate(0deg); }

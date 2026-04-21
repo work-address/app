@@ -1,14 +1,14 @@
 import { Flex, Grid, IconButton, Separator, Text } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
 import type { baseApi } from '@/features/shared'
 
-import { $user, saveProfile } from '@/entities/profile'
+import { $user, saveProfileMutation } from '@/entities/profile'
 import { type CardProps } from '@/features/shared'
 import {
   Button,
@@ -16,19 +16,18 @@ import {
   Input,
   TextArea,
   useLeaveConfirm,
-  routes,
   useConfirm,
   showToast,
   useBreakpoint,
   RichEditor,
   Spinner,
 } from '@/features/shared'
+import { routes } from '@/routes'
 
-const inputLabelWidth = '106px'
+const INPUT_LABEL_WIDTH = '106px'
 
 type FormState = Pick<
   baseApi.User,
-  | 'address'
   | 'userName'
   | 'company'
   | 'skills'
@@ -37,16 +36,28 @@ type FormState = Pick<
   | 'facebook'
   | 'linkedIn'
   | 'telegram'
->
+> & {
+  friendlyWalletAddress: string
+}
 
 export const EditProfile = () => {
   const { t } = useTranslation()
+  const navigate = useNavigate()
 
   const isDesktop = useBreakpoint('isDesktop')
   const { confirm } = useConfirm()
 
+  const [isFormSubmittedSuccessfully, setIsFormSubmittedSuccessfully] =
+    useState(false)
+
   const user = useUnit($user)
-  const loading = useUnit(saveProfile.pending)
+
+  const { loading, saveProfile, status, resetMutation } = useUnit({
+    loading: saveProfileMutation.$pending,
+    saveProfile: saveProfileMutation.start,
+    status: saveProfileMutation.$status,
+    resetMutation: saveProfileMutation.reset,
+  })
 
   const {
     register,
@@ -56,7 +67,7 @@ export const EditProfile = () => {
     reset,
   } = useForm<FormState>({
     values: {
-      address: '',
+      friendlyWalletAddress: '',
       userName: '',
       company: '',
       skills: '',
@@ -69,26 +80,11 @@ export const EditProfile = () => {
   })
 
   const onSubmit: SubmitHandler<FormState> = async (values) => {
-    await saveProfile({
+    saveProfile({
       ...values,
       // TODO: remove this when backend will be ready
       emailOrPhone: user?.emailOrPhone || '',
     })
-      .then(() => {
-        showToast('info', {
-          message: 'Profile updated',
-          position: 'top-center',
-          closeButton: true,
-        })
-      })
-      .catch(() => {
-        showToast('error', {
-          message:
-            'Something went wrong. Please check your connection and try again.',
-          position: 'top-center',
-          closeButton: true,
-        })
-      })
   }
 
   const onReset = () => {
@@ -98,9 +94,42 @@ export const EditProfile = () => {
   useLeaveConfirm({ when: isDirty })
 
   useEffect(() => {
+    if (isFormSubmittedSuccessfully) {
+      setIsFormSubmittedSuccessfully(false)
+      navigate(
+        routes.profile.build({
+          id: user?.id || '',
+        }),
+      )
+    }
+  }, [isFormSubmittedSuccessfully, navigate, user?.id])
+
+  useEffect(() => {
+    if (status === 'done') {
+      showToast('info', {
+        message: 'Profile updated',
+        position: 'top-center',
+        closeButton: true,
+      })
+
+      setIsFormSubmittedSuccessfully(true)
+      reset()
+      resetMutation()
+    } else if (status === 'fail') {
+      showToast('error', {
+        message:
+          'Something went wrong. Please check your connection and try again.',
+        position: 'top-center',
+        closeButton: true,
+      })
+      resetMutation()
+    }
+  }, [status, resetMutation, navigate, reset])
+
+  useEffect(() => {
     if (user) {
       reset({
-        address: user.address || '',
+        friendlyWalletAddress: user.friendlyWalletAddress || '',
         userName: user.userName || '',
         company: user.company || '',
         skills: user.skills || '',
@@ -126,7 +155,9 @@ export const EditProfile = () => {
             >
               <Flex gap={'var(--space-4)'} align={'center'}>
                 {isDesktop && (
-                  <Link to={routes.profile.schema}>
+                  <Link
+                    to={user?.id ? routes.profile.build({ id: user.id }) : '#'}
+                  >
                     <IconButton
                       radius={'full'}
                       variant={'ghost'}
@@ -155,6 +186,7 @@ export const EditProfile = () => {
                     themeVariant="secondary"
                     onClick={onReset}
                     disabled={!isDirty || loading}
+                    type="button"
                   >
                     {t('profile.actions.cancel')}
                   </Button>
@@ -164,7 +196,7 @@ export const EditProfile = () => {
                     disabled={!isDirty || loading}
                     type={'submit'}
                   >
-                    {loading && <Spinner size={12} color="#FFF" width="2px" />}
+                    {loading && <Spinner useCase="button" />}
                     {t('profile.actions.save')}
                   </Button>
                 </Flex>
@@ -176,16 +208,16 @@ export const EditProfile = () => {
             <Flex direction={'column'} gap={{ initial: '4', md: '5' }}>
               <Input
                 label={t('profile.form.address')}
-                labelWidth={inputLabelWidth}
+                labelWidth={INPUT_LABEL_WIDTH}
                 disabled
-                id={'address'}
-                {...register('address')}
+                id={'friendlyWalletAddress'}
+                {...register('friendlyWalletAddress')}
               />
 
               <Input
                 label={t('profile.form.username')}
                 placeholder={t('profile.form.usernamePlaceholder')}
-                labelWidth={inputLabelWidth}
+                labelWidth={INPUT_LABEL_WIDTH}
                 id={'username'}
                 disabled={loading}
                 {...register('userName')}
@@ -194,7 +226,7 @@ export const EditProfile = () => {
               <Input
                 label={t('profile.form.company')}
                 placeholder={t('profile.form.companyPlaceholder')}
-                labelWidth={inputLabelWidth}
+                labelWidth={INPUT_LABEL_WIDTH}
                 id={'company'}
                 disabled={loading}
                 {...register('company')}
@@ -203,7 +235,7 @@ export const EditProfile = () => {
               <Input
                 label={t('profile.form.skills')}
                 placeholder={t('profile.form.skillsPlaceholder')}
-                labelWidth={inputLabelWidth}
+                labelWidth={INPUT_LABEL_WIDTH}
                 id={'skills'}
                 disabled={loading}
                 {...register('skills')}
@@ -214,8 +246,7 @@ export const EditProfile = () => {
               <Input
                 label={t('profile.form.price')}
                 placeholder="0"
-                labelWidth={inputLabelWidth}
-                type={'number'}
+                labelWidth={INPUT_LABEL_WIDTH}
                 id={'price'}
                 disabled={loading}
                 addonLeft={
@@ -241,13 +272,15 @@ export const EditProfile = () => {
 
                   <Controller
                     control={control}
-                    render={({ field }) => (
-                      <RichEditor
-                        value={field.value}
-                        onChange={field.onChange}
-                        id={'bio'}
-                      />
-                    )}
+                    render={({ field }) => {
+                      return (
+                        <RichEditor
+                          value={field.value}
+                          onChange={field.onChange}
+                          id={'bio'}
+                        />
+                      )
+                    }}
                     name={'bio'}
                   />
                 </Flex>
@@ -275,7 +308,7 @@ export const EditProfile = () => {
               <Input
                 label={t('profile.links.facebook')}
                 placeholder={'facebook.com/'}
-                labelWidth={inputLabelWidth}
+                labelWidth={INPUT_LABEL_WIDTH}
                 disabled={loading}
                 {...register('facebook')}
               />
@@ -283,7 +316,7 @@ export const EditProfile = () => {
               <Input
                 label={t('profile.links.linkedin')}
                 placeholder={'linkedin.com/'}
-                labelWidth={inputLabelWidth}
+                labelWidth={INPUT_LABEL_WIDTH}
                 disabled={loading}
                 {...register('linkedIn')}
               />
@@ -291,7 +324,7 @@ export const EditProfile = () => {
               <Input
                 label={t('profile.links.telegram')}
                 placeholder={'t.me/'}
-                labelWidth={inputLabelWidth}
+                labelWidth={INPUT_LABEL_WIDTH}
                 disabled={loading}
                 {...register('telegram')}
               />

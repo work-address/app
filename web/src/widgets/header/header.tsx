@@ -11,7 +11,8 @@ import { DesktopMenu } from './desktop-menu.tsx'
 import { MobileMenu, itemVariants } from './mobile-menu.tsx'
 
 import { $user, logout } from '@/entities/profile'
-import { routes, formatWalletAddress, useBreakpoint } from '@/features/shared'
+import { formatWalletAddress, useBreakpoint } from '@/features/shared'
+import { routes } from '@/routes'
 
 export const Header = () => {
   const { t } = useTranslation()
@@ -56,7 +57,7 @@ export const Header = () => {
   return (
     <HeaderRoot ref={rootRef}>
       <HeaderInner>
-        <LogoLink to={routes.dashboard.schema}>
+        <LogoLink to={routes.dashboard.build()}>
           <LogoImg src="/img/photo/logo.svg" alt={t('header.logoAlt')} />
         </LogoLink>
 
@@ -74,7 +75,9 @@ export const Header = () => {
 
             <UserText>
               <UserName>{user?.userName || ''}</UserName>
-              <UserSub>{formatWalletAddress(user?.address || '')}</UserSub>
+              <UserSub>
+                {formatWalletAddress(user?.friendlyWalletAddress || '')}
+              </UserSub>
             </UserText>
           </UserBox>
 
@@ -138,7 +141,7 @@ export const Header = () => {
                     <UserText>
                       <UserName>{user?.userName || ''}</UserName>
                       <UserSub>
-                        {formatWalletAddress(user?.address || '')}
+                        {formatWalletAddress(user?.friendlyWalletAddress || '')}
                       </UserSub>
                     </UserText>
                   </UserBox>

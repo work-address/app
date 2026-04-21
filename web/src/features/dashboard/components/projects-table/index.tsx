@@ -2,7 +2,7 @@ import { TrashIcon, PlusIcon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -26,6 +26,7 @@ import {
   changeActivityStateFilter,
   type ActivityStateFilter,
   type ProjectWithStats,
+  deleteActivityMutation,
 } from '@/entities/activities'
 import {
   type MobileDataTableConfig,
@@ -49,11 +50,24 @@ export type ProjectStatus = 'Active' | 'Paused' | 'Finished'
 export const ProjectsTable = () => {
   const isMobile = useBreakpoint('isMobile')
 
-  const { projects, loading, activeTab, setTab } = useUnit({
+  const {
+    projects,
+    isActivitiesLoading,
+    activeTab,
+    setTab,
+    deleteProject,
+    deleteStatus,
+    resetDeleteMutation,
+    isProjectDeleting,
+  } = useUnit({
     projects: $filteredActivities,
-    loading: $activitiesLoading,
+    isActivitiesLoading: $activitiesLoading,
     activeTab: $activityStateFilter,
     setTab: changeActivityStateFilter,
+    isProjectDeleting: deleteActivityMutation.$pending,
+    deleteProject: deleteActivityMutation.start,
+    deleteStatus: deleteActivityMutation.$status,
+    resetDeleteMutation: deleteActivityMutation.reset,
   })
 
   const { confirm } = useConfirm()
@@ -88,12 +102,9 @@ export const ProjectsTable = () => {
               ),
               confirmLabel: t('dashboard.projectsTable.confirmDelete.confirm'),
               onConfirm: () => {
-                setIsProjectDialogOpen(false)
-
-                showToast('error', {
-                  message: t('dashboard.projectsTable.deletedMessage'),
-                  position: 'top-center',
-                })
+                if (row.id) {
+                  deleteProject(row.id)
+                }
               },
             })
             break
@@ -105,7 +116,7 @@ export const ProjectsTable = () => {
           }
         }
       },
-      [confirm, t],
+      [confirm, t, deleteProject],
     )
 
   const desktopConfig = useMemo(
@@ -208,6 +219,19 @@ export const ProjectsTable = () => {
     )
   }, [selectedIds, projects])
 
+  useEffect(() => {
+    if (deleteStatus === 'done') {
+      resetDeleteMutation()
+
+      setIsProjectDialogOpen(false)
+
+      showToast('error', {
+        message: t('dashboard.projectsTable.deletedMessage'),
+        position: 'top-center',
+      })
+    }
+  }, [t, deleteStatus, resetDeleteMutation])
+
   return (
     <Flex direction={'column'} height={'100%'}>
       <Flex direction={'row'} justify={'between'} pb={'3'} align={'center'}>
@@ -272,7 +296,7 @@ export const ProjectsTable = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            {projects.length === 0 && !loading ? (
+            {projects.length === 0 && !isActivitiesLoading ? (
               <ProjectsNotFound />
             ) : (
               <ProjectsTableContext value={projectsContextValues}>
@@ -288,7 +312,7 @@ export const ProjectsTable = () => {
                     allowSelection
                     selectedIds={selectedIds}
                     onSelectedIdsChange={setSelectedIds}
-                    loading={loading}
+                    loading={isActivitiesLoading}
                   />
                 ) : (
                   <DataTable
@@ -302,9 +326,10 @@ export const ProjectsTable = () => {
                     onSelectedIdsChange={setSelectedIds}
                     verticalAlign={'middle'}
                     nowrap
-                    loading={loading}
+                    loading={isActivitiesLoading}
                     skeletonHeight="31px"
                     mockDataLength={4}
+                    isFiltering={isProjectDeleting}
                   />
                 )}
               </ProjectsTableContext>
