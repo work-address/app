@@ -47,7 +47,7 @@ sample({
 const $activitiesLoading = combine(
   activitiesQuery.$pending,
   activitiesStatsQuery.$pending,
-  (a, b) => a || b,
+  (...flags) => flags.some((flag) => flag),
 )
 
 const $activities = combine(
