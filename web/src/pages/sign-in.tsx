@@ -1,24 +1,28 @@
 import { useUnit } from 'effector-react'
 import { Helmet } from 'react-helmet-async'
 import { Trans, useTranslation } from 'react-i18next'
-import { Navigate } from 'react-router-dom'
+import { useNavigate } from 'react-router-dom'
 
-import { profileEntity } from '@/entities'
+import type { LoginMode } from '@/entities/profile'
+
+import { $authenticated, $pending, login } from '@/entities/profile'
 import { AuthFormStyles as S, ProviderButton } from '@/features/auth'
 import { Button, routes, Spinner, useBreakpoint } from '@/features/shared'
 
 export default function SignInPage() {
   const { t, i18n } = useTranslation()
-  const loading = useUnit(profileEntity.$pending)
-  const authenticated = useUnit(profileEntity.$authenticated)
+  const loading = useUnit($pending)
+  const authenticated = useUnit($authenticated)
   const isDesktop = useBreakpoint('isDesktop')
+  const navigate = useNavigate()
 
-  const onSignIn = (type: profileEntity.LoginMode) => {
-    profileEntity.login(type)
+  const onSignIn = (mode: LoginMode) => {
+    login(mode)
   }
 
   if (authenticated) {
-    return <Navigate to={routes.dashboard.schema} />
+    navigate(routes.dashboard.schema)
+    return null
   }
 
   return (

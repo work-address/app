@@ -13,26 +13,33 @@ export type MobileBodyRenderProps<T extends AnyRecord> = {
   DefaultBodyComponent: typeof MobileBodyComponent<T>
   selected?: boolean
   description?: string
-} & MobileDataTableColumnConfigRecord<T>
+  dataKey?: keyof T
+  customKey?: string
+  columnConfig: MobileDataTableColumnConfigRecord<T>
+}
 
 export const MobileBodyComponent = <T extends AnyRecord>(
   props: MobileBodyRenderProps<T>,
 ): ReactNode => {
-  const dataKey = 'dataKey' in props ? String(props.dataKey) : props.customKey
+  const dataKey = props.dataKey ? String(props.dataKey) : props.customKey
 
   return (
     <Grid columns={'1fr 1fr'} width={'100%'}>
       <Text color={'gray'} size={'2'} weight={'medium'}>
         <Flex gap={'1'} align={'center'}>
-          {props.headerText ?? normalizeDataKeyToReadableString(dataKey)}
+          {props.columnConfig.headerText ??
+            normalizeDataKeyToReadableString(dataKey)}
+
           {props.description && <QuestionMarkCircledIcon />}
         </Flex>
       </Text>
 
       <Text align={'left'} size={'2'} weight={'medium'}>
-        {'dataKey' in props
-          ? String(props.data[props.dataKey])
-          : props.customKey}
+        {props.columnConfig.getValue
+          ? props.columnConfig.getValue(props.data)
+          : dataKey
+            ? String(props.data[dataKey])
+            : props.customKey}
       </Text>
     </Grid>
   )

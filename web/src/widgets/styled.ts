@@ -18,10 +18,10 @@ export const NavLink = styled(Link)<{ $active?: boolean; $download?: boolean }>`
   position: relative;
 
   &:after {
-    transition: .25s;
+    transition: 0.25s;
     content: '';
     display: block;
-    background: rgba(0,0,0,0.12);
+    background: rgba(0, 0, 0, 0.12);
     height: 2px;
     width: 100%;
     position: absolute;
@@ -42,14 +42,7 @@ export const NavLink = styled(Link)<{ $active?: boolean; $download?: boolean }>`
       opacity: 1;
     }`}
 
-  opacity: ${(p) => {
-    // eslint-disable-next-line
-  return p.$download
-    ? 1
-    : (p.$active
-      ? 1
-      : 0.8)
-  }}}
+  opacity: ${(p) => (p.$download ? 1 : p.$active ? 1 : 0.8)};
 
   @media (max-width: 1024px) {
     font-size: 14px;

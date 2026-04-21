@@ -7,4 +7,5 @@ export const reownEthProvider = createAppKit({
   networks: [mainnet],
   projectId: import.meta.env.VITE_WC_PROJECT_ID,
   features: { analytics: false },
+  themeMode: 'dark',
 })

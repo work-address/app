@@ -2,7 +2,7 @@ import { combine, createStore } from 'effector'
 
 import {
   disconnectEthFx,
-  ethDisconnected,
+  ethDisconnectedPub,
   loginEthFx,
   signEthFx,
 } from './eth.model'
@@ -30,7 +30,7 @@ export const $ethProviderData = createStore<EthModalResult | null>(null).reset(
 export const $authenticated = createStore(
   Boolean(localStorage.getItem(LOCAL_STORAGE_AUTH_KEY)),
 )
-  .on([ethDisconnected, tonDisconnected], () => false)
+  .on([ethDisconnectedPub, tonDisconnected], () => false)
   .on([loginEthFx.done, loginTonFx.done], () => true)
   .on(fetchStatusFx.done, () => true)
 

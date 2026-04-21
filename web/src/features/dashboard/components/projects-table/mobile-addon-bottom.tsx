@@ -5,12 +5,12 @@ import { useTranslation } from 'react-i18next'
 
 import { ProjectsTableContext } from './context.ts'
 
-import type { ProjectRow } from './types.ts'
+import type { ProjectWithStats } from '@/entities/activities'
 
 import { Button, type MobileAddonBottomProps } from '@/features/shared'
 
 export const MobileAddonBottom = React.memo(
-  ({ data }: MobileAddonBottomProps<ProjectRow>) => {
+  ({ data }: MobileAddonBottomProps<ProjectWithStats>) => {
     const { handleActionClick } = useContext(ProjectsTableContext)
     const { t } = useTranslation()
 

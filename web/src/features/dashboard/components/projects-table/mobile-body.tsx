@@ -1,34 +1,39 @@
 import { QuestionMarkCircledIcon } from '@radix-ui/react-icons'
 import { Flex, Grid } from '@radix-ui/themes'
+import { memo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import type { ProjectRow } from './types'
+import type { ProjectWithStats } from '@/entities/activities'
 import type { MobileBodyRenderProps } from '@/features/shared'
 
 import { formatDurationFromMinutes, Text } from '@/features/shared'
 
-export const MobileBody = (props: MobileBodyRenderProps<ProjectRow>) => {
-  const { t } = useTranslation()
-  const dataKey = 'dataKey' in props ? props.dataKey : undefined
+export const MobileBody = memo(
+  (props: MobileBodyRenderProps<ProjectWithStats>) => {
+    const { t } = useTranslation()
 
-  if (dataKey === 'timeTotal' || dataKey === 'timeActive') {
-    const minutes = props.data[dataKey]
+    if (props.customKey === 'timeTotal' || props.customKey === 'timeActive') {
+      const minutes =
+        props.customKey === 'timeTotal'
+          ? props.data.minutes
+          : props.data.minutesActive
 
-    return (
-      <Grid columns={'1fr 1fr'} width={'100%'}>
-        <Text color={'gray'} size={'2'} weight={'medium'}>
-          <Flex gap={'1'} align={'center'}>
-            {props.headerText}
-            {props.description && <QuestionMarkCircledIcon />}
-          </Flex>
-        </Text>
+      return (
+        <Grid columns={'1fr 1fr'} width={'100%'}>
+          <Text color={'gray'} size={'2'} weight={'medium'}>
+            <Flex gap={'1'} align={'center'}>
+              {props.columnConfig.headerText}
+              {props.columnConfig.description && <QuestionMarkCircledIcon />}
+            </Flex>
+          </Text>
 
-        <Text align={'left'} size={'2'} weight={'medium'}>
-          {formatDurationFromMinutes(minutes, t)}
-        </Text>
-      </Grid>
-    )
-  }
+          <Text align={'left'} size={'2'} weight={'medium'}>
+            {formatDurationFromMinutes(minutes, t)}
+          </Text>
+        </Grid>
+      )
+    }
 
-  return <props.DefaultBodyComponent {...props} />
-}
+    return <props.DefaultBodyComponent {...props} />
+  },
+)

@@ -1,11 +1,14 @@
 import { ArrowLeftIcon } from '@radix-ui/react-icons'
-import { Flex, Separator } from '@radix-ui/themes'
+import { Flex, Separator, Skeleton } from '@radix-ui/themes'
+import { useUnit } from 'effector-react'
+import { useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useParams } from 'react-router-dom'
 import { useMediaQuery } from 'styled-breakpoints/use-media-query'
 import styled, { useTheme } from 'styled-components'
 
+import { fetchInvoice, $invoice, $invoiceLoading } from '@/entities/activities'
 import {
   InvoiceCard,
   TotalAmountDesktop,
@@ -15,9 +18,23 @@ import {
 import { Card, IconButton, routes, Text } from '@/features/shared'
 
 export default function InvoicePage() {
+  const { id } = useParams<{ id: string }>()
+
+  const { fetchInvoiceEvent, invoice, loading } = useUnit({
+    fetchInvoiceEvent: fetchInvoice,
+    invoice: $invoice,
+    loading: $invoiceLoading,
+  })
+
   const { t, i18n } = useTranslation()
   const { breakpoints } = useTheme()
   const isMobile = useMediaQuery(breakpoints.down('md'))
+
+  useEffect(() => {
+    if (id) {
+      fetchInvoiceEvent({ id })
+    }
+  }, [id, fetchInvoiceEvent])
 
   return (
     <>
@@ -36,12 +53,22 @@ export default function InvoicePage() {
                   </IconButton>
                 </IconWrapper>
 
-                <Text>{t('invoice.mock.projectName')}</Text>
+                {loading ? (
+                  <Skeleton width="150px" height="24px" />
+                ) : (
+                  <Text>
+                    <Skeleton loading={loading}>{invoice?.title}</Skeleton>
+                  </Text>
+                )}
               </Flex>
 
-              <Text color={'gray'} size={'2'}>
-                {t('invoice.mock.hashPrefixed')}
-              </Text>
+              {loading ? (
+                <Skeleton width="200px" height="20px" />
+              ) : (
+                <Text color={'gray'} size={'2'}>
+                  {invoice?.hash ?? invoice?.id}
+                </Text>
+              )}
             </Flex>
           )}
 

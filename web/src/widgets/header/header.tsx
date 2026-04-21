@@ -1,4 +1,4 @@
-import { useUnit } from 'effector-react/effector-react.mjs'
+import { useUnit } from 'effector-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -10,13 +10,13 @@ import { IconImg, MobileMenuNav } from '../styled.ts'
 import { DesktopMenu } from './desktop-menu.tsx'
 import { MobileMenu, itemVariants } from './mobile-menu.tsx'
 
-import { profileEntity } from '@/entities'
+import { $user, logout } from '@/entities/profile'
 import { routes, formatWalletAddress, useBreakpoint } from '@/features/shared'
 
 export const Header = () => {
   const { t } = useTranslation()
-  const logoutEvent = useUnit(profileEntity.logout)
-  const user = useUnit(profileEntity.$user)
+  const logoutEvent = useUnit(logout)
+  const user = useUnit($user)
   const isDesktop = useBreakpoint('isDesktop')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const rootRef = useRef<HTMLElement | null>(null)

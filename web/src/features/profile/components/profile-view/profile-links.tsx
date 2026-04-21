@@ -2,14 +2,14 @@ import { Share1Icon, Pencil1Icon, CopyIcon } from '@radix-ui/react-icons'
 import { Flex, type FlexProps } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { InfoRow } from '../info-row'
 
 import { ProfileViewCard } from './styled'
 
-import { profileEntity } from '@/entities'
+import { $user } from '@/entities/profile'
 import {
   Button,
   routes,
@@ -19,14 +19,14 @@ import {
   formatWalletAddress,
 } from '@/features/shared'
 
-type ProfileInfoProps = {
+type ProfileLinksProps = {
   gridArea?: string
 }
 
-export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
+export const ProfileLinks = ({ gridArea }: ProfileLinksProps) => {
   const isDesktop = useBreakpoint('isDesktop')
   const { t } = useTranslation()
-  const user = useUnit(profileEntity.$user)
+  const user = useUnit($user)
 
   const walletAddress = formatWalletAddress(user?.address || '')
 
@@ -95,6 +95,7 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
 
         <Flex direction={'column'} gap={{ initial: '3', md: '4' }}>
           <InfoRow
+            hoverEffects={false}
             icon={
               <img
                 src={'/img/icons/case.svg'}
@@ -118,12 +119,19 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
               />
             }
             text={
-              <Text>
-                <Text color={'gray'}>
-                  {t('profile.view.social.linkedinPrefix')}
-                </Text>
-                <Text weight={'medium'}>{user?.linkedIn ?? 'johndoe'}</Text>
-              </Flex>
+              <NavLink
+                to={routes.linkedin.build({
+                  userId: user?.linkedIn || 'johndoe',
+                })}
+                target="_blank"
+              >
+                <Flex gap={infoRowGap}>
+                  <Text color={'gray'}>
+                    {t('profile.view.social.linkedinPrefix')}
+                  </Text>
+                  <Text weight={'medium'}>{user?.linkedIn ?? 'johndoe'}</Text>
+                </Flex>
+              </NavLink>
             }
           />
           <InfoRow
@@ -134,12 +142,19 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
               />
             }
             text={
-              <Text>
-                <Text color={'gray'}>
-                  {t('profile.view.social.facebookPrefix')}
-                </Text>
-                <Text weight={'medium'}>{user?.facebook ?? 'johndoe'}</Text>
-              </Flex>
+              <NavLink
+                to={routes.facebook.build({
+                  userId: user?.facebook || 'johndoe',
+                })}
+                target="_blank"
+              >
+                <Flex gap={infoRowGap}>
+                  <Text color={'gray'}>
+                    {t('profile.view.social.facebookPrefix')}
+                  </Text>
+                  <Text weight={'medium'}>{user?.facebook ?? 'johndoe'}</Text>
+                </Flex>
+              </NavLink>
             }
           />
           <InfoRow
@@ -150,12 +165,19 @@ export const ProfileInfo = ({ gridArea }: ProfileInfoProps) => {
               />
             }
             text={
-              <Text>
-                <Text color={'gray'}>
-                  {t('profile.view.social.telegramPrefix')}
-                </Text>
-                <Text weight={'medium'}>{user?.telegram ?? 'johndoe'}</Text>
-              </Flex>
+              <NavLink
+                to={routes.telegram.build({
+                  userId: user?.telegram || 'johndoe',
+                })}
+                target="_blank"
+              >
+                <Flex gap={infoRowGap}>
+                  <Text color={'gray'}>
+                    {t('profile.view.social.telegramPrefix')}
+                  </Text>
+                  <Text weight={'medium'}>{user?.telegram ?? 'johndoe'}</Text>
+                </Flex>
+              </NavLink>
             }
           />
         </Flex>

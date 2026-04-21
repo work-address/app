@@ -1,6 +1,7 @@
 import { CopyIcon, Pencil1Icon, Share1Icon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
+import { QRCodeSVG } from 'qrcode.react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
@@ -8,7 +9,7 @@ import styled from 'styled-components'
 
 import { ProfileViewCard } from './styled'
 
-import { profileEntity } from '@/entities'
+import { $user } from '@/entities/profile'
 import {
   routes,
   Text,
@@ -29,7 +30,7 @@ export const QrCode = ({ gridArea }: QrCodeProps) => {
   const isDesktop = useBreakpoint('isDesktop')
 
   const { t } = useTranslation()
-  const user = useUnit(profileEntity.$user)
+  const user = useUnit($user)
 
   const [qrModalOpened, setQrModalOpened] = useState(false)
 
@@ -71,10 +72,16 @@ export const QrCode = ({ gridArea }: QrCodeProps) => {
             </Flex>
           )}
 
-        <QrCodeImage
-          src={'/img/photo/qr-code-example.svg'}
-          alt={t('profile.view.qrAlt')}
-        />
+          <QrCodeWrapper onClick={() => setQrModalOpened(true)}>
+            <QRCodeSVG
+              value={user?.address || ''}
+              size={isMobile ? 140 : 180}
+              level="M"
+              fgColor="var(--ds-accent-11)"
+              bgColor="transparent"
+              marginSize={1}
+            />
+          </QrCodeWrapper>
 
         {isUpMd ? (
           <Button width={'146px'} themeVariant={'primary'} size={'3'}>
@@ -110,9 +117,13 @@ export const QrCode = ({ gridArea }: QrCodeProps) => {
         width={isDesktop ? '450px' : undefined}
       >
         <Flex direction={'column'} align={'center'} gap={'3'}>
-          <QrCodeImageModal
-            src={'/img/photo/qr-code-example.svg'}
-            alt={'qr-code'}
+          <QRCodeSVG
+            value={user?.address || ''}
+            size={isMobile ? 200 : 260}
+            level="M"
+            fgColor="var(--ds-accent-11)"
+            bgColor="transparent"
+            marginSize={1}
           />
 
           <Text size={isMobile ? '1' : '2'} align={'center'}>
@@ -142,23 +153,21 @@ const StyledCard = styled(ProfileViewCard)`
   }
 `
 
-const QrCodeImage = styled.img`
+const QrCodeWrapper = styled.div`
   width: 140px;
   height: 140px;
   cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
 
   ${(p) => p.theme.breakpoints.up('md')} {
     width: 180px;
     height: 180px;
   }
-`
 
-const QrCodeImageModal = styled.img`
-  width: 200px;
-  height: 200px;
-
-  ${(p) => p.theme.breakpoints.up('md')} {
-    width: 260px;
-    height: 260px;
+  svg {
+    width: 100%;
+    height: 100%;
   }
 `

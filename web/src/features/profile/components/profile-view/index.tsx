@@ -1,8 +1,8 @@
 import { Grid } from '@radix-ui/themes'
 import styled from 'styled-components'
 
-import { Description } from './description.tsx'
-import { ProfileInfo } from './profile-info.tsx'
+import { DescriptionAndSkills } from './description-and-skills.tsx'
+import { ProfileLinks } from './profile-links.tsx'
 import { QrCode } from './qr-code.tsx'
 
 export const ProfileView = () => (
@@ -37,9 +37,9 @@ export const ProfileView = () => (
     >
       <QrCode gridArea={'qrcode'} />
 
-      <ProfileInfo gridArea={'profile'} />
+      <ProfileLinks gridArea={'profile'} />
 
-      <Description gridArea={'description'} />
+      <DescriptionAndSkills gridArea={'description'} />
     </Grid>
   </Wrapper>
 )

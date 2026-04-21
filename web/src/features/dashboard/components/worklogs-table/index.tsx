@@ -217,6 +217,7 @@ export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
             allowSelection
             selectedIds={selectedIds}
             onSelectedIdsChange={setSelectedIds}
+            height={isDesktop ? '67dvh' : undefined}
           />
         </>
       ) : (

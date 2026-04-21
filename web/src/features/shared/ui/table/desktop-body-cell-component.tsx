@@ -11,4 +11,9 @@ export type DesktopBodyCellRenderProps<T extends AnyRecord> = {
 
 export const DesktopBodyCellComponent = <T extends AnyRecord>(
   props: DesktopBodyCellRenderProps<T>,
-) => (props.dataKey ? String(props.data[props.dataKey]) : props.customKey)
+) =>
+  props.columnConfig.getValue
+    ? props.columnConfig.getValue(props.data)
+    : props.dataKey
+      ? String(props.data[props.dataKey])
+      : props.customKey

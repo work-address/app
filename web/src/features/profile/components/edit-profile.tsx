@@ -8,7 +8,7 @@ import styled from 'styled-components'
 
 import type { baseApi } from '@/features/shared'
 
-import { profileEntity } from '@/entities'
+import { $user, saveProfile } from '@/entities/profile'
 import { type CardProps } from '@/features/shared'
 import {
   Button,
@@ -45,8 +45,8 @@ export const EditProfile = () => {
   const isDesktop = useBreakpoint('isDesktop')
   const { confirm } = useConfirm()
 
-  const user = useUnit(profileEntity.$user)
-  const loading = useUnit(profileEntity.saveProfile.pending)
+  const user = useUnit($user)
+  const loading = useUnit(saveProfile.pending)
 
   const {
     register,
@@ -69,15 +69,14 @@ export const EditProfile = () => {
   })
 
   const onSubmit: SubmitHandler<FormState> = async (values) => {
-    await profileEntity
-      .saveProfile({
-        ...values,
-        // TODO: remove this when backend will be ready
-        emailOrPhone: user?.emailOrPhone || '',
-      })
+    await saveProfile({
+      ...values,
+      // TODO: remove this when backend will be ready
+      emailOrPhone: user?.emailOrPhone || '',
+    })
       .then(() => {
-        showToast('success', {
-          message: 'Profile updated successfully',
+        showToast('info', {
+          message: 'Profile updated',
           position: 'top-center',
           closeButton: true,
         })

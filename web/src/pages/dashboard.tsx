@@ -15,14 +15,7 @@ import {
   DashboardStyles as S,
   Search,
 } from '@/features/dashboard'
-import {
-  Button,
-  Text,
-  Wrapper,
-  Spinner,
-  worklogsMock,
-  projectsMock,
-} from '@/features/shared'
+import { Button, Text, Wrapper, Spinner, worklogsMock } from '@/features/shared'
 
 const INIT_DELAY = 700
 
@@ -49,6 +42,7 @@ export default function DashboardPage() {
         htmlAttributes={{ lang: i18n.language }}
         title={t('dashboard.page.title')}
       />
+
       {initialized ? (
         <Wrapper>
           <S.Content>
@@ -88,7 +82,7 @@ export default function DashboardPage() {
 
               {hasProjects && (
                 <S.TableArea>
-                  <ProjectsTable rows={projectsMock} />
+                  <ProjectsTable />
                 </S.TableArea>
               )}
             </S.Left>

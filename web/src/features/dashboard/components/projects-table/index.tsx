@@ -1,7 +1,8 @@
 import { TrashIcon, PlusIcon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
+import { useUnit } from 'effector-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useMemo, useState, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -18,8 +19,12 @@ import { MobileBody } from './mobile-body.tsx'
 import { MobileHeader } from './mobile-header.tsx'
 import { ProjectDialog } from './project-dialog.tsx'
 
-import type { ProjectRow } from './types'
-
+import {
+  fetchActivities,
+  $activities,
+  $activitiesLoading,
+  type ProjectWithStats,
+} from '@/entities/activities'
 import {
   type MobileDataTableConfig,
   type DataTableConfig,
@@ -40,26 +45,30 @@ import {
 
 export type ProjectStatus = 'Active' | 'Paused' | 'Finished'
 
-type ProjectsTableProps = {
-  rows: ProjectRow[]
-}
-
-export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
+export const ProjectsTable = () => {
   const isMobile = useBreakpoint('isMobile')
+
+  const { fetchActivities: fetchActivitiesEvent, projects } = useUnit({
+    fetchActivities: fetchActivities,
+    projects: $activities,
+    loading: $activitiesLoading,
+  })
+
+  const loading = true
 
   const { confirm } = useConfirm()
 
   const { t } = useTranslation()
 
   const [activeTab, setActiveTab] = useState('all')
-  const [selectedRow, setSelectedRow] = useState<ProjectRow | null>(null)
+  const [selectedRow, setSelectedRow] = useState<ProjectWithStats | null>(null)
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
   const { processedData, processSingleDataFilter, resetFilter } =
     useDataProcessing({
-      data: rows,
+      data: projects,
     })
 
   const handleTabClick = (tab: string) => {
@@ -71,10 +80,10 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
         return resetFilter()
       }
       case 'active': {
-        return processSingleDataFilter('status', 'Active', 'equals')
+        return processSingleDataFilter('state', 'Active', 'equals')
       }
       case 'finished': {
-        return processSingleDataFilter('status', 'Finished', 'equals')
+        return processSingleDataFilter('state', 'Finished', 'equals')
       }
     }
   }
@@ -109,7 +118,7 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
           }
 
           case 'Print': {
-            alert(`${row.key} ${action}`)
+            alert(`${row.id} ${action}`)
             break
           }
         }
@@ -118,9 +127,9 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
     )
 
   const desktopConfig = useMemo(
-    (): DataTableConfig<ProjectRow> => [
+    (): DataTableConfig<ProjectWithStats> => [
       {
-        dataKey: 'name',
+        dataKey: 'title',
         width: 187,
         headerText: t('dashboard.projectsTable.head.projectName'),
       },
@@ -130,28 +139,28 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
         headerText: t('dashboard.projectsTable.head.earnings'),
       },
       {
-        dataKey: 'status',
+        dataKey: 'state',
         width: 100,
         horizontalAlign: 'center',
         headerText: t('dashboard.projectsTable.head.status'),
       },
       {
-        dataKey: 'timeTotal',
+        customKey: 'timeTotal',
         width: 180,
         headerText: t('dashboard.projectsTable.head.timeTotal'),
       },
       {
-        dataKey: 'timeActive',
+        customKey: 'timeActive',
         width: 160,
         headerText: t('dashboard.projectsTable.head.timeActive'),
       },
       {
-        dataKey: 'keyboard',
+        dataKey: 'keyboardKeys',
         width: 160,
         headerText: t('dashboard.projectsTable.head.keyboard'),
       },
       {
-        dataKey: 'mouse',
+        dataKey: 'mouseKeys',
         width: 160,
         headerText: t('dashboard.projectsTable.head.mouse'),
       },
@@ -161,32 +170,33 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
       },
       {
         customKey: 'actions',
-        headerText: '',
+        headerText: 'Actions',
+        sticky: 'right',
       },
     ],
     [t],
   )
 
   const mobileConfig = useMemo(
-    (): MobileDataTableConfig<ProjectRow> => [
+    (): MobileDataTableConfig<ProjectWithStats> => [
       {
-        dataKey: 'name',
+        dataKey: 'title',
         isTitle: true,
       },
       {
-        dataKey: 'timeTotal',
+        customKey: 'timeTotal',
         headerText: t('dashboard.projectsTable.head.timeTotal'),
       },
       {
-        dataKey: 'timeActive',
+        customKey: 'timeActive',
         headerText: t('dashboard.projectsTable.head.timeActive'),
       },
       {
-        dataKey: 'keyboard',
+        dataKey: 'keyboardKeys',
         headerText: t('dashboard.projectsTable.head.keyboard'),
       },
       {
-        dataKey: 'mouse',
+        dataKey: 'mouseKeys',
         headerText: t('dashboard.projectsTable.head.mouse'),
       },
       {
@@ -206,6 +216,10 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
       selected.every(Boolean)
     )
   }, [selectedIds, processedData])
+
+  useEffect(() => {
+    fetchActivitiesEvent()
+  }, [fetchActivitiesEvent])
 
   return (
     <Flex direction={'column'} height={'100%'}>
@@ -271,35 +285,36 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            {processedData.length === 0 ? (
+            {projects.length === 0 && !loading ? (
               <ProjectsNotFound />
             ) : (
               <ProjectsTableContext value={{ handleActionClick }}>
                 {isMobile ? (
                   <MobileDataTable
-                    data={processedData}
+                    data={projects}
                     getRowId={rowIdGetter}
                     config={mobileConfig}
                     BodyComponent={MobileBody}
                     AddonBottomComponent={MobileAddonBottom}
                     HeaderComponent={MobileHeader}
-                    initialExpandedId={rows[0]?.key}
+                    initialExpandedId={projects[0]?.id}
                     allowSelection
                     selectedIds={selectedIds}
                     onSelectedIdsChange={setSelectedIds}
                   />
                 ) : (
                   <DataTable
-                    data={processedData}
+                    data={projects}
                     config={desktopConfig}
                     getRowId={rowIdGetter}
                     allowSelection
                     BodyComponent={DesktopCell}
-                    minHeight={'100%'}
+                    height={'100%'}
                     selectedIds={selectedIds}
                     onSelectedIdsChange={setSelectedIds}
                     verticalAlign={'middle'}
                     nowrap
+                    loading={loading}
                   />
                 )}
               </ProjectsTableContext>
@@ -323,10 +338,15 @@ export const ProjectsTable = ({ rows }: ProjectsTableProps) => {
   )
 }
 
-const rowIdGetter = (row: ProjectRow) => row.key
+const rowIdGetter = (row: ProjectWithStats) => row.id ?? ''
 
 const ProjectsTableWrapper = styled.div`
   height: 100%;
+
+  ${(p) => p.theme.breakpoints.up('md')} {
+    height: 307px;
+    overflow: auto;
+  }
 `
 
 export { type ProjectRow } from './types'

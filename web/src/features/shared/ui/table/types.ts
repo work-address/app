@@ -9,20 +9,22 @@ export type KeyProp<T extends AnyRecord> =
       customKey: string
     }
 
-type CommonProps = {
+type CommonProps<T> = {
   headerText?: string
+  getValue?: (data: T) => React.ReactNode
 }
 
 export type DataTableColumnConfigRecord<T extends AnyRecord> = {
   width?: number
   horizontalAlign?: 'start' | 'center' | 'end'
-} & CommonProps &
+  sticky?: 'right' | 'left'
+} & CommonProps<T> &
   KeyProp<T>
 
 export type MobileDataTableColumnConfigRecord<T extends AnyRecord> = {
   isTitle?: boolean
   description?: string
-} & CommonProps &
+} & CommonProps<T> &
   KeyProp<T>
 
 export type MobileDataTableConfig<T extends AnyRecord> =
@@ -48,4 +50,6 @@ export type SelectionProps =
 export type DataProps<T extends AnyRecord> = {
   data: T[]
   getRowId: (data: T) => string | number
+  loading?: boolean
+  mockDataLength?: number
 } & SelectionProps

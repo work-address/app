@@ -6,7 +6,7 @@ import styled from 'styled-components'
 
 import { ProfileViewCard } from './styled'
 
-import { profileEntity } from '@/entities'
+import { $user } from '@/entities/profile'
 import { Text, useBreakpoint } from '@/features/shared'
 
 type DescriptionProps = {
@@ -27,11 +27,11 @@ const mockData = [
   '+12',
 ]
 
-export const Description = ({ gridArea }: DescriptionProps) => {
+export const DescriptionAndSkills = ({ gridArea }: DescriptionProps) => {
   const isMobile = useBreakpoint('isMobile')
   const { t } = useTranslation()
 
-  const user = useUnit(profileEntity.$user)
+  const user = useUnit($user)
 
   const skills = useMemo(
     () => user?.skills?.split(',') || mockData,

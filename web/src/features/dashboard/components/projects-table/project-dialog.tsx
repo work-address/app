@@ -9,7 +9,7 @@ import { Fragment, useEffect, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
-import type { ProjectRow } from './types'
+import type { ProjectWithStats } from '@/entities/activities'
 
 import {
   formatDurationFromMinutes,
@@ -26,8 +26,8 @@ import {
 type ProjectDialogProps = {
   open: boolean
   setOpen: (state: boolean) => void
-  row?: ProjectRow | null
-  onDeleteClick: (row?: ProjectRow | null) => void
+  row?: ProjectWithStats | null
+  onDeleteClick: (row?: ProjectWithStats | null) => void
 }
 
 export const ProjectDialog = ({
@@ -51,13 +51,13 @@ export const ProjectDialog = ({
       title={
         isDesktop ? (
           modalMode === 'view' ? (
-            row?.name
+            row?.title
           ) : (
             t('dashboard.projectsTable.drawer.editProjectTitle')
           )
         ) : (
           <Flex justify={'between'} align={'center'}>
-            <Text>{row?.name}</Text>
+            <Text>{row?.title}</Text>
 
             <IconButton
               color={'red'}
@@ -163,10 +163,10 @@ export const ProjectDialog = ({
   )
 }
 
-type ProjectRowKeys = (keyof ProjectRow)[]
+type ProjectRowKeys = (keyof ProjectWithStats)[]
 
 type ProjectDialogContentProps = {
-  data: ProjectRow
+  data: ProjectWithStats
   mode: 'view' | 'edit'
 }
 
@@ -198,14 +198,14 @@ export const ProjectDialogContent = ({
           label={'Project name'}
           id={'projectName'}
           {...inputProps}
-          {...register('name')}
+          {...register('title')}
         />
 
         <Input
           label={'Published in'}
           id={'publishedIn'}
           {...inputProps}
-          {...register('publishedIn')}
+          {...register('createdAt')}
         />
 
         <Input
@@ -213,7 +213,7 @@ export const ProjectDialogContent = ({
           addonRight={'$'}
           id={'rate'}
           {...inputProps}
-          {...register('rate')}
+          {...register('rateHour')}
         />
 
         <Separator size={'4'} />
@@ -224,7 +224,7 @@ export const ProjectDialogContent = ({
           rows={7}
           id={'description'}
           size={'3'}
-          {...register('description')}
+          {...register('text')}
         />
       </Flex>
     )
@@ -233,7 +233,7 @@ export const ProjectDialogContent = ({
   return (
     <Flex direction={'column'} gap={isDesktop ? '4' : '3'}>
       <Grid columns={{ initial: '125px 1fr' }} gap={isDesktop ? '4' : '3'}>
-        {(['startDate', 'publishedIn', 'rate'] satisfies ProjectRowKeys).map(
+        {(['createdAt', 'state', 'rateHour'] satisfies ProjectRowKeys).map(
           (key) => {
             return (
               <Fragment key={key}>
@@ -241,15 +241,9 @@ export const ProjectDialogContent = ({
                   {t(`dashboard.projectsTable.drawer.meta.${key}`)}
                 </Text>
 
-                {key === 'startDate' ? (
-                  <Text weight={'medium'} size={textSize}>
-                    {data[key] && data[key].toDateString()}
-                  </Text>
-                ) : (
-                  <Text weight={'medium'} size={textSize}>
-                    {data[key]}
-                  </Text>
-                )}
+                <Text weight={'medium'} size={textSize}>
+                  {data[key]}
+                </Text>
               </Fragment>
             )
           },
@@ -265,10 +259,10 @@ export const ProjectDialogContent = ({
               [
                 'timeTotal',
                 'timeActive',
-                'keyboard',
-                'mouse',
+                'keyboardKeys',
+                'mouseKeys',
                 'mouseDistance',
-              ] satisfies ProjectRowKeys
+              ] as const
             ).map((key) => {
               return (
                 <>
@@ -281,9 +275,13 @@ export const ProjectDialogContent = ({
                   </Flex>
 
                   <Text weight={'medium'} size={textSize}>
-                    {key === 'timeTotal' || key === 'timeActive'
-                      ? formatDurationFromMinutes(data[key], t)
-                      : data[key]}
+                    {key === 'timeTotal' &&
+                      formatDurationFromMinutes(data.minutesTotal, t)}
+
+                    {key === 'timeActive' &&
+                      formatDurationFromMinutes(data.minutesActive, t)}
+
+                    {key !== 'timeActive' && key !== 'timeTotal' && data[key]}
                   </Text>
                 </>
               )
@@ -298,7 +296,7 @@ export const ProjectDialogContent = ({
         <TextArea
           label="Description"
           disabled={true}
-          value={data.description}
+          value={data.text}
           rows={12}
           size={'3'}
         />

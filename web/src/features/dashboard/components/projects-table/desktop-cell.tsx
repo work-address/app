@@ -6,14 +6,14 @@ import { NavLink } from 'react-router-dom'
 
 import { ProjectsTableContext } from './context.ts'
 
-import type { ProjectRow } from './types.ts'
+import type { ProjectWithStats } from '@/entities/activities'
 
 import {
   type DesktopBodyCellRenderProps,
-  formatDurationFromMinutes,
   IconButton,
   routes,
   Text,
+  formatDurationFromMinutes,
 } from '@/features/shared'
 
 const statusTranslationKey = (status: string) => {
@@ -25,52 +25,55 @@ const statusTranslationKey = (status: string) => {
 }
 
 export const DesktopCell = React.memo(
-  (props: DesktopBodyCellRenderProps<ProjectRow>) => {
+  (props: DesktopBodyCellRenderProps<ProjectWithStats>) => {
     const { t } = useTranslation()
     let content: ReactNode | null
 
     switch (props.dataKey) {
-      case 'name': {
+      case 'title': {
         content = (
           <Text $themeVariant={'primary'}>
-            <NavLink to={routes.invoice.build({ id: props.data.key })}>
-              {props.data.name}
+            <NavLink to={routes.invoice.build({ id: props.data.id ?? '' })}>
+              {props.data.title}
             </NavLink>
           </Text>
         )
         break
       }
 
-      case 'status': {
-        const statusKey = statusTranslationKey(props.data.status)
+      case 'state': {
+        const statusKey = statusTranslationKey(props.data.state)
         content = (
-          <Badge color={props.data.status === 'Active' ? 'green' : 'gray'}>
-            {statusKey === null ? props.data.status : t(statusKey)}
+          <Badge color={props.data.state === 'Active' ? 'green' : 'gray'}>
+            {statusKey === null ? props.data.state : t(statusKey)}
           </Badge>
         )
         break
       }
 
-      case 'timeTotal':
-      case 'timeActive': {
-        content = (
-          <Text color={'gray'}>
-            {formatDurationFromMinutes(props.data[props.dataKey], t)}
-          </Text>
-        )
-        break
-      }
-
       default: {
-        if (props.customKey === 'actions') {
-          return <Actions {...props} />
+        if (props.customKey === 'timeTotal') {
+          content = (
+            <Text color={'gray'}>
+              {formatDurationFromMinutes(props.data.minutes, t)}
+            </Text>
+          )
+        } else if (props.customKey === 'timeActive') {
+          content = (
+            <Text color={'gray'}>
+              {formatDurationFromMinutes(props.data.minutesActiveTotal, t)}
+            </Text>
+          )
+        } else if (props.customKey === 'actions') {
+          content = <Actions {...props} />
+        } else {
+          content = (
+            <Text color={'gray'}>
+              <props.DefaultBodyComponent {...props} />
+            </Text>
+          )
         }
 
-        content = (
-          <Text color={'gray'}>
-            <props.DefaultBodyComponent {...props} />
-          </Text>
-        )
         break
       }
     }
@@ -83,42 +86,44 @@ export const DesktopCell = React.memo(
   },
 )
 
-const Actions = React.memo((props: DesktopBodyCellRenderProps<ProjectRow>) => {
-  const { t } = useTranslation()
-  const { handleActionClick } = useContext(ProjectsTableContext)
+const Actions = React.memo(
+  (props: DesktopBodyCellRenderProps<ProjectWithStats>) => {
+    const { t } = useTranslation()
+    const { handleActionClick } = useContext(ProjectsTableContext)
 
-  return (
-    <Flex gap={'3'} align={'center'}>
-      <IconButton
-        variant={'ghost'}
-        color={'gray'}
-        radius={'full'}
-        onClick={() => handleActionClick(props.data, 'Print')}
-      >
-        <img
-          src={'/img/icons/print.svg'}
-          alt={t('dashboard.projectsTable.actions.print')}
-          style={{ width: 28, height: 28, margin: -4, padding: 0 }}
-        />
-      </IconButton>
+    return (
+      <Flex gap={'3'} align={'center'}>
+        <IconButton
+          variant={'ghost'}
+          color={'gray'}
+          radius={'full'}
+          onClick={() => handleActionClick(props.data, 'Print')}
+        >
+          <img
+            src={'/img/icons/print.svg'}
+            alt={t('dashboard.projectsTable.actions.print')}
+            style={{ width: 28, height: 28, margin: -4, padding: 0 }}
+          />
+        </IconButton>
 
-      <IconButton
-        variant={'ghost'}
-        color={'gray'}
-        radius={'full'}
-        onClick={() => handleActionClick(props.data, 'Delete')}
-      >
-        <TrashIcon height={20} width={20} />
-      </IconButton>
+        <IconButton
+          variant={'ghost'}
+          color={'gray'}
+          radius={'full'}
+          onClick={() => handleActionClick(props.data, 'Delete')}
+        >
+          <TrashIcon height={20} width={20} />
+        </IconButton>
 
-      <IconButton
-        variant={'ghost'}
-        color={'gray'}
-        radius={'full'}
-        onClick={() => handleActionClick(props.data, 'Edit')}
-      >
-        <Pencil1Icon height={20} width={20} />
-      </IconButton>
-    </Flex>
-  )
-})
+        <IconButton
+          variant={'ghost'}
+          color={'gray'}
+          radius={'full'}
+          onClick={() => handleActionClick(props.data, 'Edit')}
+        >
+          <Pencil1Icon height={20} width={20} />
+        </IconButton>
+      </Flex>
+    )
+  },
+)

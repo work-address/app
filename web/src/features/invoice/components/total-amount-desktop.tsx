@@ -1,19 +1,37 @@
-import { Flex, Grid, Separator } from '@radix-ui/themes'
+import { Flex, Grid, Separator, Skeleton } from '@radix-ui/themes'
+import { useUnit } from 'effector-react'
+import { QRCodeSVG } from 'qrcode.react'
 import { Trans, useTranslation } from 'react-i18next'
 
-import { getInvoiceInfoFields } from './invoice-info-fields.ts'
-import { QrCodeImage } from './styled'
+import { useInvoiceInfoFields } from '../hooks'
 
+import { $invoice, $invoiceLoading } from '@/entities/activities'
 import { Text, Button } from '@/features/shared'
 
 export const TotalAmountDesktop = () => {
   const { t } = useTranslation()
-  const infoFields = getInvoiceInfoFields(t)
+
+  const infoFields = useInvoiceInfoFields()
+
+  const { invoice, loading } = useUnit({
+    invoice: $invoice,
+    loading: $invoiceLoading,
+  })
 
   return (
     <Grid gap={'5'} justify={'between'} columns={'auto 1fr auto'}>
       <Flex direction={'column'} gap={'3'} align={'center'}>
-        <QrCodeImage src={'/img/photo/qr-code-example.svg'} />
+        {loading ? (
+          <Skeleton width="194px" height="194px" loading={loading} />
+        ) : (
+          <QRCodeSVG
+            value={invoice?.hash || ''}
+            size={194}
+            bgColor="transparent"
+            fgColor="var(--ds-accent-9)"
+            marginSize={1}
+          />
+        )}
 
         <Text color={'gray'} align={'center'}>
           <Trans i18nKey="invoice.qrScan.desktop" components={{ br: <br /> }} />
@@ -22,18 +40,30 @@ export const TotalAmountDesktop = () => {
 
       <Flex gap={'3'} direction={'column'} justify={'between'}>
         <Flex align={'end'} gap={'3'}>
-          <Text size={'6'} weight={'medium'}>
-            {t('invoice.mock.projectName')}
-          </Text>
+          {loading ? (
+            <Skeleton width="200px" height="18px" loading={loading} />
+          ) : (
+            <Text size={'6'} weight={'medium'}>
+              {invoice?.title}
+            </Text>
+          )}
 
           <Text>{t('invoice.amount.for')}</Text>
 
-          <Text $themeVariant={'primary'} weight={'medium'} size={'4'}>
-            {t('invoice.amount.desktop')}
-          </Text>
+          {loading ? (
+            <Skeleton width="50px" height="18px" loading={loading} />
+          ) : (
+            <Text $themeVariant={'primary'} weight={'medium'} size={'4'}>
+              {invoice?.totalAmount}
+            </Text>
+          )}
         </Flex>
 
-        <Text color={'gray'}>{t('invoice.mock.hash')}</Text>
+        {loading ? (
+          <Skeleton width="300px" height="18px" loading={loading} />
+        ) : (
+          <Text color={'gray'}>{invoice?.hash ?? invoice?.id}</Text>
+        )}
 
         <Separator size={'4'} />
 
@@ -43,13 +73,23 @@ export const TotalAmountDesktop = () => {
 
         <Grid columns={'1fr 1fr'} gap={'5'} flow={'column'} rows={'3'}>
           {infoFields.map((field) => (
-            <Grid key={field.id} gap={'2'} columns={'120px 204px'}>
+            <Grid
+              key={field.id}
+              gap={'2'}
+              columns={'120px 204px'}
+              align="center"
+            >
               <Text size={'3'} color={'gray'}>
                 {t(`invoice.fields.${field.id}`)}
               </Text>
-              <Text size={'3'} weight={'medium'}>
-                {field.value}
-              </Text>
+
+              {loading ? (
+                <Skeleton />
+              ) : (
+                <Text size={'3'} weight={'medium'}>
+                  {field.value}
+                </Text>
+              )}
             </Grid>
           ))}
         </Grid>

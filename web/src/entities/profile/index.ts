@@ -8,7 +8,7 @@ import { combine, sample, split } from 'effector'
 
 import {
   disconnectEthFx,
-  ethConnected,
+  ethConnectedPub,
   loginEthFx,
   openEthModalFx,
   signEthFx,
@@ -74,7 +74,7 @@ sample({
  * fetch nonce for the connected address to sign.
  */
 sample({
-  clock: ethConnected,
+  clock: ethConnectedPub,
   source: combine($ethProviderData, $authenticated),
   filter: ([ethProviderData, authenticated]) =>
     ethProviderData === null && !authenticated,
@@ -96,8 +96,9 @@ sample({
   fn: (providerData, { result }) => ({
     nonce: result,
     signer: providerData?.signer,
+    ethersProdiver: providerData?.ethersProvider,
   }),
-  target: signEthFx,
+  target: [signEthFx],
 })
 
 /**
@@ -162,6 +163,11 @@ sample({
 sample({
   clock: logout,
   target: [disconnectTonFx, disconnectEthFx],
+})
+
+sample({
+  clock: [signEthFx.fail, tonAuthError],
+  target: logout,
 })
 
 /**

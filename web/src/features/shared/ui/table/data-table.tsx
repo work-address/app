@@ -1,5 +1,5 @@
-import { Flex } from '@radix-ui/themes'
-import { type ReactNode } from 'react'
+import { Flex, Skeleton } from '@radix-ui/themes'
+import { useMemo, type ReactNode } from 'react'
 import styled from 'styled-components'
 
 import { Card } from '../card.tsx'
@@ -14,6 +14,7 @@ import {
   type DesktopHeaderCellRenderProps,
 } from './desktop-header-cell.component.tsx'
 import { useSelection } from './use-selection.ts'
+import { MOCK_DATA_LENGTH } from './utils.ts'
 
 import type { DataProps, DataTableConfig, AnyRecord } from './types'
 
@@ -25,7 +26,10 @@ export type DataTableProps<T extends AnyRecord> = {
   minHeight?: string
   HeaderComponent?: (props: DesktopHeaderCellRenderProps<T>) => ReactNode
   BodyComponent?: (props: DesktopBodyCellRenderProps<T>) => ReactNode
+  skeletonHeight?: string
 } & DataProps<T>
+
+const DEFAULT_SKELETON_HEIGHT = '30px'
 
 export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
   const {
@@ -39,9 +43,13 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
     nowrap,
     minHeight,
     height,
+    loading,
+    mockDataLength,
+    skeletonHeight,
   } = props
 
   const selectedIds = 'selectedIds' in props ? props.selectedIds : undefined
+
   const onSelectedIdsChange =
     'onSelectedIdsChange' in props ? props.onSelectedIdsChange : undefined
 
@@ -56,6 +64,16 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
     onSelectedIdsChange,
     selectedIds,
   })
+
+  const mockedData = useMemo(
+    () =>
+      data.length === 0 && loading
+        ? Array.from({ length: mockDataLength ?? MOCK_DATA_LENGTH })
+        : [],
+    [data.length, loading, mockDataLength],
+  )
+
+  const isDataExists = data.length > 0
 
   return (
     <TableCard $height={height} $minHeight={minHeight}>
@@ -73,7 +91,11 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                   : configEntry.customKey
 
               return (
-                <Th key={key.toString()} $width={configEntry.width}>
+                <HeaderTd
+                  key={key.toString()}
+                  $width={configEntry.width}
+                  $sticky={configEntry.sticky}
+                >
                   <Flex
                     gap={'3'}
                     align={'center'}
@@ -91,69 +113,99 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                       selected={rowsSelected}
                     />
                   </Flex>
-                </Th>
+                </HeaderTd>
               )
             })}
           </tr>
         </THead>
 
         <TBody>
-          {data.map((row) => {
-            const rowId = getRowId(row)
+          {isDataExists &&
+            data.map((row) => {
+              const rowId = getRowId(row)
 
-            return (
-              <Tr key={rowId}>
-                {config.map((columnConfig, index) => {
-                  const selected = selectedIds?.[rowId] ?? false
+              return (
+                <Tr key={rowId}>
+                  {config.map((columnConfig, index) => {
+                    const selected = selectedIds?.[rowId] ?? false
 
-                  const key =
-                    'dataKey' in columnConfig
-                      ? columnConfig.dataKey
-                      : columnConfig.customKey
+                    const key =
+                      'dataKey' in columnConfig
+                        ? columnConfig.dataKey
+                        : columnConfig.customKey
 
-                  return (
-                    <Td
-                      key={`${key.toString()}-${rowId}`}
-                      $verticalAlign={verticalAlign}
-                      $width={columnConfig.width}
-                    >
-                      <Flex
-                        gap={'3'}
-                        align={'center'}
-                        justify={columnConfig.horizontalAlign}
+                    return (
+                      <Td
+                        key={`${key.toString()}-${rowId}`}
+                        $verticalAlign={verticalAlign}
+                        $width={columnConfig.width}
+                        $sticky={columnConfig.sticky}
                       >
-                        {allowSelection && index === 0 && (
-                          <Checkbox
-                            checked={selected}
-                            onCheckedChange={() =>
-                              rowId && handleSelectedChange(rowId.toString())
+                        <Flex
+                          gap={'3'}
+                          align={'center'}
+                          justify={columnConfig.horizontalAlign}
+                        >
+                          {allowSelection && index === 0 && (
+                            <Checkbox
+                              checked={selected}
+                              onCheckedChange={() =>
+                                rowId && handleSelectedChange(rowId.toString())
+                              }
+                            />
+                          )}
+
+                          <BodyComponent
+                            columnConfig={columnConfig}
+                            data={row}
+                            DefaultBodyComponent={DesktopBodyCellComponent}
+                            selected={selected}
+                            dataKey={
+                              'dataKey' in columnConfig
+                                ? columnConfig.dataKey
+                                : undefined
+                            }
+                            customKey={
+                              'customKey' in columnConfig
+                                ? columnConfig.customKey
+                                : undefined
                             }
                           />
-                        )}
+                        </Flex>
+                      </Td>
+                    )
+                  })}
+                </Tr>
+              )
+            })}
 
-                        <BodyComponent
-                          columnConfig={columnConfig}
-                          data={row}
-                          DefaultBodyComponent={DesktopBodyCellComponent}
-                          selected={selected}
-                          dataKey={
-                            'dataKey' in columnConfig
-                              ? columnConfig.dataKey
-                              : undefined
-                          }
-                          customKey={
-                            'customKey' in columnConfig
-                              ? columnConfig.customKey
-                              : undefined
-                          }
-                        />
-                      </Flex>
-                    </Td>
-                  )
-                })}
+          {!isDataExists &&
+            loading &&
+            mockedData.map((_, index) => (
+              <Tr key={`loading-${index}`}>
+                {config.map((columnConfig, index) => (
+                  <Td
+                    key={`loading-${index}`}
+                    $verticalAlign={verticalAlign}
+                    $width={columnConfig.width}
+                  >
+                    <Flex
+                      gap={'3'}
+                      align={'center'}
+                      justify={columnConfig.horizontalAlign}
+                    >
+                      {allowSelection && index === 0 && (
+                        <Checkbox checked={false} onCheckedChange={() => {}} />
+                      )}
+                      <Skeleton
+                        height={skeletonHeight ?? DEFAULT_SKELETON_HEIGHT}
+                        width="100%"
+                      />
+                    </Flex>
+                  </Td>
+                ))}
               </Tr>
-            )
-          })}
+            ))}
         </TBody>
       </StyledTable>
     </TableCard>
@@ -167,11 +219,6 @@ const TableCard = styled(Card)<{
   padding: 0;
   overflow: auto;
 
-  table {
-    border-collapse: collapse;
-    border-spacing: 0;
-  }
-
   ${(p) => p.$height && `height: ${p.$height};`}
   ${(p) => p.$minHeight && `min-height: ${p.$minHeight};`}
 `
@@ -179,24 +226,49 @@ const TableCard = styled(Card)<{
 const StyledTable = styled.table<{ $nowrap?: boolean }>`
   table-layout: fixed;
   min-width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+
   ${(p) => p.$nowrap && `white-space: nowrap;`}
 `
 
-const Th = styled.td<{ $width?: number }>`
+type StickyPositionProp = 'left' | 'right'
+
+const getStickyProperties = (position?: StickyPositionProp, bg?: string) => {
+  if (!position) {
+    return ''
+  }
+
+  const positionStyle = `${position}: 0;`
+
+  return `
+    ${positionStyle}
+    position: sticky;
+    ${bg ? `background: ${bg};` : ''}
+  `
+}
+
+const HeaderTd = styled.td<{ $width?: number; $sticky?: StickyPositionProp }>`
   background: var(--ds-neutral-2);
   padding: 12px var(--space-3);
   font-size: 14px;
   font-weight: 500;
+  position: sticky;
+  top: 0;
+  border-bottom: 1px solid var(--ds-neutral-alpha-6);
+  z-index: 1;
 
   ${(p) => p.$width && `width: ${p.$width}px; min-width: ${p.$width}px;`}
+
+  ${(p) => getStickyProperties(p.$sticky)}
 `
 
 const THead = styled.thead`
-  ${Th}:first-child {
+  ${HeaderTd}:first-child {
     border-top-left-radius: 8px;
   }
 
-  ${Th}:last-child {
+  ${HeaderTd}:last-child {
     border-top-right-radius: 8px;
   }
 
@@ -208,12 +280,15 @@ const TBody = styled.tbody``
 const Td = styled.td<{
   $verticalAlign?: DataTableProps<never>['verticalAlign']
   $width?: number
+  $sticky?: StickyPositionProp
 }>`
   padding: var(--space-4) var(--space-3);
 
   ${(p) => p.$verticalAlign && `vertical-align: ${p.$verticalAlign};`}
 
   ${(p) => p.$width && `width: ${p.$width}px; min-width: ${p.$width}px;`}
+
+  ${(p) => getStickyProperties(p.$sticky, 'var(--white)')}
 `
 
 const Tr = styled.tr`
@@ -223,8 +298,8 @@ const Tr = styled.tr`
     border-bottom: 1px solid var(--ds-neutral-alpha-6);
   }
 
-  &:hover {
-    background-color: rgba(0, 0, 0, 0.05);
+  &:hover ${Td} {
+    background-color: rgb(242, 242, 242);
   }
 `
 

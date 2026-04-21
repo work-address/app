@@ -16,3 +16,5 @@ export const normalizeDataKeyToReadableString = (key: string = ''): string => {
 
   return result.join('')
 }
+
+export const MOCK_DATA_LENGTH = 5

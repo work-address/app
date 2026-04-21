@@ -4,7 +4,7 @@ import { useUnit } from 'effector-react'
 import { lazy, Suspense, useEffect } from 'react'
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 
-import { profileEntity } from '@/entities'
+import { initAuth } from '@/entities/profile'
 import { routes } from '@/features/shared'
 import * as Layouts from '@/layouts'
 
@@ -35,7 +35,7 @@ const router = createBrowserRouter([
 ])
 
 export const App = () => {
-  const initAuthEvent = useUnit(profileEntity.initAuth)
+  const initAuthEvent = useUnit(initAuth)
 
   useEffect(() => {
     initAuthEvent()

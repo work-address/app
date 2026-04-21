@@ -1,5 +1,5 @@
 import { AxiosError } from 'axios'
-import { createEffect, createEvent } from 'effector'
+import { createEffect, createEvent, createStore, sample } from 'effector'
 import { BrowserProvider } from 'ethers'
 
 import type { AuthorizationHeaders } from './types.ts'
@@ -13,11 +13,36 @@ export type EthModalResult = {
   ethersProvider: BrowserProvider
 }
 
-export const ethConnected = createEvent<EthModalResult>()
+const ethConnected = createEvent<EthModalResult>()
+
+export const ethConnectedPub = createEvent<EthModalResult>()
+
+const ethDisconnected = createEvent()
+
+export const ethDisconnectedPub = createEvent()
 
 export const ethConnectError = createEvent()
 
-export const ethDisconnected = createEvent()
+export const $ethConnectionStatus = createStore<'connected' | 'disconnected'>(
+  'disconnected',
+)
+  .on(ethConnectedPub, () => 'connected')
+  .on(ethDisconnectedPub, () => 'disconnected')
+
+sample({
+  clock: ethConnected,
+  source: $ethConnectionStatus,
+  filter: (status) => status === 'disconnected',
+  fn: (_, data) => data,
+  target: ethConnectedPub,
+})
+
+sample({
+  clock: ethDisconnected,
+  source: $ethConnectionStatus,
+  filter: (status) => status === 'connected',
+  target: ethDisconnectedPub,
+})
 
 export const openEthModalFx = createEffect(async () => {
   await reownEthProvider.open()
@@ -60,15 +85,11 @@ export const loginEthFx = createEffect(
   },
 )
 
-let connected = false
-
 const unsubscribeEthUI = reownEthProvider.subscribeEvents(async (event) => {
   if (
     event.data.event === 'CONNECT_SUCCESS' &&
-    event.data.properties.view === 'Connect' &&
-    !connected
+    event.data.properties.view === 'Connect'
   ) {
-    connected = true
     const walletProvider = reownEthProvider.getWalletProvider()
 
     if (!walletProvider) {
@@ -85,8 +106,7 @@ const unsubscribeEthUI = reownEthProvider.subscribeEvents(async (event) => {
     ethConnected({ signer, address, ethersProvider })
   } else if (event.data.event === 'CONNECT_ERROR') {
     ethConnectError()
-  } else if (event.data.event === 'DISCONNECT_SUCCESS' && connected) {
-    connected = false
+  } else if (event.data.event === 'DISCONNECT_SUCCESS') {
     ethDisconnected()
   }
 })

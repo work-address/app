@@ -1,16 +1,16 @@
 import { createContext } from 'react'
 
-import type { ProjectRow } from '@/features/dashboard'
+import type { ProjectWithStats } from '@/entities/activities'
 
 export type ProjectTableContextValues = {
   handleActionClick: (
-    row: ProjectRow,
+    row: ProjectWithStats,
     action: 'Edit' | 'Print' | 'Delete',
   ) => void
 }
 
 const values: ProjectTableContextValues = {
-  handleActionClick: () => {},
+  handleActionClick: () => void 0,
 }
 
 export const ProjectsTableContext = createContext(values)

@@ -1,17 +1,25 @@
 import { QuestionMarkCircledIcon } from '@radix-ui/react-icons'
-import { Flex, Separator, Grid } from '@radix-ui/themes'
+import { Flex, Separator, Grid, Skeleton } from '@radix-ui/themes'
+import { useUnit } from 'effector-react'
+import { QRCodeSVG } from 'qrcode.react'
 import { Fragment } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { getInvoiceInfoFields } from './invoice-info-fields.ts'
-import { QrCodeImage } from './styled'
+import { useInvoiceInfoFields } from '../hooks'
 
+import { $invoice, $invoiceLoading } from '@/entities/activities'
 import { Text } from '@/features/shared'
 
 export const TotalAmountMobile = () => {
   const { t } = useTranslation()
-  const infoFields = getInvoiceInfoFields(t)
+
+  const infoFields = useInvoiceInfoFields()
+
+  const { invoice, loading } = useUnit({
+    invoice: $invoice,
+    loading: $invoiceLoading,
+  })
 
   return (
     <Flex gap={'3'} direction={'column'}>
@@ -19,9 +27,14 @@ export const TotalAmountMobile = () => {
         <Text size={'4'} color={'gray'}>
           {t('invoice.totalAmount')}
         </Text>
-        <Text size={'8'} weight={'medium'} $themeVariant={'primary'}>
-          {t('invoice.amount.mobile')}
-        </Text>
+
+        {loading ? (
+          <Skeleton height="40px" width="80px" />
+        ) : (
+          <Text size={'8'} weight={'medium'} $themeVariant={'primary'}>
+            {invoice?.totalAmount}
+          </Text>
+        )}
       </Flex>
 
       <Separator size={'4'} />
@@ -46,7 +59,11 @@ export const TotalAmountMobile = () => {
               ) : null}
             </Flex>
 
-            <Text weight={'medium'}>{field.value}</Text>
+            {loading ? (
+              <Skeleton height="20px" width="100%" />
+            ) : (
+              <Text weight={'medium'}>{field.value}</Text>
+            )}
           </Fragment>
         ))}
       </Grid>
@@ -54,7 +71,17 @@ export const TotalAmountMobile = () => {
       <Separator size={'4'} />
 
       <Flex justify={'center'}>
-        <QrCodeImage src={'/img/photo/qr-code-example.svg'} />
+        {loading ? (
+          <Skeleton height="194px" width="194px" />
+        ) : (
+          <QRCodeSVG
+            value={invoice?.hash || ''}
+            size={194}
+            bgColor="transparent"
+            fgColor="var(--ds-accent-9)"
+            marginSize={1}
+          />
+        )}
       </Flex>
 
       <Text color={'gray'} weight={'regular'} align={'center'}>

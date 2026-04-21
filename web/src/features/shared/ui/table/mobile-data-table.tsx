@@ -154,10 +154,20 @@ export const MobileDataTable = <T extends AnyRecord>(
                         key={`${getRowId(row)}-${'dataKey' in configItem ? String(configItem.dataKey) : configItem.customKey}`}
                       >
                         <BodyComponent
-                          {...configItem}
+                          columnConfig={configItem}
                           selected={selectedIds?.[rowId] ?? false}
                           data={row}
                           DefaultBodyComponent={MobileBodyComponent}
+                          customKey={
+                            'customKey' in configItem
+                              ? configItem.customKey
+                              : undefined
+                          }
+                          dataKey={
+                            'dataKey' in configItem
+                              ? configItem.dataKey
+                              : undefined
+                          }
                         />
                       </div>
                     ))}

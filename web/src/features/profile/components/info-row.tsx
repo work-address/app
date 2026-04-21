@@ -1,4 +1,5 @@
 import { Flex } from '@radix-ui/themes'
+import styled from 'styled-components'
 
 import type { ReactNode } from 'react'
 
@@ -7,13 +8,29 @@ import { Text } from '@/features/shared'
 type InfoRowProps = {
   icon?: ReactNode
   text?: ReactNode
+  hoverEffects?: boolean
 }
 
-export const InfoRow = ({ text, icon }: InfoRowProps) => {
+export const InfoRow = ({ text, icon, hoverEffects = true }: InfoRowProps) => {
   return (
     <Flex gap={'2'} align={'center'}>
       {icon}
-      <Text size={{ initial: '2', md: '4' }}>{text}</Text>
+      <StyledText size={{ initial: '2', md: '4' }} $hoverEffects={hoverEffects}>
+        {text}
+      </StyledText>
     </Flex>
   )
 }
+
+const StyledText = styled(Text)<{ $hoverEffects?: boolean }>`
+  ${(p) =>
+    p.$hoverEffects &&
+    `
+    border-bottom: 1px solid transparent;
+    transition: border-bottom 0.2s ease-in-out;
+
+    &:hover {
+      border-bottom: 1px solid var(--gray-6);
+    }
+  `}
+`

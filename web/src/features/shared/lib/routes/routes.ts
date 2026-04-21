@@ -14,6 +14,9 @@ type MainRoutes =
   & Route<'/time-tracker', 'timeTracker'>
   & Route<'/download', 'download'>
   & Route<'https://github.com', 'github'>
+  & Route<'https://facebook.com/:userId', 'facebook', NoChildRoutes, { userId: string }>
+  & Route<'https://t.me/:userId', 'telegram', NoChildRoutes, { userId: string }>
+  & Route<'https://linkedin.com/in/:userId', 'linkedin', NoChildRoutes, { userId: string }>
   & Route<'/invoice/:id', 'invoice', NoChildRoutes, IdRouteParams>
 
 type ProfileRoutes =
@@ -108,6 +111,21 @@ export const routes: MainRoutes = {
     target: '_blank',
 
     desktopRender: 'icon',
+  },
+
+  facebook: {
+    schema: 'https://facebook.com/:userId',
+    build: ({ userId }) => `https://facebook.com/${userId}`,
+  },
+
+  telegram: {
+    schema: 'https://t.me/:userId',
+    build: ({ userId }) => `https://t.me/${userId}`,
+  },
+
+  linkedin: {
+    schema: 'https://linkedin.com/in/:userId',
+    build: ({ userId }) => `https://linkedin.com/in/${userId}`,
   },
 
   signIn: {

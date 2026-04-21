@@ -2,7 +2,6 @@ import { AxiosError } from 'axios'
 import { createEffect } from 'effector'
 
 import type { GetNonceParams } from './types'
-import type { User } from '@/features/shared/api/generated'
 
 import { baseApi } from '@/features/shared'
 
@@ -17,7 +16,7 @@ export const fetchStatusFx = createEffect(async () => {
     throw result
   }
 
-  return result.data as User
+  return result.data
 })
 
 export const saveTokensFx = createEffect(
