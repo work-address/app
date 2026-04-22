@@ -31,12 +31,14 @@ services:
         - action: rebuild
           path: ./web/pnpm-lock.yaml
         - action: rebuild
+          path: ./tsconfig.base.json
+        - action: rebuild
           path: ./packages/eslint-config/package.json
 
   api:
     build:
-      context: api
-      dockerfile: dockerfile.dev
+      context: .
+      dockerfile: api/dockerfile.dev
     image: app-api-dev
     ports:
       - "4000:4000"
@@ -56,10 +58,12 @@ services:
       watch:
         - action: sync
           path: ./api
-          target: /app
+          target: /app/api
           ignore:
             - node_modules
         - action: rebuild
           path: ./api/package.json
         - action: rebuild
           path: ./api/pnpm-lock.yaml
+        - action: rebuild
+          path: ./tsconfig.base.json

@@ -2,6 +2,7 @@
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
     "composite": true,
+    "rootDir": "./src",
     "target": "ES2018",
     "module": "commonjs",
     "sourceMap": true,

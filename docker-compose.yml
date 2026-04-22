@@ -24,8 +24,9 @@ services:
 
   api:
     build:
-      context: api
-      dockerfile: dockerfile.prod
+      # Repo root so api/tsconfig.json can extend ../tsconfig.base.json
+      context: .
+      dockerfile: api/dockerfile.prod
     image: app-api-prod
     # ports:
     #   - "4000:4000"

@@ -16,5 +16,4 @@
 *.log
 *.tsbuildinfo
 
-# Ignore API (not needed for web build - reduces context size)
-api/
+# api/ source is required for the API image build; **/node_modules/ already trims bulk

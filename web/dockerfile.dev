@@ -15,6 +15,7 @@ RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Copy workspace files and packages needed for @app/eslint-config
 COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
+COPY tsconfig.base.json ./
 COPY packages/ packages/
 COPY web/ web/
 

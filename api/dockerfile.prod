@@ -7,22 +7,25 @@ ARG NODE_VERSION=24.12.0-alpine
 # Use a lightweight Node.js image for building
 FROM node:${NODE_VERSION} AS builder
 
-# Set the working directory inside the container
+# Layout: /app/tsconfig.base.json + /app/api/* so api/tsconfig.json extends ../tsconfig.base.json
 WORKDIR /app
 
 # Enable pnpm (project uses pnpm-lock.yaml)
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
 # Copy package-related files first to leverage Docker's caching mechanism
-COPY package.json pnpm-lock.yaml ./
+COPY tsconfig.base.json ./
+COPY api/package.json api/pnpm-lock.yaml ./api/
+
+WORKDIR /app/api
 
 # Install project dependencies (frozen lockfile = reproducible, like npm ci)
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
 
 # Copy the rest of the application source code into the container
-COPY . .
+COPY api/ .
 
-# Build the TypeScript application (outputs to /app/build)
+# Build the TypeScript application (outputs to /app/api/build)
 RUN pnpm run build
 
 # =========================================
@@ -34,11 +37,11 @@ FROM node:${NODE_VERSION} AS runner
 WORKDIR /app
 
 # Copy package files and production dependencies
-COPY --from=builder /app/package.json /app/pnpm-lock.yaml ./
-COPY --from=builder /app/node_modules ./node_modules
+COPY --from=builder /app/api/package.json /app/api/pnpm-lock.yaml ./
+COPY --from=builder /app/api/node_modules ./node_modules
 
 # Copy the built application
-COPY --from=builder /app/build ./build
+COPY --from=builder /app/api/build ./build
 
 # Use a non-root user for security best practices
 RUN addgroup -g 1001 -S nodejs && \
