@@ -1,7 +1,7 @@
 import { ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons'
-import { Flex, Separator } from '@radix-ui/themes'
+import { Flex, Separator, Skeleton } from '@radix-ui/themes'
 import { AnimatePresence, motion } from 'motion/react'
-import { type ReactNode, useMemo, useState } from 'react'
+import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import styled from 'styled-components'
 
 import { Card } from '../card'
@@ -11,6 +11,7 @@ import { IconButton } from '../icon-button.tsx'
 import { MobileBodyComponent } from './mobile-body-component'
 import { MobileHeaderComponent } from './mobile-header-component'
 import { useSelection } from './use-selection.ts'
+import { MOCK_DATA_LENGTH } from './utils.ts'
 
 import type { MobileBodyRenderProps } from './mobile-body-component'
 import type { MobileHeaderRenderProps } from './mobile-header-component'
@@ -26,7 +27,9 @@ export type MobileDataTableProps<T extends AnyRecord> = {
   HeaderComponent?: (props: MobileHeaderRenderProps<T>) => ReactNode
   BodyComponent?: (props: MobileBodyRenderProps<T>) => ReactNode
   AddonBottomComponent?: (props: MobileAddonBottomProps<T>) => ReactNode
-  initialExpandedId?: string
+  expandedId?: string
+  loading?: boolean
+  mockDataLength?: number
 } & DataProps<T>
 
 export const MobileDataTable = <T extends AnyRecord>(
@@ -39,11 +42,14 @@ export const MobileDataTable = <T extends AnyRecord>(
     AddonBottomComponent,
     getRowId,
     config,
-    initialExpandedId,
+    expandedId,
     allowSelection,
+    mockDataLength = MOCK_DATA_LENGTH,
+    loading,
   } = props
 
   const selectedIds = 'selectedIds' in props ? props.selectedIds : undefined
+
   const onSelectedIdsChange =
     'onSelectedIdsChange' in props ? props.onSelectedIdsChange : undefined
 
@@ -58,7 +64,7 @@ export const MobileDataTable = <T extends AnyRecord>(
     data.reduce(
       (acc, row) => {
         const id = getRowId(row)
-        acc[id] = id.toString() === initialExpandedId?.toString()
+        acc[id] = id.toString() === expandedId?.toString()
         return acc
       },
       {} as Record<string, boolean>,
@@ -75,6 +81,22 @@ export const MobileDataTable = <T extends AnyRecord>(
     [config],
   )
 
+  const mockedData = useMemo(
+    () => Array.from({ length: mockDataLength }, (_, index) => ({ id: index })),
+    [mockDataLength],
+  )
+
+  const isDataExists = data.length > 0
+
+  useEffect(() => {
+    if (expandedId) {
+      setExpanded((prev) => ({
+        ...prev,
+        [expandedId]: true,
+      }))
+    }
+  }, [expandedId])
+
   if (!headerConfig) {
     throw new Error(
       'You should set "isTitle" prop at least to one item in config.',
@@ -83,41 +105,132 @@ export const MobileDataTable = <T extends AnyRecord>(
 
   return (
     <CardWrapper shadow={false}>
-      {data.map((row) => {
-        const rowId = getRowId(row)
+      {isDataExists &&
+        data.map((row) => {
+          const rowId = getRowId(row)
 
-        return (
-          <CardContent key={rowId}>
-            <Flex gap={'3'}>
+          return (
+            <CardContent key={rowId}>
+              <Flex gap={'3'}>
+                {allowSelection && (
+                  <CheckboxWrapper>
+                    <Checkbox
+                      checked={selectedIds?.[rowId] ?? false}
+                      onCheckedChange={() =>
+                        handleSelectedChange(rowId.toString())
+                      }
+                    />
+                  </CheckboxWrapper>
+                )}
+
+                <Header
+                  onClick={() =>
+                    setExpanded((expanded) => ({
+                      ...expanded,
+                      [rowId]: !expanded[rowId],
+                    }))
+                  }
+                >
+                  <Flex justify={'between'} align={'center'}>
+                    <HeaderComponent
+                      data={row}
+                      dataKey={
+                        'dataKey' in headerConfig
+                          ? headerConfig.dataKey
+                          : undefined
+                      }
+                      customKey={
+                        'customKey' in headerConfig
+                          ? headerConfig.customKey
+                          : undefined
+                      }
+                      DefaultHeaderCellComponent={MobileHeaderComponent}
+                    />
+
+                    <Flex alignSelf={'end'}>
+                      <IconButton
+                        variant={'ghost'}
+                        size={'2'}
+                        radius={'full'}
+                        color={'gray'}
+                      >
+                        {expanded[rowId] ? (
+                          <ChevronUpIcon width={20} height={20} />
+                        ) : (
+                          <ChevronDownIcon width={20} height={20} />
+                        )}
+                      </IconButton>
+                    </Flex>
+                  </Flex>
+                </Header>
+              </Flex>
+
+              <AnimatePresence initial={false}>
+                {expanded[rowId] && (
+                  <motion.div
+                    initial={{ opacity: 0, height: 0 }}
+                    animate={{ opacity: 1, height: 'auto' }}
+                    exit={{ opacity: 0, height: 0 }}
+                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                    style={{ overflow: 'hidden' }}
+                  >
+                    <Separator size={'4'} />
+
+                    <FlexFields direction={'column'} gap={'3'}>
+                      {configWithoutHeader.map((configItem) => (
+                        <div
+                          key={`${getRowId(row)}-${'dataKey' in configItem ? String(configItem.dataKey) : configItem.customKey}`}
+                        >
+                          <BodyComponent
+                            columnConfig={configItem}
+                            selected={selectedIds?.[rowId] ?? false}
+                            data={row}
+                            DefaultBodyComponent={MobileBodyComponent}
+                            customKey={
+                              'customKey' in configItem
+                                ? configItem.customKey
+                                : undefined
+                            }
+                            dataKey={
+                              'dataKey' in configItem
+                                ? configItem.dataKey
+                                : undefined
+                            }
+                          />
+                        </div>
+                      ))}
+                    </FlexFields>
+
+                    {AddonBottomComponent && (
+                      <AddonWrapper>
+                        <AddonBottomComponent data={row} />
+                      </AddonWrapper>
+                    )}
+                  </motion.div>
+                )}
+              </AnimatePresence>
+            </CardContent>
+          )
+        })}
+
+      {!isDataExists &&
+        loading &&
+        mockedData.map((_, index) => (
+          <CardContent key={index}>
+            <Flex
+              gap={'3'}
+              align="center"
+              style={{ height: 40, padding: '8px 0' }}
+            >
               {allowSelection && (
                 <CheckboxWrapper>
-                  <Checkbox
-                    checked={selectedIds?.[rowId] ?? false}
-                    onCheckedChange={() =>
-                      handleSelectedChange(rowId.toString())
-                    }
-                  />
+                  <Skeleton width="18px" height="18px" />
                 </CheckboxWrapper>
               )}
 
-              <Header
-                onClick={() =>
-                  setExpanded((expanded) => ({
-                    ...expanded,
-                    [rowId]: !expanded[rowId],
-                  }))
-                }
-              >
+              <Header>
                 <Flex justify={'between'} align={'center'}>
-                  <HeaderComponent
-                    data={row}
-                    dataKey={
-                      'dataKey' in headerConfig
-                        ? headerConfig.dataKey
-                        : headerConfig.customKey
-                    }
-                    DefaultHeaderCellComponent={MobileHeaderComponent}
-                  />
+                  <Skeleton width="150px" height="20px" />
 
                   <Flex alignSelf={'end'}>
                     <IconButton
@@ -125,65 +238,16 @@ export const MobileDataTable = <T extends AnyRecord>(
                       size={'2'}
                       radius={'full'}
                       color={'gray'}
+                      disabled
                     >
-                      {expanded[rowId] ? (
-                        <ChevronUpIcon width={20} height={20} />
-                      ) : (
-                        <ChevronDownIcon width={20} height={20} />
-                      )}
+                      <ChevronDownIcon width={20} height={20} />
                     </IconButton>
                   </Flex>
                 </Flex>
               </Header>
             </Flex>
-
-            <AnimatePresence initial={false}>
-              {expanded[rowId] && (
-                <motion.div
-                  initial={{ opacity: 0, height: 0 }}
-                  animate={{ opacity: 1, height: 'auto' }}
-                  exit={{ opacity: 0, height: 0 }}
-                  transition={{ duration: 0.25, ease: 'easeInOut' }}
-                  style={{ overflow: 'hidden' }}
-                >
-                  <Separator size={'4'} />
-
-                  <FlexFields direction={'column'} gap={'3'}>
-                    {configWithoutHeader.map((configItem) => (
-                      <div
-                        key={`${getRowId(row)}-${'dataKey' in configItem ? String(configItem.dataKey) : configItem.customKey}`}
-                      >
-                        <BodyComponent
-                          columnConfig={configItem}
-                          selected={selectedIds?.[rowId] ?? false}
-                          data={row}
-                          DefaultBodyComponent={MobileBodyComponent}
-                          customKey={
-                            'customKey' in configItem
-                              ? configItem.customKey
-                              : undefined
-                          }
-                          dataKey={
-                            'dataKey' in configItem
-                              ? configItem.dataKey
-                              : undefined
-                          }
-                        />
-                      </div>
-                    ))}
-                  </FlexFields>
-
-                  {AddonBottomComponent && (
-                    <AddonWrapper>
-                      <AddonBottomComponent data={row} />
-                    </AddonWrapper>
-                  )}
-                </motion.div>
-              )}
-            </AnimatePresence>
           </CardContent>
-        )
-      })}
+        ))}
     </CardWrapper>
   )
 }

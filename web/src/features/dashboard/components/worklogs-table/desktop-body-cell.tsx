@@ -1,10 +1,11 @@
 import { Pencil1Icon } from '@radix-ui/react-icons'
 import { Badge, Flex, IconButton } from '@radix-ui/themes'
-import { memo } from 'react'
-import { useTranslation } from 'react-i18next'
+import { memo, useContext } from 'react'
 import styled from 'styled-components'
 
-import type { WorklogRow } from './types'
+import { WorklogsContext } from './worklogs-context'
+
+import type { Time } from '@/entities/activities'
 
 import {
   type DesktopBodyCellRenderProps,
@@ -13,72 +14,73 @@ import {
   Text,
 } from '@/features/shared'
 
-const BodyCellComponent = memo(
-  (props: DesktopBodyCellRenderProps<WorklogRow>) => {
-    const { t } = useTranslation()
-    switch (props.dataKey) {
-      case 'date': {
+const BodyCellComponent = memo((props: DesktopBodyCellRenderProps<Time>) => {
+  const { dateFormatter, timeFormatter, t } = useContext(WorklogsContext)
+
+  switch (props.dataKey) {
+    case 'note': {
+      return (
+        <Text color={'gray'} size="2">
+          {props.data.note}
+        </Text>
+      )
+    }
+
+    case 'screenshot': {
+      return props.data.screenshot ? (
+        <Screenshot
+          src={props.data.screenshot}
+          alt={props.data.activity?.title || ''}
+        />
+      ) : (
+        <Screenshot
+          src={'/img/photo/example-screenshot.png'}
+          alt={t('dashboard.worklogsTable.screenshotNoData')}
+        />
+      )
+    }
+
+    case 'fromAt': {
+      return (
+        <Flex direction={'column'}>
+          <Text size="2">
+            {timeFormatter.format(new Date(props.data.fromAt))}-
+            {timeFormatter.format(new Date(props.data.toAt))}
+          </Text>
+          <Text size="2" color={'gray'}>
+            {dateFormatter.format(new Date(props.data.fromAt))}
+          </Text>
+        </Flex>
+      )
+    }
+
+    case 'minutesActive': {
+      return (
+        <Badge color={getTimeActiveColor(props.data.minutesActive)}>
+          {formatDurationFromMinutes(props.data.minutesActive, t)}
+        </Badge>
+      )
+    }
+
+    default: {
+      if (props.customKey === 'actions') {
         return (
-          <Flex direction={'column'}>
-            <Text>{props.data.dateRange}</Text>
-            <Text color={'gray'}>{props.data.date}</Text>
+          <Flex>
+            <IconButton variant={'ghost'} radius={'full'} color={'gray'}>
+              <Pencil1Icon />
+            </IconButton>
           </Flex>
         )
       }
 
-      case 'note': {
-        return <Text color={'gray'}>{props.data.note}</Text>
-      }
-
-      case 'timeActive': {
-        return (
-          <Badge color={getTimeActiveColor(props.data.timeActive)}>
-            {formatDurationFromMinutes(props.data.timeActive, t)}
-          </Badge>
-        )
-      }
-
-      case 'paymentStatus': {
-        const paid = props.data.paymentStatus === 'Paid'
-        return (
-          <Badge color={paid ? 'green' : 'red'}>
-            {paid
-              ? t('dashboard.worklogsTable.paymentStatus.paid')
-              : t('dashboard.worklogsTable.paymentStatus.unpaid')}
-          </Badge>
-        )
-      }
-
-      case 'screenshot': {
-        return props.data.screenshot ? (
-          <Screenshot
-            src={props.data.screenshot}
-            alt={props.data.projectName}
-          />
-        ) : (
-          <Screenshot
-            src={'/img/photo/example-screenshot.png'}
-            alt={t('dashboard.worklogsTable.screenshotNoData')}
-          />
-        )
-      }
-
-      default: {
-        if (props.customKey === 'actions') {
-          return (
-            <Flex>
-              <IconButton variant={'ghost'} radius={'full'} color={'gray'}>
-                <Pencil1Icon />
-              </IconButton>
-            </Flex>
-          )
-        }
-
-        return <props.DefaultBodyComponent {...props} />
-      }
+      return (
+        <Text size="2">
+          <props.DefaultBodyComponent {...props} />
+        </Text>
+      )
     }
-  },
-)
+  }
+})
 
 export { BodyCellComponent }
 

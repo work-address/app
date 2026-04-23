@@ -1,7 +1,8 @@
 import { Badge, Flex } from '@radix-ui/themes'
-import React from 'react'
-import { useTranslation } from 'react-i18next'
+import React, { useContext } from 'react'
 import { NavLink } from 'react-router-dom'
+
+import { ProjectsTableContext } from './context.ts'
 
 import type { ProjectWithStats } from '@/entities/activities'
 
@@ -19,7 +20,7 @@ const statusTranslationKey = (status: string) => {
 
 export const MobileHeader = React.memo(
   (props: MobileHeaderRenderProps<ProjectWithStats>) => {
-    const { t } = useTranslation()
+    const { t } = useContext(ProjectsTableContext)
     const statusKey = statusTranslationKey(props.data.state)
 
     return (
@@ -40,7 +41,7 @@ export const MobileHeader = React.memo(
         </Flex>
 
         <Text color={'gray'} size={'2'}>
-          {props.data.earnings}
+          {props.data.earnings} {t('currency.usdt')}
         </Text>
       </Flex>
     )

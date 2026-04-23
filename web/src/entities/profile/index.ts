@@ -229,6 +229,9 @@ signEthFx.fail.watch(() => {
   })
 })
 
+// eslint-disable-next-line
+;(window as any)['logout'] = logout
+
 export { type LoginMode } from './types'
 
 export { initAuth, login, logout } from './profile.events'

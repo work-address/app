@@ -64,9 +64,6 @@
   "dashboard.projectsTable.drawer.download": "ダウンロード",
   "dashboard.projectsTable.drawer.edit": "編集",
   "dashboard.projectsTable.drawer.editProjectTitle": "プロジェクトを編集",
-  "dashboard.projectsTable.drawer.meta.publishedIn": "公開先",
-  "dashboard.projectsTable.drawer.meta.rate": "料金",
-  "dashboard.projectsTable.drawer.meta.startDate": "開始日",
   "dashboard.projectsTable.drawer.save": "保存",
   "dashboard.projectsTable.drawer.section.description": "説明",
   "dashboard.projectsTable.form.description": "説明",
@@ -77,8 +74,6 @@
   "dashboard.projectsTable.form.publishedInPlaceholder": "フォルダーを選択",
   "dashboard.projectsTable.form.rate": "料金",
   "dashboard.projectsTable.head.earnings": "収益",
-  "dashboard.projectsTable.head.keyboard": "キーボード",
-  "dashboard.projectsTable.head.mouse": "マウス",
   "dashboard.projectsTable.head.mouseDistance": "マウス移動距離",
   "dashboard.projectsTable.head.projectName": "プロジェクト名",
   "dashboard.projectsTable.head.status": "ステータス",
@@ -204,5 +199,13 @@
   "ui.datePicker.previousMonth": "前月",
   "ui.motionSelect.placeholder": "選択",
   "ui.search.clear": "クリア",
-  "ui.search.placeholderProjects": "プロジェクトを検索"
+  "ui.search.placeholderProjects": "プロジェクトを検索",
+  "currency": {
+    "usdt": "USDT"
+  },
+  "dashboard.projectsTable.drawer.meta.rateHour": "料金",
+  "dashboard.projectsTable.head.keyboardKeys": "キーボード",
+  "dashboard.projectsTable.head.mouseKeys": "マウス",
+  "dashboard.projectsTable.drawer.meta.createdAt": "開始日",
+  "dashboard.projectsTable.drawer.meta.state": "公開先"
 }

@@ -1,7 +1,6 @@
 import { TrashIcon, Pencil1Icon } from '@radix-ui/react-icons'
 import { Badge, Flex } from '@radix-ui/themes'
 import React, { type ReactNode, useContext } from 'react'
-import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router-dom'
 
 import { ProjectsTableContext } from './context.ts'
@@ -26,7 +25,7 @@ const statusTranslationKey = (status: string) => {
 
 export const DesktopCell = React.memo(
   (props: DesktopBodyCellRenderProps<ProjectWithStats>) => {
-    const { t } = useTranslation()
+    const { t } = useContext(ProjectsTableContext)
     let content: ReactNode | null
 
     switch (props.dataKey) {
@@ -88,8 +87,7 @@ export const DesktopCell = React.memo(
 
 const Actions = React.memo(
   (props: DesktopBodyCellRenderProps<ProjectWithStats>) => {
-    const { t } = useTranslation()
-    const { handleActionClick } = useContext(ProjectsTableContext)
+    const { handleActionClick, t } = useContext(ProjectsTableContext)
 
     return (
       <Flex gap={'3'} align={'center'}>

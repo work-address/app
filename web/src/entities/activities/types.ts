@@ -1,5 +1,7 @@
 import type { baseApi } from '@/features/shared'
 
+export type ActivityStateFilter = 'all' | 'Active' | 'Finished'
+
 export type ITimeTotal = {
   activityId: string
   rateHour: number
@@ -35,3 +37,25 @@ export type ProjectInvoice = baseApi.Activity & {
   report?: ITimeTotal
   totalAmount: number
 }
+
+export type Time = baseApi.Time & {
+  activity?: baseApi.Activity
+}
+
+export type WorklogsFilters = {
+  page: number
+  fromAt: number | null
+  toAt: number | null
+  activityId: string | null
+  note: string | null
+  timeActiveMin: number | null
+  timeActiveMax: number | null
+  keyboardKeysMin: number | null
+  keyboardKeysMax: number | null
+  mouseKeysMin: number | null
+  mouseKeysMax: number | null
+  mouseDistanceMin: number | null
+  mouseDistanceMax: number | null
+}
+
+export type WorklogSort = Record<string, 'ASC' | 'DESC'>

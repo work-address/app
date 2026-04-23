@@ -32,7 +32,7 @@ export const TotalAmountMobile = () => {
           <Skeleton height="40px" width="80px" />
         ) : (
           <Text size={'8'} weight={'medium'} $themeVariant={'primary'}>
-            {invoice?.totalAmount}
+            {invoice?.totalAmount} {t('currency.usdt')}
           </Text>
         )}
       </Flex>

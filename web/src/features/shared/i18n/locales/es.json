@@ -64,9 +64,6 @@
   "dashboard.projectsTable.drawer.download": "Descargar",
   "dashboard.projectsTable.drawer.edit": "Editar",
   "dashboard.projectsTable.drawer.editProjectTitle": "Editar proyecto",
-  "dashboard.projectsTable.drawer.meta.publishedIn": "Publicado en",
-  "dashboard.projectsTable.drawer.meta.rate": "Tarifa",
-  "dashboard.projectsTable.drawer.meta.startDate": "Fecha de inicio",
   "dashboard.projectsTable.drawer.save": "Guardar",
   "dashboard.projectsTable.drawer.section.description": "Descripción",
   "dashboard.projectsTable.form.description": "Descripción",
@@ -77,8 +74,6 @@
   "dashboard.projectsTable.form.publishedInPlaceholder": "Selecciona una carpeta",
   "dashboard.projectsTable.form.rate": "Tarifa",
   "dashboard.projectsTable.head.earnings": "Ingresos",
-  "dashboard.projectsTable.head.keyboard": "Teclado",
-  "dashboard.projectsTable.head.mouse": "Ratón",
   "dashboard.projectsTable.head.mouseDistance": "Distancia del ratón",
   "dashboard.projectsTable.head.projectName": "Nombre del proyecto",
   "dashboard.projectsTable.head.status": "Estado",
@@ -204,5 +199,11 @@
   "ui.datePicker.previousMonth": "Mes anterior",
   "ui.motionSelect.placeholder": "Seleccionar",
   "ui.search.clear": "Borrar",
-  "ui.search.placeholderProjects": "Buscar proyectos"
+  "ui.search.placeholderProjects": "Buscar proyectos",
+  "currency.usdt": "USDT",
+  "dashboard.projectsTable.drawer.meta.rateHour": "Tarifa",
+  "dashboard.projectsTable.head.keyboardKeys": "Teclado",
+  "dashboard.projectsTable.head.mouseKeys": "Ratón",
+  "dashboard.projectsTable.drawer.meta.createdAt": "Fecha de inicio",
+  "dashboard.projectsTable.drawer.meta.state": "Publicado en"
 }

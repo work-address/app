@@ -68,9 +68,6 @@
   "dashboard.projectsTable.drawer.edit": "Edit",
   "dashboard.projectsTable.drawer.editProjectTitle": "Edit project",
   "dashboard.projectsTable.drawer.invoice": "Invoice",
-  "dashboard.projectsTable.drawer.meta.publishedIn": "Published in",
-  "dashboard.projectsTable.drawer.meta.rate": "Rate",
-  "dashboard.projectsTable.drawer.meta.startDate": "Start date",
   "dashboard.projectsTable.drawer.save": "Save",
   "dashboard.projectsTable.drawer.section.description": "Description",
   "dashboard.projectsTable.form.description": "Description",
@@ -81,8 +78,6 @@
   "dashboard.projectsTable.form.publishedInPlaceholder": "Select folder",
   "dashboard.projectsTable.form.rate": "Rate",
   "dashboard.projectsTable.head.earnings": "Earnings",
-  "dashboard.projectsTable.head.keyboard": "Keyboard",
-  "dashboard.projectsTable.head.mouse": "Mouse",
   "dashboard.projectsTable.head.mouseDistance": "Mouse distance",
   "dashboard.projectsTable.head.projectName": "Project name",
   "dashboard.projectsTable.head.status": "Status",
@@ -208,5 +203,12 @@
   "ui.datePicker.previousMonth": "Previous month",
   "ui.motionSelect.placeholder": "Select",
   "ui.search.clear": "Clear",
-  "ui.search.placeholderProjects": "Search for projects"
+  "ui.search.placeholderProjects": "Search for projects",
+  "currency.usdt": "USDT",
+  "common.delete": "Delete",
+  "dashboard.projectsTable.drawer.meta.rateHour": "Rate",
+  "dashboard.projectsTable.head.keyboardKeys": "Keyboard",
+  "dashboard.projectsTable.head.mouseKeys": "Mouse",
+  "dashboard.projectsTable.drawer.meta.createdAt": "Start date",
+  "dashboard.projectsTable.drawer.meta.state": "Published in"
 }

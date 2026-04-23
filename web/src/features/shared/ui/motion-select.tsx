@@ -17,6 +17,8 @@ import { Drawer } from './dialogs/drawer'
 import { Input } from './input'
 import { Text } from './text'
 
+import type { InputProps } from './input'
+
 type Option = {
   value: string
   label: string
@@ -32,6 +34,7 @@ type MotionSelectProps = {
   title?: string
   label?: string
   allSelectedText?: string
+  inputProps?: InputProps
 }
 
 export const MotionSelect = ({
@@ -44,6 +47,7 @@ export const MotionSelect = ({
   title,
   label,
   allSelectedText,
+  inputProps,
 }: MotionSelectProps) => {
   const { t } = useTranslation()
   const isMobile = useBreakpoint('isMobile')
@@ -127,6 +131,7 @@ export const MotionSelect = ({
           overflow: 'hidden',
           textOverflow: 'ellipsis',
         }}
+        {...inputProps}
       />
     </InputWrapper>
   )
@@ -216,9 +221,17 @@ const MenuItem = styled.button`
 
 const InputWrapper = styled.span`
   width: 100%;
+  cursor: pointer !important;
 
   & .rt-TextFieldRoot:where(:has(.rt-TextFieldInput:where(:read-only))) {
     background: transparent !important;
-    color: #000;
+    cursor: pointer !important;
+  }
+
+  .rt-TextFieldInput:where(:disabled, :read-only) {
+    color: #000 !important;
+    cursor: pointer !important;
+    background: transparent;
+    -webkit-text-fill-color: #000;
   }
 `

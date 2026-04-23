@@ -24,7 +24,7 @@ import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { Button } from './button'
-import { Input } from './input'
+import { Input, type InputProps } from './input'
 
 type DatePickerProps = {
   value?: Date | null
@@ -33,6 +33,7 @@ type DatePickerProps = {
   placeholder?: string
   id?: string
   labelWidth?: string
+  inputProps?: InputProps
 }
 
 function dateFnsLocaleFor(lng: string | undefined) {
@@ -50,6 +51,7 @@ export const DatePickerInput = ({
   placeholder,
   id,
   labelWidth,
+  inputProps,
 }: DatePickerProps) => {
   const { t, i18n } = useTranslation()
   const dateFnsLocale = dateFnsLocaleFor(i18n.resolvedLanguage)
@@ -104,6 +106,7 @@ export const DatePickerInput = ({
             placeholder={resolvedPlaceholder}
             addonLeft={<CalendarIcon />}
             style={{ cursor: 'pointer', pointerEvents: 'none' }}
+            {...inputProps}
           />
         </span>
       </Popover.Trigger>

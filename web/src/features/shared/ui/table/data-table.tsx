@@ -1,6 +1,6 @@
 import { Flex, Skeleton } from '@radix-ui/themes'
 import { useMemo, type ReactNode } from 'react'
-import styled from 'styled-components'
+import styled, { keyframes } from 'styled-components'
 
 import { Card } from '../card.tsx'
 import { Checkbox } from '../checkbox.tsx'
@@ -24,9 +24,12 @@ export type DataTableProps<T extends AnyRecord> = {
   verticalAlign?: 'top' | 'middle' | 'bottom' | 'baseline'
   config: DataTableConfig<T>
   minHeight?: string
+  maxHeight?: string
   HeaderComponent?: (props: DesktopHeaderCellRenderProps<T>) => ReactNode
   BodyComponent?: (props: DesktopBodyCellRenderProps<T>) => ReactNode
   skeletonHeight?: string
+  sort?: Record<string, 'ASC' | 'DESC'>
+  onSortChange?: (sort: Record<string, 'ASC' | 'DESC'>) => void
 } & DataProps<T>
 
 const DEFAULT_SKELETON_HEIGHT = '30px'
@@ -42,10 +45,14 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
     BodyComponent = DesktopBodyCellComponent,
     nowrap,
     minHeight,
+    maxHeight,
     height,
     loading,
-    mockDataLength,
+    isFiltering,
+    mockDataLength = MOCK_DATA_LENGTH,
     skeletonHeight,
+    sort,
+    onSortChange,
   } = props
 
   const selectedIds = 'selectedIds' in props ? props.selectedIds : undefined
@@ -68,15 +75,28 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
   const mockedData = useMemo(
     () =>
       data.length === 0 && loading
-        ? Array.from({ length: mockDataLength ?? MOCK_DATA_LENGTH })
+        ? Array.from({ length: mockDataLength })
         : [],
     [data.length, loading, mockDataLength],
   )
 
+  const sortParams = useMemo(() => {
+    if (!sort) {
+      return null
+    }
+
+    return sort
+  }, [sort])
+
   const isDataExists = data.length > 0
 
   return (
-    <TableCard $height={height} $minHeight={minHeight}>
+    <TableCard
+      $height={height}
+      $minHeight={minHeight}
+      $maxHeight={maxHeight}
+      $isFiltering={isFiltering}
+    >
       <StyledTable $nowrap={nowrap}>
         <THead>
           <tr>
@@ -108,9 +128,21 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                       />
                     )}
                     <HeaderComponent
-                      {...configEntry}
+                      columnConfig={configEntry}
                       DefaultHeaderComponent={DesktopHeaderCellComponent}
                       selected={rowsSelected}
+                      sortParams={sortParams}
+                      dataKey={
+                        'dataKey' in configEntry
+                          ? configEntry.dataKey
+                          : undefined
+                      }
+                      customKey={
+                        'customKey' in configEntry
+                          ? configEntry.customKey
+                          : undefined
+                      }
+                      onSortChange={onSortChange}
                     />
                   </Flex>
                 </HeaderTd>
@@ -212,15 +244,55 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
   )
 }
 
+const pulseAnimation = keyframes`
+  0% {
+    offset-distance: 0%;
+    opacity: 0;
+  }
+  10% {
+    opacity: 1;
+  }
+  90% {
+    opacity: 1;
+  }
+  100% {
+    offset-distance: 100%;
+    opacity: 0;
+  }
+`
+
 const TableCard = styled(Card)<{
   $height: DataTableProps<never>['height']
   $minHeight: DataTableProps<never>['minHeight']
+  $maxHeight: DataTableProps<never>['maxHeight']
+  $isFiltering?: boolean
 }>`
   padding: 0;
   overflow: auto;
+  position: relative;
 
   ${(p) => p.$height && `height: ${p.$height};`}
   ${(p) => p.$minHeight && `min-height: ${p.$minHeight};`}
+  ${(p) => p.$maxHeight && `max-height: ${p.$maxHeight};`}
+
+  &::before {
+    content: '';
+    display: ${(p) => (p.$isFiltering ? 'block' : 'none')};
+    position: absolute;
+    width: 120px;
+    height: 4px;
+    background: linear-gradient(
+      90deg,
+      transparent,
+      var(--ds-accent-9),
+      transparent
+    );
+    filter: blur(1px);
+    z-index: 10;
+    pointer-events: none;
+    offset-path: rect(0% 100% 100% 0% round var(--radius-4));
+    animation: ${pulseAnimation} 2s ease-in-out infinite;
+  }
 `
 
 const StyledTable = styled.table<{ $nowrap?: boolean }>`

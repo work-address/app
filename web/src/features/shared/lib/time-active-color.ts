@@ -9,7 +9,7 @@ export const getTimeActiveColor = (minutesActive: number) =>
       () => 'red',
     )
     .with(
-      P.when((n) => n > 3 && n <= 5),
+      P.when((n) => n >= 3 && n <= 5),
       () => 'orange',
     )
     .otherwise(() => 'green')

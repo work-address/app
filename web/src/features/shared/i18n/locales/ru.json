@@ -64,9 +64,6 @@
   "dashboard.projectsTable.drawer.download": "Скачать",
   "dashboard.projectsTable.drawer.edit": "Изменить",
   "dashboard.projectsTable.drawer.editProjectTitle": "Редактировать проект",
-  "dashboard.projectsTable.drawer.meta.publishedIn": "Опубликовано в",
-  "dashboard.projectsTable.drawer.meta.rate": "Ставка",
-  "dashboard.projectsTable.drawer.meta.startDate": "Дата начала",
   "dashboard.projectsTable.drawer.save": "Сохранить",
   "dashboard.projectsTable.drawer.section.description": "Описание",
   "dashboard.projectsTable.form.description": "Описание",
@@ -77,8 +74,6 @@
   "dashboard.projectsTable.form.publishedInPlaceholder": "Выберите папку",
   "dashboard.projectsTable.form.rate": "Ставка",
   "dashboard.projectsTable.head.earnings": "Доход",
-  "dashboard.projectsTable.head.keyboard": "Клавиатура",
-  "dashboard.projectsTable.head.mouse": "Мышь",
   "dashboard.projectsTable.head.mouseDistance": "Путь мыши",
   "dashboard.projectsTable.head.projectName": "Название проекта",
   "dashboard.projectsTable.head.status": "Статус",
@@ -204,5 +199,11 @@
   "ui.datePicker.previousMonth": "Предыдущий месяц",
   "ui.motionSelect.placeholder": "Выберите",
   "ui.search.clear": "Очистить",
-  "ui.search.placeholderProjects": "Поиск проектов"
+  "ui.search.placeholderProjects": "Поиск проектов",
+  "currency.usdt": "USDT",
+  "dashboard.projectsTable.drawer.meta.rateHour": "Ставка",
+  "dashboard.projectsTable.head.keyboardKeys": "Клавиатура",
+  "dashboard.projectsTable.head.mouseKeys": "Мышь",
+  "dashboard.projectsTable.drawer.meta.createdAt": "Дата начала",
+  "dashboard.projectsTable.drawer.meta.state": "Опубликовано в"
 }

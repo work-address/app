@@ -64,9 +64,6 @@
   "dashboard.projectsTable.drawer.download": "下载",
   "dashboard.projectsTable.drawer.edit": "编辑",
   "dashboard.projectsTable.drawer.editProjectTitle": "编辑项目",
-  "dashboard.projectsTable.drawer.meta.publishedIn": "发布位置",
-  "dashboard.projectsTable.drawer.meta.rate": "费率",
-  "dashboard.projectsTable.drawer.meta.startDate": "开始日期",
   "dashboard.projectsTable.drawer.save": "保存",
   "dashboard.projectsTable.drawer.section.description": "描述",
   "dashboard.projectsTable.form.description": "描述",
@@ -77,8 +74,6 @@
   "dashboard.projectsTable.form.publishedInPlaceholder": "选择文件夹",
   "dashboard.projectsTable.form.rate": "费率",
   "dashboard.projectsTable.head.earnings": "收入",
-  "dashboard.projectsTable.head.keyboard": "键盘",
-  "dashboard.projectsTable.head.mouse": "鼠标",
   "dashboard.projectsTable.head.mouseDistance": "鼠标移动距离",
   "dashboard.projectsTable.head.projectName": "项目名称",
   "dashboard.projectsTable.head.status": "状态",
@@ -204,5 +199,11 @@
   "ui.datePicker.previousMonth": "上个月",
   "ui.motionSelect.placeholder": "请选择",
   "ui.search.clear": "清除",
-  "ui.search.placeholderProjects": "搜索项目"
+  "ui.search.placeholderProjects": "搜索项目",
+  "currency.usdt": "USDT",
+  "dashboard.projectsTable.drawer.meta.rateHour": "费率",
+  "dashboard.projectsTable.head.keyboardKeys": "键盘",
+  "dashboard.projectsTable.head.mouseKeys": "鼠标",
+  "dashboard.projectsTable.drawer.meta.createdAt": "开始日期",
+  "dashboard.projectsTable.drawer.meta.state": "发布位置"
 }

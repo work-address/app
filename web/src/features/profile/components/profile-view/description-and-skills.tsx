@@ -34,7 +34,10 @@ export const DescriptionAndSkills = ({ gridArea }: DescriptionProps) => {
   const user = useUnit($user)
 
   const skills = useMemo(
-    () => user?.skills?.split(',') || mockData,
+    () =>
+      user?.skills
+        ? user?.skills?.split(',').filter((s) => Boolean(s.trim()))
+        : mockData,
     [user?.skills],
   )
 
@@ -63,7 +66,11 @@ export const DescriptionAndSkills = ({ gridArea }: DescriptionProps) => {
 
         <Separator size={'4'} />
 
-        <Text>{user?.bio || t('profile.view.bio')}</Text>
+        <Text
+          dangerouslySetInnerHTML={{
+            __html: user?.bio || t('profile.view.bio'),
+          }}
+        />
 
         <Separator size={'4'} />
 

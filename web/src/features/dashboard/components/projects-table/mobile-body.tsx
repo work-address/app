@@ -1,7 +1,8 @@
 import { QuestionMarkCircledIcon } from '@radix-ui/react-icons'
 import { Flex, Grid } from '@radix-ui/themes'
-import { memo } from 'react'
-import { useTranslation } from 'react-i18next'
+import { memo, useContext } from 'react'
+
+import { ProjectsTableContext } from './context.ts'
 
 import type { ProjectWithStats } from '@/entities/activities'
 import type { MobileBodyRenderProps } from '@/features/shared'
@@ -10,7 +11,7 @@ import { formatDurationFromMinutes, Text } from '@/features/shared'
 
 export const MobileBody = memo(
   (props: MobileBodyRenderProps<ProjectWithStats>) => {
-    const { t } = useTranslation()
+    const { t } = useContext(ProjectsTableContext)
 
     if (props.customKey === 'timeTotal' || props.customKey === 'timeActive') {
       const minutes =

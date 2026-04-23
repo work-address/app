@@ -22,6 +22,7 @@ import {
   IconButton,
   type InputProps,
 } from '@/features/shared'
+import { useDateFormatter } from '@/features/shared/hooks/formatters/use-date-formatter'
 
 type ProjectDialogProps = {
   open: boolean
@@ -82,7 +83,7 @@ export const ProjectDialog = ({
               onClick={() => row && onDeleteClick(row)}
             >
               <TrashIcon />
-              Delete
+              {t('common.delete')}
             </Button>
 
             <Flex gap={'3'}>
@@ -177,6 +178,7 @@ export const ProjectDialogContent = ({
   const { t } = useTranslation()
   const isMobile = useBreakpoint('isMobile')
   const isDesktop = useBreakpoint('isDesktop')
+  const dateFormatter = useDateFormatter()
 
   const { register } = useForm({
     values: data,
@@ -242,7 +244,9 @@ export const ProjectDialogContent = ({
                 </Text>
 
                 <Text weight={'medium'} size={textSize}>
-                  {data[key]}
+                  {key === 'createdAt' && data[key]
+                    ? dateFormatter.format(new Date(data[key]))
+                    : data[key]}
                 </Text>
               </Fragment>
             )

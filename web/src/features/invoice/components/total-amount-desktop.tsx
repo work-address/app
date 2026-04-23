@@ -54,7 +54,7 @@ export const TotalAmountDesktop = () => {
             <Skeleton width="50px" height="18px" loading={loading} />
           ) : (
             <Text $themeVariant={'primary'} weight={'medium'} size={'4'}>
-              {invoice?.totalAmount}
+              {invoice?.totalAmount} {t('currency.usdt')}
             </Text>
           )}
         </Flex>

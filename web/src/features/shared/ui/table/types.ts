@@ -18,6 +18,7 @@ export type DataTableColumnConfigRecord<T extends AnyRecord> = {
   width?: number
   horizontalAlign?: 'start' | 'center' | 'end'
   sticky?: 'right' | 'left'
+  sortable?: boolean
 } & CommonProps<T> &
   KeyProp<T>
 
@@ -51,5 +52,6 @@ export type DataProps<T extends AnyRecord> = {
   data: T[]
   getRowId: (data: T) => string | number
   loading?: boolean
+  isFiltering?: boolean
   mockDataLength?: number
 } & SelectionProps

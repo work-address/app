@@ -1,7 +1,6 @@
 import { Pencil1Icon, TrashIcon } from '@radix-ui/react-icons'
 import { Grid } from '@radix-ui/themes'
 import React, { useContext } from 'react'
-import { useTranslation } from 'react-i18next'
 
 import { ProjectsTableContext } from './context.ts'
 
@@ -11,8 +10,7 @@ import { Button, type MobileAddonBottomProps } from '@/features/shared'
 
 export const MobileAddonBottom = React.memo(
   ({ data }: MobileAddonBottomProps<ProjectWithStats>) => {
-    const { handleActionClick } = useContext(ProjectsTableContext)
-    const { t } = useTranslation()
+    const { handleActionClick, t } = useContext(ProjectsTableContext)
 
     return (
       <Grid columns={'1fr 1fr'} gap={'2'}>

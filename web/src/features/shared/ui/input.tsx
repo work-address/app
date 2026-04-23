@@ -16,6 +16,7 @@ export type InputProps = TextField.RootProps & {
   gap?: GridProps['gap']
   rows?: GridProps['rows']
   textSize?: TextProps['size']
+  textWeight?: TextProps['weight']
 }
 
 export const Input = ({
@@ -28,6 +29,7 @@ export const Input = ({
   gap,
   rows,
   textSize,
+  textWeight,
   size,
   ...props
 }: InputProps) => {
@@ -48,7 +50,7 @@ export const Input = ({
         <Text
           as={'label'}
           size={textSize || '2'}
-          weight={'medium'}
+          weight={textWeight || 'medium'}
           htmlFor={id}
         >
           {label}

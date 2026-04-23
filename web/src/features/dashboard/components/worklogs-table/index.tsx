@@ -1,3 +1,4 @@
+import { useUnit } from 'effector-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -7,135 +8,95 @@ import { WorklogsEmptyState } from '../worklogs-empty-state.tsx'
 import { BodyCellComponent } from './desktop-body-cell'
 import { WorklogsDesktopFilters } from './desktop-filters'
 import { WorklogsMobileFilters } from './mobile-filters'
+import { WorklogsContext } from './worklogs-context'
 
-import type { WorklogFormFilters, WorklogRow } from './types'
-
+import {
+  $allWorklogs,
+  $activitiesLoading,
+  $isWorklogsFiltering,
+  $worklogSort,
+  type Time,
+  resetWorklogSort,
+} from '@/entities/activities'
 import {
   type DataTableConfig,
   DataTable,
   useBreakpoint,
 } from '@/features/shared'
 
-const initialFormFilters = (): WorklogFormFilters => ({
-  timeActiveMin: '',
-  timeActiveMax: '',
-  keyboardMin: '',
-  keyboardMax: '',
-  mouseMin: '',
-  mouseMax: '',
-  mouseDistanceMin: '',
-  mouseDistanceMax: '',
-})
-
-type WorklogsTableProps = {
-  rows: WorklogRow[]
-}
-
-export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
-  const { t } = useTranslation()
+export const WorklogsTable = () => {
+  const { t, i18n } = useTranslation()
 
   const isMobile = useBreakpoint('isMobile')
   const isDesktop = useBreakpoint('isDesktop')
 
-  const [worklogQuery, setWorklogQuery] = useState('')
-  const [fromDate, setFromDate] = useState<Date | null>(null)
-  const [toDate, setToDate] = useState<Date | null>(null)
-  const [worklogProjects, setWorklogProjects] = useState<string[]>([])
+  const {
+    allWorklogs: worklogRows,
+    activitiesLoading,
+    isWorklogsFiltering,
+    worklogSort,
+    resetWorklogSortEvent,
+  } = useUnit({
+    allWorklogs: $allWorklogs,
+    activitiesLoading: $activitiesLoading,
+    isWorklogsFiltering: $isWorklogsFiltering,
+    worklogSort: $worklogSort,
+    resetWorklogSortEvent: resetWorklogSort,
+  })
+
   const [filtersOpen, setFiltersOpen] = useState(false)
-  const [projectsDrawerOpen, setProjectsDrawerOpen] = useState(false)
-  const [formFilters, setFormFilters] = useState(initialFormFilters)
 
-  const projectOptions = useMemo(
-    () => [
-      {
-        value: 'project-1',
-        label: t('dashboard.page.filters.projectOption', { number: 1 }),
-      },
-      {
-        value: 'project-2',
-        label: t('dashboard.page.filters.projectOption', { number: 2 }),
-      },
-      {
-        value: 'project-3',
-        label: t('dashboard.page.filters.projectOption', { number: 3 }),
-      },
-      {
-        value: 'project-4',
-        label: t('dashboard.page.filters.projectOption', { number: 4 }),
-      },
-    ],
-    [t],
-  )
-
-  const worklogRows = useMemo(() => {
-    return rows.filter((w) => {
-      const q = worklogQuery.trim().toLowerCase()
-      if (!q) {
-        return true
-      }
-      return w.note.toLowerCase().includes(q)
-    })
-  }, [rows, worklogQuery])
-
-  const hasWorklogs = worklogRows.length > 0
-
-  const selectedProjectsLabel = useMemo(() => {
-    if (worklogProjects.length === 0) {
-      return t('dashboard.page.filters.allWorklogs')
-    }
-    const selected = projectOptions
-      .filter((o) => worklogProjects.includes(o.value))
-      .map((o) => o.label)
-
-    return selected.length <= 2
-      ? selected.join(', ')
-      : `${selected.slice(0, 2).join(', ')} +${selected.length - 2}`
-  }, [projectOptions, t, worklogProjects])
+  const hasWorklogs = activitiesLoading || worklogRows.length > 0
 
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
 
+  const handleOnSortChange = (sort: Record<string, 'ASC' | 'DESC'>) => {
+    resetWorklogSortEvent(sort)
+  }
+
   const config = useMemo(
-    (): DataTableConfig<WorklogRow> => [
+    (): DataTableConfig<Time> => [
       {
-        dataKey: 'date',
+        dataKey: 'fromAt',
         headerText: t('dashboard.worklogsTable.head.date'),
         width: 165,
+        sortable: true,
       },
       {
-        dataKey: 'projectName',
+        customKey: 'projectName',
+        getValue: (row: Time) => row.activity?.title ?? '',
         headerText: t('dashboard.worklogsTable.head.projectName'),
         width: 229,
       },
       {
         dataKey: 'note',
         headerText: t('dashboard.worklogsTable.head.note'),
+        sortable: true,
       },
       {
-        dataKey: 'timeActive',
+        dataKey: 'minutesActive',
         headerText: t('dashboard.worklogsTable.head.timeActive'),
         horizontalAlign: 'center',
         width: 115,
+        sortable: true,
       },
       {
-        dataKey: 'paymentStatus',
-        headerText: t('dashboard.worklogsTable.head.paymentStatus'),
-        horizontalAlign: 'center',
-        width: 138,
-      },
-      {
-        dataKey: 'keyboard',
+        dataKey: 'keyboardKeys',
         headerText: t('dashboard.worklogsTable.head.keyboard'),
         width: 103,
+        sortable: true,
       },
       {
-        dataKey: 'mouse',
+        dataKey: 'mouseKeys',
         headerText: t('dashboard.worklogsTable.head.mouse'),
         width: 87,
+        sortable: true,
       },
       {
         dataKey: 'mouseDistance',
         headerText: t('dashboard.worklogsTable.head.mouseDistance'),
         width: 140,
+        sortable: true,
       },
       {
         dataKey: 'screenshot',
@@ -152,9 +113,21 @@ export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
     [t],
   )
 
-  const patchFormFilters = (patch: Partial<WorklogFormFilters>) => {
-    setFormFilters((p) => ({ ...p, ...patch }))
-  }
+  const worklogsContextValue = useMemo(
+    () => ({
+      dateFormatter: new Intl.DateTimeFormat(i18n.language, {
+        day: 'numeric',
+        month: 'numeric',
+        year: 'numeric',
+      }),
+      timeFormatter: new Intl.DateTimeFormat(i18n.language, {
+        hour: 'numeric',
+        minute: '2-digit',
+      }),
+      t,
+    }),
+    [i18n.language, t],
+  )
 
   return (
     <S.Section>
@@ -163,63 +136,33 @@ export const WorklogsTable = ({ rows }: WorklogsTableProps) => {
 
         {isMobile && (
           <WorklogsMobileFilters
-            projectOptions={projectOptions}
-            worklogProjects={worklogProjects}
-            onToggleProject={(value) =>
-              setWorklogProjects((prev) =>
-                prev.includes(value)
-                  ? prev.filter((v) => v !== value)
-                  : [...prev, value],
-              )
-            }
-            selectedProjectsLabel={selectedProjectsLabel}
             filtersOpen={filtersOpen}
             onFiltersOpenChange={setFiltersOpen}
-            projectsDrawerOpen={projectsDrawerOpen}
-            onProjectsDrawerOpenChange={setProjectsDrawerOpen}
-            fromDate={fromDate}
-            onFromDateChange={setFromDate}
-            toDate={toDate}
-            onToDateChange={setToDate}
-            worklogQuery={worklogQuery}
-            onWorklogQueryChange={setWorklogQuery}
-            formFilters={formFilters}
-            onFormFiltersChange={patchFormFilters}
-            onWorklogProjectsChange={setWorklogProjects}
           />
         )}
       </S.SectionTitleRow>
 
-      {isDesktop && (
-        <WorklogsDesktopFilters
-          projectOptions={projectOptions}
-          worklogProjects={worklogProjects}
-          onWorklogProjectsChange={setWorklogProjects}
-          fromDate={fromDate}
-          onFromDateChange={setFromDate}
-          toDate={toDate}
-          onToDateChange={setToDate}
-          worklogQuery={worklogQuery}
-          onWorklogQueryChange={setWorklogQuery}
-          formFilters={formFilters}
-          onFormFiltersChange={patchFormFilters}
-        />
-      )}
+      {isDesktop && <WorklogsDesktopFilters />}
 
       {hasWorklogs ? (
-        <>
-          <DataTable
+        <WorklogsContext.Provider value={worklogsContextValue}>
+          <DataTable<Time>
             nowrap
             data={worklogRows}
             config={config}
-            getRowId={(row) => row.key}
+            getRowId={(row) => row.id ?? ''}
             BodyComponent={BodyCellComponent}
             allowSelection
             selectedIds={selectedIds}
             onSelectedIdsChange={setSelectedIds}
-            height={isDesktop ? '67dvh' : undefined}
+            maxHeight={isDesktop ? '67dvh' : undefined}
+            loading={activitiesLoading}
+            isFiltering={isWorklogsFiltering}
+            sort={worklogSort}
+            onSortChange={handleOnSortChange}
+            skeletonHeight="40px"
           />
-        </>
+        </WorklogsContext.Provider>
       ) : (
         <WorklogsEmptyState />
       )}

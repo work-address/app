@@ -50,6 +50,10 @@ export const RichEditor = ({ value, onChange }: RichEditorProps) => {
     }
   }, [editor])
 
+  useEffect(() => {
+    editor?.commands.setContent(value || '')
+  }, [value, editor])
+
   return (
     <Wrapper>
       <FlexToolbar gap={'1'} align={'center'}>

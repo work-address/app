@@ -2,7 +2,7 @@ import { TrashIcon, PlusIcon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useCallback, useMemo, useState, useEffect } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -20,9 +20,11 @@ import { MobileHeader } from './mobile-header.tsx'
 import { ProjectDialog } from './project-dialog.tsx'
 
 import {
-  fetchActivities,
-  $activities,
+  $filteredActivities,
   $activitiesLoading,
+  $activityStateFilter,
+  changeActivityStateFilter,
+  type ActivityStateFilter,
   type ProjectWithStats,
 } from '@/entities/activities'
 import {
@@ -33,7 +35,6 @@ import {
 import {
   DataTable,
   MobileDataTable,
-  useDataProcessing,
   TabsRoot,
   TabsList,
   TabsTrigger,
@@ -48,44 +49,25 @@ export type ProjectStatus = 'Active' | 'Paused' | 'Finished'
 export const ProjectsTable = () => {
   const isMobile = useBreakpoint('isMobile')
 
-  const { fetchActivities: fetchActivitiesEvent, projects } = useUnit({
-    fetchActivities: fetchActivities,
-    projects: $activities,
+  const { projects, loading, activeTab, setTab } = useUnit({
+    projects: $filteredActivities,
     loading: $activitiesLoading,
+    activeTab: $activityStateFilter,
+    setTab: changeActivityStateFilter,
   })
-
-  const loading = true
 
   const { confirm } = useConfirm()
 
   const { t } = useTranslation()
 
-  const [activeTab, setActiveTab] = useState('all')
   const [selectedRow, setSelectedRow] = useState<ProjectWithStats | null>(null)
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
   const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false)
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
-  const { processedData, processSingleDataFilter, resetFilter } =
-    useDataProcessing({
-      data: projects,
-    })
-
   const handleTabClick = (tab: string) => {
-    setActiveTab(tab)
+    setTab(tab as ActivityStateFilter)
     setSelectedIds({})
-
-    switch (tab) {
-      case 'all': {
-        return resetFilter()
-      }
-      case 'active': {
-        return processSingleDataFilter('state', 'Active', 'equals')
-      }
-      case 'finished': {
-        return processSingleDataFilter('state', 'Finished', 'equals')
-      }
-    }
   }
 
   const handleActionClick: ProjectTableContextValues['handleActionClick'] =
@@ -137,6 +119,7 @@ export const ProjectsTable = () => {
         dataKey: 'earnings',
         width: 160,
         headerText: t('dashboard.projectsTable.head.earnings'),
+        getValue: (data) => `${data.earnings} ${t('currency.usdt')}`,
       },
       {
         dataKey: 'state',
@@ -157,12 +140,12 @@ export const ProjectsTable = () => {
       {
         dataKey: 'keyboardKeys',
         width: 160,
-        headerText: t('dashboard.projectsTable.head.keyboard'),
+        headerText: t('dashboard.projectsTable.head.keyboardKeys'),
       },
       {
         dataKey: 'mouseKeys',
         width: 160,
-        headerText: t('dashboard.projectsTable.head.mouse'),
+        headerText: t('dashboard.projectsTable.head.mouseKeys'),
       },
       {
         dataKey: 'mouseDistance',
@@ -193,11 +176,11 @@ export const ProjectsTable = () => {
       },
       {
         dataKey: 'keyboardKeys',
-        headerText: t('dashboard.projectsTable.head.keyboard'),
+        headerText: t('dashboard.projectsTable.head.keyboardKeys'),
       },
       {
         dataKey: 'mouseKeys',
-        headerText: t('dashboard.projectsTable.head.mouse'),
+        headerText: t('dashboard.projectsTable.head.mouseKeys'),
       },
       {
         dataKey: 'mouseDistance',
@@ -207,19 +190,23 @@ export const ProjectsTable = () => {
     [t],
   )
 
+  const projectsContextValues = useMemo(
+    (): ProjectTableContextValues => ({
+      handleActionClick,
+      t,
+    }),
+    [handleActionClick, t],
+  )
+
   const allowDeleteAll = useMemo(() => {
     const selected = Object.values(selectedIds)
 
     return (
       selected.length > 0 &&
-      processedData.length === selected.length &&
+      projects.length === selected.length &&
       selected.every(Boolean)
     )
-  }, [selectedIds, processedData])
-
-  useEffect(() => {
-    fetchActivitiesEvent()
-  }, [fetchActivitiesEvent])
+  }, [selectedIds, projects])
 
   return (
     <Flex direction={'column'} height={'100%'}>
@@ -288,7 +275,7 @@ export const ProjectsTable = () => {
             {projects.length === 0 && !loading ? (
               <ProjectsNotFound />
             ) : (
-              <ProjectsTableContext value={{ handleActionClick }}>
+              <ProjectsTableContext value={projectsContextValues}>
                 {isMobile ? (
                   <MobileDataTable
                     data={projects}
@@ -297,10 +284,11 @@ export const ProjectsTable = () => {
                     BodyComponent={MobileBody}
                     AddonBottomComponent={MobileAddonBottom}
                     HeaderComponent={MobileHeader}
-                    initialExpandedId={projects[0]?.id}
+                    expandedId={projects[0]?.id}
                     allowSelection
                     selectedIds={selectedIds}
                     onSelectedIdsChange={setSelectedIds}
+                    loading={loading}
                   />
                 ) : (
                   <DataTable
@@ -315,6 +303,8 @@ export const ProjectsTable = () => {
                     verticalAlign={'middle'}
                     nowrap
                     loading={loading}
+                    skeletonHeight="31px"
+                    mockDataLength={4}
                   />
                 )}
               </ProjectsTableContext>
