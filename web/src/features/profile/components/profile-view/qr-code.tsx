@@ -7,9 +7,10 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
+import { $profile } from '../../model'
+
 import { ProfileViewCard } from './styled'
 
-import { $user } from '@/entities/profile'
 import {
   Text,
   useBreakpoint,
@@ -30,7 +31,7 @@ export const QrCode = ({ gridArea }: QrCodeProps) => {
   const isDesktop = useBreakpoint('isDesktop')
 
   const { t } = useTranslation()
-  const user = useUnit($user)
+  const user = useUnit($profile)
 
   const [qrModalOpened, setQrModalOpened] = useState(false)
 

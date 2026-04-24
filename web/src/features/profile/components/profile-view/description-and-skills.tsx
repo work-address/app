@@ -4,9 +4,10 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
+import { $profile } from '../../model'
+
 import { ProfileViewCard } from './styled'
 
-import { $user } from '@/entities/profile'
 import { Text, useBreakpoint } from '@/features/shared'
 
 type DescriptionProps = {
@@ -31,7 +32,7 @@ export const DescriptionAndSkills = ({ gridArea }: DescriptionProps) => {
   const isMobile = useBreakpoint('isMobile')
   const { t } = useTranslation()
 
-  const user = useUnit($user)
+  const user = useUnit($profile)
 
   const skills = useMemo(
     () =>

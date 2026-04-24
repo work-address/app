@@ -5,11 +5,11 @@ import { useTranslation } from 'react-i18next'
 import { Link, NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
+import { $profile, $isAuthenticatedUserProfile } from '../../model'
 import { InfoRow } from '../info-row'
 
 import { ProfileViewCard } from './styled'
 
-import { $user } from '@/entities/profile'
 import {
   Button,
   showToast,
@@ -26,7 +26,11 @@ type ProfileLinksProps = {
 export const ProfileLinks = ({ gridArea }: ProfileLinksProps) => {
   const isDesktop = useBreakpoint('isDesktop')
   const { t } = useTranslation()
-  const user = useUnit($user)
+
+  const { user, isAuthenticatedUserProfile } = useUnit({
+    user: $profile,
+    isAuthenticatedUserProfile: $isAuthenticatedUserProfile,
+  })
 
   const walletAddress = formatWalletAddress(user?.friendlyWalletAddress || '')
 
@@ -85,12 +89,14 @@ export const ProfileLinks = ({ gridArea }: ProfileLinksProps) => {
                   <Share1Icon />
                 </Button>
 
-                <Link to={routes.profile.children.edit.build()}>
-                  <Button themeVariant={'primary'} size={'3'}>
-                    {t('common.edit')}
-                    <Pencil1Icon />
-                  </Button>
-                </Link>
+                {isAuthenticatedUserProfile && (
+                  <Link to={routes.profile.children.edit.build()}>
+                    <Button themeVariant={'primary'} size={'3'}>
+                      {t('common.edit')}
+                      <Pencil1Icon />
+                    </Button>
+                  </Link>
+                )}
               </Flex>
             </>
           ) : (
