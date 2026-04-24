@@ -6,7 +6,7 @@ import { Trans, useTranslation } from 'react-i18next'
 import { useInvoiceInfoFields } from '../hooks'
 
 import { $invoice, $invoiceLoading } from '@/entities/activities'
-import { Text, Button } from '@/features/shared'
+import { Text, Button } from '@/shared'
 
 export const TotalAmountDesktop = () => {
   const { t } = useTranslation()

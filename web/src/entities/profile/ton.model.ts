@@ -2,9 +2,9 @@ import { AxiosError } from 'axios'
 import { createEffect, createEvent } from 'effector'
 
 import type { AuthorizationHeaders } from './types.ts'
-import type { TonProofItemReplySuccess } from '@/features/shared'
+import type { TonProofItemReplySuccess } from '@/shared'
 
-import { baseApi, tonConnectProvider } from '@/features/shared'
+import { baseApi, tonConnectProvider } from '@/shared'
 
 type TonAuthSuccessPayload = {
   address: string

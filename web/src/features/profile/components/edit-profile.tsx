@@ -6,10 +6,10 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
-import type { baseApi } from '@/features/shared'
+import type { baseApi } from '@/shared'
 
 import { $user, saveProfileMutation } from '@/entities/profile'
-import { type CardProps } from '@/features/shared'
+import { routes } from '@/routes'
 import {
   Button,
   Card,
@@ -21,8 +21,8 @@ import {
   useBreakpoint,
   RichEditor,
   Spinner,
-} from '@/features/shared'
-import { routes } from '@/routes'
+} from '@/shared'
+import { type CardProps } from '@/shared'
 
 const INPUT_LABEL_WIDTH = '106px'
 

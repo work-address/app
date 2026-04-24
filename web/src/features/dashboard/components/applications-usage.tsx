@@ -12,11 +12,7 @@ import {
 } from 'recharts'
 import styled from 'styled-components'
 
-import {
-  formatDurationFromHoursFloat,
-  MotionSelect,
-  Card,
-} from '@/features/shared'
+import { formatDurationFromHoursFloat, MotionSelect, Card } from '@/shared'
 
 type Period = 'Week' | 'Month' | 'Year'
 

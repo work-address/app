@@ -28,11 +28,7 @@ import {
   type ProjectWithStats,
   deleteActivityMutation,
 } from '@/entities/activities'
-import {
-  type MobileDataTableConfig,
-  type DataTableConfig,
-  showToast,
-} from '@/features/shared'
+import { type MobileDataTableConfig, type DataTableConfig } from '@/shared'
 import {
   DataTable,
   MobileDataTable,
@@ -43,7 +39,8 @@ import {
   IconButton,
   useBreakpoint,
   useConfirm,
-} from '@/features/shared'
+  showToast,
+} from '@/shared'
 
 export type ProjectStatus = 'Active' | 'Paused' | 'Finished'
 

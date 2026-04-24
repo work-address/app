@@ -2,7 +2,7 @@ import { normalizeDataKeyToReadableString } from './utils.ts'
 
 import type { AnyRecord, MobileDataTableColumnConfigRecord } from './types'
 
-import { Text } from '@/features/shared'
+import { Text } from '@/shared'
 
 export type MobileHeaderRenderProps<T extends AnyRecord> = Omit<
   MobileDataTableColumnConfigRecord<T>,

@@ -2,7 +2,7 @@
 /// <reference types="vite-plugin-svgr/client" />
 
 import 'styled-components'
-import type { theme } from '@/features/shared'
+import type { theme } from '@/shared'
 
 type CustomTheme = typeof theme
 

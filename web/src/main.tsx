@@ -6,7 +6,7 @@ import { HelmetProvider } from 'react-helmet-async'
 import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { ThemeProvider } from 'styled-components'
-import '@/features/shared/i18n/i18n'
+import '@/shared/i18n/i18n'
 
 import { App } from './app/app'
 
@@ -16,7 +16,7 @@ import {
   Confirm,
   BreakpointsWatcher,
   SonnerRadixTheme,
-} from '@/features/shared'
+} from '@/shared'
 
 const rootElementId = 'root'
 const rootElement = document.getElementById(rootElementId)

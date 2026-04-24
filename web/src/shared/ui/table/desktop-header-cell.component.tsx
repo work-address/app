@@ -5,7 +5,7 @@ import { normalizeDataKeyToReadableString } from './utils.ts'
 
 import type { DataTableColumnConfigRecord, AnyRecord } from './types'
 
-import { Button, Text } from '@/features/shared'
+import { Button, Text } from '@/shared'
 
 export type DesktopHeaderCellRenderProps<T extends AnyRecord> = {
   DefaultHeaderComponent: typeof DesktopHeaderCellComponent<T>

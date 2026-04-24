@@ -3,7 +3,7 @@ import { useStoreMap, useUnit } from 'effector-react'
 import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import type { InputProps } from '@/features/shared'
+import type { InputProps } from '@/shared'
 
 import {
   changeWorklogFilters,
@@ -11,7 +11,7 @@ import {
   $activities,
   type WorklogsFilters,
 } from '@/entities/activities'
-import { Input, Text, DatePickerInput, MotionSelect } from '@/features/shared'
+import { Input, Text, DatePickerInput, MotionSelect } from '@/shared'
 
 type TwoSideInputProps = {
   label: string

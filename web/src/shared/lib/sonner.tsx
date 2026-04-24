@@ -2,10 +2,10 @@ import { Theme } from '@radix-ui/themes'
 import { toast } from 'sonner'
 import styled, { createGlobalStyle } from 'styled-components'
 
+import { InfoIcon } from '../assets'
+
 import type { ReactNode } from 'react'
 import type { ToasterProps } from 'sonner'
-
-import { InfoIcon } from '@/features/shared'
 
 type ToastProps = {
   title?: ReactNode

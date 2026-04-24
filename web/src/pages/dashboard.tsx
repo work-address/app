@@ -19,7 +19,7 @@ import {
   DashboardStyles as S,
   Search,
 } from '@/features/dashboard'
-import { Button, Text, Wrapper, useBreakpoint } from '@/features/shared'
+import { Button, Text, Wrapper, useBreakpoint } from '@/shared'
 
 export default function DashboardPage() {
   const isDesktop = useBreakpoint('isDesktop')

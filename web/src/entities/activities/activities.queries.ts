@@ -3,7 +3,7 @@ import { createQuery } from '@farfetched/core'
 import type { ITimeTotalDetail, WorklogSort } from './types'
 import type { ITimeTotal } from './types'
 
-import { baseApi } from '@/features/shared'
+import { baseApi } from '@/shared'
 
 export const activityDetailQuery = createQuery({
   handler: async (id: string) => {

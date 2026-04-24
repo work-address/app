@@ -11,6 +11,7 @@ import { $profile } from '../../model'
 
 import { ProfileViewCard } from './styled'
 
+import { routes } from '@/routes'
 import {
   Text,
   useBreakpoint,
@@ -18,8 +19,7 @@ import {
   Modal,
   showToast,
   formatWalletAddress,
-} from '@/features/shared'
-import { routes } from '@/routes'
+} from '@/shared'
 
 type QrCodeProps = {
   gridArea?: string

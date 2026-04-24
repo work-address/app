@@ -3,7 +3,7 @@ import styled from 'styled-components'
 
 import type { ReactNode } from 'react'
 
-import { Text } from '@/features/shared'
+import { Text } from '@/shared'
 
 type InfoRowProps = {
   icon?: ReactNode

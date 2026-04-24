@@ -12,7 +12,7 @@ import {
 } from './inputs'
 
 import { $worklogsFilters } from '@/entities/activities'
-import { Text } from '@/features/shared'
+import { Text } from '@/shared'
 
 export const WorklogsDesktopFilters = () => {
   const { t } = useTranslation()

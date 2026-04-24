@@ -1,6 +1,6 @@
-import type { ButtonProps as Work AddressButtonProps } from '@/features/shared'
+import type { ButtonProps as Work AddressButtonProps } from '@/shared'
 
-import { Button as Work AddressButton } from '@/features/shared'
+import { Button as Work AddressButton } from '@/shared'
 
 export interface ButtonProps extends Work AddressButtonProps {}
 

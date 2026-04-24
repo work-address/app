@@ -6,7 +6,7 @@ import { normalizeDataKeyToReadableString } from './utils.ts'
 import type { AnyRecord, MobileDataTableColumnConfigRecord } from './types'
 import type { ReactNode } from 'react'
 
-import { Text } from '@/features/shared'
+import { Text } from '@/shared'
 
 export type MobileBodyRenderProps<T extends AnyRecord> = {
   data: T

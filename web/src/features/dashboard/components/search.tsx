@@ -3,7 +3,7 @@ import { Flex } from '@radix-ui/themes'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { IconButton, Input, type InputProps } from '@/features/shared'
+import { IconButton, Input, type InputProps } from '@/shared'
 
 type SearchProps = {} & InputProps
 

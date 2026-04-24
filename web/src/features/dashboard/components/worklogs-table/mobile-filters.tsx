@@ -12,7 +12,7 @@ import {
 } from './inputs'
 
 import { $worklogsFilters, applyWorklogFilters } from '@/entities/activities'
-import { Button, Drawer, Text } from '@/features/shared'
+import { Button, Drawer, Text } from '@/shared'
 
 export type WorklogsMobileFiltersProps = {
   filtersOpen: boolean

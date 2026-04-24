@@ -7,8 +7,8 @@ import type { LoginMode } from '@/entities/profile'
 
 import { $authenticated, $pending, login } from '@/entities/profile'
 import { AuthFormStyles as S, ProviderButton } from '@/features/auth'
-import { Button, Spinner, useBreakpoint } from '@/features/shared'
 import { routes } from '@/routes'
+import { Button, Spinner, useBreakpoint } from '@/shared'
 
 export default function SignInPage() {
   const { t, i18n } = useTranslation()

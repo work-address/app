@@ -35,7 +35,7 @@ import {
   tonAuthSuccess,
 } from './ton.model'
 
-import { showToast } from '@/features/shared'
+import { showToast } from '@/shared'
 
 /**
  * Route login event to the appropriate wallet flow based on selected provider.

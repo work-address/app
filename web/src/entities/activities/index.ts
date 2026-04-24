@@ -26,7 +26,7 @@ import {
 } from './activities.queries'
 import { $worklogSort, $worklogsFilters } from './activities.stores'
 
-import { $breakpoints } from '@/features/shared'
+import { $breakpoints } from '@/shared'
 
 sample({
   clock: fetchActivities,

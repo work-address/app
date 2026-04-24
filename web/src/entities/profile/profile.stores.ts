@@ -18,7 +18,7 @@ import { disconnectTonFx, loginTonFx, tonDisconnected } from './ton.model'
 import type { EthModalResult } from './eth.model'
 import type { LoginMode } from './types'
 
-import { getFriendlyWalletAddress, type baseApi } from '@/features/shared'
+import { getFriendlyWalletAddress, type baseApi } from '@/shared'
 
 export const $loginMode = createStore<LoginMode | null>(null).on(
   login,

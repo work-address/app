@@ -7,13 +7,13 @@ import { ProjectsTableContext } from './context.ts'
 
 import type { ProjectWithStats } from '@/entities/activities'
 
+import { routes } from '@/routes'
 import {
   type DesktopBodyCellRenderProps,
   IconButton,
   Text,
   formatDurationFromMinutes,
-} from '@/features/shared'
-import { routes } from '@/routes'
+} from '@/shared'
 
 const statusTranslationKey = (status: string) => {
   const key = status.toLowerCase()

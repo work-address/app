@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 
-import { Button } from '@/features/shared'
+import { Button } from '@/shared'
 
 type DashboardEmptyStateProps = {
   imageSrc: string

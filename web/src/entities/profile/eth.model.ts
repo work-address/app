@@ -5,7 +5,7 @@ import { BrowserProvider } from 'ethers'
 import type { AuthorizationHeaders } from './types.ts'
 import type { JsonRpcSigner } from 'ethers'
 
-import { baseApi, reownEthProvider } from '@/features/shared'
+import { baseApi, reownEthProvider } from '@/shared'
 
 export type EthModalResult = {
   signer: JsonRpcSigner

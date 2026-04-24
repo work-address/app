@@ -8,7 +8,7 @@ import { $profile } from '../../model'
 
 import { ProfileViewCard } from './styled'
 
-import { Text, useBreakpoint } from '@/features/shared'
+import { Text, useBreakpoint } from '@/shared'
 
 type DescriptionProps = {
   gridArea?: string

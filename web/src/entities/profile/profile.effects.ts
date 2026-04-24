@@ -3,7 +3,7 @@ import { createEffect } from 'effector'
 
 import type { GetNonceParams } from './types'
 
-import { baseApi } from '@/features/shared'
+import { baseApi } from '@/shared'
 
 export const LOCAL_STORAGE_AUTH_KEY = 'authenticated'
 export const LOCAL_STORAGE_ACCESS_TOKEN = 'access_token'

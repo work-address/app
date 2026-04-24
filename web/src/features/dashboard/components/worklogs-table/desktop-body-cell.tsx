@@ -12,7 +12,7 @@ import {
   formatDurationFromMinutes,
   getTimeActiveColor,
   Text,
-} from '@/features/shared'
+} from '@/shared'
 
 const BodyCellComponent = memo((props: DesktopBodyCellRenderProps<Time>) => {
   const { dateFormatter, timeFormatter, t } = useContext(WorklogsContext)

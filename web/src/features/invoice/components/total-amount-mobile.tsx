@@ -9,7 +9,7 @@ import styled from 'styled-components'
 import { useInvoiceInfoFields } from '../hooks'
 
 import { $invoice, $invoiceLoading } from '@/entities/activities'
-import { Text } from '@/features/shared'
+import { Text } from '@/shared'
 
 export const TotalAmountMobile = () => {
   const { t } = useTranslation()

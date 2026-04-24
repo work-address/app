@@ -4,7 +4,7 @@ import { sample, combine } from 'effector'
 import { createGate } from 'effector-react'
 
 import { $user } from '@/entities/profile'
-import { baseApi, getFriendlyWalletAddress } from '@/features/shared'
+import { baseApi, getFriendlyWalletAddress } from '@/shared'
 
 const ProfileGate = createGate<{ userId: string | null }>({
   defaultState: { userId: null },

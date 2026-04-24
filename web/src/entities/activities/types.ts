@@ -1,4 +1,4 @@
-import type { baseApi } from '@/features/shared'
+import type { baseApi } from '@/shared'
 
 export type ActivityStateFilter = 'all' | 'Active' | 'Finished'
 

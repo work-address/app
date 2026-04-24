@@ -6,7 +6,7 @@ import {
   dateFormatter,
   numberFormatter,
   formatDurationFromMinutes,
-} from '@/features/shared'
+} from '@/shared'
 
 export type InvoiceFieldId =
   | 'issueDate'

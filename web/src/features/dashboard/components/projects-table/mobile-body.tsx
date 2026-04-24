@@ -5,9 +5,9 @@ import { memo, useContext } from 'react'
 import { ProjectsTableContext } from './context.ts'
 
 import type { ProjectWithStats } from '@/entities/activities'
-import type { MobileBodyRenderProps } from '@/features/shared'
+import type { MobileBodyRenderProps } from '@/shared'
 
-import { formatDurationFromMinutes, Text } from '@/features/shared'
+import { formatDurationFromMinutes, Text } from '@/shared'
 
 export const MobileBody = memo(
   (props: MobileBodyRenderProps<ProjectWithStats>) => {

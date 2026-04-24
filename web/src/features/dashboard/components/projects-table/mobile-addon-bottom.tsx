@@ -6,7 +6,7 @@ import { ProjectsTableContext } from './context.ts'
 
 import type { ProjectWithStats } from '@/entities/activities'
 
-import { Button, type MobileAddonBottomProps } from '@/features/shared'
+import { Button, type MobileAddonBottomProps } from '@/shared'
 
 export const MobileAddonBottom = React.memo(
   ({ data }: MobileAddonBottomProps<ProjectWithStats>) => {

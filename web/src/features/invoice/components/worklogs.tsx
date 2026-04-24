@@ -6,10 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { WorklogsContext } from './worklogs-context'
 
 import type { WorklogsContextProps } from './worklogs-context'
-import type {
-  DesktopBodyCellRenderProps,
-  DataTableConfig,
-} from '@/features/shared'
+import type { DesktopBodyCellRenderProps, DataTableConfig } from '@/shared'
 
 import {
   $invoice,
@@ -22,7 +19,7 @@ import {
   formatDurationFromMinutes,
   getTimeActiveColor,
   Text,
-} from '@/features/shared'
+} from '@/shared'
 
 export const Worklogs = () => {
   const { t, i18n } = useTranslation()

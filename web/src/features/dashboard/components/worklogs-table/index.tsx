@@ -18,11 +18,7 @@ import {
   type Time,
   resetWorklogSort,
 } from '@/entities/activities'
-import {
-  type DataTableConfig,
-  DataTable,
-  useBreakpoint,
-} from '@/features/shared'
+import { type DataTableConfig, DataTable, useBreakpoint } from '@/shared'
 
 export const WorklogsTable = () => {
   const { t, i18n } = useTranslation()

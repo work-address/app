@@ -1,7 +1,7 @@
 import { Flex } from '@radix-ui/themes'
 import styled from 'styled-components'
 
-import { Card } from '@/features/shared'
+import { Card } from '@/shared'
 
 export const Logo = styled.img`
   width: auto;

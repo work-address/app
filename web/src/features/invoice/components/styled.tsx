@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 
-import { Card } from '@/features/shared'
+import { Card } from '@/shared'
 
 export const InvoiceCard = styled(Card)`
   ${(p) => p.theme.breakpoints.down('md')} {

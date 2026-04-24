@@ -10,14 +10,14 @@ import { InfoRow } from '../info-row'
 
 import { ProfileViewCard } from './styled'
 
+import { routes } from '@/routes'
 import {
   Button,
   showToast,
   Text,
   useBreakpoint,
   formatWalletAddress,
-} from '@/features/shared'
-import { routes } from '@/routes'
+} from '@/shared'
 
 type ProfileLinksProps = {
   gridArea?: string
