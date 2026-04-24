@@ -15,8 +15,8 @@ import {
   TotalAmountMobile,
   Worklogs,
 } from '@/features/invoice'
+import { Card, IconButton, Text } from '@/features/shared'
 import { routes } from '@/routes'
-import { Card, IconButton, Text } from '@/shared'
 
 export default function InvoicePage() {
   const { id } = useParams<{ id: string }>()

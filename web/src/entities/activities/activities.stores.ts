@@ -24,7 +24,7 @@ import type {
   WorklogSort,
   ActivityStateFilter,
 } from './types'
-import type { baseApi } from '@/shared'
+import type { baseApi } from '@/features/shared'
 
 export const $activityStateFilter = createStore<ActivityStateFilter>('all').on(
   changeActivityStateFilter,

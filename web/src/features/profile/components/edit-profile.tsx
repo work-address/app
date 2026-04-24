@@ -9,7 +9,7 @@ import styled from 'styled-components'
 import type { baseApi } from '@/shared'
 
 import { $user, saveProfileMutation } from '@/entities/profile'
-import { routes } from '@/routes'
+import { type CardProps } from '@/features/shared'
 import {
   Button,
   Card,
@@ -21,8 +21,8 @@ import {
   useBreakpoint,
   RichEditor,
   Spinner,
-} from '@/shared'
-import { type CardProps } from '@/shared'
+} from '@/features/shared'
+import { routes } from '@/routes'
 
 const INPUT_LABEL_WIDTH = '106px'
 

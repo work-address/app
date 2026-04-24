@@ -13,7 +13,8 @@ import {
   IconButton,
   Text,
   formatDurationFromMinutes,
-} from '@/shared'
+} from '@/features/shared'
+import { routes } from '@/routes'
 
 const statusTranslationKey = (status: string) => {
   const key = status.toLowerCase()

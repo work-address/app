@@ -18,7 +18,7 @@ import { disconnectTonFx, loginTonFx, tonDisconnected } from './ton.model'
 import type { EthModalResult } from './eth.model'
 import type { LoginMode } from './types'
 
-import { getFriendlyWalletAddress, type baseApi } from '@/shared'
+import { toUserFriendlyTonAddress, type baseApi } from '@/features/shared'
 
 export const $loginMode = createStore<LoginMode | null>(null).on(
   login,
@@ -47,7 +47,11 @@ export const $user = createStore<baseApi.User | null>(null)
 export const $normalizedUser = $user.map((user) => ({
   ...user,
   // TODO: set chain property on backend after authentication
-  friendlyWalletAddress: getFriendlyWalletAddress(user?.address),
+  friendlyWalletAddress: user?.address
+    ? user.address.includes(':')
+      ? toUserFriendlyTonAddress(user.address)
+      : user.address.toLowerCase()
+    : null,
 }))
 
 export const $initialized = createStore(false).on(setInitialized, () => true)

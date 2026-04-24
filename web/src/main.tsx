@@ -16,7 +16,7 @@ import {
   Confirm,
   BreakpointsWatcher,
   SonnerRadixTheme,
-} from '@/shared'
+} from '@/features/shared'
 
 const rootElementId = 'root'
 const rootElement = document.getElementById(rootElementId)

@@ -1,7 +1,7 @@
 import { createMutation } from '@farfetched/core'
 import { AxiosError } from 'axios'
 
-import { baseApi } from '@/shared'
+import { baseApi } from '@/features/shared'
 
 export const createActivityMutation = createMutation({
   handler: async (activity: baseApi.Activity) => {

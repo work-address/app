@@ -4,7 +4,7 @@ import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
-import type { baseApi } from '@/shared'
+import type { baseApi } from '@/features/shared'
 
 import { createActivityMutation } from '@/entities/activities'
 import {
@@ -17,7 +17,7 @@ import {
   TextArea,
   useBreakpoint,
   Spinner,
-} from '@/shared'
+} from '@/features/shared'
 
 type CreateProjectPayload = {
   name: string
