@@ -19,8 +19,7 @@ import {
   Modal,
   showToast,
   formatWalletAddress,
-} from '@/features/shared'
-import { routes } from '@/routes'
+} from '@/shared'
 
 type QrCodeProps = {
   gridArea?: string

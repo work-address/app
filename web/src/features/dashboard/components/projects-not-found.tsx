@@ -2,8 +2,8 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { Button } from '@/features/shared'
 import { routes } from '@/routes'
+import { Button } from '@/shared'
 
 export const ProjectsNotFound = () => {
   const { t } = useTranslation()

@@ -1,7 +1,7 @@
 import { createMutation } from '@farfetched/core'
 import { AxiosError } from 'axios'
 
-import { baseApi } from '@/features/shared'
+import { baseApi } from '@/shared'
 
 export const saveProfileMutation = createMutation({
   handler: async (params: baseApi.User) => {

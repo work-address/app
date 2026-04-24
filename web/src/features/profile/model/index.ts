@@ -4,21 +4,21 @@ import { sample, combine } from 'effector'
 import { createGate } from 'effector-react'
 
 import { $user } from '@/entities/profile'
-import {
-  baseApi,
-  getFriendlyWalletAddress,
-  decodeFriendWalletAddress,
-} from '@/shared'
+import { baseApi, getFriendlyWalletAddress } from '@/shared'
 
-const ProfileGate = createGate<{ friendlyWalletAddress: string | null }>({
-  defaultState: { friendlyWalletAddress: null },
+const ProfileGate = createGate<{ userId: string | null }>({
+  defaultState: { userId: null },
 })
 
 const profileQuery = createQuery({
-  handler: async (walletAddress: string) => {
-    const result = await baseApi.userControllerRead({
-      path: {
-        address: walletAddress,
+  handler: async (id: string) => {
+    const result = await baseApi.userControllerSearch({
+      body: {
+        filter: {
+          id,
+        },
+        sort: {},
+        page: 0,
       },
     })
 
@@ -26,15 +26,17 @@ const profileQuery = createQuery({
       throw result
     }
 
-    return result.data
+    return {
+      items: (result.data as [baseApi.User[], number])[0],
+      total: (result.data as [baseApi.User[], number])[1],
+    }
   },
 })
 
 const $isAuthenticatedUserProfile = combine(
   $user,
   ProfileGate.state,
-  (user, gateState) =>
-    user.friendlyWalletAddress === gateState.friendlyWalletAddress,
+  (user, gateState) => user.id === gateState.userId,
 )
 
 sample({
@@ -42,10 +44,7 @@ sample({
   source: combine($user, $isAuthenticatedUserProfile),
   filter: ([user, isAuthenticatedUserProfile]) =>
     !isAuthenticatedUserProfile && user.id !== '',
-  fn: (_, gateState) =>
-    gateState.friendlyWalletAddress
-      ? decodeFriendWalletAddress(gateState.friendlyWalletAddress)
-      : '',
+  fn: (_, gateState) => gateState.userId || '',
   target: profileQuery.start,
 })
 
@@ -54,14 +53,16 @@ const $profile = combine(
   profileQuery.$data,
   ProfileGate.state,
   (user, data, gateState) => {
-    if (gateState.friendlyWalletAddress === user.friendlyWalletAddress) {
+    if (gateState.userId === user.id) {
       return user
     }
 
-    return data
+    const profile = data?.items[0]
+
+    return profile
       ? {
-          ...data,
-          friendlyWalletAddress: getFriendlyWalletAddress(data.address),
+          ...profile,
+          friendlyWalletAddress: getFriendlyWalletAddress(profile.address),
         }
       : null
   },

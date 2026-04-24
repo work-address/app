@@ -10,7 +10,7 @@ import { Fragment, useEffect, useRef, useState } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
-import type { baseApi } from '@/features/shared'
+import type { baseApi } from '@/shared'
 
 import {
   $rawActivities,
@@ -28,8 +28,8 @@ import {
   IconButton,
   Spinner,
   type InputProps,
-} from '@/features/shared'
-import { useDateFormatter } from '@/features/shared'
+  useDateFormatter,
+} from '@/shared'
 
 type ProjectDialogProps = {
   open: boolean

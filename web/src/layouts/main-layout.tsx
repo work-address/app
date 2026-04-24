@@ -6,8 +6,8 @@ import styled from 'styled-components'
 import type { MotionProps } from 'motion/react'
 
 import { $authenticated } from '@/entities/profile'
-import { useBreakpoint } from '@/features/shared'
 import { routes } from '@/routes'
+import { useBreakpoint } from '@/shared'
 import { Header } from '@/widgets'
 
 export const MainLayout = () => {

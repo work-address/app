@@ -17,8 +17,7 @@ import {
   Text,
   useBreakpoint,
   formatWalletAddress,
-} from '@/features/shared'
-import { routes } from '@/routes'
+} from '@/shared'
 
 type ProfileLinksProps = {
   gridArea?: string
@@ -27,6 +26,11 @@ type ProfileLinksProps = {
 export const ProfileLinks = ({ gridArea }: ProfileLinksProps) => {
   const isDesktop = useBreakpoint('isDesktop')
   const { t } = useTranslation()
+
+  const { user, isAuthenticatedUserProfile } = useUnit({
+    user: $profile,
+    isAuthenticatedUserProfile: $isAuthenticatedUserProfile,
+  })
 
   const walletAddress = formatWalletAddress(user?.friendlyWalletAddress || '')
 
@@ -85,12 +89,14 @@ export const ProfileLinks = ({ gridArea }: ProfileLinksProps) => {
                   <Share1Icon />
                 </Button>
 
-                <Link to={routes.profile.children.edit.build()}>
-                  <Button themeVariant={'primary'} size={'3'}>
-                    {t('common.edit')}
-                    <Pencil1Icon />
-                  </Button>
-                </Link>
+                {isAuthenticatedUserProfile && (
+                  <Link to={routes.profile.children.edit.build()}>
+                    <Button themeVariant={'primary'} size={'3'}>
+                      {t('common.edit')}
+                      <Pencil1Icon />
+                    </Button>
+                  </Link>
+                )}
               </Flex>
             </>
           ) : (

@@ -11,8 +11,8 @@ import { DesktopMenu } from './desktop-menu.tsx'
 import { MobileMenu, itemVariants } from './mobile-menu.tsx'
 
 import { $user, logout } from '@/entities/profile'
-import { formatWalletAddress, useBreakpoint } from '@/features/shared'
 import { routes } from '@/routes'
+import { formatWalletAddress, useBreakpoint } from '@/shared'
 
 export const Header = () => {
   const { t } = useTranslation()
