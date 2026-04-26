@@ -1,6 +1,6 @@
-# Work Address API
+# Address Work API
 
-Backend for [Work Address](https://address.work/): time tracking and decentralized freelance identity. REST API built with Node.js, TypeScript, Express, and TypeORM (PostgreSQL).
+Backend for [Address Work](https://address.work/): time tracking and decentralized freelance identity. REST API built with Node.js, TypeScript, Express, and TypeORM (PostgreSQL).
 
 ## Requirements
 
@@ -17,7 +17,7 @@ From the **monorepo root** (`app/`):
 pnpm install
 ```
 
-Dependencies for this package are installed as workspace member `work-address`.
+Dependencies for this package are installed as workspace member `address-work`.
 
 ## Configuration
 
@@ -34,8 +34,8 @@ Key variables (see `.env.example`): `APP_HOST`, `APP_PORT`, `APP_DB_*`, `APP_RED
 Create databases (names should match your env):
 
 ```sql
-CREATE DATABASE workaddress_dev;
-CREATE DATABASE workaddress_test;
+CREATE DATABASE address_work_dev;
+CREATE DATABASE address_work_test;
 ```
 
 Apply the schema with TypeORM (run from **`api/`**):
@@ -115,4 +115,3 @@ Integration-style controller tests expect Postgres/Redis according to your test 
 ## Links
 
 - [address.work](https://address.work/)
-- [github.com/work-address](https://github.com/work-address)

@@ -32,7 +32,9 @@ export default function SignInPage() {
       />
 
       <S.Logo
-        src={isDesktop ? '/img/photo/logo.svg' : '/img/photo/logo.svg'}
+        src={
+          isDesktop ? '/img/photo/address-work-logo.svg' : '/img/photo/logo.svg'
+        }
         alt={t('signIn.logoAlt')}
       />
 

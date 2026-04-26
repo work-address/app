@@ -1,7 +1,7 @@
 import { BrowserRouter, Route, Routes } from 'react-router-dom'
 import { ThemeProvider } from 'styled-components'
 
-import Work AddressSignInPage from '@/pages/sign-in.tsx'
+import SignInPageView from '@/pages/sign-in.tsx'
 import { theme } from '@/shared'
 
 export const SignInPage = () => {
@@ -9,7 +9,7 @@ export const SignInPage = () => {
     <ThemeProvider theme={theme}>
       <BrowserRouter>
         <Routes>
-          <Route path={'*'} element={<Work AddressSignInPage />} />
+          <Route path={'*'} element={<SignInPageView />} />
         </Routes>
       </BrowserRouter>
     </ThemeProvider>

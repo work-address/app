@@ -1,14 +1,14 @@
-import type { ButtonProps as Work AddressButtonProps } from '@/shared'
+import type { ButtonProps as SharedButtonProps } from '@/shared'
 
-import { Button as Work AddressButton } from '@/shared'
+import { Button as SharedButton } from '@/shared'
 
-export interface ButtonProps extends Work AddressButtonProps {}
+export interface ButtonProps extends SharedButtonProps {}
 
 /** Primary UI component for user interaction */
 export const Button = ({ children = 'Button', ...props }: ButtonProps) => {
   return (
-    <Work AddressButton type="button" {...props}>
+    <SharedButton type="button" {...props}>
       {children}
-    </Work AddressButton>
+    </SharedButton>
   )
 }

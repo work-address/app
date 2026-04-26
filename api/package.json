@@ -1,9 +1,6 @@
 {
-  "name": "work-address",
   "version": "0.0.0",
-  "description": "Time tracking and Decentralized Freelance Identity",
   "private": true,
-  "author": "address.work",
   "license": "MIT",
   "engines": {
     "node": ">=18"

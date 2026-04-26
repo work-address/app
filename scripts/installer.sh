@@ -7,7 +7,7 @@ fi
 set -e
 
 # =============================================================================
-# Work Address Production Installer
+# Address Work production installer
 # Bootstrap script for fresh Linux - installs Docker, configures env, runs app
 # Run from project root after: git clone <repo> && cd app
 # Works with sh (dash), bash, etc.
@@ -126,7 +126,7 @@ if [ -n "${APP_DB_PASSWORD}" ] && [ -n "${APP_JWT_SECRET}" ]; then
   APP_DB_HOST=${APP_DB_HOST:-localhost}
   APP_DB_PORT=${APP_DB_PORT:-5432}
   APP_DB_USERNAME=${APP_DB_USERNAME:-postgres}
-  APP_DB_NAME=${APP_DB_NAME:-workaddress}
+  APP_DB_NAME=${APP_DB_NAME:-address_work}
   APP_SENTRY=${APP_SENTRY:-}
 else
   printf 'APP_DB_HOST (Postgres host) [localhost]: ' >&2
@@ -144,9 +144,9 @@ else
   printf 'APP_DB_PASSWORD: ' >&2
   read -r APP_DB_PASSWORD
 
-  printf 'APP_DB_NAME [work-address]: ' >&2
+  printf 'APP_DB_NAME [address_work]: ' >&2
   read -r APP_DB_NAME
-  APP_DB_NAME=${APP_DB_NAME:-workaddress}
+  APP_DB_NAME=${APP_DB_NAME:-address_work}
 
   printf 'APP_JWT_SECRET (min 32 chars): ' >&2
   read -r APP_JWT_SECRET
@@ -202,7 +202,7 @@ if run_docker ps | grep -q app-nginx-proxy; then
   log_info "Services are running."
   printf '\n'
   printf '%b\n' "${GREEN}============================================${NC}"
-  printf '%b\n' "${GREEN}  Work Address is running in production mode${NC}"
+  printf '%b\n' "${GREEN}  Address Work is running in production mode${NC}"
   printf '%b\n' "${GREEN}============================================${NC}"
   printf '\n'
   printf '  URL: http://localhost:8000\n'

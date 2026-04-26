@@ -1,5 +1,7 @@
 {
-  "name": "app",
+  "name": "work-address",
+  "description": "Time tracking and Decentralized Freelance Identity",
+  "author": "https://address.work",
   "private": true,
   "version": "0.0.1",
   "type": "module",
