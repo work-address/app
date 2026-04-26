@@ -12,7 +12,6 @@ import {Faker} from '../../service/Faker';
 
 import {UserFixture} from '../fixture/UserFixture';
 import {ActivityFixture} from '../fixture/ActivityFixture';
-import {ProposalRepository} from '../../repository/ProposalRepository';
 import {ProposalFixture} from '../fixture/ProposalFixture';
 import {InvoiceFixture} from '../fixture/InvoiceFixture ';
 import {TimeFixture} from '../fixture/TimeFixture';
@@ -31,7 +30,6 @@ export class BaseControllerTest {
   protected invoiceFixture: InvoiceFixture;
   protected timeFixture: TimeFixture;
   protected proposalFixture: ProposalFixture;
-  protected proposalRepository: ProposalRepository;
   protected userFixture: UserFixture;
 
   constructor() {

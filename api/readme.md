@@ -48,8 +48,8 @@ NODE_ENV=test pnpm run typeorm:cli -- schema:sync
 Drop and recreate (destructive):
 
 ```sh
-NODE_ENV=test pnpm run typeorm:cli -- schema:drop
-NODE_ENV=test pnpm run typeorm:cli -- schema:sync
+NODE_ENV=test npm run typeorm:cli -- schema:drop
+NODE_ENV=test npm run typeorm:cli -- schema:sync
 ```
 
 ## Scripts
@@ -79,7 +79,6 @@ All HTTP routes are under the **`/api`** prefix.
 | `/api/auth/timeTracker` | Time-tracker auth (nonce, login, connect)        |
 | `/api/user`             | User search, profile by address, updates         |
 | `/api/activity`         | Activities: CRUD, search, accept proposal, close |
-| `/api/proposal`         | Proposals: search, create, update, delete        |
 | `/api/time`             | Time entries: search, create, report, totals     |
 | `/api/invoice`          | Invoices: search, by activity, fetch by id       |
 | `/api/help`             | OpenAPI export                                   |

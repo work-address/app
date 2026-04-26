@@ -5,18 +5,15 @@ import {BaseControllerTest} from './BaseController.test';
 import {ActivityManager} from '../../service/ActivityManager';
 import {EActivityState} from '../../interface/EActivityState';
 import {EInvoiceState} from '../../interface/EInvoiceState';
-import {ProposalRepository} from '../../repository/ProposalRepository';
 
 @suite
 @skip
 export class InvoiceControllerTest extends BaseControllerTest {
   protected activityManager: ActivityManager;
-  protected proposalRepository: ProposalRepository;
 
   constructor() {
     super();
 
-    this.proposalRepository = this.container.get('ProposalRepository');
     this.activityManager = this.container.get('ActivityManager');
   }
 

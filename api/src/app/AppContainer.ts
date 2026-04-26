@@ -19,10 +19,8 @@ import {ActivityManager} from '../service/ActivityManager';
 import {ProposalFixture} from '../test/fixture/ProposalFixture';
 import {TimeFixture} from '../test/fixture/TimeFixture';
 import {InvoiceFixture} from '../test/fixture/InvoiceFixture ';
-import {ProposalRepository} from '../repository/ProposalRepository';
 import {TimeRepository} from '../repository/TimeRepository';
 import {InvoiceRepository} from '../repository/InvoiceRepository';
-import {ProposalManager} from '../service/ProposalManager';
 import {TimeManager} from '../service/TimeManager';
 import {InvoiceManager} from '../service/InvoiceManager';
 import {AuthenticatorTimeTracker} from '../service/auth/AuthenticatorTimeTracker';
@@ -51,7 +49,6 @@ export class AppContainer {
     // Repositories
     container.bind<UserRepository>('UserRepository').to(UserRepository);
     container.bind<ActivityRepository>('ActivityRepository').to(ActivityRepository);
-    container.bind<ProposalRepository>('ProposalRepository').to(ProposalRepository);
     container.bind<TimeRepository>('TimeRepository').to(TimeRepository);
     container.bind<InvoiceRepository>('InvoiceRepository').to(InvoiceRepository);
 
@@ -64,7 +61,6 @@ export class AppContainer {
     container.bind<RedisClient>('RedisClient').to(RedisClient);
     container.bind<Filter>('Filter').to(Filter);
     container.bind<UserManager>('UserManager').to(UserManager);
-    container.bind<ProposalManager>('ProposalManager').to(ProposalManager);
     container.bind<TimeManager>('TimeManager').to(TimeManager);
     container.bind<InvoiceManager>('InvoiceManager').to(InvoiceManager);
     container.bind<Mailer>('Mailer').to(Mailer);
