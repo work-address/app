@@ -78,9 +78,9 @@ All HTTP routes are under the **`/api`** prefix.
 | `/api/auth`             | Ethereum / TON login, nonce, refresh, status     |
 | `/api/auth/timeTracker` | Time-tracker auth (nonce, login, connect)        |
 | `/api/user`             | User search, profile by address, updates         |
-| `/api/activity`         | Activities: CRUD, search, accept proposal, close |
+| `/api/project`         | Projects: CRUD, search, close                     |
 | `/api/time`             | Time entries: search, create, report, totals     |
-| `/api/invoice`          | Invoices: search, by activity, fetch by id       |
+| `/api/invoice`          | Invoices: search, by project, fetch by id       |
 | `/api/help`             | OpenAPI export                                   |
 
 For exact paths and bodies, use Swagger or the OpenAPI JSON above.

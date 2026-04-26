@@ -54,7 +54,6 @@ export const CreateProjectModal = ({
       title: '',
       rateHour: '',
       text: '',
-      type: 'Personal',
       state: 'Published',
     },
   })
