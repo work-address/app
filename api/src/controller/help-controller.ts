@@ -1,8 +1,8 @@
 import { Get, JsonController } from 'routing-controllers'
 import { OpenAPI } from 'routing-controllers-openapi'
 
-import { App } from '../app/app'
-import { OpenApi } from '../service/open-api'
+import { App } from '@/app/app'
+import { OpenApi } from '@/service/open-api'
 
 @JsonController('/help')
 export class HelpController {

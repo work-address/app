@@ -1,6 +1,7 @@
 {
   "extends": "../tsconfig.base.json",
   "compilerOptions": {
+    "baseUrl": ".",
     "composite": true,
     "rootDir": "./src",
     "target": "ES2018",
@@ -12,7 +13,10 @@
     "moduleResolution": "node",
     "inlineSources": true,
     "experimentalDecorators": true,
-    "emitDecoratorMetadata": true
+    "emitDecoratorMetadata": true,
+    "paths": {
+      "@/*": ["./src/*"]
+    }
   },
   "exclude": ["node_modules", "build", "dist"]
 }

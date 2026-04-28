@@ -1,9 +1,9 @@
 import faker from 'faker'
 import { inject, injectable } from 'inversify'
-import { Project } from '../../entity/project'
+import { Project } from '@/entity/project'
 
-import { TimeRepository } from '../../repository/time-repository'
-import { Time } from '../../entity/time'
+import { TimeRepository } from '@/repository/time-repository'
+import { Time } from '@/entity/time'
 
 @injectable()
 export class TimeFixture {

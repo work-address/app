@@ -2,8 +2,8 @@ import * as web3 from 'web3'
 import { expect } from 'chai'
 import { suite, test } from '@testdeck/mocha'
 
-import { AbstractDatabaseIntegration } from '../abstract-database.integration'
-import { Signer } from '../../service/auth/signer'
+import { AbstractDatabaseIntegration } from '@/test/abstract-database.integration'
+import { Signer } from '@/service/auth/signer'
 
 @suite()
 export class SignerTest extends AbstractDatabaseIntegration {

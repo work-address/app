@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { suite, test } from '@testdeck/mocha'
 
-import { Helper } from '../../service/helper'
+import { Helper } from '@/service/helper'
 
 @suite()
 export class HelperTest {

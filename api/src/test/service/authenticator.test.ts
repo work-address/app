@@ -4,11 +4,11 @@ import { expect } from 'chai'
 import * as jwt from 'jsonwebtoken'
 import * as web3 from 'web3'
 
-import { Authenticator } from '../../service/auth/authenticator'
-import { User } from '../../entity/user'
-import { UserFixture } from '../fixture/user-fixture'
-import { AbstractDatabaseIntegration } from '../abstract-database.integration'
-import { UserRepository } from '../../repository/user-repository'
+import { Authenticator } from '@/service/auth/authenticator'
+import { User } from '@/entity/user'
+import { UserFixture } from '@/test/fixture/user-fixture'
+import { AbstractDatabaseIntegration } from '@/test/abstract-database.integration'
+import { UserRepository } from '@/repository/user-repository'
 
 @suite()
 export class AuthenticatorTest extends AbstractDatabaseIntegration {

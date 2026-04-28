@@ -14,13 +14,13 @@ import faker from 'faker'
 import express from 'express'
 import { OpenAPI } from 'routing-controllers-openapi'
 
-import { User } from '../entity/user'
-import { App } from '../app/app'
-import { Authenticator } from '../service/auth/authenticator'
-import { UserManager } from '../service/user-manager'
-import { UserRepository } from '../repository/user-repository'
-import { IConfigParameters } from '../interface/config'
-import { ExtendedResponseSchema } from '../decorator/extended-response-schema'
+import { User } from '@/entity/user'
+import { App } from '@/app/app'
+import { Authenticator } from '@/service/auth/authenticator'
+import { UserManager } from '@/service/user-manager'
+import { UserRepository } from '@/repository/user-repository'
+import { IConfigParameters } from '@/interface/config'
+import { ExtendedResponseSchema } from '@/decorator/extended-response-schema'
 
 // TODO: support login with solana blockchain
 @JsonController('/auth')

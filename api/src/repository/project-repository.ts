@@ -2,12 +2,12 @@ import * as _ from 'lodash'
 import { inject, injectable } from 'inversify'
 import { SelectQueryBuilder } from 'typeorm'
 
-import { Filter } from '../service/filter'
-import { AbstractRepositoryTemplate } from './abstract-repository-template'
-import { Project } from '../entity/project'
-import { ISearchProject } from '../interface/search'
-import { User } from '../entity/user'
-import { EProjectState } from '../interface/project'
+import { Filter } from '@/service/filter'
+import { AbstractRepositoryTemplate } from '@/repository/abstract-repository-template'
+import { Project } from '@/entity/project'
+import { ISearchProject } from '@/interface/search'
+import { User } from '@/entity/user'
+import { EProjectState } from '@/interface/project'
 
 @injectable()
 export class ProjectRepository extends AbstractRepositoryTemplate<Project> {

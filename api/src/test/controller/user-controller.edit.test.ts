@@ -2,9 +2,9 @@ import { expect } from 'chai'
 import faker from 'faker'
 import { suite, test } from '@testdeck/mocha'
 
-import { BaseControllerTest } from './base-controller.test'
-import { UserRepository } from '../../repository/user-repository'
-import { EUserRole } from '../../interface/user'
+import { BaseControllerTest } from '@/test/controller/base-controller.test'
+import { UserRepository } from '@/repository/user-repository'
+import { EUserRole } from '@/interface/user'
 
 @suite()
 export class UserControllerEditTest extends BaseControllerTest {

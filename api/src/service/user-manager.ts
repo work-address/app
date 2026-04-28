@@ -1,10 +1,10 @@
 import { validate } from 'class-validator'
 import { inject, injectable } from 'inversify'
 
-import { User } from '../entity/user'
-import ConstraintsValidationException from '../exception/constraints-validation-exception'
-import { UserRepository } from '../repository/user-repository'
-import { Mailer } from './mailer'
+import { User } from '@/entity/user'
+import ConstraintsValidationException from '@/exception/constraints-validation-exception'
+import { UserRepository } from '@/repository/user-repository'
+import { Mailer } from '@/service/mailer'
 
 @injectable()
 export class UserManager {

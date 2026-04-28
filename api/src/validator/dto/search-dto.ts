@@ -5,7 +5,7 @@ import {
   IsOptional,
   IsNotEmpty,
 } from 'class-validator'
-import { ISearch } from '../../interface/search'
+import { ISearch } from '@/interface/search'
 
 export class SearchDto implements ISearch {
   @IsNumber()

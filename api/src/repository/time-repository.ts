@@ -1,17 +1,17 @@
 import _ from 'lodash'
 import { inject, injectable } from 'inversify'
 
-import { Filter } from '../service/filter'
-import { AbstractRepositoryTemplate } from './abstract-repository-template'
-import { Time } from '../entity/time'
-import { User } from '../entity/user'
-import { Project } from '../entity/project'
-import { EProjectState } from '../interface/project'
+import { Filter } from '@/service/filter'
+import { AbstractRepositoryTemplate } from '@/repository/abstract-repository-template'
+import { Time } from '@/entity/time'
+import { User } from '@/entity/user'
+import { Project } from '@/entity/project'
+import { EProjectState } from '@/interface/project'
 import { SelectQueryBuilder } from 'typeorm'
-import { ISearch, ISearchTime } from '../interface/search'
-import { ITimeTotals } from '../interface/time'
-import { Calc } from '../service/calc'
-import AccessException from '../exception/access-exception'
+import { ISearch, ISearchTime } from '@/interface/search'
+import { ITimeTotals } from '@/interface/time'
+import { Calc } from '@/service/calc'
+import AccessException from '@/exception/access-exception'
 
 @injectable()
 export class TimeRepository extends AbstractRepositoryTemplate<Time> {

@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { suite, test } from '@testdeck/mocha'
 
-import { AppConfig } from '../../app/app-config'
+import { AppConfig } from '@/app/app-config'
 
 @suite()
 export class AppConfigTest {

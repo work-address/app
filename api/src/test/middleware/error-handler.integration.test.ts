@@ -4,7 +4,7 @@ import { expect } from 'chai'
 import faker from 'faker'
 import { Action } from 'routing-controllers'
 
-import { ErrorHandler } from '../../middleware/error-handler'
+import { ErrorHandler } from '@/middleware/error-handler'
 
 @suite()
 export class ErrorHandlerTest {

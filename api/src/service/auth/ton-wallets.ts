@@ -12,7 +12,7 @@ import {
 } from '@ton/ton'
 import { Buffer } from 'buffer'
 
-import { WalletContractV4R1 } from './ton-wallet-contract-v4-r1'
+import { WalletContractV4R1 } from '@/service/auth/ton-wallet-contract-v4-r1'
 
 const knownWallets = [
   { contract: WalletContractV1R1, loadData: loadWalletV1Data },

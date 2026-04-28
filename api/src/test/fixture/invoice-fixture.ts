@@ -1,9 +1,9 @@
 import { inject, injectable } from 'inversify'
-import { Project } from '../../entity/project'
+import { Project } from '@/entity/project'
 
-import { InvoiceRepository } from '../../repository/invoice-repository'
-import { Invoice } from '../../entity/invoice'
-import { EInvoiceState } from '../../interface/invoice'
+import { InvoiceRepository } from '@/repository/invoice-repository'
+import { Invoice } from '@/entity/invoice'
+import { EInvoiceState } from '@/interface/invoice'
 
 @injectable()
 export class InvoiceFixture {

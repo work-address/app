@@ -3,10 +3,10 @@ import faker from 'faker'
 import { Exclude, Expose, Type } from 'class-transformer'
 import { JSONSchema } from 'class-validator-jsonschema'
 
-import { AbstractBaseEntity } from './abstract-base-entity'
-import { Project } from './project'
+import { AbstractBaseEntity } from '@/entity/abstract-base-entity'
+import { Project } from '@/entity/project'
 import { IsDate, IsNotEmpty, IsOptional } from 'class-validator'
-import { EInvoiceState } from '../interface/invoice'
+import { EInvoiceState } from '@/interface/invoice'
 
 @JSONSchema({
   example: {

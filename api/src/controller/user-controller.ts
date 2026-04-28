@@ -12,16 +12,16 @@ import {
 import faker from 'faker'
 import { OpenAPI } from 'routing-controllers-openapi'
 
-import { App } from '../app/app'
-import { User } from '../entity/user'
-import { EUserRole } from '../interface/user'
-import { UserManager } from '../service/user-manager'
-import { AbstractController } from './abstract-controller'
-import { CurrentUser } from '../decorator/current-user'
-import { UserRepository } from '../repository/user-repository'
-import { ISearchUser } from '../interface/search'
-import { ExtendedResponseSchema } from '../decorator/extended-response-schema'
-import { OpenApi } from '../service/open-api'
+import { App } from '@/app/app'
+import { User } from '@/entity/user'
+import { EUserRole } from '@/interface/user'
+import { UserManager } from '@/service/user-manager'
+import { AbstractController } from '@/controller/abstract-controller'
+import { CurrentUser } from '@/decorator/current-user'
+import { UserRepository } from '@/repository/user-repository'
+import { ISearchUser } from '@/interface/search'
+import { ExtendedResponseSchema } from '@/decorator/extended-response-schema'
+import { OpenApi } from '@/service/open-api'
 
 @JsonController('/user')
 export class UserController extends AbstractController {

@@ -1,9 +1,9 @@
 import { inject, injectable } from 'inversify'
 
-import { User } from '../entity/user'
-import { ISearchUser } from '../interface/search'
-import { Filter } from '../service/filter'
-import { AbstractRepositoryTemplate } from './abstract-repository-template'
+import { User } from '@/entity/user'
+import { ISearchUser } from '@/interface/search'
+import { Filter } from '@/service/filter'
+import { AbstractRepositoryTemplate } from '@/repository/abstract-repository-template'
 
 @injectable()
 export class UserRepository extends AbstractRepositoryTemplate<User> {

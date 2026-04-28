@@ -1,13 +1,13 @@
 import { Connection } from 'typeorm'
 import { Container } from 'inversify'
 import { timeout } from '@testdeck/mocha'
-import { AppConfig } from '../app/app-config'
+import { AppConfig } from '@/app/app-config'
 
-import { DbConnector } from '../connector/db-connector'
-import { AppContainer } from '../app/app-container'
-import { UserFixture } from './fixture/user-fixture'
-import { IConfigParameters } from '../interface/config'
-import { Faker } from '../service/faker'
+import { DbConnector } from '@/connector/db-connector'
+import { AppContainer } from '@/app/app-container'
+import { UserFixture } from '@/test/fixture/user-fixture'
+import { IConfigParameters } from '@/interface/config'
+import { Faker } from '@/service/faker'
 
 export class AbstractDatabaseIntegration {
   public conn: Connection

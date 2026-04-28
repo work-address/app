@@ -1,10 +1,10 @@
 import { ExpressMiddlewareInterface, Middleware } from 'routing-controllers'
 import express from 'express'
 import getDecorators from 'inversify-inject-decorators'
-import { AppContainer } from '../app/app-container'
-import { Authenticator } from '../service/auth/authenticator'
+import { AppContainer } from '@/app/app-container'
+import { Authenticator } from '@/service/auth/authenticator'
 import * as jwt from 'jsonwebtoken'
-import { ILogger } from '../interface/logging'
+import { ILogger } from '@/interface/logging'
 
 const { lazyInject } = getDecorators(AppContainer.getContainer())
 

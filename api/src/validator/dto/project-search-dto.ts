@@ -1,6 +1,6 @@
 import { IsObject } from 'class-validator'
-import { SearchDto } from './search-dto'
-import { EProjectState } from '../../interface/project'
+import { SearchDto } from '@/validator/dto/search-dto'
+import { EProjectState } from '@/interface/project'
 
 export class ProjectSearchDto extends SearchDto {
   @IsObject()

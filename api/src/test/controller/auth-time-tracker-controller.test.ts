@@ -1,11 +1,11 @@
 import { expect } from 'chai'
 import { suite, test } from '@testdeck/mocha'
 
-import { UserRepository } from '../../repository/user-repository'
-import { BaseControllerTest } from './base-controller.test'
-import { RedisClient } from '../../service/redis-client'
-import { AuthenticatorTimeTracker } from '../../service/auth/authenticator-time-tracker'
-import { EAuthTimeTrackerState } from '../../interface/auth'
+import { UserRepository } from '@/repository/user-repository'
+import { BaseControllerTest } from '@/test/controller/base-controller.test'
+import { RedisClient } from '@/service/redis-client'
+import { AuthenticatorTimeTracker } from '@/service/auth/authenticator-time-tracker'
+import { EAuthTimeTrackerState } from '@/interface/auth'
 
 @suite()
 export class AuthTimeTrackerControllerTest extends BaseControllerTest {

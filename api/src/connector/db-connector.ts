@@ -1,5 +1,5 @@
 import { Connection, ConnectionOptions, getConnectionManager } from 'typeorm'
-import { IConfigParameters } from '../interface/config'
+import { IConfigParameters } from '@/interface/config'
 
 export class DbConnector {
   protected params: IConfigParameters

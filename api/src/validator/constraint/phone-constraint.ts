@@ -5,7 +5,7 @@ import {
 } from 'class-validator'
 import { getRepository, Not } from 'typeorm'
 
-import { User } from '../../entity/user'
+import { User } from '@/entity/user'
 
 @ValidatorConstraint({ name: 'PhoneConstraint', async: true })
 export class PhoneConstraint implements ValidatorConstraintInterface {

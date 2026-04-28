@@ -1,6 +1,6 @@
-import { App } from './app'
-import { AppConfig } from './app-config'
-import RejectedExecutionException from '../exception/rejected-execution-exception'
+import { App } from '@/app/app'
+import { AppConfig } from '@/app/app-config'
+import RejectedExecutionException from '@/exception/rejected-execution-exception'
 
 export async function createApp() {
   if (AppConfig.isTest()) {

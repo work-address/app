@@ -1,11 +1,11 @@
 import { suite, test } from '@testdeck/mocha'
 import { expect } from 'chai'
 
-import { UserFixture } from '../fixture/user-fixture'
-import { AbstractDatabaseIntegration } from '../abstract-database.integration'
+import { UserFixture } from '@/test/fixture/user-fixture'
+import { AbstractDatabaseIntegration } from '@/test/abstract-database.integration'
 
-import { ProjectManager } from '../../service/project-manager'
-import { ProjectFixture } from '../fixture/project-fixture'
+import { ProjectManager } from '@/service/project-manager'
+import { ProjectFixture } from '@/test/fixture/project-fixture'
 
 @suite()
 export class ProjectManagerTest extends AbstractDatabaseIntegration {

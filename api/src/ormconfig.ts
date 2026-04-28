@@ -1,4 +1,4 @@
-import { AppConfig } from './app/app-config'
+import { AppConfig } from '@/app/app-config'
 
 export default (() => {
   const params = AppConfig.readConfig()

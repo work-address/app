@@ -1,6 +1,6 @@
 import { suite, test } from '@testdeck/mocha'
 import { expect } from 'chai'
-import { Calc } from '../../service/calc'
+import { Calc } from '@/service/calc'
 
 @suite()
 export class CalcTest {

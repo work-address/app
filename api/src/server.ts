@@ -1,4 +1,6 @@
-import { createApp } from './app/app-bootstrap'
+import './register-path-alias'
+
+import { createApp } from '@/app/app-bootstrap'
 ;(async () => {
   const app = await createApp()
 

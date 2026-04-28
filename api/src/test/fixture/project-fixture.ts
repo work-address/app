@@ -1,10 +1,10 @@
 import faker from 'faker'
 import { inject, injectable } from 'inversify'
-import { Project } from '../../entity/project'
-import { User } from '../../entity/user'
+import { Project } from '@/entity/project'
+import { User } from '@/entity/user'
 
-import { ProjectRepository } from '../../repository/project-repository'
-import { EProjectState } from '../../interface/project'
+import { ProjectRepository } from '@/repository/project-repository'
+import { EProjectState } from '@/interface/project'
 
 @injectable()
 export class ProjectFixture {

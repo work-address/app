@@ -3,11 +3,11 @@ import * as httpMocks from 'node-mocks-http'
 import { expect } from 'chai'
 import { Action } from 'routing-controllers'
 
-import { UserFixture } from '../fixture/user-fixture'
-import { Authenticator } from '../../service/auth/authenticator'
-import { ValidateRoles } from '../../middleware/validate-roles'
-import { EUserRole } from '../../interface/user'
-import { AbstractDatabaseIntegration } from '../abstract-database.integration'
+import { UserFixture } from '@/test/fixture/user-fixture'
+import { Authenticator } from '@/service/auth/authenticator'
+import { ValidateRoles } from '@/middleware/validate-roles'
+import { EUserRole } from '@/interface/user'
+import { AbstractDatabaseIntegration } from '@/test/abstract-database.integration'
 
 @suite()
 export class ValidateRolesTest extends AbstractDatabaseIntegration {

@@ -12,13 +12,13 @@ import express from 'express'
 import faker from 'faker'
 import { OpenAPI } from 'routing-controllers-openapi'
 
-import { CurrentUser } from '../decorator/current-user'
-import { User } from '../entity/user'
-import { App } from '../app/app'
-import { EUserRole } from '../interface/user'
-import { AuthenticatorTimeTracker } from '../service/auth/authenticator-time-tracker'
-import { EAuthTimeTrackerState } from '../interface/auth'
-import { OpenApi } from '../service/open-api'
+import { CurrentUser } from '@/decorator/current-user'
+import { User } from '@/entity/user'
+import { App } from '@/app/app'
+import { EUserRole } from '@/interface/user'
+import { AuthenticatorTimeTracker } from '@/service/auth/authenticator-time-tracker'
+import { EAuthTimeTrackerState } from '@/interface/auth'
+import { OpenApi } from '@/service/open-api'
 
 @JsonController('/auth/timeTracker')
 export class AuthTimeTrackerController {

@@ -2,7 +2,7 @@ import { injectable } from 'inversify'
 import * as _ from 'lodash'
 import { OrderByCondition } from 'typeorm'
 
-import { ISearch } from '../interface/search'
+import { ISearch } from '@/interface/search'
 
 @injectable()
 export class Filter {

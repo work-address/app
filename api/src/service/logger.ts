@@ -1,6 +1,6 @@
 import { injectable } from 'inversify'
-import { ILogger } from '../interface/logging'
-import { WinstonClient } from './winston-client'
+import { ILogger } from '@/interface/logging'
+import { WinstonClient } from '@/service/winston-client'
 
 @injectable()
 export class Logger implements ILogger {

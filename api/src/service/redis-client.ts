@@ -1,7 +1,7 @@
 import { createClient } from 'redis'
 import { inject, injectable } from 'inversify'
 
-import { IConfigParameters } from '../interface/config'
+import { IConfigParameters } from '@/interface/config'
 
 @injectable()
 export class RedisClient {

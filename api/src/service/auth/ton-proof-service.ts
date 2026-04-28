@@ -10,8 +10,8 @@ import {
 } from '@ton/ton'
 import { sign } from 'tweetnacl'
 
-import { tryParsePublicKey } from './ton-wallets'
-import { IAuthTonPayload } from '../../interface/auth'
+import { tryParsePublicKey } from '@/service/auth/ton-wallets'
+import { IAuthTonPayload } from '@/interface/auth'
 
 @injectable()
 export class TonProofService {

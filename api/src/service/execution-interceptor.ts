@@ -1,8 +1,8 @@
 import moment from 'moment'
 import * as Sentry from '@sentry/node'
 
-import RejectedExecutionException from '../exception/rejected-execution-exception'
-import { AppConfig } from '../app/app-config'
+import RejectedExecutionException from '@/exception/rejected-execution-exception'
+import { AppConfig } from '@/app/app-config'
 
 export class ExecutionInterceptor {
   protected timerStarted: moment.Moment

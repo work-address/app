@@ -1,12 +1,12 @@
 import { inject, injectable } from 'inversify'
 
-import { Project } from '../entity/project'
-import { ProjectRepository } from '../repository/project-repository'
-import { EProjectState } from '../interface/project'
-import { User } from '../entity/user'
+import { Project } from '@/entity/project'
+import { ProjectRepository } from '@/repository/project-repository'
+import { EProjectState } from '@/interface/project'
+import { User } from '@/entity/user'
 import moment from 'moment'
-import { Time } from '../entity/time'
-import { TimeRepository } from '../repository/time-repository'
+import { Time } from '@/entity/time'
+import { TimeRepository } from '@/repository/time-repository'
 
 @injectable()
 export class ProjectManager {

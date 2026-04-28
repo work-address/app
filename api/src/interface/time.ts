@@ -1,4 +1,4 @@
-import { TimeCreateDto } from '../validator/dto/time-create-dto'
+import { TimeCreateDto } from '@/validator/dto/time-create-dto'
 
 export interface ITime {
   id?: string

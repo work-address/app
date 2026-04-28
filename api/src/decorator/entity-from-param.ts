@@ -5,7 +5,7 @@ import {
   AbstractRepositoryTemplate,
   TRelations,
   TSelectOptions,
-} from '../repository/abstract-repository-template'
+} from '@/repository/abstract-repository-template'
 
 export function EntityFromParam(
   paramName: string,

@@ -5,7 +5,7 @@ import {
 import express from 'express'
 
 import * as Sentry from '@sentry/node'
-import { ErrorFormatter } from '../service/error-formatter'
+import { ErrorFormatter } from '@/service/error-formatter'
 
 @Middleware({ type: 'after' })
 export class ErrorHandler implements ExpressErrorMiddlewareInterface {

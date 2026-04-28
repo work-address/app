@@ -3,9 +3,9 @@ import faker from 'faker'
 import { Exclude, Expose, Type } from 'class-transformer'
 import { JSONSchema } from 'class-validator-jsonschema'
 
-import { AbstractBaseEntity } from './abstract-base-entity'
-import { Project } from './project'
-import { ITime } from '../interface/time'
+import { AbstractBaseEntity } from '@/entity/abstract-base-entity'
+import { Project } from '@/entity/project'
+import { ITime } from '@/interface/time'
 import {
   IsArray,
   IsDate,

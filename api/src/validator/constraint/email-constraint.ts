@@ -6,7 +6,7 @@ import {
 } from 'class-validator'
 import { getRepository, Not } from 'typeorm'
 
-import { User } from '../../entity/user'
+import { User } from '@/entity/user'
 
 @ValidatorConstraint({ name: 'EmailConstraint', async: true })
 export class EmailConstraint implements ValidatorConstraintInterface {

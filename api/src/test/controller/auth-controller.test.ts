@@ -3,12 +3,12 @@ import { expect } from 'chai'
 import * as web3 from 'web3'
 import { suite, test } from '@testdeck/mocha'
 
-import { UserRepository } from '../../repository/user-repository'
-import { BaseControllerTest } from './base-controller.test'
-import { RedisClient } from '../../service/redis-client'
-import { AuthenticatorTimeTracker } from '../../service/auth/authenticator-time-tracker'
-import { ProjectRepository } from '../../repository/project-repository'
-import { TimeRepository } from '../../repository/time-repository'
+import { UserRepository } from '@/repository/user-repository'
+import { BaseControllerTest } from '@/test/controller/base-controller.test'
+import { RedisClient } from '@/service/redis-client'
+import { AuthenticatorTimeTracker } from '@/service/auth/authenticator-time-tracker'
+import { ProjectRepository } from '@/repository/project-repository'
+import { TimeRepository } from '@/repository/time-repository'
 import moment from 'moment'
 
 @suite()

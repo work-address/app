@@ -1,7 +1,7 @@
 import { OrderByCondition } from 'typeorm'
 
-import { EProjectState } from './project'
-import { EUserRole } from './user'
+import { EProjectState } from '@/interface/project'
+import { EUserRole } from '@/interface/user'
 
 export interface ISearch {
   sort: OrderByCondition

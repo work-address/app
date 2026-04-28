@@ -1,14 +1,14 @@
 import { inject, injectable } from 'inversify'
 
-import { Invoice } from '../entity/invoice'
-import { InvoiceRepository } from '../repository/invoice-repository'
-import { User } from '../entity/user'
-import { InvoiceCreateDto } from '../validator/dto/invoice-create-dto'
+import { Invoice } from '@/entity/invoice'
+import { InvoiceRepository } from '@/repository/invoice-repository'
+import { User } from '@/entity/user'
+import { InvoiceCreateDto } from '@/validator/dto/invoice-create-dto'
 import moment from 'moment'
-import { ProjectRepository } from '../repository/project-repository'
-import { Project } from '../entity/project'
-import RejectedExecutionException from '../exception/rejected-execution-exception'
-import { TimeRepository } from '../repository/time-repository'
+import { ProjectRepository } from '@/repository/project-repository'
+import { Project } from '@/entity/project'
+import RejectedExecutionException from '@/exception/rejected-execution-exception'
+import { TimeRepository } from '@/repository/time-repository'
 
 @injectable()
 export class InvoiceManager {

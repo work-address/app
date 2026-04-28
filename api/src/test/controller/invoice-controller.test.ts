@@ -1,9 +1,9 @@
 import { expect } from 'chai'
 import { skip, suite, test } from '@testdeck/mocha'
 
-import { BaseControllerTest } from './base-controller.test'
-import { EProjectState } from '../../interface/project'
-import { EInvoiceState } from '../../interface/invoice'
+import { BaseControllerTest } from '@/test/controller/base-controller.test'
+import { EProjectState } from '@/interface/project'
+import { EInvoiceState } from '@/interface/invoice'
 
 @suite
 @skip

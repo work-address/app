@@ -1,7 +1,7 @@
 import { inject, injectable } from 'inversify'
 import 'reflect-metadata'
 
-import { IConfigParameters } from '../interface/config'
+import { IConfigParameters } from '@/interface/config'
 
 @injectable()
 export class Mailer {

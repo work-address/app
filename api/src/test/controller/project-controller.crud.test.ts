@@ -2,9 +2,9 @@ import faker from 'faker'
 import { expect } from 'chai'
 import { suite, test } from '@testdeck/mocha'
 
-import { BaseControllerTest } from './base-controller.test'
-import { ProjectRepository } from '../../repository/project-repository'
-import { EProjectState } from '../../interface/project'
+import { BaseControllerTest } from '@/test/controller/base-controller.test'
+import { ProjectRepository } from '@/repository/project-repository'
+import { EProjectState } from '@/interface/project'
 
 @suite
 export class ProjectControllerCrudTest extends BaseControllerTest {

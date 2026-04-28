@@ -3,13 +3,13 @@ import faker from 'faker'
 import { Exclude, Expose, Type } from 'class-transformer'
 import { JSONSchema } from 'class-validator-jsonschema'
 
-import { User } from './user'
-import { AbstractBaseEntity } from './abstract-base-entity'
+import { User } from '@/entity/user'
+import { AbstractBaseEntity } from '@/entity/abstract-base-entity'
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator'
-import { EProjectState } from '../interface/project'
-import { Invoice } from './invoice'
-import { Time } from './time'
-import { IProject } from '../interface/project'
+import { EProjectState } from '@/interface/project'
+import { Invoice } from '@/entity/invoice'
+import { Time } from '@/entity/time'
+import { IProject } from '@/interface/project'
 
 @JSONSchema({
   example: {

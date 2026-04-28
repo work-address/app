@@ -12,9 +12,9 @@ import {
 } from 'typeorm'
 
 import { Repository } from 'typeorm/repository/Repository'
-import { ISearch } from '../interface/search'
-import { Filter } from '../service/filter'
-import ConstraintsValidationException from '../exception/constraints-validation-exception'
+import { ISearch } from '@/interface/search'
+import { Filter } from '@/service/filter'
+import ConstraintsValidationException from '@/exception/constraints-validation-exception'
 import { validate } from 'class-validator'
 
 export interface ObjectLiteral {

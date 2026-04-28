@@ -2,11 +2,11 @@ import { expect } from 'chai'
 import { suite, test } from '@testdeck/mocha'
 import moment from 'moment'
 
-import { BaseControllerTest } from './base-controller.test'
-import { EProjectState } from '../../interface/project'
-import { TimeRepository } from '../../repository/time-repository'
-import { ProjectRepository } from '../../repository/project-repository'
-import { RedisClient } from '../../service/redis-client'
+import { BaseControllerTest } from '@/test/controller/base-controller.test'
+import { EProjectState } from '@/interface/project'
+import { TimeRepository } from '@/repository/time-repository'
+import { ProjectRepository } from '@/repository/project-repository'
+import { RedisClient } from '@/service/redis-client'
 
 @suite
 export class TimeControllerTest extends BaseControllerTest {

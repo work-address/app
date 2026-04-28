@@ -1,7 +1,7 @@
 import { suite } from '@testdeck/mocha'
 
-import { AbstractDatabaseIntegration } from '../abstract-database.integration'
-import { TonProofService } from '../../service/auth/ton-proof-service'
+import { AbstractDatabaseIntegration } from '@/test/abstract-database.integration'
+import { TonProofService } from '@/service/auth/ton-proof-service'
 
 @suite()
 export class TonProofServiceTest extends AbstractDatabaseIntegration {

@@ -1,12 +1,12 @@
 import _ from 'lodash'
 import { inject, injectable } from 'inversify'
 
-import { Filter } from '../service/filter'
-import { AbstractRepositoryTemplate } from './abstract-repository-template'
-import { Invoice } from '../entity/invoice'
-import { ISearch } from '../interface/search'
-import { User } from '../entity/user'
-import AccessException from '../exception/access-exception'
+import { Filter } from '@/service/filter'
+import { AbstractRepositoryTemplate } from '@/repository/abstract-repository-template'
+import { Invoice } from '@/entity/invoice'
+import { ISearch } from '@/interface/search'
+import { User } from '@/entity/user'
+import AccessException from '@/exception/access-exception'
 
 @injectable()
 export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {

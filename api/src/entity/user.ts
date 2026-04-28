@@ -4,13 +4,13 @@ import { JSONSchema } from 'class-validator-jsonschema'
 import { Exclude, Expose } from 'class-transformer'
 
 import { IsOptional, IsString, Validate } from 'class-validator'
-import { AbstractBaseEntity } from './abstract-base-entity'
-import { EmailOrPhoneConstraint } from '../validator/constraint/email-or-phone-constraint'
-import { PhoneConstraint } from '../validator/constraint/phone-constraint'
-import { EmailConstraint } from '../validator/constraint/email-constraint'
-import { EUserRole } from '../interface/user'
-import { IUser } from '../interface/user'
-import { Project } from './project'
+import { AbstractBaseEntity } from '@/entity/abstract-base-entity'
+import { EmailOrPhoneConstraint } from '@/validator/constraint/email-or-phone-constraint'
+import { PhoneConstraint } from '@/validator/constraint/phone-constraint'
+import { EmailConstraint } from '@/validator/constraint/email-constraint'
+import { EUserRole } from '@/interface/user'
+import { IUser } from '@/interface/user'
+import { Project } from '@/entity/project'
 
 // TODO: add profile visibility flag, so user can hide their profile from the public
 @JSONSchema({
