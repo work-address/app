@@ -12,6 +12,7 @@ export default function FreelancerProfilePage() {
         htmlAttributes={{ lang: i18n.language }}
         title={t('app.documentTitle.profileEdit')}
       />
+
       <EditProfile />
     </>
   )
