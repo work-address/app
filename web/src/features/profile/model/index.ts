@@ -4,21 +4,21 @@ import { sample, combine } from 'effector'
 import { createGate } from 'effector-react'
 
 import { $user } from '@/entities/profile'
-import { baseApi, getFriendlyWalletAddress } from '@/shared'
+import {
+  baseApi,
+  getFriendlyWalletAddress,
+  decodeFriendWalletAddress,
+} from '@/shared'
 
-const ProfileGate = createGate<{ userId: string | null }>({
-  defaultState: { userId: null },
+const ProfileGate = createGate<{ friendlyWalletAddress: string | null }>({
+  defaultState: { friendlyWalletAddress: null },
 })
 
 const profileQuery = createQuery({
-  handler: async (id: string) => {
-    const result = await baseApi.userControllerSearch({
-      body: {
-        filter: {
-          id,
-        },
-        sort: {},
-        page: 0,
+  handler: async (walletAddress: string) => {
+    const result = await baseApi.userControllerRead({
+      path: {
+        address: walletAddress,
       },
     })
 
@@ -26,17 +26,15 @@ const profileQuery = createQuery({
       throw result
     }
 
-    return {
-      items: (result.data as [baseApi.User[], number])[0],
-      total: (result.data as [baseApi.User[], number])[1],
-    }
+    return result.data
   },
 })
 
 const $isAuthenticatedUserProfile = combine(
   $user,
   ProfileGate.state,
-  (user, gateState) => user.id === gateState.userId,
+  (user, gateState) =>
+    user.friendlyWalletAddress === gateState.friendlyWalletAddress,
 )
 
 sample({
@@ -44,7 +42,10 @@ sample({
   source: combine($user, $isAuthenticatedUserProfile),
   filter: ([user, isAuthenticatedUserProfile]) =>
     !isAuthenticatedUserProfile && user.id !== '',
-  fn: (_, gateState) => gateState.userId || '',
+  fn: (_, gateState) =>
+    gateState.friendlyWalletAddress
+      ? decodeFriendWalletAddress(gateState.friendlyWalletAddress)
+      : '',
   target: profileQuery.start,
 })
 
@@ -53,16 +54,14 @@ const $profile = combine(
   profileQuery.$data,
   ProfileGate.state,
   (user, data, gateState) => {
-    if (gateState.userId === user.id) {
+    if (gateState.friendlyWalletAddress === user.friendlyWalletAddress) {
       return user
     }
 
-    const profile = data?.items[0]
-
-    return profile
+    return data
       ? {
-          ...profile,
-          friendlyWalletAddress: getFriendlyWalletAddress(profile.address),
+          ...data,
+          friendlyWalletAddress: getFriendlyWalletAddress(data.address),
         }
       : null
   },

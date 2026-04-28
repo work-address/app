@@ -9,7 +9,7 @@ import type {
 type MainRoutes =
   & Route<'/', 'dashboard'>
   & Route<'/sign-in', 'signIn'>
-  & Route<'/profile/:id', 'profile', ProfileRoutes, IdRouteParams>
+  & Route<'/profile/:walletAddress', 'profile', ProfileRoutes, { walletAddress: string }>
   & Route<'/help', 'helpCenter'>
   & Route<'/time-tracker', 'timeTracker'>
   & Route<'/download', 'download'>
@@ -42,8 +42,8 @@ export const routes: MainRoutes = {
   },
 
   profile: {
-    schema: '/profile/:id',
-    build: ({ id }) => `/profile/${id}`,
+    schema: '/profile/:walletAddress',
+    build: ({ walletAddress }) => `/profile/${walletAddress}`,
 
     desktopOrder: 1,
     mobileOrder: 0,

@@ -45,7 +45,9 @@ export const DesktopMenu = ({
           let url = schema
 
           if (schema === routes.profile.schema) {
-            url = routes.profile.build({ id: user?.id || '' })
+            url = routes.profile.build({
+              walletAddress: user?.friendlyWalletAddress || '',
+            })
           }
 
           if (!hasDesktopOrder) {

@@ -30,6 +30,7 @@
     "@tiptap/pm": "^3.22.1",
     "@tiptap/react": "^3.22.1",
     "@tiptap/starter-kit": "^3.22.1",
+    "@ton/core": "^0.63.0",
     "@tonconnect/ui": "^2.4.4",
     "antd": "^6.3.5",
     "axios": "^1.15.0",
@@ -57,6 +58,7 @@
     "styled-components": "^6.3.12",
     "ts-pattern": "^5.9.0",
     "vaul": "^1.1.2",
+    "vite-plugin-node-polyfills": "^0.26.0",
     "vite-plugin-svgr": "^5.2.0",
     "zod": "^4.3.6"
   },

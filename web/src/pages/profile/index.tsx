@@ -6,15 +6,16 @@ import { ProfileView, ProfileGate } from '@/features/profile'
 
 export default function ProfilePage() {
   const { t, i18n } = useTranslation()
-  const { id } = useParams<{ id: string }>()
 
-  if (!id) {
+  const { walletAddress } = useParams<{ walletAddress: string }>()
+
+  if (!walletAddress) {
     return <Navigate to="/" />
   }
 
   return (
     <>
-      <ProfileGate userId={id} />
+      <ProfileGate friendlyWalletAddress={walletAddress} />
 
       <Helmet
         htmlAttributes={{ lang: i18n.language }}

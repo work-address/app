@@ -36,9 +36,7 @@ type FormState = Pick<
   | 'facebook'
   | 'linkedIn'
   | 'telegram'
-> & {
-  friendlyWalletAddress: string
-}
+>
 
 export const EditProfile = () => {
   const { t } = useTranslation()
@@ -67,7 +65,6 @@ export const EditProfile = () => {
     reset,
   } = useForm<FormState>({
     values: {
-      friendlyWalletAddress: '',
       userName: '',
       company: '',
       skills: '',
@@ -98,11 +95,11 @@ export const EditProfile = () => {
       setIsFormSubmittedSuccessfully(false)
       navigate(
         routes.profile.build({
-          id: user?.id || '',
+          walletAddress: user?.friendlyWalletAddress || '',
         }),
       )
     }
-  }, [isFormSubmittedSuccessfully, navigate, user?.id])
+  }, [isFormSubmittedSuccessfully, navigate, user?.friendlyWalletAddress])
 
   useEffect(() => {
     if (status === 'done') {
@@ -129,7 +126,6 @@ export const EditProfile = () => {
   useEffect(() => {
     if (user) {
       reset({
-        friendlyWalletAddress: user.friendlyWalletAddress || '',
         userName: user.userName || '',
         company: user.company || '',
         skills: user.skills || '',
@@ -156,7 +152,13 @@ export const EditProfile = () => {
               <Flex gap={'var(--space-4)'} align={'center'}>
                 {isDesktop && (
                   <Link
-                    to={user?.id ? routes.profile.build({ id: user.id }) : '#'}
+                    to={
+                      user?.friendlyWalletAddress
+                        ? routes.profile.build({
+                            walletAddress: user.friendlyWalletAddress,
+                          })
+                        : '#'
+                    }
                   >
                     <IconButton
                       radius={'full'}
@@ -209,9 +211,9 @@ export const EditProfile = () => {
               <Input
                 label={t('profile.form.address')}
                 labelWidth={INPUT_LABEL_WIDTH}
+                value={user.friendlyWalletAddress || ''}
                 disabled
                 id={'friendlyWalletAddress'}
-                {...register('friendlyWalletAddress')}
               />
 
               <Input

@@ -5,6 +5,7 @@ import { playwright } from '@vitest/browser-playwright'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
+import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import svgr from 'vite-plugin-svgr'
 
 const dirname =
@@ -24,6 +25,7 @@ export default defineConfig(({ command, mode }) => {
   return {
     base: '/',
     plugins: [
+      nodePolyfills(),
       react({
         babel: {
           plugins: babelPlugins,
