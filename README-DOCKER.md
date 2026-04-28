@@ -40,12 +40,6 @@ and for running the production environment
 docker compose -f docker-compose.yml up --watch
 ```
 
-Or use the dedicated watch command (keeps application logs separate from sync events):
-
-```sh
-docker compose -f docker-compose-dev.yml watch
-```
-
 Requires Docker Compose 2.22.0 or later (`docker compose version`).
 
 ### Commands

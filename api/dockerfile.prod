@@ -10,23 +10,25 @@ FROM node:${NODE_VERSION} AS builder
 # Layout: /app/tsconfig.base.json + /app/api/* so api/tsconfig.json extends ../tsconfig.base.json
 WORKDIR /app
 
-# Enable pnpm (project uses pnpm-lock.yaml)
+# Enable pnpm (project uses root pnpm-lock.yaml)
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy package-related files first to leverage Docker's caching mechanism
+# Copy workspace root + eslint-config so workspace:* deps resolve (same pattern as web/dockerfile.prod)
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY tsconfig.base.json ./
-COPY api/package.json api/pnpm-lock.yaml ./api/
+COPY packages/ packages/
+COPY api/package.json ./api/
+
+# Install api subtree only (root lockfile is authoritative)
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile --filter "./api..."
+
+# Copy the rest of the application source code into the container
+COPY api/ ./api/
 
 WORKDIR /app/api
 
-# Install project dependencies (frozen lockfile = reproducible, like npm ci)
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
-
-# Copy the rest of the application source code into the container
-COPY api/ .
-
-# Build the TypeScript application (outputs to /app/api/build)
-RUN pnpm run build
+# Stale tsconfig.tsbuildinfo + rimraf build makes composite tsc emit nothing; never copy *.tsbuildinfo (see root .dockerignore)
+RUN rm -f tsconfig.tsbuildinfo && pnpm run build
 
 # =========================================
 # Stage 2: Run the compiled API
@@ -34,13 +36,12 @@ RUN pnpm run build
 
 FROM node:${NODE_VERSION} AS runner
 
-WORKDIR /app
+# Match pnpm workspace paths: api deps symlink into /app/node_modules/.pnpm (must not flatten api/node_modules onto root)
+WORKDIR /app/api
 
-# Copy package files and production dependencies
-COPY --from=builder /app/api/package.json /app/api/pnpm-lock.yaml ./
+COPY --from=builder /app/api/package.json ./
+COPY --from=builder /app/node_modules /app/node_modules
 COPY --from=builder /app/api/node_modules ./node_modules
-
-# Copy the built application
 COPY --from=builder /app/api/build ./build
 
 # Use a non-root user for security best practices

@@ -9,20 +9,20 @@ FROM node:${NODE_VERSION} AS dev
 # Layout: /app/tsconfig.base.json + /app/api/* (matches api/tsconfig.json extends)
 WORKDIR /app
 
-# Enable pnpm (project uses pnpm-lock.yaml)
+# Enable pnpm (project uses root pnpm-lock.yaml)
 RUN corepack enable && corepack prepare pnpm@latest --activate
 
-# Copy package-related files first to leverage Docker's caching mechanism
+# Monorepo root install so @app/eslint-config (workspace:*) resolves (same pattern as web/dockerfile.dev)
+COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY tsconfig.base.json ./
-COPY api/package.json api/pnpm-lock.yaml ./api/
+COPY packages/ packages/
+COPY api/package.json ./api/
+
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --filter "./api..."
+
+COPY api/ ./api/
 
 WORKDIR /app/api
-
-# Install project dependencies
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install
-
-# Copy the rest of the application source code into the container
-COPY api/ .
 
 # Expose the port used by the API server
 EXPOSE 4000

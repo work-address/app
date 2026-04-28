@@ -9,8 +9,8 @@ out/
 *.env*
 *.log
 
-# Ignore TypeScript build artifacts
-*.tsbuildinfo
+# Ignore TypeScript build artifacts (nested name must use **/)
+**/*.tsbuildinfo
 
 # Ignore lockfile debug logs
 npm-debug.log*

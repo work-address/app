@@ -64,6 +64,6 @@ services:
         - action: rebuild
           path: ./api/package.json
         - action: rebuild
-          path: ./api/pnpm-lock.yaml
+          path: ./pnpm-lock.yaml
         - action: rebuild
           path: ./tsconfig.base.json
