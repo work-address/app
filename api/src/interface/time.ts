@@ -1,41 +1,41 @@
-import {TimeCreateDto} from '../validator/dto/time-create-dto';
+import { TimeCreateDto } from '../validator/dto/time-create-dto'
 
 export interface ITime {
-  id?: string;
-  note: string | null;
-  minutesActive: number;
-  keyboardKeys: number;
-  mouseKeys: number;
-  mouseDistance: number;
-  fromAt: Date;
-  toAt: Date;
+  id?: string
+  note: string | null
+  minutesActive: number
+  keyboardKeys: number
+  mouseKeys: number
+  mouseDistance: number
+  fromAt: Date
+  toAt: Date
   project?: {
-    id: string;
-  };
+    id: string
+  }
   processes?: {
-    name: string;
-    description?: string;
-    timeMin: number;
-  }[];
-  screenshot?: string | null;
+    name: string
+    description?: string
+    timeMin: number
+  }[]
+  screenshot?: string | null
 }
 
 export interface ITimeTotals {
-  projectId: string;
-  rateHour: number;
-  rateTotal: number;
-  minutes: number;
-  minutesActive: number;
-  keyboardKeys: number;
-  mouseKeys: number;
-  mouseDistance: number;
+  projectId: string
+  rateHour: number
+  rateTotal: number
+  minutes: number
+  minutesActive: number
+  keyboardKeys: number
+  mouseKeys: number
+  mouseDistance: number
 }
 
 export interface ITimeInsertionResult extends TimeCreateDto {
-  id?: string;
+  id?: string
   error?: {
-    name: string;
-    message: string;
-    errors?: any;
-  };
+    name: string
+    message: string
+    errors?: any
+  }
 }

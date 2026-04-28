@@ -1,85 +1,88 @@
-import * as bcrypt from 'bcrypt';
-import * as jwt from 'jsonwebtoken';
-import {inject, injectable} from 'inversify';
+import * as bcrypt from 'bcrypt'
+import * as jwt from 'jsonwebtoken'
+import { inject, injectable } from 'inversify'
 
-import {User} from '../../entity/user';
-import {Mailer} from '../mailer';
+import { User } from '../../entity/user'
+import { Mailer } from '../mailer'
 
-import {IAuthTokenData} from '../../interface/auth';
-import {UserRepository} from '../../repository/user-repository';
-import {EUserRole} from '../../interface/user';
-import {IAuthTokens} from '../../interface/auth';
-import {IConfigParameters} from '../../interface/config';
-import AuthenticationException from '../../exception/authentication-exception';
-import {UserManager} from '../user-manager';
-import {RedisClient} from '../redis-client';
-import {Signer} from './signer';
-import {ProjectManager} from '../project-manager';
-import {TimeRepository} from '../../repository/time-repository';
-import {TonProofService} from './ton-proof-service';
-import {IAuthTonPayload} from '../../interface/auth';
+import { IAuthTokenData } from '../../interface/auth'
+import { UserRepository } from '../../repository/user-repository'
+import { EUserRole } from '../../interface/user'
+import { IAuthTokens } from '../../interface/auth'
+import { IConfigParameters } from '../../interface/config'
+import AuthenticationException from '../../exception/authentication-exception'
+import { UserManager } from '../user-manager'
+import { RedisClient } from '../redis-client'
+import { Signer } from './signer'
+import { ProjectManager } from '../project-manager'
+import { TimeRepository } from '../../repository/time-repository'
+import { TonProofService } from './ton-proof-service'
+import { IAuthTonPayload } from '../../interface/auth'
 
 @injectable()
 export class Authenticator {
-  protected accessTokenExpiresIn: string = '20d';
-  protected refreshTokenExpiresIn: string = '180d';
+  protected accessTokenExpiresIn: string = '20d'
+  protected refreshTokenExpiresIn: string = '180d'
 
-  public static nonceExpiresIn: number = 1000 * 60 * 10; // 10 minutes
+  public static nonceExpiresIn: number = 1000 * 60 * 10 // 10 minutes
 
   @inject('UserRepository')
-  protected userRepository: UserRepository;
+  protected userRepository: UserRepository
   @inject('TimeRepository')
-  protected timeRepository: TimeRepository;
+  protected timeRepository: TimeRepository
   @inject('ProjectManager')
-  protected projectManager: ProjectManager;
+  protected projectManager: ProjectManager
   @inject('UserManager')
-  protected userManager: UserManager;
+  protected userManager: UserManager
   @inject('Mailer')
-  protected mailer: Mailer;
+  protected mailer: Mailer
   @inject('parameters')
-  protected parameters: IConfigParameters;
+  protected parameters: IConfigParameters
   @inject('Signer')
-  protected signer: Signer;
+  protected signer: Signer
   @inject('RedisClient')
-  protected redis: RedisClient;
+  protected redis: RedisClient
   @inject('TonProofService')
-  protected tonProofService: TonProofService;
+  protected tonProofService: TonProofService
 
   public async getNonce(address: string): Promise<string> {
-    const nonce = this.signer.generateNonce();
-    const key = `nonce:${address}`;
+    const nonce = this.signer.generateNonce()
+    const key = `nonce:${address}`
 
-    await this.redis.setWithExpiry(key, nonce, Authenticator.nonceExpiresIn);
+    await this.redis.setWithExpiry(key, nonce, Authenticator.nonceExpiresIn)
 
-    return nonce;
+    return nonce
   }
 
-  public async loginEth(signature: string, address: string): Promise<IAuthTokens> {
-    const key = `nonce:${address}`;
-    const nonce = await this.redis.get(key);
+  public async loginEth(
+    signature: string,
+    address: string,
+  ): Promise<IAuthTokens> {
+    const key = `nonce:${address}`
+    const nonce = await this.redis.get(key)
 
     if (!nonce) {
-      throw new AuthenticationException('Nonce is not available or expired');
+      throw new AuthenticationException('Nonce is not available or expired')
     }
 
-    const isValid = this.signer.verify(nonce, signature, address);
+    const isValid = this.signer.verify(nonce, signature, address)
 
     if (!isValid) {
-      throw new AuthenticationException('Signature is not valid');
+      throw new AuthenticationException('Signature is not valid')
     }
 
-    let user = await this.userRepository.findByAddressPublic(address);
+    let user = await this.userRepository.findByAddressPublic(address)
 
     if (!user) {
-      user = await this.createUserWithDemoData(address);
+      user = await this.createUserWithDemoData(address)
     }
 
-    return this.getTokens(user);
+    return this.getTokens(user)
   }
 
   // TODO: review TON login flow
   public async loginTon(payload: IAuthTonPayload): Promise<IAuthTokens> {
-    const address = payload.address;
+    const address = payload.address
     // const key = `nonce:${address}`;
     // const nonce = await this.redis.get(key);
 
@@ -91,98 +94,104 @@ export class Authenticator {
     //   throw new AuthenticationException('Nonce is not available or expired');
     // }
 
-    const isValid = this.tonProofService.checkProof(payload);
+    const isValid = this.tonProofService.checkProof(payload)
 
     if (!isValid) {
-      throw new AuthenticationException('Signature is not valid');
+      throw new AuthenticationException('Signature is not valid')
     }
 
-    let user = await this.userRepository.findByAddressPublic(address);
+    let user = await this.userRepository.findByAddressPublic(address)
 
     if (!user) {
-      user = await this.createUserWithDemoData(address);
+      user = await this.createUserWithDemoData(address)
     }
 
-    return this.getTokens(user);
+    return this.getTokens(user)
   }
 
   public async getUserFromRefreshToken(token: string): Promise<User> {
-    const payload = this.decodeJwtToken(token);
-    const userId = (payload as jwt.JwtPayload).id;
+    const payload = this.decodeJwtToken(token)
+    const userId = (payload as jwt.JwtPayload).id
 
     if (!userId) {
-      throw new AuthenticationException('Refresh token is not valid');
+      throw new AuthenticationException('Refresh token is not valid')
     }
 
     try {
-      return await this.userRepository.findOneByIdOrFail(userId);
+      return await this.userRepository.findOneByIdOrFail(userId)
     } catch {
-      throw new AuthenticationException('User does not exist');
+      throw new AuthenticationException('User does not exist')
     }
   }
 
-  public async getUserFromJwtTokenOrThrowException(token: string): Promise<User> {
-    const user = await this.getUserFromJwtToken(token);
+  public async getUserFromJwtTokenOrThrowException(
+    token: string,
+  ): Promise<User> {
+    const user = await this.getUserFromJwtToken(token)
 
     if (!user) {
-      throw new AuthenticationException('invalid auth token');
+      throw new AuthenticationException('invalid auth token')
     }
 
-    return user;
+    return user
   }
 
   public async getUserFromJwtToken(token: string): Promise<User | any> {
     try {
-      const tokenData: any = this.decodeJwtToken(token);
+      const tokenData: any = this.decodeJwtToken(token)
 
       if (tokenData.emailOrPhone) {
-        const user = await this.userRepository.findByEmailPhone(tokenData.emailOrPhone);
+        const user = await this.userRepository.findByEmailPhone(
+          tokenData.emailOrPhone,
+        )
 
         if (user) {
-          return Promise.resolve(user);
+          return Promise.resolve(user)
         }
       }
       if (tokenData.address) {
-        const user = await this.userRepository.findByAddressPublic(tokenData.address);
+        const user = await this.userRepository.findByAddressPublic(
+          tokenData.address,
+        )
 
         if (user) {
-          return Promise.resolve(user);
+          return Promise.resolve(user)
         }
       }
 
-      return Promise.resolve(null);
+      return Promise.resolve(null)
     } catch {
-      return Promise.resolve(null);
+      return Promise.resolve(null)
     }
   }
 
   public getEmailOrPhoneOrThrowError(token: string): string {
-    const tokenData: any = this.decodeJwtToken(token);
+    const tokenData: any = this.decodeJwtToken(token)
 
-    return tokenData.emailOrPhone;
+    return tokenData.emailOrPhone
   }
 
   public getJwtIatOrThrowError(token: string): string {
-    const tokenData: any = this.decodeJwtToken(token);
+    const tokenData: any = this.decodeJwtToken(token)
 
-    return tokenData.iat.toString();
+    return tokenData.iat.toString()
   }
 
   public decodeJwtToken(token: string) {
-    return jwt.verify(token, this.parameters.jwtSecret);
+    return jwt.verify(token, this.parameters.jwtSecret)
   }
 
   public getTokens(user: User): IAuthTokens {
-    const accessToken = this.generateJwtToken(user);
-    const refreshToken = this.generateRefreshToken(user);
+    const accessToken = this.generateJwtToken(user)
+    const refreshToken = this.generateRefreshToken(user)
 
-    return {accessToken, refreshToken};
+    return { accessToken, refreshToken }
   }
 
   public generateRefreshToken(user: User): string {
-    return jwt.sign({id: user.id}, this.parameters.jwtSecret, {
+    return jwt.sign({ id: user.id }, this.parameters.jwtSecret, {
       expiresIn: this.refreshTokenExpiresIn,
-    });
+    })
   }
 
   public generateJwtToken(user: User): string {
@@ -190,25 +199,25 @@ export class Authenticator {
       id: user.id,
       address: user.address,
       emailOrPhone: user.email || user.phone,
-    };
+    }
 
     return jwt.sign(data, this.parameters.jwtSecret, {
       expiresIn: this.accessTokenExpiresIn,
-    });
+    })
   }
 
   public static hashPassword(plainPassword: string): string {
-    return bcrypt.hashSync(plainPassword, 8);
+    return bcrypt.hashSync(plainPassword, 8)
   }
 
   private async createUserWithDemoData(address: string): Promise<User> {
-    const user = new User();
-    user.address = address;
-    user.roles = [EUserRole.ROLE_USER];
+    const user = new User()
+    user.address = address
+    user.roles = [EUserRole.ROLE_USER]
 
-    await this.userManager.saveSingle(user);
-    await this.projectManager.createDemoData(user);
+    await this.userManager.saveSingle(user)
+    await this.projectManager.createDemoData(user)
 
-    return user;
+    return user
   }
 }

@@ -1,22 +1,22 @@
-import {ValidationError} from 'class-validator';
+import { ValidationError } from 'class-validator'
 
 export class ErrorFormatter {
   public static format(error: any): {
-    name: string;
-    message: string;
-    errors?: any;
+    name: string
+    message: string
+    errors?: any
   } {
     const errorFormatted: {
-      message: string;
-      name: string;
-      errors?: any[];
+      message: string
+      name: string
+      errors?: any[]
     } = {
       message: error.message || error.name,
       name: error.name || 'Error',
-    };
+    }
 
     if (error.errors && error.errors.length > 0) {
-      errorFormatted.errors = error.errors;
+      errorFormatted.errors = error.errors
     }
 
     if (error.violations && error.violations.length > 0) {
@@ -26,10 +26,10 @@ export class ErrorFormatter {
           property: e.property,
           constraints: e.constraints,
           children: e.children,
-        };
-      });
+        }
+      })
     }
 
-    return errorFormatted;
+    return errorFormatted
   }
 }

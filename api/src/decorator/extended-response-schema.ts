@@ -1,47 +1,53 @@
-import {merge, isEmpty} from 'lodash';
-import {SchemaObject, OperationObject} from 'openapi3-ts';
-import {getContentType, getStatusCode, IRoute, OpenAPI} from 'routing-controllers-openapi';
+import { merge, isEmpty } from 'lodash'
+import { SchemaObject, OperationObject } from 'openapi3-ts'
+import {
+  getContentType,
+  getStatusCode,
+  IRoute,
+  OpenAPI,
+} from 'routing-controllers-openapi'
 
 export function ExtendedResponseSchema<E>(
   responseSchema: any,
   options: {
-    contentType?: string;
-    description?: string;
-    statusCode?: string | number;
-    isArray?: boolean;
-    isPagination?: boolean;
+    contentType?: string
+    description?: string
+    statusCode?: string | number
+    isArray?: boolean
+    isPagination?: boolean
   } = {},
-  example?: E
+  example?: E,
 ) {
   const setResponseSchema = (source: OperationObject, route: IRoute) => {
-    const description = options.description || '';
-    const contentType = options.contentType || getContentType(route);
-    const statusCode = (options.statusCode || getStatusCode(route)).toString();
+    const description = options.description || ''
+    const contentType = options.contentType || getContentType(route)
+    const statusCode = (options.statusCode || getStatusCode(route)).toString()
 
-    let schema: SchemaObject = {};
+    let schema: SchemaObject = {}
 
     if (typeof responseSchema === 'object' && isEmpty(responseSchema)) {
       // for {} format
-      schema = {type: 'object'};
+      schema = { type: 'object' }
     } else if (
       Number === responseSchema ||
       String === responseSchema ||
       Boolean === responseSchema
     ) {
-      const schemaName: 'number' | 'string' | 'boolean' = responseSchema.name.toLowerCase();
+      const schemaName: 'number' | 'string' | 'boolean' =
+        responseSchema.name.toLowerCase()
 
       if (options.isArray) {
         // for [0, 1, 2, ...] format
         schema = {
           type: 'array',
-          items: {type: schemaName},
-        };
+          items: { type: schemaName },
+        }
       } else {
         // for single number | boolean | string format
-        schema = {type: schemaName};
+        schema = { type: schemaName }
       }
     } else {
-      const schemaName: string = responseSchema.name;
+      const schemaName: string = responseSchema.name
 
       if (options.isArray) {
         // for [Entity, Entity, ...] format
@@ -50,7 +56,7 @@ export function ExtendedResponseSchema<E>(
           items: {
             $ref: `#/components/schemas/${schemaName}`,
           },
-        };
+        }
       } else if (options.isPagination) {
         // for [[...Entities], 0] format
         schema = {
@@ -68,42 +74,46 @@ export function ExtendedResponseSchema<E>(
               },
             ],
           },
-        };
+        }
       } else {
         schema = {
           $ref: `#/components/schemas/${schemaName}`,
-        };
+        }
       }
     }
 
     if (example) {
-      schema.example = example;
+      schema.example = example
     }
 
     const responses = {
       [statusCode]: {
-        content: {[contentType]: {schema}},
+        content: { [contentType]: { schema } },
         description,
       },
-    };
+    }
 
-    const oldSchema = source.responses[statusCode]?.content[contentType].schema;
+    const oldSchema = source.responses[statusCode]?.content[contentType].schema
 
     if (oldSchema?.$ref || oldSchema?.items || oldSchema?.oneOf) {
       // case where we're adding multiple schemas under single statuscode/contentType
-      const newStatusCodeResponse = merge({}, source.responses[statusCode], responses[statusCode]);
+      const newStatusCodeResponse = merge(
+        {},
+        source.responses[statusCode],
+        responses[statusCode],
+      )
 
       const newSchema = oldSchema.oneOf
-        ? {oneOf: [...oldSchema.oneOf, schema]}
-        : {oneOf: [oldSchema, schema]};
+        ? { oneOf: [...oldSchema.oneOf, schema] }
+        : { oneOf: [oldSchema, schema] }
 
-      newStatusCodeResponse.content[contentType].schema = newSchema;
-      source.responses[statusCode] = newStatusCodeResponse;
-      return source;
+      newStatusCodeResponse.content[contentType].schema = newSchema
+      source.responses[statusCode] = newStatusCodeResponse
+      return source
     }
 
-    return merge({}, source, {responses});
-  };
+    return merge({}, source, { responses })
+  }
 
-  return (...args: any) => OpenAPI(setResponseSchema)(...args);
+  return (...args: any) => OpenAPI(setResponseSchema)(...args)
 }

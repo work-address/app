@@ -1,59 +1,61 @@
-import {inject, injectable} from 'inversify';
+import { inject, injectable } from 'inversify'
 
-import {User} from '../entity/user';
-import {ISearchUser} from '../interface/search';
-import {Filter} from '../service/filter';
-import {AbstractRepositoryTemplate} from './abstract-repository-template';
+import { User } from '../entity/user'
+import { ISearchUser } from '../interface/search'
+import { Filter } from '../service/filter'
+import { AbstractRepositoryTemplate } from './abstract-repository-template'
 
 @injectable()
 export class UserRepository extends AbstractRepositoryTemplate<User> {
-  protected target = User;
+  protected target = User
   @inject('Filter')
-  protected filter: Filter;
+  protected filter: Filter
 
   public updateActiveAtAndTimezone(user: User, tz: string): Promise<User> {
-    user.tz = tz;
+    user.tz = tz
 
-    return this.saveSingle(user);
+    return this.saveSingle(user)
   }
 
   public async findAndCount(search: ISearchUser): Promise<[User[], number]> {
-    const sort = this.filter.buildOrderByCondition('user', search);
-    const limit = this.filter.buildLimit(search);
+    const sort = this.filter.buildOrderByCondition('user', search)
+    const limit = this.filter.buildLimit(search)
 
     return this.getRepo()
       .createQueryBuilder('user')
       .where((qb: any) => {
         if (search.filter.id) {
-          qb.andWhere('user.id = :id', {id: search.filter.id});
+          qb.andWhere('user.id = :id', { id: search.filter.id })
         }
         if (search.query) {
-          const q = `%${search.query}%`;
-          qb.andWhere('(user.email ILIKE :q OR user.phone ILIKE :q)', {q});
+          const q = `%${search.query}%`
+          qb.andWhere('(user.email ILIKE :q OR user.phone ILIKE :q)', { q })
         }
       })
       .orderBy(sort)
       .skip(limit * search.page)
       .take(limit)
-      .getManyAndCount();
+      .getManyAndCount()
   }
 
   public findByEmailPhoneOrFail(emailOrPhone: string): Promise<User> {
     return this.getRepo()
       .createQueryBuilder('u')
       .select()
-      .where('u.email = :email', {email: emailOrPhone})
-      .orWhere('u.phone = :phone', {phone: emailOrPhone})
-      .getOneOrFail();
+      .where('u.email = :email', { email: emailOrPhone })
+      .orWhere('u.phone = :phone', { phone: emailOrPhone })
+      .getOneOrFail()
   }
 
   public findByEmailPhone(emailOrPhone: string): Promise<User | undefined> {
     return this.getRepo()
       .createQueryBuilder('u')
       .select()
-      .where('lower(u.email) = :email', {email: emailOrPhone.toLocaleLowerCase()})
-      .orWhere('u.phone = :phone', {phone: emailOrPhone})
-      .getOne();
+      .where('lower(u.email) = :email', {
+        email: emailOrPhone.toLocaleLowerCase(),
+      })
+      .orWhere('u.phone = :phone', { phone: emailOrPhone })
+      .getOne()
   }
 
   public findByAddressPublic(address: string): Promise<User | undefined> {
@@ -61,7 +63,7 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
       where: {
         address,
       },
-    });
+    })
   }
 
   public findByAddressPublicOrFail(address: string): Promise<User> {
@@ -69,6 +71,6 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
       where: {
         address,
       },
-    });
+    })
   }
 }

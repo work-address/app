@@ -1,15 +1,15 @@
-import {Column, Entity, ManyToOne, OneToMany} from 'typeorm';
-import faker from 'faker';
-import {Exclude, Expose, Type} from 'class-transformer';
-import {JSONSchema} from 'class-validator-jsonschema';
+import { Column, Entity, ManyToOne, OneToMany } from 'typeorm'
+import faker from 'faker'
+import { Exclude, Expose, Type } from 'class-transformer'
+import { JSONSchema } from 'class-validator-jsonschema'
 
-import {User} from './user';
-import {AbstractBaseEntity} from './abstract-base-entity';
-import {IsBoolean, IsNotEmpty, IsOptional, IsString} from 'class-validator';
-import {EProjectState} from '../interface/project';
-import {Invoice} from './invoice';
-import {Time} from './time';
-import {IProject} from '../interface/project';
+import { User } from './user'
+import { AbstractBaseEntity } from './abstract-base-entity'
+import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator'
+import { EProjectState } from '../interface/project'
+import { Invoice } from './invoice'
+import { Time } from './time'
+import { IProject } from '../interface/project'
 
 @JSONSchema({
   example: {
@@ -20,54 +20,54 @@ import {IProject} from '../interface/project';
 @Exclude()
 export class Project extends AbstractBaseEntity implements IProject {
   @IsNotEmpty()
-  @Expose({groups: ['search', 'create', 'edit']})
-  @Column('text', {nullable: true})
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @Column('text', { nullable: true })
   @IsString()
-  title: string;
+  title: string
 
-  @Expose({groups: ['search', 'create', 'edit']})
-  @Column('bool', {nullable: true, default: false})
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @Column('bool', { nullable: true, default: false })
   @IsBoolean()
   @IsOptional()
-  trackScreenshots?: boolean | null;
+  trackScreenshots?: boolean | null
 
-  @Expose({groups: ['search', 'create', 'edit']})
-  @Column('bool', {nullable: true, default: false})
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @Column('bool', { nullable: true, default: false })
   @IsBoolean()
   @IsOptional()
-  trackProcesses?: boolean | null;
+  trackProcesses?: boolean | null
 
   @IsNotEmpty()
-  @Expose({groups: ['search', 'create', 'edit']})
-  @Column('text', {nullable: true})
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @Column('text', { nullable: true })
   @IsString()
-  text: any;
+  text: any
 
-  @Expose({groups: ['search', 'create', 'edit']})
-  @Column('decimal', {precision: 6, scale: 2, default: 0, nullable: true})
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @Column('decimal', { precision: 6, scale: 2, default: 0, nullable: true })
   @IsString()
   @IsOptional()
-  rateHour: number;
+  rateHour: number
 
   @IsNotEmpty()
-  @Expose({groups: ['search', 'create', 'edit']})
-  @Column('text', {nullable: true})
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @Column('text', { nullable: true })
   @IsString()
-  state: EProjectState;
+  state: EProjectState
 
-  @Expose({groups: ['search']})
+  @Expose({ groups: ['search'] })
   @Type(() => User)
-  @ManyToOne(() => User, {eager: true, nullable: true})
-  user: User;
+  @ManyToOne(() => User, { eager: true, nullable: true })
+  user: User
 
   // TODO: list of users who have access to the project
 
-  @Expose({groups: ['search']})
+  @Expose({ groups: ['search'] })
   @Type(() => Invoice)
-  @OneToMany(() => Invoice, invoice => invoice.project)
-  invoices: Invoice[];
-  @Expose({groups: ['search']})
+  @OneToMany(() => Invoice, (invoice) => invoice.project)
+  invoices: Invoice[]
+  @Expose({ groups: ['search'] })
   @Type(() => Time)
-  @OneToMany(() => Time, time => time.project)
-  time: Time[];
+  @OneToMany(() => Time, (time) => time.project)
+  time: Time[]
 }

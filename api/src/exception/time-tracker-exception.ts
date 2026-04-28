@@ -1,15 +1,15 @@
-import {UnauthorizedError} from 'routing-controllers';
+import { UnauthorizedError } from 'routing-controllers'
 
 class TimeTrackerException extends UnauthorizedError {
-  public static NAME = 'TimeTrackerException';
+  public static NAME = 'TimeTrackerException'
 
   constructor(message: string) {
-    super(message);
+    super(message)
 
-    Object.setPrototypeOf(this, TimeTrackerException.prototype);
-    this.name = TimeTrackerException.NAME;
-    this.message = message;
+    Object.setPrototypeOf(this, TimeTrackerException.prototype)
+    this.name = TimeTrackerException.NAME
+    this.message = message
   }
 }
 
-export default TimeTrackerException;
+export default TimeTrackerException

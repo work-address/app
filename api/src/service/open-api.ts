@@ -1,8 +1,8 @@
-import {getMetadataArgsStorage} from 'routing-controllers';
-import {routingControllersToSpec} from 'routing-controllers-openapi';
-import {validationMetadatasToSchemas} from 'class-validator-jsonschema';
-import {injectable} from 'inversify';
-import type {ParameterObject, ResponseObject, SchemaObject} from 'openapi3-ts';
+import { getMetadataArgsStorage } from 'routing-controllers'
+import { routingControllersToSpec } from 'routing-controllers-openapi'
+import { validationMetadatasToSchemas } from 'class-validator-jsonschema'
+import { injectable } from 'inversify'
+import type { ParameterObject, ResponseObject, SchemaObject } from 'openapi3-ts'
 
 @injectable()
 export class OpenApi {
@@ -23,13 +23,13 @@ export class OpenApi {
       },
       sort: {
         type: 'object',
-        additionalProperties: {type: 'string'},
+        additionalProperties: { type: 'string' },
         description: 'Map of field name to sort direction (ASC or DESC)',
       },
-      query: {type: 'string', description: 'Optional free-text query'},
-      limit: {type: 'integer', description: 'Optional page size override'},
+      query: { type: 'string', description: 'Optional free-text query' },
+      limit: { type: 'integer', description: 'Optional page size override' },
     },
-  };
+  }
 
   /** Response shape from repository tuple: [rows, totalCount]. */
   static readonly paginatedTupleResponse: ResponseObject = {
@@ -46,16 +46,16 @@ export class OpenApi {
         example: [[], 0],
       },
     },
-  };
+  }
 
   static readonly bearerAuthParameter: ParameterObject = {
     in: 'header',
     name: 'Authorization',
     required: true,
-    schema: {type: 'string'},
+    schema: { type: 'string' },
     description:
       'JWT access token (same value the API returns in the Authorization header on login)',
-  };
+  }
 
   static readonly emptyObjectResponse: ResponseObject = {
     description: 'Empty JSON object',
@@ -67,18 +67,18 @@ export class OpenApi {
         },
       },
     },
-  };
+  }
 
   public buildSpec() {
-    const {defaultMetadataStorage} = require('class-transformer/cjs/storage');
+    const { defaultMetadataStorage } = require('class-transformer/cjs/storage')
     const routingControllersOptions = {
       routePrefix: '/api',
-    };
-    const storage = getMetadataArgsStorage();
+    }
+    const storage = getMetadataArgsStorage()
     const schemas = validationMetadatasToSchemas({
       classTransformerMetadataStorage: defaultMetadataStorage,
       refPointerPrefix: '#/components/schemas/',
-    });
+    })
 
     // storage.controllers = storage.controllers.filter(c => this.isDisplayed(c.target));
     // storage.actions = storage.actions.filter(c => this.isDisplayed(c.target));
@@ -97,8 +97,8 @@ export class OpenApi {
         title: 'API schema',
         version: 'v1',
       },
-    });
+    })
 
-    return spec;
+    return spec
   }
 }

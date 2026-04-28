@@ -1,13 +1,13 @@
 class RejectedExecutionException extends Error {
-  public static NAME = 'RejectedExecutionException';
+  public static NAME = 'RejectedExecutionException'
 
   constructor(message: string) {
-    super();
+    super()
 
-    Object.setPrototypeOf(this, RejectedExecutionException.prototype);
-    this.name = RejectedExecutionException.NAME;
-    this.message = message;
+    Object.setPrototypeOf(this, RejectedExecutionException.prototype)
+    this.name = RejectedExecutionException.NAME
+    this.message = message
   }
 }
 
-export default RejectedExecutionException;
+export default RejectedExecutionException

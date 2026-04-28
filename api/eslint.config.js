@@ -1,5 +1,5 @@
-import {config as appBaseConfig} from '@app/eslint-config';
-import tseslint from 'typescript-eslint';
+import { config as appBaseConfig } from '@app/eslint-config'
+import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
@@ -30,7 +30,7 @@ export default tseslint.config(
       '@typescript-eslint/no-var-requires': 'off',
       '@typescript-eslint/no-misused-promises': 'off',
 
-      '@typescript-eslint/no-unused-vars': ['error', {args: 'none'}],
+      '@typescript-eslint/no-unused-vars': ['error', { args: 'none' }],
       '@typescript-eslint/consistent-type-imports': 'off',
 
       // Repo does not enforce shared config import/order + unicorn stylistic prefs yet (like web exemptions)
@@ -70,5 +70,5 @@ export default tseslint.config(
         tsconfigRootDir: import.meta.dirname,
       },
     },
-  }
-);
+  },
+)

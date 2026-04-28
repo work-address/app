@@ -9,198 +9,226 @@ import {
   SaveOptions,
   SelectQueryBuilder,
   getConnection,
-} from 'typeorm';
+} from 'typeorm'
 
-import {Repository} from 'typeorm/repository/Repository';
-import {ISearch} from '../interface/search';
-import {Filter} from '../service/filter';
-import ConstraintsValidationException from '../exception/constraints-validation-exception';
-import {validate} from 'class-validator';
+import { Repository } from 'typeorm/repository/Repository'
+import { ISearch } from '../interface/search'
+import { Filter } from '../service/filter'
+import ConstraintsValidationException from '../exception/constraints-validation-exception'
+import { validate } from 'class-validator'
 
 export interface ObjectLiteral {
-  [key: string]: any;
+  [key: string]: any
 }
 
-export type TRelations = {[key: string]: boolean | any};
-export type TFindOptions = TRelations;
-export type TSelectOptions = TRelations;
+export type TRelations = { [key: string]: boolean | any }
+export type TFindOptions = TRelations
+export type TSelectOptions = TRelations
 
 export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
-  protected filter: Filter;
-  protected target: EntityTarget<T> & {name: string};
+  protected filter: Filter
+  protected target: EntityTarget<T> & { name: string }
 
   async validateAndSave(entity: T): Promise<T> {
-    const errors = await validate(entity);
+    const errors = await validate(entity)
 
     if (errors.length) {
-      throw new ConstraintsValidationException(errors);
+      throw new ConstraintsValidationException(errors)
     }
 
-    return this.saveSingle(entity);
+    return this.saveSingle(entity)
   }
 
   public async findBy(options: FindManyOptions<T>): Promise<T[]> {
-    return this.getRepo().find(options);
+    return this.getRepo().find(options)
   }
 
   public async findOneBy(options: FindOneOptions<T>): Promise<T | undefined> {
-    return this.getRepo().findOne(options);
+    return this.getRepo().findOne(options)
   }
 
   public async findOneByOrFail(options: FindOneOptions<T>): Promise<T> {
-    return this.getRepo().findOneOrFail(options);
+    return this.getRepo().findOneOrFail(options)
   }
 
-  public findOneByIdOrFail(id: string | string, options?: FindOneOptions<T>): Promise<T> {
-    return this.getRepo().findOneOrFail(id, options);
+  public findOneByIdOrFail(
+    id: string | string,
+    options?: FindOneOptions<T>,
+  ): Promise<T> {
+    return this.getRepo().findOneOrFail(id, options)
   }
 
   public saveSingle<T>(entity: T, options?: SaveOptions): Promise<T> {
-    return this.getRepo().save(entity as any, options);
+    return this.getRepo().save(entity as any, options)
   }
 
   public saveMany<T>(entities: T[], options?: SaveOptions): Promise<T[]> {
-    return this.getRepo().save(entities as any, options);
+    return this.getRepo().save(entities as any, options)
   }
 
   public createEntity(entityLike: DeepPartial<T>): T {
-    return this.getRepo().create(entityLike);
+    return this.getRepo().create(entityLike)
   }
 
   public async remove(entity: T): Promise<T> {
-    return await this.getRepo().remove(entity);
+    return await this.getRepo().remove(entity)
   }
 
   public removeById(id: string): Promise<DeleteResult> {
-    return this.getRepo().delete(id);
+    return this.getRepo().delete(id)
   }
 
   public async delete(conditions: FindConditions<T>) {
-    return await this.getRepo().delete(conditions);
+    return await this.getRepo().delete(conditions)
   }
 
   public async softDelete(conditions: FindConditions<T>) {
-    return await this.getRepo().softDelete(conditions);
+    return await this.getRepo().softDelete(conditions)
   }
 
   public getRepo(): Repository<T> {
-    return getRepository(this.target);
+    return getRepository(this.target)
   }
 
   public findOneByQueryBuilder<Entity>(
     findOptions: TFindOptions,
     selectOptions: null | TSelectOptions = null,
     relations: null | TRelations = null,
-    searchOptions: ISearch | any = null
+    searchOptions: ISearch | any = null,
   ) {
-    const mainAliasName: string = this.target.name.toLowerCase();
+    const mainAliasName: string = this.target.name.toLowerCase()
     const query = this.getRepo()
       .createQueryBuilder(mainAliasName)
       .select()
-      .orderBy(`${mainAliasName}.id`, 'ASC');
+      .orderBy(`${mainAliasName}.id`, 'ASC')
 
     if (relations) {
-      AbstractRepositoryTemplate.buildRelations(relations, mainAliasName, query);
+      AbstractRepositoryTemplate.buildRelations(relations, mainAliasName, query)
     }
 
     if (selectOptions) {
-      const arrayOfSelectOptions = AbstractRepositoryTemplate.buildSelectOptions(
-        selectOptions,
-        relations,
-        mainAliasName
-      );
+      const arrayOfSelectOptions =
+        AbstractRepositoryTemplate.buildSelectOptions(
+          selectOptions,
+          relations,
+          mainAliasName,
+        )
 
-      query.select(arrayOfSelectOptions);
+      query.select(arrayOfSelectOptions)
     }
 
     query.where((qb: SelectQueryBuilder<Entity>) => {
-      AbstractRepositoryTemplate.buildFindOptions(findOptions, mainAliasName, qb);
-    });
+      AbstractRepositoryTemplate.buildFindOptions(
+        findOptions,
+        mainAliasName,
+        qb,
+      )
+    })
 
     if (searchOptions) {
       if (searchOptions.sort) {
-        const sort = this.filter.buildOrderByCondition(mainAliasName, searchOptions);
-        query.orderBy(sort);
+        const sort = this.filter.buildOrderByCondition(
+          mainAliasName,
+          searchOptions,
+        )
+        query.orderBy(sort)
       }
     }
 
-    return query.getOne();
+    return query.getOne()
   }
 
-  static buildRelations<E>(relations: TRelations, parentKey: string, query: SelectQueryBuilder<E>) {
+  static buildRelations<E>(
+    relations: TRelations,
+    parentKey: string,
+    query: SelectQueryBuilder<E>,
+  ) {
     Object.keys(relations).forEach((key: string) => {
-      query.leftJoinAndSelect(`${parentKey}.${key}`, `${parentKey}_${key}`);
+      query.leftJoinAndSelect(`${parentKey}.${key}`, `${parentKey}_${key}`)
 
       if (typeof relations[key] === 'object') {
-        AbstractRepositoryTemplate.buildRelations(relations[key], `${parentKey}_${key}`, query);
+        AbstractRepositoryTemplate.buildRelations(
+          relations[key],
+          `${parentKey}_${key}`,
+          query,
+        )
       }
-    });
+    })
   }
 
   static buildFindOptions<E>(
     findOptions: TFindOptions,
     parentKey: string,
-    query: SelectQueryBuilder<E>
+    query: SelectQueryBuilder<E>,
   ) {
     Object.keys(findOptions).forEach((key: string) => {
-      if (typeof findOptions[key] === 'object' && !Array.isArray(findOptions[key])) {
+      if (
+        typeof findOptions[key] === 'object' &&
+        !Array.isArray(findOptions[key])
+      ) {
         return AbstractRepositoryTemplate.buildFindOptions(
           findOptions[key],
           `${parentKey}_${key}`,
-          query
-        );
+          query,
+        )
       }
 
       if (key === 'query') {
-        const value: string = findOptions[key];
-        query.andWhere(`${parentKey}.${key} ILIKE :${key}`, {[key]: `%${value}%`});
+        const value: string = findOptions[key]
+        query.andWhere(`${parentKey}.${key} ILIKE :${key}`, {
+          [key]: `%${value}%`,
+        })
       } else if (Array.isArray(findOptions[key])) {
-        const values: number[] | string[] = findOptions[key];
-        query.andWhere(`${parentKey}.${key} IN (:...${key})`, {[key]: values});
+        const values: number[] | string[] = findOptions[key]
+        query.andWhere(`${parentKey}.${key} IN (:...${key})`, { [key]: values })
       } else {
-        query.andWhere(`${parentKey}.${key} = :${key}`, {[key]: findOptions[key]});
+        query.andWhere(`${parentKey}.${key} = :${key}`, {
+          [key]: findOptions[key],
+        })
       }
-    });
+    })
   }
 
   static buildSelectOptions(
     selectOptions: TSelectOptions,
     relations: TRelations | null,
     parentKey: string,
-    result: string[] = []
+    result: string[] = [],
   ) {
-    const selectOptionsKeys = Object.keys(selectOptions);
+    const selectOptionsKeys = Object.keys(selectOptions)
 
     // first level
     if (!result.length) {
       const doesExistSthExceptRelations = selectOptionsKeys.some(
-        key => typeof selectOptions[key] !== 'object'
-      );
+        (key) => typeof selectOptions[key] !== 'object',
+      )
 
       if (!doesExistSthExceptRelations) {
-        const metadata = AbstractRepositoryTemplate.getMetadata(parentKey);
+        const metadata = AbstractRepositoryTemplate.getMetadata(parentKey)
         const targetFields: string[] = metadata.ownColumns.map(
-          column => `${parentKey}_${column.propertyName}`
-        );
-        selectOptionsKeys.push(...targetFields);
+          (column) => `${parentKey}_${column.propertyName}`,
+        )
+        selectOptionsKeys.push(...targetFields)
       }
     }
 
-    result.push(`${parentKey}.id`);
+    result.push(`${parentKey}.id`)
 
     if (relations) {
-      const relationsKeys = Object.keys(relations);
+      const relationsKeys = Object.keys(relations)
 
       relationsKeys.forEach((key: string) => {
         if (!selectOptionsKeys.includes(key)) {
-          const metadata = AbstractRepositoryTemplate.getMetadata(key);
-          const targetFields: string[] = metadata.ownColumns.map(column => column.propertyName);
+          const metadata = AbstractRepositoryTemplate.getMetadata(key)
+          const targetFields: string[] = metadata.ownColumns.map(
+            (column) => column.propertyName,
+          )
 
           targetFields.forEach((fieldName: string) => {
-            result.push(`${parentKey}_${key}.${fieldName}`);
-          });
+            result.push(`${parentKey}_${key}.${fieldName}`)
+          })
         }
-      });
+      })
     }
 
     selectOptionsKeys.forEach((key: string) => {
@@ -209,28 +237,28 @@ export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
           selectOptions[key],
           relations ? relations[key] : null,
           `${parentKey}_${key}`,
-          result
-        );
+          result,
+        )
       } else {
-        result.push(`${parentKey}.${key}`);
+        result.push(`${parentKey}.${key}`)
       }
-    });
+    })
 
-    return result;
+    return result
   }
 
   static getMetadata(propertyName: string) {
-    let metadata;
+    let metadata
 
-    const validPropertyName = propertyName.toLowerCase();
+    const validPropertyName = propertyName.toLowerCase()
 
     try {
-      metadata = getConnection().getMetadata(validPropertyName);
+      metadata = getConnection().getMetadata(validPropertyName)
     } catch {
       // remove 's' symbol from the end
-      metadata = getConnection().getMetadata(validPropertyName.slice(0, -1));
+      metadata = getConnection().getMetadata(validPropertyName.slice(0, -1))
     }
 
-    return metadata;
+    return metadata
   }
 }

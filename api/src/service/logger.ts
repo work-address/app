@@ -1,28 +1,28 @@
-import {injectable} from 'inversify';
-import {ILogger} from '../interface/logging';
-import {WinstonClient} from './winston-client';
+import { injectable } from 'inversify'
+import { ILogger } from '../interface/logging'
+import { WinstonClient } from './winston-client'
 
 @injectable()
 export class Logger implements ILogger {
-  private logger: WinstonClient;
+  private logger: WinstonClient
 
   constructor() {
-    this.logger = new WinstonClient();
+    this.logger = new WinstonClient()
   }
 
   public error(message: string, object?: any): void {
-    this.logger.client.error(message, object);
+    this.logger.client.error(message, object)
   }
 
   public info(message: string, object?: any): void {
-    this.logger.client.info(message, object);
+    this.logger.client.info(message, object)
   }
 
   public debug(message: string, object?: any): void {
-    this.logger.client.debug(message, object);
+    this.logger.client.debug(message, object)
   }
 
   public warn(message: string, object?: any): void {
-    this.logger.client.warn(message, object);
+    this.logger.client.warn(message, object)
   }
 }

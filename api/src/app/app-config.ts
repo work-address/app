@@ -1,29 +1,29 @@
-import 'reflect-metadata';
-import 'dotenv/config';
+import 'reflect-metadata'
+import 'dotenv/config'
 
-import {IConfigParameters} from '../interface/config';
+import { IConfigParameters } from '../interface/config'
 
 export class AppConfig {
   public static readonly ENV = {
     test: ['test'],
     local: ['development'],
     production: ['production'],
-  };
+  }
 
   public static getEnv(): string {
-    return process.env.NODE_ENV || 'development';
+    return process.env.NODE_ENV || 'development'
   }
 
   public static isTest(): boolean {
-    return AppConfig.ENV.test.indexOf(AppConfig.getEnv()) > -1;
+    return AppConfig.ENV.test.indexOf(AppConfig.getEnv()) > -1
   }
 
   public static isLocal(): boolean {
-    return AppConfig.ENV.local.indexOf(AppConfig.getEnv()) > -1;
+    return AppConfig.ENV.local.indexOf(AppConfig.getEnv()) > -1
   }
 
   public static isProduction(): boolean {
-    return AppConfig.ENV.production.indexOf(AppConfig.getEnv()) > -1;
+    return AppConfig.ENV.production.indexOf(AppConfig.getEnv()) > -1
   }
 
   public static readConfig(): IConfigParameters {
@@ -41,6 +41,6 @@ export class AppConfig {
         password: process.env.APP_DB_PASSWORD as string,
         database: process.env.APP_DB_NAME as string,
       },
-    };
+    }
   }
 }

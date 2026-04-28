@@ -3,5 +3,5 @@ export enum EUserRole {
 }
 
 export interface IUser {
-  address: string;
+  address: string
 }

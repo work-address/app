@@ -8,33 +8,33 @@ import {
   Body,
   Req,
   ResponseClassTransformOptions,
-} from 'routing-controllers';
-import faker from 'faker';
+} from 'routing-controllers'
+import faker from 'faker'
 
-import express from 'express';
-import {OpenAPI} from 'routing-controllers-openapi';
+import express from 'express'
+import { OpenAPI } from 'routing-controllers-openapi'
 
-import {User} from '../entity/user';
-import {App} from '../app/app';
-import {Authenticator} from '../service/auth/authenticator';
-import {UserManager} from '../service/user-manager';
-import {UserRepository} from '../repository/user-repository';
-import {IConfigParameters} from '../interface/config';
-import {ExtendedResponseSchema} from '../decorator/extended-response-schema';
+import { User } from '../entity/user'
+import { App } from '../app/app'
+import { Authenticator } from '../service/auth/authenticator'
+import { UserManager } from '../service/user-manager'
+import { UserRepository } from '../repository/user-repository'
+import { IConfigParameters } from '../interface/config'
+import { ExtendedResponseSchema } from '../decorator/extended-response-schema'
 
 // TODO: support login with solana blockchain
 @JsonController('/auth')
 export class AuthController {
-  protected authenticator: Authenticator;
-  protected userManager: UserManager;
-  protected userRepository: UserRepository;
-  protected parameters: IConfigParameters;
+  protected authenticator: Authenticator
+  protected userManager: UserManager
+  protected userRepository: UserRepository
+  protected parameters: IConfigParameters
 
   constructor() {
-    this.userManager = App.container.get('UserManager');
-    this.userRepository = App.container.get('UserRepository');
-    this.authenticator = App.container.get('Authenticator');
-    this.parameters = App.container.get('parameters');
+    this.userManager = App.container.get('UserManager')
+    this.userRepository = App.container.get('UserRepository')
+    this.authenticator = App.container.get('Authenticator')
+    this.parameters = App.container.get('parameters')
   }
 
   @OpenAPI({
@@ -49,7 +49,10 @@ export class AuthController {
             type: 'object',
             required: ['signature', 'address'],
             properties: {
-              signature: {type: 'string', description: 'Hex signature from the wallet'},
+              signature: {
+                type: 'string',
+                description: 'Hex signature from the wallet',
+              },
               address: {
                 type: 'string',
                 description: 'Ethereum address (checksummed or lower-case)',
@@ -89,17 +92,20 @@ export class AuthController {
   public async loginEth(
     @Body()
     payload: {
-      signature: string;
-      address: string;
+      signature: string
+      address: string
     },
-    @Res() res: any
+    @Res() res: any,
   ): Promise<Record<string, never>> {
-    const tokens = await this.authenticator.loginEth(payload.signature, payload.address);
+    const tokens = await this.authenticator.loginEth(
+      payload.signature,
+      payload.address,
+    )
 
-    res.setHeader('Authorization', tokens.accessToken);
-    res.setHeader('Refresh-Token', tokens.refreshToken);
+    res.setHeader('Authorization', tokens.accessToken)
+    res.setHeader('Refresh-Token', tokens.refreshToken)
 
-    return {};
+    return {}
   }
 
   @OpenAPI({
@@ -112,7 +118,8 @@ export class AuthController {
         'application/json': {
           schema: {
             type: 'object',
-            description: 'TON proof payload (see server implementation for required fields)',
+            description:
+              'TON proof payload (see server implementation for required fields)',
             additionalProperties: true,
           },
         },
@@ -146,14 +153,14 @@ export class AuthController {
   @HttpCode(200)
   @Post('/ton')
   public async checkProofHandler(@Body() payload: any, @Res() res: any) {
-    console.log(payload);
+    console.log(payload)
 
-    const tokens = await this.authenticator.loginTon(payload);
+    const tokens = await this.authenticator.loginTon(payload)
 
-    res.setHeader('Authorization', tokens.accessToken);
-    res.setHeader('Refresh-Token', tokens.refreshToken);
+    res.setHeader('Authorization', tokens.accessToken)
+    res.setHeader('Refresh-Token', tokens.refreshToken)
 
-    return {};
+    return {}
   }
 
   @OpenAPI({
@@ -168,7 +175,10 @@ export class AuthController {
             type: 'object',
             required: ['address'],
             properties: {
-              address: {type: 'string', description: 'Wallet address to bind the nonce to'},
+              address: {
+                type: 'string',
+                description: 'Wallet address to bind the nonce to',
+              },
             },
           },
         },
@@ -179,7 +189,7 @@ export class AuthController {
         description: 'Nonce string to sign (JSON string body)',
         content: {
           'application/json': {
-            schema: {type: 'string'},
+            schema: { type: 'string' },
             example: faker.datatype.uuid(),
           },
         },
@@ -188,8 +198,8 @@ export class AuthController {
   })
   @HttpCode(200)
   @Post('/nonce')
-  public nonce(@Body() payload: {address: string}): Promise<string> {
-    return this.authenticator.getNonce(payload.address);
+  public nonce(@Body() payload: { address: string }): Promise<string> {
+    return this.authenticator.getNonce(payload.address)
   }
 
   @Post('/refresh')
@@ -224,7 +234,8 @@ export class AuthController {
     },
     responses: {
       200: {
-        description: 'Returns updated access and refresh tokens in response headers',
+        description:
+          'Returns updated access and refresh tokens in response headers',
         content: {
           'application/json': {
             schema: {
@@ -253,15 +264,15 @@ export class AuthController {
   })
   public async refresh(
     @BodyParam('refreshToken') refreshToken: string,
-    @Res() res: any
+    @Res() res: any,
   ): Promise<Record<string, never>> {
-    const user = await this.authenticator.getUserFromRefreshToken(refreshToken);
-    const tokens = this.authenticator.getTokens(user);
+    const user = await this.authenticator.getUserFromRefreshToken(refreshToken)
+    const tokens = this.authenticator.getTokens(user)
 
-    res.setHeader('Authorization', tokens.accessToken);
-    res.setHeader('Refresh-Token', tokens.refreshToken);
+    res.setHeader('Authorization', tokens.accessToken)
+    res.setHeader('Refresh-Token', tokens.refreshToken)
 
-    return res.send();
+    return res.send()
   }
 
   @OpenAPI({
@@ -273,7 +284,7 @@ export class AuthController {
         in: 'header',
         name: 'Authorization',
         required: false,
-        schema: {type: 'string'},
+        schema: { type: 'string' },
         description: 'JWT access token',
       },
     ],
@@ -282,7 +293,7 @@ export class AuthController {
         description: 'User entity (search + me groups) or null',
         content: {
           'application/json': {
-            schema: {type: 'object', nullable: true},
+            schema: { type: 'object', nullable: true },
           },
         },
       },
@@ -290,11 +301,11 @@ export class AuthController {
   })
   @Get('/status')
   @ExtendedResponseSchema(User)
-  @ResponseClassTransformOptions({groups: ['search', 'me']})
+  @ResponseClassTransformOptions({ groups: ['search', 'me'] })
   public async status(@Req() req: express.Request): Promise<User | null> {
-    const token = req.headers.authorization as string;
-    const user = await this.authenticator.getUserFromJwtToken(token);
+    const token = req.headers.authorization as string
+    const user = await this.authenticator.getUserFromJwtToken(token)
 
-    return user;
+    return user
   }
 }

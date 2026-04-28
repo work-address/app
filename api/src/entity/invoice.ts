@@ -1,12 +1,12 @@
-import {Column, Entity, JoinColumn, ManyToOne} from 'typeorm';
-import faker from 'faker';
-import {Exclude, Expose, Type} from 'class-transformer';
-import {JSONSchema} from 'class-validator-jsonschema';
+import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm'
+import faker from 'faker'
+import { Exclude, Expose, Type } from 'class-transformer'
+import { JSONSchema } from 'class-validator-jsonschema'
 
-import {AbstractBaseEntity} from './abstract-base-entity';
-import {Project} from './project';
-import {IsDate, IsNotEmpty, IsOptional} from 'class-validator';
-import {EInvoiceState} from '../interface/invoice';
+import { AbstractBaseEntity } from './abstract-base-entity'
+import { Project } from './project'
+import { IsDate, IsNotEmpty, IsOptional } from 'class-validator'
+import { EInvoiceState } from '../interface/invoice'
 
 @JSONSchema({
   example: {
@@ -16,31 +16,31 @@ import {EInvoiceState} from '../interface/invoice';
 @Entity()
 @Exclude()
 export class Invoice extends AbstractBaseEntity {
-  @Expose({groups: ['search']})
+  @Expose({ groups: ['search'] })
   @Type(() => Project)
-  @ManyToOne(() => Project, {eager: true, nullable: false})
-  @JoinColumn({name: 'projectId'})
-  project: Project;
+  @ManyToOne(() => Project, { eager: true, nullable: false })
+  @JoinColumn({ name: 'projectId' })
+  project: Project
 
-  @Expose({groups: ['search']})
+  @Expose({ groups: ['search'] })
   @Column('timestamptz')
   @IsDate()
-  fromAt: Date;
-  @Expose({groups: ['search']})
+  fromAt: Date
+  @Expose({ groups: ['search'] })
   @Column('timestamptz')
   @IsDate()
-  toAt: Date;
+  toAt: Date
 
   @IsNotEmpty()
-  @Expose({groups: ['search', 'create', 'edit']})
-  @Column('float', {nullable: false})
-  amount: number;
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @Column('float', { nullable: false })
+  amount: number
   @IsOptional()
-  @Expose({groups: ['search', 'create', 'edit']})
-  @Column('text', {nullable: true})
-  paymentTxId: string;
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @Column('text', { nullable: true })
+  paymentTxId: string
   @IsNotEmpty()
-  @Expose({groups: ['search', 'create', 'edit']})
-  @Column('text', {nullable: true})
-  state: EInvoiceState;
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @Column('text', { nullable: true })
+  state: EInvoiceState
 }

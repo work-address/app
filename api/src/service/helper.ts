@@ -1,18 +1,18 @@
 export class Helper {
   public static toFixedDecimals(value: number, numberDecimals: number) {
-    const isValueLessZero = value < 0;
+    const isValueLessZero = value < 0
 
     if (isValueLessZero) {
-      value = Math.abs(value);
+      value = Math.abs(value)
     }
 
-    const e = Math.floor(Number(`${value}e+${numberDecimals}`));
-    let result = Number(`${e}e-${numberDecimals}`);
+    const e = Math.floor(Number(`${value}e+${numberDecimals}`))
+    let result = Number(`${e}e-${numberDecimals}`)
 
     if (isValueLessZero) {
-      result = -result;
+      result = -result
     }
 
-    return result;
+    return result
   }
 }

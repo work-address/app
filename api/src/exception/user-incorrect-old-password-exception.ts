@@ -1,12 +1,12 @@
-import {HttpError} from 'routing-controllers';
+import { HttpError } from 'routing-controllers'
 
 export class UserIncorrectOldPasswordException extends HttpError {
-  public static NAME = 'UserIncorrectOldPasswordException';
+  public static NAME = 'UserIncorrectOldPasswordException'
 
   constructor(message: string) {
-    super(400);
+    super(400)
 
-    this.name = UserIncorrectOldPasswordException.NAME;
-    this.message = message;
+    this.name = UserIncorrectOldPasswordException.NAME
+    this.message = message
   }
 }

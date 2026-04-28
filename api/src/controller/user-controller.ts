@@ -8,31 +8,31 @@ import {
   Post,
   Put,
   ResponseClassTransformOptions,
-} from 'routing-controllers';
-import faker from 'faker';
-import {OpenAPI} from 'routing-controllers-openapi';
+} from 'routing-controllers'
+import faker from 'faker'
+import { OpenAPI } from 'routing-controllers-openapi'
 
-import {App} from '../app/app';
-import {User} from '../entity/user';
-import {EUserRole} from '../interface/user';
-import {UserManager} from '../service/user-manager';
-import {AbstractController} from './abstract-controller';
-import {CurrentUser} from '../decorator/current-user';
-import {UserRepository} from '../repository/user-repository';
-import {ISearchUser} from '../interface/search';
-import {ExtendedResponseSchema} from '../decorator/extended-response-schema';
-import {OpenApi} from '../service/open-api';
+import { App } from '../app/app'
+import { User } from '../entity/user'
+import { EUserRole } from '../interface/user'
+import { UserManager } from '../service/user-manager'
+import { AbstractController } from './abstract-controller'
+import { CurrentUser } from '../decorator/current-user'
+import { UserRepository } from '../repository/user-repository'
+import { ISearchUser } from '../interface/search'
+import { ExtendedResponseSchema } from '../decorator/extended-response-schema'
+import { OpenApi } from '../service/open-api'
 
 @JsonController('/user')
 export class UserController extends AbstractController {
-  protected userManager: UserManager;
-  protected userRepository: UserRepository;
+  protected userManager: UserManager
+  protected userRepository: UserRepository
 
   constructor() {
-    super();
+    super()
 
-    this.userManager = App.container.get('UserManager');
-    this.userRepository = App.container.get('UserRepository');
+    this.userManager = App.container.get('UserManager')
+    this.userRepository = App.container.get('UserRepository')
   }
 
   @OpenAPI({
@@ -45,7 +45,7 @@ export class UserController extends AbstractController {
           schema: OpenApi.searchRequestBodySchema,
           example: {
             filter: {},
-            sort: {createdAt: 'ASC'},
+            sort: { createdAt: 'ASC' },
             page: 0,
           },
         },
@@ -56,9 +56,9 @@ export class UserController extends AbstractController {
     },
   })
   @Post('/search')
-  @ResponseClassTransformOptions({groups: ['search']})
+  @ResponseClassTransformOptions({ groups: ['search'] })
   public search(@Body() search: ISearchUser) {
-    return this.userRepository.findAndCount(search);
+    return this.userRepository.findAndCount(search)
   }
 
   @OpenAPI({
@@ -68,7 +68,7 @@ export class UserController extends AbstractController {
         in: 'path',
         name: 'address',
         required: true,
-        schema: {type: 'string'},
+        schema: { type: 'string' },
         description: 'On-chain address string as stored on the user',
       },
     ],
@@ -76,16 +76,16 @@ export class UserController extends AbstractController {
       200: {
         description: 'User (search group)',
         content: {
-          'application/json': {schema: {type: 'object'}},
+          'application/json': { schema: { type: 'object' } },
         },
       },
     },
   })
   @Get('/:address/address')
   @ExtendedResponseSchema(User)
-  @ResponseClassTransformOptions({groups: ['search']})
+  @ResponseClassTransformOptions({ groups: ['search'] })
   public read(@Param('address') address: string): Promise<User> {
-    return this.userRepository.findByAddressPublicOrFail(address);
+    return this.userRepository.findByAddressPublicOrFail(address)
   }
 
   @Put()
@@ -107,12 +107,12 @@ export class UserController extends AbstractController {
             type: 'object',
             description: 'Subset of User editable fields',
             properties: {
-              bio: {type: 'string'},
-              tz: {type: 'string'},
-              phone: {type: 'string'},
-              email: {type: 'string'},
-              region: {type: 'string'},
-              country: {type: 'string'},
+              bio: { type: 'string' },
+              tz: { type: 'string' },
+              phone: { type: 'string' },
+              email: { type: 'string' },
+              region: { type: 'string' },
+              country: { type: 'string' },
             },
           },
         },
@@ -127,9 +127,10 @@ export class UserController extends AbstractController {
   @Authorized([EUserRole.ROLE_USER])
   public async edit(
     @CurrentUser() currentUser: User,
-    @Body({validate: {groups: ['edit']}, transform: {groups: ['edit']}}) data: User
+    @Body({ validate: { groups: ['edit'] }, transform: { groups: ['edit'] } })
+    data: User,
   ) {
-    await this.userManager.editValidateAndSave(currentUser, data);
-    return {};
+    await this.userManager.editValidateAndSave(currentUser, data)
+    return {}
   }
 }

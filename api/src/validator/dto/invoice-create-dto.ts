@@ -1,9 +1,9 @@
-import {IsNumber} from 'class-validator';
+import { IsNumber } from 'class-validator'
 
 export class InvoiceCreateDto {
   @IsNumber()
-  fromUnix: number;
+  fromUnix: number
 
   @IsNumber()
-  toUnix: number;
+  toUnix: number
 }

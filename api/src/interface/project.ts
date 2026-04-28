@@ -10,11 +10,11 @@ export enum EUserProjectRole {
 }
 
 export interface IProject {
-  id?: string;
-  title: string;
-  text: any;
-  rateHour: number;
-  state: EProjectState;
-  trackScreenshots?: boolean | null;
-  trackProcesses?: boolean | null;
+  id?: string
+  title: string
+  text: any
+  rateHour: number
+  state: EProjectState
+  trackScreenshots?: boolean | null
+  trackProcesses?: boolean | null
 }

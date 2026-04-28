@@ -8,36 +8,36 @@ import {
   Post,
   QueryParam,
   ResponseClassTransformOptions,
-} from 'routing-controllers';
-import {OpenAPI} from 'routing-controllers-openapi';
+} from 'routing-controllers'
+import { OpenAPI } from 'routing-controllers-openapi'
 
-import {App} from '../app/app';
-import {User} from '../entity/user';
-import {ExtendedResponseSchema} from '../decorator/extended-response-schema';
-import {EUserRole} from '../interface/user';
-import {AbstractController} from './abstract-controller';
-import {CurrentUser} from '../decorator/current-user';
-import {TimeManager} from '../service/time-manager';
-import {TimeRepository} from '../repository/time-repository';
-import {TimeSearchDto} from '../validator/dto/time-search-dto';
-import {Time} from '../entity/time';
-import {EntityFromParam} from '../decorator/entity-from-param';
-import {ITimeInsertionResult} from '../interface/time';
-import {TimeCreateDto} from '../validator/dto/time-create-dto';
-import {Project} from '../entity/project';
-import {OpenApi} from '../service/open-api';
+import { App } from '../app/app'
+import { User } from '../entity/user'
+import { ExtendedResponseSchema } from '../decorator/extended-response-schema'
+import { EUserRole } from '../interface/user'
+import { AbstractController } from './abstract-controller'
+import { CurrentUser } from '../decorator/current-user'
+import { TimeManager } from '../service/time-manager'
+import { TimeRepository } from '../repository/time-repository'
+import { TimeSearchDto } from '../validator/dto/time-search-dto'
+import { Time } from '../entity/time'
+import { EntityFromParam } from '../decorator/entity-from-param'
+import { ITimeInsertionResult } from '../interface/time'
+import { TimeCreateDto } from '../validator/dto/time-create-dto'
+import { Project } from '../entity/project'
+import { OpenApi } from '../service/open-api'
 
 @Authorized([EUserRole.ROLE_USER])
 @JsonController('/time')
 export class TimeController extends AbstractController {
-  protected timeManager: TimeManager;
-  protected timeRepository: TimeRepository;
+  protected timeManager: TimeManager
+  protected timeRepository: TimeRepository
 
   constructor() {
-    super();
+    super()
 
-    this.timeManager = App.container.get('TimeManager');
-    this.timeRepository = App.container.get('TimeRepository');
+    this.timeManager = App.container.get('TimeManager')
+    this.timeRepository = App.container.get('TimeRepository')
   }
 
   @OpenAPI({
@@ -56,7 +56,7 @@ export class TimeController extends AbstractController {
               fromAt: 1700000000000,
               toAt: 1700086400000,
             },
-            sort: {createdAt: 'ASC'},
+            sort: { createdAt: 'ASC' },
             page: 0,
           },
         },
@@ -67,10 +67,13 @@ export class TimeController extends AbstractController {
     },
   })
   @Post('/search')
-  @ExtendedResponseSchema(Time, {isPagination: true})
-  @ResponseClassTransformOptions({groups: ['search']})
-  public search(@Body() search: TimeSearchDto, @CurrentUser() currentUser: User) {
-    return this.timeRepository.findAndCountPersonal(search, currentUser);
+  @ExtendedResponseSchema(Time, { isPagination: true })
+  @ResponseClassTransformOptions({ groups: ['search'] })
+  public search(
+    @Body() search: TimeSearchDto,
+    @CurrentUser() currentUser: User,
+  ) {
+    return this.timeRepository.findAndCountPersonal(search, currentUser)
   }
 
   @OpenAPI({
@@ -82,7 +85,7 @@ export class TimeController extends AbstractController {
         in: 'query',
         name: 'projectId',
         required: false,
-        schema: {type: 'string', format: 'uuid'},
+        schema: { type: 'string', format: 'uuid' },
       },
     ],
     responses: {
@@ -90,28 +93,32 @@ export class TimeController extends AbstractController {
         description: 'Array of per-project aggregate rows',
         content: {
           'application/json': {
-            schema: {type: 'array', items: {type: 'object'}},
+            schema: { type: 'array', items: { type: 'object' } },
           },
         },
       },
     },
   })
   @Get('/totals')
-  @ResponseClassTransformOptions({groups: ['search']})
-  public getTotals(@CurrentUser() currentUser: User, @QueryParam('projectId') projectId?: string) {
-    return this.timeRepository.getTotals(currentUser, projectId);
+  @ResponseClassTransformOptions({ groups: ['search'] })
+  public getTotals(
+    @CurrentUser() currentUser: User,
+    @QueryParam('projectId') projectId?: string,
+  ) {
+    return this.timeRepository.getTotals(currentUser, projectId)
   }
 
   @OpenAPI({
     summary: 'Cached time report for a project',
-    description: 'User must be allowed to view the project (owner or assigned user).',
+    description:
+      'User must be allowed to view the project (owner or assigned user).',
     parameters: [
       OpenApi.bearerAuthParameter,
       {
         in: 'path',
         name: 'id',
         required: true,
-        schema: {type: 'string', format: 'uuid'},
+        schema: { type: 'string', format: 'uuid' },
         description: 'Project id',
       },
     ],
@@ -119,18 +126,18 @@ export class TimeController extends AbstractController {
       200: {
         description: 'Report payload (see TimeManager.buildAndCacheReport)',
         content: {
-          'application/json': {schema: {type: 'object'}},
+          'application/json': { schema: { type: 'object' } },
         },
       },
     },
   })
   @Get('/report/:id')
-  @ResponseClassTransformOptions({groups: ['search']})
+  @ResponseClassTransformOptions({ groups: ['search'] })
   public async getReport(
     @CurrentUser() currentUser: User,
-    @EntityFromParam('id') project: Project
+    @EntityFromParam('id') project: Project,
   ) {
-    return await this.timeManager.buildAndCacheReport(project, currentUser);
+    return await this.timeManager.buildAndCacheReport(project, currentUser)
   }
 
   @OpenAPI({
@@ -159,25 +166,28 @@ export class TimeController extends AbstractController {
                 'projectId',
               ],
               properties: {
-                fromIndex: {type: 'number'},
-                toIndex: {type: 'number'},
-                note: {type: 'string'},
-                keyboardKeys: {type: 'number'},
-                minutesActive: {type: 'number'},
-                mouseKeys: {type: 'number'},
-                mouseDistance: {type: 'number'},
-                fromAt: {type: 'string', format: 'date-time'},
-                toAt: {type: 'string', format: 'date-time'},
-                projectId: {type: 'string', format: 'uuid'},
-                screenshot: {type: 'string', description: 'Base64 or data URL'},
+                fromIndex: { type: 'number' },
+                toIndex: { type: 'number' },
+                note: { type: 'string' },
+                keyboardKeys: { type: 'number' },
+                minutesActive: { type: 'number' },
+                mouseKeys: { type: 'number' },
+                mouseDistance: { type: 'number' },
+                fromAt: { type: 'string', format: 'date-time' },
+                toAt: { type: 'string', format: 'date-time' },
+                projectId: { type: 'string', format: 'uuid' },
+                screenshot: {
+                  type: 'string',
+                  description: 'Base64 or data URL',
+                },
                 processes: {
                   type: 'array',
                   items: {
                     type: 'object',
                     properties: {
-                      name: {type: 'string'},
-                      description: {type: 'string'},
-                      timeMin: {type: 'number'},
+                      name: { type: 'string' },
+                      description: { type: 'string' },
+                      timeMin: { type: 'number' },
                     },
                   },
                 },
@@ -212,12 +222,12 @@ export class TimeController extends AbstractController {
               items: {
                 type: 'object',
                 properties: {
-                  id: {type: 'string', format: 'uuid'},
+                  id: { type: 'string', format: 'uuid' },
                   error: {
                     type: 'object',
                     properties: {
-                      name: {type: 'string'},
-                      message: {type: 'string'},
+                      name: { type: 'string' },
+                      message: { type: 'string' },
                     },
                   },
                 },
@@ -236,37 +246,43 @@ export class TimeController extends AbstractController {
       validate: {
         groups: ['create'],
       },
-      transform: {groups: ['create']},
+      transform: { groups: ['create'] },
     })
-    data: TimeCreateDto[]
+    data: TimeCreateDto[],
   ): Promise<ITimeInsertionResult[]> {
-    return this.timeManager.createOrUpdateMany(data, currentUser);
+    return this.timeManager.createOrUpdateMany(data, currentUser)
   }
 
   @OpenAPI({
     summary: 'Get one time entry',
-    description: 'Caller must be project owner or assigned owner for that time row.',
+    description:
+      'Caller must be project owner or assigned owner for that time row.',
     parameters: [
       OpenApi.bearerAuthParameter,
-      {in: 'path', name: 'id', required: true, schema: {type: 'string', format: 'uuid'}},
+      {
+        in: 'path',
+        name: 'id',
+        required: true,
+        schema: { type: 'string', format: 'uuid' },
+      },
     ],
     responses: {
       200: {
         description: 'Time with project relation',
         content: {
-          'application/json': {schema: {type: 'object'}},
+          'application/json': { schema: { type: 'object' } },
         },
       },
     },
   })
   @Get('/:id')
   @ExtendedResponseSchema(Time)
-  @ResponseClassTransformOptions({groups: ['search']})
+  @ResponseClassTransformOptions({ groups: ['search'] })
   public read(
     @CurrentUser() currentUser: User,
-    @EntityFromParam('id', null, {project: true}) time: Time
+    @EntityFromParam('id', null, { project: true }) time: Time,
   ) {
-    return this.timeRepository.findOneConfirmUser(time, currentUser);
+    return this.timeRepository.findOneConfirmUser(time, currentUser)
   }
 
   @OpenAPI({
@@ -274,7 +290,12 @@ export class TimeController extends AbstractController {
     description: 'User must own the time row via assigned project.',
     parameters: [
       OpenApi.bearerAuthParameter,
-      {in: 'path', name: 'id', required: true, schema: {type: 'string', format: 'uuid'}},
+      {
+        in: 'path',
+        name: 'id',
+        required: true,
+        schema: { type: 'string', format: 'uuid' },
+      },
     ],
     responses: {
       200: OpenApi.emptyObjectResponse,
@@ -282,9 +303,12 @@ export class TimeController extends AbstractController {
   })
   @Delete('/:id')
   @HttpCode(200)
-  public async delete(@CurrentUser() currentUser: User, @EntityFromParam('id') time: Time) {
-    await this.timeManager.remove(time, currentUser);
+  public async delete(
+    @CurrentUser() currentUser: User,
+    @EntityFromParam('id') time: Time,
+  ) {
+    await this.timeManager.remove(time, currentUser)
 
-    return {};
+    return {}
   }
 }

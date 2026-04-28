@@ -1,10 +1,9 @@
-import {createApp} from './app/app-bootstrap';
+import { createApp } from './app/app-bootstrap'
+;(async () => {
+  const app = await createApp()
 
-(async () => {
-  const app = await createApp();
-
-  await app.boostrap();
-  app.start();
+  await app.boostrap()
+  app.start()
 })()
-  .then(r => console.log(r))
-  .catch(e => console.log(e));
+  .then((r) => console.log(r))
+  .catch((e) => console.log(e))

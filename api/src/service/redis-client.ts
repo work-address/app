@@ -1,47 +1,51 @@
-import {createClient} from 'redis';
-import {inject, injectable} from 'inversify';
+import { createClient } from 'redis'
+import { inject, injectable } from 'inversify'
 
-import {IConfigParameters} from '../interface/config';
+import { IConfigParameters } from '../interface/config'
 
 @injectable()
 export class RedisClient {
   @inject('parameters')
-  protected parameters: IConfigParameters;
+  protected parameters: IConfigParameters
 
   public async set(key: string, value: any) {
-    const client = await this.getConnectedClient();
+    const client = await this.getConnectedClient()
 
-    await client.set(key, JSON.stringify(value));
-    await client.disconnect();
+    await client.set(key, JSON.stringify(value))
+    await client.disconnect()
   }
 
-  public async setWithExpiry(key: string, value: any, expiryMilliseconds: number) {
-    const client = await this.getConnectedClient();
+  public async setWithExpiry(
+    key: string,
+    value: any,
+    expiryMilliseconds: number,
+  ) {
+    const client = await this.getConnectedClient()
 
-    await client.set(key, JSON.stringify(value), {PX: expiryMilliseconds});
-    await client.disconnect();
+    await client.set(key, JSON.stringify(value), { PX: expiryMilliseconds })
+    await client.disconnect()
   }
 
   public async get(key: string): Promise<any | string> {
-    const client = await this.getConnectedClient();
-    const value = await client.get(key);
+    const client = await this.getConnectedClient()
+    const value = await client.get(key)
 
-    await client.disconnect();
+    await client.disconnect()
 
     if (value) {
-      return JSON.parse(value);
+      return JSON.parse(value)
     }
 
-    return '';
+    return ''
   }
 
   private async getConnectedClient() {
     const client = createClient({
       url: this.parameters.redis,
-    });
+    })
 
-    await client.connect();
+    await client.connect()
 
-    return client;
+    return client
   }
 }

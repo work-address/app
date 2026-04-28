@@ -14,9 +14,6 @@
     "prettier:fix": "prettier --write \"**/*.{ts,js,md}\"",
     "prettier:check": "prettier --check \"**/*.{ts,js,md}\"",
     "typeorm:cli": "TS_NODE_PROJECT=tsconfig.json ts-node ./node_modules/typeorm/cli -f src/ormconfig.ts",
-    "lint": "eslint .",
-    "lint:fix": "eslint --max-warnings 0 --fix .",
-    "lint:check": "eslint --max-warnings 0 ."
   },
   "keywords": [
     "node",

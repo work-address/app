@@ -1,22 +1,28 @@
-import {IsNumber, IsString, IsObject, IsOptional, IsNotEmpty} from 'class-validator';
-import {ISearch} from '../../interface/search';
+import {
+  IsNumber,
+  IsString,
+  IsObject,
+  IsOptional,
+  IsNotEmpty,
+} from 'class-validator'
+import { ISearch } from '../../interface/search'
 
 export class SearchDto implements ISearch {
   @IsNumber()
   @IsNotEmpty()
-  page: number;
+  page: number
 
   @IsObject()
-  filter: any;
+  filter: any
 
   @IsObject()
-  sort: any;
+  sort: any
 
   @IsString()
   @IsOptional()
-  query: string;
+  query: string
 
   @IsNumber()
   @IsOptional()
-  limit: number;
+  limit: number
 }

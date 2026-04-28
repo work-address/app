@@ -1,15 +1,15 @@
-import {Get, JsonController} from 'routing-controllers';
-import {OpenAPI} from 'routing-controllers-openapi';
+import { Get, JsonController } from 'routing-controllers'
+import { OpenAPI } from 'routing-controllers-openapi'
 
-import {App} from '../app/app';
-import {OpenApi} from '../service/open-api';
+import { App } from '../app/app'
+import { OpenApi } from '../service/open-api'
 
 @JsonController('/help')
 export class HelpController {
-  protected openApi: OpenApi;
+  protected openApi: OpenApi
 
   constructor() {
-    this.openApi = App.container.get('OpenApi');
+    this.openApi = App.container.get('OpenApi')
   }
 
   @OpenAPI({
@@ -23,7 +23,8 @@ export class HelpController {
           'application/json': {
             schema: {
               type: 'object',
-              description: 'Valid OpenAPI object (openapi, info, paths, components, …)',
+              description:
+                'Valid OpenAPI object (openapi, info, paths, components, …)',
             },
           },
         },
@@ -32,6 +33,6 @@ export class HelpController {
   })
   @Get('/openApi')
   public swagger() {
-    return this.openApi.buildSpec();
+    return this.openApi.buildSpec()
   }
 }

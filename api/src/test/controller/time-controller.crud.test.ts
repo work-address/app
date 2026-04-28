@@ -1,33 +1,33 @@
-import {expect} from 'chai';
-import faker from 'faker';
-import {suite, test} from '@testdeck/mocha';
-import moment from 'moment';
-import fs from 'fs';
+import { expect } from 'chai'
+import faker from 'faker'
+import { suite, test } from '@testdeck/mocha'
+import moment from 'moment'
+import fs from 'fs'
 
-import {BaseControllerTest} from './base-controller.test';
-import {ProjectManager} from '../../service/project-manager';
-import {TimeRepository} from '../../repository/time-repository';
-import {TimeCreateDto} from '../../validator/dto/time-create-dto';
-import {In} from 'typeorm';
-import {join} from 'path';
+import { BaseControllerTest } from './base-controller.test'
+import { ProjectManager } from '../../service/project-manager'
+import { TimeRepository } from '../../repository/time-repository'
+import { TimeCreateDto } from '../../validator/dto/time-create-dto'
+import { In } from 'typeorm'
+import { join } from 'path'
 
 @suite
 export class TimeControllerCrudTest extends BaseControllerTest {
-  protected timeRepository: TimeRepository;
-  protected projectManager: ProjectManager;
+  protected timeRepository: TimeRepository
+  protected projectManager: ProjectManager
 
   constructor() {
-    super();
+    super()
 
-    this.timeRepository = this.container.get('TimeRepository');
-    this.projectManager = this.container.get('ProjectManager');
+    this.timeRepository = this.container.get('TimeRepository')
+    this.projectManager = this.container.get('ProjectManager')
   }
 
   @test.skip
   async _skipped() {
     // const file = join(__dirname, '../fixture/media/screenshot.webp');
-    const file = join(__dirname, '../fixture/media/screenshot.base64');
-    const stream = fs.readFileSync(file);
+    const file = join(__dirname, '../fixture/media/screenshot.base64')
+    const stream = fs.readFileSync(file)
 
     // console.log(stream.length)
 
@@ -63,9 +63,9 @@ export class TimeControllerCrudTest extends BaseControllerTest {
           ],
         },
       ],
-    });
+    })
 
-    console.log(res.data);
+    console.log(res.data)
   }
 
   @test.skip
@@ -73,13 +73,18 @@ export class TimeControllerCrudTest extends BaseControllerTest {
     // const file = join(__dirname, '../fixture/media/screenshot.webp');
     // const file = join(__dirname, '../fixture/media/screenshor-a.webp');
     // const file = join(__dirname, '../fixture/media/screenshot.base64');
-    const file = join(__dirname, '../fixture/media/screenshot.webp');
-    const stream = fs.readFileSync(file);
+    const file = join(__dirname, '../fixture/media/screenshot.webp')
+    const stream = fs.readFileSync(file)
 
-    const user = await this.userFixture.createUser();
+    const user = await this.userFixture.createUser()
     // const projectA = await this.projectFixture.createPersonal(user);
     // const projectB = await this.projectFixture.createPersonal(user);
-    const projectC = await this.projectFixture.createPersonal(user, 0, true, true);
+    const projectC = await this.projectFixture.createPersonal(
+      user,
+      0,
+      true,
+      true,
+    )
 
     const data: TimeCreateDto[] = [
       // {
@@ -127,7 +132,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
           },
         ],
       },
-    ];
+    ]
 
     const res = await this.http.request({
       url: `${this.url}/api/time`,
@@ -137,9 +142,9 @@ export class TimeControllerCrudTest extends BaseControllerTest {
         Authorization: this.authenticator.getTokens(user).accessToken,
       },
       data,
-    });
+    })
 
-    console.log('>>>>>', res.data);
+    console.log('>>>>>', res.data)
 
     // const timeA = await this.timeRepository.findOneByOrFail({
     //   where: {
@@ -178,12 +183,15 @@ export class TimeControllerCrudTest extends BaseControllerTest {
 
   @test.skip
   async createRemote() {
-    const file = join(__dirname, '../fixture/media/screenshot_20260127_184X00.webp');
-    const stream = fs.readFileSync(file);
-    const projectId = '7ec869da-edb9-4ffa-ab96-f749454172ba';
-    const screenshotData = stream.toString('base64');
+    const file = join(
+      __dirname,
+      '../fixture/media/screenshot_20260127_184X00.webp',
+    )
+    const stream = fs.readFileSync(file)
+    const projectId = '7ec869da-edb9-4ffa-ab96-f749454172ba'
+    const screenshotData = stream.toString('base64')
 
-    console.log('>>>>', screenshotData);
+    console.log('>>>>', screenshotData)
 
     // const data: TimeCreateDto[] = [
     const data = [
@@ -243,7 +251,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
         ],
         screenshot: screenshotData,
       },
-    ];
+    ]
 
     const res = await this.http.request({
       url: `${this.url}/api/time`,
@@ -254,18 +262,26 @@ export class TimeControllerCrudTest extends BaseControllerTest {
           'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjBhZmRjZGYzLTQyZmYtNGEzNS05MWZhLWVkOGE1Mzc2YzFlYyIsImFkZHJlc3MiOiJVUUJLWFJrakpFc0toRnA3WFlvcF9XVkxXaXA2QXpIT1dYNUVXNWpkSTZ0QUpRWkoiLCJlbWFpbE9yUGhvbmUiOm51bGwsImlhdCI6MTc2OTQ0ODg4MywiZXhwIjoxNzcxMTc2ODgzfQ.BIc63S3ZqsUkV3nzl6kE5pbaChoZeJtnW2lufuuXx7Y',
       },
       data,
-    });
+    })
 
-    console.log('>>>>>', res.data);
+    console.log('>>>>>', res.data)
   }
 
   @test.skip
   async createLocal() {
-    const file = join(__dirname, '../fixture/media/screenshot_20260127_184X00.webp');
-    const stream = fs.readFileSync(file);
+    const file = join(
+      __dirname,
+      '../fixture/media/screenshot_20260127_184X00.webp',
+    )
+    const stream = fs.readFileSync(file)
 
-    const user = await this.userFixture.createUser();
-    const projectC = await this.projectFixture.createPersonal(user, 0, true, true);
+    const user = await this.userFixture.createUser()
+    const projectC = await this.projectFixture.createPersonal(
+      user,
+      0,
+      true,
+      true,
+    )
 
     const data: TimeCreateDto[] = [
       {
@@ -289,7 +305,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
           },
         ],
       },
-    ];
+    ]
 
     const res = await this.http.request({
       url: `${this.url}/api/time`,
@@ -299,16 +315,16 @@ export class TimeControllerCrudTest extends BaseControllerTest {
         Authorization: this.authenticator.getTokens(user).accessToken,
       },
       data,
-    });
+    })
 
-    console.log('>>>>>', res.data);
+    console.log('>>>>>', res.data)
   }
 
   @test.skip
   async createPersonalInputValidationErrorA() {
-    const user = await this.userFixture.createUser();
-    const projectA = await this.projectFixture.createPersonal(user);
-    const unix = moment().utc();
+    const user = await this.userFixture.createUser()
+    const projectA = await this.projectFixture.createPersonal(user)
+    const unix = moment().utc()
     const data: TimeCreateDto[] = [
       {
         fromIndex: 1000,
@@ -334,7 +350,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
         toAt: moment(unix).toISOString(),
         projectId: '',
       },
-    ];
+    ]
 
     const res = await this.http.request({
       url: `${this.url}/api/time`,
@@ -344,9 +360,9 @@ export class TimeControllerCrudTest extends BaseControllerTest {
         Authorization: this.authenticator.getTokens(user).accessToken,
       },
       data,
-    });
+    })
 
-    expect(res.status).to.be.equal(200);
+    expect(res.status).to.be.equal(200)
     expect(res.data).to.be.deep.equal([
       data[0],
       {
@@ -356,13 +372,13 @@ export class TimeControllerCrudTest extends BaseControllerTest {
           message: 'invalid input syntax for type uuid: ""',
         },
       },
-    ]);
+    ])
   }
 
   @test
   async createPersonalInputValidationErrorB() {
-    const user = await this.userFixture.createUser();
-    const projectA = await this.projectFixture.createPersonal(user);
+    const user = await this.userFixture.createUser()
+    const projectA = await this.projectFixture.createPersonal(user)
     const data = [
       {
         fromIndex: 1000,
@@ -372,7 +388,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
         note: faker.datatype.uuid(),
         projectId: projectA.id,
       },
-    ];
+    ]
 
     const res = await this.http.request({
       url: `${this.url}/api/time`,
@@ -382,9 +398,9 @@ export class TimeControllerCrudTest extends BaseControllerTest {
         Authorization: this.authenticator.getTokens(user).accessToken,
       },
       data,
-    });
+    })
 
-    expect(res.status).to.be.equal(200);
+    expect(res.status).to.be.equal(200)
     expect(res.data).to.be.deep.equal([
       {
         ...data[0],
@@ -395,48 +411,52 @@ export class TimeControllerCrudTest extends BaseControllerTest {
             {
               property: 'keyboardKeys',
               constraints: {
-                isNumber: 'keyboardKeys must be a number conforming to the specified constraints',
+                isNumber:
+                  'keyboardKeys must be a number conforming to the specified constraints',
               },
               children: [],
             },
             {
               property: 'minutesActive',
               constraints: {
-                isNumber: 'minutesActive must be a number conforming to the specified constraints',
+                isNumber:
+                  'minutesActive must be a number conforming to the specified constraints',
               },
               children: [],
             },
             {
               property: 'mouseKeys',
               constraints: {
-                isNumber: 'mouseKeys must be a number conforming to the specified constraints',
+                isNumber:
+                  'mouseKeys must be a number conforming to the specified constraints',
               },
               children: [],
             },
             {
               property: 'mouseDistance',
               constraints: {
-                isNumber: 'mouseDistance must be a number conforming to the specified constraints',
+                isNumber:
+                  'mouseDistance must be a number conforming to the specified constraints',
               },
               children: [],
             },
           ],
         },
       },
-    ]);
+    ])
   }
 
   @test
   async updatePersonal() {
-    const user = await this.userFixture.createUser();
-    const projectA = await this.projectFixture.createPersonal(user);
-    const projectB = await this.projectFixture.createPersonal(user);
+    const user = await this.userFixture.createUser()
+    const projectA = await this.projectFixture.createPersonal(user)
+    const projectB = await this.projectFixture.createPersonal(user)
 
-    const unix = 1705829280;
-    const fromAt = moment.unix(unix);
-    const toAt = moment.unix(unix).add(10, 'minutes');
+    const unix = 1705829280
+    const fromAt = moment.unix(unix)
+    const toAt = moment.unix(unix).add(10, 'minutes')
 
-    await this.timeFixture.create(projectB, fromAt.toDate(), toAt.toDate());
+    await this.timeFixture.create(projectB, fromAt.toDate(), toAt.toDate())
     const data: TimeCreateDto[] = [
       {
         fromIndex: 1000,
@@ -474,7 +494,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
         toAt: toAt.toISOString(),
         projectId: projectB.id,
       },
-    ];
+    ]
 
     const res = await this.http.request({
       url: `${this.url}/api/time`,
@@ -484,7 +504,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
         Authorization: this.authenticator.getTokens(user).accessToken,
       },
       data,
-    });
+    })
 
     const times = await this.timeRepository.findBy({
       where: {
@@ -493,12 +513,12 @@ export class TimeControllerCrudTest extends BaseControllerTest {
       order: {
         createdAt: 'ASC',
       },
-    });
+    })
 
-    expect(res.data).to.have.length(3);
-    expect(times[0].keyboardKeys).to.eq(200000);
-    expect(times[0].project.id).to.eq(projectB.id);
-    expect(times[1].keyboardKeys).to.eq(100000);
-    expect(times[1].project.id).to.eq(projectA.id);
+    expect(res.data).to.have.length(3)
+    expect(times[0].keyboardKeys).to.eq(200000)
+    expect(times[0].project.id).to.eq(projectB.id)
+    expect(times[1].keyboardKeys).to.eq(100000)
+    expect(times[1].project.id).to.eq(projectA.id)
   }
 }

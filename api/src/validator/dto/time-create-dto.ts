@@ -1,39 +1,45 @@
-import {IsArray, IsDateString, IsNumber, IsOptional, IsString} from 'class-validator';
+import {
+  IsArray,
+  IsDateString,
+  IsNumber,
+  IsOptional,
+  IsString,
+} from 'class-validator'
 
 export class TimeCreateDto {
   @IsNumber()
-  fromIndex: number;
+  fromIndex: number
   @IsNumber()
-  toIndex: number;
+  toIndex: number
   @IsDateString()
-  fromAt: string;
+  fromAt: string
   @IsDateString()
-  toAt: string;
+  toAt: string
 
   @IsString()
-  projectId: string;
+  projectId: string
 
   @IsString()
-  note: string | null;
+  note: string | null
 
   @IsNumber()
-  minutesActive: number;
+  minutesActive: number
   @IsNumber()
-  keyboardKeys: number;
+  keyboardKeys: number
   @IsNumber()
-  mouseKeys: number;
+  mouseKeys: number
   @IsNumber()
-  mouseDistance: number;
+  mouseDistance: number
 
   @IsString()
   @IsOptional()
-  screenshot?: string;
+  screenshot?: string
 
   @IsArray()
   @IsOptional()
   processes?: {
-    name: string;
-    description?: string;
-    timeMin: number;
-  }[];
+    name: string
+    description?: string
+    timeMin: number
+  }[]
 }

@@ -1,9 +1,9 @@
 declare namespace NodeJS {
   interface ProcessEnv {
-    [key: string]: string | undefined;
+    [key: string]: string | undefined
   }
 }
 
 declare const process: {
-  env: NodeJS.ProcessEnv;
-};
+  env: NodeJS.ProcessEnv
+}

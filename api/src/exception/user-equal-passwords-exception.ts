@@ -1,12 +1,12 @@
-import {HttpError} from 'routing-controllers';
+import { HttpError } from 'routing-controllers'
 
 export class UserEqualPasswordsException extends HttpError {
-  public static NAME = 'UserEqualPasswordsException';
+  public static NAME = 'UserEqualPasswordsException'
 
   constructor(message: string) {
-    super(400);
+    super(400)
 
-    this.name = UserEqualPasswordsException.NAME;
-    this.message = message;
+    this.name = UserEqualPasswordsException.NAME
+    this.message = message
   }
 }

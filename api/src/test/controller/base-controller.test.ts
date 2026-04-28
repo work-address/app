@@ -1,71 +1,71 @@
-import nock from 'nock';
-import {Container} from 'inversify';
-import {timeout} from '@testdeck/mocha';
+import nock from 'nock'
+import { Container } from 'inversify'
+import { timeout } from '@testdeck/mocha'
 
-import {App} from '../../app/app';
-import {AppConfig} from '../../app/app-config';
-import {AppContainer} from '../../app/app-container';
-import {createAppTest} from '../../app/app-bootstrap';
-import {IConfigParameters} from '../../interface/config';
-import {Http} from '../../service/http';
-import {Faker} from '../../service/faker';
+import { App } from '../../app/app'
+import { AppConfig } from '../../app/app-config'
+import { AppContainer } from '../../app/app-container'
+import { createAppTest } from '../../app/app-bootstrap'
+import { IConfigParameters } from '../../interface/config'
+import { Http } from '../../service/http'
+import { Faker } from '../../service/faker'
 
-import {UserFixture} from '../fixture/user-fixture';
-import {ProjectFixture} from '../fixture/project-fixture';
-import {InvoiceFixture} from '../fixture/invoice-fixture';
-import {TimeFixture} from '../fixture/time-fixture';
-import {Authenticator} from '../../service/auth/authenticator';
+import { UserFixture } from '../fixture/user-fixture'
+import { ProjectFixture } from '../fixture/project-fixture'
+import { InvoiceFixture } from '../fixture/invoice-fixture'
+import { TimeFixture } from '../fixture/time-fixture'
+import { Authenticator } from '../../service/auth/authenticator'
 
 export class BaseControllerTest {
-  protected url: string;
-  protected app: App;
-  protected container: Container;
-  protected parameters: IConfigParameters;
-  protected http: Http;
-  protected faker: Faker;
-  protected authenticator: Authenticator;
+  protected url: string
+  protected app: App
+  protected container: Container
+  protected parameters: IConfigParameters
+  protected http: Http
+  protected faker: Faker
+  protected authenticator: Authenticator
 
-  protected projectFixture: ProjectFixture;
-  protected invoiceFixture: InvoiceFixture;
-  protected timeFixture: TimeFixture;
-  protected userFixture: UserFixture;
+  protected projectFixture: ProjectFixture
+  protected invoiceFixture: InvoiceFixture
+  protected timeFixture: TimeFixture
+  protected userFixture: UserFixture
 
   constructor() {
-    const env = AppConfig.getEnv();
-    const parameters = AppConfig.readConfig();
+    const env = AppConfig.getEnv()
+    const parameters = AppConfig.readConfig()
 
-    this.container = AppContainer.build(parameters, env);
-    this.parameters = this.container.get('parameters');
-    this.http = this.container.get('Http');
-    this.faker = this.container.get('Faker');
+    this.container = AppContainer.build(parameters, env)
+    this.parameters = this.container.get('parameters')
+    this.http = this.container.get('Http')
+    this.faker = this.container.get('Faker')
 
-    this.authenticator = this.container.get('Authenticator');
+    this.authenticator = this.container.get('Authenticator')
 
-    this.userFixture = this.container.get('UserFixture');
-    this.projectFixture = this.container.get('ProjectFixture');
-    this.timeFixture = this.container.get('TimeFixture');
-    this.invoiceFixture = this.container.get('InvoiceFixture');
+    this.userFixture = this.container.get('UserFixture')
+    this.projectFixture = this.container.get('ProjectFixture')
+    this.timeFixture = this.container.get('TimeFixture')
+    this.invoiceFixture = this.container.get('InvoiceFixture')
 
-    this.url = `http://${this.parameters.host}:${this.parameters.port}`;
+    this.url = `http://${this.parameters.host}:${this.parameters.port}`
     // this.url = `https://address.work:4000`;
   }
 
   @timeout(10000)
   async before() {
-    this.app = createAppTest();
-    await this.app.boostrap();
-    this.app.start();
+    this.app = createAppTest()
+    await this.app.boostrap()
+    this.app.start()
   }
 
   @timeout(10000)
   async after() {
-    const pendedMocks = nock.pendingMocks();
+    const pendedMocks = nock.pendingMocks()
 
     if (pendedMocks.length > 0) {
-      console.log('There are pended mocks that should be removed');
-      nock.cleanAll();
+      console.log('There are pended mocks that should be removed')
+      nock.cleanAll()
     }
 
-    await this.app.stop();
+    await this.app.stop()
   }
 }

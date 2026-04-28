@@ -1,7 +1,7 @@
-import {AppConfig} from './app/app-config';
+import { AppConfig } from './app/app-config'
 
 export default (() => {
-  const params = AppConfig.readConfig();
+  const params = AppConfig.readConfig()
 
   const connectionConfig = {
     type: params.database.type,
@@ -18,7 +18,7 @@ export default (() => {
       migrationsDir: `src/migration`,
       subscribersDir: `src/subscriber`,
     },
-  };
+  }
 
-  return connectionConfig;
-})();
+  return connectionConfig
+})()
