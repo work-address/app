@@ -116,7 +116,7 @@ export class Authenticator {
 
     try {
       return await this.userRepository.findOneByIdOrFail(userId);
-    } catch (err) {
+    } catch {
       throw new AuthenticationException('User does not exist');
     }
   }
@@ -151,7 +151,7 @@ export class Authenticator {
       }
 
       return Promise.resolve(null);
-    } catch (e) {
+    } catch {
       return Promise.resolve(null);
     }
   }

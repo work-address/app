@@ -27,7 +27,6 @@ export class User extends AbstractBaseEntity implements IUser {
   @IsOptional()
   address: string;
 
-
   @Expose({groups: ['search', 'edit', 'register']})
   @Validate(EmailOrPhoneConstraint, [], {groups: ['register']})
   emailOrPhone: string;

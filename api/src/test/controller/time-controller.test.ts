@@ -63,13 +63,13 @@ export class TimeControllerTest extends BaseControllerTest {
 
     try {
       res = await this.http.request({
-      url: `${this.url}/api/time/${time.id}`,
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: this.authenticator.getTokens(other).accessToken,
-      },
-    });
+        url: `${this.url}/api/time/${time.id}`,
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Authorization: this.authenticator.getTokens(other).accessToken,
+        },
+      });
     } catch (error: any) {
       res = error.response;
     }

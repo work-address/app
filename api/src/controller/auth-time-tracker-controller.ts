@@ -57,7 +57,8 @@ export class AuthTimeTrackerController {
 
   @OpenAPI({
     summary: 'Time-tracker: complete login for nonce',
-    description: 'Called by the tracker app after website connect flow; identifies session by path `nonce`.',
+    description:
+      'Called by the tracker app after website connect flow; identifies session by path `nonce`.',
     parameters: [
       {
         in: 'path',

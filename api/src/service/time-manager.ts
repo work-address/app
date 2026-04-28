@@ -40,13 +40,9 @@ export class TimeManager {
       const toAt = moment(item.toAt).toDate();
 
       try {
-        const project = await this.projectRepository.findProjectAsWorkerOrFail(
-          item.projectId
-        );
+        const project = await this.projectRepository.findProjectAsWorkerOrFail(item.projectId);
 
-        const isAccessible =
-          project.user.id === user.id &&
-          project.state === EProjectState.ACTIVE;
+        const isAccessible = project.user.id === user.id && project.state === EProjectState.ACTIVE;
 
         if (!isAccessible) {
           throw new AccessException(`The given project is unavailable for time tracking`);

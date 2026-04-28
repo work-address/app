@@ -19,19 +19,13 @@ export class InvoiceManager {
   @inject('TimeRepository')
   protected timeRepository: TimeRepository;
 
-  public async create(
-    data: InvoiceCreateDto,
-    project: Project,
-    owner: User
-  ): Promise<Invoice> {
+  public async create(data: InvoiceCreateDto, project: Project, owner: User): Promise<Invoice> {
     const invoice = new Invoice();
 
     const projectExisting = await this.projectRepository.findProjectOwnedBy(project, owner);
 
     if (!projectExisting) {
-      throw new RejectedExecutionException(
-        `Wrong user: the given project belongs to someone else`
-      );
+      throw new RejectedExecutionException(`Wrong user: the given project belongs to someone else`);
     }
 
     const times = await this.timeRepository.findTimeBetweenForProject(
@@ -42,8 +36,7 @@ export class InvoiceManager {
     );
 
     const rate = Number(project.rateHour) || 0;
-    const hours =
-      times.reduce((sum, t) => sum + (t.minutesActive || 0) / 60, 0) || 0;
+    const hours = times.reduce((sum, t) => sum + (t.minutesActive || 0) / 60, 0) || 0;
 
     invoice.fromAt = moment.utc(data.fromUnix).toDate();
     invoice.toAt = moment.utc(data.toUnix).toDate();

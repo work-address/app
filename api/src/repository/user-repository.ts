@@ -29,10 +29,7 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
         }
         if (search.query) {
           const q = `%${search.query}%`;
-          qb.andWhere(
-            '(user.email ILIKE :q OR user.phone ILIKE :q)',
-            {q}
-          );
+          qb.andWhere('(user.email ILIKE :q OR user.phone ILIKE :q)', {q});
         }
       })
       .orderBy(sort)

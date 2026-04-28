@@ -31,9 +31,7 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
       .innerJoinAndSelect('project.user', 'user')
       .andWhere('project.id = :id', {id})
       .andWhere(`project.state IN (:...state)`, {
-        state: [
-          EProjectState.ACTIVE,
-        ],
+        state: [EProjectState.ACTIVE],
       })
       .select()
       .getOneOrFail();
@@ -83,5 +81,4 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
       .take(limit)
       .getManyAndCount();
   }
-
 }

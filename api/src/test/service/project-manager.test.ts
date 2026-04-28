@@ -30,5 +30,4 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
 
     expect(result?.id).to.be.equal(project.id);
   }
-
 }

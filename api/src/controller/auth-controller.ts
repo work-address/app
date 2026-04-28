@@ -50,7 +50,10 @@ export class AuthController {
             required: ['signature', 'address'],
             properties: {
               signature: {type: 'string', description: 'Hex signature from the wallet'},
-              address: {type: 'string', description: 'Ethereum address (checksummed or lower-case)'},
+              address: {
+                type: 'string',
+                description: 'Ethereum address (checksummed or lower-case)',
+              },
             },
           },
         },

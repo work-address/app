@@ -226,7 +226,7 @@ export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
 
     try {
       metadata = getConnection().getMetadata(validPropertyName);
-    } catch (e) {
+    } catch {
       // remove 's' symbol from the end
       metadata = getConnection().getMetadata(validPropertyName.slice(0, -1));
     }

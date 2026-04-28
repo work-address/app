@@ -98,10 +98,7 @@ export class TimeController extends AbstractController {
   })
   @Get('/totals')
   @ResponseClassTransformOptions({groups: ['search']})
-  public getTotals(
-    @CurrentUser() currentUser: User,
-    @QueryParam('projectId') projectId?: string
-  ) {
+  public getTotals(@CurrentUser() currentUser: User, @QueryParam('projectId') projectId?: string) {
     return this.timeRepository.getTotals(currentUser, projectId);
   }
 

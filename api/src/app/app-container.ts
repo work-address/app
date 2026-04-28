@@ -24,7 +24,7 @@ import {InvoiceManager} from '../service/invoice-manager';
 import {AuthenticatorTimeTracker} from '../service/auth/authenticator-time-tracker';
 import {TonProofService} from '../service/auth/ton-proof-service';
 import {ImageResizer} from '../service/image-resizer';
-import { ProjectFixture } from '../test/fixture/project-fixture';
+import {ProjectFixture} from '../test/fixture/project-fixture';
 
 export class AppContainer {
   private static container: Container;

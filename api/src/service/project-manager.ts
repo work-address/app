@@ -15,10 +15,7 @@ export class ProjectManager {
   @inject('TimeRepository')
   protected timeRepository: TimeRepository;
 
-  public async findProjectCheckAccess(
-    project: Project,
-    owner: User
-  ): Promise<Project | undefined> {
+  public async findProjectCheckAccess(project: Project, owner: User): Promise<Project | undefined> {
     return this.projectRepository.findProjectAsOwner(project, owner);
   }
 

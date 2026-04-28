@@ -60,7 +60,7 @@ NODE_ENV=test npm run typeorm:cli -- schema:sync
 | `pnpm run build`                           | Compile TypeScript to `build/`                     |
 | `pnpm run prod`                            | Run `build/server.js` (set `NODE_ENV=production`)  |
 | `pnpm test`                                | Tests with coverage (`nyc` + `mocha` + `ts-node`)  |
-| `pnpm run lint:check` / `lint:fix`         | ESLint on `src/**/*.ts`                            |
+| `pnpm run lint` / `lint:check` / `lint:fix` | ESLint (`@app/eslint-config`, `eslint.config.js`) |
 | `pnpm run prettier:check` / `prettier:fix` | Formatting                                         |
 | `pnpm run typeorm:cli`                     | TypeORM CLI (`src/ormconfig.ts`)                   |
 

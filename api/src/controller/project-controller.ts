@@ -44,8 +44,7 @@ export class ProjectController extends AbstractController {
 
   @OpenAPI({
     summary: 'Search projects owned by the current user',
-    description:
-      '`filter` may include `state`, `projectId` to narrow down owned projects.',
+    description: '`filter` may include `state`, `projectId` to narrow down owned projects.',
     parameters: [OpenApi.bearerAuthParameter],
     requestBody: {
       required: true,
