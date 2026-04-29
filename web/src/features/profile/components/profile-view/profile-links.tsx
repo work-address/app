@@ -1,4 +1,4 @@
-import { Share1Icon, Pencil1Icon, CopyIcon } from '@radix-ui/react-icons'
+import { Pencil1Icon, CopyIcon } from '@radix-ui/react-icons'
 import { Flex, type FlexProps } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
@@ -11,19 +11,18 @@ import { InfoRow } from '../info-row'
 import { ProfileViewCard } from './styled'
 
 import { routes } from '@/routes'
-import {
-  Button,
-  showToast,
-  Text,
-  useBreakpoint,
-  formatWalletAddress,
-} from '@/shared'
+import { Button, Text, useBreakpoint, formatWalletAddress } from '@/shared'
 
 type ProfileLinksProps = {
   gridArea?: string
+  onWalletAddressCopy?: () => void
+  onShareProfile?: () => void
 }
 
-export const ProfileLinks = ({ gridArea }: ProfileLinksProps) => {
+export const ProfileLinks = ({
+  gridArea,
+  onWalletAddressCopy,
+}: ProfileLinksProps) => {
   const isDesktop = useBreakpoint('isDesktop')
   const { t } = useTranslation()
 
@@ -35,20 +34,11 @@ export const ProfileLinks = ({ gridArea }: ProfileLinksProps) => {
   const walletAddress = formatWalletAddress(user?.friendlyWalletAddress || '')
 
   const infoRowGap: FlexProps['gap'] = {
-    initial: '2px',
-  }
-
-  const handleCopyWalletAddress = async () => {
-    await navigator.clipboard.writeText(user?.friendlyWalletAddress || '')
-
-    showToast('info', {
-      message: 'Address copied to clipboard',
-      position: 'top-center',
-    })
+    initial: '0',
   }
 
   return (
-    <StyledCard gridArea={gridArea} shadow={false}>
+    <StyledCard $gridArea={gridArea} shadow={false}>
       <Flex
         gap={{ initial: '4', md: '5' }}
         direction={'column'}
@@ -64,7 +54,7 @@ export const ProfileLinks = ({ gridArea }: ProfileLinksProps) => {
                 </Text>
 
                 <Flex gap={'2'} align={'center'}>
-                  <Button variant={'ghost'} onClick={handleCopyWalletAddress}>
+                  <Button variant={'ghost'} onClick={onWalletAddressCopy}>
                     <Text
                       $themeVariant={'primary'}
                       size={'3'}
@@ -78,26 +68,18 @@ export const ProfileLinks = ({ gridArea }: ProfileLinksProps) => {
                 </Flex>
               </Flex>
 
-              <Flex gap={'2'}>
-                <Button
-                  variant={'outline'}
-                  color={'gray'}
-                  size={'3'}
-                  onClick={handleCopyWalletAddress}
+              {isAuthenticatedUserProfile && (
+                <Link
+                  to={routes.profile.children.edit.build({
+                    walletAddress: user?.friendlyWalletAddress || '',
+                  })}
                 >
-                  {t('common.share')}
-                  <Share1Icon />
-                </Button>
-
-                {isAuthenticatedUserProfile && (
-                  <Link to={routes.profile.children.edit.build()}>
-                    <Button themeVariant={'primary'} size={'3'}>
-                      {t('common.edit')}
-                      <Pencil1Icon />
-                    </Button>
-                  </Link>
-                )}
-              </Flex>
+                  <Button themeVariant={'primary'} size={'3'}>
+                    {t('common.edit')}
+                    <Pencil1Icon />
+                  </Button>
+                </Link>
+              )}
             </>
           ) : (
             <div />
@@ -116,6 +98,7 @@ export const ProfileLinks = ({ gridArea }: ProfileLinksProps) => {
             text={
               <Flex gap={{ initial: '5px', md: '6px' }}>
                 <Text color={'gray'}>{t('profile.view.worksAt')}</Text>
+
                 <Text weight={'medium'}>
                   {user?.company ?? t('profile.view.mockCompany')}
                 </Text>

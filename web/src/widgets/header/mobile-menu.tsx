@@ -4,6 +4,7 @@ import React, { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
+import { match } from 'ts-pattern'
 
 import { IconImg } from '../styled.ts'
 
@@ -58,22 +59,25 @@ export const MobileMenu = ({ setOpen }: MobileMenuProps) => {
             return null
           }
 
-          let url = schema
-
-          if (schema === routes.profile.schema) {
-            url = routes.profile.build({
-              walletAddress: user?.friendlyWalletAddress || '',
-            })
-          }
+          const url = match(schema)
+            .with(routes.profile.schema, () =>
+              routes.profile.build({
+                walletAddress: user?.friendlyWalletAddress || '',
+              }),
+            )
+            .with(routes.profile.children.edit.schema, () =>
+              routes.profile.children.edit.build({
+                walletAddress: user?.friendlyWalletAddress || '',
+              }),
+            )
+            .otherwise(() => schema)
 
           return (
             <MobileMenuItem
               key={key}
               href={url}
               onClick={onClick}
-              $active={
-                schema === '/' ? pathname === schema : pathname.includes(schema)
-              }
+              $active={url === '/' ? pathname === url : pathname.includes(url)}
               variants={itemVariants}
               target={target}
             >

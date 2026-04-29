@@ -3,8 +3,12 @@ import { AxiosError } from 'axios'
 import { sample, combine } from 'effector'
 import { createGate } from 'effector-react'
 
-import { $user } from '@/entities/profile'
-import { baseApi, getFriendlyWalletAddress } from '@/shared'
+import { $user, $pending as $profilePending } from '@/entities/profile'
+import {
+  baseApi,
+  getFriendlyWalletAddress,
+  decodeFriendWalletAddress,
+} from '@/shared'
 
 const ProfileGate = createGate<{ userId: string | null }>({
   defaultState: { userId: null },
@@ -68,4 +72,10 @@ const $profile = combine(
   },
 )
 
+const $pending = combine(profileQuery.$pending, $profilePending, (...args) =>
+  args.some((arg) => arg),
+)
+
 export { ProfileGate, $isAuthenticatedUserProfile, $profile }
+
+export { $pending as $profileLoading }

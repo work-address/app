@@ -1,8 +1,9 @@
 import { Grid, type GridProps, type TextProps } from '@radix-ui/themes'
 import { TextField, Text } from '@radix-ui/themes'
 import { forwardRef, type ReactNode } from 'react'
-import { useMediaQuery } from 'styled-breakpoints/use-media-query'
-import styled, { useTheme } from 'styled-components'
+import styled from 'styled-components'
+
+import { useBreakpoint } from '../hooks'
 
 export type InputProps = TextField.RootProps & {
   label?: string
@@ -36,10 +37,11 @@ export const Input = forwardRef(
     }: InputProps,
     ref: React.Ref<HTMLInputElement>,
   ) => {
-    const { breakpoints } = useTheme()
-    const isUpMd = useMediaQuery(breakpoints.up('md'))
+    const isDesktop = useBreakpoint('isDesktop')
 
-    const usingGap = label ? (gap ?? (isUpMd ? '24px' : 'var(--space-2)')) : '0'
+    const usingGap = label
+      ? (gap ?? (isDesktop ? '24px' : 'var(--space-2)'))
+      : '0'
 
     return (
       <Grid
@@ -62,7 +64,7 @@ export const Input = forwardRef(
 
         <TextFieldRoot
           id={id}
-          size={size ?? (isUpMd ? undefined : '3')}
+          size={size ?? (isDesktop ? undefined : '3')}
           ref={ref}
           {...props}
         >
@@ -80,15 +82,12 @@ export const Input = forwardRef(
 )
 
 const TextFieldRoot = styled(TextField.Root)`
-  /* Находим внутренний input Radix */
   & .rt-TextFieldInput {
     text-overflow: ellipsis;
     white-space: nowrap;
     overflow: hidden;
   }
 
-  /* Если используешь слоты (addonLeft/Right),
-     нужно ограничить ширину контейнера инпута */
   & :where(.rt-TextFieldInput) {
     min-width: 0;
   }

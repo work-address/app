@@ -1,5 +1,5 @@
 import { CopyIcon, Pencil1Icon, Share1Icon } from '@radix-ui/react-icons'
-import { Flex } from '@radix-ui/themes'
+import { Flex, Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { useState } from 'react'
@@ -7,48 +7,48 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { $profile } from '../../model'
+import { $profile, $isAuthenticatedUserProfile } from '../../model'
 
 import { ProfileViewCard } from './styled'
 
+import { $pending } from '@/entities/profile'
 import { routes } from '@/routes'
 import {
   Text,
   useBreakpoint,
   Button,
   Modal,
-  showToast,
   formatWalletAddress,
 } from '@/shared'
 
 type QrCodeProps = {
   gridArea?: string
   padding?: string
+  onWalletAddressCopy?: () => void
+  onShareProfile?: () => void
 }
 
-export const QrCode = ({ gridArea }: QrCodeProps) => {
+export const QrCode = ({
+  gridArea,
+  onWalletAddressCopy,
+  onShareProfile,
+}: QrCodeProps) => {
   const isMobile = useBreakpoint('isMobile')
   const isDesktop = useBreakpoint('isDesktop')
 
   const { t } = useTranslation()
-  const user = useUnit($profile)
+
+  const { user, isAuthenticatedUserProfile, profileLoading } = useUnit({
+    user: $profile,
+    isAuthenticatedUserProfile: $isAuthenticatedUserProfile,
+    profileLoading: $pending,
+  })
 
   const [qrModalOpened, setQrModalOpened] = useState(false)
 
-  const walletAddress = formatWalletAddress(user?.friendlyWalletAddress || '')
-
-  const handleCopyWalletAddress = async () => {
-    await navigator.clipboard.writeText(user?.friendlyWalletAddress || '')
-
-    showToast('info', {
-      message: 'Address copied to clipboard',
-      position: 'top-center',
-    })
-  }
-
   return (
     <>
-      <StyledCard gridArea={gridArea} shadow={false}>
+      <StyledCard $gridArea={gridArea} shadow={false}>
         <Flex
           direction={'column'}
           gap={{ initial: '4' }}
@@ -57,53 +57,76 @@ export const QrCode = ({ gridArea }: QrCodeProps) => {
         >
           {isMobile && (
             <Flex direction={'column'} align={'center'} gap={{ initial: '2' }}>
-              <Text size={'6'} weight={'medium'}>
-                {user?.userName ?? t('profile.view.mockName')}
-              </Text>
+              <Skeleton loading={profileLoading}>
+                <Text size={'6'} weight={'medium'}>
+                  {user?.userName ?? t('profile.view.mockName')}
+                </Text>
+              </Skeleton>
 
               <Flex gap={'2'} align={'center'}>
-                <Button variant={'ghost'} onClick={handleCopyWalletAddress}>
-                  <Text $themeVariant={'primary'} size={'2'} weight={'medium'}>
-                    {walletAddress}
-                  </Text>
+                <Skeleton loading={profileLoading}>
+                  <Button variant={'ghost'} onClick={onWalletAddressCopy}>
+                    <Text
+                      $themeVariant={'primary'}
+                      size={'2'}
+                      weight={'medium'}
+                    >
+                      {user?.friendlyWalletAddress
+                        ? formatWalletAddress(user?.friendlyWalletAddress)
+                        : '...'}
+                    </Text>
 
-                  <CopyIcon />
-                </Button>
+                    <CopyIcon />
+                  </Button>
+                </Skeleton>
               </Flex>
             </Flex>
           )}
 
           <QrCodeWrapper onClick={() => setQrModalOpened(true)}>
-            <QRCodeSVG
-              value={user?.friendlyWalletAddress || ''}
-              size={isMobile ? 140 : 180}
-              level="M"
-              fgColor="var(--ds-accent-11)"
-              bgColor="transparent"
-              marginSize={1}
-            />
+            <Skeleton loading={profileLoading}>
+              <QRCodeSVG
+                value={user?.friendlyWalletAddress || ''}
+                size={isMobile ? 140 : 180}
+                level="M"
+                fgColor="var(--ds-accent-11)"
+                bgColor="transparent"
+                marginSize={1}
+              />
+            </Skeleton>
           </QrCodeWrapper>
 
           {isMobile ? (
             <Flex gap={'2'} direction={'column'} width={'100%'}>
-              <Link to={routes.profile.children.edit.build()}>
-                <Button stretch themeVariant={'primary'}>
-                  {t('common.edit')} <Pencil1Icon />
-                </Button>
-              </Link>
+              {isAuthenticatedUserProfile && (
+                <Link
+                  to={routes.profile.children.edit.build({
+                    walletAddress: user?.friendlyWalletAddress || '',
+                  })}
+                >
+                  <Button stretch themeVariant={'primary'}>
+                    {t('common.edit')} <Pencil1Icon />
+                  </Button>
+                </Link>
+              )}
 
               <Button
                 stretch
                 variant={'outline'}
                 color={'gray'}
-                onClick={handleCopyWalletAddress}
+                onClick={onShareProfile}
               >
                 {t('common.share')} <Share1Icon />
               </Button>
-            </Link>
-
-            <Button stretch variant={'outline'} color={'gray'}>
-              {t('common.share')} <Share1Icon />
+            </Flex>
+          ) : (
+            <Button
+              width={'146px'}
+              themeVariant={'primary'}
+              size={'3'}
+              onClick={onShareProfile}
+            >
+              {t('profile.view.shareProfile')}
             </Button>
           )}
         </Flex>

@@ -20,7 +20,7 @@ type MainRoutes =
   & Route<'/invoice/:id', 'invoice', NoChildRoutes, IdRouteParams>
 
 type ProfileRoutes =
-  & Route<'/profile/edit', 'edit', NoChildRoutes>
+  & Route<'/profile/:walletAddress/edit', 'edit', NoChildRoutes, { walletAddress: string }>
 
 /* eslint-enable */
 
@@ -54,8 +54,8 @@ export const routes: MainRoutes = {
     translateKeyMobile: 'header.nav.profile',
     children: {
       edit: {
-        schema: '/profile/edit',
-        build: () => '/profile/edit',
+        schema: '/profile/:walletAddress/edit',
+        build: ({ walletAddress }) => `/profile/${walletAddress}/edit`,
       },
     },
   },

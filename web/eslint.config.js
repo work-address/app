@@ -13,7 +13,7 @@ export default tseslint.config(
       'dist/**',
       'storybook-static/**',
       'coverage/**',
-      'src/features/shared/api/generated',
+      'src/shared/api/generated',
     ],
   },
   ...appBaseConfig,

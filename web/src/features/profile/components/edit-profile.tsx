@@ -1,21 +1,30 @@
-import { Flex, Grid, IconButton, Separator, Text } from '@radix-ui/themes'
+import {
+  Flex,
+  Grid,
+  IconButton,
+  Separator,
+  Skeleton,
+  Text,
+} from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useEffect, useState } from 'react'
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
+import { match } from 'ts-pattern'
+
+import { $profile, $profileLoading } from '../model'
 
 import type { baseApi } from '@/shared'
 
-import { $user, saveProfileMutation } from '@/entities/profile'
+import { saveProfileMutation } from '@/entities/profile'
 import { routes } from '@/routes'
 import {
   Button,
   Card,
   Input,
   TagInput,
-  TextArea,
   useLeaveConfirm,
   useConfirm,
   showToast,
@@ -38,6 +47,14 @@ type FormState = Pick<
   | 'telegram'
 > & { skills: string[] }
 
+const normalizeLink = (prefix: string, value: string) =>
+  value
+    .replace(/^https?:\/\//, '')
+    .replace(/^www\./, '')
+    .replace(new RegExp(`^${prefix}`), '')
+    .replace(/\/$/, '')
+    .replace(/^\//, '')
+
 export const EditProfile = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
@@ -48,14 +65,16 @@ export const EditProfile = () => {
   const [isFormSubmittedSuccessfully, setIsFormSubmittedSuccessfully] =
     useState(false)
 
-  const user = useUnit($user)
+  const user = useUnit($profile)
 
-  const { loading, saveProfile, status, resetMutation } = useUnit({
-    loading: saveProfileMutation.$pending,
-    saveProfile: saveProfileMutation.start,
-    status: saveProfileMutation.$status,
-    resetMutation: saveProfileMutation.reset,
-  })
+  const { profileSaving, profileLoading, saveProfile, status, resetMutation } =
+    useUnit({
+      profileSaving: saveProfileMutation.$pending,
+      profileLoading: $profileLoading,
+      saveProfile: saveProfileMutation.start,
+      status: saveProfileMutation.$status,
+      resetMutation: saveProfileMutation.reset,
+    })
 
   const {
     register,
@@ -63,6 +82,7 @@ export const EditProfile = () => {
     formState: { isDirty },
     handleSubmit,
     reset,
+    setValue,
   } = useForm<FormState>({
     values: {
       userName: '',
@@ -79,7 +99,7 @@ export const EditProfile = () => {
   const onSubmit: SubmitHandler<FormState> = async (values) => {
     saveProfile({
       ...values,
-      skills: values.skills.join(','),
+      skills: values.skills.join(',') || '',
       // TODO: remove this when backend will be ready
       emailOrPhone: user?.emailOrPhone || '',
     })
@@ -89,11 +109,41 @@ export const EditProfile = () => {
     confirm().then(() => reset())
   }
 
+  const handleSocialPaste = (
+    type: 'facebook' | 'linkedIn' | 'telegram',
+    e: React.ClipboardEvent<HTMLInputElement>,
+  ) => {
+    e.preventDefault()
+    const text = e.clipboardData.getData('text')
+
+    const domain = match(type)
+      .with('facebook', () => 'facebook.com')
+      .with('linkedIn', () => 'linkedin.com')
+      .with('telegram', () => 't.me')
+      .exhaustive()
+
+    const randomLinkPasted = text.includes('http')
+    const notAllowedTextPasted = !text.includes(domain)
+
+    if (notAllowedTextPasted && randomLinkPasted) {
+      showToast('error', {
+        message: 'Invalid link',
+        position: isDesktop ? 'top-center' : 'bottom-center',
+      })
+
+      return
+    }
+
+    const normalized = normalizeLink(domain, text)
+    setValue(type, normalized, { shouldDirty: true, shouldValidate: true })
+  }
+
   useLeaveConfirm({ when: isDirty })
 
   useEffect(() => {
     if (isFormSubmittedSuccessfully) {
       setIsFormSubmittedSuccessfully(false)
+
       navigate(
         routes.profile.build({
           walletAddress: user?.friendlyWalletAddress || '',
@@ -129,7 +179,7 @@ export const EditProfile = () => {
       reset({
         userName: user.userName || '',
         company: user.company || '',
-        skills: user.skills?.split(',') || [],
+        skills: user.skills ? user.skills?.split(',') : [],
         price: user.price || '',
         bio: user.bio || '',
         facebook: user.facebook || '',
@@ -188,7 +238,7 @@ export const EditProfile = () => {
                   <Button
                     themeVariant="secondary"
                     onClick={onReset}
-                    disabled={!isDirty || loading}
+                    disabled={!isDirty || profileSaving}
                     type="button"
                   >
                     {t('profile.actions.cancel')}
@@ -196,10 +246,10 @@ export const EditProfile = () => {
 
                   <Button
                     themeVariant={'primary'}
-                    disabled={!isDirty || loading}
+                    disabled={!isDirty || profileSaving}
                     type={'submit'}
                   >
-                    {loading && <Spinner useCase="button" />}
+                    {profileSaving && <Spinner useCase="button" />}
                     {t('profile.actions.save')}
                   </Button>
                 </Flex>
@@ -209,31 +259,37 @@ export const EditProfile = () => {
             {isDesktop && <Separator size={'4'} mb={'5'} />}
 
             <Flex direction={'column'} gap={{ initial: '4', md: '5' }}>
-              <Input
-                label={t('profile.form.address')}
-                labelWidth={INPUT_LABEL_WIDTH}
-                value={user.friendlyWalletAddress || ''}
-                disabled
-                id={'friendlyWalletAddress'}
-              />
+              <Skeleton loading={profileLoading}>
+                <Input
+                  label={t('profile.form.address')}
+                  labelWidth={INPUT_LABEL_WIDTH}
+                  value={user?.friendlyWalletAddress || ''}
+                  disabled
+                  id={'friendlyWalletAddress'}
+                />
+              </Skeleton>
 
-              <Input
-                label={t('profile.form.username')}
-                placeholder={t('profile.form.usernamePlaceholder')}
-                labelWidth={INPUT_LABEL_WIDTH}
-                id={'username'}
-                disabled={loading}
-                {...register('userName')}
-              />
+              <Skeleton loading={profileLoading}>
+                <Input
+                  label={t('profile.form.username')}
+                  placeholder={t('profile.form.usernamePlaceholder')}
+                  labelWidth={INPUT_LABEL_WIDTH}
+                  id={'username'}
+                  disabled={profileSaving}
+                  {...register('userName')}
+                />
+              </Skeleton>
 
-              <Input
-                label={t('profile.form.company')}
-                placeholder={t('profile.form.companyPlaceholder')}
-                labelWidth={INPUT_LABEL_WIDTH}
-                id={'company'}
-                disabled={loading}
-                {...register('company')}
-              />
+              <Skeleton loading={profileLoading}>
+                <Input
+                  label={t('profile.form.company')}
+                  placeholder={t('profile.form.companyPlaceholder')}
+                  labelWidth={INPUT_LABEL_WIDTH}
+                  id={'company'}
+                  disabled={profileSaving}
+                  {...register('company')}
+                />
+              </Skeleton>
 
               <Controller
                 control={control}
@@ -244,64 +300,56 @@ export const EditProfile = () => {
                     placeholder={t('profile.form.skillsPlaceholder')}
                     labelWidth={INPUT_LABEL_WIDTH}
                     id={'skills'}
-                    disabled={loading}
+                    disabled={profileSaving}
                     value={field.value}
                     onChange={field.onChange}
+                    showSkeleton={profileLoading}
                   />
                 )}
               />
 
               <Separator size={'4'} />
 
-              <Input
-                label={t('profile.form.price')}
-                placeholder="0"
-                labelWidth={INPUT_LABEL_WIDTH}
-                id={'price'}
-                disabled={loading}
-                addonLeft={
-                  <Text size={'2'} color={'gray'}>
-                    $
-                  </Text>
-                }
-                {...register('price')}
-              />
+              <Skeleton loading={profileLoading}>
+                <Input
+                  label={t('profile.form.price')}
+                  placeholder="0"
+                  labelWidth={INPUT_LABEL_WIDTH}
+                  id={'price'}
+                  disabled={profileSaving}
+                  addonLeft={
+                    <Text size={'2'} color={'gray'}>
+                      $
+                    </Text>
+                  }
+                  {...register('price')}
+                />
+              </Skeleton>
 
               <Separator size={'4'} />
 
-              {isDesktop ? (
-                <Flex direction={'column'} gap={'3'}>
-                  <Text
-                    size={'2'}
-                    weight={'medium'}
-                    as={'label'}
-                    htmlFor={'bio'}
-                  >
-                    {t('profile.form.bio')}
-                  </Text>
+              <Controller
+                control={control}
+                render={({ field }) => {
+                  return (
+                    <Skeleton loading={profileLoading}>
+                      <Flex direction={'column'} gap="1">
+                        <Text size={'2'} weight={'medium'} mb={'2'}>
+                          {t('profile.form.bio')}
+                        </Text>
 
-                  <Controller
-                    control={control}
-                    render={({ field }) => {
-                      return (
                         <RichEditor
                           value={field.value}
                           onChange={field.onChange}
                           id={'bio'}
+                          showEditPanel={isDesktop}
                         />
-                      )
-                    }}
-                    name={'bio'}
-                  />
-                </Flex>
-              ) : (
-                <TextArea
-                  label={t('profile.form.bio')}
-                  id={'bio'}
-                  placeholder={t('profile.form.bioPlaceholder')}
-                  {...register('bio')}
-                />
-              )}
+                      </Flex>
+                    </Skeleton>
+                  )
+                }}
+                name={'bio'}
+              />
             </Flex>
           </FreelancerViewCard>
 
@@ -315,29 +363,38 @@ export const EditProfile = () => {
             </Text>
 
             <Grid gap={{ initial: '4', md: '5' }}>
-              <Input
-                label={t('profile.links.facebook')}
-                placeholder={'facebook.com/'}
-                labelWidth={INPUT_LABEL_WIDTH}
-                disabled={loading}
-                {...register('facebook')}
-              />
+              <Skeleton loading={profileLoading}>
+                <StyledLinkInput
+                  label={t('profile.links.facebook')}
+                  addonLeft={'facebook.com/'}
+                  labelWidth={INPUT_LABEL_WIDTH}
+                  disabled={profileSaving}
+                  onPaste={(e) => handleSocialPaste('facebook', e)}
+                  {...register('facebook')}
+                />
+              </Skeleton>
 
-              <Input
-                label={t('profile.links.linkedin')}
-                placeholder={'linkedin.com/'}
-                labelWidth={INPUT_LABEL_WIDTH}
-                disabled={loading}
-                {...register('linkedIn')}
-              />
+              <Skeleton loading={profileLoading}>
+                <StyledLinkInput
+                  label={t('profile.links.linkedin')}
+                  addonLeft={'linkedin.com/'}
+                  labelWidth={INPUT_LABEL_WIDTH}
+                  disabled={profileSaving}
+                  onPaste={(e) => handleSocialPaste('linkedIn', e)}
+                  {...register('linkedIn')}
+                />
+              </Skeleton>
 
-              <Input
-                label={t('profile.links.telegram')}
-                placeholder={'t.me/'}
-                labelWidth={INPUT_LABEL_WIDTH}
-                disabled={loading}
-                {...register('telegram')}
-              />
+              <Skeleton loading={profileLoading}>
+                <StyledLinkInput
+                  label={t('profile.links.telegram')}
+                  addonLeft={'t.me/'}
+                  labelWidth={INPUT_LABEL_WIDTH}
+                  disabled={profileSaving}
+                  onPaste={(e) => handleSocialPaste('telegram', e)}
+                  {...register('telegram')}
+                />
+              </Skeleton>
 
               {!isDesktop && (
                 <BottomSheet columns={'1fr 1fr'} gap={'var(--space-4)'}>
@@ -394,4 +451,10 @@ const BottomSheet = styled(Grid)`
   bottom: 0;
   background: #fff;
   border-top: 1px solid var(--ds-neutral-alpha-6);
+`
+
+const StyledLinkInput = styled(Input)`
+  [data-side='left'] {
+    padding-right: 0;
+  }
 `

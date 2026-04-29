@@ -2,6 +2,7 @@ import { useUnit } from 'effector-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation } from 'react-router-dom'
+import { match } from 'ts-pattern'
 
 import { NavLink, IconLink, IconImg } from '../styled.ts'
 
@@ -42,13 +43,18 @@ export const DesktopMenu = ({
           const hasDesktopOrder = typeof desktopOrder === 'number'
           const renderText = translateKeyDesktop ? t(translateKeyDesktop) : text
 
-          let url = schema
-
-          if (schema === routes.profile.schema) {
-            url = routes.profile.build({
-              walletAddress: user?.friendlyWalletAddress || '',
-            })
-          }
+          const url = match(schema)
+            .with(routes.profile.schema, () =>
+              routes.profile.build({
+                walletAddress: user?.friendlyWalletAddress || '',
+              }),
+            )
+            .with(routes.profile.children.edit.schema, () =>
+              routes.profile.children.edit.build({
+                walletAddress: user?.friendlyWalletAddress || '',
+              }),
+            )
+            .otherwise(() => schema)
 
           if (!hasDesktopOrder) {
             return null
@@ -65,7 +71,7 @@ export const DesktopMenu = ({
                   $active={
                     schema === '/'
                       ? schema === pathname
-                      : pathname.includes(schema)
+                      : pathname.includes(url)
                   }
                   target={target}
                 >

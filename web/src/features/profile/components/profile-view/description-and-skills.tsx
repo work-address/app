@@ -1,4 +1,4 @@
-import { Separator, Flex, Badge } from '@radix-ui/themes'
+import { Separator, Flex, Badge, Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -8,6 +8,7 @@ import { $profile } from '../../model'
 
 import { ProfileViewCard } from './styled'
 
+import { $pending } from '@/entities/profile'
 import { Text, useBreakpoint } from '@/shared'
 
 type DescriptionProps = {
@@ -32,7 +33,10 @@ export const DescriptionAndSkills = ({ gridArea }: DescriptionProps) => {
   const isMobile = useBreakpoint('isMobile')
   const { t } = useTranslation()
 
-  const user = useUnit($profile)
+  const { user, profileLoading } = useUnit({
+    user: $profile,
+    profileLoading: $pending,
+  })
 
   const skills = useMemo(
     () =>
@@ -43,7 +47,7 @@ export const DescriptionAndSkills = ({ gridArea }: DescriptionProps) => {
   )
 
   return (
-    <StyledCard gridArea={gridArea} shadow={false}>
+    <StyledCard $gridArea={gridArea} shadow={false}>
       <Flex gap={'4'} direction={'column'}>
         <div>
           <Flex justify={'between'}>
@@ -53,9 +57,11 @@ export const DescriptionAndSkills = ({ gridArea }: DescriptionProps) => {
 
             <Text color={'blue'} $themeVariant={'primary'}>
               <Flex gap={'1'} align={'end'}>
-                <Text size={isMobile ? '4' : '8'} weight={'medium'}>
-                  35
-                </Text>
+                <Skeleton loading={profileLoading}>
+                  <Text size={isMobile ? '4' : '8'} weight={'medium'}>
+                    {user?.price || 0}
+                  </Text>
+                </Skeleton>
 
                 <Text size={isMobile ? '2' : undefined}>
                   {t('profile.view.usdtUnit')}
@@ -67,11 +73,13 @@ export const DescriptionAndSkills = ({ gridArea }: DescriptionProps) => {
 
         <Separator size={'4'} />
 
-        <Text
-          dangerouslySetInnerHTML={{
-            __html: user?.bio || t('profile.view.bio'),
-          }}
-        />
+        <Skeleton loading={profileLoading}>
+          <Text
+            dangerouslySetInnerHTML={{
+              __html: user?.bio || t('profile.view.bio'),
+            }}
+          />
+        </Skeleton>
 
         <Separator size={'4'} />
 
@@ -81,13 +89,17 @@ export const DescriptionAndSkills = ({ gridArea }: DescriptionProps) => {
           </Text>
         </div>
 
-        <Flex gap={'2'} wrap={'wrap'} mb={{ initial: '0', md: '2' }}>
-          {skills.map((skill) => (
-            <Badge key={skill} color={'gray'} size={'2'}>
-              {skill}
-            </Badge>
-          ))}
-        </Flex>
+        <Skeleton loading={profileLoading}>
+          <Flex gap={'2'} wrap={'wrap'} mb={{ initial: '0', md: '2' }}>
+            {skills.map((skill) => (
+              <Badge key={skill} color={'gray'} size={isMobile ? '1' : '2'}>
+                <Text weight={'medium'} size={'1'}>
+                  {skill}
+                </Text>
+              </Badge>
+            ))}
+          </Flex>
+        </Skeleton>
       </Flex>
     </StyledCard>
   )

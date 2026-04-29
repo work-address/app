@@ -25,9 +25,15 @@ type RichEditorProps = {
   value?: string
   onChange?: (value: string) => void
   id?: string
+  showEditPanel?: boolean
 }
 
-export const RichEditor = ({ value, onChange }: RichEditorProps) => {
+export const RichEditor = ({
+  value,
+  onChange,
+  id,
+  showEditPanel = true,
+}: RichEditorProps) => {
   const { t } = useTranslation()
   const [, forceUpdate] = useReducer((x) => x + 1, 0)
   const isInternalUpdateRef = useRef(false)
@@ -66,127 +72,131 @@ export const RichEditor = ({ value, onChange }: RichEditorProps) => {
 
   return (
     <Wrapper>
-      <FlexToolbar gap={'1'} align={'center'}>
-        <CustomIconButton
-          variant="ghost"
-          onClick={() => editor?.chain().focus().undo().run()}
-          color={'gray'}
-          type={'button'}
-        >
-          <ResetIcon />
-        </CustomIconButton>
+      {showEditPanel && (
+        <FlexToolbar gap={'1'} align={'center'}>
+          <CustomIconButton
+            variant="ghost"
+            onClick={() => editor?.chain().focus().undo().run()}
+            color={'gray'}
+            type={'button'}
+          >
+            <ResetIcon />
+          </CustomIconButton>
 
-        <CustomIconButton
-          variant="ghost"
-          onClick={() => editor?.chain().focus().redo().run()}
-          style={{ transform: 'scaleX(-1)' }}
-          color={'gray'}
-          type={'button'}
-        >
-          <ResetIcon />
-        </CustomIconButton>
+          <CustomIconButton
+            variant="ghost"
+            onClick={() => editor?.chain().focus().redo().run()}
+            style={{ transform: 'scaleX(-1)' }}
+            color={'gray'}
+            type={'button'}
+          >
+            <ResetIcon />
+          </CustomIconButton>
 
-        <Separator orientation="vertical" />
+          <Separator orientation="vertical" />
 
-        <CustomIconButton
-          variant="ghost"
-          data-active={editor?.isActive('bold')}
-          onClick={() => editor?.chain().focus().toggleBold().run()}
-          color={'gray'}
-          type={'button'}
-        >
-          <FontBoldIcon />
-        </CustomIconButton>
+          <CustomIconButton
+            variant="ghost"
+            data-active={editor?.isActive('bold')}
+            onClick={() => editor?.chain().focus().toggleBold().run()}
+            color={'gray'}
+            type={'button'}
+          >
+            <FontBoldIcon />
+          </CustomIconButton>
 
-        <CustomIconButton
-          variant="ghost"
-          data-active={editor?.isActive('italic')}
-          onClick={() => editor?.chain().focus().toggleItalic().run()}
-          color={'gray'}
-          type={'button'}
-        >
-          <FontItalicIcon />
-        </CustomIconButton>
+          <CustomIconButton
+            variant="ghost"
+            data-active={editor?.isActive('italic')}
+            onClick={() => editor?.chain().focus().toggleItalic().run()}
+            color={'gray'}
+            type={'button'}
+          >
+            <FontItalicIcon />
+          </CustomIconButton>
 
-        <CustomIconButton
-          variant="ghost"
-          data-active={editor?.isActive('underline')}
-          onClick={() => editor?.chain().focus().toggleUnderline().run()}
-          color={'gray'}
-          type={'button'}
-        >
-          <UnderlineIcon />
-        </CustomIconButton>
+          <CustomIconButton
+            variant="ghost"
+            data-active={editor?.isActive('underline')}
+            onClick={() => editor?.chain().focus().toggleUnderline().run()}
+            color={'gray'}
+            type={'button'}
+          >
+            <UnderlineIcon />
+          </CustomIconButton>
 
-        <CustomIconButton
-          variant="ghost"
-          data-active={editor?.isActive('strike')}
-          onClick={() => editor?.chain().focus().toggleStrike().run()}
-          color={'gray'}
-          type={'button'}
-        >
-          <StrikethroughIcon />
-        </CustomIconButton>
+          <CustomIconButton
+            variant="ghost"
+            data-active={editor?.isActive('strike')}
+            onClick={() => editor?.chain().focus().toggleStrike().run()}
+            color={'gray'}
+            type={'button'}
+          >
+            <StrikethroughIcon />
+          </CustomIconButton>
 
-        <Separator orientation="vertical" />
+          <Separator orientation="vertical" />
 
-        <CustomIconButton
-          variant="ghost"
-          data-active={editor?.isActive({ textAlign: 'left' })}
-          onClick={() => editor?.chain().focus().setTextAlign('left').run()}
-          color={'gray'}
-          type={'button'}
-        >
-          <TextAlignLeftIcon />
-        </CustomIconButton>
+          <CustomIconButton
+            variant="ghost"
+            data-active={editor?.isActive({ textAlign: 'left' })}
+            onClick={() => editor?.chain().focus().setTextAlign('left').run()}
+            color={'gray'}
+            type={'button'}
+          >
+            <TextAlignLeftIcon />
+          </CustomIconButton>
 
-        <CustomIconButton
-          variant="ghost"
-          data-active={editor?.isActive({ textAlign: 'center' })}
-          onClick={() => editor?.chain().focus().setTextAlign('center').run()}
-          color={'gray'}
-          type={'button'}
-        >
-          <TextAlignCenterIcon />
-        </CustomIconButton>
+          <CustomIconButton
+            variant="ghost"
+            data-active={editor?.isActive({ textAlign: 'center' })}
+            onClick={() => editor?.chain().focus().setTextAlign('center').run()}
+            color={'gray'}
+            type={'button'}
+          >
+            <TextAlignCenterIcon />
+          </CustomIconButton>
 
-        <CustomIconButton
-          variant="ghost"
-          data-active={editor?.isActive({ textAlign: 'right' })}
-          onClick={() => editor?.chain().focus().setTextAlign('right').run()}
-          color={'gray'}
-          type={'button'}
-        >
-          <TextAlignRightIcon />
-        </CustomIconButton>
+          <CustomIconButton
+            variant="ghost"
+            data-active={editor?.isActive({ textAlign: 'right' })}
+            onClick={() => editor?.chain().focus().setTextAlign('right').run()}
+            color={'gray'}
+            type={'button'}
+          >
+            <TextAlignRightIcon />
+          </CustomIconButton>
 
-        <CustomIconButton
-          variant="ghost"
-          data-active={editor?.isActive({ textAlign: 'justify' })}
-          onClick={() => editor?.chain().focus().setTextAlign('justify').run()}
-          color={'gray'}
-          type={'button'}
-        >
-          <TextAlignJustifyIcon />
-        </CustomIconButton>
-
-        <Separator orientation="vertical" />
-
-        <CustomIconButton
-          variant="ghost"
-          data-active={editor?.isActive('link')}
-          color={'gray'}
-          onClick={() => {
-            const url = window.prompt(t('profile.editor.linkPrompt'))
-            if (url) {
-              editor?.chain().focus().setLink({ href: url }).run()
+          <CustomIconButton
+            variant="ghost"
+            data-active={editor?.isActive({ textAlign: 'justify' })}
+            onClick={() =>
+              editor?.chain().focus().setTextAlign('justify').run()
             }
-          }}
-          type={'button'}
-        >
-          <Link2Icon />
-        </CustomIconButton>
-      </FlexToolbar>
+            color={'gray'}
+            type={'button'}
+          >
+            <TextAlignJustifyIcon />
+          </CustomIconButton>
+
+          <Separator orientation="vertical" />
+
+          <CustomIconButton
+            variant="ghost"
+            data-active={editor?.isActive('link')}
+            color={'gray'}
+            onClick={() => {
+              const url = window.prompt(t('profile.editor.linkPrompt'))
+              if (url) {
+                editor?.chain().focus().setLink({ href: url }).run()
+              }
+            }}
+            type={'button'}
+          >
+            <Link2Icon />
+          </CustomIconButton>
+        </FlexToolbar>
+      )}
 
       <EditorWrapper>
         <StyledEditorContent editor={editor} id={id} />

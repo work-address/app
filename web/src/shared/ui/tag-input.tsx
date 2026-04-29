@@ -1,5 +1,5 @@
 import { Cross2Icon } from '@radix-ui/react-icons'
-import { Badge, Flex, Grid, Text } from '@radix-ui/themes'
+import { Badge, Flex, Grid, IconButton, Skeleton, Text } from '@radix-ui/themes'
 import { useState, type KeyboardEvent, useRef, useEffect } from 'react'
 import styled from 'styled-components'
 
@@ -13,6 +13,7 @@ export type TagInputProps = {
   labelWidth?: string
   placeholder?: string
   disabled?: boolean
+  showSkeleton?: boolean
 }
 
 export const TagInput = ({
@@ -23,6 +24,7 @@ export const TagInput = ({
   labelWidth = 'auto',
   placeholder,
   disabled,
+  showSkeleton = false,
 }: TagInputProps) => {
   const isDesktop = useBreakpoint('isDesktop')
   const [inputValue, setInputValue] = useState('')
@@ -88,38 +90,52 @@ export const TagInput = ({
         </Text>
       )}
 
-      <InputContainer $disabled={disabled} onClick={handleContainerClick}>
-        <Flex gap="1" wrap="wrap" align="center" width="100%">
-          {value.map((tag) => (
-            <Badge key={tag} color="gray" size="2" variant="surface">
-              <Flex align="center" gap="1">
-                {tag}
-                {!disabled && (
-                  <RemoveButton
-                    type="button"
-                    onClick={(e) => {
-                      e.stopPropagation()
-                      removeTag(tag)
-                    }}
-                  >
-                    <Cross2Icon width="12" height="12" />
-                  </RemoveButton>
-                )}
-              </Flex>
-            </Badge>
-          ))}
-          <StyledInput
-            ref={inputRef}
-            id={id}
-            placeholder={value.length === 0 ? placeholder : ''}
-            disabled={disabled}
-            value={inputValue}
-            onChange={(e) => setInputValue(e.target.value)}
-            onKeyDown={handleKeyDown}
-            onBlur={handleBlur}
-          />
-        </Flex>
-      </InputContainer>
+      <Skeleton loading={showSkeleton}>
+        <InputContainer $disabled={disabled} onClick={handleContainerClick}>
+          <Flex gap="1" wrap="wrap" align="center" width="100%">
+            {value.map((tag) => (
+              <StyledBadge key={tag} color="gray" size="2" variant="surface">
+                <Flex align="center" gap="1">
+                  {tag}
+
+                  {!disabled && (
+                    <Flex p="1">
+                      <IconButton
+                        size="1"
+                        variant="ghost"
+                        type="button"
+                        radius="full"
+                        onClick={(e) => {
+                          e.stopPropagation()
+                          removeTag(tag)
+                        }}
+                      >
+                        <Cross2Icon width="10" height="10" />
+                      </IconButton>
+                    </Flex>
+                  )}
+                </Flex>
+              </StyledBadge>
+            ))}
+
+            {value.length === 0 && !focused && (
+              <StyledPlaceholder>{placeholder}</StyledPlaceholder>
+            )}
+
+            {focused && (
+              <StyledTagInput
+                ref={inputRef}
+                id={id}
+                disabled={disabled}
+                value={inputValue}
+                onChange={(e) => setInputValue(e.target.value)}
+                onKeyDown={handleKeyDown}
+                onBlur={handleBlur}
+              />
+            )}
+          </Flex>
+        </InputContainer>
+      </Skeleton>
     </Grid>
   )
 }
@@ -127,17 +143,19 @@ export const TagInput = ({
 const InputContainer = styled.div<{ $disabled?: boolean }>`
   display: flex;
   align-items: center;
-  padding: var(--space-1) var(--space-1);
+  padding: var(--space-1);
   cursor: ${({ $disabled }) => ($disabled ? 'not-allowed' : 'text')};
   border: 1px solid var(--gray-a7);
   border-radius: var(--radius-2);
+  min-height: var(--space-7);
+
   transition:
     border-color 0.2s,
     box-shadow 0.2s;
 
   &:focus-within {
-    border-color: var(--blue-8);
-    box-shadow: 0 0 0 1px var(--blue-8);
+    border-color: var(--focus-8);
+    box-shadow: 0 0 0 1px var(--focus-8);
   }
 
   ${({ $disabled }) =>
@@ -146,38 +164,43 @@ const InputContainer = styled.div<{ $disabled?: boolean }>`
     opacity: 0.5;
     background-color: var(--gray-a3);
   `}
+
+  ${(p) => p.theme.breakpoints.up('md')} {
+    min-height: var(--space-6);
+  }
 `
 
-const StyledInput = styled.input`
+const StyledBadge = styled(Badge)`
+  ${(p) => p.theme.breakpoints.up('md')} {
+    padding-top: 1px;
+    padding-bottom: 1px;
+  }
+`
+
+const StyledTagInput = styled.input`
   flex: 1;
   min-width: 60px;
   border: none;
   outline: none;
   background: transparent;
   font-family: inherit;
-  font-size: var(--font-size-2);
   color: var(--color-text);
-  padding: 4px 0;
+  padding: 4px 4px;
+  font-size: var(--font-size-3);
 
   &::placeholder {
     color: var(--gray-a10);
   }
+
+  ${(p) => p.theme.breakpoints.up('md')} {
+    font-size: var(--font-size-2);
+    padding: 2px 4px;
+  }
 `
 
-const RemoveButton = styled.button`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  padding: 0;
-  background: transparent;
-  border: none;
-  cursor: pointer;
-  color: inherit;
-  opacity: 0.6;
-  border-radius: 50%;
-
-  &:hover {
-    opacity: 1;
-    background: rgba(0, 0, 0, 0.05);
-  }
+const StyledPlaceholder = styled.span`
+  color: var(--gray-a10);
+  font-family: inherit;
+  font-size: var(--font-size-2);
+  padding: 0 var(--space-1);
 `

@@ -5,14 +5,19 @@ import styled from 'styled-components'
 
 import type { MotionProps } from 'motion/react'
 
-import { $authenticated } from '@/entities/profile'
+import { $authenticated, $pending } from '@/entities/profile'
 import { routes } from '@/routes'
 import { useBreakpoint } from '@/shared'
 import { Header } from '@/widgets'
 
 export const MainLayout = () => {
   const { pathname } = useLocation()
-  const authenticated = useUnit($authenticated)
+
+  const { authenticated, pending } = useUnit({
+    authenticated: $authenticated,
+    pending: $pending,
+  })
+
   const isDesktop = useBreakpoint('isDesktop')
 
   const motionProps: MotionProps | null = isDesktop
@@ -23,6 +28,10 @@ export const MainLayout = () => {
         transition: { duration: 0.35 },
       }
     : null
+
+  if (pending) {
+    return null
+  }
 
   if (!authenticated) {
     return <Navigate to={routes.signIn.build()} />
