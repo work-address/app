@@ -14,6 +14,7 @@ import {
   Button,
   Card,
   Input,
+  TagInput,
   TextArea,
   useLeaveConfirm,
   useConfirm,
@@ -30,13 +31,12 @@ type FormState = Pick<
   baseApi.User,
   | 'userName'
   | 'company'
-  | 'skills'
   | 'price'
   | 'bio'
   | 'facebook'
   | 'linkedIn'
   | 'telegram'
->
+> & { skills: string[] }
 
 export const EditProfile = () => {
   const { t } = useTranslation()
@@ -67,7 +67,7 @@ export const EditProfile = () => {
     values: {
       userName: '',
       company: '',
-      skills: '',
+      skills: [],
       price: '',
       bio: '',
       facebook: '',
@@ -79,6 +79,7 @@ export const EditProfile = () => {
   const onSubmit: SubmitHandler<FormState> = async (values) => {
     saveProfile({
       ...values,
+      skills: values.skills.join(','),
       // TODO: remove this when backend will be ready
       emailOrPhone: user?.emailOrPhone || '',
     })
@@ -128,7 +129,7 @@ export const EditProfile = () => {
       reset({
         userName: user.userName || '',
         company: user.company || '',
-        skills: user.skills || '',
+        skills: user.skills?.split(',') || [],
         price: user.price || '',
         bio: user.bio || '',
         facebook: user.facebook || '',
@@ -234,13 +235,20 @@ export const EditProfile = () => {
                 {...register('company')}
               />
 
-              <Input
-                label={t('profile.form.skills')}
-                placeholder={t('profile.form.skillsPlaceholder')}
-                labelWidth={INPUT_LABEL_WIDTH}
-                id={'skills'}
-                disabled={loading}
-                {...register('skills')}
+              <Controller
+                control={control}
+                name="skills"
+                render={({ field }) => (
+                  <TagInput
+                    label={t('profile.form.skills')}
+                    placeholder={t('profile.form.skillsPlaceholder')}
+                    labelWidth={INPUT_LABEL_WIDTH}
+                    id={'skills'}
+                    disabled={loading}
+                    value={field.value}
+                    onChange={field.onChange}
+                  />
+                )}
               />
 
               <Separator size={'4'} />
