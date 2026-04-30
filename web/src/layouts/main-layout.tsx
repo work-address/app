@@ -1,6 +1,6 @@
 import { useUnit } from 'effector-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { memo } from 'react'
+import { memo, useMemo } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 
@@ -43,14 +43,23 @@ const PageContent = memo(() => {
 
   const isDesktop = useBreakpoint('isDesktop')
 
-  const motionProps: MotionProps | null = isDesktop
-    ? {
+  const motionProps: MotionProps | null = useMemo(() => {
+    if (isDesktop) {
+      return {
         initial: { opacity: 0, y: 50 },
         animate: { opacity: 1, y: 0 },
         exit: { opacity: 0, y: -50 },
-        transition: { duration: 0.35 },
+        transition: { duration: 0.25, ease: 'easeInOut' },
       }
-    : null
+    } else {
+      return {
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
+        exit: { opacity: 0 },
+        transition: { duration: 0.25, ease: 'easeInOut' },
+      }
+    }
+  }, [isDesktop])
 
   return (
     <AnimatePresence mode={'wait'}>
