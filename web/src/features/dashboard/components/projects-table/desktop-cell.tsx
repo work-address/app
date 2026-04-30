@@ -32,7 +32,10 @@ export const DesktopCell = React.memo(
       case 'title': {
         content = (
           <Text $themeVariant={'primary'}>
-            <NavLink to={routes.invoice.build({ id: props.data.id ?? '' })}>
+            <NavLink
+              to={routes.invoice.build({ id: props.data.id ?? '' })}
+              viewTransition
+            >
               {props.data.title}
             </NavLink>
           </Text>

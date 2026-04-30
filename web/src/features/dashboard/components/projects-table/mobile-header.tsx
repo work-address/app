@@ -30,6 +30,7 @@ export const MobileHeader = React.memo(
           <NavLink
             to={routes.invoice.build({ id: props.data.id ?? '' })}
             onClick={(e) => e.stopPropagation()}
+            viewTransition
           >
             <Text size={'4'} $themeVariant={'primary'} weight={'medium'}>
               {props.data.title}
