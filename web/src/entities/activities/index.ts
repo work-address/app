@@ -1,5 +1,4 @@
 import { combine, sample } from 'effector'
-import { debounce } from 'patronum/debounce'
 
 import {
   fetchActivities,
@@ -10,6 +9,7 @@ import {
   appendWorklogSort,
   resetWorklogSort,
   setWorklogsLoading,
+  debouncedChangeWorklogFilters,
 } from './activities.events'
 import {
   createActivityMutation,
@@ -56,20 +56,13 @@ sample({
   target: worklogsQuery.start,
 })
 
-const DESKTOP_CHANGE_FILTERS_DEBOUNCE_TIME = 1500
-
-const debouncedChangedWorklogFilters = debounce(
-  changeWorklogFilters,
-  DESKTOP_CHANGE_FILTERS_DEBOUNCE_TIME,
-)
-
 sample({
   clock: [resetWorklogSort, appendWorklogSort],
   target: applyWorklogFilters,
 })
 
 sample({
-  clock: debouncedChangedWorklogFilters,
+  clock: debouncedChangeWorklogFilters,
   source: $breakpoints,
   filter: (breakpoints) => breakpoints.isDesktop,
   target: applyWorklogFilters,
@@ -98,7 +91,7 @@ export {
   type Time,
   type WorklogsFilters,
   type WorklogSort,
-  type ActivityStateFilter,
+  type ProjectsFilter,
 } from './types'
 
 export {

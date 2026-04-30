@@ -1,6 +1,9 @@
 import type { baseApi } from '@/shared'
 
-export type ActivityStateFilter = 'all' | 'Active' | 'Finished'
+export type ProjectsFilter = {
+  projectState: 'All' | 'Active' | 'Finished'
+  title: string
+}
 
 export type ITimeTotal = {
   activityId: string

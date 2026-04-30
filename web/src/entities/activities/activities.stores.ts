@@ -22,14 +22,17 @@ import type {
   ITimeTotalDetail,
   WorklogsFilters,
   WorklogSort,
-  ActivityStateFilter,
+  ProjectsFilter,
 } from './types'
 import type { baseApi } from '@/shared'
 
-export const $activityStateFilter = createStore<ActivityStateFilter>('all').on(
-  changeActivityStateFilter,
-  (_, filter) => filter,
-)
+export const $activityStateFilter = createStore<ProjectsFilter>({
+  projectState: 'All',
+  title: '',
+}).on(changeActivityStateFilter, (state, filter) => ({
+  ...state,
+  ...filter,
+}))
 
 export const $worklogsFilters = createStore<WorklogsFilters>({
   page: 0,
@@ -98,11 +101,21 @@ export const $filteredActivities = combine(
   $activities,
   $activityStateFilter,
   (activities, filter): ProjectWithStats[] => {
-    if (filter === 'all') {
-      return activities
+    let filteredActivities = [...activities]
+
+    if (filter.projectState !== 'All') {
+      filteredActivities = filteredActivities.filter(
+        (project) => project.state === filter.projectState,
+      )
     }
 
-    return activities.filter((project) => project.state === filter)
+    if (filter.title) {
+      filteredActivities = filteredActivities.filter((project) =>
+        project.title.toLowerCase().includes(filter.title.toLowerCase()),
+      )
+    }
+
+    return filteredActivities
   },
 )
 

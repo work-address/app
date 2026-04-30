@@ -3,7 +3,7 @@ import fs from 'node:fs'
 
 const { VITE_API_URL } = process.env
 
-const outputDir = 'src/features/shared/api/generated'
+const outputDir = 'src/shared/api/generated'
 
 if (fs.existsSync(outputDir)) {
   fs.rmSync(outputDir, { recursive: true, force: true })

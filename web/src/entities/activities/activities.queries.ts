@@ -26,12 +26,18 @@ export const activityReportQuery = createQuery({
 })
 
 export const activitiesQuery = createQuery({
-  handler: async ({ page = 0 }: { page?: number } = {}) => {
+  handler: async ({
+    page = 0,
+    limit = 50,
+  }: { page?: number; limit?: number } = {}) => {
     const response = await baseApi.activityControllerSearchFreelancer({
       body: {
-        filter: {},
+        filter: {
+          query: 'test',
+        },
         page,
         sort: { createdAt: 'DESC' },
+        limit,
       },
     })
 

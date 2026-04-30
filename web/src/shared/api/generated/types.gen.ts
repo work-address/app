@@ -55,6 +55,7 @@ export type Activity = {
     sourceUrl?: string;
     jobUrl?: string;
     hash?: string;
+    type: string;
     state: string;
     id?: string;
     createdAt?: string | string;
@@ -339,21 +340,21 @@ export type ActivityControllerSearchFreelancerResponses = {
 
 export type ActivityControllerSearchFreelancerResponse = ActivityControllerSearchFreelancerResponses[keyof ActivityControllerSearchFreelancerResponses];
 
-export type ActivityControllerSearchOwnerData = {
+export type ActivityControllerSearchBusinessData = {
     /**
      * ActivitySearchDto
      */
     body?: ActivitySearchDto;
     path?: never;
     query?: never;
-    url: '/api/activity/search/owner';
+    url: '/api/activity/search/business';
 };
 
-export type ActivityControllerSearchOwnerResponses = {
+export type ActivityControllerSearchBusinessResponses = {
     200: Array<Array<Activity> | number>;
 };
 
-export type ActivityControllerSearchOwnerResponse = ActivityControllerSearchOwnerResponses[keyof ActivityControllerSearchOwnerResponses];
+export type ActivityControllerSearchBusinessResponse = ActivityControllerSearchBusinessResponses[keyof ActivityControllerSearchBusinessResponses];
 
 export type ActivityControllerAcceptProposalData = {
     body?: never;
@@ -455,17 +456,17 @@ export type ActivityControllerCloseResponses = {
     200: unknown;
 };
 
-export type ProposalControllerSearchOwnerData = {
+export type ProposalControllerSearchBusinessData = {
     /**
      * ProposalSearchDto
      */
     body?: ProposalSearchDto;
     path?: never;
     query?: never;
-    url: '/api/proposal/search/owner';
+    url: '/api/proposal/search/business';
 };
 
-export type ProposalControllerSearchOwnerResponses = {
+export type ProposalControllerSearchBusinessResponses = {
     /**
      * Successful response
      */

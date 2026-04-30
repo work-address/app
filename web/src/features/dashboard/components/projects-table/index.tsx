@@ -24,7 +24,7 @@ import {
   $activitiesLoading,
   $activityStateFilter,
   changeActivityStateFilter,
-  type ActivityStateFilter,
+  type ProjectsFilter,
   type ProjectWithStats,
   deleteActivityMutation,
 } from '@/entities/activities'
@@ -50,8 +50,8 @@ export const ProjectsTable = () => {
   const {
     projects,
     isActivitiesLoading,
-    activeTab,
-    setTab,
+    filter,
+    changeActivityStateFilterEvent,
     deleteProject,
     deleteStatus,
     resetDeleteMutation,
@@ -59,8 +59,8 @@ export const ProjectsTable = () => {
   } = useUnit({
     projects: $filteredActivities,
     isActivitiesLoading: $activitiesLoading,
-    activeTab: $activityStateFilter,
-    setTab: changeActivityStateFilter,
+    filter: $activityStateFilter,
+    changeActivityStateFilterEvent: changeActivityStateFilter,
     isProjectDeleting: deleteActivityMutation.$pending,
     deleteProject: deleteActivityMutation.start,
     deleteStatus: deleteActivityMutation.$status,
@@ -77,7 +77,10 @@ export const ProjectsTable = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
   const handleTabClick = (tab: string) => {
-    setTab(tab as ActivityStateFilter)
+    changeActivityStateFilterEvent({
+      projectState: tab as ProjectsFilter['projectState'],
+      title: '',
+    })
     setSelectedIds({})
   }
 
@@ -232,17 +235,17 @@ export const ProjectsTable = () => {
   return (
     <Flex direction={'column'} height={'100%'}>
       <Flex direction={'row'} justify={'between'} pb={'3'} align={'center'}>
-        <TabsRoot value={activeTab} onValueChange={handleTabClick}>
+        <TabsRoot value={filter.projectState} onValueChange={handleTabClick}>
           <TabsList>
-            <TabsTrigger value={'all'}>
+            <TabsTrigger value={'All'}>
               {t('dashboard.page.tabs.all')}
             </TabsTrigger>
 
-            <TabsTrigger value={'active'}>
+            <TabsTrigger value={'Active'}>
               {t('dashboard.page.tabs.active')}
             </TabsTrigger>
 
-            <TabsTrigger value={'finished'}>
+            <TabsTrigger value={'Finished'}>
               {t('dashboard.page.tabs.finished')}
             </TabsTrigger>
           </TabsList>
@@ -286,7 +289,7 @@ export const ProjectsTable = () => {
       <ProjectsTableWrapper>
         <AnimatePresence mode={'wait'}>
           <motion.div
-            key={activeTab}
+            key={filter.projectState}
             style={{ height: '100%' }}
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}

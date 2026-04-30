@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { ActivityControllerAcceptProposalData, ActivityControllerAcceptProposalResponses, ActivityControllerCloseData, ActivityControllerCloseResponses, ActivityControllerCreateData, ActivityControllerCreateResponses, ActivityControllerDeleteData, ActivityControllerDeleteResponses, ActivityControllerEditData, ActivityControllerEditResponses, ActivityControllerReadData, ActivityControllerReadResponses, ActivityControllerSearchOwnerData, ActivityControllerSearchOwnerResponses, ActivityControllerSearchData, ActivityControllerSearchFreelancerData, ActivityControllerSearchFreelancerResponses, ActivityControllerSearchResponses, AuthControllerCheckProofHandlerData, AuthControllerCheckProofHandlerResponses, AuthControllerLoginEthData, AuthControllerLoginEthResponses, AuthControllerNonceData, AuthControllerNonceResponses, AuthControllerRefreshData, AuthControllerRefreshResponses, AuthControllerStatusData, AuthControllerStatusResponses, AuthTimeTrackerControllerTimeTrackerConnectData, AuthTimeTrackerControllerTimeTrackerConnectResponses, AuthTimeTrackerControllerTimeTrackerLoginData, AuthTimeTrackerControllerTimeTrackerLoginResponses, AuthTimeTrackerControllerTimeTrackerNonceGenerateData, AuthTimeTrackerControllerTimeTrackerNonceGenerateResponses, AuthTimeTrackerControllerTimeTrackerNonceGetData, AuthTimeTrackerControllerTimeTrackerNonceGetResponses, HelpControllerSwaggerData, HelpControllerSwaggerResponses, InvoiceControllerCreateData, InvoiceControllerCreateResponses, InvoiceControllerReadData, InvoiceControllerReadResponses, InvoiceControllerSearchData, InvoiceControllerSearchResponses, ProposalControllerCreateData, ProposalControllerCreateResponses, ProposalControllerDeleteData, ProposalControllerDeleteResponses, ProposalControllerEditData, ProposalControllerEditResponses, ProposalControllerSearchOwnerData, ProposalControllerSearchOwnerResponses, ProposalControllerSearchData, ProposalControllerSearchResponses, TimeControllerCreateOrUpdateManyData, TimeControllerCreateOrUpdateManyResponses, TimeControllerDeleteData, TimeControllerDeleteResponses, TimeControllerGetReportData, TimeControllerGetReportResponses, TimeControllerGetTotalsData, TimeControllerGetTotalsResponses, TimeControllerReadData, TimeControllerReadResponses, TimeControllerSearchFreelancerData, TimeControllerSearchFreelancerResponses, UserControllerEditData, UserControllerEditResponses, UserControllerReadData, UserControllerReadResponses, UserControllerSearchData, UserControllerSearchResponses } from './types.gen';
+import type { ActivityControllerAcceptProposalData, ActivityControllerAcceptProposalResponses, ActivityControllerCloseData, ActivityControllerCloseResponses, ActivityControllerCreateData, ActivityControllerCreateResponses, ActivityControllerDeleteData, ActivityControllerDeleteResponses, ActivityControllerEditData, ActivityControllerEditResponses, ActivityControllerReadData, ActivityControllerReadResponses, ActivityControllerSearchBusinessData, ActivityControllerSearchBusinessResponses, ActivityControllerSearchData, ActivityControllerSearchFreelancerData, ActivityControllerSearchFreelancerResponses, ActivityControllerSearchResponses, AuthControllerCheckProofHandlerData, AuthControllerCheckProofHandlerResponses, AuthControllerLoginEthData, AuthControllerLoginEthResponses, AuthControllerNonceData, AuthControllerNonceResponses, AuthControllerRefreshData, AuthControllerRefreshResponses, AuthControllerStatusData, AuthControllerStatusResponses, AuthTimeTrackerControllerTimeTrackerConnectData, AuthTimeTrackerControllerTimeTrackerConnectResponses, AuthTimeTrackerControllerTimeTrackerLoginData, AuthTimeTrackerControllerTimeTrackerLoginResponses, AuthTimeTrackerControllerTimeTrackerNonceGenerateData, AuthTimeTrackerControllerTimeTrackerNonceGenerateResponses, AuthTimeTrackerControllerTimeTrackerNonceGetData, AuthTimeTrackerControllerTimeTrackerNonceGetResponses, HelpControllerSwaggerData, HelpControllerSwaggerResponses, InvoiceControllerCreateData, InvoiceControllerCreateResponses, InvoiceControllerReadData, InvoiceControllerReadResponses, InvoiceControllerSearchData, InvoiceControllerSearchResponses, ProposalControllerCreateData, ProposalControllerCreateResponses, ProposalControllerDeleteData, ProposalControllerDeleteResponses, ProposalControllerEditData, ProposalControllerEditResponses, ProposalControllerSearchBusinessData, ProposalControllerSearchBusinessResponses, ProposalControllerSearchData, ProposalControllerSearchResponses, TimeControllerCreateOrUpdateManyData, TimeControllerCreateOrUpdateManyResponses, TimeControllerDeleteData, TimeControllerDeleteResponses, TimeControllerGetReportData, TimeControllerGetReportResponses, TimeControllerGetTotalsData, TimeControllerGetTotalsResponses, TimeControllerReadData, TimeControllerReadResponses, TimeControllerSearchFreelancerData, TimeControllerSearchFreelancerResponses, UserControllerEditData, UserControllerEditResponses, UserControllerReadData, UserControllerReadResponses, UserControllerSearchData, UserControllerSearchResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -150,11 +150,11 @@ export const activityControllerSearchFreelancer = <ThrowOnError extends boolean 
 });
 
 /**
- * Search projects as owner
+ * Search projects as a business
  */
-export const activityControllerSearchOwner = <ThrowOnError extends boolean = false>(options?: Options<ActivityControllerSearchOwnerData, ThrowOnError>) => (options?.client ?? client).post<ActivityControllerSearchOwnerResponses, unknown, ThrowOnError>({
+export const activityControllerSearchBusiness = <ThrowOnError extends boolean = false>(options?: Options<ActivityControllerSearchBusinessData, ThrowOnError>) => (options?.client ?? client).post<ActivityControllerSearchBusinessResponses, unknown, ThrowOnError>({
     responseType: 'json',
-    url: '/api/activity/search/owner',
+    url: '/api/activity/search/business',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -225,11 +225,11 @@ export const activityControllerClose = <ThrowOnError extends boolean = false>(op
 });
 
 /**
- * Search proposals as owner
+ * Search business
  */
-export const proposalControllerSearchOwner = <ThrowOnError extends boolean = false>(options?: Options<ProposalControllerSearchOwnerData, ThrowOnError>) => (options?.client ?? client).post<ProposalControllerSearchOwnerResponses, unknown, ThrowOnError>({
+export const proposalControllerSearchBusiness = <ThrowOnError extends boolean = false>(options?: Options<ProposalControllerSearchBusinessData, ThrowOnError>) => (options?.client ?? client).post<ProposalControllerSearchBusinessResponses, unknown, ThrowOnError>({
     responseType: 'json',
-    url: '/api/proposal/search/owner',
+    url: '/api/proposal/search/business',
     ...options,
     headers: {
         'Content-Type': 'application/json',

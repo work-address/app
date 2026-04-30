@@ -1,14 +1,17 @@
 import { PlusIcon } from '@radix-ui/react-icons'
 import { Badge, Flex } from '@radix-ui/themes'
-import { useUnit } from 'effector-react'
+import { useStoreMap, useUnit } from 'effector-react'
 import { useEffect, useState } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
+import { useDebounce } from 'react-use'
 
 import {
   fetchActivities,
   $activitiesLoading,
   $hasProjects,
+  $activityStateFilter,
+  changeActivityStateFilter,
 } from '@/entities/activities'
 import {
   ApplicationsUsage,
@@ -76,7 +79,7 @@ export default function DashboardPage() {
 
               {showSkeletons ? (
                 <Flex mb={{ initial: '3', sm: '0' }}>
-                  <Search radius={isDesktop ? 'large' : undefined} size={'3'} />
+                  <ProjectsSearchInput />
                 </Flex>
               ) : (
                 <S.TopRight>
@@ -123,5 +126,43 @@ export default function DashboardPage() {
         )}
       </Wrapper>
     </>
+  )
+}
+
+const ProjectsSearchInput = () => {
+  const isDesktop = useBreakpoint('isDesktop')
+
+  const titleFromStore = useStoreMap({
+    store: $activityStateFilter,
+    keys: [],
+    fn: (stateFilter) => stateFilter.title,
+  })
+
+  const [title, setTitle] = useState(titleFromStore)
+  const changeActivityStateFilterEvent = useUnit(changeActivityStateFilter)
+
+  useDebounce(
+    () => {
+      changeActivityStateFilterEvent({ title })
+    },
+    500,
+    [title],
+  )
+
+  const handleChange = (title: string) => {
+    setTitle(title)
+  }
+
+  useEffect(() => {
+    setTitle(titleFromStore)
+  }, [titleFromStore])
+
+  return (
+    <Search
+      value={title}
+      onChange={handleChange}
+      radius={isDesktop ? 'large' : undefined}
+      size={'3'}
+    />
   )
 }
