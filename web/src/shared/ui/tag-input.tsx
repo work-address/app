@@ -98,22 +98,20 @@ export const TagInput = ({
                 <Flex align="center" gap="1">
                   {tag}
 
-                  {!disabled && (
-                    <Flex p="1">
-                      <IconButton
-                        size="1"
-                        variant="ghost"
-                        type="button"
-                        radius="full"
-                        onClick={(e) => {
-                          e.stopPropagation()
-                          removeTag(tag)
-                        }}
-                      >
-                        <Cross2Icon width="10" height="10" />
-                      </IconButton>
-                    </Flex>
-                  )}
+                  <Flex p="1">
+                    <IconButton
+                      size="1"
+                      variant="ghost"
+                      type="button"
+                      radius="full"
+                      onClick={(e) => {
+                        e.stopPropagation()
+                        removeTag(tag)
+                      }}
+                    >
+                      <Cross2Icon width="10" height="10" />
+                    </IconButton>
+                  </Flex>
                 </Flex>
               </StyledBadge>
             ))}

@@ -345,6 +345,7 @@ export const EditProfile = () => {
                           onChange={field.onChange}
                           id={'bio'}
                           showEditPanel={isDesktop}
+                          disabled={profileSaving}
                         />
                       </Flex>
                     </Skeleton>

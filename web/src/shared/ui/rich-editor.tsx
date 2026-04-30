@@ -26,6 +26,7 @@ type RichEditorProps = {
   onChange?: (value: string) => void
   id?: string
   showEditPanel?: boolean
+  disabled?: boolean
 }
 
 export const RichEditor = ({
@@ -33,6 +34,7 @@ export const RichEditor = ({
   onChange,
   id,
   showEditPanel = true,
+  disabled,
 }: RichEditorProps) => {
   const { t } = useTranslation()
   const [, forceUpdate] = useReducer((x) => x + 1, 0)
@@ -71,7 +73,7 @@ export const RichEditor = ({
   }, [value, editor])
 
   return (
-    <Wrapper>
+    <Wrapper $disabled={disabled}>
       {showEditPanel && (
         <FlexToolbar gap={'1'} align={'center'}>
           <CustomIconButton
@@ -199,16 +201,33 @@ export const RichEditor = ({
       )}
 
       <EditorWrapper>
-        <StyledEditorContent editor={editor} id={id} />
+        <StyledEditorContent disabled={disabled} editor={editor} id={id} />
       </EditorWrapper>
     </Wrapper>
   )
 }
 
-const Wrapper = styled.div`
+const Wrapper = styled.div<{ $disabled?: boolean }>`
   border: 1px solid var(--gray-6);
   border-radius: var(--radius-3);
   overflow: hidden;
+
+  ${(p) =>
+    p.$disabled &&
+    `
+    pointer-events: none;
+    cursor: not-allowed;
+    background-color: var(--gray-3);
+    opacity: 0.6;
+
+    .tiptap {
+      color: var(--gray-8);
+    }
+
+    div[contenteditable] {
+      cursor: not-allowed;
+    }
+  `}
 `
 
 const FlexToolbar = styled(Flex)`
@@ -244,6 +263,10 @@ const EditorWrapper = styled.div`
 `
 
 const StyledEditorContent = styled(EditorContent)`
+  ${(p) => p.theme.breakpoints.down('md')} {
+    font-size: var(--font-size-3);
+  }
+
   div[contenteditable='true'] {
     min-height: 120px;
   }

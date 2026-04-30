@@ -77,7 +77,12 @@ const StyledPageIndicator = styled.div<{
   top: 0;
 
   width: 100%;
-  height: 4px;
+
+  height: 2px;
+
+  ${(p) => p.theme.breakpoints.up('md')} {
+    height: 4px;
+  }
 
   background: linear-gradient(to right, transparent, var(--ds-accent-9));
 

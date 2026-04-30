@@ -57,7 +57,7 @@ export const Header = () => {
   return (
     <HeaderRoot ref={rootRef}>
       <HeaderInner>
-        <LogoLink to={routes.dashboard.build()}>
+        <LogoLink to={routes.dashboard.build()} viewTransition>
           <LogoImg src="/img/photo/logo.svg" alt={t('header.logoAlt')} />
         </LogoLink>
 
@@ -75,6 +75,7 @@ export const Header = () => {
 
             <UserText>
               <UserName>{user?.userName || ''}</UserName>
+
               <UserSub>
                 {formatWalletAddress(user?.friendlyWalletAddress || '')}
               </UserSub>
