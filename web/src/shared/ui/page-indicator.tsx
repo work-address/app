@@ -39,24 +39,20 @@ const pageIndicatorAnimation = keyframes`
     transform: translateX(-70%);
   }
 
-  40% {
-    transform: translateX(-45%);
+  100% {
+    transform: translateX(-10%);
   }
+`
 
-  60% {
-    transform: translateX(-40%);
-  }
-
-  75% {
-    transform: translateX(-30%);
-  }
-
-  85% {
-    transform: translateX(-20%);
+const finishAnimation = keyframes`
+  0% {
+    transform: translateX(0%);
+    opacity: 1;
   }
 
   100% {
-    transform: translateX(-10%);
+    transform: translateX(0%);
+    opacity: 0;
   }
 `
 
@@ -73,33 +69,31 @@ const StyledPageIndicator = styled.div<{
   $animationFinished: boolean
 }>`
   position: absolute;
-  top: 0;
   transform: translateX(-100%);
+  top: 0;
 
   width: 100%;
-  height: 3px;
-
-  animation-name: ${pageIndicatorAnimation};
-
-  animation-duration: 5s;
-  animation-iteration-count: 0;
-
-  will-change: transform;
+  height: 4px;
 
   background: linear-gradient(to right, transparent, var(--ds-accent-9));
-  opacity: 0;
-  transition: opacity 0.3s ease-in-out;
+
+  animation-iteration-count: 0;
+  animation-timing-function: ease-in-out;
+
+  animation-name: ${(p) =>
+    p.$animationFinished ? finishAnimation : pageIndicatorAnimation};
 
   ${(p) =>
     p.$showAnimation &&
     `
-      animation-iteration-count: 1;
-      opacity: 1;
+      animation-duration: 8s;
+      animation-iteration-count: infinite;
     `}
 
   ${(p) =>
     p.$animationFinished &&
     `
-      transform: translateX(0) !important;
+      animation-duration: 1s;
+      animation-iteration-count: 1;
     `}
 `
