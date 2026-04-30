@@ -1,5 +1,6 @@
 import { useUnit } from 'effector-react'
 import { AnimatePresence, motion } from 'motion/react'
+import { memo } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 
@@ -7,16 +8,38 @@ import type { MotionProps } from 'motion/react'
 
 import { $authenticated, $pending } from '@/entities/profile'
 import { routes } from '@/routes'
-import { useBreakpoint } from '@/shared'
+import { useBreakpoint, PageIndicator } from '@/shared'
 import { Header } from '@/widgets'
 
 export const MainLayout = () => {
-  const { pathname } = useLocation()
-
-  const { authenticated, pending } = useUnit({
+  const { authenticated, authenticationPending } = useUnit({
     authenticated: $authenticated,
-    pending: $pending,
+    authenticationPending: $pending,
   })
+
+  if (authenticationPending) {
+    return null
+  }
+
+  if (!authenticated) {
+    return <Navigate to={routes.signIn.build()} />
+  }
+
+  return (
+    <Layout>
+      <PageIndicator />
+
+      <StickyHeader>
+        <Header />
+      </StickyHeader>
+
+      <PageContent />
+    </Layout>
+  )
+}
+
+const PageContent = memo(() => {
+  const { pathname } = useLocation()
 
   const isDesktop = useBreakpoint('isDesktop')
 
@@ -29,30 +52,16 @@ export const MainLayout = () => {
       }
     : null
 
-  if (pending) {
-    return null
-  }
-
-  if (!authenticated) {
-    return <Navigate to={routes.signIn.build()} />
-  }
-
   return (
-    <Layout>
-      <StickyHeader>
-        <Header />
-      </StickyHeader>
-
-      <AnimatePresence mode={'wait'}>
-        <Content>
-          <motion.div key={pathname} {...motionProps}>
-            <Outlet />
-          </motion.div>
-        </Content>
-      </AnimatePresence>
-    </Layout>
+    <AnimatePresence mode={'wait'}>
+      <Content>
+        <motion.div key={pathname} {...motionProps}>
+          <Outlet />
+        </motion.div>
+      </Content>
+    </AnimatePresence>
   )
-}
+})
 
 const Layout = styled.div`
   height: 100%;

@@ -74,6 +74,7 @@ export const DesktopMenu = ({
                       : pathname.includes(url)
                   }
                   target={target}
+                  viewTransition
                 >
                   {desktopRender === 'textWithIcon' && (
                     <IconImg src={desktopIcon} alt={renderText} />
@@ -95,6 +96,7 @@ export const DesktopMenu = ({
                   to={schema}
                   aria-label={t('header.aria.github')}
                   target={target}
+                  viewTransition
                 >
                   <IconImg src={desktopIcon} alt={t('header.aria.github')} />
                 </IconLink>

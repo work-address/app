@@ -37,7 +37,7 @@ export const MobileMenu = ({ setOpen }: MobileMenuProps) => {
       if (target === '_blank') {
         window.open(path)
       } else {
-        navigate(path)
+        navigate(path, { viewTransition: true })
       }
     }
   }

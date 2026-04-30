@@ -47,6 +47,6 @@ createRoot(rootElement).render(
   </StrictMode>,
 )
 
-if (import.meta.env.DEV) {
+if (import.meta.env.DEV && localStorage.getItem('log') === '1') {
   attachLogger()
 }
