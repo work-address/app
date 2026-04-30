@@ -40,24 +40,38 @@ export const MainLayout = () => {
 
 const PageContent = memo(() => {
   const { pathname } = useLocation()
-
   const isDesktop = useBreakpoint('isDesktop')
 
-  const motionProps: MotionProps | null = useMemo(() => {
+  const motionProps = useMemo(() => {
     if (isDesktop) {
       return {
-        initial: { opacity: 0, y: 50 },
-        animate: { opacity: 1, y: 0 },
-        exit: { opacity: 0, y: -50 },
-        transition: { duration: 0.25, ease: 'easeInOut' },
-      }
+        initial: {
+          opacity: 0,
+          x: -50,
+        },
+        animate: {
+          opacity: 1,
+          x: 0,
+        },
+        exit: {
+          opacity: 0,
+          x: 50,
+        },
+        transition: { duration: 0.3, ease: 'easeInOut' },
+      } satisfies MotionProps
     } else {
       return {
-        initial: { opacity: 0 },
-        animate: { opacity: 1 },
-        exit: { opacity: 0 },
-        transition: { duration: 0.25, ease: 'easeInOut' },
-      }
+        initial: {
+          opacity: 0,
+        },
+        animate: {
+          opacity: 1,
+        },
+        exit: {
+          opacity: 0,
+        },
+        transition: { duration: 0.3, ease: 'easeInOut' },
+      } satisfies MotionProps
     }
   }, [isDesktop])
 
@@ -65,11 +79,15 @@ const PageContent = memo(() => {
     <AnimatePresence mode={'wait'}>
       <Content>
         <motion.div key={pathname} {...motionProps}>
-          <Outlet />
+          <WrappedOutlet />
         </motion.div>
       </Content>
     </AnimatePresence>
   )
+})
+
+const WrappedOutlet = memo(() => {
+  return <Outlet />
 })
 
 const Layout = styled.div`
