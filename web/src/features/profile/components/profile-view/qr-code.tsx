@@ -103,6 +103,7 @@ export const QrCode = ({
                   to={routes.profile.children.edit.build({
                     walletAddress: user?.friendlyWalletAddress || '',
                   })}
+                  viewTransition
                 >
                   <Button stretch themeVariant={'primary'}>
                     {t('common.edit')} <Pencil1Icon />

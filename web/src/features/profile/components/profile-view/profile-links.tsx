@@ -73,6 +73,7 @@ export const ProfileLinks = ({
                   to={routes.profile.children.edit.build({
                     walletAddress: user?.friendlyWalletAddress || '',
                   })}
+                  viewTransition
                 >
                   <Button themeVariant={'primary'} size={'3'}>
                     {t('common.edit')}

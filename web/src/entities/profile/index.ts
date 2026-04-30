@@ -148,19 +148,11 @@ sample({
 })
 
 /**
- * Logout flow: clear stored tokens.
+ * Logout flow: disconnect both wallet providers, clear tokens
  */
 sample({
   clock: logout,
-  target: clearTokensFx,
-})
-
-/**
- * Logout flow: disconnect both wallet providers.
- */
-sample({
-  clock: logout,
-  target: [disconnectTonFx, disconnectEthFx],
+  target: [disconnectTonFx, disconnectEthFx, clearTokensFx],
 })
 
 sample({
@@ -185,7 +177,7 @@ sample({
  */
 sample({
   clock: fetchStatusFx.fail,
-  target: [clearTokensFx, $authenticated.reinit],
+  target: [$authenticated.reinit, logout],
 })
 
 /**

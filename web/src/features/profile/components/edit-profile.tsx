@@ -148,6 +148,7 @@ export const EditProfile = () => {
         routes.profile.build({
           walletAddress: user?.friendlyWalletAddress || '',
         }),
+        { viewTransition: true },
       )
     }
   }, [isFormSubmittedSuccessfully, navigate, user?.friendlyWalletAddress])
@@ -210,6 +211,7 @@ export const EditProfile = () => {
                           })
                         : '#'
                     }
+                    viewTransition
                   >
                     <IconButton
                       radius={'full'}

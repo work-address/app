@@ -39,6 +39,10 @@ const pageIndicatorAnimation = keyframes`
     transform: translateX(-70%);
   }
 
+  50% {
+    transform: translateX(-35%);
+  }
+
   100% {
     transform: translateX(-10%);
   }
@@ -78,7 +82,7 @@ const StyledPageIndicator = styled.div<{
   background: linear-gradient(to right, transparent, var(--ds-accent-9));
 
   animation-iteration-count: 0;
-  animation-timing-function: ease-in-out;
+  animation-timing-function: ease-out;
 
   animation-name: ${(p) =>
     p.$animationFinished ? finishAnimation : pageIndicatorAnimation};
@@ -86,7 +90,7 @@ const StyledPageIndicator = styled.div<{
   ${(p) =>
     p.$showAnimation &&
     `
-      animation-duration: 8s;
+      animation-duration: 4s;
       animation-iteration-count: infinite;
     `}
 
