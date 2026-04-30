@@ -194,7 +194,7 @@ const StyledTagInput = styled.input`
 
   ${(p) => p.theme.breakpoints.up('md')} {
     font-size: var(--font-size-2);
-    padding: 2px 4px;
+    padding: 1px 4px;
   }
 `
 
