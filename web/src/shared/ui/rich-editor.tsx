@@ -264,7 +264,9 @@ const EditorWrapper = styled.div`
 
 const StyledEditorContent = styled(EditorContent)`
   ${(p) => p.theme.breakpoints.down('md')} {
-    font-size: var(--font-size-3);
+    div[contenteditable='true'] {
+      font-size: var(--font-size-3);
+    }
   }
 
   div[contenteditable='true'] {
