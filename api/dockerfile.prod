@@ -44,6 +44,11 @@ COPY --from=builder /app/node_modules /app/node_modules
 COPY --from=builder /app/api/node_modules ./node_modules
 COPY --from=builder /app/api/build ./build
 
+# typeorm:cli (schema:sync) needs TS sources + tsconfig (ormconfig uses src/entity/*)
+COPY --from=builder /app/tsconfig.base.json /app/tsconfig.base.json
+COPY --from=builder /app/api/tsconfig.json ./tsconfig.json
+COPY --from=builder /app/api/src ./src
+
 # Use a non-root user for security best practices
 RUN addgroup -g 1001 -S nodejs && \
     adduser -S nodejs -u 1001
@@ -52,5 +57,5 @@ USER nodejs
 # Expose port 4000 to allow HTTP traffic
 EXPOSE 4000
 
-# Start the API server
-CMD ["node", "build/server.js"]
+# Align DB schema with entities, then start the API server
+CMD ["sh", "-c", "npm run typeorm:cli -- schema:sync && node build/server.js"]
