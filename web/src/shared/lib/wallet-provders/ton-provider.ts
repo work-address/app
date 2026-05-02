@@ -1,7 +1,9 @@
 import { TonConnectUI } from '@tonconnect/ui'
 
 export const tonConnectProvider = new TonConnectUI({
-  manifestUrl: import.meta.env.VITE_TON_MANIFEST_URL,
+  manifestUrl: import.meta.env.DEV
+    ? import.meta.env.VITE_TON_DEV_MANIFEST_URL
+    : `${window.location.origin}/tonconnect-manifest.json`,
 })
 
 export type {

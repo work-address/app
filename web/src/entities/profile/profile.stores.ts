@@ -44,11 +44,15 @@ export const $user = createStore<baseApi.User | null>(null)
   }))
   .reset(logout)
 
-export const $normalizedUser = $user.map((user) => ({
-  ...user,
-  // TODO: set chain property on backend after authentication
-  friendlyWalletAddress: getFriendlyWalletAddress(user?.address),
-}))
+export const $normalizedUser = $user.map((user) =>
+  user
+    ? {
+        ...user,
+        // TODO: set chain property on backend after authentication
+        friendlyWalletAddress: getFriendlyWalletAddress(user?.address),
+      }
+    : null,
+)
 
 export const $initialized = createStore(false).on(setInitialized, () => true)
 

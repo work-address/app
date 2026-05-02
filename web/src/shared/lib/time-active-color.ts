@@ -5,7 +5,7 @@ import type { BadgeProps } from '@radix-ui/themes'
 export const getTimeActiveColor = (minutesActive: number) =>
   match<number, BadgeProps['color']>(minutesActive)
     .with(
-      P.when((n) => n > 0 && n <= 2),
+      P.when((n) => n >= 0 && n <= 2),
       () => 'red',
     )
     .with(

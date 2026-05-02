@@ -9,7 +9,7 @@ type IconButtonProps = {
 
 export const IconButton = ({
   themeVariant,
-  type = 'submit',
+  type = 'button',
   ...props
 }: IconButtonProps) => {
   return (

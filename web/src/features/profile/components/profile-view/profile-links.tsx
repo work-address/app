@@ -1,11 +1,15 @@
 import { Pencil1Icon, CopyIcon } from '@radix-ui/react-icons'
-import { Flex, type FlexProps } from '@radix-ui/themes'
+import { Flex, Skeleton, type FlexProps } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
 import { Link, NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { $profile, $isAuthenticatedUserProfile } from '../../model'
+import {
+  $profile,
+  $isAuthenticatedUserProfile,
+  $profileLoading,
+} from '../../model'
 import { InfoRow } from '../info-row'
 
 import { ProfileViewCard } from './styled'
@@ -26,12 +30,15 @@ export const ProfileLinks = ({
   const isDesktop = useBreakpoint('isDesktop')
   const { t } = useTranslation()
 
-  const { user, isAuthenticatedUserProfile } = useUnit({
+  const { user, isAuthenticatedUserProfile, profileLoading } = useUnit({
     user: $profile,
     isAuthenticatedUserProfile: $isAuthenticatedUserProfile,
+    profileLoading: $profileLoading,
   })
 
-  const walletAddress = formatWalletAddress(user?.friendlyWalletAddress || '')
+  const walletAddress = formatWalletAddress(
+    user?.friendlyWalletAddress || 'efgH1234567890',
+  )
 
   const infoRowGap: FlexProps['gap'] = {
     initial: '0',
@@ -49,19 +56,23 @@ export const ProfileLinks = ({
           {isDesktop ? (
             <>
               <Flex direction={'column'} gap={'2'}>
-                <Text size={'7'} weight={'medium'}>
-                  {user?.userName || t('profile.view.mockName')}
-                </Text>
+                <Skeleton loading={profileLoading}>
+                  <Text size={'7'} weight={'medium'}>
+                    {user?.userName || t('profile.view.mockName')}
+                  </Text>
+                </Skeleton>
 
                 <Flex gap={'2'} align={'center'}>
                   <Button variant={'ghost'} onClick={onWalletAddressCopy}>
-                    <Text
-                      $themeVariant={'primary'}
-                      size={'3'}
-                      weight={'medium'}
-                    >
-                      {walletAddress}
-                    </Text>
+                    <Skeleton loading={profileLoading}>
+                      <Text
+                        $themeVariant={'primary'}
+                        size={'3'}
+                        weight={'medium'}
+                      >
+                        {walletAddress}
+                      </Text>
+                    </Skeleton>
 
                     <CopyIcon />
                   </Button>
@@ -88,93 +99,104 @@ export const ProfileLinks = ({
         </Flex>
 
         <Flex direction={'column'} gap={{ initial: '3', md: '4' }}>
-          <InfoRow
-            hoverEffects={false}
-            icon={
-              <img
-                src={'/img/icons/case.svg'}
-                alt={t('profile.view.alt.case')}
-              />
-            }
-            text={
-              <Flex gap={{ initial: '5px', md: '6px' }}>
-                <Text color={'gray'}>{t('profile.view.worksAt')}</Text>
+          {user?.company && (
+            <InfoRow
+              hoverEffects={false}
+              icon={
+                <img
+                  src={'/img/icons/case.svg'}
+                  alt={t('profile.view.alt.case')}
+                />
+              }
+              text={
+                <Flex gap={{ initial: '5px', md: '6px' }}>
+                  <Text color={'gray'}>{t('profile.view.worksAt')}</Text>
 
-                <Text weight={'medium'}>
-                  {user?.company ?? t('profile.view.mockCompany')}
-                </Text>
-              </Flex>
-            }
-          />
-          <InfoRow
-            icon={
-              <img
-                src={'/img/icons/linkedin.svg'}
-                alt={t('profile.links.linkedin')}
-              />
-            }
-            text={
-              <NavLink
-                to={routes.linkedin.build({
-                  userId: user?.linkedIn || 'johndoe',
-                })}
-                target="_blank"
-              >
-                <Flex gap={infoRowGap}>
-                  <Text color={'gray'}>
-                    {t('profile.view.social.linkedinPrefix')}
+                  <Text weight={'medium'}>
+                    {user?.company ?? t('profile.view.mockCompany')}
                   </Text>
-                  <Text weight={'medium'}>{user?.linkedIn ?? 'johndoe'}</Text>
                 </Flex>
-              </NavLink>
-            }
-          />
-          <InfoRow
-            icon={
-              <img
-                src={'/img/icons/facebook.svg'}
-                alt={t('profile.links.facebook')}
-              />
-            }
-            text={
-              <NavLink
-                to={routes.facebook.build({
-                  userId: user?.facebook || 'johndoe',
-                })}
-                target="_blank"
-              >
-                <Flex gap={infoRowGap}>
-                  <Text color={'gray'}>
-                    {t('profile.view.social.facebookPrefix')}
-                  </Text>
-                  <Text weight={'medium'}>{user?.facebook ?? 'johndoe'}</Text>
-                </Flex>
-              </NavLink>
-            }
-          />
-          <InfoRow
-            icon={
-              <img
-                src={'/img/icons/telegram.svg'}
-                alt={t('profile.links.telegram')}
-              />
-            }
-            text={
-              <NavLink
-                to={routes.telegram.build({
-                  userId: user?.telegram || 'johndoe',
-                })}
-                target="_blank"
-              >
-                <Flex gap={infoRowGap}>
-                  <Text color={'gray'}>
-                    {t('profile.view.social.telegramPrefix')}
-                  </Text>
-                  <Text weight={'medium'}>{user?.telegram ?? 'johndoe'}</Text>
-                </Flex>
-              </NavLink>
-            }
-          />
+              }
+            />
+          )}
+
+          {user?.linkedIn && (
+            <InfoRow
+              icon={
+                <img
+                  src={'/img/icons/linkedin.svg'}
+                  alt={t('profile.links.linkedin')}
+                />
+              }
+              text={
+                <NavLink
+                  to={routes.linkedin.build({
+                    userId: user?.linkedIn || 'johndoe',
+                  })}
+                  target="_blank"
+                >
+                  <Flex gap={infoRowGap}>
+                    <Text color={'gray'}>
+                      {t('profile.view.social.linkedinPrefix')}
+                    </Text>
+                    <Text weight={'medium'}>{user?.linkedIn ?? 'johndoe'}</Text>
+                  </Flex>
+                </NavLink>
+              }
+            />
+          )}
+
+          {user?.facebook && (
+            <InfoRow
+              icon={
+                <img
+                  src={'/img/icons/facebook.svg'}
+                  alt={t('profile.links.facebook')}
+                />
+              }
+              text={
+                <NavLink
+                  to={routes.facebook.build({
+                    userId: user?.facebook || 'johndoe',
+                  })}
+                  target="_blank"
+                >
+                  <Flex gap={infoRowGap}>
+                    <Text color={'gray'}>
+                      {t('profile.view.social.facebookPrefix')}
+                    </Text>
+                    <Text weight={'medium'}>{user?.facebook ?? 'johndoe'}</Text>
+                  </Flex>
+                </NavLink>
+              }
+            />
+          )}
+
+          {user?.telegram && (
+            <InfoRow
+              icon={
+                <img
+                  src={'/img/icons/telegram.svg'}
+                  alt={t('profile.links.telegram')}
+                />
+              }
+              text={
+                <NavLink
+                  to={routes.telegram.build({
+                    userId: user?.telegram || 'johndoe',
+                  })}
+                  target="_blank"
+                >
+                  <Flex gap={infoRowGap}>
+                    <Text color={'gray'}>
+                      {t('profile.view.social.telegramPrefix')}
+                    </Text>
+                    <Text weight={'medium'}>{user?.telegram ?? 'johndoe'}</Text>
+                  </Flex>
+                </NavLink>
+              }
+            />
+          )}
         </Flex>
       </Flex>
     </StyledCard>

@@ -67,6 +67,7 @@ export const DatePickerInput = ({
 
   const weekDayLabels = useMemo(() => {
     const ref = startOfWeek(new Date(2025, 0, 15), { locale: dateFnsLocale })
+
     return Array.from({ length: 7 }, (_, i) =>
       format(addDays(ref, i), 'EEE', { locale: dateFnsLocale }),
     )
@@ -91,6 +92,7 @@ export const DatePickerInput = ({
     if (!next) {
       setPendingDate(value ?? null)
     }
+
     setOpen(next)
   }
 

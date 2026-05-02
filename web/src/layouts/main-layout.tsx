@@ -1,25 +1,20 @@
 import { useUnit } from 'effector-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { memo, useMemo } from 'react'
+import { memo, useEffect, useMemo } from 'react'
 import { Navigate, Outlet, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 
 import type { MotionProps } from 'motion/react'
 
-import { $authenticated, $pending } from '@/entities/profile'
+import { $authenticated } from '@/entities/profile'
 import { routes } from '@/routes'
 import { useBreakpoint, PageIndicator } from '@/shared'
 import { Header } from '@/widgets'
 
 export const MainLayout = () => {
-  const { authenticated, authenticationPending } = useUnit({
+  const { authenticated } = useUnit({
     authenticated: $authenticated,
-    authenticationPending: $pending,
   })
-
-  if (authenticationPending) {
-    return null
-  }
 
   if (!authenticated) {
     return <Navigate to={routes.signIn.build()} />
@@ -47,42 +42,36 @@ const PageContent = memo(() => {
       return {
         initial: {
           opacity: 0,
-          x: -50,
+          x: -100,
         },
         animate: {
           opacity: 1,
           x: 0,
         },
-        exit: {
-          opacity: 0,
-          x: 50,
-        },
         transition: { duration: 0.3, ease: 'easeInOut' },
       } satisfies MotionProps
     } else {
       return {
-        initial: {
-          opacity: 0,
-        },
-        animate: {
-          opacity: 1,
-        },
-        exit: {
-          opacity: 0,
-        },
-        transition: { duration: 0.3, ease: 'easeInOut' },
+        transition: { duration: 0 },
       } satisfies MotionProps
     }
   }, [isDesktop])
 
+  useEffect(() => {
+    document.body.scrollIntoView({
+      behavior: 'instant',
+      block: 'start',
+    })
+  }, [pathname])
+
   return (
-    <AnimatePresence mode={'wait'}>
-      <Content>
+    <Content>
+      <AnimatePresence mode="wait">
         <motion.div key={pathname} {...motionProps}>
           <WrappedOutlet />
         </motion.div>
-      </Content>
-    </AnimatePresence>
+      </AnimatePresence>
+    </Content>
   )
 })
 

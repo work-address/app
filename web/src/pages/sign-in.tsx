@@ -72,7 +72,7 @@ export default function SignInPage() {
           </ProviderButton>
         </S.Actions>
 
-        <S.Learn href={'#'} target={'_blank'}>
+        <S.Learn to={routes.docs.build()} target={routes.docs.target}>
           {t('signIn.learnMore')}
         </S.Learn>
       </S.SignInCard>
@@ -89,6 +89,7 @@ export default function SignInPage() {
 
         <S.FootLine>
           <S.FootLabel>{t('signIn.footer.tonWallets')}</S.FootLabel>
+
           <Trans
             i18nKey="signIn.footer.tonWalletsList"
             components={{ db: <S.DesktopBreak /> }}

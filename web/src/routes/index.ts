@@ -13,11 +13,12 @@ type MainRoutes =
   & Route<'/help', 'helpCenter'>
   & Route<'/time-tracker', 'timeTracker'>
   & Route<'/download', 'download'>
+  & Route<'/invoice/:id', 'invoice', NoChildRoutes, IdRouteParams>
   & Route<'https://github.com', 'github'>
   & Route<'https://facebook.com/:userId', 'facebook', NoChildRoutes, { userId: string }>
   & Route<'https://t.me/:userId', 'telegram', NoChildRoutes, { userId: string }>
   & Route<'https://linkedin.com/in/:userId', 'linkedin', NoChildRoutes, { userId: string }>
-  & Route<'/invoice/:id', 'invoice', NoChildRoutes, IdRouteParams>
+  & Route<'https://address.work/docs', 'docs'>
 
 type ProfileRoutes =
   & Route<'/profile/:walletAddress/edit', 'edit', NoChildRoutes, { walletAddress: string }>
@@ -136,6 +137,12 @@ export const routes: MainRoutes = {
   invoice: {
     schema: '/invoice/:id',
     build: ({ id }) => `/invoice/${id}`,
+  },
+
+  docs: {
+    schema: 'https://address.work/docs',
+    build: () => 'https://address.work/docs',
+    target: '_blank',
   },
 }
 

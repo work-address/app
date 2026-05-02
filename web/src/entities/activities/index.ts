@@ -10,6 +10,7 @@ import {
   resetWorklogSort,
   setWorklogsLoading,
   debouncedChangeWorklogFilters,
+  resetInvoice,
 } from './activities.events'
 import {
   createActivityMutation,
@@ -84,6 +85,11 @@ sample({
   target: [activitiesQuery.start, activitiesStatsQuery.start],
 })
 
+sample({
+  clock: resetInvoice,
+  target: [activityDetailQuery.reset, activityReportQuery.reset],
+})
+
 export {
   type ProjectWithStats,
   type ITimeTotal,
@@ -102,6 +108,8 @@ export {
   applyWorklogFilters,
   resetWorklogSort,
   changeActivityStateFilter,
+  setActivitiesStateFiltering,
+  resetInvoice,
 } from './activities.events'
 
 export {
@@ -124,5 +132,6 @@ export {
   $filteredActivities,
   $activityStateFilter,
   $isWorklogsFiltering,
+  $isActivitiesFiltering,
   $rawActivities,
 } from './activities.stores'

@@ -58,6 +58,7 @@ export const activitiesStatsQuery = createQuery({
 
 export type WorklogsQueryParams = {
   activityId?: string
+  note?: string
   fromAt?: number
   toAt?: number
   page?: number
@@ -72,6 +73,7 @@ export const worklogsQuery = createQuery({
           activityId: params?.activityId,
           fromAt: params?.fromAt,
           toAt: params?.toAt,
+          note: params.note,
         },
         page: params?.page ?? 0,
         sort: params?.sort ?? {},

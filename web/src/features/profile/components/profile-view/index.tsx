@@ -8,26 +8,26 @@ import { DescriptionAndSkills } from './description-and-skills.tsx'
 import { ProfileLinks } from './profile-links.tsx'
 import { QrCode } from './qr-code.tsx'
 
-import { showToast } from '@/shared'
+import { showToast, copyToClipboard } from '@/shared'
 
 export const ProfileView = () => {
   const { user } = useUnit({ user: $profile })
 
-  const handleCopyWalletAddress = async () => {
-    await navigator.clipboard.writeText(user?.friendlyWalletAddress || '')
-
-    showToast('info', {
-      message: 'Address copied to clipboard',
-      position: 'top-center',
+  const handleCopyWalletAddress = () => {
+    copyToClipboard(user?.friendlyWalletAddress || '').then(() => {
+      showToast('info', {
+        message: 'Address copied to clipboard',
+        position: 'top-center',
+      })
     })
   }
 
-  const handleShareProfile = async () => {
-    await navigator.clipboard.writeText(window.location.href)
-
-    showToast('info', {
-      message: 'Profile link copied to clipboard',
-      position: 'top-center',
+  const handleShareProfile = () => {
+    copyToClipboard(window.location.href).then(() => {
+      showToast('info', {
+        message: 'Profile link copied to clipboard',
+        position: 'top-center',
+      })
     })
   }
 
@@ -55,7 +55,7 @@ export const ProfileView = () => {
         }}
         gap={{
           initial: '0',
-          md: '20px',
+          sm: '20px',
         }}
         justify={{
           md: 'center',

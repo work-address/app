@@ -1,4 +1,5 @@
 import { Flex } from '@radix-ui/themes'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { Card } from '@/shared'
@@ -115,7 +116,7 @@ export const Actions = styled.div`
   }
 `
 
-export const Learn = styled.a`
+export const Learn = styled(Link)`
   color: #3f67a4;
   font-weight: 500;
   padding: 6px 0 0;

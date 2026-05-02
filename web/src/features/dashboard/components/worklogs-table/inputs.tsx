@@ -11,7 +11,7 @@ import {
   $activities,
   type WorklogsFilters,
 } from '@/entities/activities'
-import { Input, Text, DatePickerInput, MotionSelect } from '@/shared'
+import { Input, Text, DatePickerInput, Select } from '@/shared'
 
 type TwoSideInputProps = {
   label: string
@@ -154,7 +154,7 @@ export const ProjectsSelect = () => {
   )
 
   return (
-    <MotionSelect
+    <Select
       label={t('dashboard.page.filters.projects')}
       options={options}
       value={selectedActivity ?? ''}

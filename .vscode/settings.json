@@ -5,4 +5,13 @@
     "react",
     "i18next"
   ],
+  "files.exclude": {
+    "**/node_modules": true
+  },
+  "search.exclude": {
+    "**/node_modules": true
+  },
+  "js/ts.tsdk.path": "web/node_modules/typescript/lib",
+  "js/ts.tsserver.experimental.enableProjectDiagnostics": true,
+  "editor.foldingImportsByDefault": true
 }

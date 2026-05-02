@@ -1,6 +1,6 @@
 import { Theme } from '@radix-ui/themes'
 import { attachLogger } from 'effector-logger'
-import { StrictMode } from 'react'
+import { Fragment, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HelmetProvider } from 'react-helmet-async'
 import { BrowserRouter } from 'react-router-dom'
@@ -18,17 +18,22 @@ import {
   SonnerRadixTheme,
 } from '@/shared'
 
-const rootElementId = 'root'
-const rootElement = document.getElementById(rootElementId)
+const ROOT_ELEMENT_ID = 'root'
 
-if (rootElement === null) {
+const ROOT_ELEMENT = document.getElementById(ROOT_ELEMENT_ID)
+
+const REACT_STRICT_MODE = false
+
+if (ROOT_ELEMENT === null) {
   throw new Error(
-    `No root element in the dom tree. Check if element with id "${rootElementId}" exists`,
+    `No root element in the dom tree. Check if element with id "${ROOT_ELEMENT_ID}" exists`,
   )
 }
 
-createRoot(rootElement).render(
-  <StrictMode>
+const AppWrapper = REACT_STRICT_MODE ? StrictMode : Fragment
+
+createRoot(ROOT_ELEMENT).render(
+  <AppWrapper>
     <Theme>
       <ThemeProvider theme={theme}>
         <Confirm />
@@ -44,7 +49,7 @@ createRoot(rootElement).render(
     <SonnerRadixTheme>
       <Toaster />
     </SonnerRadixTheme>
-  </StrictMode>,
+  </AppWrapper>,
 )
 
 if (import.meta.env.DEV && localStorage.getItem('log') === '1') {

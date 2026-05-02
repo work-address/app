@@ -18,3 +18,18 @@ export const getFriendlyWalletAddress = (
 
   return address
 }
+
+export const decodeFriendWalletAddress = (
+  friendWalletAddress: string,
+): string => {
+  if (!friendWalletAddress) {
+    return ''
+  }
+
+  if (friendWalletAddress.startsWith('0x')) {
+    return friendWalletAddress
+  } else {
+    const addr = Address.parse(friendWalletAddress)
+    return addr.toRawString() ?? friendWalletAddress
+  }
+}

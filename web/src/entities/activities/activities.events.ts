@@ -9,6 +9,8 @@ export const fetchActivities = createEvent()
 
 export const fetchInvoice = createEvent<{ id: string }>()
 
+export const resetInvoice = createEvent()
+
 export const fetchWorklogs = createEvent()
 
 export const changeActivityStateFilter = createEvent<Partial<ProjectsFilter>>()
@@ -36,3 +38,5 @@ export const applyWorklogFilters = createEvent()
 export const appendWorklogSort = createEvent<WorklogSort>()
 
 export const resetWorklogSort = createEvent<WorklogSort | null>()
+
+export const setActivitiesStateFiltering = createEvent<boolean>()

@@ -23,6 +23,7 @@ import {
   $filteredActivities,
   $activitiesLoading,
   $activityStateFilter,
+  $isActivitiesFiltering,
   changeActivityStateFilter,
   type ProjectsFilter,
   type ProjectWithStats,
@@ -50,6 +51,7 @@ export const ProjectsTable = () => {
   const {
     projects,
     isActivitiesLoading,
+    isActivitiesFiltering,
     filter,
     changeActivityStateFilterEvent,
     deleteProject,
@@ -59,6 +61,7 @@ export const ProjectsTable = () => {
   } = useUnit({
     projects: $filteredActivities,
     isActivitiesLoading: $activitiesLoading,
+    isActivitiesFiltering: $isActivitiesFiltering,
     filter: $activityStateFilter,
     changeActivityStateFilterEvent: changeActivityStateFilter,
     isProjectDeleting: deleteActivityMutation.$pending,
@@ -79,7 +82,7 @@ export const ProjectsTable = () => {
   const handleTabClick = (tab: string) => {
     changeActivityStateFilterEvent({
       projectState: tab as ProjectsFilter['projectState'],
-      title: '',
+      containsText: '',
     })
     setSelectedIds({})
   }
@@ -123,12 +126,12 @@ export const ProjectsTable = () => {
     (): DataTableConfig<ProjectWithStats> => [
       {
         dataKey: 'title',
-        width: 187,
+        width: 230,
         headerText: t('dashboard.projectsTable.head.projectName'),
       },
       {
         dataKey: 'earnings',
-        width: 160,
+        width: 90,
         headerText: t('dashboard.projectsTable.head.earnings'),
         getValue: (data) => `${data.earnings} ${t('currency.usdt')}`,
       },
@@ -140,12 +143,12 @@ export const ProjectsTable = () => {
       },
       {
         customKey: 'timeTotal',
-        width: 180,
+        width: 120,
         headerText: t('dashboard.projectsTable.head.timeTotal'),
       },
       {
         customKey: 'timeActive',
-        width: 160,
+        width: 120,
         headerText: t('dashboard.projectsTable.head.timeActive'),
       },
       {
@@ -160,6 +163,7 @@ export const ProjectsTable = () => {
       },
       {
         dataKey: 'mouseDistance',
+        width: 160,
         headerText: t('dashboard.projectsTable.head.mouseDistance'),
       },
       {
@@ -329,7 +333,7 @@ export const ProjectsTable = () => {
                     loading={isActivitiesLoading}
                     skeletonHeight="31px"
                     mockDataLength={4}
-                    isFiltering={isProjectDeleting}
+                    isFiltering={isProjectDeleting || isActivitiesFiltering}
                   />
                 )}
               </ProjectsTableContext>

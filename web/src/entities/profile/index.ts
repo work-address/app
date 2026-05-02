@@ -22,6 +22,7 @@ import {
   writeAuthenticatedToLsFx,
 } from './profile.effects'
 import { initAuth, login, logout, setInitialized } from './profile.events'
+import { saveProfileMutation } from './profile.mutations'
 import {
   $authenticated,
   $ethProviderData,
@@ -131,6 +132,13 @@ sample({
   target: writeAuthenticatedToLsFx,
 })
 
+sample({
+  clock: initAuth,
+  source: $authenticated,
+  filter: (auth) => !auth,
+  target: [disconnectEthFx, disconnectTonFx],
+})
+
 /**
  * After successful login (either provider), persist tokens to localStorage.
  */
@@ -178,6 +186,11 @@ sample({
 sample({
   clock: fetchStatusFx.fail,
   target: [$authenticated.reinit, logout],
+})
+
+sample({
+  clock: saveProfileMutation.finished.success,
+  target: fetchStatusFx,
 })
 
 /**

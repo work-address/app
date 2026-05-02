@@ -8,6 +8,7 @@ type DashboardEmptyStateProps = {
   description: string
   actionLabel: string
   onAction?: () => void
+  className?: string
 }
 
 export const DashboardEmptyState = ({
@@ -16,16 +17,19 @@ export const DashboardEmptyState = ({
   description,
   actionLabel,
   onAction,
+  className,
 }: DashboardEmptyStateProps) => {
   return (
-    <Root>
+    <Root className={className}>
       <Hero>
         <HeroImg src={imageSrc} alt={title} />
       </Hero>
+
       <Text>
         <EmptyTitle>{title}</EmptyTitle>
         <EmptyDesc>{description}</EmptyDesc>
       </Text>
+
       <EmptyAction themeVariant="secondary" onClick={onAction}>
         {actionLabel}
       </EmptyAction>
@@ -39,7 +43,6 @@ const Root = styled.section`
   flex-direction: column;
   align-items: center;
   justify-content: center;
-  padding: 40px 0 10px;
 `
 
 const Hero = styled.div`

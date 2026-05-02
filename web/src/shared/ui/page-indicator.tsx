@@ -36,11 +36,15 @@ export const PageIndicator = () => {
 
 const pageIndicatorAnimation = keyframes`
   0% {
-    transform: translateX(-70%);
+    transform: translateX(-80%);
   }
 
-  50% {
-    transform: translateX(-35%);
+  15% {
+    transform: translateX(-40%);
+  }
+
+  65% {
+    transform: translateX(-30%);
   }
 
   100% {
@@ -65,7 +69,7 @@ const PageIndicatorContainer = styled.div`
   top: 0;
   left: 0;
   right: 0;
-  z-index: 100;
+  z-index: 11;
 `
 
 const StyledPageIndicator = styled.div<{
@@ -95,8 +99,8 @@ const StyledPageIndicator = styled.div<{
   ${(p) =>
     p.$showAnimation &&
     `
-      animation-duration: 4s;
-      animation-iteration-count: infinite;
+      animation-duration: 10s;
+      animation-iteration-count: 1;
     `}
 
   ${(p) =>

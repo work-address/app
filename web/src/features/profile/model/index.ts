@@ -40,15 +40,19 @@ const profileQuery = createQuery({
 const $isAuthenticatedUserProfile = combine(
   $user,
   ProfileGate.state,
-  (user, gateState) => user.id === gateState.userId,
+  (user, gateState) =>
+    user?.friendlyWalletAddress === gateState.friendlyWalletAddress,
 )
 
 sample({
   clock: ProfileGate.open,
   source: combine($user, $isAuthenticatedUserProfile),
   filter: ([user, isAuthenticatedUserProfile]) =>
-    !isAuthenticatedUserProfile && user.id !== '',
-  fn: (_, gateState) => gateState.userId || '',
+    !isAuthenticatedUserProfile && user?.id !== '',
+  fn: (_, gateState) =>
+    gateState.friendlyWalletAddress
+      ? decodeFriendWalletAddress(gateState.friendlyWalletAddress)
+      : '',
   target: profileQuery.start,
 })
 
@@ -56,17 +60,17 @@ const $profile = combine(
   $user,
   profileQuery.$data,
   ProfileGate.state,
-  (user, data, gateState) => {
-    if (gateState.userId === user.id) {
+  (user, loadedProfileData, gateState) => {
+    if (gateState.friendlyWalletAddress === user?.friendlyWalletAddress) {
       return user
     }
 
-    const profile = data?.items[0]
-
-    return profile
+    return loadedProfileData
       ? {
-          ...profile,
-          friendlyWalletAddress: getFriendlyWalletAddress(profile.address),
+          ...loadedProfileData,
+          friendlyWalletAddress: getFriendlyWalletAddress(
+            loadedProfileData.address,
+          ),
         }
       : null
   },

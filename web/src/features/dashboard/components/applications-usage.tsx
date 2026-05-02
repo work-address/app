@@ -12,7 +12,13 @@ import {
 } from 'recharts'
 import styled from 'styled-components'
 
-import { formatDurationFromHoursFloat, MotionSelect, Card } from '@/shared'
+import type { TooltipContentProps } from 'recharts'
+import type {
+  ValueType,
+  NameType,
+} from 'recharts/types/component/DefaultTooltipContent'
+
+import { formatDurationFromHoursFloat, Select, Card } from '@/shared'
 
 type Period = 'Week' | 'Month' | 'Year'
 
@@ -24,66 +30,7 @@ type BarDatum = {
   zoom: number
 }
 
-function CustomTooltip({ active, payload, label }: any) {
-  const { t } = useTranslation()
-
-  if (!active || !payload?.length) return null
-  const byKey: Record<string, number> = {}
-  for (const p of payload) {
-    if (p?.dataKey != null) {
-      byKey[String(p.dataKey)] = Number(p.value ?? 0)
-    }
-  }
-
-  const entries = [
-    {
-      key: 'firefox',
-      name: t('dashboard.applicationsUsage.tooltip.apps.firefox'),
-    },
-    { key: 'figma', name: t('dashboard.applicationsUsage.tooltip.apps.figma') },
-    {
-      key: 'terminal',
-      name: t('dashboard.applicationsUsage.tooltip.apps.terminal'),
-    },
-    { key: 'zoom', name: t('dashboard.applicationsUsage.tooltip.apps.zoom') },
-  ]
-
-  const colors: Record<string, string> = {
-    firefox: 'var(--c-rgba-0-52-130-0_75)',
-    figma: 'var(--c-rgba-0-52-130-0_50)',
-    terminal: 'var(--c-rgba-0-52-130-0_28)',
-    zoom: 'var(--c-rgba-0-52-130-0_14)',
-  }
-
-  const total = entries.reduce((acc, e) => acc + (byKey[e.key] ?? 0), 0)
-  return (
-    <TooltipBox>
-      <TipTitle>{label}</TipTitle>
-      <TipList>
-        {entries.map((e) => (
-          <TipRow key={e.key}>
-            <TipLeft>
-              <Dot $c={colors[e.key]} />
-              {e.name}
-            </TipLeft>
-            <TipVal>
-              {formatDurationFromHoursFloat(byKey[e.key] ?? 0, t)}
-            </TipVal>
-          </TipRow>
-        ))}
-      </TipList>
-      <TipDivider />
-      <TipTotal>
-        <TipTotalLabel>
-          {t('dashboard.applicationsUsage.tooltip.total')}
-        </TipTotalLabel>
-        <TipVal>{formatDurationFromHoursFloat(total, t)}</TipVal>
-      </TipTotal>
-    </TooltipBox>
-  )
-}
-
-export default function ApplicationsUsage() {
+export const ApplicationsUsage = () => {
   const { t } = useTranslation()
   const [period, setPeriod] = useState<Period>('Week')
 
@@ -194,7 +141,7 @@ export default function ApplicationsUsage() {
       <Head>
         <Title>{t('dashboard.applicationsUsage.title')}</Title>
         <PeriodSelect>
-          <MotionSelect
+          <Select
             options={[
               {
                 value: 'Week',
@@ -280,6 +227,74 @@ export default function ApplicationsUsage() {
   )
 }
 
+const CustomTooltip = ({
+  active,
+  payload,
+  label,
+}: Partial<TooltipContentProps<ValueType, NameType>>) => {
+  const { t } = useTranslation()
+
+  if (!active || !payload?.length) {
+    return null
+  }
+
+  const byKey: Record<string, number> = {}
+
+  for (const p of payload) {
+    if (p?.dataKey) {
+      byKey[String(p.dataKey)] = Number(p.value ?? 0)
+    }
+  }
+
+  const entries = [
+    {
+      key: 'firefox',
+      name: t('dashboard.applicationsUsage.tooltip.apps.firefox'),
+    },
+    { key: 'figma', name: t('dashboard.applicationsUsage.tooltip.apps.figma') },
+    {
+      key: 'terminal',
+      name: t('dashboard.applicationsUsage.tooltip.apps.terminal'),
+    },
+    { key: 'zoom', name: t('dashboard.applicationsUsage.tooltip.apps.zoom') },
+  ]
+
+  const colors: Record<string, string> = {
+    firefox: 'var(--c-rgba-0-52-130-0_75)',
+    figma: 'var(--c-rgba-0-52-130-0_50)',
+    terminal: 'var(--c-rgba-0-52-130-0_28)',
+    zoom: 'var(--c-rgba-0-52-130-0_14)',
+  }
+
+  const total = entries.reduce((acc, e) => acc + (byKey[e.key] ?? 0), 0)
+
+  return (
+    <TooltipBox>
+      <TipTitle>{label}</TipTitle>
+      <TipList>
+        {entries.map((e) => (
+          <TipRow key={e.key}>
+            <TipLeft>
+              <Dot $c={colors[e.key]} />
+              {e.name}
+            </TipLeft>
+            <TipVal>
+              {formatDurationFromHoursFloat(byKey[e.key] ?? 0, t)}
+            </TipVal>
+          </TipRow>
+        ))}
+      </TipList>
+      <TipDivider />
+      <TipTotal>
+        <TipTotalLabel>
+          {t('dashboard.applicationsUsage.tooltip.total')}
+        </TipTotalLabel>
+        <TipVal>{formatDurationFromHoursFloat(total, t)}</TipVal>
+      </TipTotal>
+    </TooltipBox>
+  )
+}
+
 const Wrapper = styled.aside`
   width: 100%;
 `
@@ -317,6 +332,10 @@ const Plot = styled.div`
   padding: 10px;
   border-radius: 10px;
   background: var(--white);
+
+  .recharts-surface {
+    outline: none;
+  }
 `
 
 const ChartWrap = styled.div`

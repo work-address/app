@@ -37,7 +37,7 @@ type MotionSelectProps = {
   inputProps?: InputProps
 }
 
-export const MotionSelect = ({
+export const Select = ({
   className,
   options,
   value,
@@ -104,9 +104,11 @@ export const MotionSelect = ({
               onClick={() => toggle(o.value)}
             >
               {isDesktop && multi && <Checkbox checked={checked} />}
+
               <Text size={'3'} style={{ color: '#000' }}>
                 {o.label}
               </Text>
+
               {isMobile && multi && checked && <CheckIcon aria-hidden="true" />}
             </MenuItem>
           )
@@ -123,8 +125,8 @@ export const MotionSelect = ({
         addonRight={open ? <ChevronUpIcon /> : <ChevronDownIcon />}
         value={buttonText ? buttonText : ''}
         columns={'1fr'}
-        readOnly={true}
         onChange={() => {}}
+        onKeyDown={(e) => e.preventDefault()}
         placeholder={ph}
         style={{
           whiteSpace: 'nowrap',
@@ -223,15 +225,12 @@ const InputWrapper = styled.span`
   width: 100%;
   cursor: pointer !important;
 
-  & .rt-TextFieldRoot:where(:has(.rt-TextFieldInput:where(:read-only))) {
-    background: transparent !important;
-    cursor: pointer !important;
+  & .rt-TextFieldInput {
+    pointer-events: none;
+    caret-color: transparent;
   }
 
-  .rt-TextFieldInput:where(:disabled, :read-only) {
-    color: #000 !important;
-    cursor: pointer !important;
-    background: transparent;
-    -webkit-text-fill-color: #000;
+  .rt-TextFieldSlot {
+    cursor: pointer;
   }
 `

@@ -12,7 +12,7 @@ type SearchProps = {
   ) => void
 } & Omit<InputProps, 'value' | 'onChange'>
 
-export const Search = ({ ...props }: SearchProps) => {
+export const SearchInput = ({ ...props }: SearchProps) => {
   const { value, onChange } = props
   const { t } = useTranslation()
 

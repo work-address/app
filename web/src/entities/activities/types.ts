@@ -2,7 +2,7 @@ import type { baseApi } from '@/shared'
 
 export type ProjectsFilter = {
   projectState: 'All' | 'Active' | 'Finished'
-  title: string
+  containsText: string
 }
 
 export type ITimeTotal = {

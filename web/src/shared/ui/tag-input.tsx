@@ -1,9 +1,31 @@
 import { Cross2Icon } from '@radix-ui/react-icons'
-import { Badge, Flex, Grid, IconButton, Skeleton, Text } from '@radix-ui/themes'
-import { useState, type KeyboardEvent, useRef, useEffect } from 'react'
+import {
+  Badge,
+  Flex,
+  Grid,
+  Popover,
+  ScrollArea,
+  Skeleton,
+  Text,
+  TextField,
+} from '@radix-ui/themes'
+import {
+  useState,
+  type KeyboardEvent,
+  useRef,
+  useEffect,
+  forwardRef,
+  useImperativeHandle,
+  useMemo,
+  useCallback,
+} from 'react'
 import styled from 'styled-components'
 
 import { useBreakpoint } from '../hooks'
+
+import { IconButton } from './icon-button'
+
+import type { InputProps } from './input'
 
 export type TagInputProps = {
   label?: string
@@ -14,191 +36,353 @@ export type TagInputProps = {
   placeholder?: string
   disabled?: boolean
   showSkeleton?: boolean
+  state?: InputProps['state']
+  suggestions?: string[]
 }
 
-export const TagInput = ({
-  label,
-  value = [],
-  onChange,
-  id,
-  labelWidth = 'auto',
-  placeholder,
-  disabled,
-  showSkeleton = false,
-}: TagInputProps) => {
-  const isDesktop = useBreakpoint('isDesktop')
-  const [inputValue, setInputValue] = useState('')
-  const inputRef = useRef<HTMLInputElement>(null)
-  const [focused, setFocused] = useState(false)
+const SuggestionList = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-1) 0;
+`
 
-  const addTag = (tag: string) => {
-    const trimmed = tag.trim()
-    if (trimmed && !value.includes(trimmed)) {
-      onChange?.([...value, trimmed])
-      setInputValue('')
-    }
+const SuggestionItem = styled.button<{ $active?: boolean }>`
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-2);
+  cursor: pointer;
+  background: ${(p) => (p.$active ? 'var(--accent-a3)' : 'transparent')};
+
+  &:hover {
+    background: var(--accent-a3);
   }
+`
 
-  const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
-    if (e.key === 'Enter' || e.key === ',') {
-      e.preventDefault()
+export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
+  (
+    {
+      label,
+      value = [],
+      onChange,
+      id,
+      labelWidth = 'auto',
+      placeholder,
+      disabled,
+      showSkeleton = false,
+      state,
+      suggestions,
+    },
+    ref,
+  ) => {
+    const isDesktop = useBreakpoint('isDesktop')
+    const [inputValue, setInputValue] = useState('')
+    const innerInputRef = useRef<HTMLInputElement>(null)
+    const suggestionsRef = useRef<HTMLDivElement>(null)
+    const [focused, setFocused] = useState(false)
+    const [activeIndex, setActiveIndex] = useState(-1)
+    const [arrowKeyPressed, setArrowKeyPressed] = useState(false)
+
+    const filteredSuggestions = useMemo(() => {
+      if (!suggestions) {
+        return []
+      }
+
+      const lower = inputValue.toLowerCase()
+
+      return suggestions.filter(
+        (s) => s.toLowerCase().includes(lower) && !value.includes(s),
+      )
+    }, [suggestions, inputValue, value])
+
+    const hasSuggestions = filteredSuggestions.length > 0
+
+    const addTag = useCallback(
+      (tag: string) => {
+        const trimmed = tag.trim()
+
+        if (trimmed && !value.includes(trimmed)) {
+          onChange?.([...value, trimmed])
+          setInputValue('')
+          setActiveIndex(-1)
+        }
+      },
+      [value, onChange],
+    )
+
+    const handleKeyDown = (e: KeyboardEvent<HTMLInputElement>) => {
+      if (hasSuggestions) {
+        if (e.key === 'ArrowDown') {
+          e.preventDefault()
+          setActiveIndex((i) => Math.min(i + 1, filteredSuggestions.length - 1))
+          setArrowKeyPressed(true)
+        } else if (e.key === 'ArrowUp') {
+          e.preventDefault()
+          setActiveIndex((i) => Math.max(i - 1, -1))
+          setArrowKeyPressed(true)
+          return
+        } else if (e.key === 'Escape') {
+          setActiveIndex(-1)
+          setInputValue('')
+          return
+        }
+        if ((e.key === 'Enter' || e.key === 'Tab') && activeIndex >= 0) {
+          e.preventDefault()
+          addTag(filteredSuggestions[activeIndex])
+          return
+        }
+      }
+
+      if (e.key === 'Enter' || e.key === ',') {
+        e.preventDefault()
+        addTag(inputValue)
+      } else if (e.key === 'Backspace' && !inputValue && value.length > 0) {
+        const nextTags = value.slice(0, -1)
+        onChange?.(nextTags)
+      }
+    }
+
+    const handleFocus = () => {
+      setFocused(true)
+    }
+
+    const handleBlur = () => {
       addTag(inputValue)
-    } else if (e.key === 'Backspace' && !inputValue && value.length > 0) {
-      const nextTags = value.slice(0, -1)
+      setFocused(false)
+      setActiveIndex(-1)
+    }
+
+    const removeTag = (tagToRemove: string) => {
+      const nextTags = value.filter((t) => t !== tagToRemove)
       onChange?.(nextTags)
     }
-  }
 
-  const handleContainerClick = () => {
-    setFocused(true)
-  }
+    const handleTagClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.stopPropagation()
+      e.preventDefault()
 
-  const handleBlur = () => {
-    addTag(inputValue)
-    setFocused(false)
-  }
+      const tag = e.currentTarget.dataset['tag']
 
-  const removeTag = (tagToRemove: string) => {
-    const nextTags = value.filter((t) => t !== tagToRemove)
-    onChange?.(nextTags)
-  }
+      if (tag) {
+        removeTag(tag)
+      }
 
-  const usingGap = label ? (isDesktop ? '24px' : 'var(--space-2)') : '0'
-
-  useEffect(() => {
-    if (focused) {
-      inputRef.current?.focus()
+      innerInputRef.current?.focus()
     }
-  }, [focused])
 
-  return (
-    <Grid
-      columns={{ initial: '1', md: `${labelWidth} 1fr` }}
-      gap={usingGap}
-      align={'start'}
-      width={'100%'}
-    >
-      {label && (
-        <Text
-          as={'label'}
-          size={'2'}
-          weight={'medium'}
-          htmlFor={id}
-          style={{ marginTop: '8px' }}
-        >
-          {label}
-        </Text>
-      )}
+    const handleSuggestionClick = (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault()
+      const tag = e.currentTarget.dataset['tag']
 
-      <Skeleton loading={showSkeleton}>
-        <InputContainer $disabled={disabled} onClick={handleContainerClick}>
-          <Flex gap="1" wrap="wrap" align="center" width="100%">
-            {value.map((tag) => (
-              <StyledBadge key={tag} color="gray" size="2" variant="surface">
-                <Flex align="center" gap="1">
-                  {tag}
+      if (tag) {
+        addTag(tag)
+      }
+    }
 
-                  <Flex p="1">
-                    <IconButton
-                      size="1"
-                      variant="ghost"
-                      type="button"
-                      radius="full"
-                      onClick={(e) => {
-                        e.stopPropagation()
-                        removeTag(tag)
-                      }}
-                    >
-                      <Cross2Icon width="10" height="10" />
-                    </IconButton>
-                  </Flex>
-                </Flex>
-              </StyledBadge>
-            ))}
+    const handleSuggestionOver = (e: React.MouseEvent<HTMLButtonElement>) => {
+      const index = Number(e.currentTarget.dataset['activeIndex'])
 
-            {value.length === 0 && !focused && (
-              <StyledPlaceholder>{placeholder}</StyledPlaceholder>
-            )}
+      if (!isNaN(index)) {
+        setActiveIndex(index)
+      }
+    }
 
-            {focused && (
-              <StyledTagInput
-                ref={inputRef}
-                id={id}
-                disabled={disabled}
-                value={inputValue}
-                onChange={(e) => setInputValue(e.target.value)}
-                onKeyDown={handleKeyDown}
-                onBlur={handleBlur}
-              />
-            )}
-          </Flex>
-        </InputContainer>
-      </Skeleton>
-    </Grid>
-  )
-}
+    const handleBadgeMouseDown = (e: React.MouseEvent<HTMLButtonElement>) => {
+      e.preventDefault()
+    }
 
-const InputContainer = styled.div<{ $disabled?: boolean }>`
-  display: flex;
-  align-items: center;
-  padding: var(--space-1);
-  cursor: ${({ $disabled }) => ($disabled ? 'not-allowed' : 'text')};
-  border: 1px solid var(--gray-a7);
-  border-radius: var(--radius-2);
+    const internalGap = label ? (isDesktop ? '24px' : 'var(--space-2)') : '0'
+
+    const errorProps = useMemo<InputProps | null>(
+      () => (state === 'error' ? { color: 'red', variant: 'soft' } : null),
+      [state],
+    )
+
+    useEffect(() => {
+      if (focused) {
+        innerInputRef.current?.focus()
+      }
+    }, [focused])
+
+    useEffect(() => {
+      if (arrowKeyPressed) {
+        const activeListItem = suggestionsRef?.current?.querySelector(
+          `[data-active-index="${activeIndex}"]`,
+        )
+
+        activeListItem?.scrollIntoView({
+          behavior: 'instant',
+          block: 'center',
+        })
+
+        setArrowKeyPressed(false)
+      }
+    }, [activeIndex, arrowKeyPressed])
+
+    useImperativeHandle<HTMLInputElement | null, HTMLInputElement | null>(
+      ref,
+      () => innerInputRef.current,
+      [innerInputRef],
+    )
+
+    return (
+      <Grid
+        columns={{ initial: '1', md: `${labelWidth} 1fr` }}
+        gap={internalGap}
+        align={'start'}
+        width={'100%'}
+        ref={suggestionsRef}
+      >
+        {label && (
+          <Text
+            as={'label'}
+            size={'2'}
+            weight={'medium'}
+            htmlFor={id}
+            style={{ marginTop: '8px' }}
+          >
+            {label}
+          </Text>
+        )}
+
+        <Popover.Root open={hasSuggestions && focused} modal={false}>
+          <Popover.Trigger>
+            <span style={{ width: '100%' }}>
+              <Skeleton loading={showSkeleton}>
+                <StyledTextFieldRoot
+                  disabled={disabled}
+                  onFocus={handleFocus}
+                  id={id}
+                  onChange={(e) => setInputValue(e.target.value)}
+                  onKeyDown={handleKeyDown}
+                  onBlur={handleBlur}
+                  value={inputValue}
+                  placeholder={value.length === 0 ? placeholder : ''}
+                  $grow={focused || value.length === 0}
+                  ref={innerInputRef}
+                  size={isDesktop ? undefined : '3'}
+                  {...errorProps}
+                >
+                  {value.length > 0 && (
+                    <>
+                      {value.map((tag) => (
+                        <StyledBadge
+                          key={tag}
+                          color="gray"
+                          size="2"
+                          variant="surface"
+                          $disabled={disabled}
+                        >
+                          <Flex align="center" gap="1">
+                            {tag}
+
+                            <Flex p="1">
+                              <IconButton
+                                size="1"
+                                variant="ghost"
+                                type="button"
+                                radius="full"
+                                data-tag={tag}
+                                onClick={handleTagClick}
+                                onMouseDown={handleBadgeMouseDown}
+                              >
+                                <Cross2Icon width="10" height="10" />
+                              </IconButton>
+                            </Flex>
+                          </Flex>
+                        </StyledBadge>
+                      ))}
+                    </>
+                  )}
+                </StyledTextFieldRoot>
+              </Skeleton>
+            </span>
+          </Popover.Trigger>
+
+          <Popover.Content
+            style={{ padding: 0, width: 'var(--radix-popover-anchor-width)' }}
+            align="start"
+            sideOffset={4}
+            onOpenAutoFocus={(e) => e.preventDefault()}
+            onInteractOutside={(e) => e.preventDefault()}
+            container={document.body}
+          >
+            <ScrollArea style={{ maxHeight: 220 }}>
+              <SuggestionList ref={suggestionsRef}>
+                {filteredSuggestions.map((s, i) => (
+                  <SuggestionItem
+                    key={s}
+                    type="button"
+                    $active={i === activeIndex}
+                    onMouseDown={handleSuggestionClick}
+                    onMouseOver={handleSuggestionOver}
+                    data-tag={s}
+                    data-active-index={i}
+                  >
+                    {s}
+                  </SuggestionItem>
+                ))}
+              </SuggestionList>
+            </ScrollArea>
+          </Popover.Content>
+        </Popover.Root>
+      </Grid>
+    )
+  },
+)
+
+const StyledTextFieldRoot = styled(TextField.Root)<{ $grow?: boolean }>`
   min-height: var(--space-7);
+  max-height: initial;
+  height: initial;
+  background-clip: initial;
 
-  transition:
-    border-color 0.2s,
-    box-shadow 0.2s;
+  flex-wrap: wrap;
 
-  &:focus-within {
-    border-color: var(--focus-8);
-    box-shadow: 0 0 0 1px var(--focus-8);
+  gap: var(--space-1);
+  padding: var(--space-1);
+
+  input {
+    flex-shrink: 1;
+    flex-grow: 0;
+    order: 999;
+    max-width: 0;
+    margin-left: calc(var(--space-1) * -1);
+    padding: 2px 0;
   }
-
-  ${({ $disabled }) =>
-    $disabled &&
-    `
-    opacity: 0.5;
-    background-color: var(--gray-a3);
-  `}
 
   ${(p) => p.theme.breakpoints.up('md')} {
     min-height: var(--space-6);
+
+    input {
+      padding: 1px 0;
+    }
   }
+
+  ${(p) =>
+    p.$grow &&
+    `
+    input {
+      flex-grow: 1;
+      flex-basis: 80px;
+      max-width: none;
+    }
+  `}
 `
 
-const StyledBadge = styled(Badge)`
+const StyledBadge = styled(Badge)<{ $disabled?: boolean }>`
+  flex-shrink: 1;
+  flex-grow: 0;
+
+  ${(p) =>
+    p.$disabled &&
+    `
+    opacity: 0.5;
+  `}
+
   ${(p) => p.theme.breakpoints.up('md')} {
-    padding-top: 1px;
-    padding-bottom: 1px;
+    padding-top: 2px;
+    padding-bottom: 2px;
   }
-`
-
-const StyledTagInput = styled.input`
-  flex: 1;
-  min-width: 60px;
-  border: none;
-  outline: none;
-  background: transparent;
-  font-family: inherit;
-  color: var(--color-text);
-  padding: 4px 4px;
-  font-size: var(--font-size-3);
-
-  &::placeholder {
-    color: var(--gray-a10);
-  }
-
-  ${(p) => p.theme.breakpoints.up('md')} {
-    font-size: var(--font-size-2);
-    padding: 1px 4px;
-  }
-`
-
-const StyledPlaceholder = styled.span`
-  color: var(--gray-a10);
-  font-family: inherit;
-  font-size: var(--font-size-2);
-  padding: 0 var(--space-1);
 `

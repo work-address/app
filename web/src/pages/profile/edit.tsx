@@ -9,8 +9,16 @@ import { routes } from '@/routes'
 
 export default function FreelancerProfilePage() {
   const { t, i18n } = useTranslation()
+
   const { walletAddress } = useParams()
-  const user = useUnit($user)
+
+  const { user } = useUnit({
+    user: $user,
+  })
+
+  if (!user) {
+    return null
+  }
 
   if (user.friendlyWalletAddress !== walletAddress) {
     return (

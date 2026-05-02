@@ -5,10 +5,14 @@ import { useEffect } from 'react'
 import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { NavLink, useParams } from 'react-router-dom'
-import { useMediaQuery } from 'styled-breakpoints/use-media-query'
-import styled, { useTheme } from 'styled-components'
+import styled from 'styled-components'
 
-import { fetchInvoice, $invoice, $invoiceLoading } from '@/entities/activities'
+import {
+  fetchInvoice,
+  $invoice,
+  $invoiceLoading,
+  resetInvoice,
+} from '@/entities/activities'
 import {
   InvoiceCard,
   TotalAmountDesktop,
@@ -16,26 +20,31 @@ import {
   Worklogs,
 } from '@/features/invoice'
 import { routes } from '@/routes'
-import { Card, IconButton, Text } from '@/shared'
+import { Card, IconButton, Text, useBreakpoint } from '@/shared'
 
 export default function InvoicePage() {
   const { id } = useParams<{ id: string }>()
 
-  const { fetchInvoiceEvent, invoice, loading } = useUnit({
+  const { fetchInvoiceEvent, invoice, loading, resetInvoiceEvent } = useUnit({
     fetchInvoiceEvent: fetchInvoice,
     invoice: $invoice,
     loading: $invoiceLoading,
+    resetInvoiceEvent: resetInvoice,
   })
 
   const { t, i18n } = useTranslation()
-  const { breakpoints } = useTheme()
-  const isMobile = useMediaQuery(breakpoints.down('md'))
+
+  const isMobile = useBreakpoint('isMobile')
 
   useEffect(() => {
     if (id) {
       fetchInvoiceEvent({ id })
     }
-  }, [id, fetchInvoiceEvent])
+
+    return () => {
+      resetInvoiceEvent()
+    }
+  }, [id, fetchInvoiceEvent, resetInvoiceEvent])
 
   return (
     <>

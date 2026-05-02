@@ -15,14 +15,19 @@ import {
 } from '@/entities/activities'
 import {
   ApplicationsUsage,
-  DashboardEmptyState,
   WorklogsTable,
   ProjectsTable,
   CreateProjectModal,
   DashboardStyles as S,
-  Search,
+  ProjectsSearchInput,
 } from '@/features/dashboard'
-import { Button, Text, Wrapper, useBreakpoint } from '@/shared'
+import {
+  Button,
+  Text,
+  Wrapper,
+  useBreakpoint,
+  DashboardEmptyState,
+} from '@/shared'
 
 export default function DashboardPage() {
   const isDesktop = useBreakpoint('isDesktop')

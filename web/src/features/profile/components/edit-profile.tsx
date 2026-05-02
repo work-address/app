@@ -7,7 +7,7 @@ import {
   Text,
 } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { useEffect, useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { Controller, type SubmitHandler, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
@@ -35,6 +35,104 @@ import {
 import { type CardProps } from '@/shared'
 
 const INPUT_LABEL_WIDTH = '106px'
+
+const SKILLS_SUGGESTIONS = [
+  'Python',
+  'JavaScript',
+  'TypeScript',
+  'React',
+  'Node.js',
+  'UI/UX Design',
+  'Figma',
+  'Graphic Design',
+  'Java',
+  'Go',
+  'Copywriting',
+  'Content Writing',
+  'SEO',
+  'Vue.js',
+  'Angular',
+  'Social Media Marketing',
+  'Email Marketing',
+  'Rust',
+  'C++',
+  'C#',
+  'PHP',
+  'Ruby',
+  'Swift',
+  'Kotlin',
+  'Video Editing',
+  'Motion Graphics',
+  'After Effects',
+  'Premiere Pro',
+  'Next.js',
+  'Express.js',
+  'NestJS',
+  'Django',
+  'FastAPI',
+  'Spring Boot',
+  'Illustration',
+  'Brand Identity',
+  'Logo Design',
+  'PostgreSQL',
+  'MySQL',
+  'MongoDB',
+  'Redis',
+  'GraphQL',
+  'REST API',
+  'Docker',
+  'Kubernetes',
+  'AWS',
+  'Google Cloud',
+  'Azure',
+  'GitHub',
+  'CI/CD',
+  'Unit Testing',
+  'WebSockets',
+  'Solidity',
+  'Web3',
+  'Smart Contracts',
+  'Project Management',
+  'Scrum',
+  'Agile',
+  'Technical Writing',
+  'Data Analysis',
+  'Machine Learning',
+  'Data Visualization',
+  'Excel',
+  'Power BI',
+  'Tableau',
+  'Photoshop',
+  'Illustrator',
+  'Sketch',
+  'WordPress',
+  'Shopify',
+  'Webflow',
+  'Mobile Development',
+  'iOS',
+  'Android',
+  'Flutter',
+  'React Native',
+  'Game Development',
+  'Unity',
+  'Unreal Engine',
+  '3D Modeling',
+  'Blender',
+  'Voice Over',
+  'Transcription',
+  'Translation',
+  'Legal Writing',
+  'Business Analysis',
+  'Financial Modeling',
+  'Accounting',
+  'Blockchain',
+  'NFT',
+  'Cybersecurity',
+  'Penetration Testing',
+  'DevOps',
+  'Linux',
+  'Networking',
+]
 
 type FormState = Pick<
   baseApi.User,
@@ -79,9 +177,9 @@ export const EditProfile = () => {
   const {
     register,
     control,
-    formState: { isDirty },
+    formState: { isDirty, errors },
     handleSubmit,
-    reset,
+    reset: resetForm,
     setValue,
   } = useForm<FormState>({
     values: {
@@ -106,7 +204,7 @@ export const EditProfile = () => {
   }
 
   const onReset = () => {
-    confirm().then(() => reset())
+    confirm().then(() => resetForm())
   }
 
   const handleSocialPaste = (
@@ -162,7 +260,7 @@ export const EditProfile = () => {
       })
 
       setIsFormSubmittedSuccessfully(true)
-      reset()
+      resetForm()
       resetMutation()
     } else if (status === 'fail') {
       showToast('error', {
@@ -171,13 +269,14 @@ export const EditProfile = () => {
         position: 'top-center',
         closeButton: true,
       })
+
       resetMutation()
     }
-  }, [status, resetMutation, navigate, reset])
+  }, [status, resetMutation, navigate, resetForm])
 
   useEffect(() => {
     if (user) {
-      reset({
+      resetForm({
         userName: user.userName || '',
         company: user.company || '',
         skills: user.skills ? user.skills?.split(',') : [],
@@ -188,20 +287,15 @@ export const EditProfile = () => {
         telegram: user.telegram || '',
       })
     }
-  }, [user, reset])
+  }, [user, resetForm])
 
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Wrapper>
         <Grid rows={{ initial: 'auto auto' }} gap={{ initial: '1', md: '5' }}>
           <FreelancerViewCard>
-            <Flex
-              gap={'var(--space-4)'}
-              mb={'4'}
-              align={'center'}
-              justify={'between'}
-            >
-              <Flex gap={'var(--space-4)'} align={'center'}>
+            <Flex gap={'4'} mb={'4'} align={'center'} justify={'between'}>
+              <Flex gap={'4'} align={'center'}>
                 {isDesktop && (
                   <Link
                     to={
@@ -278,7 +372,10 @@ export const EditProfile = () => {
                   labelWidth={INPUT_LABEL_WIDTH}
                   id={'username'}
                   disabled={profileSaving}
-                  {...register('userName')}
+                  state={errors.userName ? 'error' : undefined}
+                  {...register('userName', {
+                    required: true,
+                  })}
                 />
               </Skeleton>
 
@@ -289,13 +386,17 @@ export const EditProfile = () => {
                   labelWidth={INPUT_LABEL_WIDTH}
                   id={'company'}
                   disabled={profileSaving}
-                  {...register('company')}
+                  state={errors.company ? 'error' : undefined}
+                  {...register('company', {
+                    required: true,
+                  })}
                 />
               </Skeleton>
 
               <Controller
                 control={control}
                 name="skills"
+                rules={{ required: true }}
                 render={({ field }) => (
                   <TagInput
                     label={t('profile.form.skills')}
@@ -303,9 +404,10 @@ export const EditProfile = () => {
                     labelWidth={INPUT_LABEL_WIDTH}
                     id={'skills'}
                     disabled={profileSaving}
-                    value={field.value}
-                    onChange={field.onChange}
                     showSkeleton={profileLoading}
+                    state={errors.skills ? 'error' : undefined}
+                    suggestions={SKILLS_SUGGESTIONS}
+                    {...field}
                   />
                 )}
               />
@@ -314,17 +416,22 @@ export const EditProfile = () => {
 
               <Skeleton loading={profileLoading}>
                 <Input
-                  label={t('profile.form.price')}
-                  placeholder="0"
-                  labelWidth={INPUT_LABEL_WIDTH}
-                  id={'price'}
-                  disabled={profileSaving}
                   addonLeft={
                     <Text size={'2'} color={'gray'}>
                       $
                     </Text>
                   }
-                  {...register('price')}
+                  label={t('profile.form.price')}
+                  placeholder="0"
+                  labelWidth={INPUT_LABEL_WIDTH}
+                  id={'price'}
+                  disabled={profileSaving}
+                  state={errors.price ? 'error' : undefined}
+                  inputMode="decimal"
+                  {...register('price', {
+                    pattern: /^\d*([,.]\d{1,2})?$/,
+                    required: true,
+                  })}
                 />
               </Skeleton>
 
@@ -371,8 +478,9 @@ export const EditProfile = () => {
                   label={t('profile.links.facebook')}
                   addonLeft={'facebook.com/'}
                   labelWidth={INPUT_LABEL_WIDTH}
-                  disabled={profileSaving}
                   onPaste={(e) => handleSocialPaste('facebook', e)}
+                  disabled={profileSaving}
+                  state={errors.facebook ? 'error' : undefined}
                   {...register('facebook')}
                 />
               </Skeleton>
@@ -384,6 +492,7 @@ export const EditProfile = () => {
                   labelWidth={INPUT_LABEL_WIDTH}
                   disabled={profileSaving}
                   onPaste={(e) => handleSocialPaste('linkedIn', e)}
+                  state={errors.linkedIn ? 'error' : undefined}
                   {...register('linkedIn')}
                 />
               </Skeleton>
@@ -395,6 +504,7 @@ export const EditProfile = () => {
                   labelWidth={INPUT_LABEL_WIDTH}
                   disabled={profileSaving}
                   onPaste={(e) => handleSocialPaste('telegram', e)}
+                  state={errors.telegram ? 'error' : undefined}
                   {...register('telegram')}
                 />
               </Skeleton>

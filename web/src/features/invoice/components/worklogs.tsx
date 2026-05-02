@@ -15,10 +15,11 @@ import {
   type ITimeTotalDetail,
 } from '@/entities/activities'
 import {
-  DataTable,
   formatDurationFromMinutes,
   getTimeActiveColor,
+  DataTable,
   Text,
+  WorklogsEmptyState,
 } from '@/shared'
 
 export const Worklogs = () => {
@@ -30,6 +31,8 @@ export const Worklogs = () => {
     invoice: $invoice,
     loading: $invoiceLoading,
   })
+
+  const showSkeletons = loading || worklogs.length > 0
 
   const contextValue = useMemo<WorklogsContextProps>(
     () => ({
@@ -92,20 +95,26 @@ export const Worklogs = () => {
     <>
       <Text size={'5'}>{t('dashboard.page.worklogs.title')}</Text>
 
-      <WorklogsContext value={contextValue}>
-        <DataTable
-          loading={loading}
-          data={worklogs}
-          config={tableConfig}
-          getRowId={rowIdGetter}
-          verticalAlign={'middle'}
-          BodyComponent={Cell}
-          allowSelection
-          selectedIds={selectedIds}
-          onSelectedIdsChange={setSelectedIds}
-          nowrap
-        />
-      </WorklogsContext>
+      {loading ? (
+        <WorklogsContext value={contextValue}>
+          <DataTable
+            loading={showSkeletons}
+            data={worklogs}
+            config={tableConfig}
+            getRowId={rowIdGetter}
+            verticalAlign={'middle'}
+            BodyComponent={Cell}
+            allowSelection
+            selectedIds={selectedIds}
+            onSelectedIdsChange={setSelectedIds}
+            nowrap
+          />
+        </WorklogsContext>
+      ) : (
+        <Flex pt="1" pb="4">
+          <WorklogsEmptyState />
+        </Flex>
+      )}
     </>
   )
 }

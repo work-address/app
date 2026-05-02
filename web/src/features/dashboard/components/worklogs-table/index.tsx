@@ -1,9 +1,9 @@
+import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import * as S from '../dashboard-styles.ts'
-import { WorklogsEmptyState } from '../worklogs-empty-state.tsx'
 
 import { BodyCellComponent } from './desktop-body-cell'
 import { WorklogsDesktopFilters } from './desktop-filters'
@@ -18,7 +18,12 @@ import {
   type Time,
   resetWorklogSort,
 } from '@/entities/activities'
-import { type DataTableConfig, DataTable, useBreakpoint } from '@/shared'
+import {
+  type DataTableConfig,
+  DataTable,
+  useBreakpoint,
+  WorklogsEmptyState,
+} from '@/shared'
 
 export const WorklogsTable = () => {
   const { t, i18n } = useTranslation()
@@ -151,7 +156,7 @@ export const WorklogsTable = () => {
             allowSelection
             selectedIds={selectedIds}
             onSelectedIdsChange={setSelectedIds}
-            height={'72dvh'}
+            height={'72vh'}
             loading={worklogsLoading}
             isFiltering={isWorklogsFiltering}
             sort={worklogSort}
@@ -160,7 +165,9 @@ export const WorklogsTable = () => {
           />
         </WorklogsContext.Provider>
       ) : (
-        <WorklogsEmptyState />
+        <Flex pt="7">
+          <WorklogsEmptyState />
+        </Flex>
       )}
     </S.Section>
   )

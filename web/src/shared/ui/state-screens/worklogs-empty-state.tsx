@@ -1,6 +1,6 @@
 import { useTranslation } from 'react-i18next'
 
-import { DashboardEmptyState } from './dashboard-empty-state.tsx'
+import { DashboardEmptyState } from './dashboard-empty-state'
 
 type WorklogsEmptyStateProps = {
   onHelp?: () => void

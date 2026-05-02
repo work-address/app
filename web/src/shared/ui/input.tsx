@@ -2,6 +2,7 @@ import { Grid, type GridProps, type TextProps } from '@radix-ui/themes'
 import { TextField, Text } from '@radix-ui/themes'
 import { forwardRef, type ReactNode } from 'react'
 import styled from 'styled-components'
+import { match, P } from 'ts-pattern'
 
 import { useBreakpoint } from '../hooks'
 
@@ -17,6 +18,7 @@ export type InputProps = TextField.RootProps & {
   rows?: GridProps['rows']
   textSize?: TextProps['size']
   textWeight?: TextProps['weight']
+  state?: 'error' | 'valid'
 }
 
 export const Input = forwardRef(
@@ -32,7 +34,9 @@ export const Input = forwardRef(
       rows,
       textSize,
       textWeight,
+      state,
       size,
+      onChange,
       ...props
     }: InputProps,
     ref: React.Ref<HTMLInputElement>,
@@ -42,6 +46,24 @@ export const Input = forwardRef(
     const usingGap = label
       ? (gap ?? (isDesktop ? '24px' : 'var(--space-2)'))
       : '0'
+
+    const errorProps: InputProps | null =
+      state === 'error' ? { color: 'red', variant: 'soft' } : null
+
+    const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+      e.target.value = match(props.inputMode)
+        .with('decimal', () =>
+          e.target.value
+            .replace(',', '.')
+            .replaceAll(/[^\d.]/g, '')
+            .replace(/^(\d*\.?\d*).*$/, '$1'),
+        )
+        .with('numeric', () => e.target.value.replaceAll(/\D/g, ''))
+        .with(P.any, () => e.target.value)
+        .exhaustive()
+
+      onChange?.(e)
+    }
 
     return (
       <Grid
@@ -67,6 +89,8 @@ export const Input = forwardRef(
           size={size ?? (isDesktop ? undefined : '3')}
           ref={ref}
           {...props}
+          {...errorProps}
+          onChange={handleChange}
         >
           {addonLeft && (
             <TextField.Slot side={'left'}>{addonLeft}</TextField.Slot>

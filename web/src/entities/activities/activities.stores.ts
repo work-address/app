@@ -6,6 +6,7 @@ import {
   resetWorklogSort,
   changeActivityStateFilter,
   setWorklogsLoading,
+  setActivitiesStateFiltering,
 } from './activities.events'
 import {
   activitiesQuery,
@@ -28,7 +29,7 @@ import type { baseApi } from '@/shared'
 
 export const $activityStateFilter = createStore<ProjectsFilter>({
   projectState: 'All',
-  title: '',
+  containsText: '',
 }).on(changeActivityStateFilter, (state, filter) => ({
   ...state,
   ...filter,
@@ -109,15 +110,25 @@ export const $filteredActivities = combine(
       )
     }
 
-    if (filter.title) {
-      filteredActivities = filteredActivities.filter((project) =>
-        project.title.toLowerCase().includes(filter.title.toLowerCase()),
+    if (filter.containsText) {
+      filteredActivities = filteredActivities.filter(
+        (project) =>
+          project.title
+            .toLowerCase()
+            .includes(filter.containsText.trim().toLowerCase()) ||
+          project.text
+            ?.toLowerCase()
+            .includes(filter.containsText.trim().toLowerCase()),
       )
     }
 
     return filteredActivities
   },
 )
+
+export const $isActivitiesFiltering = createStore(false)
+  .on(setActivitiesStateFiltering, (_, payload) => payload)
+  .on($filteredActivities, () => false)
 
 export const $invoice = combine(
   activityDetailQuery.$data,
@@ -127,9 +138,10 @@ export const $invoice = combine(
       return null
     }
 
-    const totalAmount =
-      ((report?.totals[0]?.rateHour ?? 0) / 60) *
-      (report?.totals[0]?.minutesActive ?? 0)
+    const rateHour = report?.totals[0]?.rateHour ?? 0
+    const minutesActive = report?.totals[0]?.minutesActive ?? 0
+
+    const totalAmount = (rateHour / 60) * minutesActive
 
     return {
       ...detail,
