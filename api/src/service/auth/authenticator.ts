@@ -5,11 +5,11 @@ import { inject, injectable } from 'inversify'
 import { User } from '@/entity/user'
 import { Mailer } from '@/service/mailer'
 
-import { IAuthTokenData } from '@/interface/auth'
+import { IAuthTokenData } from '@/model/auth'
 import { UserRepository } from '@/repository/user-repository'
-import { EUserRole } from '@/interface/user'
-import { IAuthTokens } from '@/interface/auth'
-import { IConfigParameters } from '@/interface/config'
+import { EUserRole } from '@/model/user'
+import { IAuthTokens } from '@/model/auth'
+import { IConfigParameters } from '@/model/config'
 import AuthenticationException from '@/exception/authentication-exception'
 import { UserManager } from '@/service/user-manager'
 import { RedisClient } from '@/service/redis-client'
@@ -17,7 +17,7 @@ import { Signer } from '@/service/auth/signer'
 import { ProjectManager } from '@/service/project-manager'
 import { TimeRepository } from '@/repository/time-repository'
 import { TonProofService } from '@/service/auth/ton-proof-service'
-import { IAuthTonPayload } from '@/interface/auth'
+import { IAuthTonPayload } from '@/model/auth'
 
 @injectable()
 export class Authenticator {
@@ -59,11 +59,11 @@ export class Authenticator {
     address: string,
   ): Promise<IAuthTokens> {
     const key = `nonce:${address}`
-    const nonce = await this.redis.get(key)
-
-    if (!nonce) {
+    const nonceRaw = await this.redis.get(key)
+    if (typeof nonceRaw !== 'string' || !nonceRaw) {
       throw new AuthenticationException('Nonce is not available or expired')
     }
+    const nonce = nonceRaw
 
     const isValid = this.signer.verify(nonce, signature, address)
 
@@ -110,8 +110,15 @@ export class Authenticator {
   }
 
   public async getUserFromRefreshToken(token: string): Promise<User> {
-    const payload = this.decodeJwtToken(token)
-    const userId = (payload as jwt.JwtPayload).id
+    let payload: jwt.JwtPayload & Partial<IAuthTokenData>
+    try {
+      payload = this.decodeJwtToken(token)
+    } catch (e) {
+      if (e instanceof AuthenticationException) throw e
+      if (e instanceof Error && e.name === 'TokenExpiredError') throw e
+      throw new AuthenticationException('Refresh token is not valid')
+    }
+    const userId = payload.id
 
     if (!userId) {
       throw new AuthenticationException('Refresh token is not valid')
@@ -136,9 +143,9 @@ export class Authenticator {
     return user
   }
 
-  public async getUserFromJwtToken(token: string): Promise<User | any> {
+  public async getUserFromJwtToken(token: string): Promise<User | null> {
     try {
-      const tokenData: any = this.decodeJwtToken(token)
+      const tokenData = this.decodeJwtToken(token)
 
       if (tokenData.emailOrPhone) {
         const user = await this.userRepository.findByEmailPhone(
@@ -166,19 +173,25 @@ export class Authenticator {
   }
 
   public getEmailOrPhoneOrThrowError(token: string): string {
-    const tokenData: any = this.decodeJwtToken(token)
+    const tokenData = this.decodeJwtToken(token)
 
-    return tokenData.emailOrPhone
+    return tokenData.emailOrPhone as string
   }
 
   public getJwtIatOrThrowError(token: string): string {
-    const tokenData: any = this.decodeJwtToken(token)
+    const tokenData = this.decodeJwtToken(token)
 
-    return tokenData.iat.toString()
+    return String(tokenData.iat)
   }
 
-  public decodeJwtToken(token: string) {
-    return jwt.verify(token, this.parameters.jwtSecret)
+  public decodeJwtToken(
+    token: string,
+  ): jwt.JwtPayload & Partial<IAuthTokenData> {
+    const payload = jwt.verify(token, this.parameters.jwtSecret)
+    if (typeof payload !== 'object' || payload === null) {
+      throw new AuthenticationException('Invalid token payload')
+    }
+    return payload as jwt.JwtPayload & Partial<IAuthTokenData>
   }
 
   public getTokens(user: User): IAuthTokens {

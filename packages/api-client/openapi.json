@@ -1,0 +1,2778 @@
+{
+  "components": {
+    "schemas": {
+      "AbstractBaseEntity": {
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "updatedAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "Invoice": {
+        "properties": {
+          "fromAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "toAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "amount": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "state": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "updatedAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "fromAt",
+          "toAt",
+          "amount",
+          "state"
+        ],
+        "example": {
+          "id": "cc817881-5ba0-408a-9dfc-64ff6a422b54"
+        }
+      },
+      "Time": {
+        "properties": {
+          "note": {
+            "type": "string"
+          },
+          "screenshot": {
+            "type": "string"
+          },
+          "processes": {
+            "items": {},
+            "type": "array"
+          },
+          "keyboardKeys": {
+            "type": "number"
+          },
+          "minutesActive": {
+            "type": "number"
+          },
+          "mouseKeys": {
+            "type": "number"
+          },
+          "mouseDistance": {
+            "type": "number"
+          },
+          "fromAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "toAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "updatedAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "keyboardKeys",
+          "minutesActive",
+          "mouseKeys",
+          "mouseDistance",
+          "fromAt",
+          "toAt"
+        ],
+        "example": {
+          "id": "8938462b-6273-45c1-ada5-a8b25df1aa34"
+        }
+      },
+      "Project": {
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "trackScreenshots": {
+            "type": "boolean"
+          },
+          "trackProcesses": {
+            "type": "boolean"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rateHour": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "updatedAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "title",
+          "text",
+          "state"
+        ],
+        "example": {
+          "id": "88f09b2d-ff57-4c28-a27c-fe637ecd145f"
+        }
+      },
+      "User": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "emailOrPhone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "company": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "string"
+          },
+          "facebook": {
+            "type": "string"
+          },
+          "linkedIn": {
+            "type": "string"
+          },
+          "twitter": {
+            "type": "string"
+          },
+          "instagram": {
+            "type": "string"
+          },
+          "youtube": {
+            "type": "string"
+          },
+          "telegram": {
+            "type": "string"
+          },
+          "whatsapp": {
+            "type": "string"
+          },
+          "tz": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "roles": {
+            "items": {
+              "enum": [
+                "ROLE_USER"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "id": {
+            "minLength": 1,
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "updatedAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "emailOrPhone"
+        ],
+        "example": {
+          "id": "997222da-6f9e-4ef4-af06-1aac21679608"
+        }
+      },
+      "AuthForgotPasswordDto": {
+        "properties": {
+          "emailOrPhone": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "emailOrPhone"
+        ]
+      },
+      "AuthEthLoginDto": {
+        "properties": {
+          "signature": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "address": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "signature",
+          "address"
+        ]
+      },
+      "AuthNonceRequestDto": {
+        "properties": {
+          "address": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "address"
+        ]
+      },
+      "AuthRefreshTokenDto": {
+        "properties": {
+          "refreshToken": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "refreshToken"
+        ]
+      },
+      "AuthTonProofDomainDto": {
+        "properties": {
+          "lengthBytes": {
+            "type": "number"
+          },
+          "value": {
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "lengthBytes",
+          "value"
+        ]
+      },
+      "AuthTonProofPayloadDto": {
+        "properties": {
+          "timestamp": {
+            "type": "number"
+          },
+          "domain": {
+            "$ref": "#/components/schemas/AuthTonProofDomainDto"
+          },
+          "payload": {
+            "type": "string"
+          },
+          "signature": {
+            "type": "string"
+          },
+          "state_init": {
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "timestamp",
+          "domain",
+          "payload",
+          "signature",
+          "state_init"
+        ]
+      },
+      "AuthTonLoginDto": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "network": {
+            "type": "string"
+          },
+          "public_key": {
+            "type": "string"
+          },
+          "proof": {
+            "$ref": "#/components/schemas/AuthTonProofPayloadDto"
+          }
+        },
+        "type": "object",
+        "required": [
+          "address",
+          "network",
+          "public_key",
+          "proof"
+        ]
+      },
+      "SearchDto": {
+        "properties": {
+          "page": {
+            "minLength": 1,
+            "type": "number"
+          },
+          "filter": {
+            "type": "object"
+          },
+          "sort": {
+            "type": "object"
+          },
+          "limit": {
+            "type": "number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "page",
+          "filter",
+          "sort"
+        ]
+      },
+      "UserSearchFilterDto": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "role": {
+            "enum": [
+              "ROLE_USER"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "UserSearchDto": {
+        "properties": {
+          "filter": {
+            "$ref": "#/components/schemas/UserSearchFilterDto",
+            "type": "object"
+          },
+          "page": {
+            "minLength": 1,
+            "type": "number"
+          },
+          "sort": {
+            "type": "object"
+          },
+          "limit": {
+            "type": "number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "filter",
+          "page",
+          "sort"
+        ]
+      },
+      "ProjectSearchSortDto": {
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          "updatedAt": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          "title": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          "rateHour": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          "trackScreenshots": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          "trackProcesses": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "ProjectSearchFilterDto": {
+        "properties": {
+          "userId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "projectId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "state": {
+            "enum": [
+              "Inactive",
+              "Active"
+            ],
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "text": {
+            "type": "string"
+          },
+          "rateHourFrom": {
+            "type": "number"
+          },
+          "rateHourTo": {
+            "type": "number"
+          },
+          "trackScreenshots": {
+            "type": "boolean"
+          },
+          "trackProcesses": {
+            "type": "boolean"
+          },
+          "withScreenshots": {
+            "type": "boolean"
+          },
+          "withProcesses": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "ProjectSearchDto": {
+        "properties": {
+          "sort": {
+            "$ref": "#/components/schemas/ProjectSearchSortDto",
+            "type": "object"
+          },
+          "filter": {
+            "$ref": "#/components/schemas/ProjectSearchFilterDto",
+            "type": "object"
+          },
+          "page": {
+            "minLength": 1,
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sort",
+          "filter",
+          "page"
+        ]
+      },
+      "TimeSearchSortDto": {
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          "updatedAt": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          "fromAt": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          "toAt": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          "keyboardKeys": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          "minutesActive": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          "mouseKeys": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          "mouseDistance": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "TimeSearchFilterDto": {
+        "properties": {
+          "projectId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "fromAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "toAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "note": {
+            "type": "string"
+          },
+          "screenshot": {
+            "type": "string"
+          },
+          "keyboardKeysFrom": {
+            "type": "number"
+          },
+          "keyboardKeysTo": {
+            "type": "number"
+          },
+          "minutesActiveFrom": {
+            "type": "number"
+          },
+          "minutesActiveTo": {
+            "type": "number"
+          },
+          "mouseKeysFrom": {
+            "type": "number"
+          },
+          "mouseKeysTo": {
+            "type": "number"
+          },
+          "mouseDistanceFrom": {
+            "type": "number"
+          },
+          "mouseDistanceTo": {
+            "type": "number"
+          },
+          "withScreenshots": {
+            "type": "boolean"
+          },
+          "withProcesses": {
+            "type": "boolean"
+          }
+        },
+        "type": "object"
+      },
+      "TimeSearchDto": {
+        "properties": {
+          "sort": {
+            "$ref": "#/components/schemas/TimeSearchSortDto",
+            "type": "object"
+          },
+          "filter": {
+            "$ref": "#/components/schemas/TimeSearchFilterDto",
+            "type": "object"
+          },
+          "page": {
+            "minLength": 1,
+            "type": "number"
+          },
+          "limit": {
+            "type": "number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "sort",
+          "filter",
+          "page"
+        ]
+      },
+      "TimeCreateDto": {
+        "properties": {
+          "fromIndex": {
+            "type": "number"
+          },
+          "toIndex": {
+            "type": "number"
+          },
+          "fromAt": {
+            "pattern": "\\d{4}-[01]\\d-[0-3]\\dT[0-2]\\d:[0-5]\\d:[0-5]\\d.\\d+Z?",
+            "type": "string"
+          },
+          "toAt": {
+            "pattern": "\\d{4}-[01]\\d-[0-3]\\dT[0-2]\\d:[0-5]\\d:[0-5]\\d.\\d+Z?",
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "minutesActive": {
+            "type": "number"
+          },
+          "keyboardKeys": {
+            "type": "number"
+          },
+          "mouseKeys": {
+            "type": "number"
+          },
+          "mouseDistance": {
+            "type": "number"
+          },
+          "screenshot": {
+            "type": "string"
+          },
+          "processes": {
+            "items": {},
+            "type": "array"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fromIndex",
+          "toIndex",
+          "fromAt",
+          "toAt",
+          "projectId",
+          "note",
+          "minutesActive",
+          "keyboardKeys",
+          "mouseKeys",
+          "mouseDistance"
+        ]
+      },
+      "TimeInsertionErrorDto": {
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "message": {
+            "type": "string"
+          },
+          "errors": {}
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "message"
+        ]
+      },
+      "TimeInsertionResultDto": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "error": {
+            "$ref": "#/components/schemas/TimeInsertionErrorDto"
+          },
+          "fromIndex": {
+            "type": "number"
+          },
+          "toIndex": {
+            "type": "number"
+          },
+          "fromAt": {
+            "pattern": "\\d{4}-[01]\\d-[0-3]\\dT[0-2]\\d:[0-5]\\d:[0-5]\\d.\\d+Z?",
+            "type": "string"
+          },
+          "toAt": {
+            "pattern": "\\d{4}-[01]\\d-[0-3]\\dT[0-2]\\d:[0-5]\\d:[0-5]\\d.\\d+Z?",
+            "type": "string"
+          },
+          "projectId": {
+            "type": "string"
+          },
+          "note": {
+            "type": "string"
+          },
+          "minutesActive": {
+            "type": "number"
+          },
+          "keyboardKeys": {
+            "type": "number"
+          },
+          "mouseKeys": {
+            "type": "number"
+          },
+          "mouseDistance": {
+            "type": "number"
+          },
+          "screenshot": {
+            "type": "string"
+          },
+          "processes": {
+            "items": {},
+            "type": "array"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fromIndex",
+          "toIndex",
+          "fromAt",
+          "toAt",
+          "projectId",
+          "note",
+          "minutesActive",
+          "keyboardKeys",
+          "mouseKeys",
+          "mouseDistance"
+        ]
+      },
+      "InvoiceSearchFilterDto": {
+        "properties": {
+          "projectId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "fromAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "toAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "amountFrom": {
+            "type": "number"
+          },
+          "amountTo": {
+            "type": "number"
+          },
+          "state": {
+            "enum": [
+              "PAID",
+              "Requested"
+            ],
+            "type": "string"
+          }
+        },
+        "type": "object"
+      },
+      "InvoiceSearchDto": {
+        "properties": {
+          "filter": {
+            "$ref": "#/components/schemas/InvoiceSearchFilterDto",
+            "type": "object"
+          },
+          "page": {
+            "minLength": 1,
+            "type": "number"
+          },
+          "sort": {
+            "type": "object"
+          },
+          "limit": {
+            "type": "number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "filter",
+          "page",
+          "sort"
+        ]
+      },
+      "InvoiceCreateDto": {
+        "properties": {
+          "fromUnix": {
+            "type": "number"
+          },
+          "toUnix": {
+            "type": "number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "fromUnix",
+          "toUnix"
+        ]
+      },
+      "User_search": {
+        "type": "object",
+        "description": "Subset of User serialized with class-transformer group \"search\".",
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "updatedAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "address": {
+            "type": "string"
+          },
+          "emailOrPhone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "company": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "string"
+          },
+          "facebook": {
+            "type": "string"
+          },
+          "linkedIn": {
+            "type": "string"
+          },
+          "twitter": {
+            "type": "string"
+          },
+          "instagram": {
+            "type": "string"
+          },
+          "youtube": {
+            "type": "string"
+          },
+          "telegram": {
+            "type": "string"
+          },
+          "tz": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "roles": {
+            "items": {
+              "enum": [
+                "ROLE_USER"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          }
+        }
+      },
+      "User_edit": {
+        "type": "object",
+        "description": "Subset of User serialized with class-transformer group \"edit\".",
+        "properties": {
+          "emailOrPhone": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "company": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "price": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "string"
+          },
+          "facebook": {
+            "type": "string"
+          },
+          "linkedIn": {
+            "type": "string"
+          },
+          "twitter": {
+            "type": "string"
+          },
+          "instagram": {
+            "type": "string"
+          },
+          "youtube": {
+            "type": "string"
+          },
+          "telegram": {
+            "type": "string"
+          },
+          "tz": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "roles": {
+            "items": {
+              "enum": [
+                "ROLE_USER"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          }
+        }
+      },
+      "Project_search": {
+        "type": "object",
+        "description": "Subset of Project serialized with class-transformer group \"search\".",
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "updatedAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "trackScreenshots": {
+            "type": "boolean"
+          },
+          "trackProcesses": {
+            "type": "boolean"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rateHour": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "Project_create": {
+        "type": "object",
+        "description": "Subset of Project serialized with class-transformer group \"create\".",
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "trackScreenshots": {
+            "type": "boolean"
+          },
+          "trackProcesses": {
+            "type": "boolean"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rateHour": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "Project_edit": {
+        "type": "object",
+        "description": "Subset of Project serialized with class-transformer group \"edit\".",
+        "properties": {
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "trackScreenshots": {
+            "type": "boolean"
+          },
+          "trackProcesses": {
+            "type": "boolean"
+          },
+          "text": {
+            "type": "string",
+            "minLength": 1
+          },
+          "rateHour": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string",
+            "minLength": 1
+          }
+        }
+      },
+      "Time_search": {
+        "type": "object",
+        "description": "Subset of Time serialized with class-transformer group \"search\".",
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "updatedAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "note": {
+            "type": "string"
+          },
+          "screenshot": {
+            "type": "string"
+          },
+          "processes": {
+            "items": {},
+            "type": "array"
+          },
+          "keyboardKeys": {
+            "type": "number"
+          },
+          "minutesActive": {
+            "type": "number"
+          },
+          "mouseKeys": {
+            "type": "number"
+          },
+          "mouseDistance": {
+            "type": "number"
+          },
+          "fromAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "toAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          }
+        }
+      },
+      "Invoice_search": {
+        "type": "object",
+        "description": "Subset of Invoice serialized with class-transformer group \"search\".",
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "type": "string",
+            "format": "uuid"
+          },
+          "createdAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "updatedAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "fromAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "toAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "amount": {
+            "minLength": 1,
+            "type": "string"
+          },
+          "state": {
+            "minLength": 1,
+            "type": "string"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "bearerAuth": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "JWT",
+        "description": "JWT access token (same value the API returns on login)"
+      }
+    }
+  },
+  "info": {
+    "title": "API schema",
+    "version": "v1"
+  },
+  "openapi": "3.0.0",
+  "paths": {
+    "/api/help/openApi": {
+      "get": {
+        "operationId": "HelpController.swagger",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "OpenAPI 3 specification (JSON)",
+        "tags": [
+          "Help"
+        ]
+      }
+    },
+    "/api/auth/eth": {
+      "post": {
+        "operationId": "AuthController.loginEth",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthEthLoginDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {
+              "Authorization": {
+                "required": true,
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Refresh-Token": {
+                "required": true,
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Login with Ethereum wallet",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/ton": {
+      "post": {
+        "operationId": "AuthController.checkProofHandler",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthTonLoginDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {
+              "Authorization": {
+                "required": true,
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Refresh-Token": {
+                "required": true,
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Login with TON Connect proof",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/nonce": {
+      "post": {
+        "operationId": "AuthController.nonce",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthNonceRequestDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string",
+                  "example": "550e8400-e29b-41d4-a716-446655440000"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Request nonce for Ethereum login",
+        "tags": [
+          "Auth"
+        ]
+      }
+    },
+    "/api/auth/refresh": {
+      "post": {
+        "operationId": "AuthController.refresh",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AuthRefreshTokenDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "headers": {
+              "Authorization": {
+                "required": true,
+                "schema": {
+                  "type": "string"
+                }
+              },
+              "Refresh-Token": {
+                "required": true,
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "JWT token rotation",
+        "tags": [
+          "Auth"
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "schema": {
+              "type": "string"
+            },
+            "required": true
+          }
+        ]
+      }
+    },
+    "/api/auth/status": {
+      "get": {
+        "operationId": "AuthController.status",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Current user from JWT",
+        "tags": [
+          "Auth"
+        ],
+        "parameters": [
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ]
+      }
+    },
+    "/api/user/search": {
+      "post": {
+        "operationId": "UserController.search",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserSearchDto",
+                "type": "object",
+                "required": [
+                  "page",
+                  "filter",
+                  "sort"
+                ],
+                "properties": {
+                  "page": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Zero-based page index"
+                  },
+                  "sort": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Map of field name to sort direction (ASC or DESC)"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "description": "Optional page size override"
+                  },
+                  "filter": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Endpoint-specific filters (see summary / examples)"
+                  }
+                }
+              },
+              "example": {
+                "filter": {
+                  "role": "ROLE_USER"
+                },
+                "sort": {
+                  "createdAt": "ASC"
+                },
+                "page": 0
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/User_search"
+                        }
+                      },
+                      {
+                        "type": "integer"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Search users",
+        "tags": [
+          "User"
+        ]
+      }
+    },
+    "/api/user/{address}/address": {
+      "get": {
+        "operationId": "UserController.read",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/User_search"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Public profile by wallet address",
+        "tags": [
+          "User"
+        ]
+      }
+    },
+    "/api/user": {
+      "put": {
+        "operationId": "UserController.edit",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/User_edit"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Update current user profile",
+        "tags": [
+          "User"
+        ]
+      }
+    },
+    "/api/project/search": {
+      "post": {
+        "operationId": "ProjectController.search",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectSearchDto",
+                "type": "object",
+                "required": [
+                  "page",
+                  "filter",
+                  "sort"
+                ],
+                "properties": {
+                  "page": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Zero-based page index"
+                  },
+                  "sort": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Map of field name to sort direction (ASC or DESC)"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "description": "Optional page size override"
+                  },
+                  "filter": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Endpoint-specific filters (see summary / examples)"
+                  }
+                }
+              },
+              "example": {
+                "filter": {
+                  "state": "DRAFT"
+                },
+                "sort": {
+                  "createdAt": "DESC"
+                },
+                "page": 0
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Project_search"
+                        }
+                      },
+                      {
+                        "type": "integer"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Search projects accessible by the current user",
+        "tags": [
+          "Project"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/project": {
+      "post": {
+        "operationId": "ProjectController.create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Project_create"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "headers": {
+              "Location": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            }
+          }
+        },
+        "summary": "Create project",
+        "tags": [
+          "Project"
+        ]
+      }
+    },
+    "/api/project/{id}": {
+      "get": {
+        "operationId": "ProjectController.read",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Project"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Project_search"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Get project by id",
+        "tags": [
+          "Project"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "ProjectController.edit",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Project"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Project_edit"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Update project",
+        "tags": [
+          "Project"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "ProjectController.delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Project"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Soft-delete project",
+        "tags": [
+          "Project"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/project/{id}/close": {
+      "post": {
+        "operationId": "ProjectController.close",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Project"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Close project",
+        "tags": [
+          "Project"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/time/search": {
+      "post": {
+        "operationId": "TimeController.search",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimeSearchDto",
+                "type": "object",
+                "required": [
+                  "page",
+                  "filter",
+                  "sort"
+                ],
+                "properties": {
+                  "page": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Zero-based page index"
+                  },
+                  "sort": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Map of field name to sort direction (ASC or DESC)"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "description": "Optional page size override"
+                  },
+                  "filter": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Endpoint-specific filters (see summary / examples)"
+                  }
+                }
+              },
+              "example": {
+                "filter": {
+                  "projectId": "dd8a088d-00c1-499f-a75b-7ca45821a7e3",
+                  "fromAt": 1700000000000,
+                  "toAt": 1700086400000
+                },
+                "sort": {
+                  "createdAt": "ASC"
+                },
+                "page": 0
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Time_search"
+                        }
+                      },
+                      {
+                        "type": "integer"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Search time entries",
+        "tags": [
+          "Time"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/time/totals": {
+      "get": {
+        "operationId": "TimeController.getTotals",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "projectId",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "type": "object"
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Aggregated time totals for project owner",
+        "tags": [
+          "Time"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/time/report/{id}": {
+      "get": {
+        "operationId": "TimeController.getReport",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Project"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Cached time report for a project",
+        "tags": [
+          "Time"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/time": {
+      "post": {
+        "operationId": "TimeController.createOrUpdateMany",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "items": {
+                  "type": "object",
+                  "$ref": "#/components/schemas/TimeCreateDto"
+                },
+                "type": "array"
+              },
+              "example": [
+                {
+                  "fromIndex": 1000,
+                  "toIndex": 2000,
+                  "note": "Focus block",
+                  "keyboardKeys": 3,
+                  "minutesActive": 4,
+                  "mouseKeys": 3,
+                  "mouseDistance": 5,
+                  "fromAt": "2024-01-21T09:00:00.000Z",
+                  "toAt": "2024-01-21T09:10:00.000Z",
+                  "projectId": "dd8a088d-00c1-499f-a75b-7ca45821a7e3"
+                }
+              ]
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "$ref": "#/components/schemas/TimeInsertionResultDto"
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Create or update many time rows (batch)",
+        "tags": [
+          "Time"
+        ]
+      }
+    },
+    "/api/time/{id}": {
+      "get": {
+        "operationId": "TimeController.read",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Time_search"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Get one time entry",
+        "tags": [
+          "Time"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "TimeController.delete",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Time"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Delete time entry",
+        "tags": [
+          "Time"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/invoice/search": {
+      "post": {
+        "operationId": "InvoiceController.search",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceSearchDto",
+                "type": "object",
+                "required": [
+                  "page",
+                  "filter",
+                  "sort"
+                ],
+                "properties": {
+                  "page": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "description": "Zero-based page index"
+                  },
+                  "sort": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    },
+                    "description": "Map of field name to sort direction (ASC or DESC)"
+                  },
+                  "limit": {
+                    "type": "integer",
+                    "description": "Optional page size override"
+                  },
+                  "filter": {
+                    "type": "object",
+                    "additionalProperties": true,
+                    "description": "Endpoint-specific filters (see summary / examples)"
+                  }
+                }
+              },
+              "example": {
+                "filter": {
+                  "projectId": "abf47aa2-7f53-468c-bfdd-4203b2e12c85"
+                },
+                "sort": {
+                  "fromAt": "DESC"
+                },
+                "page": 0
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/Invoice_search"
+                        }
+                      },
+                      {
+                        "type": "integer"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Search invoices accessible by the current user",
+        "tags": [
+          "Invoice"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/invoice/project/{projectId}": {
+      "post": {
+        "operationId": "InvoiceController.create",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "projectId",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Project"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceCreateDto"
+              },
+              "example": {
+                "fromUnix": 1778163610043,
+                "toUnix": 1778250010043
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invoice_search"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Create invoice from logged time in a range",
+        "tags": [
+          "Invoice"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/invoice/{id}": {
+      "get": {
+        "operationId": "InvoiceController.read",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Invoice"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invoice_search"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Get invoice by id",
+        "tags": [
+          "Invoice"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/auth/timeTracker/nonce": {
+      "post": {
+        "operationId": "AuthTimeTrackerController.timeTrackerNonceGenerate",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "nonce",
+                    "startAt",
+                    "state",
+                    "ip"
+                  ],
+                  "properties": {
+                    "nonce": {
+                      "type": "string"
+                    },
+                    "startAt": {
+                      "type": "number"
+                    },
+                    "state": {
+                      "type": "string"
+                    },
+                    "ip": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Start time-tracker auth: create nonce",
+        "tags": [
+          "Auth Time Tracker"
+        ]
+      }
+    },
+    "/api/auth/timeTracker/{nonce}/login": {
+      "post": {
+        "operationId": "AuthTimeTrackerController.timeTrackerLogin",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "nonce",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Time-tracker: complete login for nonce",
+        "tags": [
+          "Auth Time Tracker"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "nonce": "20789884-0ac6-4337-aa7e-26101e413cb3"
+              },
+              "schema": {
+                "properties": {
+                  "nonce": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        }
+      }
+    },
+    "/api/auth/timeTracker/{nonce}/connect": {
+      "post": {
+        "operationId": "AuthTimeTrackerController.timeTrackerConnect",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "nonce",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Success"
+          }
+        },
+        "summary": "Browser: link logged-in user to time-tracker session",
+        "tags": [
+          "Auth Time Tracker"
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "example": {
+                "nonce": "7dcc43a2-922b-42bc-b34f-af4a546638cc"
+              },
+              "schema": {
+                "properties": {
+                  "nonce": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          },
+          "required": true
+        },
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/auth/timeTracker/{nonce}": {
+      "get": {
+        "operationId": "AuthTimeTrackerController.timeTrackerNonceGet",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "nonce",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "examples": {
+                  "init": {
+                    "value": {
+                      "nonce": "b0cd0b1c-c058-4082-8330-7299e424279f",
+                      "ip": "127.0.0.1",
+                      "state": "Initialization"
+                    }
+                  },
+                  "login": {
+                    "value": {
+                      "nonce": "1c9e7163-88c9-4a6a-8bc9-1eb1e4927fcf",
+                      "ip": "127.0.0.1",
+                      "state": "Login"
+                    }
+                  },
+                  "connected": {
+                    "value": {
+                      "nonce": "2cad4965-7a26-41c7-a4fe-10c688d14691",
+                      "ip": "127.0.0.1",
+                      "state": "Connected",
+                      "jwt": {
+                        "accessToken": "aaa.bbb.ccc",
+                        "refreshToken": "ddd.eee.fff"
+                      }
+                    }
+                  }
+                },
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "nonce": {
+                      "type": "string"
+                    },
+                    "ip": {
+                      "type": "string"
+                    },
+                    "state": {
+                      "type": "string"
+                    },
+                    "jwt": {
+                      "type": "object",
+                      "properties": {
+                        "accessToken": {
+                          "type": "string"
+                        },
+                        "refreshToken": {
+                          "type": "string"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Poll time-tracker auth state by nonce",
+        "tags": [
+          "Auth Time Tracker"
+        ]
+      }
+    }
+  }
+}

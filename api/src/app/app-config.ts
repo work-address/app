@@ -1,7 +1,7 @@
 import 'reflect-metadata'
 import 'dotenv/config'
 
-import { IConfigParameters } from '@/interface/config'
+import { IConfigParameters } from '@/model/config'
 
 export class AppConfig {
   public static readonly ENV = {

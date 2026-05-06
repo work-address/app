@@ -4,7 +4,7 @@ import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
 
 import { ProjectRepository } from '@/repository/project-repository'
-import { EProjectState } from '@/interface/project'
+import { EProjectState } from '@/model/project'
 
 @injectable()
 export class ProjectFixture {

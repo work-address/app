@@ -2,9 +2,10 @@
   "name": "work-address",
   "description": "Time tracking and Decentralized Freelance Identity",
   "author": "https://address.work",
-  "private": true,
   "version": "0.0.1",
-  "type": "module",
+  "scripts": {
+    "codegen:api-client": "pnpm --filter @app/api-client codegen"
+  },
   "prettier": {
     "tabWidth": 2,
     "semi": false,

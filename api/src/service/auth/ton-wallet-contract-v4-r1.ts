@@ -23,8 +23,14 @@ export class WalletContractV4R1 {
     if (code === undefined) {
       throw new Error('WalletContractV4R1: empty BOC')
     }
-    ;(wallet as any).init = { data, code }
-    ;(wallet as any).address = contractAddress(args.workchain, wallet.init)
-    return wallet
+    const customInit = { data, code }
+    type PatchedWallet = Omit<typeof wallet, 'init' | 'address'> & {
+      init: typeof customInit
+      address: ReturnType<typeof contractAddress>
+    }
+    const patched = wallet as PatchedWallet
+    patched.init = customInit
+    patched.address = contractAddress(args.workchain, patched.init)
+    return patched
   }
 }

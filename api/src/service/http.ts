@@ -4,16 +4,16 @@ import { injectable } from 'inversify'
 
 @injectable()
 export class Http {
-  public async request(options: any = {}): Promise<AxiosResponse> {
-    const config: AxiosRequestConfig<any> = {
+  public async request(options: unknown = {}): Promise<AxiosResponse> {
+    const config: AxiosRequestConfig = {
       method: 'GET',
     }
 
-    _.assign(config, options)
+    _.assign(config, options as object)
 
     try {
       return await Axios.request(config)
-    } catch (e: any) {
+    } catch (e: unknown) {
       // console.log(e);
       // console.log(e.response.data);
       // console.log(e.response.data.errors);

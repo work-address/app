@@ -4,7 +4,7 @@ import getDecorators from 'inversify-inject-decorators'
 import { AppContainer } from '@/app/app-container'
 import { Authenticator } from '@/service/auth/authenticator'
 import * as jwt from 'jsonwebtoken'
-import { ILogger } from '@/interface/logging'
+import { ILogger } from '@/model/logging'
 
 const { lazyInject } = getDecorators(AppContainer.getContainer())
 
@@ -18,7 +18,7 @@ export class PayloadLogger implements ExpressMiddlewareInterface {
   use(
     request: express.Request,
     _response: express.Response,
-    _next: (err?: any) => any,
+    _next: express.NextFunction,
   ) {
     let user = {}
 

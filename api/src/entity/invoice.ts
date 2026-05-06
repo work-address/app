@@ -5,8 +5,8 @@ import { JSONSchema } from 'class-validator-jsonschema'
 
 import { AbstractBaseEntity } from '@/entity/abstract-base-entity'
 import { Project } from '@/entity/project'
-import { IsDate, IsNotEmpty, IsOptional } from 'class-validator'
-import { EInvoiceState } from '@/interface/invoice'
+import { IsDate, IsNotEmpty } from 'class-validator'
+import { EInvoiceState } from '@/model/invoice'
 
 @JSONSchema({
   example: {
@@ -35,10 +35,6 @@ export class Invoice extends AbstractBaseEntity {
   @Expose({ groups: ['search', 'create', 'edit'] })
   @Column('float', { nullable: false })
   amount: number
-  @IsOptional()
-  @Expose({ groups: ['search', 'create', 'edit'] })
-  @Column('text', { nullable: true })
-  paymentTxId: string
   @IsNotEmpty()
   @Expose({ groups: ['search', 'create', 'edit'] })
   @Column('text', { nullable: true })

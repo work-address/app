@@ -5,13 +5,13 @@ import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
 import { TimeRepository } from '@/repository/time-repository'
 import { ProjectRepository } from '@/repository/project-repository'
-import { ITimeInsertionResult } from '@/interface/time'
+import { ITimeInsertionResult } from '@/model/time'
 import { ErrorFormatter } from '@/service/error-formatter'
-import { TimeCreateDto } from '@/validator/dto/time-create-dto'
+import { TimeCreateDto } from '@/model/dto/time'
 import { Project } from '@/entity/project'
 import { RedisClient } from '@/service/redis-client'
-import { ITimeTotals } from '@/interface/time'
-import { EProjectState } from '@/interface/project'
+import { ITimeTotals } from '@/model/time'
+import { EProjectState } from '@/model/project'
 import AccessException from '@/exception/access-exception'
 import { ImageResizer } from '@/service/image-resizer'
 
@@ -82,7 +82,7 @@ export class TimeManager {
           screenshot: undefined,
           processes: undefined,
         })
-      } catch (error: any) {
+      } catch (error: unknown) {
         insertionResults.push({
           ...item,
           error: ErrorFormatter.format(error),
@@ -115,18 +115,21 @@ export class TimeManager {
   }
 
   public async remove(time: Time, worker: User) {
-    const timeExisting = await this.timeRepository.findTimeByWorkerOrFail(
-      time,
-      worker,
-    )
-
-    if (!timeExisting) {
-      throw new AccessException(
-        `Wrong user: the given time belongs to someone else`,
+    try {
+      const timeExisting = await this.timeRepository.findTimeByWorkerOrFail(
+        time,
+        worker,
       )
-    }
 
-    await this.timeRepository.remove(timeExisting)
+      await this.timeRepository.remove(timeExisting)
+    } catch (e) {
+      if (e instanceof Error && e.name === 'EntityNotFoundError') {
+        throw new AccessException(
+          `Wrong user: the given time belongs to someone else`,
+        )
+      }
+      throw e
+    }
   }
 
   public async buildAndCacheReport(
@@ -143,8 +146,16 @@ export class TimeManager {
 
     const cache = await this.redisClient.get(project.id)
 
-    if (cache) {
-      return cache
+    if (
+      cache &&
+      typeof cache === 'object' &&
+      'totals' in cache &&
+      'time' in cache
+    ) {
+      return cache as {
+        totals: ITimeTotals[]
+        time: Time[]
+      }
     }
 
     await this.redisClient.setWithExpiry(

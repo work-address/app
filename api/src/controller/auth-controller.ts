@@ -1,26 +1,49 @@
 import {
   Post,
-  BodyParam,
   JsonController,
   Res,
   HttpCode,
   Get,
   Body,
   Req,
-  ResponseClassTransformOptions,
 } from 'routing-controllers'
-import faker from 'faker'
-
 import express from 'express'
-import { OpenAPI } from 'routing-controllers-openapi'
 
+import {
+  OpenAPIExtended,
+  OpenAPIExtendedResponsePart,
+} from '@/decorator/openapi/openapi-extended'
+import {
+  AuthEthLoginDto,
+  AuthNonceRequestDto,
+  AuthRefreshTokenDto,
+  AuthTonLoginDto,
+} from '@/model/dto/auth'
 import { User } from '@/entity/user'
 import { App } from '@/app/app'
 import { Authenticator } from '@/service/auth/authenticator'
 import { UserManager } from '@/service/user-manager'
 import { UserRepository } from '@/repository/user-repository'
-import { IConfigParameters } from '@/interface/config'
-import { ExtendedResponseSchema } from '@/decorator/extended-response-schema'
+import { IConfigParameters } from '@/model/config'
+
+const authSessionJsonHeadersResponse: OpenAPIExtendedResponsePart<
+  Record<string, never>
+> = {
+  schema: {},
+  options: {
+    emptyBody: true,
+    headers: {
+      Authorization: {
+        required: true,
+        schema: { type: 'string' as const },
+      },
+      'Refresh-Token': {
+        required: true,
+        schema: { type: 'string' as const },
+      },
+    },
+  },
+}
 
 // TODO: support login with solana blockchain
 @JsonController('/auth')
@@ -37,66 +60,17 @@ export class AuthController {
     this.parameters = App.container.get('parameters')
   }
 
-  @OpenAPI({
+  @OpenAPIExtended({
     summary: 'Login with Ethereum wallet',
-    description:
-      'Verifies `signature` for the server-issued nonce for `address`. Tokens are returned in response headers, not the body.',
-    requestBody: {
-      required: true,
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            required: ['signature', 'address'],
-            properties: {
-              signature: {
-                type: 'string',
-                description: 'Hex signature from the wallet',
-              },
-              address: {
-                type: 'string',
-                description: 'Ethereum address (checksummed or lower-case)',
-              },
-            },
-          },
-        },
-      },
-    },
-    responses: {
-      200: {
-        description: 'Replies with refresh and login headers sent',
-        content: {
-          'application/json': {},
-        },
-        headers: {
-          Authorization: {
-            required: true,
-            schema: {
-              type: 'string',
-            },
-            description: 'contains JWT Access Token',
-          },
-          'Refresh-Token': {
-            required: true,
-            schema: {
-              type: 'string',
-            },
-            description: 'contains JWT Refresh Token',
-          },
-        },
-      },
-    },
+    body: { schema: AuthEthLoginDto },
+    response: authSessionJsonHeadersResponse,
   })
   @Post('/eth')
   @HttpCode(200)
   public async loginEth(
-    @Body()
-    payload: {
-      signature: string
-      address: string
-    },
-    @Res() res: any,
-  ): Promise<Record<string, never>> {
+    @Body() payload: AuthEthLoginDto,
+    @Res() res: express.Response,
+  ): Promise<express.Response> {
     const tokens = await this.authenticator.loginEth(
       payload.signature,
       payload.address,
@@ -105,54 +79,21 @@ export class AuthController {
     res.setHeader('Authorization', tokens.accessToken)
     res.setHeader('Refresh-Token', tokens.refreshToken)
 
-    return {}
+    res.end()
+    return res
   }
 
-  @OpenAPI({
+  @OpenAPIExtended({
     summary: 'Login with TON Connect proof',
-    description:
-      'Payload shape follows TON proof / Connect flow expected by `Authenticator.loginTon`. Tokens are returned in headers.',
-    requestBody: {
-      required: true,
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            description:
-              'TON proof payload (see server implementation for required fields)',
-            additionalProperties: true,
-          },
-        },
-      },
-    },
-    responses: {
-      200: {
-        description: 'Replies with refresh and login headers sent',
-        content: {
-          'application/json': {},
-        },
-        headers: {
-          Authorization: {
-            required: true,
-            schema: {
-              type: 'string',
-            },
-            description: 'contains JWT Access Token',
-          },
-          'Refresh-Token': {
-            required: true,
-            schema: {
-              type: 'string',
-            },
-            description: 'contains JWT Refresh Token',
-          },
-        },
-      },
-    },
+    body: { schema: AuthTonLoginDto },
+    response: authSessionJsonHeadersResponse,
   })
   @HttpCode(200)
   @Post('/ton')
-  public async checkProofHandler(@Body() payload: any, @Res() res: any) {
+  public async checkProofHandler(
+    @Body() payload: AuthTonLoginDto,
+    @Res() res: express.Response,
+  ): Promise<express.Response> {
     console.log(payload)
 
     const tokens = await this.authenticator.loginTon(payload)
@@ -160,148 +101,63 @@ export class AuthController {
     res.setHeader('Authorization', tokens.accessToken)
     res.setHeader('Refresh-Token', tokens.refreshToken)
 
-    return {}
+    res.end()
+    return res
   }
 
-  @OpenAPI({
+  @OpenAPIExtended({
     summary: 'Request nonce for Ethereum login',
-    description:
-      'First step for `/auth/eth`: server returns a message/nonce string to sign. Response body is a plain string (JSON-encoded string), not an object.',
-    requestBody: {
-      required: true,
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            required: ['address'],
-            properties: {
-              address: {
-                type: 'string',
-                description: 'Wallet address to bind the nonce to',
-              },
-            },
-          },
-        },
-      },
-    },
-    responses: {
-      200: {
-        description: 'Nonce string to sign (JSON string body)',
-        content: {
-          'application/json': {
-            schema: { type: 'string' },
-            example: faker.datatype.uuid(),
-          },
-        },
-      },
+    body: { schema: AuthNonceRequestDto },
+    response: {
+      schema: String,
+      options: {},
+      example: '550e8400-e29b-41d4-a716-446655440000',
     },
   })
   @HttpCode(200)
   @Post('/nonce')
-  public nonce(@Body() payload: { address: string }): Promise<string> {
+  public nonce(@Body() payload: AuthNonceRequestDto): Promise<string> {
     return this.authenticator.getNonce(payload.address)
   }
 
-  @Post('/refresh')
-  @OpenAPI({
+  @OpenAPIExtended({
     summary: 'JWT token rotation',
-    parameters: [
-      {
-        in: 'header',
-        name: 'Authorization',
-        schema: {
-          type: 'string',
+    operation: {
+      parameters: [
+        {
+          in: 'header',
+          name: 'Authorization',
+          schema: { type: 'string' },
+          required: true,
         },
-        required: true,
-        description: 'Expired Access Token.',
-      },
-    ],
-    requestBody: {
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            properties: {
-              refreshToken: {
-                type: 'string',
-                description: 'Refresh token issued to a user at login.',
-              },
-            },
-          },
-        },
-      },
-      required: true,
+      ],
     },
-    responses: {
-      200: {
-        description:
-          'Returns updated access and refresh tokens in response headers',
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-            },
-          },
-        },
-        headers: {
-          Authorization: {
-            required: true,
-            schema: {
-              type: 'string',
-            },
-            description: 'contains JWT Access Token',
-          },
-          'Refresh-Token': {
-            required: true,
-            schema: {
-              type: 'string',
-            },
-            description: 'contains JWT Refresh Token',
-          },
-        },
-      },
-    },
+    body: { schema: AuthRefreshTokenDto },
+    response: authSessionJsonHeadersResponse,
   })
+  @Post('/refresh')
   public async refresh(
-    @BodyParam('refreshToken') refreshToken: string,
-    @Res() res: any,
-  ): Promise<Record<string, never>> {
-    const user = await this.authenticator.getUserFromRefreshToken(refreshToken)
+    @Body() body: AuthRefreshTokenDto,
+    @Res() res: express.Response,
+  ): Promise<express.Response> {
+    const user = await this.authenticator.getUserFromRefreshToken(
+      body.refreshToken,
+    )
     const tokens = this.authenticator.getTokens(user)
 
     res.setHeader('Authorization', tokens.accessToken)
     res.setHeader('Refresh-Token', tokens.refreshToken)
 
-    return res.send()
+    res.end()
+    return res
   }
 
-  @OpenAPI({
+  @OpenAPIExtended({
     summary: 'Current user from JWT',
-    description:
-      'Pass `Authorization: <accessToken>`. Returns user profile when valid; behavior when missing/invalid depends on `getUserFromJwtToken`.',
-    parameters: [
-      {
-        in: 'header',
-        name: 'Authorization',
-        required: false,
-        schema: { type: 'string' },
-        description: 'JWT access token',
-      },
-    ],
-    responses: {
-      200: {
-        description: 'User entity (search + me groups) or null',
-        content: {
-          'application/json': {
-            schema: { type: 'object', nullable: true },
-          },
-        },
-      },
-    },
+    optionalAuthorizationHeader: true,
+    response: { schema: User, transformGroups: ['search', 'me'] },
   })
   @Get('/status')
-  @ExtendedResponseSchema(User)
-  @ResponseClassTransformOptions({ groups: ['search', 'me'] })
   public async status(@Req() req: express.Request): Promise<User | null> {
     const token = req.headers.authorization as string
     const user = await this.authenticator.getUserFromJwtToken(token)

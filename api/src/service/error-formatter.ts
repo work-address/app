@@ -1,26 +1,30 @@
 import { ValidationError } from 'class-validator'
 
 export class ErrorFormatter {
-  public static format(error: any): {
+  public static format(error: unknown): {
     name: string
     message: string
-    errors?: any
+    errors?: unknown
   } {
+    const src = error as Error & {
+      errors?: unknown[]
+      violations?: ValidationError[]
+    }
     const errorFormatted: {
       message: string
       name: string
-      errors?: any[]
+      errors?: unknown[]
     } = {
-      message: error.message || error.name,
-      name: error.name || 'Error',
+      message: src.message || src.name,
+      name: src.name || 'Error',
     }
 
-    if (error.errors && error.errors.length > 0) {
-      errorFormatted.errors = error.errors
+    if (src.errors && src.errors.length > 0) {
+      errorFormatted.errors = src.errors
     }
 
-    if (error.violations && error.violations.length > 0) {
-      errorFormatted.errors = error.violations.map((e: ValidationError) => {
+    if (src.violations && src.violations.length > 0) {
+      errorFormatted.errors = src.violations.map((e: ValidationError) => {
         return {
           value: e.value,
           property: e.property,

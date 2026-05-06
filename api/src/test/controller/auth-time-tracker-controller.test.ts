@@ -1,15 +1,22 @@
 import { expect } from 'chai'
+import axios from 'axios'
+import faker from 'faker'
 import { suite, test } from '@testdeck/mocha'
 
-import { UserRepository } from '@/repository/user-repository'
+import {
+  authTimeTrackerControllerTimeTrackerConnect,
+  authTimeTrackerControllerTimeTrackerLogin,
+  authTimeTrackerControllerTimeTrackerNonceGenerate,
+  authTimeTrackerControllerTimeTrackerNonceGet,
+} from '@app/api-client'
+
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { RedisClient } from '@/service/redis-client'
 import { AuthenticatorTimeTracker } from '@/service/auth/authenticator-time-tracker'
-import { EAuthTimeTrackerState } from '@/interface/auth'
+import { EAuthTimeTrackerState } from '@/model/auth'
 
 @suite()
 export class AuthTimeTrackerControllerTest extends BaseControllerTest {
-  protected userRepository: UserRepository
   protected redisClient: RedisClient
   protected authenticatorTimeTracker: AuthenticatorTimeTracker
 
@@ -25,12 +32,10 @@ export class AuthTimeTrackerControllerTest extends BaseControllerTest {
   @test()
   async timeTrackerNonceGenerate() {
     const ip = '127.0.0.1'
-    const res = await this.http.request({
-      url: `${this.url}/api/auth/timeTracker/nonce`,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const client = this.apiClient()
+    const res = await authTimeTrackerControllerTimeTrackerNonceGenerate({
+      client,
+      throwOnError: true,
     })
 
     const nonce = res.data.nonce as string
@@ -39,12 +44,18 @@ export class AuthTimeTrackerControllerTest extends BaseControllerTest {
 
     expect(res.status).to.be.equal(200)
     expect(nonce.length).to.be.eq(32)
-    expect(data).to.be.deep.eq({
+    const cached = data as {
+      nonce: string
+      ip: string
+      startAt: number
+      state: EAuthTimeTrackerState
+    }
+    expect(cached).to.deep.include({
       nonce,
       ip,
-      startAt: data.startAt,
       state: EAuthTimeTrackerState.INIT,
     })
+    expect(cached.startAt).to.be.a('number')
   }
 
   @test()
@@ -55,13 +66,14 @@ export class AuthTimeTrackerControllerTest extends BaseControllerTest {
     const user = await this.userFixture.createUser()
     const token = this.authenticator.generateJwtToken(user)
 
-    const res = await this.http.request({
-      url: `${this.url}/api/auth/timeTracker/${nonce.nonce}`,
-      method: 'GET',
+    const client = this.apiClient()
+    const res = await authTimeTrackerControllerTimeTrackerNonceGet({
+      client,
+      path: { nonce: nonce.nonce },
       headers: {
-        'Content-Type': 'application/json',
         Authorization: token,
       },
+      throwOnError: true,
     })
 
     const key = `timetracker:nonce:${nonce.nonce}`
@@ -77,19 +89,16 @@ export class AuthTimeTrackerControllerTest extends BaseControllerTest {
     const nonce =
       await this.authenticatorTimeTracker.timeTrackerNonceGenerate(ip)
 
-    const res = await this.http.request({
-      url: `${this.url}/api/auth/timeTracker/${nonce.nonce}/login`,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      data: {
-        nonce,
-      },
+    const client = this.apiClient()
+    const res = await authTimeTrackerControllerTimeTrackerLogin({
+      client,
+      path: { nonce: nonce.nonce },
+      body: { nonce: nonce.nonce },
+      throwOnError: true,
     })
 
     expect(res.status).to.be.equal(200)
-    expect(res.data).to.be.deep.eq({})
+    this.expectEmptyResponseBody(res.data)
   }
 
   @test()
@@ -102,17 +111,19 @@ export class AuthTimeTrackerControllerTest extends BaseControllerTest {
       await this.authenticatorTimeTracker.timeTrackerNonceGenerate(ip)
     await this.authenticatorTimeTracker.timeTrackerLogin(nonce.nonce, ip)
 
-    const res = await this.http.request({
-      url: `${this.url}/api/auth/timeTracker/${nonce.nonce}/connect`,
-      method: 'POST',
+    const client = this.apiClient()
+    const res = await authTimeTrackerControllerTimeTrackerConnect({
+      client,
+      path: { nonce: nonce.nonce },
+      body: { nonce: nonce.nonce },
       headers: {
-        'Content-Type': 'application/json',
         Authorization: token,
       },
+      throwOnError: true,
     })
 
     expect(res.status).to.be.equal(200)
-    expect(res.data).to.be.deep.eq({})
+    this.expectEmptyResponseBody(res.data)
   }
 
   @test()
@@ -129,12 +140,11 @@ export class AuthTimeTrackerControllerTest extends BaseControllerTest {
       ip,
     )
 
-    const res = await this.http.request({
-      url: `${this.url}/api/auth/timeTracker/${nonce.nonce}`,
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-      },
+    const client = this.apiClient()
+    const res = await authTimeTrackerControllerTimeTrackerNonceGet({
+      client,
+      path: { nonce: nonce.nonce },
+      throwOnError: true,
     })
 
     expect(res.status).to.be.equal(200)
@@ -142,5 +152,75 @@ export class AuthTimeTrackerControllerTest extends BaseControllerTest {
     expect(res.data.state).to.be.eq(EAuthTimeTrackerState.CONNECTED)
     expect(res.data.ip).to.be.eq(ip)
     expect(res.data).to.have.property('jwt')
+  }
+
+  @test()
+  async timeTrackerLogin_unknownNonce() {
+    const client = this.apiClient()
+    const unknownNonce = faker.datatype.uuid()
+
+    let error: unknown
+
+    try {
+      await authTimeTrackerControllerTimeTrackerLogin({
+        client,
+        path: { nonce: unknownNonce },
+        body: { nonce: unknownNonce },
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
+    }
+
+    if (!axios.isAxiosError(error)) throw error
+    expect(error).to.be.ok
+    expect(error.response?.status).to.be.equal(401)
+    expect(String(error.response?.data?.message ?? '')).to.match(/nonce/i)
+  }
+
+  @test()
+  async timeTrackerNonceGet_unknownNonce() {
+    const client = this.apiClient()
+    let error: unknown
+
+    try {
+      await authTimeTrackerControllerTimeTrackerNonceGet({
+        client,
+        path: { nonce: faker.datatype.uuid() },
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
+    }
+
+    if (!axios.isAxiosError(error)) throw error
+    expect(error).to.be.ok
+    expect(error.response?.status).to.be.equal(401)
+    expect(String(error.response?.data?.message ?? '')).to.match(/nonce/i)
+  }
+
+  @test()
+  async timeTrackerConnect_requiresAuthorization() {
+    const ip = '127.0.0.1'
+    const nonce =
+      await this.authenticatorTimeTracker.timeTrackerNonceGenerate(ip)
+    await this.authenticatorTimeTracker.timeTrackerLogin(nonce.nonce, ip)
+
+    let error: unknown
+
+    try {
+      await authTimeTrackerControllerTimeTrackerConnect({
+        client: this.apiClient(),
+        path: { nonce: nonce.nonce },
+        body: { nonce: nonce.nonce },
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
+    }
+
+    if (!axios.isAxiosError(error)) throw error
+    expect(error).to.be.ok
+    expect(error.response?.status).to.be.equal(401)
   }
 }

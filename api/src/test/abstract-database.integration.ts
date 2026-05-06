@@ -6,7 +6,7 @@ import { AppConfig } from '@/app/app-config'
 import { DbConnector } from '@/connector/db-connector'
 import { AppContainer } from '@/app/app-container'
 import { UserFixture } from '@/test/fixture/user-fixture'
-import { IConfigParameters } from '@/interface/config'
+import { IConfigParameters } from '@/model/config'
 import { Faker } from '@/service/faker'
 
 export class AbstractDatabaseIntegration {

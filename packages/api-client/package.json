@@ -1,0 +1,20 @@
+{
+  "name": "@app/api-client",
+  "version": "0.0.1",
+  "private": true,
+  "main": "./src/public-api.ts",
+  "types": "./src/public-api.ts",
+  "scripts": {
+    "precodegen": "pnpm --dir ../../api run export-openapi",
+    "codegen": "tsx ./generate-client.ts"
+  },
+  "dependencies": {
+    "@hey-api/client-axios": "^0.9.1",
+    "@hey-api/openapi-ts": "0.96.0",
+    "axios": "^1.7.9"
+  },
+  "devDependencies": {
+    "@types/node": "^22.13.5",
+    "tsx": "^4.19.4"
+  }
+}

@@ -4,7 +4,7 @@ import * as crypto from 'crypto'
 
 import faker from 'faker'
 
-import { IConfigParameters } from '@/interface/config'
+import { IConfigParameters } from '@/model/config'
 
 @injectable()
 export class Signer {

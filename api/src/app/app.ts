@@ -15,7 +15,7 @@ import { OpenApi } from '@/service/open-api'
 import { HelpController } from '@/controller/help-controller'
 import { ErrorHandler } from '@/middleware/error-handler'
 import { AppConfig } from '@/app/app-config'
-import { IConfigParameters } from '@/interface/config'
+import { IConfigParameters } from '@/model/config'
 
 import { AuthController } from '@/controller/auth-controller'
 import { ValidateRoles } from '@/middleware/validate-roles'
@@ -82,7 +82,11 @@ export class App {
 
     this.express.use(
       bodyParser.json({
-        verify: (req: any, _res, buf) => {
+        verify: (
+          req: express.Request & { rawBuffer?: string },
+          _res: express.Response,
+          buf: Buffer,
+        ) => {
           req.rawBuffer = buf.toString()
         },
         limit: '30mb',

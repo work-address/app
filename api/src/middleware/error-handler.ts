@@ -10,12 +10,18 @@ import { ErrorFormatter } from '@/service/error-formatter'
 @Middleware({ type: 'after' })
 export class ErrorHandler implements ExpressErrorMiddlewareInterface {
   error(
-    error: any,
+    error: unknown,
     _request: express.Request,
     response: express.Response,
-    _next: (err: any) => any,
+    _next: express.NextFunction,
   ): void {
-    const httpCode: number = error.httpCode || error.response?.status || 500
+    const err = error as {
+      httpCode?: number
+      response?: { status?: number }
+      message?: string
+      name?: string
+    }
+    const httpCode: number = err.httpCode || err.response?.status || 500
 
     const errorFormatted = ErrorFormatter.format(error)
 
@@ -25,7 +31,7 @@ export class ErrorHandler implements ExpressErrorMiddlewareInterface {
     response.send(errorFormatted)
   }
 
-  private captureSentry(httpCode: number, error: any) {
+  private captureSentry(httpCode: number, error: unknown) {
     const isWarning = httpCode === 400 || httpCode === 401
 
     if (isWarning) {

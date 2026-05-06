@@ -1,5 +1,5 @@
 import { Connection, ConnectionOptions, getConnectionManager } from 'typeorm'
-import { IConfigParameters } from '@/interface/config'
+import { IConfigParameters } from '@/model/config'
 
 export class DbConnector {
   protected params: IConfigParameters
@@ -31,6 +31,8 @@ export class DbConnector {
         migrationsDir: `${directory}/migration`,
         subscribersDir: `${directory}/subscriber`,
       },
+      synchronize: this.env === 'test',
+      dropSchema: this.env === 'test',
     }
 
     return manager.create(connectionConfig).connect()

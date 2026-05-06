@@ -1,5 +1,5 @@
 import { injectable } from 'inversify'
-import { ILogger } from '@/interface/logging'
+import { ILogger } from '@/model/logging'
 import { WinstonClient } from '@/service/winston-client'
 
 @injectable()
@@ -10,19 +10,19 @@ export class Logger implements ILogger {
     this.logger = new WinstonClient()
   }
 
-  public error(message: string, object?: any): void {
+  public error(message: string, object?: unknown): void {
     this.logger.client.error(message, object)
   }
 
-  public info(message: string, object?: any): void {
+  public info(message: string, object?: unknown): void {
     this.logger.client.info(message, object)
   }
 
-  public debug(message: string, object?: any): void {
+  public debug(message: string, object?: unknown): void {
     this.logger.client.debug(message, object)
   }
 
-  public warn(message: string, object?: any): void {
+  public warn(message: string, object?: unknown): void {
     this.logger.client.warn(message, object)
   }
 }

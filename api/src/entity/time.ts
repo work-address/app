@@ -5,7 +5,7 @@ import { JSONSchema } from 'class-validator-jsonschema'
 
 import { AbstractBaseEntity } from '@/entity/abstract-base-entity'
 import { Project } from '@/entity/project'
-import { ITime } from '@/interface/time'
+import { ITime } from '@/model/time'
 import {
   IsArray,
   IsDate,

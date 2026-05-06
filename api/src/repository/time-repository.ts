@@ -6,12 +6,13 @@ import { AbstractRepositoryTemplate } from '@/repository/abstract-repository-tem
 import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
-import { EProjectState } from '@/interface/project'
+import { EProjectState } from '@/model/project'
 import { SelectQueryBuilder } from 'typeorm'
-import { ISearch, ISearchTime } from '@/interface/search'
-import { ITimeTotals } from '@/interface/time'
+import { ISearch } from '@/model/dto/search'
+import { ITimeTotals } from '@/model/time'
 import { Calc } from '@/service/calc'
 import AccessException from '@/exception/access-exception'
+import { TimeSearchDto } from '@/model/dto/time'
 
 @injectable()
 export class TimeRepository extends AbstractRepositoryTemplate<Time> {
@@ -83,7 +84,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
   }
 
   public findAndCountPersonal(
-    search: ISearchTime,
+    search: TimeSearchDto,
     user: User,
   ): Promise<[Time[], number]> {
     const s = _.assign(
@@ -115,6 +116,82 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
           qb.andWhere('project.id = :projectId', {
             projectId: s.filter.projectId,
           })
+        }
+        if ('fromAt' in s.filter) {
+          qb.andWhere('time.fromAt >= :fromAt', {
+            fromAt: s.filter.fromAt,
+          })
+        }
+        if ('toAt' in s.filter) {
+          qb.andWhere('time.toAt <= :toAt', {
+            toAt: s.filter.toAt,
+          })
+        }
+        if ('note' in s.filter) {
+          qb.andWhere('time.note ILIKE :note', { note: `%${s.filter.note}%` })
+        }
+        if ('screenshot' in s.filter) {
+          qb.andWhere('time.screenshot ILIKE :screenshot', {
+            screenshot: `%${s.filter.screenshot}%`,
+          })
+        }
+        if ('keyboardKeysFrom' in s.filter) {
+          qb.andWhere('time.keyboardKeys >= :keyboardKeysFrom', {
+            keyboardKeysFrom: s.filter.keyboardKeysFrom,
+          })
+        }
+        if ('keyboardKeysTo' in s.filter) {
+          qb.andWhere('time.keyboardKeys <= :keyboardKeysTo', {
+            keyboardKeysTo: s.filter.keyboardKeysTo,
+          })
+        }
+        if ('minutesActiveFrom' in s.filter) {
+          qb.andWhere('time.minutesActive >= :minutesActiveFrom', {
+            minutesActiveFrom: s.filter.minutesActiveFrom,
+          })
+        }
+        if ('minutesActiveTo' in s.filter) {
+          qb.andWhere('time.minutesActive <= :minutesActiveTo', {
+            minutesActiveTo: s.filter.minutesActiveTo,
+          })
+        }
+        if ('mouseKeysFrom' in s.filter) {
+          qb.andWhere('time.mouseKeys >= :mouseKeysFrom', {
+            mouseKeysFrom: s.filter.mouseKeysFrom,
+          })
+        }
+        if ('mouseKeysTo' in s.filter) {
+          qb.andWhere('time.mouseKeys <= :mouseKeysTo', {
+            mouseKeysTo: s.filter.mouseKeysTo,
+          })
+        }
+        if ('mouseDistanceFrom' in s.filter) {
+          qb.andWhere('time.mouseDistance >= :mouseDistanceFrom', {
+            mouseDistanceFrom: s.filter.mouseDistanceFrom,
+          })
+        }
+        if ('mouseDistanceTo' in s.filter) {
+          qb.andWhere('time.mouseDistance <= :mouseDistanceTo', {
+            mouseDistanceTo: s.filter.mouseDistanceTo,
+          })
+        }
+        if ('withScreenshots' in s.filter) {
+          if (s.filter.withScreenshots) {
+            qb.andWhere('time.screenshot IS NOT NULL')
+            qb.andWhere("time.screenshot != ''")
+          } else {
+            qb.andWhere("(time.screenshot IS NULL OR time.screenshot = '')")
+          }
+        }
+        if ('withProcesses' in s.filter) {
+          if (s.filter.withProcesses) {
+            qb.andWhere('time.processes IS NOT NULL')
+            qb.andWhere("time.processes::text != '[]'")
+          } else {
+            qb.andWhere(
+              "(time.processes IS NULL OR time.processes::text = '[]')",
+            )
+          }
         }
       })
       .orderBy(sort)

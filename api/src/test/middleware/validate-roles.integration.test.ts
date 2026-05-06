@@ -6,7 +6,7 @@ import { Action } from 'routing-controllers'
 import { UserFixture } from '@/test/fixture/user-fixture'
 import { Authenticator } from '@/service/auth/authenticator'
 import { ValidateRoles } from '@/middleware/validate-roles'
-import { EUserRole } from '@/interface/user'
+import { EUserRole } from '@/model/user'
 import { AbstractDatabaseIntegration } from '@/test/abstract-database.integration'
 
 @suite()

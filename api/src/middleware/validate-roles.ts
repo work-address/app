@@ -1,10 +1,10 @@
 import { Action } from 'routing-controllers'
 
 import { Authenticator } from '@/service/auth/authenticator'
+import { EUserRole } from '@/model/user'
 import { AppContainer } from '@/app/app-container'
 
 export const ValidateRoles = async (action: Action, roles: string[] = []) => {
-  console
   const authenticator: Authenticator =
     AppContainer.getContainer().get('Authenticator')
   const token = action.request.headers.authorization as string
@@ -16,8 +16,8 @@ export const ValidateRoles = async (action: Action, roles: string[] = []) => {
     isValid = true
   }
 
-  roles.forEach((r: any) => {
-    if (user.roles.indexOf(r) > -1) {
+  roles.forEach((r: string) => {
+    if (user.roles.includes(r as EUserRole)) {
       isValid = true
     }
   })

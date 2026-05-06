@@ -3,7 +3,7 @@ import faker from 'faker'
 import * as web3 from 'web3'
 
 import { User } from '@/entity/user'
-import { EUserRole } from '@/interface/user'
+import { EUserRole } from '@/model/user'
 
 import { UserRepository } from '@/repository/user-repository'
 import { Signer } from '@/service/auth/signer'

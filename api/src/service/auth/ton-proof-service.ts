@@ -11,7 +11,7 @@ import {
 import { sign } from 'tweetnacl'
 
 import { tryParsePublicKey } from '@/service/auth/ton-wallets'
-import { IAuthTonPayload } from '@/interface/auth'
+import { IAuthTonPayload } from '@/model/auth'
 
 @injectable()
 export class TonProofService {

@@ -3,13 +3,19 @@ import * as faker from 'faker'
 import { JSONSchema } from 'class-validator-jsonschema'
 import { Exclude, Expose } from 'class-transformer'
 
-import { IsOptional, IsString, Validate } from 'class-validator'
+import {
+  IsArray,
+  IsEnum,
+  IsOptional,
+  IsString,
+  Validate,
+} from 'class-validator'
 import { AbstractBaseEntity } from '@/entity/abstract-base-entity'
-import { EmailOrPhoneConstraint } from '@/validator/constraint/email-or-phone-constraint'
-import { PhoneConstraint } from '@/validator/constraint/phone-constraint'
-import { EmailConstraint } from '@/validator/constraint/email-constraint'
-import { EUserRole } from '@/interface/user'
-import { IUser } from '@/interface/user'
+import { EmailOrPhoneConstraint } from '@/entity/constraint/email-or-phone-constraint'
+import { PhoneConstraint } from '@/entity/constraint/phone-constraint'
+import { EmailConstraint } from '@/entity/constraint/email-constraint'
+import { EUserRole } from '@/model/user'
+import { IUser } from '@/model/user'
 import { Project } from '@/entity/project'
 
 // TODO: add profile visibility flag, so user can hide their profile from the public
@@ -52,24 +58,28 @@ export class User extends AbstractBaseEntity implements IUser {
   @IsOptional()
   @Index({ unique: true })
   phone: string
+
+  // Professional Information
+  @Expose({ groups: ['search', 'edit'] })
+  @Column('text', { nullable: true })
+  @IsString()
+  @IsOptional()
+  title: string
   @Expose({ groups: ['search', 'edit'] })
   @Column('text', { nullable: true })
   @IsString()
   @IsOptional()
   company: string
-
   @Expose({ groups: ['search', 'edit'] })
   @Column('text', { nullable: true })
   @IsString()
   @IsOptional()
   bio: string
-
   @Expose({ groups: ['search', 'create', 'edit'] })
   @Column('decimal', { precision: 6, scale: 2, default: 0, nullable: true })
   @IsString()
   @IsOptional()
   price: number
-
   @Expose({ groups: ['search', 'edit'] })
   @Column('text', { nullable: true })
   @IsString()
@@ -112,42 +122,18 @@ export class User extends AbstractBaseEntity implements IUser {
   @IsOptional()
   whatsapp: string
 
-  // Address
+  // Location
   @Expose({ groups: ['search', 'edit'] })
   @Column('text', { nullable: true })
   @IsString()
   @IsOptional()
-  lat: string
-  @Expose({ groups: ['search', 'edit'] })
-  @Column('text', { nullable: true })
-  @IsString()
-  @IsOptional()
-  lng: string
-  @Expose({ groups: ['search', 'edit'] })
-  @Column('text', { nullable: true })
-  @IsString()
-  @IsOptional()
-  address1: string
-  @Expose({ groups: ['search', 'edit'] })
-  @Column('text', { nullable: true })
-  @IsString()
-  @IsOptional()
-  address2: string
-  @Expose({ groups: ['search', 'edit'] })
-  @Column('text', { nullable: true })
-  @IsString()
-  @IsOptional()
-  postalCode: string
+  tz: string
   @Expose({ groups: ['search', 'edit'] })
   @Column('text', { nullable: true })
   @IsString()
   @IsOptional()
   city: string
-  @Expose({ groups: ['search', 'edit'] })
-  @Column('text', { nullable: true })
-  @IsString()
-  @IsOptional()
-  region: string
+
   @Expose({ groups: ['search', 'edit'] })
   @Column('text', { nullable: true })
   @IsString()
@@ -156,13 +142,10 @@ export class User extends AbstractBaseEntity implements IUser {
 
   @OneToMany(() => Project, (project) => project.user)
   projects: Project[]
-
-  @Expose({ groups: ['search', 'edit'] })
-  @Column('text', { nullable: true })
-  @IsString()
-  @IsOptional()
-  tz: string
   @Expose({ groups: ['search', 'edit'] })
   @Column('text', { array: true })
+  @IsArray()
+  @IsEnum(EUserRole, { each: true })
+  @IsOptional()
   roles: EUserRole[] = []
 }

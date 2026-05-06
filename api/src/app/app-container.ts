@@ -1,6 +1,6 @@
 import { Container } from 'inversify'
 
-import { IConfigParameters } from '@/interface/config'
+import { IConfigParameters } from '@/model/config'
 
 import { Http } from '@/service/http'
 import { OpenApi } from '@/service/open-api'

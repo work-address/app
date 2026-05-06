@@ -4,12 +4,20 @@ import { suite, test } from '@testdeck/mocha'
 import moment from 'moment'
 import fs from 'fs'
 
+import {
+  timeControllerCreateOrUpdateMany,
+  timeControllerDelete,
+} from '@app/api-client'
+import type { TimeCreateDto as ApiTimeCreateDto } from '@app/api-client'
+
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { ProjectManager } from '@/service/project-manager'
 import { TimeRepository } from '@/repository/time-repository'
-import { TimeCreateDto } from '@/validator/dto/time-create-dto'
+import { TimeCreateDto } from '@/model/dto/time'
 import { In } from 'typeorm'
 import { join } from 'path'
+import { EProjectState } from '@/model/project'
+import axios from 'axios'
 
 @suite
 export class TimeControllerCrudTest extends BaseControllerTest {
@@ -31,16 +39,16 @@ export class TimeControllerCrudTest extends BaseControllerTest {
 
     // console.log(stream.length)
 
-    const res = await this.http.request({
-      url: `${this.url}/api/time`,
-      method: 'POST',
+    const client = this.apiClient()
+    const res = await timeControllerCreateOrUpdateMany({
+      client,
       headers: {
         'Content-Type': 'application/json',
         // Authorization: this.authenticator.getTokens(user).accessToken,
         Authorization:
           'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjBhZmRjZGYzLTQyZmYtNGEzNS05MWZhLWVkOGE1Mzc2YzFlYyIsImFkZHJlc3MiOiJVUUJLWFJrakpFc0toRnA3WFlvcF9XVkxXaXA2QXpIT1dYNUVXNWpkSTZ0QUpRWkoiLCJlbWFpbE9yUGhvbmUiOm51bGwsImlhdCI6MTc2NTE4NzEwOSwiZXhwIjoxNzY2OTE1MTA5fQ.AtXIVuwaBs-1iABXAHKHbfcIRuLWj5Rp0Dgog5Ja7RU',
       },
-      data: [
+      body: [
         {
           fromIndex: 1000,
           toIndex: 1001,
@@ -62,7 +70,8 @@ export class TimeControllerCrudTest extends BaseControllerTest {
             },
           ],
         },
-      ],
+      ] as ApiTimeCreateDto[],
+      throwOnError: true,
     })
 
     console.log(res.data)
@@ -134,14 +143,14 @@ export class TimeControllerCrudTest extends BaseControllerTest {
       },
     ]
 
-    const res = await this.http.request({
-      url: `${this.url}/api/time`,
-      method: 'POST',
+    const client = this.apiClient()
+    const res = await timeControllerCreateOrUpdateMany({
+      client,
       headers: {
-        'Content-Type': 'application/json',
         Authorization: this.authenticator.getTokens(user).accessToken,
       },
-      data,
+      body: data as unknown as ApiTimeCreateDto[],
+      throwOnError: true,
     })
 
     console.log('>>>>>', res.data)
@@ -253,15 +262,15 @@ export class TimeControllerCrudTest extends BaseControllerTest {
       },
     ]
 
-    const res = await this.http.request({
-      url: `${this.url}/api/time`,
-      method: 'POST',
+    const client = this.apiClient()
+    const res = await timeControllerCreateOrUpdateMany({
+      client,
       headers: {
-        'Content-Type': 'application/json',
         Authorization:
           'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjBhZmRjZGYzLTQyZmYtNGEzNS05MWZhLWVkOGE1Mzc2YzFlYyIsImFkZHJlc3MiOiJVUUJLWFJrakpFc0toRnA3WFlvcF9XVkxXaXA2QXpIT1dYNUVXNWpkSTZ0QUpRWkoiLCJlbWFpbE9yUGhvbmUiOm51bGwsImlhdCI6MTc2OTQ0ODg4MywiZXhwIjoxNzcxMTc2ODgzfQ.BIc63S3ZqsUkV3nzl6kE5pbaChoZeJtnW2lufuuXx7Y',
       },
-      data,
+      body: data as unknown as ApiTimeCreateDto[],
+      throwOnError: true,
     })
 
     console.log('>>>>>', res.data)
@@ -307,14 +316,14 @@ export class TimeControllerCrudTest extends BaseControllerTest {
       },
     ]
 
-    const res = await this.http.request({
-      url: `${this.url}/api/time`,
-      method: 'POST',
+    const client = this.apiClient()
+    const res = await timeControllerCreateOrUpdateMany({
+      client,
       headers: {
-        'Content-Type': 'application/json',
         Authorization: this.authenticator.getTokens(user).accessToken,
       },
-      data,
+      body: data as unknown as ApiTimeCreateDto[],
+      throwOnError: true,
     })
 
     console.log('>>>>>', res.data)
@@ -352,14 +361,14 @@ export class TimeControllerCrudTest extends BaseControllerTest {
       },
     ]
 
-    const res = await this.http.request({
-      url: `${this.url}/api/time`,
-      method: 'POST',
+    const client = this.apiClient()
+    const res = await timeControllerCreateOrUpdateMany({
+      client,
       headers: {
-        'Content-Type': 'application/json',
         Authorization: this.authenticator.getTokens(user).accessToken,
       },
-      data,
+      body: data as unknown as ApiTimeCreateDto[],
+      throwOnError: true,
     })
 
     expect(res.status).to.be.equal(200)
@@ -390,14 +399,14 @@ export class TimeControllerCrudTest extends BaseControllerTest {
       },
     ]
 
-    const res = await this.http.request({
-      url: `${this.url}/api/time`,
-      method: 'POST',
+    const client = this.apiClient()
+    const res = await timeControllerCreateOrUpdateMany({
+      client,
       headers: {
-        'Content-Type': 'application/json',
         Authorization: this.authenticator.getTokens(user).accessToken,
       },
-      data,
+      body: data as unknown as ApiTimeCreateDto[],
+      throwOnError: true,
     })
 
     expect(res.status).to.be.equal(200)
@@ -496,14 +505,14 @@ export class TimeControllerCrudTest extends BaseControllerTest {
       },
     ]
 
-    const res = await this.http.request({
-      url: `${this.url}/api/time`,
-      method: 'POST',
+    const client = this.apiClient()
+    const res = await timeControllerCreateOrUpdateMany({
+      client,
       headers: {
-        'Content-Type': 'application/json',
         Authorization: this.authenticator.getTokens(user).accessToken,
       },
-      data,
+      body: data as unknown as ApiTimeCreateDto[],
+      throwOnError: true,
     })
 
     const times = await this.timeRepository.findBy({
@@ -515,10 +524,50 @@ export class TimeControllerCrudTest extends BaseControllerTest {
       },
     })
 
+    expect(res.status).to.be.equal(200)
     expect(res.data).to.have.length(3)
     expect(times[0].keyboardKeys).to.eq(200000)
     expect(times[0].project.id).to.eq(projectB.id)
     expect(times[1].keyboardKeys).to.eq(100000)
     expect(times[1].project.id).to.eq(projectA.id)
+  }
+
+  @test()
+  async delete_deniedForNonOwner() {
+    const owner = await this.userFixture.createUser()
+    const other = await this.userFixture.createUser()
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
+    const time = await this.timeFixture.create(
+      project,
+      moment.utc().subtract(60, 'minutes').toDate(),
+      moment.utc().toDate(),
+    )
+
+    let error: unknown
+
+    try {
+      await timeControllerDelete({
+        client: this.apiClient(),
+        path: { id: time.id as never },
+        headers: {
+          Authorization: this.authenticator.getTokens(other).accessToken,
+        },
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
+    }
+
+    if (!axios.isAxiosError(error)) throw error
+    expect(error).to.be.ok
+    expect(error.response?.status).to.be.equal(401)
+
+    const stillThere = await this.timeRepository.findOneBy({
+      where: { id: time.id },
+    })
+    expect(stillThere).to.not.eq(undefined)
   }
 }

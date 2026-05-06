@@ -1,9 +1,10 @@
 import { inject, injectable } from 'inversify'
+import { SelectQueryBuilder } from 'typeorm'
 
 import { User } from '@/entity/user'
-import { ISearchUser } from '@/interface/search'
 import { Filter } from '@/service/filter'
 import { AbstractRepositoryTemplate } from '@/repository/abstract-repository-template'
+import { UserSearchDto } from '@/model/dto/user'
 
 @injectable()
 export class UserRepository extends AbstractRepositoryTemplate<User> {
@@ -17,19 +18,18 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
     return this.saveSingle(user)
   }
 
-  public async findAndCount(search: ISearchUser): Promise<[User[], number]> {
+  public async findAndCount(search: UserSearchDto): Promise<[User[], number]> {
     const sort = this.filter.buildOrderByCondition('user', search)
     const limit = this.filter.buildLimit(search)
 
     return this.getRepo()
       .createQueryBuilder('user')
-      .where((qb: any) => {
+      .where((qb: SelectQueryBuilder<User>) => {
         if (search.filter.id) {
           qb.andWhere('user.id = :id', { id: search.filter.id })
         }
-        if (search.query) {
-          const q = `%${search.query}%`
-          qb.andWhere('(user.email ILIKE :q OR user.phone ILIKE :q)', { q })
+        if (search.filter.role) {
+          qb.andWhere(':role = ANY(user.roles)', { role: search.filter.role })
         }
       })
       .orderBy(sort)

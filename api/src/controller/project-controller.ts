@@ -9,66 +9,50 @@ import {
   Put,
   Req,
   Res,
-  ResponseClassTransformOptions,
 } from 'routing-controllers'
-import { OpenAPI } from 'routing-controllers-openapi'
+import { OpenAPIExtended } from '@/decorator/openapi/openapi-extended'
 import express from 'express'
 import { App } from '@/app/app'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
 import { EntityFromParam } from '@/decorator/entity-from-param'
-import { ExtendedResponseSchema } from '@/decorator/extended-response-schema'
-import { EUserRole } from '@/interface/user'
-import { AbstractController } from '@/controller/abstract-controller'
+import { EUserRole } from '@/model/user'
 import { CurrentUser } from '@/decorator/current-user'
 import { ProjectRepository } from '@/repository/project-repository'
-import { ProjectSearchDto } from '@/validator/dto/project-search-dto'
+import { ProjectSearchDto } from '@/model/dto/project'
 import { ProjectManager } from '@/service/project-manager'
 import AccessException from '@/exception/access-exception'
 import { Authenticator } from '@/service/auth/authenticator'
-import { OpenApi } from '@/service/open-api'
 
+@Authorized([EUserRole.ROLE_USER])
 @JsonController('/project')
-export class ProjectController extends AbstractController {
+export class ProjectController {
   protected authenticator: Authenticator
   protected projectManager: ProjectManager
   protected projectRepository: ProjectRepository
 
   constructor() {
-    super()
-
     this.authenticator = App.container.get('Authenticator')
     this.projectManager = App.container.get('ProjectManager')
     this.projectRepository = App.container.get('ProjectRepository')
   }
 
-  @OpenAPI({
-    summary: 'Search projects owned by the current user',
-    description:
-      '`filter` may include `state`, `projectId` to narrow down owned projects.',
-    parameters: [OpenApi.bearerAuthParameter],
-    requestBody: {
-      required: true,
-      content: {
-        'application/json': {
-          schema: OpenApi.searchRequestBodySchema,
-          example: {
-            filter: { state: 'DRAFT' },
-            sort: { createdAt: 'DESC' },
-            page: 0,
-          },
-        },
+  @OpenAPIExtended({
+    summary: 'Search projects accessible by the current user',
+    searchRequestBody: {
+      example: {
+        filter: { state: 'DRAFT' },
+        sort: { createdAt: 'DESC' },
+        page: 0,
       },
     },
-    responses: {
-      200: OpenApi.paginatedTupleResponse,
+    response: {
+      schema: Project,
+      options: { isPagination: true, serializationGroup: 'search' },
     },
   })
   @Post('/search')
   @HttpCode(200)
-  @Authorized([EUserRole.ROLE_USER])
-  @ExtendedResponseSchema(Project, { isPagination: true })
-  @ResponseClassTransformOptions({ groups: ['search'] })
   public search(
     @CurrentUser() currentUser: User,
     @Body() search: ProjectSearchDto,
@@ -76,41 +60,20 @@ export class ProjectController extends AbstractController {
     return this.projectRepository.findAndCountAccessibleBy(search, currentUser)
   }
 
-  @OpenAPI({
+  @OpenAPIExtended({
     summary: 'Create project',
-    description: 'Creates a project for the current user.',
-    parameters: [OpenApi.bearerAuthParameter],
-    requestBody: {
-      required: true,
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            required: ['title', 'text', 'state'],
-            properties: {
-              title: { type: 'string' },
-              text: { type: 'string' },
-              state: { type: 'string' },
-              trackScreenshots: { type: 'boolean' },
-              trackProcesses: { type: 'boolean' },
-              rateHour: { type: 'number' },
-            },
-          },
-        },
-      },
+    body: {
+      schema: Project,
+      options: { serializationGroup: 'create' },
     },
-    responses: {
-      201: {
-        description: 'Created; `Location` header points to `/api/project/{id}`',
+    response: {
+      schema: {},
+      options: {
+        emptyBody: true,
+        statusCode: 201,
         headers: {
           Location: {
             schema: { type: 'string' },
-            description: 'URI of the new project',
-          },
-        },
-        content: {
-          'application/json': {
-            schema: { type: 'object', properties: {} },
           },
         },
       },
@@ -126,8 +89,8 @@ export class ProjectController extends AbstractController {
       transform: { groups: ['create'] },
     })
     data: Project,
-    @Res() res: any,
-  ) {
+    @Res() res: express.Response,
+  ): Promise<express.Response> {
     data.user = currentUser
 
     const project = await this.projectManager.save(data)
@@ -135,79 +98,43 @@ export class ProjectController extends AbstractController {
     res.status(201)
     res.location(`/api/project/${project.id}`)
 
-    return {}
+    res.end()
+    return res
   }
 
-  @OpenAPI({
+  @OpenAPIExtended({
     summary: 'Get project by id',
-    description:
-      'Visibility depends on caller: guest sees public fields; owner sees the full owner view. Optional `Authorization` for authenticated view.',
-    parameters: [
-      {
-        in: 'path',
-        name: 'id',
-        required: true,
-        schema: { type: 'string', format: 'uuid' },
-      },
-      {
-        in: 'header',
-        name: 'Authorization',
-        required: false,
-        schema: { type: 'string' },
-        description: 'Optional JWT for expanded view',
-      },
-    ],
-    responses: {
-      200: {
-        description: 'Project (search serialization group)',
-        content: {
-          'application/json': {
-            schema: { type: 'object' },
-          },
-        },
-      },
+    optionalAuthorizationHeader: true,
+    response: {
+      schema: Project,
+      options: { serializationGroup: 'search' },
     },
   })
-  @HttpCode(200)
   @Get('/:id')
-  @ExtendedResponseSchema(Project)
-  @ResponseClassTransformOptions({ groups: ['search'] })
+  @HttpCode(200)
   public async read(
-    @EntityFromParam('id') project: Project,
+    @EntityFromParam({ paramName: 'id' }) project: Project,
     @Req() req: express.Request,
   ): Promise<Project | undefined> {
     const token = req.headers['authorization'] as string
     const user = await this.authenticator.getUserFromJwtToken(token)
 
+    if (!user) {
+      return undefined
+    }
+
     return await this.projectManager.findProjectCheckAccess(project, user)
   }
 
-  @OpenAPI({
+  @OpenAPIExtended({
     summary: 'Update project',
-    description:
-      'Owner only. Active/closed contract projects may be restricted from editing.',
-    parameters: [
-      OpenApi.bearerAuthParameter,
-      {
-        in: 'path',
-        name: 'id',
-        required: true,
-        schema: { type: 'string', format: 'uuid' },
-      },
-    ],
-    requestBody: {
-      required: true,
-      content: {
-        'application/json': {
-          schema: {
-            type: 'object',
-            description: 'Fields to update (edit validation group)',
-          },
-        },
-      },
+    body: {
+      schema: Project,
+      options: { serializationGroup: 'edit' },
     },
-    responses: {
-      200: OpenApi.emptyObjectResponse,
+    response: {
+      schema: {},
+      options: { emptyBody: true },
     },
   })
   @Put('/:id')
@@ -215,79 +142,67 @@ export class ProjectController extends AbstractController {
   @Authorized([EUserRole.ROLE_USER])
   public async edit(
     @CurrentUser() currentUser: User,
-    @EntityFromParam('id') project: Project,
+    @EntityFromParam({ paramName: 'id' }) project: Project,
     @Body({ validate: { groups: ['edit'] }, transform: { groups: ['edit'] } })
     data: Project,
-  ) {
+    @Res() res: express.Response,
+  ): Promise<express.Response> {
     if (currentUser.id !== project.user.id) {
       throw new AccessException()
     }
 
     await this.projectManager.editAndSave(project, data)
 
-    return {}
+    res.end()
+    return res
   }
 
-  @OpenAPI({
+  @OpenAPIExtended({
     summary: 'Close project',
-    description: 'Owner only. Sets state to inactive.',
-    parameters: [
-      OpenApi.bearerAuthParameter,
-      {
-        in: 'path',
-        name: 'id',
-        required: true,
-        schema: { type: 'string', format: 'uuid' },
-      },
-    ],
-    responses: {
-      200: OpenApi.emptyObjectResponse,
+    response: {
+      schema: {},
+      options: { emptyBody: true },
     },
   })
   @Post('/:id/close')
   @HttpCode(200)
   @Authorized([EUserRole.ROLE_USER])
-  @ResponseClassTransformOptions({ groups: ['search'] })
   public async close(
-    @EntityFromParam('id') project: Project,
+    @EntityFromParam({ paramName: 'id' }) project: Project,
     @CurrentUser() currentUser: User,
-  ) {
+    @Res() res: express.Response,
+  ): Promise<express.Response> {
     if (currentUser.id !== project.user.id) {
       throw new AccessException()
     }
 
     await this.projectManager.close(project)
 
-    return {}
+    res.end()
+    return res
   }
 
-  @OpenAPI({
+  @OpenAPIExtended({
     summary: 'Soft-delete project',
-    description: 'Owner only (enforced in repository).',
-    parameters: [
-      OpenApi.bearerAuthParameter,
-      {
-        in: 'path',
-        name: 'id',
-        required: true,
-        schema: { type: 'string', format: 'uuid' },
-      },
-    ],
-    responses: {
-      200: OpenApi.emptyObjectResponse,
+    response: {
+      schema: {},
+      options: { emptyBody: true },
     },
   })
   @Delete('/:id')
   @HttpCode(200)
+  @Authorized([EUserRole.ROLE_USER])
   public async delete(
     @CurrentUser() currentUser: User,
-    @EntityFromParam('id') project: Project,
-  ) {
+    @EntityFromParam({ paramName: 'id' }) project: Project,
+    @Res() res: express.Response,
+  ): Promise<express.Response> {
     await this.projectRepository.softDelete({
       id: project.id,
       user: currentUser,
     })
 
-    return {}
+    res.end()
+    return res
   }
 }

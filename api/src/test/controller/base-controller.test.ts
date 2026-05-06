@@ -1,12 +1,15 @@
+import { expect } from 'chai'
 import nock from 'nock'
 import { Container } from 'inversify'
 import { timeout } from '@testdeck/mocha'
+
+import { createClient, createConfig } from '@app/api-client'
 
 import { App } from '@/app/app'
 import { AppConfig } from '@/app/app-config'
 import { AppContainer } from '@/app/app-container'
 import { createAppTest } from '@/app/app-bootstrap'
-import { IConfigParameters } from '@/interface/config'
+import { IConfigParameters } from '@/model/config'
 import { Http } from '@/service/http'
 import { Faker } from '@/service/faker'
 
@@ -47,7 +50,17 @@ export class BaseControllerTest {
     this.invoiceFixture = this.container.get('InvoiceFixture')
 
     this.url = `http://${this.parameters.host}:${this.parameters.port}`
-    // this.url = `https://address.work:4000`;
+  }
+
+  protected apiClient() {
+    return createClient(createConfig({ baseURL: this.url }))
+  }
+
+  protected expectEmptyResponseBody(data: unknown, message?: string): void {
+    expect(
+      data === null || data === '' || data === undefined,
+      message ?? 'response body should be empty',
+    ).to.be.true
   }
 
   @timeout(10000)

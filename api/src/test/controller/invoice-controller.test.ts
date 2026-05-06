@@ -1,15 +1,18 @@
 import { expect } from 'chai'
-import { skip, suite, test } from '@testdeck/mocha'
+import axios from 'axios'
+import faker from 'faker'
+import { suite, test } from '@testdeck/mocha'
+
+import { invoiceControllerRead } from '@app/api-client'
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
-import { EProjectState } from '@/interface/project'
-import { EInvoiceState } from '@/interface/invoice'
+import { EProjectState } from '@/model/project'
+import { EInvoiceState } from '@/model/invoice'
 
-@suite
-@skip
+@suite()
 export class InvoiceControllerTest extends BaseControllerTest {
-  @test
-  async getUser() {
+  @test()
+  async read_invoiceOwnedByCurrentUser() {
     const owner = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
       owner,
@@ -21,22 +24,42 @@ export class InvoiceControllerTest extends BaseControllerTest {
       EInvoiceState.PAID,
     )
 
-    const res = await this.http.request({
-      url: `${this.url}/api/invoice/${invoice.id}`,
-      method: 'GET',
+    const client = this.apiClient()
+    const res = await invoiceControllerRead({
+      client,
+      path: { id: invoice.id as never },
       headers: {
-        'Content-Type': 'application/json',
         Authorization: this.authenticator.getTokens(owner).accessToken,
       },
+      throwOnError: true,
     })
 
     expect(res.status).to.be.equal(200)
-    expect(res.data.id).to.be.equal(invoice.id)
-    expect(res.data.project.id).to.be.equal(project.id)
+    const responseInvoice = res.data as {
+      id?: string
+      amount?: number
+      state?: EInvoiceState
+      fromAt?: string
+      toAt?: string
+      project?: { id?: string; title?: string; state?: EProjectState }
+    }
+    expect(responseInvoice.id).to.be.equal(invoice.id)
+    expect(responseInvoice.amount).to.be.equal(invoice.amount)
+    expect(responseInvoice.state).to.be.equal(invoice.state)
+    expect(
+      new Date(responseInvoice.fromAt as string).toISOString(),
+    ).to.be.equal(invoice.fromAt.toISOString())
+    expect(new Date(responseInvoice.toAt as string).toISOString()).to.be.equal(
+      invoice.toAt.toISOString(),
+    )
+    const responseProject = responseInvoice.project ?? {}
+    expect(responseProject.id).to.be.equal(project.id)
+    expect(responseProject.title).to.be.equal(project.title)
+    expect(responseProject.state).to.be.equal(project.state)
   }
 
-  @test
-  async getOwner() {
+  @test()
+  async read_requiresAuthorization() {
     const owner = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
       owner,
@@ -48,17 +71,78 @@ export class InvoiceControllerTest extends BaseControllerTest {
       EInvoiceState.PAID,
     )
 
-    const res = await this.http.request({
-      url: `${this.url}/api/invoice/${invoice.id}`,
-      method: 'GET',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: this.authenticator.getTokens(owner).accessToken,
-      },
-    })
+    let error: unknown
 
-    expect(res.status).to.be.equal(200)
-    expect(res.data.id).to.be.equal(invoice.id)
-    expect(res.data.project.id).to.be.equal(project.id)
+    try {
+      await invoiceControllerRead({
+        client: this.apiClient(),
+        path: { id: invoice.id as never },
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
+    }
+
+    if (!axios.isAxiosError(error)) throw error
+    expect(error).to.be.ok
+    expect(error.response?.status).to.be.equal(401)
+  }
+
+  @test()
+  async read_deniedForNonOwner() {
+    const owner = await this.userFixture.createUser()
+    const other = await this.userFixture.createUser()
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
+    const invoice = await this.invoiceFixture.create(
+      project,
+      50,
+      EInvoiceState.PAID,
+    )
+
+    let error: unknown
+
+    try {
+      await invoiceControllerRead({
+        client: this.apiClient(),
+        path: { id: invoice.id as never },
+        headers: {
+          Authorization: this.authenticator.getTokens(other).accessToken,
+        },
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
+    }
+
+    if (!axios.isAxiosError(error)) throw error
+    expect(error).to.be.ok
+    expect(error.response?.status).to.be.equal(401)
+  }
+
+  @test()
+  async read_unknownInvoice_notFound() {
+    const owner = await this.userFixture.createUser()
+
+    let error: unknown
+
+    try {
+      await invoiceControllerRead({
+        client: this.apiClient(),
+        path: { id: faker.datatype.uuid() as never },
+        headers: {
+          Authorization: this.authenticator.getTokens(owner).accessToken,
+        },
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
+    }
+
+    if (!axios.isAxiosError(error)) throw error
+    expect(error).to.be.ok
+    expect(error.response?.status).to.be.equal(404)
   }
 }

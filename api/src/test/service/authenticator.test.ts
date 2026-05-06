@@ -32,7 +32,8 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     const token = this.authenticator.generateJwtToken(user)
     const userFromToken = await this.authenticator.getUserFromJwtToken(token)
 
-    expect(userFromToken.id).to.be.equal(user.id)
+    expect(userFromToken).to.not.eq(null)
+    expect(userFromToken!.id).to.be.equal(user.id)
   }
 
   @test()
@@ -50,7 +51,8 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
 
     const userFromToken = await this.authenticator.getUserFromJwtToken(token)
 
-    expect(userFromToken.id).to.be.equal(user.id)
+    expect(userFromToken).to.not.eq(null)
+    expect(userFromToken!.id).to.be.equal(user.id)
   }
 
   @test()
@@ -99,9 +101,9 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
 
     try {
       await this.authenticator.getUserFromRefreshToken(refreshToken)
-    } catch (err: any) {
-      expect(err.name).to.be.eq('AuthenticationException')
-      expect(err.message).to.be.eq(
+    } catch (err: unknown) {
+      expect((err as Error).name).to.be.eq('AuthenticationException')
+      expect((err as Error).message).to.be.eq(
         'Authentication error: Refresh token is not valid',
       )
     }
@@ -125,8 +127,8 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
 
     try {
       await this.authenticator.getUserFromRefreshToken(refreshToken)
-    } catch (err: any) {
-      expect(err.name).to.be.eq('TokenExpiredError')
+    } catch (err: unknown) {
+      expect((err as Error).name).to.be.eq('TokenExpiredError')
     }
   }
 
@@ -142,9 +144,11 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
 
     try {
       await this.authenticator.getUserFromRefreshToken(refreshToken)
-    } catch (err: any) {
-      expect(err.name).to.be.eq('AuthenticationException')
-      expect(err.message).to.be.eq('Authentication error: User does not exist')
+    } catch (err: unknown) {
+      expect((err as Error).name).to.be.eq('AuthenticationException')
+      expect((err as Error).message).to.be.eq(
+        'Authentication error: User does not exist',
+      )
     }
   }
 
@@ -161,33 +165,35 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
 
   @test()
   getEmailFromJwtOrThrowError_errorMalformed() {
-    let error
+    let error: Error | undefined
     const token = faker.datatype.uuid()
 
     try {
       this.authenticator.getEmailOrPhoneOrThrowError(token)
-    } catch (e: any) {
-      error = e
+    } catch (e: unknown) {
+      error = e as Error
     }
 
-    expect(error.name).to.be.eq('JsonWebTokenError')
-    expect(error.message).to.be.eq('jwt malformed')
+    expect(error).to.be.ok
+    expect(error!.name).to.be.eq('JsonWebTokenError')
+    expect(error!.message).to.be.eq('jwt malformed')
   }
 
   @test.skip()
   getEmailFromJwtOrThrowError_errorExpired() {
-    let error
+    let error: Error | undefined
     const oldToken =
       'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbE9yUGhvbmUiOiJPbGdhNTBAeWFob28uY29tIiwiaWF0IjoxNzAzNTg5NzE4LCJleHAiOjE3MDM2MDA1MTh9.Y2De_m7g_ZLmugywlDseKLmPPnJqek_CJl1VIfJe-2o'
 
     try {
       this.authenticator.getEmailOrPhoneOrThrowError(oldToken)
-    } catch (e: any) {
-      error = e
+    } catch (e: unknown) {
+      error = e as Error
     }
 
-    expect(error.name).to.be.eq('TokenExpiredError')
-    expect(error.message).to.be.eq('jwt expired')
+    expect(error).to.be.ok
+    expect(error!.name).to.be.eq('TokenExpiredError')
+    expect(error!.message).to.be.eq('jwt expired')
   }
 
   @test()
@@ -237,16 +243,17 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     const nonce = await this.authenticator.getNonce(accountA.address)
     const signature = web3.eth.accounts.sign(nonce, accountB.privateKey)
 
-    let err = null
+    let err: Error | null = null
 
     try {
       await this.authenticator.loginEth(signature.signature, accountB.address)
-    } catch (e: any) {
-      err = e
+    } catch (e: unknown) {
+      err = e as Error
     }
 
-    expect(err.name).to.be.equal('AuthenticationException')
-    expect(err.message).to.be.equal(
+    expect(err).to.not.eq(null)
+    expect(err!.name).to.be.equal('AuthenticationException')
+    expect(err!.message).to.be.equal(
       'Authentication error: Nonce is not available or expired',
     )
   }

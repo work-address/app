@@ -6,10 +6,10 @@ import { JSONSchema } from 'class-validator-jsonschema'
 import { User } from '@/entity/user'
 import { AbstractBaseEntity } from '@/entity/abstract-base-entity'
 import { IsBoolean, IsNotEmpty, IsOptional, IsString } from 'class-validator'
-import { EProjectState } from '@/interface/project'
+import { EProjectState } from '@/model/project'
 import { Invoice } from '@/entity/invoice'
 import { Time } from '@/entity/time'
-import { IProject } from '@/interface/project'
+import { IProject } from '@/model/project'
 
 @JSONSchema({
   example: {
@@ -41,7 +41,7 @@ export class Project extends AbstractBaseEntity implements IProject {
   @Expose({ groups: ['search', 'create', 'edit'] })
   @Column('text', { nullable: true })
   @IsString()
-  text: any
+  text: string
 
   @Expose({ groups: ['search', 'create', 'edit'] })
   @Column('decimal', { precision: 6, scale: 2, default: 0, nullable: true })
@@ -61,7 +61,6 @@ export class Project extends AbstractBaseEntity implements IProject {
   user: User
 
   // TODO: list of users who have access to the project
-
   @Expose({ groups: ['search'] })
   @Type(() => Invoice)
   @OneToMany(() => Invoice, (invoice) => invoice.project)

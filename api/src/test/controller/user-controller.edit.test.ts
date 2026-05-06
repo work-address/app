@@ -1,10 +1,14 @@
 import { expect } from 'chai'
 import faker from 'faker'
+import axios from 'axios'
 import { suite, test } from '@testdeck/mocha'
+
+import { userControllerEdit } from '@app/api-client'
+import type { UserEdit } from '@app/api-client'
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { UserRepository } from '@/repository/user-repository'
-import { EUserRole } from '@/interface/user'
+import { EUserRole } from '@/model/user'
 
 @suite()
 export class UserControllerEditTest extends BaseControllerTest {
@@ -17,39 +21,84 @@ export class UserControllerEditTest extends BaseControllerTest {
   }
 
   @test()
+  async edit_requiresAuthorization() {
+    let error: unknown
+
+    try {
+      await userControllerEdit({
+        client: this.apiClient(),
+        body: {
+          bio: 'x',
+          tz: 'UTC',
+          skills: 'y',
+          price: 1,
+          phone: this.faker.phone(),
+          roles: [EUserRole.ROLE_USER],
+        } as unknown as UserEdit,
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
+    }
+
+    if (!axios.isAxiosError(error)) throw error
+    expect(error).to.be.ok
+    expect(error.response?.status).to.be.equal(401)
+  }
+
+  @test()
   async edit() {
     const user = await this.userFixture.createUser()
 
     const data = {
       bio: faker.datatype.number(),
+      title: faker.name.jobTitle(),
+      company: faker.company.companyName(),
       roles: [EUserRole.ROLE_USER],
       tz: 'America/Los_Angeles',
       phone: this.faker.phone(),
       skills: faker.datatype.uuid(),
       price: faker.datatype.number(50),
+      facebook: faker.internet.url(),
+      linkedIn: faker.internet.url(),
+      twitter: `@${faker.internet.userName().toLowerCase()}`,
+      instagram: `@${faker.internet.userName().toLowerCase()}`,
+      youtube: faker.internet.url(),
+      telegram: `@${faker.internet.userName().toLowerCase()}`,
+      city: faker.address.city(),
+      country: faker.address.country(),
     }
 
-    const config = {
-      url: `${this.url}/api/user`,
-      method: 'PUT',
+    const client = this.apiClient()
+    const res = await userControllerEdit({
+      client,
       headers: {
-        'Content-Type': 'application/json',
         Authorization: this.authenticator.getTokens(user).accessToken,
       },
-      data,
-    }
-    const res = await this.http.request(config)
+      body: data as unknown as UserEdit,
+      throwOnError: true,
+    })
     const updated = await this.userRepository.findByEmailPhoneOrFail(data.phone)
 
     expect(res.status).to.be.equal(204)
-    expect(res.data).to.be.empty
+    this.expectEmptyResponseBody(res.data)
 
     expect(updated.bio).to.be.equal(data.bio.toString())
+    expect(updated.title).to.be.equal(data.title)
+    expect(updated.company).to.be.equal(data.company)
     expect(updated.roles).to.be.deep.equal([EUserRole.ROLE_USER])
     expect(updated.tz).to.be.eq(data.tz)
-    expect(updated.price).to.be.not.eq(0)
-    expect(updated.skills).to.be.not.eq('')
+    expect(parseFloat(updated.price as unknown as string)).to.be.eq(data.price)
+    expect(updated.skills).to.be.eq(data.skills)
     expect(updated.phone).to.be.eq(data.phone)
+    expect(updated.facebook).to.be.eq(data.facebook)
+    expect(updated.linkedIn).to.be.eq(data.linkedIn)
+    expect(updated.twitter).to.be.eq(data.twitter)
+    expect(updated.instagram).to.be.eq(data.instagram)
+    expect(updated.youtube).to.be.eq(data.youtube)
+    expect(updated.telegram).to.be.eq(data.telegram)
+    expect(updated.city).to.be.eq(data.city)
+    expect(updated.country).to.be.eq(data.country)
   }
 
   @test()
@@ -57,25 +106,28 @@ export class UserControllerEditTest extends BaseControllerTest {
     const user = await this.userFixture.createUser()
 
     const data = {
-      storeName: faker.company.companyName(),
+      email: 'not-a-valid-email',
     }
 
-    const config = {
-      url: `${this.url}/api/user`,
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: this.authenticator.getTokens(user).accessToken,
-      },
-      data,
-    }
+    let error: unknown
 
     try {
-      await this.http.request(config)
-    } catch (e: any) {
-      expect(e.response.status).to.be.equal(400)
-      expect(e.response.data.errors).to.have.length(1)
+      await userControllerEdit({
+        client: this.apiClient(),
+        headers: {
+          Authorization: this.authenticator.getTokens(user).accessToken,
+        },
+        body: data as unknown as UserEdit,
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
     }
+
+    if (!axios.isAxiosError(error)) throw error
+    expect(error).to.be.ok
+    expect(error.response?.status).to.be.equal(400)
+    expect(error.response?.data.errors).to.have.length(1)
   }
 
   @test()
@@ -86,19 +138,18 @@ export class UserControllerEditTest extends BaseControllerTest {
       email: faker.internet.email(),
     })
 
-    const config = {
-      url: `${this.url}/api/user`,
-      method: 'PUT',
+    const client = this.apiClient()
+    const res = await userControllerEdit({
+      client,
       headers: {
-        'Content-Type': 'application/json',
         Authorization: this.authenticator.getTokens(user).accessToken,
       },
-      data,
-    }
+      body: data as unknown as UserEdit,
+      throwOnError: true,
+    })
 
-    const res = await this.http.request(config)
-
-    expect(res.data).to.be.empty
+    expect(res.status).to.be.equal(204)
+    this.expectEmptyResponseBody(res.data)
   }
 
   @test()
@@ -110,29 +161,28 @@ export class UserControllerEditTest extends BaseControllerTest {
 
     userB.phone = userA.phone
 
-    const config = {
-      url: `${this.url}/api/user`,
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: this.authenticator.getTokens(userB).accessToken,
-      },
-      data: userB,
-    }
-
-    let err = null
+    let error: unknown
 
     try {
-      await this.http.request(config)
-    } catch (e: any) {
-      err = e
+      await userControllerEdit({
+        client: this.apiClient(),
+        headers: {
+          Authorization: this.authenticator.getTokens(userB).accessToken,
+        },
+        body: userB as unknown as UserEdit,
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
     }
 
-    expect(err.response.status).to.be.equal(400)
-    expect(err.response.data.name).to.be.equal('BadRequestError')
-    expect(err.response.data.errors[0].constraints.PhoneConstraint).to.be.equal(
-      'Phone number already exists.',
-    )
+    if (!axios.isAxiosError(error)) throw error
+    expect(error).to.be.ok
+    expect(error.response?.status).to.be.equal(400)
+    expect(error.response?.data.name).to.be.equal('BadRequestError')
+    expect(
+      error.response?.data.errors?.[0].constraints.PhoneConstraint,
+    ).to.be.equal('Phone number already exists.')
   }
 
   @test()
@@ -144,28 +194,27 @@ export class UserControllerEditTest extends BaseControllerTest {
 
     userB.email = userA.email
 
-    const config = {
-      url: `${this.url}/api/user`,
-      method: 'PUT',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: this.authenticator.getTokens(userB).accessToken,
-      },
-      data: userB,
-    }
-
-    let err = null
+    let error: unknown
 
     try {
-      await this.http.request(config)
-    } catch (e: any) {
-      err = e
+      await userControllerEdit({
+        client: this.apiClient(),
+        headers: {
+          Authorization: this.authenticator.getTokens(userB).accessToken,
+        },
+        body: userB as unknown as UserEdit,
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
     }
 
-    expect(err.response.status).to.be.equal(400)
-    expect(err.response.data.name).to.be.equal('BadRequestError')
-    expect(err.response.data.errors[0].constraints.EmailConstraint).to.be.equal(
-      'Email address is already taken',
-    )
+    if (!axios.isAxiosError(error)) throw error
+    expect(error).to.be.ok
+    expect(error.response?.status).to.be.equal(400)
+    expect(error.response?.data.name).to.be.equal('BadRequestError')
+    expect(
+      error.response?.data.errors?.[0].constraints.EmailConstraint,
+    ).to.be.equal('Email address is already taken')
   }
 }

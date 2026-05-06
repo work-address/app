@@ -4,9 +4,10 @@ import { inject, injectable } from 'inversify'
 import { Filter } from '@/service/filter'
 import { AbstractRepositoryTemplate } from '@/repository/abstract-repository-template'
 import { Invoice } from '@/entity/invoice'
-import { ISearch } from '@/interface/search'
+
 import { User } from '@/entity/user'
 import AccessException from '@/exception/access-exception'
+import { InvoiceSearchDto } from '@/model/dto/invoice'
 
 @injectable()
 export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
@@ -36,7 +37,10 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
     return p
   }
 
-  public async findAndCount(search: ISearch): Promise<[Invoice[], number]> {
+  public async findAndCount(
+    search: InvoiceSearchDto,
+    user: User,
+  ): Promise<[Invoice[], number]> {
     const s = _.assign(
       {
         filter: {},
@@ -52,7 +56,43 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
 
     return this.getRepo()
       .createQueryBuilder('invoice')
+      .innerJoinAndSelect('invoice.project', 'project')
+      .innerJoin('project.user', 'user')
       .select()
+      .where((qb) => {
+        qb.andWhere('user.id = :userId', { userId: user.id })
+
+        if ('projectId' in s.filter) {
+          qb.andWhere('project.id = :projectId', {
+            projectId: s.filter.projectId,
+          })
+        }
+        if ('fromAt' in s.filter) {
+          qb.andWhere('invoice.fromAt >= :fromAt', {
+            fromAt: s.filter.fromAt,
+          })
+        }
+        if ('toAt' in s.filter) {
+          qb.andWhere('invoice.toAt <= :toAt', {
+            toAt: s.filter.toAt,
+          })
+        }
+        if ('amountFrom' in s.filter) {
+          qb.andWhere('invoice.amount >= :amountFrom', {
+            amountFrom: s.filter.amountFrom,
+          })
+        }
+        if ('amountTo' in s.filter) {
+          qb.andWhere('invoice.amount <= :amountTo', {
+            amountTo: s.filter.amountTo,
+          })
+        }
+        if ('state' in s.filter) {
+          qb.andWhere('invoice.state = :state', {
+            state: s.filter.state,
+          })
+        }
+      })
       .orderBy(sort)
       .skip(limit * s.page)
       .take(limit)

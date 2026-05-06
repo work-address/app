@@ -20,7 +20,7 @@ COPY packages/ packages/
 COPY api/package.json ./api/
 
 # Install api subtree only (root lockfile is authoritative)
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile --filter "./api..."
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile --filter "./api..." --filter "@app/api-client..."
 
 # Copy the rest of the application source code into the container
 COPY api/ ./api/

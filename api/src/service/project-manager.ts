@@ -2,7 +2,7 @@ import { inject, injectable } from 'inversify'
 
 import { Project } from '@/entity/project'
 import { ProjectRepository } from '@/repository/project-repository'
-import { EProjectState } from '@/interface/project'
+import { EProjectState } from '@/model/project'
 import { User } from '@/entity/user'
 import moment from 'moment'
 import { Time } from '@/entity/time'

@@ -1,10 +1,10 @@
 import {
   DeepPartial,
-  DeleteResult,
   EntityTarget,
   FindConditions,
   FindManyOptions,
   FindOneOptions,
+  ObjectLiteral,
   getRepository,
   SaveOptions,
   SelectQueryBuilder,
@@ -12,16 +12,12 @@ import {
 } from 'typeorm'
 
 import { Repository } from 'typeorm/repository/Repository'
-import { ISearch } from '@/interface/search'
+import { ISearch } from '@/model/dto/search'
 import { Filter } from '@/service/filter'
 import ConstraintsValidationException from '@/exception/constraints-validation-exception'
 import { validate } from 'class-validator'
 
-export interface ObjectLiteral {
-  [key: string]: any
-}
-
-export type TRelations = { [key: string]: boolean | any }
+export type TRelations = Record<string, unknown>
 export type TFindOptions = TRelations
 export type TSelectOptions = TRelations
 
@@ -58,28 +54,16 @@ export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
     return this.getRepo().findOneOrFail(id, options)
   }
 
-  public saveSingle<T>(entity: T, options?: SaveOptions): Promise<T> {
-    return this.getRepo().save(entity as any, options)
+  public saveSingle(entity: T, options?: SaveOptions): Promise<T> {
+    return this.getRepo().save(entity as DeepPartial<T>, options)
   }
 
-  public saveMany<T>(entities: T[], options?: SaveOptions): Promise<T[]> {
-    return this.getRepo().save(entities as any, options)
-  }
-
-  public createEntity(entityLike: DeepPartial<T>): T {
-    return this.getRepo().create(entityLike)
+  public saveMany(entities: T[], options?: SaveOptions): Promise<T[]> {
+    return this.getRepo().save(entities as DeepPartial<T>[], options)
   }
 
   public async remove(entity: T): Promise<T> {
     return await this.getRepo().remove(entity)
-  }
-
-  public removeById(id: string): Promise<DeleteResult> {
-    return this.getRepo().delete(id)
-  }
-
-  public async delete(conditions: FindConditions<T>) {
-    return await this.getRepo().delete(conditions)
   }
 
   public async softDelete(conditions: FindConditions<T>) {
@@ -94,7 +78,7 @@ export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
     findOptions: TFindOptions,
     selectOptions: null | TSelectOptions = null,
     relations: null | TRelations = null,
-    searchOptions: ISearch | any = null,
+    searchOptions: ISearch | null = null,
   ) {
     const mainAliasName: string = this.target.name.toLowerCase()
     const query = this.getRepo()
@@ -146,9 +130,13 @@ export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
     Object.keys(relations).forEach((key: string) => {
       query.leftJoinAndSelect(`${parentKey}.${key}`, `${parentKey}_${key}`)
 
-      if (typeof relations[key] === 'object') {
+      if (
+        typeof relations[key] === 'object' &&
+        relations[key] !== null &&
+        !Array.isArray(relations[key])
+      ) {
         AbstractRepositoryTemplate.buildRelations(
-          relations[key],
+          relations[key] as TRelations,
           `${parentKey}_${key}`,
           query,
         )
@@ -164,22 +152,18 @@ export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
     Object.keys(findOptions).forEach((key: string) => {
       if (
         typeof findOptions[key] === 'object' &&
+        findOptions[key] !== null &&
         !Array.isArray(findOptions[key])
       ) {
         return AbstractRepositoryTemplate.buildFindOptions(
-          findOptions[key],
+          findOptions[key] as TFindOptions,
           `${parentKey}_${key}`,
           query,
         )
       }
 
-      if (key === 'query') {
-        const value: string = findOptions[key]
-        query.andWhere(`${parentKey}.${key} ILIKE :${key}`, {
-          [key]: `%${value}%`,
-        })
-      } else if (Array.isArray(findOptions[key])) {
-        const values: number[] | string[] = findOptions[key]
+      if (Array.isArray(findOptions[key])) {
+        const values = findOptions[key] as number[] | string[]
         query.andWhere(`${parentKey}.${key} IN (:...${key})`, { [key]: values })
       } else {
         query.andWhere(`${parentKey}.${key} = :${key}`, {
@@ -233,9 +217,17 @@ export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
 
     selectOptionsKeys.forEach((key: string) => {
       if (typeof selectOptions[key] === 'object') {
+        const nestedRelations =
+          relations &&
+          typeof relations[key] === 'object' &&
+          relations[key] !== null &&
+          !Array.isArray(relations[key])
+            ? (relations[key] as TRelations)
+            : null
+
         AbstractRepositoryTemplate.buildSelectOptions(
-          selectOptions[key],
-          relations ? relations[key] : null,
+          selectOptions[key] as TSelectOptions,
+          nestedRelations,
           `${parentKey}_${key}`,
           result,
         )

@@ -18,7 +18,7 @@ COPY tsconfig.base.json ./
 COPY packages/ packages/
 COPY api/package.json ./api/
 
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --filter "./api..."
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --filter "./api..." --filter "@app/api-client..."
 
 COPY api/ ./api/
 

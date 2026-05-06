@@ -4,6 +4,7 @@ import {
   HttpCode,
   Get,
   Req,
+  Res,
   Authorized,
   Param,
 } from 'routing-controllers'
@@ -15,10 +16,12 @@ import { OpenAPI } from 'routing-controllers-openapi'
 import { CurrentUser } from '@/decorator/current-user'
 import { User } from '@/entity/user'
 import { App } from '@/app/app'
-import { EUserRole } from '@/interface/user'
-import { AuthenticatorTimeTracker } from '@/service/auth/authenticator-time-tracker'
-import { EAuthTimeTrackerState } from '@/interface/auth'
-import { OpenApi } from '@/service/open-api'
+import { EUserRole } from '@/model/user'
+import {
+  AuthenticatorTimeTracker,
+  type TimeTrackerNonceCache,
+} from '@/service/auth/authenticator-time-tracker'
+import { EAuthTimeTrackerState } from '@/model/auth'
 
 @JsonController('/auth/timeTracker')
 export class AuthTimeTrackerController {
@@ -32,11 +35,8 @@ export class AuthTimeTrackerController {
 
   @OpenAPI({
     summary: 'Start time-tracker auth: create nonce',
-    description:
-      'First step for desktop time-tracker flow. Uses client IP from the request. No JSON body required.',
     responses: {
       200: {
-        description: 'Nonce payload for the tracker to poll',
         content: {
           'application/json': {
             schema: {
@@ -44,7 +44,7 @@ export class AuthTimeTrackerController {
               required: ['nonce', 'startAt', 'state', 'ip'],
               properties: {
                 nonce: { type: 'string' },
-                startAt: { type: 'number', description: 'Unix timestamp (ms)' },
+                startAt: { type: 'number' },
                 state: { type: 'string' },
                 ip: { type: 'string' },
               },
@@ -69,16 +69,6 @@ export class AuthTimeTrackerController {
 
   @OpenAPI({
     summary: 'Time-tracker: complete login for nonce',
-    description:
-      'Called by the tracker app after website connect flow; identifies session by path `nonce`.',
-    parameters: [
-      {
-        in: 'path',
-        name: 'nonce',
-        required: true,
-        schema: { type: 'string' },
-      },
-    ],
     requestBody: {
       content: {
         'application/json': {
@@ -89,7 +79,6 @@ export class AuthTimeTrackerController {
             properties: {
               nonce: {
                 type: 'string',
-                description: 'Nonce from POST /auth/timeTracker/nonce response',
               },
             },
           },
@@ -99,15 +88,7 @@ export class AuthTimeTrackerController {
     },
     responses: {
       200: {
-        description: 'Empty object on success',
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              properties: {},
-            },
-          },
-        },
+        description: 'Success',
       },
     },
   })
@@ -116,25 +97,16 @@ export class AuthTimeTrackerController {
   public async timeTrackerLogin(
     @Param('nonce') nonce: string,
     @Req() req: express.Request,
-  ): Promise<Record<string, never>> {
+    @Res() res: express.Response,
+  ): Promise<express.Response> {
     await this.authenticatorTimeTracker.timeTrackerLogin(nonce, req.ip ?? '')
 
-    return {}
+    res.end()
+    return res
   }
 
   @OpenAPI({
     summary: 'Browser: link logged-in user to time-tracker session',
-    description:
-      'Authenticated website user connects a tracker session identified by `nonce` (path). Body may repeat nonce for clarity.',
-    parameters: [
-      OpenApi.bearerAuthParameter,
-      {
-        in: 'path',
-        name: 'nonce',
-        required: true,
-        schema: { type: 'string' },
-      },
-    ],
     requestBody: {
       content: {
         'application/json': {
@@ -145,7 +117,6 @@ export class AuthTimeTrackerController {
             properties: {
               nonce: {
                 type: 'string',
-                description: 'Nonce passed from timetracker app via URL param ',
               },
             },
           },
@@ -155,15 +126,7 @@ export class AuthTimeTrackerController {
     },
     responses: {
       200: {
-        description: 'Empty object on success',
-        content: {
-          'application/json': {
-            schema: {
-              type: 'object',
-              properties: {},
-            },
-          },
-        },
+        description: 'Success',
       },
     },
   })
@@ -174,30 +137,22 @@ export class AuthTimeTrackerController {
     @CurrentUser() currentUser: User,
     @Param('nonce') nonce: string,
     @Req() req: express.Request,
-  ): Promise<Record<string, never>> {
+    @Res() res: express.Response,
+  ): Promise<express.Response> {
     await this.authenticatorTimeTracker.timeTrackerConnect(
       nonce,
       currentUser,
       req.ip ?? '',
     )
 
-    return {}
+    res.end()
+    return res
   }
 
   @OpenAPI({
     summary: 'Poll time-tracker auth state by nonce',
-    description: 'GET with `nonce` in path; optional IP check on server.',
-    parameters: [
-      {
-        in: 'path',
-        name: 'nonce',
-        required: true,
-        schema: { type: 'string' },
-      },
-    ],
     responses: {
       200: {
-        description: 'State for the nonce; includes `jwt` when CONNECTED',
         content: {
           'application/json': {
             examples: {
@@ -232,17 +187,12 @@ export class AuthTimeTrackerController {
               properties: {
                 nonce: {
                   type: 'string',
-                  description:
-                    'Nonce used in the auth process by the timetracker or website',
                 },
                 ip: {
                   type: 'string',
-                  description:
-                    'IP address of a user provided the timetracker app or website',
                 },
                 state: {
                   type: 'string',
-                  description: 'Authentication state',
                 },
                 jwt: {
                   type: 'object',
@@ -263,7 +213,7 @@ export class AuthTimeTrackerController {
   public async timeTrackerNonceGet(
     @Param('nonce') nonce: string,
     @Req() req: express.Request,
-  ): Promise<Record<string, never>> {
+  ): Promise<TimeTrackerNonceCache> {
     return this.authenticatorTimeTracker.timeTrackerNonceGet(
       nonce,
       req.ip ?? '',

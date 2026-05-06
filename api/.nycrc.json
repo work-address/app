@@ -1,6 +1,7 @@
 {
   "all": true,
   "check-coverage": true,
+  "lines": 87,
   "exclude": [
     "**/*.d.ts",
     "src/decorator-options/**",

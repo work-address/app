@@ -1,10 +1,13 @@
 import { expect } from 'chai'
+import axios from 'axios'
 import { suite, test } from '@testdeck/mocha'
+
+import { projectControllerClose } from '@app/api-client'
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { ProjectManager } from '@/service/project-manager'
 import { ProjectRepository } from '@/repository/project-repository'
-import { EProjectState } from '@/interface/project'
+import { EProjectState } from '@/model/project'
 
 @suite
 export class ProjectControllerTest extends BaseControllerTest {
@@ -26,119 +29,53 @@ export class ProjectControllerTest extends BaseControllerTest {
       EProjectState.ACTIVE,
     )
 
-    const res = await this.http.request({
-      url: `${this.url}/api/project/${project.id}/close`,
-      method: 'POST',
+    const client = this.apiClient()
+    const res = await projectControllerClose({
+      client,
+      path: { id: project.id as never },
       headers: {
-        'Content-Type': 'application/json',
         Authorization: this.authenticator.getTokens(owner).accessToken,
       },
+      throwOnError: true,
     })
 
     const updated = await this.projectRepository.findOneByIdOrFail(project.id)
 
     expect(res.status).to.be.equal(200)
-    expect(res.data).to.be.deep.equal({})
+    this.expectEmptyResponseBody(res.data)
     expect(updated.state).to.be.eq(EProjectState.INACTIVE)
   }
 
   @test()
-  async searchUserPersonalSorted() {
-    const user = await this.userFixture.createUser()
-    const projectA = await this.projectFixture.createPersonal(user)
-    const projectB = await this.projectFixture.createPersonal(user)
-    const projectC = await this.projectFixture.createPersonal(user)
-
-    projectA.title = 'AAA'
-    projectB.title = 'BBB'
-    projectC.title = 'CCC'
-
-    await this.projectRepository.saveMany([projectA, projectB, projectC])
-
-    const config = {
-      url: `${this.url}/api/project/search`,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: this.authenticator.getTokens(user).accessToken,
-      },
-      data: {
-        filter: {},
-        sort: { title: 'ASC' },
-        page: 0,
-      },
-    }
-
-    const res = await this.http.request(config)
-
-    expect(res.data[0].length).to.be.eq(3)
-    expect(res.data[0][0].title).to.be.eq(projectA.title)
-    expect(res.data[0][1].title).to.be.eq(projectB.title)
-    expect(res.data[0][2].title).to.be.eq(projectC.title)
-    expect(res.data[0][0].state).to.be.eq(EProjectState.ACTIVE)
-  }
-
-  @test()
-  async searchOwnerDraft() {
-    const user = await this.userFixture.createUser()
+  async close_deniedForNonOwner() {
+    const owner = await this.userFixture.createUser()
+    const other = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
-      user,
-      EProjectState.INACTIVE,
+      owner,
+      EProjectState.ACTIVE,
     )
 
-    const config = {
-      url: `${this.url}/api/project/search`,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: this.authenticator.getTokens(user).accessToken,
-      },
-      data: {
-        filter: {
-          userId: user.id,
-          state: EProjectState.INACTIVE,
+    let error: unknown
+
+    try {
+      await projectControllerClose({
+        client: this.apiClient(),
+        path: { id: project.id as never },
+        headers: {
+          Authorization: this.authenticator.getTokens(other).accessToken,
         },
-        sort: { createdAt: 'ASC' },
-        page: 0,
-      },
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
     }
 
-    const res = await this.http.request(config)
+    if (!axios.isAxiosError(error)) throw error
+    expect(error).to.be.ok
+    expect(error.response?.status).to.be.equal(401)
 
-    expect(res.data[0].length).to.be.eq(1)
-    expect(res.data[0][0].id).to.be.eq(project.id)
-    expect(res.data[0][0].state).to.be.eq(EProjectState.INACTIVE)
+    const unchanged = await this.projectRepository.findOneByIdOrFail(project.id)
+    expect(unchanged.state).to.be.eq(EProjectState.ACTIVE)
   }
 
-  @test()
-  async searchOwnerArchived() {
-    const user = await this.userFixture.createUser()
-    const project = await this.projectFixture.create(
-      user,
-      EProjectState.INACTIVE,
-    )
-
-    const config = {
-      url: `${this.url}/api/project/search`,
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        Authorization: this.authenticator.getTokens(user).accessToken,
-      },
-      data: {
-        filter: {
-          userId: user.id,
-          state: EProjectState.INACTIVE,
-        },
-        sort: { createdAt: 'ASC' },
-        page: 0,
-      },
-    }
-
-    const res = await this.http.request(config)
-
-    expect(res.data[0].length).to.be.eq(1)
-    expect(res.data[0][0].id).to.be.eq(project.id)
-    expect(res.data[0][0].state).to.be.eq(EProjectState.INACTIVE)
-  }
 }

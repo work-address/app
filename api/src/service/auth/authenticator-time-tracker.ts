@@ -2,13 +2,35 @@ import { inject, injectable } from 'inversify'
 import moment from 'moment'
 
 import { User } from '@/entity/user'
-import { IConfigParameters } from '@/interface/config'
+import { IConfigParameters } from '@/model/config'
 import TimeTrackerException from '@/exception/time-tracker-exception'
 import { RedisClient } from '@/service/redis-client'
 import { Signer } from '@/service/auth/signer'
 import { Authenticator } from '@/service/auth/authenticator'
-import { EAuthTimeTrackerState } from '@/interface/auth'
+import { EAuthTimeTrackerState, IAuthTokens } from '@/model/auth'
 import { UserRepository } from '@/repository/user-repository'
+
+export type TimeTrackerNonceCache = {
+  ip: string
+  state?: EAuthTimeTrackerState
+  jwt?: IAuthTokens
+}
+
+function timeTrackerDataFromRedis(raw: unknown): TimeTrackerNonceCache | null {
+  if (
+    raw === '' ||
+    raw == null ||
+    typeof raw !== 'object' ||
+    Array.isArray(raw)
+  ) {
+    return null
+  }
+  const o = raw as { ip?: unknown }
+  if (typeof o.ip !== 'string') {
+    return null
+  }
+  return raw as TimeTrackerNonceCache
+}
 
 @injectable()
 export class AuthenticatorTimeTracker {
@@ -33,7 +55,7 @@ export class AuthenticatorTimeTracker {
     const key = `timetracker:nonce:${nonce}`
     const dataExisting = await this.redis.get(key)
 
-    if (dataExisting) {
+    if (dataExisting !== '') {
       throw new TimeTrackerException('The given nonce already persisted')
     }
 
@@ -50,10 +72,15 @@ export class AuthenticatorTimeTracker {
   }
 
   public async timeTrackerLogin(nonce: string, ip: string) {
-    const nonceData = await this.redis.get(`timetracker:nonce:${nonce}`)
+    const nonceParsed = timeTrackerDataFromRedis(
+      await this.redis.get(`timetracker:nonce:${nonce}`),
+    )
+    if (!nonceParsed) {
+      throw new TimeTrackerException('The given nonce is not available')
+    }
     const key = `timetracker:nonce:${nonce}`
 
-    if (nonceData.ip !== ip) {
+    if (nonceParsed.ip !== ip) {
       throw new TimeTrackerException('IP address mismatch')
     }
 
@@ -67,9 +94,14 @@ export class AuthenticatorTimeTracker {
   }
 
   public async timeTrackerConnect(nonce: string, user: User, ip: string) {
-    const loginData = await this.redis.get(`timetracker:nonce:${nonce}`)
+    const loginParsed = timeTrackerDataFromRedis(
+      await this.redis.get(`timetracker:nonce:${nonce}`),
+    )
+    if (!loginParsed) {
+      throw new TimeTrackerException('The given nonce is not available')
+    }
 
-    if (loginData.ip !== ip) {
+    if (loginParsed.ip !== ip) {
       throw new TimeTrackerException('IP address mismatch')
     }
 
@@ -88,7 +120,7 @@ export class AuthenticatorTimeTracker {
 
   public async timeTrackerNonceGet(nonce: string, ip: string) {
     const key = `timetracker:nonce:${nonce}`
-    const data = await this.redis.get(key)
+    const data = timeTrackerDataFromRedis(await this.redis.get(key))
 
     if (!data) {
       throw new TimeTrackerException(

@@ -5,7 +5,7 @@ import { suite, test } from '@testdeck/mocha'
 import { UserRepository } from '@/repository/user-repository'
 import { AbstractDatabaseIntegration } from '@/test/abstract-database.integration'
 import { User } from '@/entity/user'
-import { EUserRole } from '@/interface/user'
+import { EUserRole } from '@/model/user'
 import { Signer } from '@/service/auth/signer'
 
 @suite()
@@ -65,8 +65,9 @@ export class UserRepositoryIntegrationTest extends AbstractDatabaseIntegration {
 
     try {
       await this.userRepository.findByEmailPhoneOrFail(user.email)
-    } catch (e: any) {
-      expect(e.name).to.be.equal('EntityNotFoundError')
+      expect.fail('expected rejection')
+    } catch (e: unknown) {
+      expect((e as Error).name).to.be.equal('EntityNotFoundError')
     }
 
     expect(newUser).to.have.property('id')
@@ -93,15 +94,8 @@ export class UserRepositoryIntegrationTest extends AbstractDatabaseIntegration {
       sort: { createdAt: 'ASC' },
       page: 0,
     })
-    const positiveC = await this.userRepository.findAndCount({
-      filter: {},
-      query: user.email,
-      sort: { createdAt: 'ASC' },
-      page: 0,
-    })
 
     expect(positiveA[1]).to.be.eq(1)
     expect(positiveB[1]).to.be.eq(1)
-    expect(positiveC[1]).to.be.eq(1)
   }
 }

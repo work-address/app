@@ -1,5 +1,6 @@
 import { getMetadataArgsStorage, NotFoundError } from 'routing-controllers'
-import { getConnectionManager } from 'typeorm'
+import { getConnectionManager, EntityTarget } from 'typeorm'
+import 'reflect-metadata'
 
 import {
   AbstractRepositoryTemplate,
@@ -7,18 +8,60 @@ import {
   TSelectOptions,
 } from '@/repository/abstract-repository-template'
 
-export function EntityFromParam(
-  paramName: string,
-  selectOptions: null | TSelectOptions = null,
-  relations: null | TRelations = null,
-) {
+export interface EntityFromParamMetadataItem {
+  entityName: string
+}
+
+export interface EntityFromParamArgs {
+  paramName: string
+  selectOptions?: null | TSelectOptions
+  relations?: null | TRelations
+  lookupField?: string
+}
+
+const ENTITY_FROM_PARAM_OPENAPI_METADATA_KEY =
+  'openapi:entity-from-param:not-found'
+
+export function getEntityFromParamMetadata(
+  object: Object,
+  methodName: string,
+): EntityFromParamMetadataItem[] {
+  return (
+    Reflect.getOwnMetadata(
+      ENTITY_FROM_PARAM_OPENAPI_METADATA_KEY,
+      object,
+      methodName,
+    ) ?? []
+  )
+}
+
+export function EntityFromParam({
+  paramName,
+  selectOptions = null,
+  relations = null,
+  lookupField = 'id',
+}: EntityFromParamArgs) {
   return function (object: Object, methodName: string, index: number) {
-    const reflectedType = (Reflect as any).getMetadata(
+    const paramTypes = Reflect.getMetadata(
       'design:paramtypes',
       object,
       methodName,
-    )[index]
+    ) as unknown
+    if (!Array.isArray(paramTypes)) {
+      throw new Error('Cannot guess type if the parameter')
+    }
+    const reflectedType = paramTypes[index] as
+      | (new (...args: unknown[]) => object)
+      | undefined
     if (!reflectedType) throw new Error('Cannot guess type if the parameter')
+
+    const existingMeta = getEntityFromParamMetadata(object, methodName)
+    Reflect.defineMetadata(
+      ENTITY_FROM_PARAM_OPENAPI_METADATA_KEY,
+      [...existingMeta, { entityName: reflectedType.name || 'Entity' }],
+      object,
+      methodName,
+    )
 
     getMetadataArgsStorage().params.push({
       object: object,
@@ -29,16 +72,23 @@ export function EntityFromParam(
       parse: false,
       required: false,
       transform: (_actionProperties, value) =>
-        entityTransform(value, reflectedType, selectOptions, relations),
+        entityTransform(
+          value,
+          reflectedType,
+          selectOptions,
+          relations,
+          lookupField,
+        ),
     })
   }
 }
 
 async function entityTransform(
-  value: any,
-  target: any,
+  value: unknown,
+  target: EntityTarget<object> & { name?: string },
   selectOptions: null | TSelectOptions = null,
   relations: null | TRelations = null,
+  lookupField: string = 'id',
 ) {
   if (value === null || value === undefined) return Promise.resolve(value)
 
@@ -53,9 +103,9 @@ async function entityTransform(
         target,
         getRepo: () => repository,
       },
-    )({ id: value }, selectOptions, relations)
+    )({ [lookupField]: value }, selectOptions, relations)
   } else {
-    res = await repository.findOne(value)
+    res = await repository.findOne({ [lookupField]: value })
   }
 
   if (!res) {

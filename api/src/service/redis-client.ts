@@ -1,14 +1,14 @@
 import { createClient } from 'redis'
 import { inject, injectable } from 'inversify'
 
-import { IConfigParameters } from '@/interface/config'
+import { IConfigParameters } from '@/model/config'
 
 @injectable()
 export class RedisClient {
   @inject('parameters')
   protected parameters: IConfigParameters
 
-  public async set(key: string, value: any) {
+  public async set(key: string, value: unknown) {
     const client = await this.getConnectedClient()
 
     await client.set(key, JSON.stringify(value))
@@ -17,7 +17,7 @@ export class RedisClient {
 
   public async setWithExpiry(
     key: string,
-    value: any,
+    value: unknown,
     expiryMilliseconds: number,
   ) {
     const client = await this.getConnectedClient()
@@ -26,7 +26,7 @@ export class RedisClient {
     await client.disconnect()
   }
 
-  public async get(key: string): Promise<any | string> {
+  public async get(key: string): Promise<unknown | string> {
     const client = await this.getConnectedClient()
     const value = await client.get(key)
 
