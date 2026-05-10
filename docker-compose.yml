@@ -4,6 +4,8 @@ services:
       context: nginx-proxy
       dockerfile: dockerfile
     image: app-nginx-proxy
+    # Prefer rebuilding from this repo instead of reusing a stale tagged image locally.
+    pull_policy: build
     ports:
       - "8000:8000"
     depends_on:
@@ -17,6 +19,7 @@ services:
       context: .
       dockerfile: web/dockerfile.prod
     image: app-web-prod
+    pull_policy: build
     # ports:
     #   - "3000:3000"
     networks:
@@ -27,7 +30,11 @@ services:
       # Repo root so api/tsconfig.json can extend ../tsconfig.base.json
       context: .
       dockerfile: api/dockerfile.prod
+      args:
+        # Bump visibility of what's running: docker inspect app-api-prod | jq '.[0].Config.Labels'
+        GIT_COMMIT: ${GIT_COMMIT:-unknown}
     image: app-api-prod
+    pull_policy: build
     # ports:
     #   - "4000:4000"
     environment:

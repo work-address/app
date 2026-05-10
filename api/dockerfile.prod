@@ -35,9 +35,14 @@ RUN rm -f tsconfig.tsbuildinfo && pnpm run build
 # =========================================
 
 FROM node:${NODE_VERSION} AS runner
+ARG GIT_COMMIT=unknown
+
+LABEL org.opencontainers.image.revision="${GIT_COMMIT}"
 
 # Match pnpm workspace paths: api deps symlink into /app/node_modules/.pnpm (must not flatten api/node_modules onto root)
 WORKDIR /app/api
+
+ENV NODE_ENV=production
 
 COPY --from=builder /app/api/package.json ./
 COPY --from=builder /app/node_modules /app/node_modules

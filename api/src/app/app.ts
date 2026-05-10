@@ -10,8 +10,6 @@ import { useExpressServer } from 'routing-controllers'
 
 import { AppContainer } from '@/app/app-container'
 import { DbConnector } from '@/connector/db-connector'
-import { OpenApi } from '@/service/open-api'
-
 import { HelpController } from '@/controller/help-controller'
 import { ErrorHandler } from '@/middleware/error-handler'
 import { AppConfig } from '@/app/app-config'
@@ -51,9 +49,6 @@ export class App {
   }
 
   public start() {
-    const openApi = new OpenApi()
-    const spec = openApi.buildSpec()
-
     if (!AppConfig.isLocal()) {
       Sentry.init({
         dsn: this.parameters.sentry,
@@ -97,10 +92,23 @@ export class App {
 
     this.initControllers()
 
+    const swaggerNoStore: express.RequestHandler = (_req, res, next) => {
+      res.setHeader(
+        'Cache-Control',
+        'no-store, no-cache, must-revalidate, private',
+      )
+      next()
+    }
+
+    // Fetch spec from `/api/help/openApi` so docs stay fresh after deploy; embedding via `setup(spec)`
+    // bakes JSON into HTML and is often cached by proxies/CDNs as stale schema.
     this.express.use(
       '/swagger',
+      swaggerNoStore,
       swaggerUiExpress.serve,
-      swaggerUiExpress.setup(spec),
+      swaggerUiExpress.setup(null, {
+        swaggerUrl: '/api/help/openApi',
+      }),
     )
 
     this.listen()

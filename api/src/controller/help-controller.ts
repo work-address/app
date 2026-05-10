@@ -1,4 +1,4 @@
-import { Get, HttpCode, JsonController } from 'routing-controllers'
+import { Get, Header, HttpCode, JsonController } from 'routing-controllers'
 import { OpenAPI } from 'routing-controllers-openapi'
 
 import { App } from '@/app/app'
@@ -15,6 +15,7 @@ export class HelpController {
   @OpenAPI({
     summary: 'OpenAPI 3 specification (JSON)',
   })
+  @Header('Cache-Control', 'no-store, no-cache, must-revalidate, private')
   @HttpCode(200)
   @Get('/openApi')
   public swagger() {
