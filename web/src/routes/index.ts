@@ -10,7 +10,7 @@ type MainRoutes =
   & Route<'/', 'dashboard'>
   & Route<'/sign-in', 'signIn'>
   & Route<'/profile/:walletAddress', 'profile', ProfileRoutes, { walletAddress: string }>
-  & Route<'/help', 'helpCenter'>
+  & Route<'https://address.work/docs', 'docs'>
   & Route<'/time-tracker', 'timeTracker'>
   & Route<'/download', 'download'>
   & Route<'/invoice/:id', 'invoice', NoChildRoutes, IdRouteParams>
@@ -18,7 +18,6 @@ type MainRoutes =
   & Route<'https://facebook.com/:userId', 'facebook', NoChildRoutes, { userId: string }>
   & Route<'https://t.me/:userId', 'telegram', NoChildRoutes, { userId: string }>
   & Route<'https://linkedin.com/in/:userId', 'linkedin', NoChildRoutes, { userId: string }>
-  & Route<'https://address.work/docs', 'docs'>
 
 type ProfileRoutes =
   & Route<'/profile/:walletAddress/edit', 'edit', NoChildRoutes, { walletAddress: string }>
@@ -61,9 +60,10 @@ export const routes: MainRoutes = {
     },
   },
 
-  helpCenter: {
-    schema: '/help',
-    build: () => '/help',
+  docs: {
+    schema: 'https://address.work/docs',
+    build: () => 'https://address.work/docs',
+    target: '_blank',
 
     translateKeyDesktop: 'header.nav.helpCenter',
     translateKeyMobile: 'header.nav.helpCenter',
@@ -137,12 +137,6 @@ export const routes: MainRoutes = {
   invoice: {
     schema: '/invoice/:id',
     build: ({ id }) => `/invoice/${id}`,
-  },
-
-  docs: {
-    schema: 'https://address.work/docs',
-    build: () => 'https://address.work/docs',
-    target: '_blank',
   },
 }
 

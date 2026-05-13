@@ -23,7 +23,7 @@ export const ProjectsNotFound = () => {
       <Desc>{t('dashboard.page.projectsNotFound.description')}</Desc>
 
       <Button
-        onClick={() => navigate(routes.helpCenter.build())}
+        onClick={() => navigate(routes.docs.build())}
         variant={'outline'}
         color={'gray'}
         size={'2'}
