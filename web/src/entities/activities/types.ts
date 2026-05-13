@@ -1,7 +1,7 @@
 import type { baseApi } from '@/shared'
 
 export type ProjectsFilter = {
-  projectState: 'All' | 'Active' | 'Finished'
+  projectState: 'All' | 'Active' | 'Inactive'
   containsText: string
 }
 

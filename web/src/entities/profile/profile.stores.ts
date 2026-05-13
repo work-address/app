@@ -13,6 +13,7 @@ import {
 } from './profile.effects'
 import { login, logout, setInitialized } from './profile.events'
 import { saveProfileMutation } from './profile.mutations'
+import { getNonceSolanaFx, signSolanaFx } from './solana.model'
 import { disconnectTonFx, loginTonFx, tonDisconnected } from './ton.model'
 
 import type { EthModalResult } from './eth.model'
@@ -64,4 +65,6 @@ export const $pending = combine(
   fetchStatusFx.pending,
   loginEthFx.pending,
   loginTonFx.pending,
+  getNonceSolanaFx.pending,
+  signSolanaFx.pending,
 ).map((state) => state.some(Boolean))

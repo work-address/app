@@ -6,8 +6,8 @@ import {
 } from '@radix-ui/react-icons'
 import { Flex, Grid, Separator } from '@radix-ui/themes'
 import { useStoreMap, useUnit } from 'effector-react'
-import { Fragment, useEffect, useRef, useState } from 'react'
-import { useForm } from 'react-hook-form'
+import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
+import { useForm, Controller } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
 import type { baseApi } from '@/shared'
@@ -29,6 +29,7 @@ import {
   Spinner,
   type InputProps,
   useDateFormatter,
+  Select,
 } from '@/shared'
 
 type ProjectDialogProps = {
@@ -114,16 +115,6 @@ export const ProjectDialog = ({
             <Flex gap={'3'}>
               {modalMode === 'view' ? (
                 <>
-                  <Button
-                    themeVariant={'secondary'}
-                    variant={'outline'}
-                    size={'3'}
-                    type="button"
-                  >
-                    <DownloadIcon />
-                    {t('dashboard.projectsTable.drawer.invoice')}
-                  </Button>
-
                   <Button
                     themeVariant={'primary'}
                     size={'3'}
@@ -235,7 +226,7 @@ type ProjectDialogContentProps = {
   mode: 'view' | 'edit'
 }
 
-type FormValues = Pick<baseApi.Project, 'title' | 'state' | 'rateHour' | 'text'>
+type FormValues = Pick<baseApi.Project, 'title' | 'rateHour' | 'text' | 'state'>
 
 export const ProjectDialogContent = ({
   data,
@@ -253,6 +244,7 @@ export const ProjectDialogContent = ({
     handleSubmit,
     reset: resetForm,
     formState: { errors },
+    control,
   } = useForm<FormValues>({
     values: {
       title: data.title,
@@ -290,6 +282,14 @@ export const ProjectDialogContent = ({
     }
   }, [editingStatus, resetForm])
 
+  const stateOptions = useMemo(
+    () => [
+      { label: 'Active', value: 'Active' },
+      { label: 'Inactive', value: 'Inactive' },
+    ],
+    [],
+  )
+
   if (mode === 'edit') {
     const inputProps: InputProps = {
       rows: 'auto auto',
@@ -314,13 +314,23 @@ export const ProjectDialogContent = ({
             {...register('title', { required: true })}
           />
 
-          <Input
-            label={'Published in'}
-            id={'publishedIn'}
+          <Controller
+            render={({ field }) => (
+              <Select
+                label={'Published in'}
+                options={stateOptions}
+                disabled={editingStatus === 'pending'}
+                inputProps={{
+                  ...inputProps,
+                  state: errors.state ? 'error' : 'valid',
+                  id: 'state',
+                }}
+                {...field}
+              />
+            )}
+            name="state"
+            control={control}
             disabled={editingStatus === 'pending'}
-            state={errors.state ? 'error' : 'valid'}
-            {...inputProps}
-            {...register('state', { required: true })}
           />
 
           <Input

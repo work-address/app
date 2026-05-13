@@ -27,10 +27,14 @@ import {
   $authenticated,
   $ethProviderData,
   $initialized,
+  $loginMode,
 } from './profile.stores'
 import {
   disconnectSolanaFx,
+  getNonceSolanaFx,
+  loginSolanaFx,
   openSolanaModalFx,
+  signSolanaFx,
   solanaConnectedPub,
   solanaConnectError,
 } from './solana.model'
@@ -42,6 +46,7 @@ import {
   tonAuthSuccess,
 } from './ton.model'
 import './reown.model'
+import './solana.gate'
 
 import { showToast } from '@/shared'
 
@@ -170,6 +175,33 @@ sample({
 sample({
   clock: logout,
   target: [disconnectTonFx, disconnectEthFx, disconnectSolanaFx, clearTokensFx],
+})
+
+/**
+ * Solana flow: after wallet connected (and user intends to log in),
+ * fetch nonce, sign it, then call the backend stub.
+ */
+sample({
+  clock: solanaConnectedPub,
+  source: combine($authenticated, $loginMode),
+  filter: ([authenticated, mode]) => !authenticated && mode === 'solana',
+  fn: () => undefined as void,
+  target: getNonceSolanaFx,
+})
+
+sample({
+  clock: getNonceSolanaFx.doneData,
+  target: signSolanaFx,
+})
+
+sample({
+  clock: signSolanaFx.doneData,
+  target: loginSolanaFx,
+})
+
+sample({
+  clock: signSolanaFx.fail,
+  target: solanaConnectError,
 })
 
 sample({

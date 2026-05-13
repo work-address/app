@@ -19,14 +19,14 @@ import { Text } from './text'
 
 import type { InputProps } from './input'
 
-type Option = {
+export type SelectOption = {
   value: string
   label: string
 }
 
 type SelectProps = {
   className?: string
-  options: Option[]
+  options: SelectOption[]
   value: string | string[]
   onChange: (value: string | string[]) => void
   placeholder?: string

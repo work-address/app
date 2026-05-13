@@ -248,8 +248,8 @@ export const ProjectsTable = () => {
               {t('dashboard.page.tabs.active')}
             </TabsTrigger>
 
-            <TabsTrigger value={'Finished'}>
-              {t('dashboard.page.tabs.finished')}
+            <TabsTrigger value={'Inactive'}>
+              {t('dashboard.page.tabs.inactive')}
             </TabsTrigger>
           </TabsList>
         </TabsRoot>

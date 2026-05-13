@@ -45,9 +45,10 @@ export const mapProjectsAndStats = (
     }
 
     return {
-      ...project,
       ...stats,
+      ...project,
       ...computed,
+      rateHour: Number(project.rateHour ?? stats.rateHour),
     }
   })
 }
