@@ -2,7 +2,7 @@ import { useUnit } from 'effector-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
+import { Link, NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { IconImg, MobileMenuNav } from '../styled.ts'
@@ -12,7 +12,7 @@ import { MobileMenu, itemVariants } from './mobile-menu.tsx'
 
 import { $user, logout } from '@/entities/profile'
 import { routes } from '@/routes'
-import { formatWalletAddress, useBreakpoint } from '@/shared'
+import { Button, formatWalletAddress, useBreakpoint } from '@/shared'
 
 export const Header = () => {
   const { t } = useTranslation()
@@ -68,19 +68,30 @@ export const Header = () => {
         )}
 
         <Right>
-          <UserBox>
-            <UserAvatar>
-              <IconImg src="/img/icons/person.svg" alt={t('header.userAlt')} />
-            </UserAvatar>
+          <NavLink
+            to={routes.profile.build({
+              walletAddress: user?.friendlyWalletAddress ?? '',
+            })}
+          >
+            <Button variant="ghost" color="gray" radius="large">
+              <UserBox>
+                <UserAvatar>
+                  <IconImg
+                    src="/img/icons/person.svg"
+                    alt={t('header.userAlt')}
+                  />
+                </UserAvatar>
 
-            <UserText>
-              <UserName>{user?.userName || ''}</UserName>
+                <UserText>
+                  <UserName>{user?.userName || ''}</UserName>
 
-              <UserSub>
-                {formatWalletAddress(user?.friendlyWalletAddress || '')}
-              </UserSub>
-            </UserText>
-          </UserBox>
+                  <UserSub>
+                    {formatWalletAddress(user?.friendlyWalletAddress || '')}
+                  </UserSub>
+                </UserText>
+              </UserBox>
+            </Button>
+          </NavLink>
 
           <ExitButton
             aria-label={t('header.exit')}
@@ -131,21 +142,32 @@ export const Header = () => {
             >
               <MobileMenuInner>
                 <MobileMenuTop>
-                  <UserBox>
-                    <UserAvatar>
-                      <IconImg
-                        src="/img/icons/person.svg"
-                        alt={t('header.userAlt')}
-                      />
-                    </UserAvatar>
+                  <NavLink
+                    to={routes.profile.build({
+                      walletAddress: user?.friendlyWalletAddress ?? '',
+                    })}
+                    style={{ width: '100%' }}
+                  >
+                    <Button variant="ghost" color="gray" width="100%">
+                      <UserBox>
+                        <UserAvatar>
+                          <IconImg
+                            src="/img/icons/person.svg"
+                            alt={t('header.userAlt')}
+                          />
+                        </UserAvatar>
 
-                    <UserText>
-                      <UserName>{user?.userName || ''}</UserName>
-                      <UserSub>
-                        {formatWalletAddress(user?.friendlyWalletAddress || '')}
-                      </UserSub>
-                    </UserText>
-                  </UserBox>
+                        <UserText>
+                          <UserName>{user?.userName || ''}</UserName>
+                          <UserSub>
+                            {formatWalletAddress(
+                              user?.friendlyWalletAddress || '',
+                            )}
+                          </UserSub>
+                        </UserText>
+                      </UserBox>
+                    </Button>
+                  </NavLink>
                 </MobileMenuTop>
 
                 <Divider />
@@ -344,6 +366,7 @@ const UserBox = styled.div`
   display: flex;
   align-items: center;
   gap: 10px;
+  width: 100%;
 `
 
 const UserAvatar = styled.div`
@@ -360,6 +383,7 @@ const UserText = styled.div`
   display: flex;
   flex-direction: column;
   gap: 4px;
+  align-items: start;
 `
 
 const UserName = styled.span`
