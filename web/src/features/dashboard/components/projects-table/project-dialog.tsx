@@ -255,6 +255,7 @@ export const ProjectDialogContent = ({
     register,
     handleSubmit,
     reset: resetForm,
+    formState: { errors },
   } = useForm<FormValues>({
     values: {
       title: data.title,
@@ -311,16 +312,18 @@ export const ProjectDialogContent = ({
             label={'Project name'}
             id={'projectName'}
             disabled={editingStatus === 'pending'}
+            state={errors.title ? 'error' : 'valid'}
             {...inputProps}
-            {...register('title')}
+            {...register('title', { required: true })}
           />
 
           <Input
             label={'Published in'}
             id={'publishedIn'}
             disabled={editingStatus === 'pending'}
+            state={errors.state ? 'error' : 'valid'}
             {...inputProps}
-            {...register('state')}
+            {...register('state', { required: true })}
           />
 
           <Input
@@ -328,8 +331,9 @@ export const ProjectDialogContent = ({
             addonRight={'$'}
             id={'rate'}
             disabled={editingStatus === 'pending'}
+            state={errors.rateHour ? 'error' : 'valid'}
             {...inputProps}
-            {...register('rateHour')}
+            {...register('rateHour', { required: true })}
           />
 
           <Separator size={'4'} />
@@ -341,7 +345,8 @@ export const ProjectDialogContent = ({
             id={'description'}
             size={'3'}
             disabled={editingStatus === 'pending'}
-            {...register('text')}
+            state={errors.text ? 'error' : 'valid'}
+            {...register('text', { required: true })}
           />
         </Flex>
       </form>

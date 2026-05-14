@@ -9,11 +9,15 @@ type TextAreaProps = RadixTextAreaProps & {
   label?: string
   value?: string
   id?: string
+  state?: 'error' | 'valid'
 }
 
-export const TextArea = ({ label, id, ...props }: TextAreaProps) => {
+export const TextArea = ({ label, id, state, ...props }: TextAreaProps) => {
   const { breakpoints } = useTheme()
   const isUpMd = useMediaQuery(breakpoints.up('md'))
+
+  const errorProps: TextAreaProps | null =
+    state === 'error' ? { color: 'red', variant: 'soft' } : null
 
   return (
     <Grid
@@ -25,7 +29,7 @@ export const TextArea = ({ label, id, ...props }: TextAreaProps) => {
         {label}
       </Text>
 
-      <RadixTextArea id={id} size={'3'} {...props} />
+      <RadixTextArea id={id} size={'3'} {...props} {...errorProps} />
     </Grid>
   )
 }

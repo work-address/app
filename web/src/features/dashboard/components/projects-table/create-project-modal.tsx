@@ -49,13 +49,13 @@ export const CreateProjectModal = ({
     register,
     handleSubmit,
     reset: resetForm,
+    formState: { errors },
   } = useForm<baseApi.Activity>({
     defaultValues: {
       title: '',
       rateHour: '',
       text: '',
       state: 'Published',
-      type: 'Active',
     },
   })
 
@@ -157,8 +157,9 @@ export const CreateProjectModal = ({
               id={'projectName'}
               placeholder={t('project.createModal.projectNamePlaceholder')}
               disabled={pending}
+              state={errors.title ? 'error' : 'valid'}
               {...inputProps}
-              {...register('title')}
+              {...register('title', { required: true })}
             />
 
             <Input
@@ -166,10 +167,11 @@ export const CreateProjectModal = ({
               id={'rate'}
               placeholder={t('project.createModal.ratePlaceholder')}
               addonRight={'$'}
-              type="number"
               disabled={pending}
+              inputMode="decimal"
+              state={errors.rateHour ? 'error' : 'valid'}
               {...inputProps}
-              {...register('rateHour')}
+              {...register('rateHour', { required: true })}
             />
 
             <TextArea
@@ -178,7 +180,8 @@ export const CreateProjectModal = ({
               placeholder={t('project.createModal.descriptionPlaceholder')}
               rows={isMobile ? 7 : 3}
               disabled={pending}
-              {...register('text')}
+              state={errors.text ? 'error' : 'valid'}
+              {...register('text', { required: true })}
             />
           </Flex>
         </form>
