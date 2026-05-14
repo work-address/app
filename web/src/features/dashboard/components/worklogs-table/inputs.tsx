@@ -19,8 +19,8 @@ type TwoSideInputProps = {
   leftPlaceholder: string
   rightId: keyof WorklogsFilters
   rightPlaceholder: string
-  type: 'string' | 'number'
   inputProps?: InputProps
+  inputMode?: InputProps['inputMode']
 }
 
 export const TwoSideInput = ({
@@ -29,8 +29,8 @@ export const TwoSideInput = ({
   rightId,
   leftPlaceholder,
   rightPlaceholder,
-  type,
   inputProps,
+  inputMode,
 }: TwoSideInputProps) => {
   const leftValue = useStoreMap({
     store: $worklogsFilters,
@@ -50,7 +50,7 @@ export const TwoSideInput = ({
 
   const handleChange = useCallback(
     (key: keyof WorklogsFilters, value: string) => {
-      const parsedValue = type === 'number' ? Number(value) : value
+      const parsedValue = value ? Number(value) : ''
       const oldValue = key === leftId ? leftValue : rightValue
 
       changeFiltersEvent({
@@ -60,7 +60,7 @@ export const TwoSideInput = ({
             : parsedValue,
       })
     },
-    [changeFiltersEvent, type, leftId, leftValue, rightValue],
+    [changeFiltersEvent, leftId, leftValue, rightValue],
   )
 
   return (
@@ -81,6 +81,7 @@ export const TwoSideInput = ({
           onChange={(e) => handleChange(leftId, e.target.value)}
           placeholder={leftPlaceholder}
           {...inputProps}
+          inputMode={inputMode}
         />
 
         <Input
@@ -89,6 +90,7 @@ export const TwoSideInput = ({
           onChange={(e) => handleChange(rightId, e.target.value)}
           placeholder={rightPlaceholder}
           {...inputProps}
+          inputMode={inputMode}
         />
       </Grid>
     </Grid>

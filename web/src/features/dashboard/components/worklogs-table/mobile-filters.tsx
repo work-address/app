@@ -96,7 +96,7 @@ export const WorklogsMobileFilters = ({
             leftPlaceholder={t('dashboard.page.filters.min')}
             rightId={'timeActiveMax'}
             rightPlaceholder={t('dashboard.page.filters.max')}
-            type="number"
+            inputMode="numeric"
           />
 
           <TwoSideInput
@@ -105,7 +105,7 @@ export const WorklogsMobileFilters = ({
             leftPlaceholder={t('dashboard.page.filters.min')}
             rightId={'keyboardKeysMax'}
             rightPlaceholder={t('dashboard.page.filters.max')}
-            type="number"
+            inputMode="numeric"
           />
 
           <TwoSideInput
@@ -114,7 +114,7 @@ export const WorklogsMobileFilters = ({
             leftPlaceholder={t('dashboard.page.filters.min')}
             rightId={'mouseKeysMax'}
             rightPlaceholder={t('dashboard.page.filters.max')}
-            type="number"
+            inputMode="numeric"
           />
 
           <TwoSideInput
@@ -123,7 +123,7 @@ export const WorklogsMobileFilters = ({
             leftPlaceholder={t('dashboard.page.filters.min')}
             rightId={'mouseDistanceMax'}
             rightPlaceholder={t('dashboard.page.filters.max')}
-            type="number"
+            inputMode="numeric"
           />
         </Flex>
       </Drawer>

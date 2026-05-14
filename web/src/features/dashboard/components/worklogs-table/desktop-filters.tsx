@@ -50,7 +50,7 @@ export const WorklogsDesktopFilters = () => {
           label={t('dashboard.page.filters.timeActive')}
           leftId="timeActiveMin"
           rightId="timeActiveMax"
-          type="number"
+          inputMode="numeric"
           leftPlaceholder={t('dashboard.page.filters.min')}
           rightPlaceholder={t('dashboard.page.filters.max')}
         />
@@ -61,7 +61,7 @@ export const WorklogsDesktopFilters = () => {
           label={t('dashboard.page.filters.keyboard')}
           leftId="keyboardKeysMin"
           rightId="keyboardKeysMax"
-          type="number"
+          inputMode="numeric"
           leftPlaceholder={t('dashboard.page.filters.min')}
           rightPlaceholder={t('dashboard.page.filters.max')}
         />
@@ -72,7 +72,7 @@ export const WorklogsDesktopFilters = () => {
           label={t('dashboard.page.filters.mouse')}
           leftId="mouseKeysMin"
           rightId="mouseKeysMax"
-          type="number"
+          inputMode="numeric"
           leftPlaceholder={t('dashboard.page.filters.min')}
           rightPlaceholder={t('dashboard.page.filters.max')}
         />
@@ -83,7 +83,7 @@ export const WorklogsDesktopFilters = () => {
           label={t('dashboard.page.filters.mouseDistance')}
           leftId="mouseDistanceMin"
           rightId="mouseDistanceMax"
-          type="number"
+          inputMode="numeric"
           leftPlaceholder={t('dashboard.page.filters.min')}
           rightPlaceholder={t('dashboard.page.filters.max')}
         />
