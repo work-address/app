@@ -15,14 +15,10 @@ const ProfileGate = createGate<{ userId: string | null }>({
 })
 
 const profileQuery = createQuery({
-  handler: async (id: string) => {
-    const result = await baseApi.userControllerSearch({
-      body: {
-        filter: {
-          id,
-        },
-        sort: {},
-        page: 0,
+  handler: async (walletAddress: string) => {
+    const result = await baseApi.userControllerRead({
+      path: {
+        address: walletAddress as never,
       },
     })
 

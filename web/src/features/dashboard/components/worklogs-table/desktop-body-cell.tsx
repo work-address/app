@@ -30,7 +30,7 @@ const BodyCellComponent = memo((props: DesktopBodyCellRenderProps<Time>) => {
       return props.data.screenshot ? (
         <Screenshot
           src={props.data.screenshot}
-          alt={props.data.activity?.title || ''}
+          alt={props.data.project?.title || ''}
         />
       ) : (
         <Screenshot

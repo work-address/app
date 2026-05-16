@@ -59,7 +59,7 @@ export const QrCode = ({
             <Flex direction={'column'} align={'center'} gap={{ initial: '2' }}>
               <Skeleton loading={profileLoading}>
                 <Text size={'6'} weight={'medium'}>
-                  {user?.userName ?? t('profile.view.mockName')}
+                  {user?.title ?? t('profile.view.mockName')}
                 </Text>
               </Skeleton>
 

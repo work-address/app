@@ -58,7 +58,7 @@ export const ProfileLinks = ({
               <Flex direction={'column'} gap={'2'}>
                 <Skeleton loading={profileLoading}>
                   <Text size={'7'} weight={'medium'}>
-                    {user?.userName || t('profile.view.mockName')}
+                    {user?.title || t('profile.view.mockName')}
                   </Text>
                 </Skeleton>
 

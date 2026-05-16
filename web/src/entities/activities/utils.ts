@@ -2,7 +2,7 @@ import type { ITimeTotal, ITimeTotalComputed, ProjectWithStats } from './types'
 import type { baseApi } from '@/shared'
 
 export const mapProjectsAndStats = (
-  projects: baseApi.Activity[] = [],
+  projects: baseApi.Project[] = [],
   stats: ITimeTotal[] = [],
 ) => {
   const recordStats = stats.reduce(

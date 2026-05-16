@@ -76,7 +76,7 @@ export default function InvoicePage() {
                 <Skeleton width="200px" height="20px" />
               ) : (
                 <Text color={'gray'} size={'2'}>
-                  {invoice?.hash ?? invoice?.id}
+                  {invoice?.id}
                 </Text>
               )}
             </Flex>

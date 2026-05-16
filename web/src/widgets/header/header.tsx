@@ -83,7 +83,7 @@ export const Header = () => {
                 </UserAvatar>
 
                 <UserText>
-                  <UserName>{user?.userName || ''}</UserName>
+                  <UserName>{user?.title || ''}</UserName>
 
                   <UserSub>
                     {formatWalletAddress(user?.friendlyWalletAddress || '')}
@@ -158,7 +158,8 @@ export const Header = () => {
                         </UserAvatar>
 
                         <UserText>
-                          <UserName>{user?.userName || ''}</UserName>
+                          <UserName>{user?.title || ''}</UserName>
+
                           <UserSub>
                             {formatWalletAddress(
                               user?.friendlyWalletAddress || '',

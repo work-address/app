@@ -10,7 +10,9 @@ type TonAuthSuccessPayload = {
   address: string
   network: string
   public_key: string
-  proof: TonProofItemReplySuccess['proof']
+  proof: TonProofItemReplySuccess['proof'] & {
+    state_init: string
+  }
 }
 
 export const tonAuthSuccess = createEvent<TonAuthSuccessPayload>()
@@ -66,7 +68,11 @@ const unsubscribeTonUI = tonConnectProvider.onStatusChange((wallet) => {
       address: wallet.account.address,
       network: wallet.account.chain,
       public_key: wallet.account.publicKey,
-      proof: proofItemReply.proof,
+      proof: {
+        ...proofItemReply.proof,
+        // TODO: get state_init from wallet
+        state_init: '',
+      },
     })
   } else if (!wallet) {
     tonDisconnected()

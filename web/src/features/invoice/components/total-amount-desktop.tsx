@@ -25,7 +25,7 @@ export const TotalAmountDesktop = () => {
           <Skeleton width="194px" height="194px" loading={loading} />
         ) : (
           <QRCodeSVG
-            value={invoice?.hash || ''}
+            value={invoice?.id || ''}
             size={194}
             bgColor="transparent"
             fgColor="var(--ds-accent-9)"
@@ -62,7 +62,7 @@ export const TotalAmountDesktop = () => {
         {loading ? (
           <Skeleton width="300px" height="18px" loading={loading} />
         ) : (
-          <Text color={'gray'}>{invoice?.hash ?? invoice?.id}</Text>
+          <Text color={'gray'}>{invoice?.id}</Text>
         )}
 
         <Separator size={'4'} />

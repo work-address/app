@@ -235,10 +235,7 @@ type ProjectDialogContentProps = {
   mode: 'view' | 'edit'
 }
 
-type FormValues = Pick<
-  baseApi.Activity,
-  'title' | 'state' | 'rateHour' | 'text'
->
+type FormValues = Pick<baseApi.Project, 'title' | 'state' | 'rateHour' | 'text'>
 
 export const ProjectDialogContent = ({
   data,

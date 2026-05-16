@@ -75,7 +75,7 @@ export const TotalAmountMobile = () => {
           <Skeleton height="194px" width="194px" />
         ) : (
           <QRCodeSVG
-            value={invoice?.hash || ''}
+            value={invoice?.id || ''}
             size={194}
             bgColor="transparent"
             fgColor="var(--ds-accent-9)"

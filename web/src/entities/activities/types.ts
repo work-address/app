@@ -32,17 +32,17 @@ export type ITimeTotalComputed = {
   earnings: number
 }
 
-export type ProjectWithStats = Omit<baseApi.Activity, 'rateHour'> &
+export type ProjectWithStats = Omit<baseApi.Project, 'rateHour'> &
   ITimeTotal &
   ITimeTotalComputed
 
-export type ProjectInvoice = baseApi.Activity & {
+export type ProjectInvoice = baseApi.Project & {
   report?: ITimeTotal
   totalAmount: number
 }
 
 export type Time = baseApi.Time & {
-  activity?: baseApi.Activity
+  project?: baseApi.Project
 }
 
 export type WorklogsFilters = {

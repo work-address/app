@@ -79,14 +79,14 @@ export const $worklogsLoading = restore(setWorklogsLoading, false).on(
 export const $rawActivities = activitiesQuery.$data.map(
   (activities) =>
     activities?.items.reduce(
-      (acc, activity) => {
-        if (activity.id) {
-          acc[activity.id] = activity
+      (acc, project) => {
+        if (project.id) {
+          acc[project.id] = project
         }
 
         return acc
       },
-      {} as Record<string, baseApi.Activity>,
+      {} as Record<string, baseApi.Project>,
     ) ?? {},
 )
 

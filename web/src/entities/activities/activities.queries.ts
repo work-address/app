@@ -7,11 +7,11 @@ import { baseApi } from '@/shared'
 
 export const activityDetailQuery = createQuery({
   handler: async (id: string) => {
-    const response = await baseApi.activityControllerRead({
+    const response = await baseApi.projectControllerRead({
       path: { id: id as never },
     })
 
-    return response.data as baseApi.Activity
+    return response.data as baseApi.Project
   },
 })
 
@@ -30,11 +30,9 @@ export const activitiesQuery = createQuery({
     page = 0,
     limit = 50,
   }: { page?: number; limit?: number } = {}) => {
-    const response = await baseApi.activityControllerSearchFreelancer({
+    const response = await baseApi.projectControllerSearch({
       body: {
-        filter: {
-          query: 'test',
-        },
+        filter: {},
         page,
         sort: { createdAt: 'DESC' },
         limit,
@@ -42,7 +40,7 @@ export const activitiesQuery = createQuery({
     })
 
     return {
-      items: (response.data?.[0] as baseApi.Activity[]) ?? [],
+      items: (response.data?.[0] as baseApi.Project[]) ?? [],
       total: (response.data?.[1] as number) ?? 0,
     }
   },
@@ -67,12 +65,12 @@ export type WorklogsQueryParams = {
 
 export const worklogsQuery = createQuery({
   handler: async (params: WorklogsQueryParams) => {
-    const response = await baseApi.timeControllerSearchFreelancer({
+    const response = await baseApi.timeControllerSearch({
       body: {
         filter: {
-          activityId: params?.activityId,
-          fromAt: params?.fromAt,
-          toAt: params?.toAt,
+          projectId: params?.activityId,
+          fromAt: params?.fromAt?.toString(),
+          toAt: params?.toAt?.toString(),
           note: params.note,
         },
         page: params?.page ?? 0,

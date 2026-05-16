@@ -10,18 +10,10 @@ export type AbstractBaseEntity = {
     updatedAt?: string | string;
 };
 
-export type Proposal = {
-    text: string;
-    id?: string;
-    createdAt?: string | string;
-    updatedAt?: string | string;
-};
-
 export type Invoice = {
     fromAt: string | string;
     toAt: string | string;
     amount: string;
-    paymentTxId?: unknown;
     state: string;
     id?: string;
     createdAt?: string | string;
@@ -43,19 +35,12 @@ export type Time = {
     updatedAt?: string | string;
 };
 
-export type Activity = {
+export type Project = {
     title: string;
     trackScreenshots?: boolean;
     trackProcesses?: boolean;
     text: string;
-    location?: string;
-    position?: string;
-    salary?: string;
     rateHour?: string;
-    sourceUrl?: string;
-    jobUrl?: string;
-    hash?: string;
-    type: string;
     state: string;
     id?: string;
     createdAt?: string | string;
@@ -64,10 +49,10 @@ export type Activity = {
 
 export type User = {
     address?: string;
-    userName?: string;
     emailOrPhone: string;
     email?: string;
     phone?: string;
+    title?: string;
     company?: string;
     bio?: string;
     price?: string;
@@ -79,18 +64,50 @@ export type User = {
     youtube?: string;
     telegram?: string;
     whatsapp?: string;
-    lat?: string;
-    lng?: string;
-    address1?: string;
-    address2?: string;
-    postalCode?: string;
-    city?: string;
-    region?: string;
-    country?: string;
     tz?: string;
+    city?: string;
+    country?: string;
+    roles?: Array<'ROLE_USER'>;
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
+};
+
+export type AuthForgotPasswordDto = {
+    emailOrPhone: string;
+};
+
+export type AuthEthLoginDto = {
+    signature: string;
+    address: string;
+};
+
+export type AuthNonceRequestDto = {
+    address: string;
+};
+
+export type AuthRefreshTokenDto = {
+    refreshToken: string;
+};
+
+export type AuthTonProofDomainDto = {
+    lengthBytes: number;
+    value: string;
+};
+
+export type AuthTonProofPayloadDto = {
+    timestamp: number;
+    domain: AuthTonProofDomainDto;
+    payload: string;
+    signature: string;
+    state_init: string;
+};
+
+export type AuthTonLoginDto = {
+    address: string;
+    network: string;
+    public_key: string;
+    proof: AuthTonProofPayloadDto;
 };
 
 export type SearchDto = {
@@ -101,61 +118,277 @@ export type SearchDto = {
     sort: {
         [key: string]: unknown;
     };
-    query?: string;
     limit?: number;
 };
 
-export type ActivitySearchDto = {
-    filter: {
-        [key: string]: unknown;
-    };
+export type UserSearchFilterDto = {
+    id?: string;
+    role?: 'ROLE_USER';
+};
+
+export type UserSearchDto = {
+    filter: UserSearchFilterDto;
     page: number;
     sort: {
         [key: string]: unknown;
     };
-    query?: string;
     limit?: number;
 };
 
-export type ProposalSearchDto = {
-    filter: {
-        [key: string]: unknown;
-    };
+export type ProjectSearchSortDto = {
+    createdAt?: 'ASC' | 'DESC';
+    updatedAt?: 'ASC' | 'DESC';
+    title?: 'ASC' | 'DESC';
+    state?: 'ASC' | 'DESC';
+    rateHour?: 'ASC' | 'DESC';
+    trackScreenshots?: 'ASC' | 'DESC';
+    trackProcesses?: 'ASC' | 'DESC';
+};
+
+export type ProjectSearchFilterDto = {
+    userId?: string;
+    projectId?: string;
+    state?: 'Inactive' | 'Active';
+    title?: string;
+    text?: string;
+    rateHourFrom?: number;
+    rateHourTo?: number;
+    trackScreenshots?: boolean;
+    trackProcesses?: boolean;
+    withScreenshots?: boolean;
+    withProcesses?: boolean;
+};
+
+export type ProjectSearchDto = {
+    sort: ProjectSearchSortDto;
+    filter: ProjectSearchFilterDto;
     page: number;
-    sort: {
-        [key: string]: unknown;
-    };
-    query?: string;
     limit?: number;
+};
+
+export type TimeSearchSortDto = {
+    createdAt?: 'ASC' | 'DESC';
+    updatedAt?: 'ASC' | 'DESC';
+    fromAt?: 'ASC' | 'DESC';
+    toAt?: 'ASC' | 'DESC';
+    keyboardKeys?: 'ASC' | 'DESC';
+    minutesActive?: 'ASC' | 'DESC';
+    mouseKeys?: 'ASC' | 'DESC';
+    mouseDistance?: 'ASC' | 'DESC';
+};
+
+export type TimeSearchFilterDto = {
+    projectId?: string;
+    fromAt?: string | string;
+    toAt?: string | string;
+    note?: string;
+    screenshot?: string;
+    keyboardKeysFrom?: number;
+    keyboardKeysTo?: number;
+    minutesActiveFrom?: number;
+    minutesActiveTo?: number;
+    mouseKeysFrom?: number;
+    mouseKeysTo?: number;
+    mouseDistanceFrom?: number;
+    mouseDistanceTo?: number;
+    withScreenshots?: boolean;
+    withProcesses?: boolean;
 };
 
 export type TimeSearchDto = {
-    filter: {
-        [key: string]: unknown;
-    };
+    sort: TimeSearchSortDto;
+    filter: TimeSearchFilterDto;
     page: number;
-    sort: {
-        [key: string]: unknown;
-    };
-    query?: string;
     limit?: number;
 };
 
+export type TimeCreateDto = {
+    fromIndex: number;
+    toIndex: number;
+    fromAt: string;
+    toAt: string;
+    projectId: string;
+    note: string;
+    minutesActive: number;
+    keyboardKeys: number;
+    mouseKeys: number;
+    mouseDistance: number;
+    screenshot?: string;
+    processes?: Array<unknown>;
+};
+
+export type TimeInsertionErrorDto = {
+    name: string;
+    message: string;
+    errors?: unknown;
+};
+
+export type TimeInsertionResultDto = {
+    id?: string;
+    error?: TimeInsertionErrorDto;
+    fromIndex: number;
+    toIndex: number;
+    fromAt: string;
+    toAt: string;
+    projectId: string;
+    note: string;
+    minutesActive: number;
+    keyboardKeys: number;
+    mouseKeys: number;
+    mouseDistance: number;
+    screenshot?: string;
+    processes?: Array<unknown>;
+};
+
+export type InvoiceSearchFilterDto = {
+    projectId?: string;
+    fromAt?: string | string;
+    toAt?: string | string;
+    amountFrom?: number;
+    amountTo?: number;
+    state?: 'PAID' | 'Requested';
+};
+
 export type InvoiceSearchDto = {
-    filter: {
-        [key: string]: unknown;
-    };
+    filter: InvoiceSearchFilterDto;
     page: number;
     sort: {
         [key: string]: unknown;
     };
-    query?: string;
     limit?: number;
 };
 
 export type InvoiceCreateDto = {
     fromUnix: number;
     toUnix: number;
+};
+
+/**
+ * Subset of User serialized with class-transformer group "search".
+ */
+export type UserSearch = {
+    id?: string;
+    createdAt?: string | string;
+    updatedAt?: string | string;
+    address?: string;
+    emailOrPhone?: string;
+    email?: string;
+    phone?: string;
+    title?: string;
+    company?: string;
+    bio?: string;
+    price?: string;
+    skills?: string;
+    facebook?: string;
+    linkedIn?: string;
+    twitter?: string;
+    instagram?: string;
+    youtube?: string;
+    telegram?: string;
+    tz?: string;
+    city?: string;
+    country?: string;
+    roles?: Array<'ROLE_USER'>;
+};
+
+/**
+ * Subset of User serialized with class-transformer group "edit".
+ */
+export type UserEdit = {
+    emailOrPhone?: string;
+    email?: string;
+    phone?: string;
+    title?: string;
+    company?: string;
+    bio?: string;
+    price?: string;
+    skills?: string;
+    facebook?: string;
+    linkedIn?: string;
+    twitter?: string;
+    instagram?: string;
+    youtube?: string;
+    telegram?: string;
+    tz?: string;
+    city?: string;
+    country?: string;
+    roles?: Array<'ROLE_USER'>;
+};
+
+/**
+ * Subset of Project serialized with class-transformer group "search".
+ */
+export type ProjectSearch = {
+    id?: string;
+    createdAt?: string | string;
+    updatedAt?: string | string;
+    title?: string;
+    trackScreenshots?: boolean;
+    trackProcesses?: boolean;
+    text?: string;
+    rateHour?: string;
+    state?: string;
+    user?: UserSearch;
+    invoices?: InvoiceSearch;
+    time?: TimeSearch;
+};
+
+/**
+ * Subset of Project serialized with class-transformer group "create".
+ */
+export type ProjectCreate = {
+    id?: string;
+    title?: string;
+    trackScreenshots?: boolean;
+    trackProcesses?: boolean;
+    text?: string;
+    rateHour?: string;
+    state?: string;
+};
+
+/**
+ * Subset of Project serialized with class-transformer group "edit".
+ */
+export type ProjectEdit = {
+    title?: string;
+    trackScreenshots?: boolean;
+    trackProcesses?: boolean;
+    text?: string;
+    rateHour?: string;
+    state?: string;
+};
+
+/**
+ * Subset of Time serialized with class-transformer group "search".
+ */
+export type TimeSearch = {
+    id?: string;
+    createdAt?: string | string;
+    updatedAt?: string | string;
+    project?: ProjectSearch;
+    note?: string;
+    screenshot?: string;
+    processes?: Array<unknown>;
+    keyboardKeys?: number;
+    minutesActive?: number;
+    mouseKeys?: number;
+    mouseDistance?: number;
+    fromAt?: string | string;
+    toAt?: string | string;
+};
+
+/**
+ * Subset of Invoice serialized with class-transformer group "search".
+ */
+export type InvoiceSearch = {
+    id?: string;
+    createdAt?: string | string;
+    updatedAt?: string | string;
+    project?: ProjectSearch;
+    fromAt?: string | string;
+    toAt?: string | string;
+    amount?: string;
+    state?: string;
 };
 
 export type HelpControllerSwaggerData = {
@@ -173,62 +406,43 @@ export type HelpControllerSwaggerResponses = {
 };
 
 export type AuthControllerLoginEthData = {
-    body?: unknown;
+    body: AuthEthLoginDto;
     path?: never;
     query?: never;
     url: '/api/auth/eth';
 };
 
 export type AuthControllerLoginEthResponses = {
-    /**
-     * Replies with refresh and login headers sent
-     */
     200: unknown;
 };
 
 export type AuthControllerCheckProofHandlerData = {
-    body?: unknown;
+    body: AuthTonLoginDto;
     path?: never;
     query?: never;
     url: '/api/auth/ton';
 };
 
 export type AuthControllerCheckProofHandlerResponses = {
-    /**
-     * Replies with refresh and login headers sent
-     */
     200: unknown;
 };
 
 export type AuthControllerNonceData = {
-    body?: unknown;
+    body: AuthNonceRequestDto;
     path?: never;
     query?: never;
     url: '/api/auth/nonce';
 };
 
 export type AuthControllerNonceResponses = {
-    /**
-     * Replies with nonce for user login
-     */
-    200: {
-        nonce?: string;
-    };
+    200: string;
 };
 
 export type AuthControllerNonceResponse = AuthControllerNonceResponses[keyof AuthControllerNonceResponses];
 
 export type AuthControllerRefreshData = {
-    body: {
-        /**
-         * Refresh token issued to a user at login.
-         */
-        refreshToken?: string;
-    };
+    body: AuthRefreshTokenDto;
     headers: {
-        /**
-         * Expired Access Token.
-         */
         Authorization: string;
     };
     path?: never;
@@ -237,18 +451,14 @@ export type AuthControllerRefreshData = {
 };
 
 export type AuthControllerRefreshResponses = {
-    /**
-     * Returns succesfully updated access and refresh tokens in headers
-     */
-    200: {
-        [key: string]: unknown;
-    };
+    200: unknown;
 };
-
-export type AuthControllerRefreshResponse = AuthControllerRefreshResponses[keyof AuthControllerRefreshResponses];
 
 export type AuthControllerStatusData = {
     body?: never;
+    headers?: {
+        Authorization?: string;
+    };
     path?: never;
     query?: never;
     url: '/api/auth/status';
@@ -261,350 +471,258 @@ export type AuthControllerStatusResponses = {
 export type AuthControllerStatusResponse = AuthControllerStatusResponses[keyof AuthControllerStatusResponses];
 
 export type UserControllerSearchData = {
-    body?: {
-        [key: string]: unknown;
-    };
+    body: UserSearchDto;
     path?: never;
     query?: never;
     url: '/api/user/search';
 };
 
 export type UserControllerSearchResponses = {
-    /**
-     * Empty results
-     */
-    200: unknown;
+    200: Array<Array<UserSearch> | number>;
 };
+
+export type UserControllerSearchResponse = UserControllerSearchResponses[keyof UserControllerSearchResponses];
 
 export type UserControllerReadData = {
     body?: never;
     path: {
-        address: string;
+        address: User;
     };
     query?: never;
     url: '/api/user/{address}/address';
 };
 
+export type UserControllerReadErrors = {
+    /**
+     * User does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type UserControllerReadError = UserControllerReadErrors[keyof UserControllerReadErrors];
+
 export type UserControllerReadResponses = {
-    200: User;
+    200: UserSearch;
 };
 
 export type UserControllerReadResponse = UserControllerReadResponses[keyof UserControllerReadResponses];
 
 export type UserControllerEditData = {
-    /**
-     * User
-     */
-    body?: User;
+    body: UserEdit;
     path?: never;
     query?: never;
     url: '/api/user';
 };
 
 export type UserControllerEditResponses = {
-    /**
-     * User profile
-     */
-    204: unknown;
+    204: void;
 };
 
-export type ActivityControllerSearchData = {
-    /**
-     * ActivitySearchDto
-     */
-    body?: ActivitySearchDto;
+export type UserControllerEditResponse = UserControllerEditResponses[keyof UserControllerEditResponses];
+
+export type ProjectControllerSearchData = {
+    body: ProjectSearchDto;
     path?: never;
     query?: never;
-    url: '/api/activity/search';
+    url: '/api/project/search';
 };
 
-export type ActivityControllerSearchResponses = {
-    200: Array<Array<Activity> | number>;
+export type ProjectControllerSearchResponses = {
+    200: Array<Array<ProjectSearch> | number>;
 };
 
-export type ActivityControllerSearchResponse = ActivityControllerSearchResponses[keyof ActivityControllerSearchResponses];
+export type ProjectControllerSearchResponse = ProjectControllerSearchResponses[keyof ProjectControllerSearchResponses];
 
-export type ActivityControllerSearchFreelancerData = {
-    /**
-     * ActivitySearchDto
-     */
-    body?: ActivitySearchDto;
+export type ProjectControllerCreateData = {
+    body: ProjectCreate;
     path?: never;
     query?: never;
-    url: '/api/activity/search/freelancer';
+    url: '/api/project';
 };
 
-export type ActivityControllerSearchFreelancerResponses = {
-    200: Array<Array<Activity> | number>;
-};
-
-export type ActivityControllerSearchFreelancerResponse = ActivityControllerSearchFreelancerResponses[keyof ActivityControllerSearchFreelancerResponses];
-
-export type ActivityControllerSearchBusinessData = {
-    /**
-     * ActivitySearchDto
-     */
-    body?: ActivitySearchDto;
-    path?: never;
-    query?: never;
-    url: '/api/activity/search/business';
-};
-
-export type ActivityControllerSearchBusinessResponses = {
-    200: Array<Array<Activity> | number>;
-};
-
-export type ActivityControllerSearchBusinessResponse = ActivityControllerSearchBusinessResponses[keyof ActivityControllerSearchBusinessResponses];
-
-export type ActivityControllerAcceptProposalData = {
-    body?: never;
-    path: {
-        id: Activity;
-        proposalId: Proposal;
-    };
-    query?: never;
-    url: '/api/activity/{id}/accept/{proposalId}';
-};
-
-export type ActivityControllerAcceptProposalResponses = {
-    /**
-     * Successful response
-     */
-    200: unknown;
-};
-
-export type ActivityControllerCreateData = {
-    /**
-     * Activity
-     */
-    body?: Activity;
-    path?: never;
-    query?: never;
-    url: '/api/activity';
-};
-
-export type ActivityControllerCreateResponses = {
-    /**
-     * Successful response
-     */
+export type ProjectControllerCreateResponses = {
     201: unknown;
 };
 
-export type ActivityControllerDeleteData = {
+export type ProjectControllerDeleteData = {
     body?: never;
     path: {
-        id: Activity;
+        id: Project;
     };
     query?: never;
-    url: '/api/activity/{id}';
+    url: '/api/project/{id}';
 };
 
-export type ActivityControllerDeleteResponses = {
+export type ProjectControllerDeleteErrors = {
     /**
-     * Successful response
+     * Project does not exist
      */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type ProjectControllerDeleteError = ProjectControllerDeleteErrors[keyof ProjectControllerDeleteErrors];
+
+export type ProjectControllerDeleteResponses = {
     200: unknown;
 };
 
-export type ActivityControllerReadData = {
+export type ProjectControllerReadData = {
+    body?: never;
+    headers?: {
+        Authorization?: string;
+    };
+    path: {
+        id: Project;
+    };
+    query?: never;
+    url: '/api/project/{id}';
+};
+
+export type ProjectControllerReadErrors = {
+    /**
+     * Project does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type ProjectControllerReadError = ProjectControllerReadErrors[keyof ProjectControllerReadErrors];
+
+export type ProjectControllerReadResponses = {
+    200: ProjectSearch;
+};
+
+export type ProjectControllerReadResponse = ProjectControllerReadResponses[keyof ProjectControllerReadResponses];
+
+export type ProjectControllerEditData = {
+    body: ProjectEdit;
+    path: {
+        id: Project;
+    };
+    query?: never;
+    url: '/api/project/{id}';
+};
+
+export type ProjectControllerEditErrors = {
+    /**
+     * Project does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type ProjectControllerEditError = ProjectControllerEditErrors[keyof ProjectControllerEditErrors];
+
+export type ProjectControllerEditResponses = {
+    200: unknown;
+};
+
+export type ProjectControllerCloseData = {
     body?: never;
     path: {
-        id: Activity;
+        id: Project;
     };
     query?: never;
-    url: '/api/activity/{id}';
+    url: '/api/project/{id}/close';
 };
 
-export type ActivityControllerReadResponses = {
-    200: Activity;
-};
-
-export type ActivityControllerReadResponse = ActivityControllerReadResponses[keyof ActivityControllerReadResponses];
-
-export type ActivityControllerEditData = {
+export type ProjectControllerCloseErrors = {
     /**
-     * Activity
+     * Project does not exist
      */
-    body?: Activity;
-    path: {
-        id: Activity;
+    404: {
+        name?: string;
+        message?: string;
     };
-    query?: never;
-    url: '/api/activity/{id}';
 };
 
-export type ActivityControllerEditResponses = {
-    /**
-     * Successful response
-     */
+export type ProjectControllerCloseError = ProjectControllerCloseErrors[keyof ProjectControllerCloseErrors];
+
+export type ProjectControllerCloseResponses = {
     200: unknown;
 };
 
-export type ActivityControllerCloseData = {
-    body?: never;
-    path: {
-        id: Activity;
-    };
-    query?: never;
-    url: '/api/activity/{id}/close';
-};
-
-export type ActivityControllerCloseResponses = {
-    /**
-     * Successful response
-     */
-    200: unknown;
-};
-
-export type ProposalControllerSearchBusinessData = {
-    /**
-     * ProposalSearchDto
-     */
-    body?: ProposalSearchDto;
-    path?: never;
-    query?: never;
-    url: '/api/proposal/search/business';
-};
-
-export type ProposalControllerSearchBusinessResponses = {
-    /**
-     * Successful response
-     */
-    200: unknown;
-};
-
-export type ProposalControllerSearchData = {
-    /**
-     * ProposalSearchDto
-     */
-    body?: ProposalSearchDto;
-    path?: never;
-    query?: never;
-    url: '/api/proposal/search/freelancer';
-};
-
-export type ProposalControllerSearchResponses = {
-    /**
-     * Successful response
-     */
-    200: unknown;
-};
-
-export type ProposalControllerCreateData = {
-    /**
-     * Proposal
-     */
-    body?: Proposal;
-    path?: never;
-    query?: never;
-    url: '/api/proposal';
-};
-
-export type ProposalControllerCreateResponses = {
-    /**
-     * Successful response
-     */
-    201: unknown;
-};
-
-export type ProposalControllerDeleteData = {
-    body?: never;
-    path: {
-        id: Proposal;
-    };
-    query?: never;
-    url: '/api/proposal/{id}';
-};
-
-export type ProposalControllerDeleteResponses = {
-    /**
-     * Successful response
-     */
-    200: unknown;
-};
-
-export type ProposalControllerEditData = {
-    /**
-     * Proposal
-     */
-    body?: Proposal;
-    path: {
-        id: Proposal;
-    };
-    query?: never;
-    url: '/api/proposal/{id}';
-};
-
-export type ProposalControllerEditResponses = {
-    /**
-     * Successful response
-     */
-    200: unknown;
-};
-
-export type TimeControllerSearchFreelancerData = {
-    /**
-     * TimeSearchDto
-     */
-    body?: TimeSearchDto;
+export type TimeControllerSearchData = {
+    body: TimeSearchDto;
     path?: never;
     query?: never;
     url: '/api/time/search';
 };
 
-export type TimeControllerSearchFreelancerResponses = {
-    200: Array<Array<Time> | number>;
+export type TimeControllerSearchResponses = {
+    200: Array<Array<TimeSearch> | number>;
 };
 
-export type TimeControllerSearchFreelancerResponse = TimeControllerSearchFreelancerResponses[keyof TimeControllerSearchFreelancerResponses];
+export type TimeControllerSearchResponse = TimeControllerSearchResponses[keyof TimeControllerSearchResponses];
 
 export type TimeControllerGetTotalsData = {
     body?: never;
     path?: never;
     query?: {
-        activityId?: string;
+        projectId?: string;
     };
     url: '/api/time/totals';
 };
 
 export type TimeControllerGetTotalsResponses = {
-    /**
-     * Successful response
-     */
-    200: unknown;
+    200: Array<{
+        [key: string]: unknown;
+    }>;
 };
+
+export type TimeControllerGetTotalsResponse = TimeControllerGetTotalsResponses[keyof TimeControllerGetTotalsResponses];
 
 export type TimeControllerGetReportData = {
     body?: never;
     path: {
-        id: Activity;
+        id: Project;
     };
     query?: never;
     url: '/api/time/report/{id}';
 };
 
-export type TimeControllerGetReportResponses = {
+export type TimeControllerGetReportErrors = {
     /**
-     * Successful response
+     * Project does not exist
      */
-    200: unknown;
+    404: {
+        name?: string;
+        message?: string;
+    };
 };
 
-export type TimeControllerCreateOrUpdateManyData = {
-    body?: Array<{
+export type TimeControllerGetReportError = TimeControllerGetReportErrors[keyof TimeControllerGetReportErrors];
+
+export type TimeControllerGetReportResponses = {
+    200: {
         [key: string]: unknown;
-    }>;
+    };
+};
+
+export type TimeControllerGetReportResponse = TimeControllerGetReportResponses[keyof TimeControllerGetReportResponses];
+
+export type TimeControllerCreateOrUpdateManyData = {
+    body: Array<TimeCreateDto>;
     path?: never;
     query?: never;
     url: '/api/time';
 };
 
 export type TimeControllerCreateOrUpdateManyResponses = {
-    /**
-     * Echoes data passed with error property added in case of an error
-     */
-    200: unknown;
+    200: Array<TimeInsertionResultDto>;
 };
+
+export type TimeControllerCreateOrUpdateManyResponse = TimeControllerCreateOrUpdateManyResponses[keyof TimeControllerCreateOrUpdateManyResponses];
 
 export type TimeControllerDeleteData = {
     body?: never;
@@ -615,10 +733,19 @@ export type TimeControllerDeleteData = {
     url: '/api/time/{id}';
 };
 
-export type TimeControllerDeleteResponses = {
+export type TimeControllerDeleteErrors = {
     /**
-     * Empty object
+     * Time does not exist
      */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type TimeControllerDeleteError = TimeControllerDeleteErrors[keyof TimeControllerDeleteErrors];
+
+export type TimeControllerDeleteResponses = {
     200: unknown;
 };
 
@@ -631,46 +758,63 @@ export type TimeControllerReadData = {
     url: '/api/time/{id}';
 };
 
+export type TimeControllerReadErrors = {
+    /**
+     * Time does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type TimeControllerReadError = TimeControllerReadErrors[keyof TimeControllerReadErrors];
+
 export type TimeControllerReadResponses = {
-    200: Time;
+    200: TimeSearch;
 };
 
 export type TimeControllerReadResponse = TimeControllerReadResponses[keyof TimeControllerReadResponses];
 
 export type InvoiceControllerSearchData = {
-    /**
-     * InvoiceSearchDto
-     */
-    body?: InvoiceSearchDto;
+    body: InvoiceSearchDto;
     path?: never;
     query?: never;
     url: '/api/invoice/search';
 };
 
 export type InvoiceControllerSearchResponses = {
-    200: Array<Array<Invoice> | number>;
+    200: Array<Array<InvoiceSearch> | number>;
 };
 
 export type InvoiceControllerSearchResponse = InvoiceControllerSearchResponses[keyof InvoiceControllerSearchResponses];
 
 export type InvoiceControllerCreateData = {
-    /**
-     * InvoiceCreateDto
-     */
-    body?: InvoiceCreateDto;
+    body: InvoiceCreateDto;
     path: {
-        activityId: Activity;
+        projectId: Project;
     };
     query?: never;
-    url: '/api/invoice/activity/{activityId}';
+    url: '/api/invoice/project/{projectId}';
 };
 
-export type InvoiceControllerCreateResponses = {
+export type InvoiceControllerCreateErrors = {
     /**
-     * Successful response
+     * Project does not exist
      */
-    200: unknown;
+    404: {
+        name?: string;
+        message?: string;
+    };
 };
+
+export type InvoiceControllerCreateError = InvoiceControllerCreateErrors[keyof InvoiceControllerCreateErrors];
+
+export type InvoiceControllerCreateResponses = {
+    200: InvoiceSearch;
+};
+
+export type InvoiceControllerCreateResponse = InvoiceControllerCreateResponses[keyof InvoiceControllerCreateResponses];
 
 export type InvoiceControllerReadData = {
     body?: never;
@@ -681,16 +825,26 @@ export type InvoiceControllerReadData = {
     url: '/api/invoice/{id}';
 };
 
+export type InvoiceControllerReadErrors = {
+    /**
+     * Invoice does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type InvoiceControllerReadError = InvoiceControllerReadErrors[keyof InvoiceControllerReadErrors];
+
 export type InvoiceControllerReadResponses = {
-    200: Invoice;
+    200: InvoiceSearch;
 };
 
 export type InvoiceControllerReadResponse = InvoiceControllerReadResponses[keyof InvoiceControllerReadResponses];
 
 export type AuthTimeTrackerControllerTimeTrackerNonceGenerateData = {
-    body?: {
-        [key: string]: unknown;
-    };
+    body?: never;
     path?: never;
     query?: never;
     url: '/api/auth/timeTracker/nonce';
@@ -700,14 +854,18 @@ export type AuthTimeTrackerControllerTimeTrackerNonceGenerateResponses = {
     /**
      * Successful response
      */
-    200: unknown;
+    200: {
+        nonce: string;
+        startAt: number;
+        state: string;
+        ip: string;
+    };
 };
+
+export type AuthTimeTrackerControllerTimeTrackerNonceGenerateResponse = AuthTimeTrackerControllerTimeTrackerNonceGenerateResponses[keyof AuthTimeTrackerControllerTimeTrackerNonceGenerateResponses];
 
 export type AuthTimeTrackerControllerTimeTrackerLoginData = {
     body: {
-        /**
-         * Nonce initially retrieved from none generate endpoint
-         */
         nonce?: string;
     };
     path: {
@@ -719,20 +877,13 @@ export type AuthTimeTrackerControllerTimeTrackerLoginData = {
 
 export type AuthTimeTrackerControllerTimeTrackerLoginResponses = {
     /**
-     * On sucess replies with the empty object
+     * Success
      */
-    200: {
-        [key: string]: unknown;
-    };
+    200: unknown;
 };
-
-export type AuthTimeTrackerControllerTimeTrackerLoginResponse = AuthTimeTrackerControllerTimeTrackerLoginResponses[keyof AuthTimeTrackerControllerTimeTrackerLoginResponses];
 
 export type AuthTimeTrackerControllerTimeTrackerConnectData = {
     body: {
-        /**
-         * Nonce passed from timetracker app via URL param
-         */
         nonce?: string;
     };
     path: {
@@ -744,22 +895,13 @@ export type AuthTimeTrackerControllerTimeTrackerConnectData = {
 
 export type AuthTimeTrackerControllerTimeTrackerConnectResponses = {
     /**
-     * On sucess replies with the empty object
+     * Success
      */
-    200: {
-        [key: string]: unknown;
-    };
+    200: unknown;
 };
 
-export type AuthTimeTrackerControllerTimeTrackerConnectResponse = AuthTimeTrackerControllerTimeTrackerConnectResponses[keyof AuthTimeTrackerControllerTimeTrackerConnectResponses];
-
 export type AuthTimeTrackerControllerTimeTrackerNonceGetData = {
-    body?: {
-        /**
-         * Nonce used in the auth process by the timetracker or website
-         */
-        nonce?: string;
-    };
+    body?: never;
     path: {
         nonce: string;
     };
@@ -769,22 +911,16 @@ export type AuthTimeTrackerControllerTimeTrackerNonceGetData = {
 
 export type AuthTimeTrackerControllerTimeTrackerNonceGetResponses = {
     /**
-     * On sucess replies with the state for the nonce provided
+     * Successful response
      */
     200: {
-        /**
-         * Nonce used in the auth process by the timetracker or website
-         */
         nonce?: string;
-        /**
-         * IP address of a user provided the timetracker app or website
-         */
         ip?: string;
-        /**
-         * Authentication state
-         */
         state?: string;
-        jwt?: unknown;
+        jwt?: {
+            accessToken?: string;
+            refreshToken?: string;
+        };
     };
 };
 

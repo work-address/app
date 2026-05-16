@@ -50,7 +50,7 @@ client.instance.interceptors.response.use(
             'Refresh-Token': refreshToken,
             Authorization: '',
           },
-          body: {},
+          body: { refreshToken },
         })
 
         if (result instanceof AxiosError) {

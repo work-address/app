@@ -136,13 +136,7 @@ const SKILLS_SUGGESTIONS = [
 
 type FormState = Pick<
   baseApi.User,
-  | 'userName'
-  | 'company'
-  | 'price'
-  | 'bio'
-  | 'facebook'
-  | 'linkedIn'
-  | 'telegram'
+  'title' | 'company' | 'price' | 'bio' | 'facebook' | 'linkedIn' | 'telegram'
 > & { skills: string[] }
 
 const normalizeLink = (prefix: string, value: string) =>
@@ -183,7 +177,7 @@ export const EditProfile = () => {
     setValue,
   } = useForm<FormState>({
     values: {
-      userName: '',
+      title: '',
       company: '',
       skills: [],
       price: '',
@@ -277,7 +271,7 @@ export const EditProfile = () => {
   useEffect(() => {
     if (user) {
       resetForm({
-        userName: user.userName || '',
+        // userName: user.userName || '',
         company: user.company || '',
         skills: user.skills ? user.skills?.split(',') : [],
         price: user.price || '',
@@ -372,8 +366,8 @@ export const EditProfile = () => {
                   labelWidth={INPUT_LABEL_WIDTH}
                   id={'username'}
                   disabled={profileSaving}
-                  state={errors.userName ? 'error' : undefined}
-                  {...register('userName', {
+                  state={errors.title ? 'error' : undefined}
+                  {...register('title', {
                     required: true,
                   })}
                 />

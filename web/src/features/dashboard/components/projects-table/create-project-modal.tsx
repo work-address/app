@@ -50,7 +50,7 @@ export const CreateProjectModal = ({
     handleSubmit,
     reset: resetForm,
     formState: { errors },
-  } = useForm<baseApi.Activity>({
+  } = useForm<baseApi.Project>({
     defaultValues: {
       title: '',
       rateHour: '',
@@ -66,7 +66,7 @@ export const CreateProjectModal = ({
     size: '3',
   }
 
-  const handleFormSubmit = (data: baseApi.Activity) => {
+  const handleFormSubmit = (data: baseApi.Project) => {
     createActivity(data)
   }
 

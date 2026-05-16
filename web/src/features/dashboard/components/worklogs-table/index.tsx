@@ -65,7 +65,7 @@ export const WorklogsTable = () => {
       },
       {
         customKey: 'projectName',
-        getValue: (row: Time) => row.activity?.title ?? '',
+        getValue: (row: Time) => row.project?.title ?? '',
         headerText: t('dashboard.worklogsTable.head.projectName'),
         width: 229,
       },

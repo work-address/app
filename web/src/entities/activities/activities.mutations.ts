@@ -4,8 +4,8 @@ import { AxiosError } from 'axios'
 import { baseApi } from '@/shared'
 
 export const createActivityMutation = createMutation({
-  handler: async (activity: baseApi.Activity) => {
-    const result = await baseApi.activityControllerCreate({
+  handler: async (activity: baseApi.Project) => {
+    const result = await baseApi.projectControllerCreate({
       body: activity,
     })
 
@@ -19,7 +19,7 @@ export const createActivityMutation = createMutation({
 
 export const deleteActivityMutation = createMutation({
   handler: async (id: string) => {
-    const result = await baseApi.activityControllerDelete({
+    const result = await baseApi.projectControllerDelete({
       path: { id: id as never },
     })
 
@@ -32,8 +32,8 @@ export const deleteActivityMutation = createMutation({
 })
 
 export const editActivityMutation = createMutation({
-  handler: async (activity: baseApi.Activity) => {
-    const result = await baseApi.activityControllerEdit({
+  handler: async (activity: baseApi.Project) => {
+    const result = await baseApi.projectControllerEdit({
       path: {
         id: activity.id as never,
       },

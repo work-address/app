@@ -53,11 +53,11 @@ export const ProjectsTable = () => {
     isActivitiesLoading,
     isActivitiesFiltering,
     filter,
-    changeActivityStateFilterEvent,
-    deleteProject,
-    deleteStatus,
-    resetDeleteMutation,
     isProjectDeleting,
+    deleteStatus,
+    changeActivityStateFilterEvent,
+    deleteProjectEvent,
+    resetDeleteMutationEvent,
   } = useUnit({
     projects: $filteredActivities,
     isActivitiesLoading: $activitiesLoading,
@@ -65,9 +65,9 @@ export const ProjectsTable = () => {
     filter: $activityStateFilter,
     changeActivityStateFilterEvent: changeActivityStateFilter,
     isProjectDeleting: deleteActivityMutation.$pending,
-    deleteProject: deleteActivityMutation.start,
+    deleteProjectEvent: deleteActivityMutation.start,
     deleteStatus: deleteActivityMutation.$status,
-    resetDeleteMutation: deleteActivityMutation.reset,
+    resetDeleteMutationEvent: deleteActivityMutation.reset,
   })
 
   const { confirm } = useConfirm()
@@ -106,7 +106,7 @@ export const ProjectsTable = () => {
               confirmLabel: t('dashboard.projectsTable.confirmDelete.confirm'),
               onConfirm: () => {
                 if (row.id) {
-                  deleteProject(row.id)
+                  deleteProjectEvent(row.id)
                 }
               },
             })
@@ -119,7 +119,7 @@ export const ProjectsTable = () => {
           }
         }
       },
-      [confirm, t, deleteProject],
+      [confirm, t, deleteProjectEvent],
     )
 
   const desktopConfig = useMemo(
@@ -225,8 +225,7 @@ export const ProjectsTable = () => {
 
   useEffect(() => {
     if (deleteStatus === 'done') {
-      resetDeleteMutation()
-
+      resetDeleteMutationEvent()
       setIsProjectDialogOpen(false)
 
       showToast('error', {
@@ -234,7 +233,7 @@ export const ProjectsTable = () => {
         position: 'top-center',
       })
     }
-  }, [t, deleteStatus, resetDeleteMutation])
+  }, [t, deleteStatus, resetDeleteMutationEvent])
 
   return (
     <Flex direction={'column'} height={'100%'}>

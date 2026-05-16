@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { ActivityControllerAcceptProposalData, ActivityControllerAcceptProposalResponses, ActivityControllerCloseData, ActivityControllerCloseResponses, ActivityControllerCreateData, ActivityControllerCreateResponses, ActivityControllerDeleteData, ActivityControllerDeleteResponses, ActivityControllerEditData, ActivityControllerEditResponses, ActivityControllerReadData, ActivityControllerReadResponses, ActivityControllerSearchBusinessData, ActivityControllerSearchBusinessResponses, ActivityControllerSearchData, ActivityControllerSearchFreelancerData, ActivityControllerSearchFreelancerResponses, ActivityControllerSearchResponses, AuthControllerCheckProofHandlerData, AuthControllerCheckProofHandlerResponses, AuthControllerLoginEthData, AuthControllerLoginEthResponses, AuthControllerNonceData, AuthControllerNonceResponses, AuthControllerRefreshData, AuthControllerRefreshResponses, AuthControllerStatusData, AuthControllerStatusResponses, AuthTimeTrackerControllerTimeTrackerConnectData, AuthTimeTrackerControllerTimeTrackerConnectResponses, AuthTimeTrackerControllerTimeTrackerLoginData, AuthTimeTrackerControllerTimeTrackerLoginResponses, AuthTimeTrackerControllerTimeTrackerNonceGenerateData, AuthTimeTrackerControllerTimeTrackerNonceGenerateResponses, AuthTimeTrackerControllerTimeTrackerNonceGetData, AuthTimeTrackerControllerTimeTrackerNonceGetResponses, HelpControllerSwaggerData, HelpControllerSwaggerResponses, InvoiceControllerCreateData, InvoiceControllerCreateResponses, InvoiceControllerReadData, InvoiceControllerReadResponses, InvoiceControllerSearchData, InvoiceControllerSearchResponses, ProposalControllerCreateData, ProposalControllerCreateResponses, ProposalControllerDeleteData, ProposalControllerDeleteResponses, ProposalControllerEditData, ProposalControllerEditResponses, ProposalControllerSearchBusinessData, ProposalControllerSearchBusinessResponses, ProposalControllerSearchData, ProposalControllerSearchResponses, TimeControllerCreateOrUpdateManyData, TimeControllerCreateOrUpdateManyResponses, TimeControllerDeleteData, TimeControllerDeleteResponses, TimeControllerGetReportData, TimeControllerGetReportResponses, TimeControllerGetTotalsData, TimeControllerGetTotalsResponses, TimeControllerReadData, TimeControllerReadResponses, TimeControllerSearchFreelancerData, TimeControllerSearchFreelancerResponses, UserControllerEditData, UserControllerEditResponses, UserControllerReadData, UserControllerReadResponses, UserControllerSearchData, UserControllerSearchResponses } from './types.gen';
+import type { AuthControllerCheckProofHandlerData, AuthControllerCheckProofHandlerResponses, AuthControllerLoginEthData, AuthControllerLoginEthResponses, AuthControllerNonceData, AuthControllerNonceResponses, AuthControllerRefreshData, AuthControllerRefreshResponses, AuthControllerStatusData, AuthControllerStatusResponses, AuthTimeTrackerControllerTimeTrackerConnectData, AuthTimeTrackerControllerTimeTrackerConnectResponses, AuthTimeTrackerControllerTimeTrackerLoginData, AuthTimeTrackerControllerTimeTrackerLoginResponses, AuthTimeTrackerControllerTimeTrackerNonceGenerateData, AuthTimeTrackerControllerTimeTrackerNonceGenerateResponses, AuthTimeTrackerControllerTimeTrackerNonceGetData, AuthTimeTrackerControllerTimeTrackerNonceGetResponses, HelpControllerSwaggerData, HelpControllerSwaggerResponses, InvoiceControllerCreateData, InvoiceControllerCreateErrors, InvoiceControllerCreateResponses, InvoiceControllerReadData, InvoiceControllerReadErrors, InvoiceControllerReadResponses, InvoiceControllerSearchData, InvoiceControllerSearchResponses, ProjectControllerCloseData, ProjectControllerCloseErrors, ProjectControllerCloseResponses, ProjectControllerCreateData, ProjectControllerCreateResponses, ProjectControllerDeleteData, ProjectControllerDeleteErrors, ProjectControllerDeleteResponses, ProjectControllerEditData, ProjectControllerEditErrors, ProjectControllerEditResponses, ProjectControllerReadData, ProjectControllerReadErrors, ProjectControllerReadResponses, ProjectControllerSearchData, ProjectControllerSearchResponses, TimeControllerCreateOrUpdateManyData, TimeControllerCreateOrUpdateManyResponses, TimeControllerDeleteData, TimeControllerDeleteErrors, TimeControllerDeleteResponses, TimeControllerGetReportData, TimeControllerGetReportErrors, TimeControllerGetReportResponses, TimeControllerGetTotalsData, TimeControllerGetTotalsResponses, TimeControllerReadData, TimeControllerReadErrors, TimeControllerReadResponses, TimeControllerSearchData, TimeControllerSearchResponses, UserControllerEditData, UserControllerEditResponses, UserControllerReadData, UserControllerReadErrors, UserControllerReadResponses, UserControllerSearchData, UserControllerSearchResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -19,7 +19,7 @@ export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends 
 };
 
 /**
- * Swagger
+ * OpenAPI 3 specification (JSON)
  */
 export const helpControllerSwagger = <ThrowOnError extends boolean = false>(options?: Options<HelpControllerSwaggerData, ThrowOnError>) => (options?.client ?? client).get<HelpControllerSwaggerResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -28,41 +28,39 @@ export const helpControllerSwagger = <ThrowOnError extends boolean = false>(opti
 });
 
 /**
- * Auth login Eth
+ * Login with Ethereum wallet
  */
-export const authControllerLoginEth = <ThrowOnError extends boolean = false>(options?: Options<AuthControllerLoginEthData, ThrowOnError>) => (options?.client ?? client).post<AuthControllerLoginEthResponses, unknown, ThrowOnError>({
-    responseType: 'json',
+export const authControllerLoginEth = <ThrowOnError extends boolean = false>(options: Options<AuthControllerLoginEthData, ThrowOnError>) => (options.client ?? client).post<AuthControllerLoginEthResponses, unknown, ThrowOnError>({
     url: '/api/auth/eth',
     ...options,
     headers: {
         'Content-Type': 'application/json',
-        ...options?.headers
+        ...options.headers
     }
 });
 
 /**
- * Auth login TON
+ * Login with TON Connect proof
  */
-export const authControllerCheckProofHandler = <ThrowOnError extends boolean = false>(options?: Options<AuthControllerCheckProofHandlerData, ThrowOnError>) => (options?.client ?? client).post<AuthControllerCheckProofHandlerResponses, unknown, ThrowOnError>({
-    responseType: 'json',
+export const authControllerCheckProofHandler = <ThrowOnError extends boolean = false>(options: Options<AuthControllerCheckProofHandlerData, ThrowOnError>) => (options.client ?? client).post<AuthControllerCheckProofHandlerResponses, unknown, ThrowOnError>({
     url: '/api/auth/ton',
     ...options,
     headers: {
         'Content-Type': 'application/json',
-        ...options?.headers
+        ...options.headers
     }
 });
 
 /**
- * Returns nonce for web3 wallet as first step in authentication process
+ * Request nonce for Ethereum login
  */
-export const authControllerNonce = <ThrowOnError extends boolean = false>(options?: Options<AuthControllerNonceData, ThrowOnError>) => (options?.client ?? client).post<AuthControllerNonceResponses, unknown, ThrowOnError>({
+export const authControllerNonce = <ThrowOnError extends boolean = false>(options: Options<AuthControllerNonceData, ThrowOnError>) => (options.client ?? client).post<AuthControllerNonceResponses, unknown, ThrowOnError>({
     responseType: 'json',
     url: '/api/auth/nonce',
     ...options,
     headers: {
         'Content-Type': 'application/json',
-        ...options?.headers
+        ...options.headers
     }
 });
 
@@ -70,7 +68,6 @@ export const authControllerNonce = <ThrowOnError extends boolean = false>(option
  * JWT token rotation
  */
 export const authControllerRefresh = <ThrowOnError extends boolean = false>(options: Options<AuthControllerRefreshData, ThrowOnError>) => (options.client ?? client).post<AuthControllerRefreshResponses, unknown, ThrowOnError>({
-    responseType: 'json',
     url: '/api/auth/refresh',
     ...options,
     headers: {
@@ -80,7 +77,7 @@ export const authControllerRefresh = <ThrowOnError extends boolean = false>(opti
 });
 
 /**
- * User authentication status
+ * Current user from JWT
  */
 export const authControllerStatus = <ThrowOnError extends boolean = false>(options?: Options<AuthControllerStatusData, ThrowOnError>) => (options?.client ?? client).get<AuthControllerStatusResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -89,125 +86,46 @@ export const authControllerStatus = <ThrowOnError extends boolean = false>(optio
 });
 
 /**
- * User search
+ * Search users
  */
-export const userControllerSearch = <ThrowOnError extends boolean = false>(options?: Options<UserControllerSearchData, ThrowOnError>) => (options?.client ?? client).post<UserControllerSearchResponses, unknown, ThrowOnError>({
+export const userControllerSearch = <ThrowOnError extends boolean = false>(options: Options<UserControllerSearchData, ThrowOnError>) => (options.client ?? client).post<UserControllerSearchResponses, unknown, ThrowOnError>({
     responseType: 'json',
     url: '/api/user/search',
     ...options,
     headers: {
         'Content-Type': 'application/json',
-        ...options?.headers
+        ...options.headers
     }
 });
 
 /**
- * User profile by address
+ * Public profile by wallet address
  */
-export const userControllerRead = <ThrowOnError extends boolean = false>(options: Options<UserControllerReadData, ThrowOnError>) => (options.client ?? client).get<UserControllerReadResponses, unknown, ThrowOnError>({
+export const userControllerRead = <ThrowOnError extends boolean = false>(options: Options<UserControllerReadData, ThrowOnError>) => (options.client ?? client).get<UserControllerReadResponses, UserControllerReadErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/user/{address}/address',
     ...options
 });
 
 /**
- * User profile edit
+ * Update current user profile
  */
-export const userControllerEdit = <ThrowOnError extends boolean = false>(options?: Options<UserControllerEditData, ThrowOnError>) => (options?.client ?? client).put<UserControllerEditResponses, unknown, ThrowOnError>({
-    responseType: 'json',
+export const userControllerEdit = <ThrowOnError extends boolean = false>(options: Options<UserControllerEditData, ThrowOnError>) => (options.client ?? client).put<UserControllerEditResponses, unknown, ThrowOnError>({
     url: '/api/user',
     ...options,
     headers: {
         'Content-Type': 'application/json',
-        ...options?.headers
+        ...options.headers
     }
 });
 
 /**
- * Search projects as public
+ * Search projects accessible by the current user
  */
-export const activityControllerSearch = <ThrowOnError extends boolean = false>(options?: Options<ActivityControllerSearchData, ThrowOnError>) => (options?.client ?? client).post<ActivityControllerSearchResponses, unknown, ThrowOnError>({
+export const projectControllerSearch = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerSearchData, ThrowOnError>) => (options.client ?? client).post<ProjectControllerSearchResponses, unknown, ThrowOnError>({
     responseType: 'json',
-    url: '/api/activity/search',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers
-    }
-});
-
-/**
- * Search projects as a freelancer
- */
-export const activityControllerSearchFreelancer = <ThrowOnError extends boolean = false>(options?: Options<ActivityControllerSearchFreelancerData, ThrowOnError>) => (options?.client ?? client).post<ActivityControllerSearchFreelancerResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/activity/search/freelancer',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers
-    }
-});
-
-/**
- * Search projects as a business
- */
-export const activityControllerSearchBusiness = <ThrowOnError extends boolean = false>(options?: Options<ActivityControllerSearchBusinessData, ThrowOnError>) => (options?.client ?? client).post<ActivityControllerSearchBusinessResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/activity/search/business',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers
-    }
-});
-
-/**
- * Accept proposal
- */
-export const activityControllerAcceptProposal = <ThrowOnError extends boolean = false>(options: Options<ActivityControllerAcceptProposalData, ThrowOnError>) => (options.client ?? client).post<ActivityControllerAcceptProposalResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/activity/{id}/accept/{proposalId}',
-    ...options
-});
-
-/**
- * Project create
- */
-export const activityControllerCreate = <ThrowOnError extends boolean = false>(options?: Options<ActivityControllerCreateData, ThrowOnError>) => (options?.client ?? client).post<ActivityControllerCreateResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/activity',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers
-    }
-});
-
-/**
- * Project delete
- */
-export const activityControllerDelete = <ThrowOnError extends boolean = false>(options: Options<ActivityControllerDeleteData, ThrowOnError>) => (options.client ?? client).delete<ActivityControllerDeleteResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/activity/{id}',
-    ...options
-});
-
-/**
- * Retrieve full data of a project
- */
-export const activityControllerRead = <ThrowOnError extends boolean = false>(options: Options<ActivityControllerReadData, ThrowOnError>) => (options.client ?? client).get<ActivityControllerReadResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/activity/{id}',
-    ...options
-});
-
-/**
- * Project edit
- */
-export const activityControllerEdit = <ThrowOnError extends boolean = false>(options: Options<ActivityControllerEditData, ThrowOnError>) => (options.client ?? client).put<ActivityControllerEditResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/activity/{id}',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/project/search',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -216,68 +134,10 @@ export const activityControllerEdit = <ThrowOnError extends boolean = false>(opt
 });
 
 /**
- * Close project without removing it
+ * Create project
  */
-export const activityControllerClose = <ThrowOnError extends boolean = false>(options: Options<ActivityControllerCloseData, ThrowOnError>) => (options.client ?? client).post<ActivityControllerCloseResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/activity/{id}/close',
-    ...options
-});
-
-/**
- * Search business
- */
-export const proposalControllerSearchBusiness = <ThrowOnError extends boolean = false>(options?: Options<ProposalControllerSearchBusinessData, ThrowOnError>) => (options?.client ?? client).post<ProposalControllerSearchBusinessResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/proposal/search/business',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers
-    }
-});
-
-/**
- * Search
- */
-export const proposalControllerSearch = <ThrowOnError extends boolean = false>(options?: Options<ProposalControllerSearchData, ThrowOnError>) => (options?.client ?? client).post<ProposalControllerSearchResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/proposal/search/freelancer',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers
-    }
-});
-
-/**
- * Create
- */
-export const proposalControllerCreate = <ThrowOnError extends boolean = false>(options?: Options<ProposalControllerCreateData, ThrowOnError>) => (options?.client ?? client).post<ProposalControllerCreateResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/proposal',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers
-    }
-});
-
-/**
- * Delete
- */
-export const proposalControllerDelete = <ThrowOnError extends boolean = false>(options: Options<ProposalControllerDeleteData, ThrowOnError>) => (options.client ?? client).delete<ProposalControllerDeleteResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/proposal/{id}',
-    ...options
-});
-
-/**
- * Edit
- */
-export const proposalControllerEdit = <ThrowOnError extends boolean = false>(options: Options<ProposalControllerEditData, ThrowOnError>) => (options.client ?? client).put<ProposalControllerEditResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/proposal/{id}',
+export const projectControllerCreate = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerCreateData, ThrowOnError>) => (options.client ?? client).post<ProjectControllerCreateResponses, unknown, ThrowOnError>({
+    url: '/api/project',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -286,86 +146,86 @@ export const proposalControllerEdit = <ThrowOnError extends boolean = false>(opt
 });
 
 /**
- * Time search
+ * Soft-delete project
  */
-export const timeControllerSearchFreelancer = <ThrowOnError extends boolean = false>(options?: Options<TimeControllerSearchFreelancerData, ThrowOnError>) => (options?.client ?? client).post<TimeControllerSearchFreelancerResponses, unknown, ThrowOnError>({
+export const projectControllerDelete = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerDeleteData, ThrowOnError>) => (options.client ?? client).delete<ProjectControllerDeleteResponses, ProjectControllerDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/project/{id}',
+    ...options
+});
+
+/**
+ * Get project by id
+ */
+export const projectControllerRead = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerReadData, ThrowOnError>) => (options.client ?? client).get<ProjectControllerReadResponses, ProjectControllerReadErrors, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/project/{id}',
+    ...options
+});
+
+/**
+ * Update project
+ */
+export const projectControllerEdit = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerEditData, ThrowOnError>) => (options.client ?? client).put<ProjectControllerEditResponses, ProjectControllerEditErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/project/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Close project
+ */
+export const projectControllerClose = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerCloseData, ThrowOnError>) => (options.client ?? client).post<ProjectControllerCloseResponses, ProjectControllerCloseErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/project/{id}/close',
+    ...options
+});
+
+/**
+ * Search time entries
+ */
+export const timeControllerSearch = <ThrowOnError extends boolean = false>(options: Options<TimeControllerSearchData, ThrowOnError>) => (options.client ?? client).post<TimeControllerSearchResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/time/search',
     ...options,
     headers: {
         'Content-Type': 'application/json',
-        ...options?.headers
+        ...options.headers
     }
 });
 
 /**
- * Time totals
+ * Aggregated time totals for project owner
  */
 export const timeControllerGetTotals = <ThrowOnError extends boolean = false>(options?: Options<TimeControllerGetTotalsData, ThrowOnError>) => (options?.client ?? client).get<TimeControllerGetTotalsResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/time/totals',
     ...options
 });
 
 /**
- * Report for activity
+ * Cached time report for a project
  */
-export const timeControllerGetReport = <ThrowOnError extends boolean = false>(options: Options<TimeControllerGetReportData, ThrowOnError>) => (options.client ?? client).get<TimeControllerGetReportResponses, unknown, ThrowOnError>({
+export const timeControllerGetReport = <ThrowOnError extends boolean = false>(options: Options<TimeControllerGetReportData, ThrowOnError>) => (options.client ?? client).get<TimeControllerGetReportResponses, TimeControllerGetReportErrors, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/time/report/{id}',
     ...options
 });
 
 /**
- * Create or update multiple time records from array
+ * Create or update many time rows (batch)
  */
-export const timeControllerCreateOrUpdateMany = <ThrowOnError extends boolean = false>(options?: Options<TimeControllerCreateOrUpdateManyData, ThrowOnError>) => (options?.client ?? client).post<TimeControllerCreateOrUpdateManyResponses, unknown, ThrowOnError>({
+export const timeControllerCreateOrUpdateMany = <ThrowOnError extends boolean = false>(options: Options<TimeControllerCreateOrUpdateManyData, ThrowOnError>) => (options.client ?? client).post<TimeControllerCreateOrUpdateManyResponses, unknown, ThrowOnError>({
     responseType: 'json',
     url: '/api/time',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers
-    }
-});
-
-/**
- * Remove time
- */
-export const timeControllerDelete = <ThrowOnError extends boolean = false>(options: Options<TimeControllerDeleteData, ThrowOnError>) => (options.client ?? client).delete<TimeControllerDeleteResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/time/{id}',
-    ...options
-});
-
-/**
- * Single time read
- */
-export const timeControllerRead = <ThrowOnError extends boolean = false>(options: Options<TimeControllerReadData, ThrowOnError>) => (options.client ?? client).get<TimeControllerReadResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/time/{id}',
-    ...options
-});
-
-/**
- * Search
- */
-export const invoiceControllerSearch = <ThrowOnError extends boolean = false>(options?: Options<InvoiceControllerSearchData, ThrowOnError>) => (options?.client ?? client).post<InvoiceControllerSearchResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/invoice/search',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers
-    }
-});
-
-/**
- * Create
- */
-export const invoiceControllerCreate = <ThrowOnError extends boolean = false>(options: Options<InvoiceControllerCreateData, ThrowOnError>) => (options.client ?? client).post<InvoiceControllerCreateResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/invoice/activity/{activityId}',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -374,29 +234,73 @@ export const invoiceControllerCreate = <ThrowOnError extends boolean = false>(op
 });
 
 /**
- * Read
+ * Delete time entry
  */
-export const invoiceControllerRead = <ThrowOnError extends boolean = false>(options: Options<InvoiceControllerReadData, ThrowOnError>) => (options.client ?? client).get<InvoiceControllerReadResponses, unknown, ThrowOnError>({
+export const timeControllerDelete = <ThrowOnError extends boolean = false>(options: Options<TimeControllerDeleteData, ThrowOnError>) => (options.client ?? client).delete<TimeControllerDeleteResponses, TimeControllerDeleteErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/time/{id}',
+    ...options
+});
+
+/**
+ * Get one time entry
+ */
+export const timeControllerRead = <ThrowOnError extends boolean = false>(options: Options<TimeControllerReadData, ThrowOnError>) => (options.client ?? client).get<TimeControllerReadResponses, TimeControllerReadErrors, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/time/{id}',
+    ...options
+});
+
+/**
+ * Search invoices accessible by the current user
+ */
+export const invoiceControllerSearch = <ThrowOnError extends boolean = false>(options: Options<InvoiceControllerSearchData, ThrowOnError>) => (options.client ?? client).post<InvoiceControllerSearchResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/invoice/search',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Create invoice from logged time in a range
+ */
+export const invoiceControllerCreate = <ThrowOnError extends boolean = false>(options: Options<InvoiceControllerCreateData, ThrowOnError>) => (options.client ?? client).post<InvoiceControllerCreateResponses, InvoiceControllerCreateErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/invoice/project/{projectId}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Get invoice by id
+ */
+export const invoiceControllerRead = <ThrowOnError extends boolean = false>(options: Options<InvoiceControllerReadData, ThrowOnError>) => (options.client ?? client).get<InvoiceControllerReadResponses, InvoiceControllerReadErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/invoice/{id}',
     ...options
 });
 
 /**
- * Nonce generate operation as first stap of authentication process for the timetracker app
+ * Start time-tracker auth: create nonce
  */
 export const authTimeTrackerControllerTimeTrackerNonceGenerate = <ThrowOnError extends boolean = false>(options?: Options<AuthTimeTrackerControllerTimeTrackerNonceGenerateData, ThrowOnError>) => (options?.client ?? client).post<AuthTimeTrackerControllerTimeTrackerNonceGenerateResponses, unknown, ThrowOnError>({
     responseType: 'json',
     url: '/api/auth/timeTracker/nonce',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options?.headers
-    }
+    ...options
 });
 
 /**
- * Login operation by the timetracker app to be after connected via website
+ * Time-tracker: complete login for nonce
  */
 export const authTimeTrackerControllerTimeTrackerLogin = <ThrowOnError extends boolean = false>(options: Options<AuthTimeTrackerControllerTimeTrackerLoginData, ThrowOnError>) => (options.client ?? client).post<AuthTimeTrackerControllerTimeTrackerLoginResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -409,10 +313,11 @@ export const authTimeTrackerControllerTimeTrackerLogin = <ThrowOnError extends b
 });
 
 /**
- * Used by the client(website) to authenicate and connects timetracker app
+ * Browser: link logged-in user to time-tracker session
  */
 export const authTimeTrackerControllerTimeTrackerConnect = <ThrowOnError extends boolean = false>(options: Options<AuthTimeTrackerControllerTimeTrackerConnectData, ThrowOnError>) => (options.client ?? client).post<AuthTimeTrackerControllerTimeTrackerConnectResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/auth/timeTracker/{nonce}/connect',
     ...options,
     headers: {
@@ -422,14 +327,10 @@ export const authTimeTrackerControllerTimeTrackerConnect = <ThrowOnError extends
 });
 
 /**
- * Returns authentication state from nonce
+ * Poll time-tracker auth state by nonce
  */
 export const authTimeTrackerControllerTimeTrackerNonceGet = <ThrowOnError extends boolean = false>(options: Options<AuthTimeTrackerControllerTimeTrackerNonceGetData, ThrowOnError>) => (options.client ?? client).get<AuthTimeTrackerControllerTimeTrackerNonceGetResponses, unknown, ThrowOnError>({
     responseType: 'json',
     url: '/api/auth/timeTracker/{nonce}',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
+    ...options
 });
