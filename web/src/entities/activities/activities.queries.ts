@@ -69,8 +69,8 @@ export const worklogsQuery = createQuery({
       body: {
         filter: {
           projectId: params?.activityId,
-          fromAt: params?.fromAt?.toString(),
-          toAt: params?.toAt?.toString(),
+          fromAt: params?.fromAt?.toString().slice(0, -3),
+          toAt: params?.toAt?.toString().slice(0, -3),
           note: params.note,
         },
         page: params?.page ?? 0,

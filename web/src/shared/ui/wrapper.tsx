@@ -9,7 +9,7 @@ export const Wrapper = ({ children }: { children: ReactNode }) => {
 const WrapperWhite = styled.div`
   background: var(--white);
   border-radius: 40px 40px 0 0;
-  padding: 32px 28px 60px 28px;
+  padding: 32px 28px;
 
   @media (max-width: 768px) {
     padding: 18px 16px;

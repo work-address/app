@@ -105,7 +105,6 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
         if (trimmed && !value.includes(trimmed)) {
           onChange?.([...value, trimmed])
           setInputValue('')
-          setActiveIndex(-1)
         }
       },
       [value, onChange],

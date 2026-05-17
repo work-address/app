@@ -248,7 +248,7 @@ export const EditProfile = () => {
   useEffect(() => {
     if (status === 'done') {
       showToast('info', {
-        message: 'Profile updated',
+        message: t('profile.form.edit.success'),
         position: 'top-center',
         closeButton: true,
       })
@@ -258,20 +258,19 @@ export const EditProfile = () => {
       resetMutation()
     } else if (status === 'fail') {
       showToast('error', {
-        message:
-          'Something went wrong. Please check your connection and try again.',
+        message: t('profile.form.edit.error'),
         position: 'top-center',
         closeButton: true,
       })
 
       resetMutation()
     }
-  }, [status, resetMutation, navigate, resetForm])
+  }, [status, resetMutation, navigate, resetForm, t])
 
   useEffect(() => {
     if (user) {
       resetForm({
-        // userName: user.userName || '',
+        title: user.title ?? '',
         company: user.company || '',
         skills: user.skills ? user.skills?.split(',') : [],
         price: user.price || '',

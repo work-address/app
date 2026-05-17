@@ -156,7 +156,7 @@ export const WorklogsTable = () => {
             allowSelection
             selectedIds={selectedIds}
             onSelectedIdsChange={setSelectedIds}
-            height={'72vh'}
+            height={'70vh'}
             loading={worklogsLoading}
             isFiltering={isWorklogsFiltering}
             sort={worklogSort}
@@ -166,7 +166,7 @@ export const WorklogsTable = () => {
         </WorklogsContext.Provider>
       ) : (
         <Flex pt="7">
-          <WorklogsEmptyState />
+          <WorklogsEmptyState style={{ height: 560 }} />
         </Flex>
       )}
     </S.Section>

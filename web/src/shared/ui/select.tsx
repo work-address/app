@@ -24,7 +24,7 @@ type Option = {
   label: string
 }
 
-type MotionSelectProps = {
+type SelectProps = {
   className?: string
   options: Option[]
   value: string | string[]
@@ -48,7 +48,7 @@ export const Select = ({
   label,
   allSelectedText,
   inputProps,
-}: MotionSelectProps) => {
+}: SelectProps) => {
   const { t } = useTranslation()
   const isMobile = useBreakpoint('isMobile')
   const isDesktop = useBreakpoint('isDesktop')

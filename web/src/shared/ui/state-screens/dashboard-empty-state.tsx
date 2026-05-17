@@ -9,6 +9,7 @@ type DashboardEmptyStateProps = {
   actionLabel: string
   onAction?: () => void
   className?: string
+  style?: React.CSSProperties
 }
 
 export const DashboardEmptyState = ({
@@ -18,9 +19,10 @@ export const DashboardEmptyState = ({
   actionLabel,
   onAction,
   className,
+  style,
 }: DashboardEmptyStateProps) => {
   return (
-    <Root className={className}>
+    <Root className={className} style={style}>
       <Hero>
         <HeroImg src={imageSrc} alt={title} />
       </Hero>

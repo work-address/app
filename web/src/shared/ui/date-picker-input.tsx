@@ -2,8 +2,9 @@ import {
   CalendarIcon,
   ChevronLeftIcon,
   ChevronRightIcon,
+  Cross2Icon,
 } from '@radix-ui/react-icons'
-import { Popover, Text } from '@radix-ui/themes'
+import { IconButton, Popover, Text } from '@radix-ui/themes'
 import {
   addDays,
   addMonths,
@@ -19,7 +20,7 @@ import {
   subMonths,
 } from 'date-fns'
 import { enUS, ru } from 'date-fns/locale'
-import { useMemo, useState } from 'react'
+import { useMemo, useState, type MouseEventHandler } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -34,6 +35,7 @@ type DatePickerProps = {
   id?: string
   labelWidth?: string
   inputProps?: InputProps
+  allowClear?: boolean
 }
 
 function dateFnsLocaleFor(lng: string | undefined) {
@@ -52,6 +54,7 @@ export const DatePickerInput = ({
   id,
   labelWidth,
   inputProps,
+  allowClear = true,
 }: DatePickerProps) => {
   const { t, i18n } = useTranslation()
   const dateFnsLocale = dateFnsLocaleFor(i18n.resolvedLanguage)
@@ -96,6 +99,11 @@ export const DatePickerInput = ({
     setOpen(next)
   }
 
+  const handleClear: MouseEventHandler<HTMLButtonElement> = (e) => {
+    e.stopPropagation()
+    onChange?.(null)
+  }
+
   return (
     <Popover.Root open={open} onOpenChange={handleOpenChange} modal={false}>
       <Popover.Trigger>
@@ -107,7 +115,19 @@ export const DatePickerInput = ({
             value={value ? inputDateFormatter.format(value) : ''}
             placeholder={resolvedPlaceholder}
             addonLeft={<CalendarIcon />}
-            style={{ cursor: 'pointer', pointerEvents: 'none' }}
+            addonRight={
+              !!value && allowClear ? (
+                <IconButton
+                  variant="ghost"
+                  size="1"
+                  color="gray"
+                  onClick={handleClear}
+                  style={{ cursor: 'pointer' }}
+                >
+                  <Cross2Icon />
+                </IconButton>
+              ) : undefined
+            }
             {...inputProps}
           />
         </span>
@@ -157,6 +177,7 @@ export const DatePickerInput = ({
               const isSelected = pendingDate
                 ? isSameDay(day, pendingDate)
                 : false
+
               const isCurrentMonth = isSameMonth(day, viewDate)
               const isTodayDate = isToday(day)
 

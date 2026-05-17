@@ -30,7 +30,6 @@ export default function DashboardPage() {
   const isDesktop = useBreakpoint('isDesktop')
 
   const { t, i18n } = useTranslation()
-
   const [createProjectOpen, setCreateProjectOpen] = useState(false)
 
   const {

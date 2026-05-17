@@ -4,9 +4,13 @@ import { DashboardEmptyState } from './dashboard-empty-state'
 
 type WorklogsEmptyStateProps = {
   onHelp?: () => void
+  style?: React.CSSProperties
 }
 
-export default function WorklogsEmptyState({ onHelp }: WorklogsEmptyStateProps) {
+export const WorklogsEmptyState = ({
+  onHelp,
+  style,
+}: WorklogsEmptyStateProps) => {
   const { t } = useTranslation()
 
   return (
@@ -16,6 +20,7 @@ export default function WorklogsEmptyState({ onHelp }: WorklogsEmptyStateProps) 
       description={t('dashboard.worklogsEmpty.description')}
       actionLabel={t('dashboard.worklogsEmpty.action')}
       onAction={onHelp}
+      style={style}
     />
   )
 }

@@ -158,6 +158,8 @@
   "profile.form.skillsPlaceholder": "e.g., Communication, Teamwork, Problem-solving",
   "profile.form.username": "Username",
   "profile.form.usernamePlaceholder": "How should we call you?",
+  "profile.form.edit.success": "Profile updated",
+  "profile.form.edit.error": "Something went wrong. Please check your connection and try again.",
   "profile.links.facebook": "Facebook",
   "profile.links.linkedin": "Linkedin",
   "profile.links.telegram": "Telegram",
