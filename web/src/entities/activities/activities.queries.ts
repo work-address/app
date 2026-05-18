@@ -1,29 +1,9 @@
 import { createQuery } from '@farfetched/core'
 
-import type { ITimeTotalDetail, WorklogSort } from './types'
+import type { WorklogSort } from './types'
 import type { ITimeTotal } from './types'
 
 import { baseApi } from '@/shared'
-
-export const activityDetailQuery = createQuery({
-  handler: async (id: string) => {
-    const response = await baseApi.projectControllerRead({
-      path: { id: id as never },
-    })
-
-    return response.data as baseApi.Project
-  },
-})
-
-export const activityReportQuery = createQuery({
-  handler: async (id: string) => {
-    const response = await baseApi.timeControllerGetReport({
-      path: { id: id as never },
-    })
-
-    return response.data as { time: ITimeTotalDetail[]; totals: ITimeTotal[] }
-  },
-})
 
 export const activitiesQuery = createQuery({
   handler: async ({

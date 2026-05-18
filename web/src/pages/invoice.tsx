@@ -12,8 +12,6 @@ import {
   $invoice,
   $invoiceLoading,
   resetInvoice,
-} from '@/entities/activities'
-import {
   InvoiceCard,
   TotalAmountDesktop,
   TotalAmountMobile,

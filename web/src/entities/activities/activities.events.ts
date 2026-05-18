@@ -7,10 +7,6 @@ import type { WorklogSort } from './types'
 
 export const fetchActivities = createEvent()
 
-export const fetchInvoice = createEvent<{ id: string }>()
-
-export const resetInvoice = createEvent()
-
 export const fetchWorklogs = createEvent()
 
 export const changeActivityStateFilter = createEvent<Partial<ProjectsFilter>>()

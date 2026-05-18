@@ -12,15 +12,11 @@ import {
   activitiesQuery,
   activitiesStatsQuery,
   worklogsQuery,
-  activityDetailQuery,
-  activityReportQuery,
 } from './activities.queries'
 import { mapProjectsAndStats } from './utils'
 
 import type {
   ProjectWithStats,
-  ProjectInvoice,
-  ITimeTotalDetail,
   WorklogsFilters,
   WorklogSort,
   ProjectsFilter,
@@ -129,38 +125,6 @@ export const $filteredActivities = combine(
 export const $isActivitiesFiltering = createStore(false)
   .on(setActivitiesStateFiltering, (_, payload) => payload)
   .on($filteredActivities, () => false)
-
-export const $invoice = combine(
-  activityDetailQuery.$data,
-  activityReportQuery.$data,
-  (detail, report): ProjectInvoice | null => {
-    if (!detail) {
-      return null
-    }
-
-    const rateHour = report?.totals[0]?.rateHour ?? 0
-    const minutesActive = report?.totals[0]?.minutesActive ?? 0
-
-    const totalAmount = (rateHour / 60) * minutesActive
-
-    return {
-      ...detail,
-      report: report?.totals[0] ?? undefined,
-      totalAmount,
-    }
-  },
-)
-
-export const $invoiceWorklogs = combine(
-  activityReportQuery.$data,
-  (report): ITimeTotalDetail[] => report?.time ?? [],
-)
-
-export const $invoiceLoading = combine(
-  activityDetailQuery.$pending,
-  activityReportQuery.$pending,
-  (...flags) => flags.some((flag) => flag),
-)
 
 export const $hasProjects = $activities.map(
   (activities) => activities.length > 0,

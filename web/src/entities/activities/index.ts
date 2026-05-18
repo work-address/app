@@ -2,7 +2,6 @@ import { combine, sample } from 'effector'
 
 import {
   fetchActivities,
-  fetchInvoice,
   fetchWorklogs,
   applyWorklogFilters,
   changeWorklogFilters,
@@ -10,7 +9,6 @@ import {
   resetWorklogSort,
   setWorklogsLoading,
   debouncedChangeWorklogFilters,
-  resetInvoice,
 } from './activities.events'
 import {
   createActivityMutation,
@@ -20,8 +18,6 @@ import {
 import {
   activitiesQuery,
   activitiesStatsQuery,
-  activityDetailQuery,
-  activityReportQuery,
   worklogsQuery,
   type WorklogsQueryParams,
 } from './activities.queries'
@@ -32,12 +28,6 @@ import { $breakpoints } from '@/shared'
 sample({
   clock: fetchActivities,
   target: [activitiesQuery.start, activitiesStatsQuery.start, fetchWorklogs],
-})
-
-sample({
-  clock: fetchInvoice,
-  fn: ({ id }) => id,
-  target: [activityDetailQuery.start, activityReportQuery.start],
 })
 
 sample({
@@ -85,11 +75,6 @@ sample({
   target: [activitiesQuery.start, activitiesStatsQuery.start],
 })
 
-sample({
-  clock: resetInvoice,
-  target: [activityDetailQuery.reset, activityReportQuery.reset],
-})
-
 export {
   type ProjectWithStats,
   type ITimeTotal,
@@ -102,14 +87,12 @@ export {
 
 export {
   fetchActivities,
-  fetchInvoice,
   changeWorklogFilters,
   appendWorklogSort as changeWorklogSort,
   applyWorklogFilters,
   resetWorklogSort,
   changeActivityStateFilter,
   setActivitiesStateFiltering,
-  resetInvoice,
 } from './activities.events'
 
 export {
@@ -122,9 +105,6 @@ export {
   $activities,
   $activitiesLoading,
   $allWorklogs,
-  $invoiceWorklogs,
-  $invoice,
-  $invoiceLoading,
   $hasProjects,
   $worklogsFilters,
   $worklogSort,

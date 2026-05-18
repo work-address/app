@@ -4,8 +4,8 @@ import { QRCodeSVG } from 'qrcode.react'
 import { Trans, useTranslation } from 'react-i18next'
 
 import { useInvoiceInfoFields } from '../hooks'
+import { $invoice, $invoiceLoading } from '../model'
 
-import { $invoice, $invoiceLoading } from '@/entities/activities'
 import { Text, Button } from '@/shared'
 
 export const TotalAmountDesktop = () => {

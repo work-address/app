@@ -3,17 +3,14 @@ import { useUnit } from 'effector-react'
 import { memo, useContext, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import { $invoice, $invoiceWorklogs, $invoiceLoading } from '../model'
+
 import { WorklogsContext } from './worklogs-context'
 
 import type { WorklogsContextProps } from './worklogs-context'
 import type { DesktopBodyCellRenderProps, DataTableConfig } from '@/shared'
 
-import {
-  $invoice,
-  $invoiceWorklogs,
-  $invoiceLoading,
-  type ITimeTotalDetail,
-} from '@/entities/activities'
+import { type ITimeTotalDetail } from '@/entities/activities'
 import {
   formatDurationFromMinutes,
   getTimeActiveColor,

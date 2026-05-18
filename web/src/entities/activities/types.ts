@@ -36,11 +36,6 @@ export type ProjectWithStats = Omit<baseApi.Project, 'rateHour'> &
   ITimeTotal &
   ITimeTotalComputed
 
-export type ProjectInvoice = baseApi.Project & {
-  report?: ITimeTotal
-  totalAmount: number
-}
-
 export type Time = baseApi.Time & {
   project?: baseApi.Project
 }

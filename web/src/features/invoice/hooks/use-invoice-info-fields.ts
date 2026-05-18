@@ -1,7 +1,8 @@
 import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
 
-import { $invoice } from '@/entities/activities'
+import { $invoice } from '../model'
+
 import {
   dateFormatter,
   numberFormatter,

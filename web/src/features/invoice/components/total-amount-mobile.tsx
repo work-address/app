@@ -7,8 +7,8 @@ import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { useInvoiceInfoFields } from '../hooks'
+import { $invoice, $invoiceLoading } from '../model'
 
-import { $invoice, $invoiceLoading } from '@/entities/activities'
 import { Text } from '@/shared'
 
 export const TotalAmountMobile = () => {
