@@ -13,6 +13,7 @@ const ProfilePage = lazy(() => import('@/pages/profile'))
 const ProfileEditPage = lazy(() => import('@/pages/profile/edit'))
 const SignInPage = lazy(() => import('@/pages/sign-in'))
 const InvoicePage = lazy(() => import('@/pages/invoice'))
+const BalancePage = lazy(() => import('@/pages/balance'))
 
 const router = createBrowserRouter([
   {
@@ -37,6 +38,10 @@ const router = createBrowserRouter([
       {
         path: routes.invoice.schema,
         element: <InvoicePage />,
+      },
+      {
+        path: routes.balance.schema,
+        element: <BalancePage />,
       },
     ],
   },
