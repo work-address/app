@@ -1,11 +1,11 @@
 import { AxiosError } from 'axios'
 import { createEffect, createEvent, createStore, sample } from 'effector'
-import { BrowserProvider } from 'ethers'
 
 import type { AuthorizationHeaders } from './types.ts'
+import type { BrowserProvider } from 'ethers'
 import type { JsonRpcSigner } from 'ethers'
 
-import { baseApi, reownEthProvider } from '@/shared'
+import { baseApi, reownProvider } from '@/shared'
 
 export type EthModalResult = {
   signer: JsonRpcSigner
@@ -13,11 +13,11 @@ export type EthModalResult = {
   ethersProvider: BrowserProvider
 }
 
-const ethConnected = createEvent<EthModalResult>()
+export const ethConnected = createEvent<EthModalResult>()
 
 export const ethConnectedPub = createEvent<EthModalResult>()
 
-const ethDisconnected = createEvent()
+export const ethDisconnected = createEvent()
 
 export const ethDisconnectedPub = createEvent()
 
@@ -45,7 +45,7 @@ sample({
 })
 
 export const openEthModalFx = createEffect(async () => {
-  await reownEthProvider.open()
+  await reownProvider.open({ namespace: 'eip155' })
 })
 
 export const signEthFx = createEffect(
@@ -59,7 +59,7 @@ export const signEthFx = createEffect(
 )
 
 export const disconnectEthFx = createEffect(async () => {
-  await reownEthProvider.disconnect()
+  await reownProvider.disconnect()
 })
 
 export const loginEthFx = createEffect(
@@ -84,35 +84,3 @@ export const loginEthFx = createEffect(
     }
   },
 )
-
-const unsubscribeEthUI = reownEthProvider.subscribeEvents(async (event) => {
-  if (
-    event.data.event === 'CONNECT_SUCCESS' &&
-    event.data.properties.view === 'Connect'
-  ) {
-    const walletProvider = reownEthProvider.getWalletProvider()
-
-    if (!walletProvider) {
-      // eslint-disable-next-line no-console
-      return console.error(
-        'Wallet is not connected. Check the ethUI resolve status.',
-      )
-    }
-
-    const ethersProvider = new BrowserProvider(walletProvider as never)
-    const signer = await ethersProvider.getSigner()
-    const address = await signer.getAddress()
-
-    ethConnected({ signer, address, ethersProvider })
-  } else if (event.data.event === 'CONNECT_ERROR') {
-    ethConnectError()
-  } else if (event.data.event === 'DISCONNECT_SUCCESS') {
-    ethDisconnected()
-  }
-})
-
-if (import.meta.hot) {
-  import.meta.hot.dispose(() => {
-    unsubscribeEthUI?.()
-  })
-}

@@ -1,2 +1,2 @@
 export * from './ton-provider.ts'
-export * from './eth-provider.ts'
+export * from './reown-provider.ts'

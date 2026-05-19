@@ -29,12 +29,19 @@ import {
   $initialized,
 } from './profile.stores'
 import {
+  disconnectSolanaFx,
+  openSolanaModalFx,
+  solanaConnectedPub,
+  solanaConnectError,
+} from './solana.model'
+import {
   disconnectTonFx,
   loginTonFx,
   openTonModalFx,
   tonAuthError,
   tonAuthSuccess,
 } from './ton.model'
+import './reown.model'
 
 import { showToast } from '@/shared'
 
@@ -48,12 +55,14 @@ split({
   match: {
     eth: (mode) => mode === 'eth',
     ton: (mode) => mode === 'ton',
+    solana: (mode) => mode === 'solana',
   },
   cases: {
     eth: openEthModalFx,
     ton: getNonceFx.prepend(() => ({
       mode: 'ton',
     })),
+    solana: openSolanaModalFx,
   },
 })
 
@@ -136,7 +145,7 @@ sample({
   clock: initAuth,
   source: $authenticated,
   filter: (auth) => !auth,
-  target: [disconnectEthFx, disconnectTonFx],
+  target: [disconnectEthFx, disconnectTonFx, disconnectSolanaFx],
 })
 
 /**
@@ -160,11 +169,11 @@ sample({
  */
 sample({
   clock: logout,
-  target: [disconnectTonFx, disconnectEthFx, clearTokensFx],
+  target: [disconnectTonFx, disconnectEthFx, disconnectSolanaFx, clearTokensFx],
 })
 
 sample({
-  clock: [signEthFx.fail, tonAuthError],
+  clock: [signEthFx.fail, tonAuthError, solanaConnectError],
   target: logout,
 })
 
@@ -222,6 +231,20 @@ signEthFx.done.watch(() => {
 signEthFx.fail.watch(() => {
   showToast('error', {
     message: 'Ethereum login error.',
+    position: 'top-center',
+  })
+})
+
+solanaConnectedPub.watch(() => {
+  showToast('success', {
+    message: 'Solana wallet connected.',
+    position: 'top-center',
+  })
+})
+
+solanaConnectError.watch(() => {
+  showToast('error', {
+    message: 'Solana connection error.',
     position: 'top-center',
   })
 })

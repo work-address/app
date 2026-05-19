@@ -19,6 +19,7 @@
     "@radix-ui/themes": "^3.3.0",
     "@reown/appkit": "^1.8.19",
     "@reown/appkit-adapter-ethers": "^1.8.19",
+    "@reown/appkit-adapter-solana": "^1.8.19",
     "@tiptap/extension-link": "^3.22.1",
     "@tiptap/extension-placeholder": "^3.22.1",
     "@tiptap/extension-text-align": "^3.22.1",

@@ -1,4 +1,4 @@
-export type LoginMode = 'ton' | 'eth'
+export type LoginMode = 'ton' | 'eth' | 'solana'
 
 export type EthNonceParams = { address: string; mode: 'eth' }
 export type TonNonceParams = { mode: 'ton' }

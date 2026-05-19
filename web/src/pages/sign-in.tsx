@@ -70,6 +70,14 @@ export default function SignInPage() {
           >
             {t('signIn.providers.ton')}
           </ProviderButton>
+
+          <ProviderButton
+            iconUrl={'/img/photo/solana-logo.png'}
+            iconAlt={t('signIn.alt.solana')}
+            onClick={() => onSignIn('solana')}
+          >
+            {t('signIn.providers.solana')}
+          </ProviderButton>
         </S.Actions>
 
         <S.Learn to={routes.docs.build()} target={routes.docs.target}>
