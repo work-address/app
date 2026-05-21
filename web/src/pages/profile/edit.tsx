@@ -1,11 +1,11 @@
 import { useUnit } from 'effector-react'
-import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { useParams, Navigate } from 'react-router-dom'
 
 import { $user } from '@/entities/profile'
 import { EditProfile, ProfileGate } from '@/features/profile'
 import { routes } from '@/routes'
+import { PageHelmet } from '@/shared'
 
 export default function FreelancerProfilePage() {
   const { t, i18n } = useTranslation()
@@ -34,7 +34,7 @@ export default function FreelancerProfilePage() {
     <>
       <ProfileGate friendlyWalletAddress={walletAddress || ''} />
 
-      <Helmet
+      <PageHelmet
         htmlAttributes={{ lang: i18n.language }}
         title={t('app.documentTitle.profileEdit')}
       />

@@ -1,5 +1,4 @@
 import { useUnit } from 'effector-react'
-import { Helmet } from 'react-helmet-async'
 import { Trans, useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router-dom'
 
@@ -8,7 +7,7 @@ import type { LoginMode } from '@/entities/profile'
 import { $authenticated, $pending, login } from '@/entities/profile'
 import { AuthFormStyles as S, ProviderButton } from '@/features/auth'
 import { routes } from '@/routes'
-import { Button, Spinner, useBreakpoint } from '@/shared'
+import { Button, PageHelmet, Spinner, useBreakpoint } from '@/shared'
 
 export default function SignInPage() {
   const { t, i18n } = useTranslation()
@@ -26,7 +25,7 @@ export default function SignInPage() {
 
   return (
     <>
-      <Helmet
+      <PageHelmet
         htmlAttributes={{ lang: i18n.language }}
         title={t('signIn.title')}
       />

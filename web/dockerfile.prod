@@ -4,6 +4,7 @@
 # Build context: repository root (monorepo)
 
 ARG NODE_VERSION=24.12.0-alpine
+ARG GIT_COMMIT=unknown
 
 # Use a lightweight Node.js image for building
 FROM node:${NODE_VERSION} AS dev
@@ -25,6 +26,7 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --froze
 
 # Build the React.js application (outputs to /app/web/dist)
 WORKDIR /app/web
+ENV GIT_COMMIT=${GIT_COMMIT}
 RUN pnpm run build
 
 # =========================================

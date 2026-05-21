@@ -2,7 +2,6 @@ import { PlusIcon } from '@radix-ui/react-icons'
 import { Badge, Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useEffect, useState } from 'react'
-import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 
 import {
@@ -20,6 +19,7 @@ import {
 } from '@/features/dashboard'
 import {
   Button,
+  PageHelmet,
   Text,
   Wrapper,
   useBreakpoint,
@@ -50,7 +50,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <Helmet
+      <PageHelmet
         htmlAttributes={{ lang: i18n.language }}
         title={t('dashboard.page.title')}
       />

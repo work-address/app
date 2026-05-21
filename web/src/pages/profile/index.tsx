@@ -1,10 +1,10 @@
 import { useUnit } from 'effector-react'
-import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { Navigate, useParams } from 'react-router-dom'
 
 import { $user } from '@/entities/profile'
 import { ProfileView, ProfileGate } from '@/features/profile'
+import { PageHelmet } from '@/shared'
 
 export default function ProfilePage() {
   const { t, i18n } = useTranslation()
@@ -24,7 +24,7 @@ export default function ProfilePage() {
     <>
       <ProfileGate userId={id} />
 
-      <Helmet
+      <PageHelmet
         htmlAttributes={{ lang: i18n.language }}
         title={t('profile.title')}
       />

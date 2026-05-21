@@ -2,7 +2,6 @@ import { ArrowLeftIcon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useEffect } from 'react'
-import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router-dom'
 import styled from 'styled-components'
@@ -16,7 +15,7 @@ import {
   resetBalance,
 } from '@/features/balance'
 import { routes } from '@/routes'
-import { Card, IconButton, Text, useBreakpoint } from '@/shared'
+import { Card, IconButton, PageHelmet, Text, useBreakpoint } from '@/shared'
 
 export default function BalancePage() {
   const { t, i18n } = useTranslation()
@@ -37,7 +36,7 @@ export default function BalancePage() {
 
   return (
     <>
-      <Helmet
+      <PageHelmet
         htmlAttributes={{ lang: i18n.language }}
         title={t('balance.documentTitle')}
       />

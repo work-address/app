@@ -2,7 +2,6 @@ import { ArrowLeftIcon } from '@radix-ui/react-icons'
 import { Flex, Separator, Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useEffect } from 'react'
-import { Helmet } from 'react-helmet-async'
 import { useTranslation } from 'react-i18next'
 import { NavLink, useParams } from 'react-router-dom'
 import styled from 'styled-components'
@@ -18,7 +17,7 @@ import {
   Worklogs,
 } from '@/features/invoice'
 import { routes } from '@/routes'
-import { Card, IconButton, Text, useBreakpoint } from '@/shared'
+import { Card, IconButton, PageHelmet, Text, useBreakpoint } from '@/shared'
 
 export default function InvoicePage() {
   const { id } = useParams<{ id: string }>()
@@ -46,7 +45,7 @@ export default function InvoicePage() {
 
   return (
     <>
-      <Helmet
+      <PageHelmet
         htmlAttributes={{ lang: i18n.language }}
         title={t('app.documentTitle.invoice')}
       />
