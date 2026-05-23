@@ -7,7 +7,6 @@
 **/.cache/
 
 # Ignore Git and IDE
-.git/
 .gitignore
 .vscode/
 .idea/

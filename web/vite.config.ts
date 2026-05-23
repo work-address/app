@@ -2,7 +2,6 @@
 import { storybookTest } from '@storybook/addon-vitest/vitest-plugin'
 import react from '@vitejs/plugin-react'
 import { playwright } from '@vitest/browser-playwright'
-import { execSync } from 'node:child_process'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
 import { defineConfig } from 'vite'
@@ -13,22 +12,6 @@ const dirname =
   typeof __dirname === 'undefined'
     ? path.dirname(fileURLToPath(import.meta.url))
     : __dirname
-
-function resolveGitCommit(): string {
-  const fromEnv = process.env.GIT_COMMIT ?? process.env.VITE_GIT_COMMIT
-  if (fromEnv) {
-    return fromEnv
-  }
-
-  try {
-    return execSync('git rev-parse --short HEAD', { encoding: 'utf8' }).trim()
-  } catch {
-    return 'unknown'
-  }
-}
-
-const gitCommit = resolveGitCommit()
-process.env.VITE_GIT_COMMIT_SUFFIX = gitCommit === 'unknown' ? 'n/a' : gitCommit
 
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig(({ command, mode }) => {

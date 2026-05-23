@@ -1,6 +1,4 @@
-const gitCommitSuffix = import.meta.env.VITE_GIT_COMMIT_SUFFIX ?? 'n/a'
-
-export const appDocumentTitle = `Work Address [${gitCommitSuffix}]`
+export const appDocumentTitle = 'Work Address'
 
 export function formatPageTitle(pageTitle: string) {
   return `${pageTitle} - ${appDocumentTitle}`

@@ -18,8 +18,6 @@ services:
     build:
       context: .
       dockerfile: web/dockerfile.prod
-      args:
-        GIT_COMMIT: ${GIT_COMMIT:-unknown}
     image: app-web-prod
     pull_policy: build
     # ports:
@@ -32,9 +30,6 @@ services:
       # Repo root so api/tsconfig.json can extend ../tsconfig.base.json
       context: .
       dockerfile: api/dockerfile.prod
-      args:
-        # Bump visibility of what's running: docker inspect app-api-prod | jq '.[0].Config.Labels'
-        GIT_COMMIT: ${GIT_COMMIT:-unknown}
     image: app-api-prod
     pull_policy: build
     # ports:
