@@ -1,9 +1,11 @@
+# syntax=docker/dockerfile:1
 # =========================================
 # Stage 1: Build the React.js Application
 # =========================================
 # Build context: repository root (monorepo)
 
 ARG NODE_VERSION=24.12.0-alpine
+ARG GIT_COMMIT=unknown
 
 # Use a lightweight Node.js image for building
 FROM node:${NODE_VERSION} AS dev
@@ -19,13 +21,17 @@ COPY pnpm-workspace.yaml package.json pnpm-lock.yaml ./
 COPY tsconfig.base.json ./
 COPY packages/ packages/
 COPY web/ web/
+COPY scripts/resolve-git-commit.sh scripts/resolve-git-commit.sh
 
 # Install project dependencies (frozen lockfile = reproducible, like npm ci)
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
 
 # Build the React.js application (outputs to /app/web/dist)
 WORKDIR /app/web
-RUN pnpm run build
+ARG GIT_COMMIT
+RUN --mount=type=bind,source=.git,target=/tmp/.git,readonly \
+    export GIT_COMMIT="$(GIT_COMMIT="$GIT_COMMIT" GIT_DIR=/tmp/.git sh /app/scripts/resolve-git-commit.sh)" && \
+    pnpm run build
 
 # =========================================
 # Stage 2: Prepare Nginx to Serve Static Files

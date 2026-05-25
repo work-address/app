@@ -102,6 +102,10 @@ export default function SignInPage() {
             components={{ db: <S.DesktopBreak /> }}
           />
         </S.FootLine>
+
+        <S.CommitSha>
+          Version: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}
+        </S.CommitSha>
       </S.Foot>
 
       <S.HiddenButtonRow>

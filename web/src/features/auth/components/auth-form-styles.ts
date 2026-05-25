@@ -142,6 +142,7 @@ export const Foot = styled.footer`
   margin-left: -2px;
   margin-top: 20px;
   line-height: 16px;
+  padding-bottom: 40px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     font-size: 14px;
@@ -168,6 +169,20 @@ export const FootLine = styled.div`
 
 export const FootLabel = styled.span`
   font-weight: 300;
+`
+
+export const CommitSha = styled.div`
+  margin-top: 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(0, 7, 20, 0.38);
+  letter-spacing: 0.2px;
+
+  ${({ theme }) => theme.breakpoints.up('md')} {
+    margin-top: 21px;
+    font-size: 12px;
+  }
 `
 
 export const HiddenButtonRow = styled.div`

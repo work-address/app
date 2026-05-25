@@ -18,6 +18,8 @@ services:
     build:
       context: .
       dockerfile: web/dockerfile.prod
+      args:
+        GIT_COMMIT: ${GIT_COMMIT:-unknown}
     image: app-web-prod
     pull_policy: build
     # ports:

@@ -15,3 +15,7 @@ declare module '*.svg?react' {
   const SVG: React.VFC<React.SVGProps<SVGSVGElement>>
   export default SVG
 }
+
+interface ImportMetaEnv {
+  readonly VITE_GIT_COMMIT_SUFFIX: string
+}
