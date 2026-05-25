@@ -244,5 +244,6 @@
   "dashboard.projectsTable.drawer.meta.createdAt": "Start date",
   "dashboard.projectsTable.drawer.meta.state": "Published in",
   "project.createModal.createSuccess": "Project created successfully",
-  "project.createModal.createError": "Project create error"
+  "project.createModal.createError": "Project create error",
+  "signIn.connected": "Authentication is complete, you may close the window"
 }

@@ -2,11 +2,12 @@ import './app.css'
 import '@radix-ui/themes/styles.css'
 import { useUnit } from 'effector-react'
 import { lazy, Suspense, useEffect } from 'react'
-import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
 import { initAuth } from '@/entities/profile'
 import * as Layouts from '@/layouts'
 import { routes } from '@/routes'
+import { ErrorBoundary } from '@/shared'
 
 const DashboardPage = lazy(() => import('@/pages/dashboard'))
 const ProfilePage = lazy(() => import('@/pages/profile'))
@@ -19,9 +20,11 @@ const router = createBrowserRouter([
   {
     element: <Layouts.AuthLayout />,
     children: [{ path: routes.signIn.schema, element: <SignInPage /> }],
+    errorElement: <ErrorBoundary />,
   },
   {
     element: <Layouts.MainLayout />,
+    errorElement: <ErrorBoundary />,
     children: [
       {
         path: routes.dashboard.schema,
@@ -45,7 +48,6 @@ const router = createBrowserRouter([
       },
     ],
   },
-  { path: '*', element: <Navigate to="/sign-in" replace /> },
 ])
 
 export const App = () => {

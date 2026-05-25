@@ -287,7 +287,12 @@ solanaConnectError.watch(() => {
 export { type LoginMode } from './types'
 
 export { initAuth, login, logout } from './profile.events'
-export { clearTokensFx, fetchStatusFx, saveTokensFx } from './profile.effects'
+export {
+  clearTokensFx,
+  fetchStatusFx,
+  saveTokensFx,
+  connectTimeTrackerFx,
+} from './profile.effects'
 export {
   $authenticated,
   $initialized,

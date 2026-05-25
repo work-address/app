@@ -54,3 +54,10 @@ export const getNonceFx = createEffect(async (params: GetNonceParams) => {
     )
   }
 })
+
+export const connectTimeTrackerFx = createEffect(async (nonce: string) => {
+  await baseApi.authTimeTrackerControllerTimeTrackerConnect({
+    body: { nonce },
+    path: { nonce },
+  })
+})
