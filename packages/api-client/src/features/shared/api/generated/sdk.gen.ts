@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthControllerCheckProofHandlerData, AuthControllerCheckProofHandlerResponses, AuthControllerLoginEthData, AuthControllerLoginEthResponses, AuthControllerNonceData, AuthControllerNonceResponses, AuthControllerRefreshData, AuthControllerRefreshResponses, AuthControllerStatusData, AuthControllerStatusResponses, AuthTimeTrackerControllerTimeTrackerConnectData, AuthTimeTrackerControllerTimeTrackerConnectResponses, AuthTimeTrackerControllerTimeTrackerLoginData, AuthTimeTrackerControllerTimeTrackerLoginResponses, AuthTimeTrackerControllerTimeTrackerNonceGenerateData, AuthTimeTrackerControllerTimeTrackerNonceGenerateResponses, AuthTimeTrackerControllerTimeTrackerNonceGetData, AuthTimeTrackerControllerTimeTrackerNonceGetResponses, HelpControllerSwaggerData, HelpControllerSwaggerResponses, InvoiceControllerCreateData, InvoiceControllerCreateResponses, InvoiceControllerReadData, InvoiceControllerReadResponses, InvoiceControllerSearchData, InvoiceControllerSearchResponses, ProjectControllerCloseData, ProjectControllerCloseResponses, ProjectControllerCreateData, ProjectControllerCreateResponses, ProjectControllerDeleteData, ProjectControllerDeleteResponses, ProjectControllerEditData, ProjectControllerEditResponses, ProjectControllerReadData, ProjectControllerReadResponses, ProjectControllerSearchData, ProjectControllerSearchResponses, TimeControllerCreateOrUpdateManyData, TimeControllerCreateOrUpdateManyResponses, TimeControllerDeleteData, TimeControllerDeleteResponses, TimeControllerGetReportData, TimeControllerGetReportResponses, TimeControllerGetTotalsData, TimeControllerGetTotalsResponses, TimeControllerReadData, TimeControllerReadResponses, TimeControllerSearchData, TimeControllerSearchResponses, UserControllerEditData, UserControllerEditResponses, UserControllerReadData, UserControllerReadResponses, UserControllerSearchData, UserControllerSearchResponses } from './types.gen';
+import type { AuthControllerCheckProofHandlerData, AuthControllerCheckProofHandlerResponses, AuthControllerLoginEthData, AuthControllerLoginEthResponses, AuthControllerLoginSolanaData, AuthControllerLoginSolanaResponses, AuthControllerNonceData, AuthControllerNonceResponses, AuthControllerRefreshData, AuthControllerRefreshResponses, AuthControllerStatusData, AuthControllerStatusResponses, AuthControllerTonNonceData, AuthControllerTonNonceResponses, AuthTimeTrackerControllerTimeTrackerConnectData, AuthTimeTrackerControllerTimeTrackerConnectResponses, AuthTimeTrackerControllerTimeTrackerLoginData, AuthTimeTrackerControllerTimeTrackerLoginResponses, AuthTimeTrackerControllerTimeTrackerNonceGenerateData, AuthTimeTrackerControllerTimeTrackerNonceGenerateResponses, AuthTimeTrackerControllerTimeTrackerNonceGetData, AuthTimeTrackerControllerTimeTrackerNonceGetResponses, HelpControllerSwaggerData, HelpControllerSwaggerResponses, InvoiceControllerCreateData, InvoiceControllerCreateErrors, InvoiceControllerCreateResponses, InvoiceControllerReadData, InvoiceControllerReadErrors, InvoiceControllerReadResponses, InvoiceControllerSearchData, InvoiceControllerSearchResponses, ProjectControllerCloseData, ProjectControllerCloseErrors, ProjectControllerCloseResponses, ProjectControllerCreateData, ProjectControllerCreateResponses, ProjectControllerDeleteData, ProjectControllerDeleteErrors, ProjectControllerDeleteResponses, ProjectControllerEditData, ProjectControllerEditErrors, ProjectControllerEditResponses, ProjectControllerGetStatsData, ProjectControllerGetStatsErrors, ProjectControllerGetStatsResponses, ProjectControllerReadData, ProjectControllerReadErrors, ProjectControllerReadResponses, ProjectControllerSearchData, ProjectControllerSearchResponses, TimeControllerCreateOrUpdateManyData, TimeControllerCreateOrUpdateManyResponses, TimeControllerDeleteData, TimeControllerDeleteErrors, TimeControllerDeleteResponses, TimeControllerEditData, TimeControllerEditErrors, TimeControllerEditResponses, TimeControllerGetReportData, TimeControllerGetReportErrors, TimeControllerGetReportResponses, TimeControllerGetTotalsData, TimeControllerGetTotalsErrors, TimeControllerGetTotalsResponses, TimeControllerMarkPaidData, TimeControllerMarkPaidResponses, TimeControllerMarkUnpaidData, TimeControllerMarkUnpaidResponses, TimeControllerReadData, TimeControllerReadErrors, TimeControllerReadResponses, TimeControllerRemoveProcessesData, TimeControllerRemoveProcessesErrors, TimeControllerRemoveProcessesResponses, TimeControllerRemoveScreenshotData, TimeControllerRemoveScreenshotErrors, TimeControllerRemoveScreenshotResponses, TimeControllerSearchData, TimeControllerSearchResponses, UserControllerEditData, UserControllerEditResponses, UserControllerReadData, UserControllerReadErrors, UserControllerReadResponses, UserControllerSearchData, UserControllerSearchResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -40,6 +40,18 @@ export const authControllerLoginEth = <ThrowOnError extends boolean = false>(opt
 });
 
 /**
+ * Login with Solana wallet
+ */
+export const authControllerLoginSolana = <ThrowOnError extends boolean = false>(options: Options<AuthControllerLoginSolanaData, ThrowOnError>) => (options.client ?? client).post<AuthControllerLoginSolanaResponses, unknown, ThrowOnError>({
+    url: '/api/auth/solana',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * Login with TON Connect proof
  */
 export const authControllerCheckProofHandler = <ThrowOnError extends boolean = false>(options: Options<AuthControllerCheckProofHandlerData, ThrowOnError>) => (options.client ?? client).post<AuthControllerCheckProofHandlerResponses, unknown, ThrowOnError>({
@@ -62,6 +74,15 @@ export const authControllerNonce = <ThrowOnError extends boolean = false>(option
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Request nonce for TON Connect login
+ */
+export const authControllerTonNonce = <ThrowOnError extends boolean = false>(options?: Options<AuthControllerTonNonceData, ThrowOnError>) => (options?.client ?? client).post<AuthControllerTonNonceResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/auth/ton/nonce',
+    ...options
 });
 
 /**
@@ -90,6 +111,7 @@ export const authControllerStatus = <ThrowOnError extends boolean = false>(optio
  */
 export const userControllerSearch = <ThrowOnError extends boolean = false>(options: Options<UserControllerSearchData, ThrowOnError>) => (options.client ?? client).post<UserControllerSearchResponses, unknown, ThrowOnError>({
     responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/user/search',
     ...options,
     headers: {
@@ -101,7 +123,7 @@ export const userControllerSearch = <ThrowOnError extends boolean = false>(optio
 /**
  * Public profile by wallet address
  */
-export const userControllerRead = <ThrowOnError extends boolean = false>(options: Options<UserControllerReadData, ThrowOnError>) => (options.client ?? client).get<UserControllerReadResponses, unknown, ThrowOnError>({
+export const userControllerRead = <ThrowOnError extends boolean = false>(options: Options<UserControllerReadData, ThrowOnError>) => (options.client ?? client).get<UserControllerReadResponses, UserControllerReadErrors, ThrowOnError>({
     responseType: 'json',
     url: '/api/user/{address}/address',
     ...options
@@ -120,7 +142,7 @@ export const userControllerEdit = <ThrowOnError extends boolean = false>(options
 });
 
 /**
- * Search projects accessible by the current user
+ * Search projects accessible to the current user as owner, worker, or viewer
  */
 export const projectControllerSearch = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerSearchData, ThrowOnError>) => (options.client ?? client).post<ProjectControllerSearchResponses, unknown, ThrowOnError>({
     responseType: 'json',
@@ -148,16 +170,16 @@ export const projectControllerCreate = <ThrowOnError extends boolean = false>(op
 /**
  * Soft-delete project
  */
-export const projectControllerDelete = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerDeleteData, ThrowOnError>) => (options.client ?? client).delete<ProjectControllerDeleteResponses, unknown, ThrowOnError>({
+export const projectControllerDelete = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerDeleteData, ThrowOnError>) => (options.client ?? client).delete<ProjectControllerDeleteResponses, ProjectControllerDeleteErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/project/{id}',
     ...options
 });
 
 /**
- * Get project by id
+ * Get project by id (project owner, workers, and viewers)
  */
-export const projectControllerRead = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerReadData, ThrowOnError>) => (options.client ?? client).get<ProjectControllerReadResponses, unknown, ThrowOnError>({
+export const projectControllerRead = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerReadData, ThrowOnError>) => (options.client ?? client).get<ProjectControllerReadResponses, ProjectControllerReadErrors, ThrowOnError>({
     responseType: 'json',
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/project/{id}',
@@ -165,9 +187,9 @@ export const projectControllerRead = <ThrowOnError extends boolean = false>(opti
 });
 
 /**
- * Update project
+ * Update project (including worker and viewer addresses)
  */
-export const projectControllerEdit = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerEditData, ThrowOnError>) => (options.client ?? client).put<ProjectControllerEditResponses, unknown, ThrowOnError>({
+export const projectControllerEdit = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerEditData, ThrowOnError>) => (options.client ?? client).put<ProjectControllerEditResponses, ProjectControllerEditErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/project/{id}',
     ...options,
@@ -178,9 +200,19 @@ export const projectControllerEdit = <ThrowOnError extends boolean = false>(opti
 });
 
 /**
+ * Get project statistics for project owner, workers, and viewers
+ */
+export const projectControllerGetStats = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerGetStatsData, ThrowOnError>) => (options.client ?? client).get<ProjectControllerGetStatsResponses, ProjectControllerGetStatsErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/project/{id}/stats/{period}',
+    ...options
+});
+
+/**
  * Close project
  */
-export const projectControllerClose = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerCloseData, ThrowOnError>) => (options.client ?? client).post<ProjectControllerCloseResponses, unknown, ThrowOnError>({
+export const projectControllerClose = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerCloseData, ThrowOnError>) => (options.client ?? client).post<ProjectControllerCloseResponses, ProjectControllerCloseErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/project/{id}/close',
     ...options
@@ -201,19 +233,45 @@ export const timeControllerSearch = <ThrowOnError extends boolean = false>(optio
 });
 
 /**
- * Aggregated time totals for project owner
+ * Mark time entries as paid
  */
-export const timeControllerGetTotals = <ThrowOnError extends boolean = false>(options?: Options<TimeControllerGetTotalsData, ThrowOnError>) => (options?.client ?? client).get<TimeControllerGetTotalsResponses, unknown, ThrowOnError>({
+export const timeControllerMarkPaid = <ThrowOnError extends boolean = false>(options: Options<TimeControllerMarkPaidData, ThrowOnError>) => (options.client ?? client).post<TimeControllerMarkPaidResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/time/paid',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Mark time entries as unpaid
+ */
+export const timeControllerMarkUnpaid = <ThrowOnError extends boolean = false>(options: Options<TimeControllerMarkUnpaidData, ThrowOnError>) => (options.client ?? client).post<TimeControllerMarkUnpaidResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/time/unpaid',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Aggregated time totals for project owner, workers, and viewers
+ */
+export const timeControllerGetTotals = <ThrowOnError extends boolean = false>(options: Options<TimeControllerGetTotalsData, ThrowOnError>) => (options.client ?? client).get<TimeControllerGetTotalsResponses, TimeControllerGetTotalsErrors, ThrowOnError>({
     responseType: 'json',
     security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/time/totals',
+    url: '/api/time/totals/{id}/project',
     ...options
 });
 
 /**
  * Cached time report for a project
  */
-export const timeControllerGetReport = <ThrowOnError extends boolean = false>(options: Options<TimeControllerGetReportData, ThrowOnError>) => (options.client ?? client).get<TimeControllerGetReportResponses, unknown, ThrowOnError>({
+export const timeControllerGetReport = <ThrowOnError extends boolean = false>(options: Options<TimeControllerGetReportData, ThrowOnError>) => (options.client ?? client).get<TimeControllerGetReportResponses, TimeControllerGetReportErrors, ThrowOnError>({
     responseType: 'json',
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/time/report/{id}',
@@ -234,9 +292,9 @@ export const timeControllerCreateOrUpdateMany = <ThrowOnError extends boolean = 
 });
 
 /**
- * Delete time entry
+ * Delete time entry (tracking worker only)
  */
-export const timeControllerDelete = <ThrowOnError extends boolean = false>(options: Options<TimeControllerDeleteData, ThrowOnError>) => (options.client ?? client).delete<TimeControllerDeleteResponses, unknown, ThrowOnError>({
+export const timeControllerDelete = <ThrowOnError extends boolean = false>(options: Options<TimeControllerDeleteData, ThrowOnError>) => (options.client ?? client).delete<TimeControllerDeleteResponses, TimeControllerDeleteErrors, ThrowOnError>({
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/time/{id}',
     ...options
@@ -245,10 +303,41 @@ export const timeControllerDelete = <ThrowOnError extends boolean = false>(optio
 /**
  * Get one time entry
  */
-export const timeControllerRead = <ThrowOnError extends boolean = false>(options: Options<TimeControllerReadData, ThrowOnError>) => (options.client ?? client).get<TimeControllerReadResponses, unknown, ThrowOnError>({
+export const timeControllerRead = <ThrowOnError extends boolean = false>(options: Options<TimeControllerReadData, ThrowOnError>) => (options.client ?? client).get<TimeControllerReadResponses, TimeControllerReadErrors, ThrowOnError>({
     responseType: 'json',
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/time/{id}',
+    ...options
+});
+
+/**
+ * Update time entry (tracking worker only)
+ */
+export const timeControllerEdit = <ThrowOnError extends boolean = false>(options: Options<TimeControllerEditData, ThrowOnError>) => (options.client ?? client).put<TimeControllerEditResponses, TimeControllerEditErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/time/{id}',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Remove screenshot from time entry (tracking worker only)
+ */
+export const timeControllerRemoveScreenshot = <ThrowOnError extends boolean = false>(options: Options<TimeControllerRemoveScreenshotData, ThrowOnError>) => (options.client ?? client).delete<TimeControllerRemoveScreenshotResponses, TimeControllerRemoveScreenshotErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/time/{id}/screenshot',
+    ...options
+});
+
+/**
+ * Remove processes from time entry (tracking worker only)
+ */
+export const timeControllerRemoveProcesses = <ThrowOnError extends boolean = false>(options: Options<TimeControllerRemoveProcessesData, ThrowOnError>) => (options.client ?? client).delete<TimeControllerRemoveProcessesResponses, TimeControllerRemoveProcessesErrors, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/time/{id}/processes',
     ...options
 });
 
@@ -269,7 +358,7 @@ export const invoiceControllerSearch = <ThrowOnError extends boolean = false>(op
 /**
  * Create invoice from logged time in a range
  */
-export const invoiceControllerCreate = <ThrowOnError extends boolean = false>(options: Options<InvoiceControllerCreateData, ThrowOnError>) => (options.client ?? client).post<InvoiceControllerCreateResponses, unknown, ThrowOnError>({
+export const invoiceControllerCreate = <ThrowOnError extends boolean = false>(options: Options<InvoiceControllerCreateData, ThrowOnError>) => (options.client ?? client).post<InvoiceControllerCreateResponses, InvoiceControllerCreateErrors, ThrowOnError>({
     responseType: 'json',
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/invoice/project/{projectId}',
@@ -283,7 +372,7 @@ export const invoiceControllerCreate = <ThrowOnError extends boolean = false>(op
 /**
  * Get invoice by id
  */
-export const invoiceControllerRead = <ThrowOnError extends boolean = false>(options: Options<InvoiceControllerReadData, ThrowOnError>) => (options.client ?? client).get<InvoiceControllerReadResponses, unknown, ThrowOnError>({
+export const invoiceControllerRead = <ThrowOnError extends boolean = false>(options: Options<InvoiceControllerReadData, ThrowOnError>) => (options.client ?? client).get<InvoiceControllerReadResponses, InvoiceControllerReadErrors, ThrowOnError>({
     responseType: 'json',
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/invoice/{id}',

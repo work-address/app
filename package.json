@@ -4,7 +4,8 @@
   "author": "https://address.work",
   "version": "0.0.1",
   "scripts": {
-    "codegen:api-client": "pnpm --filter @app/api-client codegen"
+    "codegen:api-client": "pnpm --filter @app/api-client codegen",
+    "test": "pnpm --filter ./api test"
   },
   "prettier": {
     "tabWidth": 2,

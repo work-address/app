@@ -67,7 +67,8 @@ export class BaseControllerTest {
   async before() {
     this.app = createAppTest()
     await this.app.boostrap()
-    this.app.start()
+    await this.app.start(0)
+    this.url = `http://127.0.0.1:${this.app.getListeningPort()}`
   }
 
   @timeout(10000)

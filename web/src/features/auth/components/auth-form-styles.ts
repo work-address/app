@@ -171,6 +171,16 @@ export const FootLabel = styled.span`
   font-weight: 300;
 `
 
+export const FootWalletLink = styled.a`
+  color: inherit;
+  text-decoration: none;
+
+  &:hover {
+    color: #3f67a4;
+    text-decoration: underline;
+  }
+`
+
 export const CommitSha = styled.div`
   margin-top: 14px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;

@@ -61,7 +61,7 @@ All HTTP routes are under the **`/api`** prefix.
 ## Testing
 
 ```sh
-pnpm test
+NODE_ENV=test pnpm test
 ```
 
 Run a single file (example):

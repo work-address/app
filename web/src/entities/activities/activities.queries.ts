@@ -26,11 +26,45 @@ export const activitiesQuery = createQuery({
   },
 })
 
-export const activitiesStatsQuery = createQuery({
-  handler: async (): Promise<ITimeTotal[]> => {
-    const response = await baseApi.timeControllerGetTotals()
+type TimeTotalsRow = {
+  projectId: string
+  rateHour: number
+  rateTotal: number
+  minutes: number
+  minutesActive: number
+  keyboardKeys: number
+  mouseKeys: number
+  mouseDistance: number
+}
 
-    return response.data as ITimeTotal[]
+export const activitiesStatsQuery = createQuery({
+  handler: async (projectIds: string[]): Promise<ITimeTotal[]> => {
+    if (projectIds.length === 0) {
+      return []
+    }
+
+    const responses = await Promise.all(
+      projectIds.map((id) =>
+        baseApi.timeControllerGetTotals({
+          path: { id: id as never },
+        }),
+      ),
+    )
+
+    return responses.flatMap((response) => {
+      const rows = (response.data ?? []) as TimeTotalsRow[]
+
+      return rows.map((row) => ({
+        activityId: row.projectId,
+        rateHour: row.rateHour,
+        rateTotal: row.rateTotal,
+        minutes: row.minutes,
+        minutesActive: row.minutesActive,
+        keyboardKeys: row.keyboardKeys,
+        mouseKeys: row.mouseKeys,
+        mouseDistance: row.mouseDistance,
+      }))
+    })
   },
 })
 

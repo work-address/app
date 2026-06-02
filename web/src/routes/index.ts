@@ -172,6 +172,10 @@ export const mapRoutes = (tree: Record<string, any>): MappingRoute[] => {
 
 export const defaultMappedRoutes = mapRoutes(routes)
 
+export const openDocs = () => {
+  window.open(routes.docs.build(), routes.docs.target ?? '_blank')
+}
+
 export type { MainRoutes }
 
 export { type MappingRoute } from './types.ts'

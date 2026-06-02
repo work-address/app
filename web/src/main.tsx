@@ -10,14 +10,13 @@ import '@/shared/i18n/i18n'
 
 import { App } from './app/app'
 
-import { SolanaWalletBridge } from '@/entities/profile/solana.gate'
 import {
   ToastStyle,
   theme,
   Confirm,
   BreakpointsWatcher,
   SonnerRadixTheme,
-  SolanaWalletProvider,
+  SolanaWalletMount,
 } from '@/shared'
 
 const ROOT_ELEMENT_ID = 'root'
@@ -36,25 +35,23 @@ const AppWrapper = REACT_STRICT_MODE ? StrictMode : Fragment
 
 createRoot(ROOT_ELEMENT).render(
   <AppWrapper>
-    <SolanaWalletProvider>
-      <SolanaWalletBridge />
+    <SolanaWalletMount />
 
-      <Theme>
-        <ThemeProvider theme={theme}>
-          <Confirm />
-          <BreakpointsWatcher />
-          <ToastStyle />
+    <Theme>
+      <ThemeProvider theme={theme}>
+        <Confirm />
+        <BreakpointsWatcher />
+        <ToastStyle />
 
-          <HelmetProvider>
-            <App />
-          </HelmetProvider>
-        </ThemeProvider>
-      </Theme>
+        <HelmetProvider>
+          <App />
+        </HelmetProvider>
+      </ThemeProvider>
+    </Theme>
 
-      <SonnerRadixTheme>
-        <Toaster />
-      </SonnerRadixTheme>
-    </SolanaWalletProvider>
+    <SonnerRadixTheme>
+      <Toaster />
+    </SonnerRadixTheme>
   </AppWrapper>,
 )
 

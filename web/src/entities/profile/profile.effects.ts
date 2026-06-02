@@ -46,12 +46,7 @@ export const getNonceFx = createEffect(async (params: GetNonceParams) => {
       .authControllerNonce({ body: { address: params.address } })
       .then((response) => response.data as string)
   } else {
-    return (
-      baseApi
-        // TODO: no address in case of ton login. fix on backend
-        .authControllerNonce({ body: { address: '' } })
-        .then((response) => response.data as string)
-    )
+    return baseApi.authControllerTonNonce().then((response) => response.data as string)
   }
 })
 

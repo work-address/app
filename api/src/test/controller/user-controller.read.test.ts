@@ -18,7 +18,7 @@ export class UserControllerReadTest extends BaseControllerTest {
 
     const res = await userControllerRead({
       client,
-      path: { address: user.address },
+      path: { address: user.address as never },
       throwOnError: true,
     })
 
@@ -30,7 +30,7 @@ export class UserControllerReadTest extends BaseControllerTest {
     expect(res.data!.title).to.be.eq(user.title)
     expect(res.data!.company).to.be.eq(user.company)
     expect(res.data!.bio).to.be.eq(user.bio)
-    expect(Number(res.data!.price)).to.be.eq(Number(user.price))
+    expect(Number(res.data!.rate)).to.be.eq(Number(user.rate))
     expect(res.data!.skills).to.be.eq(user.skills)
     expect(res.data!.facebook).to.be.eq(user.facebook)
     expect(res.data!.linkedIn).to.be.eq(user.linkedIn)
@@ -66,7 +66,7 @@ export class UserControllerReadTest extends BaseControllerTest {
     try {
       await userControllerRead({
         client,
-        path: { address: ghost.address },
+        path: { address: ghost.address as never },
         throwOnError: true,
       })
     } catch (e: unknown) {
@@ -111,7 +111,7 @@ export class UserControllerReadTest extends BaseControllerTest {
 
     const readRes = await userControllerRead({
       client,
-      path: { address: user.address },
+      path: { address: user.address as never },
       throwOnError: true,
     })
     const profile = readRes.data as unknown as {

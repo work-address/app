@@ -15,14 +15,79 @@ type TonAuthSuccessPayload = {
   }
 }
 
-export const tonAuthSuccess = createEvent<TonAuthSuccessPayload>()
-
 export const tonDisconnected = createEvent()
 
-export const tonAuthError = createEvent()
+export const tonAuthError = createEvent<string>()
+
+async function ensureTonWalletDisconnected() {
+  try {
+    await tonConnectProvider.disconnect()
+  } catch {
+    // Wallet was not connected.
+  }
+
+  if (!tonConnectProvider.connected) {
+    return
+  }
+
+  await new Promise<void>((resolve, reject) => {
+    const timeoutId = window.setTimeout(() => {
+      cleanup()
+      reject(new Error('Timed out waiting for TON wallet to disconnect'))
+    }, 10_000)
+
+    const unsubscribe = tonConnectProvider.onStatusChange((wallet) => {
+      if (!wallet) {
+        cleanup()
+        resolve()
+      }
+    })
+
+    const cleanup = () => {
+      window.clearTimeout(timeoutId)
+      unsubscribe()
+    }
+  })
+}
+
+function extractTonAuthPayload(
+  wallet: NonNullable<
+    Awaited<ReturnType<typeof tonConnectProvider.connectWallet>>
+  >,
+): TonAuthSuccessPayload {
+  const proofItemReply = wallet.connectItems?.tonProof
+
+  if (!proofItemReply) {
+    throw new Error('TON proof not received from wallet')
+  }
+
+  if ('error' in proofItemReply) {
+    throw new Error(String(proofItemReply.error))
+  }
+
+  if (!wallet.account.publicKey) {
+    throw new Error('TON wallet did not provide a public key')
+  }
+
+  if (!wallet.account.walletStateInit) {
+    throw new Error('TON wallet did not provide wallet state init')
+  }
+
+  return {
+    address: wallet.account.address,
+    network: wallet.account.chain,
+    public_key: wallet.account.publicKey,
+    proof: {
+      ...proofItemReply.proof,
+      state_init: wallet.account.walletStateInit,
+    },
+  }
+}
 
 export const openTonModalFx = createEffect(
-  async (params: { nonce: string }) => {
+  async (params: { nonce: string }): Promise<TonAuthSuccessPayload> => {
+    await ensureTonWalletDisconnected()
+
     tonConnectProvider.setConnectRequestParameters({
       value: {
         tonProof: params.nonce,
@@ -30,7 +95,9 @@ export const openTonModalFx = createEffect(
       state: 'ready',
     })
 
-    await tonConnectProvider.openModal()
+    const wallet = await tonConnectProvider.connectWallet()
+
+    return extractTonAuthPayload(wallet)
   },
 )
 
@@ -52,29 +119,12 @@ export const loginTonFx = createEffect(
 )
 
 export const disconnectTonFx = createEffect(async () => {
-  await tonConnectProvider.disconnect()
+  await ensureTonWalletDisconnected()
+  tonDisconnected()
 })
 
 const unsubscribeTonUI = tonConnectProvider.onStatusChange((wallet) => {
-  const proofItemReply = wallet?.connectItems?.tonProof
-
-  if (
-    proofItemReply &&
-    'proof' in proofItemReply &&
-    wallet &&
-    wallet.account.publicKey
-  ) {
-    return tonAuthSuccess({
-      address: wallet.account.address,
-      network: wallet.account.chain,
-      public_key: wallet.account.publicKey,
-      proof: {
-        ...proofItemReply.proof,
-        // TODO: get state_init from wallet
-        state_init: '',
-      },
-    })
-  } else if (!wallet) {
+  if (!wallet) {
     tonDisconnected()
   }
 })

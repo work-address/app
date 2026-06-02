@@ -64,6 +64,11 @@ export class User extends AbstractBaseEntity implements IUser {
   @Column('text', { nullable: true })
   @IsString()
   @IsOptional()
+  name: string
+  @Expose({ groups: ['search', 'edit'] })
+  @Column('text', { nullable: true })
+  @IsString()
+  @IsOptional()
   title: string
   @Expose({ groups: ['search', 'edit'] })
   @Column('text', { nullable: true })
@@ -79,7 +84,7 @@ export class User extends AbstractBaseEntity implements IUser {
   @Column('decimal', { precision: 6, scale: 2, default: 0, nullable: true })
   @IsString()
   @IsOptional()
-  price: number
+  rate: number
   @Expose({ groups: ['search', 'edit'] })
   @Column('text', { nullable: true })
   @IsString()

@@ -1,3 +1,3 @@
 export const FEATURE_FLAGS = {
-  SOLANA_ENABLED: false,
+  SOLANA_ENABLED: true,
 }

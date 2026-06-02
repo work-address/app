@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer'
 import {
   Allow,
+  ArrayMinSize,
   IsArray,
   IsBoolean,
   IsDate,
@@ -161,6 +162,13 @@ export class TimeInsertionErrorDto {
   @IsOptional()
   @Allow()
   errors?: unknown
+}
+
+export class TimeIdsDto {
+  @IsArray()
+  @ArrayMinSize(1)
+  @IsUUID('4', { each: true })
+  ids: string[]
 }
 
 export class TimeInsertionResultDto extends TimeCreateDto {

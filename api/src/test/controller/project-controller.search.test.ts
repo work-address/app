@@ -3,11 +3,16 @@ import axios from 'axios'
 import faker from 'faker'
 import { suite, test } from '@testdeck/mocha'
 
-import { projectControllerSearch } from '@app/api-client'
+import {
+  projectControllerEdit,
+  projectControllerSearch,
+} from '@app/api-client'
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { ProjectRepository } from '@/repository/project-repository'
 import { EProjectState } from '@/model/project'
+import { User } from '@/entity/user'
+import { Project } from '@/entity/project'
 
 @suite
 export class ProjectControllerSearchTest extends BaseControllerTest {
@@ -16,6 +21,172 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
   constructor() {
     super()
     this.projectRepository = this.container.get('ProjectRepository')
+  }
+
+  private async grantAccess(
+    project: Project,
+    owner: User,
+    worker: User,
+    viewer: User,
+  ) {
+    await projectControllerEdit({
+      client: this.apiClient(),
+      path: { id: project.id as never },
+      headers: {
+        Authorization: this.authenticator.getTokens(owner).accessToken,
+      },
+      body: {
+        title: project.title,
+        text: project.text,
+        state: project.state,
+        workerAddresses: [worker.address],
+        viewerAddresses: [viewer.address],
+      },
+      throwOnError: true,
+    })
+  }
+
+  @test()
+  async search_returnsSharedProjectsForWorkerAndViewer() {
+    const owner = await this.userFixture.createUser()
+    const worker = await this.userFixture.createUser()
+    const viewer = await this.userFixture.createUser()
+    const owned = await this.projectFixture.createPersonal(owner)
+    const shared = await this.projectFixture.create(owner, EProjectState.ACTIVE)
+    await this.grantAccess(shared, owner, worker, viewer)
+
+    const searchBody = {
+      filter: {},
+      sort: { createdAt: 'ASC' as const },
+      page: 0,
+    }
+
+    const workerRes = await projectControllerSearch({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(worker).accessToken,
+      },
+      body: searchBody,
+      throwOnError: true,
+    })
+
+    const viewerRes = await projectControllerSearch({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(viewer).accessToken,
+      },
+      body: searchBody,
+      throwOnError: true,
+    })
+
+    const workerIds = (workerRes.data[0] as Array<{ id: string }>).map(
+      (row) => row.id,
+    )
+    const viewerIds = (viewerRes.data[0] as Array<{ id: string }>).map(
+      (row) => row.id,
+    )
+
+    expect(workerIds).to.include(shared.id)
+    expect(workerIds).to.not.include(owned.id)
+    expect(viewerIds).to.include(shared.id)
+    expect(viewerIds).to.not.include(owned.id)
+  }
+
+  @test()
+  async search_asOwner_includesAllOwnedProjects() {
+    const owner = await this.userFixture.createUser()
+    const worker = await this.userFixture.createUser()
+    const viewer = await this.userFixture.createUser()
+    const first = await this.projectFixture.createPersonal(owner)
+    const second = await this.projectFixture.create(owner, EProjectState.ACTIVE)
+    await this.grantAccess(second, owner, worker, viewer)
+
+    const res = await projectControllerSearch({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(owner).accessToken,
+      },
+      body: {
+        filter: {},
+        sort: { createdAt: 'ASC' },
+        page: 0,
+      },
+      throwOnError: true,
+    })
+
+    const ids = (res.data[0] as Array<{ id: string }>).map((row) => row.id)
+    expect(ids).to.include(first.id)
+    expect(ids).to.include(second.id)
+    expect(res.data[1]).to.be.eq(2)
+  }
+
+  @test()
+  async search_excludesProjectsWithoutAccess() {
+    const owner = await this.userFixture.createUser()
+    const worker = await this.userFixture.createUser()
+    const viewer = await this.userFixture.createUser()
+    const outsider = await this.userFixture.createUser()
+    const shared = await this.projectFixture.create(owner, EProjectState.ACTIVE)
+    await this.grantAccess(shared, owner, worker, viewer)
+
+    const res = await projectControllerSearch({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(outsider).accessToken,
+      },
+      body: {
+        filter: { projectId: shared.id },
+        sort: { createdAt: 'ASC' },
+        page: 0,
+      },
+      throwOnError: true,
+    })
+
+    expect(res.status).to.be.equal(200)
+    expect(res.data[0]).to.deep.equal([])
+    expect(res.data[1]).to.be.eq(0)
+  }
+
+  @test()
+  async search_filterProjectId_asWorkerAndViewer() {
+    const owner = await this.userFixture.createUser()
+    const worker = await this.userFixture.createUser()
+    const viewer = await this.userFixture.createUser()
+    const project = await this.projectFixture.create(owner, EProjectState.ACTIVE)
+    await this.grantAccess(project, owner, worker, viewer)
+
+    const searchBody = {
+      filter: { projectId: project.id },
+      sort: { createdAt: 'ASC' as const },
+      page: 0,
+    }
+
+    const workerRes = await projectControllerSearch({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(worker).accessToken,
+      },
+      body: searchBody,
+      throwOnError: true,
+    })
+
+    const viewerRes = await projectControllerSearch({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(viewer).accessToken,
+      },
+      body: searchBody,
+      throwOnError: true,
+    })
+
+    expect((workerRes.data[0] as Array<{ id: string }>).length).to.be.eq(1)
+    expect((workerRes.data[0] as Array<{ id: string }>)[0].id).to.be.eq(
+      project.id,
+    )
+    expect((viewerRes.data[0] as Array<{ id: string }>).length).to.be.eq(1)
+    expect((viewerRes.data[0] as Array<{ id: string }>)[0].id).to.be.eq(
+      project.id,
+    )
   }
 
   @test()
@@ -58,6 +229,258 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
     expect(rows[0].user?.id).to.be.eq(user.id)
     expect(rows[0].user?.address).to.be.eq(user.address)
     expect(rows[0].user?.roles).to.deep.eq(user.roles)
+  }
+
+  @test()
+  async search_exposesWorkerAndViewerAddresses() {
+    const owner = await this.userFixture.createUser()
+    const worker = await this.userFixture.createUser()
+    const viewer = await this.userFixture.createUser()
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
+    project.workerAddresses = [worker.address]
+    project.viewerAddresses = [viewer.address]
+    await this.projectRepository.saveSingle(project)
+
+    const res = await projectControllerSearch({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(owner).accessToken,
+      },
+      body: {
+        filter: { projectId: project.id },
+        sort: { createdAt: 'ASC' },
+        page: 0,
+      },
+      throwOnError: true,
+    })
+
+    expect(res.status).to.be.equal(200)
+    const rows = res.data[0] as Array<{
+      workerAddresses?: string[]
+      viewerAddresses?: string[]
+      workers?: Array<{ id?: string; address?: string }>
+      viewers?: Array<{ id?: string; address?: string }>
+    }>
+    expect(rows.length).to.be.eq(1)
+    expect(rows[0].workerAddresses).to.deep.equal([worker.address])
+    expect(rows[0].viewerAddresses).to.deep.equal([viewer.address])
+    expect(rows[0].workers).to.have.length(1)
+    expect(rows[0].workers?.[0]?.id).to.equal(worker.id)
+    expect(rows[0].workers?.[0]?.address).to.equal(worker.address)
+    expect(rows[0].viewers).to.have.length(1)
+    expect(rows[0].viewers?.[0]?.id).to.equal(viewer.id)
+    expect(rows[0].viewers?.[0]?.address).to.equal(viewer.address)
+  }
+
+  @test()
+  async search_exposesEmptyAddressLists() {
+    const owner = await this.userFixture.createUser()
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
+
+    const res = await projectControllerSearch({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(owner).accessToken,
+      },
+      body: {
+        filter: { projectId: project.id },
+        sort: { createdAt: 'ASC' },
+        page: 0,
+      },
+      throwOnError: true,
+    })
+
+    expect(res.status).to.be.equal(200)
+    const rows = res.data[0] as Array<{
+      workerAddresses?: string[]
+      viewerAddresses?: string[]
+      workers?: unknown[]
+      viewers?: unknown[]
+    }>
+    expect(rows.length).to.be.eq(1)
+    expect(rows[0].workerAddresses ?? []).to.deep.equal([])
+    expect(rows[0].viewerAddresses ?? []).to.deep.equal([])
+    expect(rows[0].workers ?? []).to.deep.equal([])
+    expect(rows[0].viewers ?? []).to.deep.equal([])
+  }
+
+  @test()
+  async search_asWorker_exposesWorkersAndViewers() {
+    const owner = await this.userFixture.createUser()
+    const worker = await this.userFixture.createUser()
+    const viewer = await this.userFixture.createUser()
+    const shared = await this.projectFixture.create(owner, EProjectState.ACTIVE)
+    await this.grantAccess(shared, owner, worker, viewer)
+
+    const res = await projectControllerSearch({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(worker).accessToken,
+      },
+      body: {
+        filter: { projectId: shared.id },
+        sort: { createdAt: 'ASC' },
+        page: 0,
+      },
+      throwOnError: true,
+    })
+
+    const rows = res.data[0] as Array<{
+      workerAddresses?: string[]
+      viewerAddresses?: string[]
+      workers?: Array<{ id?: string }>
+      viewers?: Array<{ id?: string }>
+    }>
+
+    expect(rows.length).to.be.eq(1)
+    expect(rows[0].workerAddresses).to.deep.equal([worker.address])
+    expect(rows[0].viewerAddresses).to.deep.equal([viewer.address])
+    expect(rows[0].workers?.[0]?.id).to.equal(worker.id)
+    expect(rows[0].viewers?.[0]?.id).to.equal(viewer.id)
+  }
+
+  @test()
+  async search_asViewer_exposesWorkersAndViewers() {
+    const owner = await this.userFixture.createUser()
+    const worker = await this.userFixture.createUser()
+    const viewer = await this.userFixture.createUser()
+    const shared = await this.projectFixture.create(owner, EProjectState.ACTIVE)
+    await this.grantAccess(shared, owner, worker, viewer)
+
+    const res = await projectControllerSearch({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(viewer).accessToken,
+      },
+      body: {
+        filter: { projectId: shared.id },
+        sort: { createdAt: 'ASC' },
+        page: 0,
+      },
+      throwOnError: true,
+    })
+
+    const rows = res.data[0] as Array<{
+      workerAddresses?: string[]
+      viewerAddresses?: string[]
+      workers?: Array<{ id?: string }>
+      viewers?: Array<{ id?: string }>
+    }>
+
+    expect(rows.length).to.be.eq(1)
+    expect(rows[0].workerAddresses).to.deep.equal([worker.address])
+    expect(rows[0].viewerAddresses).to.deep.equal([viewer.address])
+    expect(rows[0].workers?.[0]?.id).to.equal(worker.id)
+    expect(rows[0].viewers?.[0]?.id).to.equal(viewer.id)
+  }
+
+  @test()
+  async search_multipleProjects_attachWorkersAndViewersPerProject() {
+    const owner = await this.userFixture.createUser()
+    const workerA = await this.userFixture.createUser()
+    const workerB = await this.userFixture.createUser()
+    const viewerA = await this.userFixture.createUser()
+    const viewerB = await this.userFixture.createUser()
+    const first = await this.projectFixture.create(owner, EProjectState.ACTIVE)
+    first.workerAddresses = [workerA.address]
+    first.viewerAddresses = [viewerA.address]
+    await this.projectRepository.saveSingle(first)
+    const second = await this.projectFixture.create(owner, EProjectState.ACTIVE)
+    second.workerAddresses = [workerB.address]
+    second.viewerAddresses = [viewerB.address]
+    await this.projectRepository.saveSingle(second)
+
+    const res = await projectControllerSearch({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(owner).accessToken,
+      },
+      body: {
+        filter: {},
+        sort: { createdAt: 'ASC' },
+        page: 0,
+      },
+      throwOnError: true,
+    })
+
+    const rows = res.data[0] as Array<{
+      id: string
+      workers?: Array<{ id?: string }>
+      viewers?: Array<{ id?: string }>
+    }>
+    const firstRow = rows.find((row) => row.id === first.id)
+    const secondRow = rows.find((row) => row.id === second.id)
+
+    expect(firstRow?.workers?.map((user) => user.id)).to.deep.equal([
+      workerA.id,
+    ])
+    expect(firstRow?.viewers?.map((user) => user.id)).to.deep.equal([
+      viewerA.id,
+    ])
+    expect(secondRow?.workers?.map((user) => user.id)).to.deep.equal([
+      workerB.id,
+    ])
+    expect(secondRow?.viewers?.map((user) => user.id)).to.deep.equal([
+      viewerB.id,
+    ])
+  }
+
+  @test()
+  async search_preservesWorkerAndViewerOrder() {
+    const owner = await this.userFixture.createUser()
+    const workerA = await this.userFixture.createUser()
+    const workerB = await this.userFixture.createUser()
+    const viewerA = await this.userFixture.createUser()
+    const viewerB = await this.userFixture.createUser()
+    const project = await this.projectFixture.create(owner, EProjectState.ACTIVE)
+    project.workerAddresses = [workerB.address, workerA.address]
+    project.viewerAddresses = [viewerB.address, viewerA.address]
+    await this.projectRepository.saveSingle(project)
+
+    const res = await projectControllerSearch({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(owner).accessToken,
+      },
+      body: {
+        filter: { projectId: project.id },
+        sort: { createdAt: 'ASC' },
+        page: 0,
+      },
+      throwOnError: true,
+    })
+
+    const row = (
+      res.data[0] as Array<{
+        workerAddresses?: string[]
+        viewerAddresses?: string[]
+        workers?: Array<{ id?: string; address?: string }>
+        viewers?: Array<{ id?: string; address?: string }>
+      }>
+    )[0]
+
+    expect(row.workerAddresses).to.deep.equal([
+      workerB.address,
+      workerA.address,
+    ])
+    expect(row.viewerAddresses).to.deep.equal([
+      viewerB.address,
+      viewerA.address,
+    ])
+    expect(row.workers?.map((user) => user.id)).to.deep.equal([
+      workerB.id,
+      workerA.id,
+    ])
+    expect(row.viewers?.map((user) => user.id)).to.deep.equal([
+      viewerB.id,
+      viewerA.id,
+    ])
   }
 
   @test()

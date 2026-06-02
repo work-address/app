@@ -11,7 +11,6 @@ import { TimeCreateDto } from '@/model/dto/time'
 import { Project } from '@/entity/project'
 import { RedisClient } from '@/service/redis-client'
 import { ITimeTotals } from '@/model/time'
-import { EProjectState } from '@/model/project'
 import AccessException from '@/exception/access-exception'
 import { ImageResizer } from '@/service/image-resizer'
 
@@ -40,18 +39,10 @@ export class TimeManager {
       const toAt = moment(item.toAt).toDate()
 
       try {
-        const project = await this.projectRepository.findProjectAsWorkerOrFail(
+        const project = await this.projectRepository.findProjectForTimeTracking(
           item.projectId,
+          user,
         )
-
-        const isAccessible =
-          project.user.id === user.id && project.state === EProjectState.ACTIVE
-
-        if (!isAccessible) {
-          throw new AccessException(
-            `The given project is unavailable for time tracking`,
-          )
-        }
 
         let time = await this.timeRepository.findTimeSingleForProject(
           project,
@@ -61,6 +52,11 @@ export class TimeManager {
 
         if (!time) {
           time = new Time()
+          time.user = user
+        } else if (time.user?.id !== user.id) {
+          throw new AccessException(
+            `Wrong user: the given time belongs to someone else`,
+          )
         }
 
         time.fromAt = fromAt
@@ -99,26 +95,45 @@ export class TimeManager {
     return this.timeRepository.validateAndSave(time)
   }
 
-  public async editAndSave(time: Time, data: Time, worker: User) {
-    const timeExisting = await this.timeRepository.findTimeByWorkerOrFail(
-      time,
-      worker,
-    )
+  public async setIsPaidMany(
+    ids: string[],
+    isPaid: boolean,
+    user: User,
+  ): Promise<void> {
+    const times = await this.timeRepository.findByIdsAsAuthor(ids, user)
 
-    if (!timeExisting) {
-      throw new AccessException(`The given time belongs to someone else`)
+    for (const time of times) {
+      time.isPaid = isPaid
     }
 
-    time = Object.assign(time, data)
+    await this.timeRepository.saveMany(times)
+  }
+
+  public async editAndSave(time: Time, data: Time): Promise<void> {
+    time.note = data.note
+
+    if (data.isPaid !== undefined) {
+      time.isPaid = data.isPaid
+    }
 
     await this.timeRepository.validateAndSave(time)
   }
 
-  public async remove(time: Time, worker: User) {
+  public async removeScreenshot(time: Time): Promise<void> {
+    time.screenshot = null
+    await this.timeRepository.validateAndSave(time)
+  }
+
+  public async removeProcesses(time: Time): Promise<void> {
+    time.processes = null
+    await this.timeRepository.validateAndSave(time)
+  }
+
+  public async remove(time: Time, user: User) {
     try {
-      const timeExisting = await this.timeRepository.findTimeByWorkerOrFail(
+      const timeExisting = await this.timeRepository.findTimeAsAuthorOrFail(
         time,
-        worker,
+        user,
       )
 
       await this.timeRepository.remove(timeExisting)
@@ -139,11 +154,6 @@ export class TimeManager {
     totals: ITimeTotals[]
     time: Time[]
   }> {
-    const data = {
-      totals: await this.timeRepository.getTotals(user, project.id),
-      time: await this.timeRepository.findAllTimeForProject(project, user),
-    }
-
     const cache = await this.redisClient.get(project.id)
 
     if (
@@ -156,6 +166,11 @@ export class TimeManager {
         totals: ITimeTotals[]
         time: Time[]
       }
+    }
+
+    const data = {
+      totals: await this.timeRepository.getTotals(user, project.id),
+      time: await this.timeRepository.findAllTimeForProject(project, user),
     }
 
     await this.redisClient.setWithExpiry(

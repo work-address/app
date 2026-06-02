@@ -7,6 +7,14 @@ type ExposeGroupStorage = {
     propertyName?: string
     options?: { groups?: string[] }
   }>
+  findTypeMetadata?(
+    target: Function,
+    propertyName: string,
+  ):
+    | {
+        typeFunction?: () => unknown
+      }
+    | undefined
 }
 
 function hasGroup(
@@ -83,14 +91,25 @@ function resolveEntityPropertyType(
   return reflectedType
 }
 
-function inferEntityRefSchema(
-  entityClass: Function,
-  propertyName: string,
+function isEmptyArrayItemsSchema(schema: SchemaObject): boolean {
+  if (schema.type !== 'array') {
+    return false
+  }
+
+  const items = schema.items
+  if (!items || typeof items !== 'object' || '$ref' in items) {
+    return false
+  }
+
+  return Object.keys(items).length === 0
+}
+
+function entityRefSchemaForType(
+  propertyType: Function,
   group: string,
   componentsSchemas: Record<string, SchemaObject>,
 ): SchemaObject | undefined {
-  const propertyType = resolveEntityPropertyType(entityClass, propertyName)
-  if (!propertyType || !isEntityLikeReflectedType(propertyType)) {
+  if (!isEntityLikeReflectedType(propertyType)) {
     return undefined
   }
 
@@ -104,6 +123,51 @@ function inferEntityRefSchema(
   }
 
   return undefined
+}
+
+function inferArrayEntityRefSchema(
+  entityClass: Function,
+  propertyName: string,
+  group: string,
+  componentsSchemas: Record<string, SchemaObject>,
+  classTransformerStorage: ExposeGroupStorage,
+): SchemaObject | undefined {
+  const typeMeta = classTransformerStorage.findTypeMetadata?.(
+    entityClass,
+    propertyName,
+  )
+  const elementType = typeMeta?.typeFunction?.()
+  if (typeof elementType !== 'function') {
+    return undefined
+  }
+
+  const itemSchema = entityRefSchemaForType(
+    elementType,
+    group,
+    componentsSchemas,
+  )
+  if (!itemSchema) {
+    return undefined
+  }
+
+  return {
+    type: 'array',
+    items: itemSchema,
+  }
+}
+
+function inferEntityRefSchema(
+  entityClass: Function,
+  propertyName: string,
+  group: string,
+  componentsSchemas: Record<string, SchemaObject>,
+): SchemaObject | undefined {
+  const propertyType = resolveEntityPropertyType(entityClass, propertyName)
+  if (!propertyType) {
+    return undefined
+  }
+
+  return entityRefSchemaForType(propertyType, group, componentsSchemas)
 }
 
 /**
@@ -135,6 +199,20 @@ export function schemaForClassTransformGroup(
 
     const fromCv = full?.properties?.[prop]
     if (hasMeaningfulSchemaShape(fromCv)) {
+      if (isEmptyArrayItemsSchema(fromCv as SchemaObject)) {
+        const arraySchema = inferArrayEntityRefSchema(
+          entityClass,
+          prop,
+          group,
+          componentsSchemas,
+          classTransformerStorage,
+        )
+        if (arraySchema) {
+          properties[prop] = arraySchema
+          continue
+        }
+      }
+
       properties[prop] = fromCv as SchemaObject
       continue
     }

@@ -43,11 +43,16 @@ export class TimeControllerSearchTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const rowsPersonal = res.data[0] as Array<{ id: string; note: unknown }>
+    const rowsPersonal = res.data[0] as Array<{
+      id: string
+      note: unknown
+      isPaid: boolean
+    }>
     expect(res.status).to.be.equal(200)
     expect(rowsPersonal.length).to.be.eq(1)
     expect(rowsPersonal[0].id).to.be.eq(time.id)
     expect(rowsPersonal[0].note).to.be.deep.eq(time.note)
+    expect(rowsPersonal[0].isPaid).to.be.false
   }
 
   @test
@@ -256,8 +261,14 @@ export class TimeControllerSearchTest extends BaseControllerTest {
       [0, 1, 2, 3].map((i) =>
         this.timeFixture.create(
           project,
-          base.clone().add(i * 10, 'minutes').toDate(),
-          base.clone().add(i * 10 + 5, 'minutes').toDate(),
+          base
+            .clone()
+            .add(i * 10, 'minutes')
+            .toDate(),
+          base
+            .clone()
+            .add(i * 10 + 5, 'minutes')
+            .toDate(),
         ),
       ),
     )

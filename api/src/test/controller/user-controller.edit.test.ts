@@ -31,7 +31,7 @@ export class UserControllerEditTest extends BaseControllerTest {
           bio: 'x',
           tz: 'UTC',
           skills: 'y',
-          price: 1,
+          rate: 1,
           phone: this.faker.phone(),
           roles: [EUserRole.ROLE_USER],
         } as unknown as UserEdit,
@@ -58,7 +58,7 @@ export class UserControllerEditTest extends BaseControllerTest {
       tz: 'America/Los_Angeles',
       phone: this.faker.phone(),
       skills: faker.datatype.uuid(),
-      price: faker.datatype.number(50),
+      rate: faker.datatype.number(50),
       facebook: faker.internet.url(),
       linkedIn: faker.internet.url(),
       twitter: `@${faker.internet.userName().toLowerCase()}`,
@@ -88,7 +88,7 @@ export class UserControllerEditTest extends BaseControllerTest {
     expect(updated.company).to.be.equal(data.company)
     expect(updated.roles).to.be.deep.equal([EUserRole.ROLE_USER])
     expect(updated.tz).to.be.eq(data.tz)
-    expect(parseFloat(updated.price as unknown as string)).to.be.eq(data.price)
+    expect(parseFloat(updated.rate as unknown as string)).to.be.eq(data.rate)
     expect(updated.skills).to.be.eq(data.skills)
     expect(updated.phone).to.be.eq(data.phone)
     expect(updated.facebook).to.be.eq(data.facebook)

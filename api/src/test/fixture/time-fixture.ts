@@ -1,6 +1,7 @@
 import faker from 'faker'
 import { inject, injectable } from 'inversify'
 import { Project } from '@/entity/project'
+import { User } from '@/entity/user'
 
 import { TimeRepository } from '@/repository/time-repository'
 import { Time } from '@/entity/time'
@@ -10,10 +11,16 @@ export class TimeFixture {
   @inject('TimeRepository')
   protected timeRepository: TimeRepository
 
-  public create(project: Project, from: Date, to: Date): Promise<Time> {
+  public create(
+    project: Project,
+    from: Date,
+    to: Date,
+    user?: User,
+  ): Promise<Time> {
     const time = new Time()
 
     time.project = project
+    time.user = user ?? project.user
     time.note = faker.datatype.uuid()
     time.mouseKeys = faker.datatype.number(9)
     time.keyboardKeys = faker.datatype.number(9)

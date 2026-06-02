@@ -39,6 +39,13 @@ export class RedisClient {
     return ''
   }
 
+  public async del(key: string): Promise<void> {
+    const client = await this.getConnectedClient()
+
+    await client.del(key)
+    await client.disconnect()
+  }
+
   private async getConnectedClient() {
     const client = createClient({
       url: this.parameters.redis,

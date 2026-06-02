@@ -73,4 +73,26 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
       },
     })
   }
+
+  public countByAddresses(addresses: string[]): Promise<number> {
+    if (!addresses.length) {
+      return Promise.resolve(0)
+    }
+
+    return this.getRepo()
+      .createQueryBuilder('user')
+      .andWhere('user.address IN (:...addresses)', { addresses })
+      .getCount()
+  }
+
+  public findByAddresses(addresses: string[]): Promise<User[]> {
+    if (!addresses.length) {
+      return Promise.resolve([])
+    }
+
+    return this.getRepo()
+      .createQueryBuilder('user')
+      .where('user.address IN (:...addresses)', { addresses })
+      .getMany()
+  }
 }

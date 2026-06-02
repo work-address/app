@@ -27,7 +27,16 @@ import { $breakpoints } from '@/shared'
 
 sample({
   clock: fetchActivities,
-  target: [activitiesQuery.start, activitiesStatsQuery.start, fetchWorklogs],
+  target: [activitiesQuery.start, fetchWorklogs],
+})
+
+sample({
+  clock: activitiesQuery.finished.success,
+  fn: ({ result }) =>
+    result.items
+      .map((project) => project.id)
+      .filter((id): id is string => Boolean(id)),
+  target: activitiesStatsQuery.start,
 })
 
 sample({
@@ -72,7 +81,7 @@ sample({
     deleteActivityMutation.finished.success.map(() => void 0),
     editActivityMutation.finished.success.map(() => void 0),
   ],
-  target: [activitiesQuery.start, activitiesStatsQuery.start],
+  target: activitiesQuery.start,
 })
 
 export {

@@ -5,7 +5,7 @@ import { createApp } from '@/app/app-bootstrap'
   const app = await createApp()
 
   await app.boostrap()
-  app.start()
+  await app.start()
 })()
   .then((r) => console.log(r))
   .catch((e) => console.log(e))

@@ -7,8 +7,8 @@ import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
 import { EProjectState } from '@/model/project'
-import { SelectQueryBuilder } from 'typeorm'
-import { ISearch } from '@/model/dto/search'
+import { Brackets, SelectQueryBuilder } from 'typeorm'
+
 import { ITimeTotals } from '@/model/time'
 import { Calc } from '@/service/calc'
 import AccessException from '@/exception/access-exception'
@@ -21,53 +21,54 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
   protected target = Time
 
   public async findOneConfirmUser(time: Time, user: User): Promise<Time> {
-    const timeOwner = await this.getRepo()
+    const qb = this.getRepo()
       .createQueryBuilder('time')
       .innerJoinAndSelect('time.project', 'project')
-      .innerJoin('project.user', 'userId')
+      .innerJoin('project.user', 'owner')
       .andWhere('time.id = :timeId', { timeId: time.id })
-      .andWhere('userId.id = :userId', { userId: user.id })
-      .select()
-      .getOne()
 
-    const t = timeOwner
+    this.applyViewAccessFilter(qb, 'owner', user)
 
-    if (!t) {
+    const timeEntry = await qb.select().getOne()
+
+    if (!timeEntry) {
       throw new AccessException()
     }
 
-    return t
+    return timeEntry
   }
 
   public async getTotals(
     user: User,
     projectId: string | undefined,
   ): Promise<ITimeTotals[]> {
-    const result = await this.getRepo()
+    const qb = this.getRepo()
       .createQueryBuilder('time')
-      .innerJoinAndSelect('time.project', 'project')
-      .innerJoinAndSelect('project.user', 'user')
+      .innerJoin('time.project', 'project')
+      .innerJoin('project.user', 'owner')
       .andWhere('project.deletedAt IS NULL')
-      .andWhere('user.id = :userId', { userId: user.id })
-      .select([
-        'project.id as projectId',
-        'project.rateHour as rateHour',
-        'COUNT(time.id) as minutes',
-        'SUM(time.minutesActive) as minutesActive',
-        'SUM(time.keyboardKeys) as keyboardKeys',
-        'SUM(time.mouseKeys) as mouseKeys',
-        'SUM(time.mouseDistance) as mouseDistance',
-      ])
-      .where((qb: SelectQueryBuilder<Time>) => {
-        qb.andWhere('project.user.id = :userId', { userId: user.id })
 
-        if (projectId) {
-          qb.andWhere('project.id = :projectId', { projectId })
-        }
-      })
+    this.applyViewAccessFilter(qb, 'owner', user)
+
+    qb.select([
+      'project.id as projectId',
+      'project.rateHour as rateHour',
+      'COUNT(time.id) as minutes',
+      'SUM(time.minutesActive) as minutesActive',
+      'SUM(CASE WHEN COALESCE(time.isPaid, false) = true THEN time.minutesActive ELSE 0 END) as minutesPaid',
+      'SUM(CASE WHEN COALESCE(time.isPaid, false) = false THEN time.minutesActive ELSE 0 END) as minutesUnpaid',
+      'SUM(time.keyboardKeys) as keyboardKeys',
+      'SUM(time.mouseKeys) as mouseKeys',
+      'SUM(time.mouseDistance) as mouseDistance',
+    ])
       .groupBy('project.id')
       .orderBy('project.id', 'ASC')
-      .getRawMany()
+
+    if (projectId) {
+      qb.andWhere('project.id = :projectId', { projectId })
+    }
+
+    const result = await qb.getRawMany()
 
     return result.map((r) => {
       return {
@@ -76,6 +77,8 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         rateTotal: Calc.rateTotal(r.minutes * 10, r.ratehour),
         minutes: Number(r.minutes * 10),
         minutesActive: Number(r.minutesactive),
+        minutesPaid: Number(r.minutespaid),
+        minutesUnpaid: Number(r.minutesunpaid),
         keyboardKeys: Number(r.keyboardkeys),
         mouseKeys: Number(r.mousekeys),
         mouseDistance: Number(r.mousedistance),
@@ -83,7 +86,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     })
   }
 
-  public findAndCountPersonal(
+  public findAndCount(
     search: TimeSearchDto,
     user: User,
   ): Promise<[Time[], number]> {
@@ -101,121 +104,107 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     const sort = this.filter.buildOrderByCondition('time', s)
     const limit = this.filter.buildLimit(search)
 
-    return this.getRepo()
+    const qb = this.getRepo()
       .createQueryBuilder('time')
       .innerJoinAndSelect('time.project', 'project')
-      .innerJoinAndSelect('project.user', 'user')
-      .andWhere('user.id = :userId', { userId: user.id })
+      .innerJoinAndSelect('time.user', 'user')
+      .innerJoinAndSelect('project.user', 'owner')
       .andWhere(`project.state = :state`, { state: EProjectState.ACTIVE })
       .andWhere('project.deletedAt IS NULL')
-      .select()
-      .where((qb: SelectQueryBuilder<Time>) => {
-        qb.andWhere('project.user.id = :userId', { userId: user.id })
 
+    this.applyViewAccessFilter(qb, 'owner', user)
+
+    qb.andWhere(
+      new Brackets((filterQb) => {
         if ('projectId' in s.filter) {
-          qb.andWhere('project.id = :projectId', {
+          filterQb.andWhere('project.id = :projectId', {
             projectId: s.filter.projectId,
           })
         }
         if ('fromAt' in s.filter) {
-          qb.andWhere('time.fromAt >= :fromAt', {
+          filterQb.andWhere('time.fromAt >= :fromAt', {
             fromAt: s.filter.fromAt,
           })
         }
         if ('toAt' in s.filter) {
-          qb.andWhere('time.toAt <= :toAt', {
+          filterQb.andWhere('time.toAt <= :toAt', {
             toAt: s.filter.toAt,
           })
         }
         if ('note' in s.filter) {
-          qb.andWhere('time.note ILIKE :note', { note: `%${s.filter.note}%` })
+          filterQb.andWhere('time.note ILIKE :note', {
+            note: `%${s.filter.note}%`,
+          })
         }
         if ('screenshot' in s.filter) {
-          qb.andWhere('time.screenshot ILIKE :screenshot', {
+          filterQb.andWhere('time.screenshot ILIKE :screenshot', {
             screenshot: `%${s.filter.screenshot}%`,
           })
         }
         if ('keyboardKeysFrom' in s.filter) {
-          qb.andWhere('time.keyboardKeys >= :keyboardKeysFrom', {
+          filterQb.andWhere('time.keyboardKeys >= :keyboardKeysFrom', {
             keyboardKeysFrom: s.filter.keyboardKeysFrom,
           })
         }
         if ('keyboardKeysTo' in s.filter) {
-          qb.andWhere('time.keyboardKeys <= :keyboardKeysTo', {
+          filterQb.andWhere('time.keyboardKeys <= :keyboardKeysTo', {
             keyboardKeysTo: s.filter.keyboardKeysTo,
           })
         }
         if ('minutesActiveFrom' in s.filter) {
-          qb.andWhere('time.minutesActive >= :minutesActiveFrom', {
+          filterQb.andWhere('time.minutesActive >= :minutesActiveFrom', {
             minutesActiveFrom: s.filter.minutesActiveFrom,
           })
         }
         if ('minutesActiveTo' in s.filter) {
-          qb.andWhere('time.minutesActive <= :minutesActiveTo', {
+          filterQb.andWhere('time.minutesActive <= :minutesActiveTo', {
             minutesActiveTo: s.filter.minutesActiveTo,
           })
         }
         if ('mouseKeysFrom' in s.filter) {
-          qb.andWhere('time.mouseKeys >= :mouseKeysFrom', {
+          filterQb.andWhere('time.mouseKeys >= :mouseKeysFrom', {
             mouseKeysFrom: s.filter.mouseKeysFrom,
           })
         }
         if ('mouseKeysTo' in s.filter) {
-          qb.andWhere('time.mouseKeys <= :mouseKeysTo', {
+          filterQb.andWhere('time.mouseKeys <= :mouseKeysTo', {
             mouseKeysTo: s.filter.mouseKeysTo,
           })
         }
         if ('mouseDistanceFrom' in s.filter) {
-          qb.andWhere('time.mouseDistance >= :mouseDistanceFrom', {
+          filterQb.andWhere('time.mouseDistance >= :mouseDistanceFrom', {
             mouseDistanceFrom: s.filter.mouseDistanceFrom,
           })
         }
         if ('mouseDistanceTo' in s.filter) {
-          qb.andWhere('time.mouseDistance <= :mouseDistanceTo', {
+          filterQb.andWhere('time.mouseDistance <= :mouseDistanceTo', {
             mouseDistanceTo: s.filter.mouseDistanceTo,
           })
         }
         if ('withScreenshots' in s.filter) {
           if (s.filter.withScreenshots) {
-            qb.andWhere('time.screenshot IS NOT NULL')
-            qb.andWhere("time.screenshot != ''")
+            filterQb.andWhere('time.screenshot IS NOT NULL')
+            filterQb.andWhere("time.screenshot != ''")
           } else {
-            qb.andWhere("(time.screenshot IS NULL OR time.screenshot = '')")
+            filterQb.andWhere(
+              "(time.screenshot IS NULL OR time.screenshot = '')",
+            )
           }
         }
         if ('withProcesses' in s.filter) {
           if (s.filter.withProcesses) {
-            qb.andWhere('time.processes IS NOT NULL')
-            qb.andWhere("time.processes::text != '[]'")
+            filterQb.andWhere('time.processes IS NOT NULL')
+            filterQb.andWhere("time.processes::text != '[]'")
           } else {
-            qb.andWhere(
+            filterQb.andWhere(
               "(time.processes IS NULL OR time.processes::text = '[]')",
             )
           }
         }
-      })
-      .orderBy(sort)
-      .skip(limit * s.page)
-      .take(limit)
-      .getManyAndCount()
-  }
-
-  public findAndCount(search: ISearch): Promise<[Time[], number]> {
-    const s = _.assign(
-      {
-        filter: {},
-        sort: {
-          createdAt: 'ASC',
-        },
-        page: 0,
-      },
-      search,
+      }),
     )
-    const sort = this.filter.buildOrderByCondition('time', s)
-    const limit = this.filter.buildLimit(search)
 
-    return this.getRepo()
-      .createQueryBuilder('time')
+    return qb
       .select()
       .orderBy(sort)
       .skip(limit * s.page)
@@ -223,27 +212,93 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       .getManyAndCount()
   }
 
-  public findTimeByWorkerOrFail(time: Time, worker: User): Promise<Time> {
-    return this.getRepo()
+  public async findByIdsConfirmAccess(
+    ids: string[],
+    user: User,
+  ): Promise<Time[]> {
+    const uniqueIds = [...new Set(ids)]
+
+    const qb = this.getRepo()
       .createQueryBuilder('time')
       .innerJoinAndSelect('time.project', 'project')
       .innerJoinAndSelect('project.user', 'owner')
-      .andWhere('owner.id = :ownerId', { ownerId: worker.id })
+      .innerJoinAndSelect('time.user', 'author')
+      .andWhere('time.id IN (:...ids)', { ids: uniqueIds })
+
+    this.applyViewAccessFilter(qb, 'owner', user)
+
+    const times = await qb.getMany()
+
+    if (times.length !== uniqueIds.length) {
+      throw new AccessException()
+    }
+
+    for (const time of times) {
+      if (!time.isAuthor(user) && !time.project.isOwner(user)) {
+        throw new AccessException()
+      }
+    }
+
+    return times
+  }
+
+  public async findByIdsAsAuthor(ids: string[], user: User): Promise<Time[]> {
+    const uniqueIds = [...new Set(ids)]
+
+    if (uniqueIds.length === 0) {
+      return []
+    }
+
+    const times = await this.getRepo()
+      .createQueryBuilder('time')
+      .innerJoinAndSelect('time.user', 'author')
+      .where('time.id IN (:...ids)', { ids: uniqueIds })
+      .andWhere('author.id = :userId', { userId: user.id })
+      .getMany()
+
+    if (times.length !== uniqueIds.length) {
+      throw new AccessException()
+    }
+
+    return times
+  }
+
+  public findTimeAsAuthorOrFail(time: Time, user: User): Promise<Time> {
+    return this.getRepo()
+      .createQueryBuilder('time')
+      .innerJoinAndSelect('time.project', 'project')
+      .innerJoinAndSelect('time.user', 'author')
       .andWhere('time.id = :timeId', { timeId: time.id })
+      .andWhere('author.id = :userId', { userId: user.id })
       .select()
       .getOneOrFail()
   }
 
-  public findAllTimeForProject(project: Project, user: User): Promise<Time[]> {
+  public findWithProcessesForProjectSince(
+    project: Project,
+    fromAt: Date,
+  ): Promise<Time[]> {
     return this.getRepo()
       .createQueryBuilder('time')
-      .innerJoinAndSelect('time.project', 'project')
-      .innerJoinAndSelect('project.user', 'user')
+      .innerJoin('time.project', 'project')
       .andWhere('project.id = :projectId', { projectId: project.id })
-      .andWhere('user.id = :userId', { userId: user.id })
-      .select('time')
-      .orderBy('time.fromAt', 'DESC')
+      .andWhere('time.fromAt >= :fromAt', { fromAt })
+      .andWhere('time.processes IS NOT NULL')
+      .andWhere("time.processes::text != '[]'")
+      .orderBy('time.fromAt', 'ASC')
       .getMany()
+  }
+
+  public findAllTimeForProject(project: Project, user: User): Promise<Time[]> {
+    const qb = this.getRepo()
+      .createQueryBuilder('time')
+      .innerJoinAndSelect('time.project', 'project')
+      .innerJoin('project.user', 'owner')
+      .andWhere('project.id = :projectId', { projectId: project.id })
+
+    this.applyViewAccessFilter(qb, 'owner', user)
+
+    return qb.select('time').orderBy('time.fromAt', 'DESC').getMany()
   }
 
   public findTimeSingleForProject(
@@ -254,8 +309,8 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     return this.getRepo()
       .createQueryBuilder('time')
       .innerJoinAndSelect('time.project', 'project')
+      .innerJoinAndSelect('time.user', 'user')
       .andWhere('project.id = :projectId', { projectId: project.id })
-      .select('time')
       .andWhere('time.fromAt = :from', { from })
       .andWhere('time.toAt = :to', { to })
       .getOne()
@@ -271,11 +326,35 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       .createQueryBuilder('time')
       .innerJoinAndSelect('time.project', 'project')
       .innerJoin('project.user', 'owner')
-      .andWhere('time.fromAt >= :from', { from })
-      .andWhere('time.toAt <= :to', { to })
+      .andWhere('time.fromAt >= :from', { from: new Date(from) })
+      .andWhere('time.toAt <= :to', { to: new Date(to) })
       .andWhere('owner.id = :ownerId', { ownerId: freelancer.id })
       .andWhere('project.id = :projectId', { projectId: project.id })
       .andWhere('project.deletedAt IS NULL')
+      .andWhere('COALESCE(time.isPaid, false) = false')
       .getMany()
+  }
+
+  private applyViewAccessFilter(
+    qb: SelectQueryBuilder<unknown>,
+    ownerAlias: string,
+    user: User,
+  ): void {
+    const { accessUserId, userAddress } = Project.accessParams(user)
+
+    qb.andWhere(
+      new Brackets((subQb) => {
+        subQb
+          .where(`${ownerAlias}.id = :accessUserId`, { accessUserId })
+          .orWhere(
+            ":userAddress = ANY(COALESCE(project.workerAddresses, '{}'))",
+            { userAddress },
+          )
+          .orWhere(
+            ":userAddress = ANY(COALESCE(project.viewerAddresses, '{}'))",
+            { userAddress },
+          )
+      }),
+    )
   }
 }

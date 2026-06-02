@@ -4,6 +4,7 @@ import { suite, test } from '@testdeck/mocha'
 
 import { AbstractDatabaseIntegration } from '@/test/abstract-database.integration'
 import { Signer } from '@/service/auth/signer'
+import { buildSolanaAuthPayload } from '@/test/fixture/solana-auth-fixture'
 
 @suite()
 export class SignerTest extends AbstractDatabaseIntegration {
@@ -48,6 +49,73 @@ export class SignerTest extends AbstractDatabaseIntegration {
       nonceA,
       signature.signature,
       account.address,
+    )
+
+    expect(isValid).to.be.false
+  }
+
+  @test()
+  verify_failsWrongAccount() {
+    const accountA = web3.eth.accounts.create()
+    const accountB = web3.eth.accounts.create()
+    const nonce = this.signer.generateNonce()
+
+    const signature = web3.eth.accounts.sign(nonce, accountA.privateKey)
+    const isValid = this.signer.verify(
+      nonce,
+      signature.signature,
+      accountB.address,
+    )
+
+    expect(isValid).to.be.false
+  }
+
+  @test()
+  verify_acceptsChecksummedAndLowercaseAddress() {
+    const account = web3.eth.accounts.create()
+    const nonce = this.signer.generateNonce()
+    const signature = web3.eth.accounts.sign(nonce, account.privateKey)
+
+    const isValid = this.signer.verify(
+      nonce,
+      signature.signature,
+      account.address.toLowerCase(),
+    )
+
+    expect(isValid).to.be.true
+  }
+
+  @test()
+  verifySolana_success() {
+    const nonce = this.signer.generateNonce()
+    const { address, signature } = buildSolanaAuthPayload({ nonce })
+
+    const isValid = this.signer.verifySolana(nonce, signature, address)
+
+    expect(isValid).to.be.true
+  }
+
+  @test()
+  verifySolana_failsWrongNonce() {
+    const nonceA = this.signer.generateNonce()
+    const nonceB = this.signer.generateNonce()
+    const { address, signature } = buildSolanaAuthPayload({ nonce: nonceB })
+
+    const isValid = this.signer.verifySolana(nonceA, signature, address)
+
+    expect(isValid).to.be.false
+  }
+
+  @test()
+  verifySolana_failsWrongAccount() {
+    const nonce = this.signer.generateNonce()
+    const accountA = buildSolanaAuthPayload({ nonce })
+    const accountB = buildSolanaAuthPayload({ nonce })
+
+    const isValid = this.signer.verifySolana(
+      nonce,
+      accountA.signature,
+      accountB.address,
     )
 
     expect(isValid).to.be.false

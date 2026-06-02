@@ -5,9 +5,9 @@ import {
   Get,
   HttpCode,
   JsonController,
+  Param,
   Post,
   Put,
-  Req,
   Res,
 } from 'routing-controllers'
 import { OpenAPIExtended } from '@/decorator/openapi/openapi-extended'
@@ -19,26 +19,31 @@ import { EntityFromParam } from '@/decorator/entity-from-param'
 import { EUserRole } from '@/model/user'
 import { CurrentUser } from '@/decorator/current-user'
 import { ProjectRepository } from '@/repository/project-repository'
+import { ProjectStatistics } from '@/entity/project-statistics'
 import { ProjectSearchDto } from '@/model/dto/project'
 import { ProjectManager } from '@/service/project-manager'
+import { ProjectStatisticsManager } from '@/service/project-statistics-manager'
+import { EProjectStatisticsPeriod } from '@/model/project-statistics'
 import AccessException from '@/exception/access-exception'
-import { Authenticator } from '@/service/auth/authenticator'
 
 @Authorized([EUserRole.ROLE_USER])
 @JsonController('/project')
 export class ProjectController {
-  protected authenticator: Authenticator
   protected projectManager: ProjectManager
   protected projectRepository: ProjectRepository
+  protected projectStatisticsManager: ProjectStatisticsManager
 
   constructor() {
-    this.authenticator = App.container.get('Authenticator')
     this.projectManager = App.container.get('ProjectManager')
     this.projectRepository = App.container.get('ProjectRepository')
+    this.projectStatisticsManager = App.container.get(
+      'ProjectStatisticsManager',
+    )
   }
 
   @OpenAPIExtended({
-    summary: 'Search projects accessible by the current user',
+    summary:
+      'Search projects accessible to the current user as owner, worker, or viewer',
     searchRequestBody: {
       example: {
         filter: { state: 'DRAFT' },
@@ -93,7 +98,7 @@ export class ProjectController {
   ): Promise<express.Response> {
     data.user = currentUser
 
-    const project = await this.projectManager.save(data)
+    const project = await this.projectManager.createAndSave(data)
 
     res.status(201)
     res.location(`/api/project/${project.id}`)
@@ -103,8 +108,7 @@ export class ProjectController {
   }
 
   @OpenAPIExtended({
-    summary: 'Get project by id',
-    optionalAuthorizationHeader: true,
+    summary: 'Get project by id (project owner, workers, and viewers)',
     response: {
       schema: Project,
       options: { serializationGroup: 'search' },
@@ -114,20 +118,39 @@ export class ProjectController {
   @HttpCode(200)
   public async read(
     @EntityFromParam({ paramName: 'id' }) project: Project,
-    @Req() req: express.Request,
+    @CurrentUser() currentUser: User,
   ): Promise<Project | undefined> {
-    const token = req.headers['authorization'] as string
-    const user = await this.authenticator.getUserFromJwtToken(token)
-
-    if (!user) {
-      return undefined
-    }
-
-    return await this.projectManager.findProjectCheckAccess(project, user)
+    return this.projectRepository.findProjectWithAccess(project, currentUser)
   }
 
   @OpenAPIExtended({
-    summary: 'Update project',
+    summary: 'Get project statistics for project owner, workers, and viewers',
+    response: {
+      schema: ProjectStatistics,
+      options: { isArray: true, serializationGroup: 'search' },
+    },
+  })
+  @Get('/:id/stats/:period')
+  @HttpCode(200)
+  public async getStats(
+    @CurrentUser() currentUser: User,
+    @EntityFromParam({ paramName: 'id' }) project: Project,
+    @Param('period') period: EProjectStatisticsPeriod,
+  ): Promise<ProjectStatistics[]> {
+    const accessible = await this.projectRepository.findProjectWithAccess(
+      project,
+      currentUser,
+    )
+
+    if (!accessible) {
+      throw new AccessException()
+    }
+
+    return this.projectStatisticsManager.getStatsForProject(accessible, period)
+  }
+
+  @OpenAPIExtended({
+    summary: 'Update project (including worker and viewer addresses)',
     body: {
       schema: Project,
       options: { serializationGroup: 'edit' },
@@ -197,6 +220,10 @@ export class ProjectController {
     @EntityFromParam({ paramName: 'id' }) project: Project,
     @Res() res: express.Response,
   ): Promise<express.Response> {
+    if (currentUser.id !== project.user.id) {
+      throw new AccessException()
+    }
+
     await this.projectRepository.softDelete({
       id: project.id,
       user: currentUser,

@@ -533,6 +533,37 @@ export class TimeControllerCrudTest extends BaseControllerTest {
   }
 
   @test()
+  async delete_asOwner() {
+    const owner = await this.userFixture.createUser()
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
+    const time = await this.timeFixture.create(
+      project,
+      moment.utc().subtract(60, 'minutes').toDate(),
+      moment.utc().toDate(),
+    )
+
+    const res = await timeControllerDelete({
+      client: this.apiClient(),
+      path: { id: time.id as never },
+      headers: {
+        Authorization: this.authenticator.getTokens(owner).accessToken,
+      },
+      throwOnError: true,
+    })
+
+    const removed = await this.timeRepository.findOneBy({
+      where: { id: time.id },
+    })
+
+    expect(res.status).to.be.equal(200)
+    this.expectEmptyResponseBody(res.data)
+    expect(removed).to.be.undefined
+  }
+
+  @test()
   async delete_deniedForNonOwner() {
     const owner = await this.userFixture.createUser()
     const other = await this.userFixture.createUser()
@@ -563,6 +594,45 @@ export class TimeControllerCrudTest extends BaseControllerTest {
 
     if (!axios.isAxiosError(error)) throw error
     expect(error).to.be.ok
+    expect(error.response?.status).to.be.equal(401)
+
+    const stillThere = await this.timeRepository.findOneBy({
+      where: { id: time.id },
+    })
+    expect(stillThere).to.not.eq(undefined)
+  }
+
+  @test()
+  async delete_deniedForOwnerWhenNotAuthor() {
+    const owner = await this.userFixture.createUser()
+    const worker = await this.userFixture.createUser()
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
+    const time = await this.timeFixture.create(
+      project,
+      moment.utc().subtract(60, 'minutes').toDate(),
+      moment.utc().toDate(),
+      worker,
+    )
+
+    let error: unknown
+
+    try {
+      await timeControllerDelete({
+        client: this.apiClient(),
+        path: { id: time.id as never },
+        headers: {
+          Authorization: this.authenticator.getTokens(owner).accessToken,
+        },
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
+    }
+
+    if (!axios.isAxiosError(error)) throw error
     expect(error.response?.status).to.be.equal(401)
 
     const stillThere = await this.timeRepository.findOneBy({

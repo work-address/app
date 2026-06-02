@@ -6,17 +6,47 @@ import { suite, test } from '@testdeck/mocha'
 import { userControllerSearch } from '@app/api-client'
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
+import { User } from '@/entity/user'
 import { EUserRole } from '@/model/user'
 
 @suite()
 export class UserControllerSearchTest extends BaseControllerTest {
+  private authHeaders(user: User) {
+    return {
+      Authorization: this.authenticator.getTokens(user).accessToken,
+    }
+  }
+
+  @test()
+  async search_requiresAuthorization() {
+    let error: unknown
+
+    try {
+      await userControllerSearch({
+        client: this.apiClient(),
+        body: {
+          filter: { role: EUserRole.ROLE_USER },
+          sort: { createdAt: 'DESC' },
+          page: 0,
+        },
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
+    }
+
+    if (!axios.isAxiosError(error)) throw error
+    expect(error).to.be.ok
+    expect(error.response?.status).to.be.equal(401)
+  }
+
   @test()
   async search_filtersByUserId() {
     const user = await this.userFixture.createUser()
-    const client = this.apiClient()
 
     const res = await userControllerSearch({
-      client,
+      client: this.apiClient(),
+      headers: this.authHeaders(user),
       body: {
         filter: { id: user.id },
         sort: { createdAt: 'DESC' },
@@ -34,11 +64,11 @@ export class UserControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_filtersByRole() {
-    await this.userFixture.createUser()
-    const client = this.apiClient()
+    const user = await this.userFixture.createUser()
 
     const res = await userControllerSearch({
-      client,
+      client: this.apiClient(),
+      headers: this.authHeaders(user),
       body: {
         filter: { role: EUserRole.ROLE_USER },
         sort: { createdAt: 'DESC' },
@@ -50,17 +80,17 @@ export class UserControllerSearchTest extends BaseControllerTest {
     const rows = res.data[0] as Array<{ roles: EUserRole[] }>
     expect(res.status).to.be.equal(200)
     expect(rows.length).to.be.greaterThan(0)
-    expect(
-      rows.every((row) => row.roles.includes(EUserRole.ROLE_USER)),
-    ).to.be.true
+    expect(rows.every((row) => row.roles.includes(EUserRole.ROLE_USER))).to.be
+      .true
   }
 
   @test()
   async search_returnsEmptyWhenNoRowsMatch() {
-    const client = this.apiClient()
+    const user = await this.userFixture.createUser()
 
     const res = await userControllerSearch({
-      client,
+      client: this.apiClient(),
+      headers: this.authHeaders(user),
       body: {
         filter: { id: faker.datatype.uuid() },
         sort: { createdAt: 'DESC' },
@@ -76,13 +106,14 @@ export class UserControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_rejectsInvalidFilterFieldType() {
-    const client = this.apiClient()
+    const user = await this.userFixture.createUser()
 
     let error: unknown
 
     try {
       await userControllerSearch({
-        client,
+        client: this.apiClient(),
+        headers: this.authHeaders(user),
         body: {
           filter: { id: 123 as never },
           sort: { createdAt: 'DESC' },
@@ -104,6 +135,7 @@ export class UserControllerSearchTest extends BaseControllerTest {
 
     const res = await userControllerSearch({
       client: this.apiClient(),
+      headers: this.authHeaders(user),
       body: {
         filter: { id: user.id },
         sort: { createdAt: 'ASC' },
@@ -120,11 +152,12 @@ export class UserControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_roleFilter_respectsLimit() {
-    await this.userFixture.createUser()
+    const user = await this.userFixture.createUser()
     await this.userFixture.createUser()
 
     const res = await userControllerSearch({
       client: this.apiClient(),
+      headers: this.authHeaders(user),
       body: {
         filter: { role: EUserRole.ROLE_USER },
         sort: { createdAt: 'ASC' },
@@ -143,11 +176,12 @@ export class UserControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_sortCreatedAt_desc_isNonIncreasing() {
-    await this.userFixture.createUser()
+    const user = await this.userFixture.createUser()
     await this.userFixture.createUser()
 
     const res = await userControllerSearch({
       client: this.apiClient(),
+      headers: this.authHeaders(user),
       body: {
         filter: { role: EUserRole.ROLE_USER },
         sort: { createdAt: 'DESC' },
@@ -173,6 +207,7 @@ export class UserControllerSearchTest extends BaseControllerTest {
 
     const res = await userControllerSearch({
       client: this.apiClient(),
+      headers: this.authHeaders(user),
       body: {
         filter: { id: user.id, role: EUserRole.ROLE_USER },
         sort: { createdAt: 'DESC' },
@@ -189,11 +224,14 @@ export class UserControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_rejectsInvalidLimitType() {
+    const user = await this.userFixture.createUser()
+
     let error: unknown
 
     try {
       await userControllerSearch({
         client: this.apiClient(),
+        headers: this.authHeaders(user),
         body: {
           filter: { role: EUserRole.ROLE_USER },
           sort: { createdAt: 'DESC' },
@@ -212,11 +250,12 @@ export class UserControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_sortCreatedAt_asc_isNonDecreasing() {
-    await this.userFixture.createUser()
+    const user = await this.userFixture.createUser()
     await this.userFixture.createUser()
 
     const res = await userControllerSearch({
       client: this.apiClient(),
+      headers: this.authHeaders(user),
       body: {
         filter: { role: EUserRole.ROLE_USER },
         sort: { createdAt: 'ASC' },
@@ -238,11 +277,14 @@ export class UserControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_rejectsInvalidIdUuid() {
+    const user = await this.userFixture.createUser()
+
     let error: unknown
 
     try {
       await userControllerSearch({
         client: this.apiClient(),
+        headers: this.authHeaders(user),
         body: {
           filter: { id: 'not-uuid' },
           sort: { createdAt: 'ASC' },
@@ -260,11 +302,14 @@ export class UserControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_rejectsInvalidRoleEnum() {
+    const user = await this.userFixture.createUser()
+
     let error: unknown
 
     try {
       await userControllerSearch({
         client: this.apiClient(),
+        headers: this.authHeaders(user),
         body: {
           filter: { role: 'ROLE_GHOST' as never },
           sort: { createdAt: 'ASC' },
@@ -282,11 +327,14 @@ export class UserControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_rejectsMissingPageField() {
+    const user = await this.userFixture.createUser()
+
     let error: unknown
 
     try {
       await userControllerSearch({
         client: this.apiClient(),
+        headers: this.authHeaders(user),
         body: {
           filter: { role: EUserRole.ROLE_USER },
           sort: { createdAt: 'ASC' },

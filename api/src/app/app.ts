@@ -24,7 +24,6 @@ import { InvoiceController } from '@/controller/invoice-controller'
 import { AuthTimeTrackerController } from '@/controller/auth-time-tracker-controller'
 
 const swaggerUiExpress = require('swagger-ui-express')
-const boolParser = require('express-query-boolean')
 
 export class App {
   public static server: http.Server
@@ -48,7 +47,7 @@ export class App {
     App.container = AppContainer.build(this.parameters, this.env)
   }
 
-  public start() {
+  public async start(port?: number) {
     if (!AppConfig.isLocal()) {
       Sentry.init({
         dsn: this.parameters.sentry,
@@ -88,8 +87,6 @@ export class App {
       }),
     )
 
-    this.express.use(boolParser())
-
     this.initControllers()
 
     const swaggerNoStore: express.RequestHandler = (_req, res, next) => {
@@ -111,13 +108,38 @@ export class App {
       }),
     )
 
-    this.listen()
+    await this.listen(port)
+  }
+
+  public getListeningPort(): number {
+    const address = App.server.address()
+
+    if (address && typeof address === 'object') {
+      return address.port
+    }
+
+    return this.parameters.port
   }
 
   public async stop() {
-    await App.conn.close()
+    if (App.conn?.isConnected) {
+      await App.conn.close()
+    }
 
-    App.server.close()
+    if (!App.server) {
+      return
+    }
+
+    await new Promise<void>((resolve, reject) => {
+      App.server.close((error) => {
+        if (error) {
+          reject(error)
+          return
+        }
+
+        resolve()
+      })
+    })
   }
 
   private initControllers() {
@@ -152,20 +174,24 @@ export class App {
     })
   }
 
-  private listen() {
-    App.server = this.express.listen(
-      this.parameters.port,
-      this.parameters.host,
-      () => {
-        if (this.env !== 'test') {
-          console.log(
-            `App[${this.env}] listening on ${this.parameters.host}:${this.parameters.port}`,
-          )
-        }
-      },
-    )
+  private listen(port?: number): Promise<void> {
+    return new Promise((resolve) => {
+      App.server = this.express.listen(
+        port ?? this.parameters.port,
+        this.parameters.host,
+        () => {
+          if (this.env !== 'test') {
+            console.log(
+              `App[${this.env}] listening on ${this.parameters.host}:${this.getListeningPort()}`,
+            )
+          }
 
-    App.server.keepAliveTimeout = 65000
-    App.server.headersTimeout = 66000
+          resolve()
+        },
+      )
+
+      App.server.keepAliveTimeout = 65000
+      App.server.headersTimeout = 66000
+    })
   }
 }

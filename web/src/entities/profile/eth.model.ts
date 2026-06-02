@@ -5,7 +5,7 @@ import type { AuthorizationHeaders } from './types.ts'
 import type { BrowserProvider } from 'ethers'
 import type { JsonRpcSigner } from 'ethers'
 
-import { baseApi, reownProvider } from '@/shared'
+import { baseApi, disconnectReownProvider, getReownProvider } from '@/shared'
 
 export type EthModalResult = {
   signer: JsonRpcSigner
@@ -45,6 +45,7 @@ sample({
 })
 
 export const openEthModalFx = createEffect(async () => {
+  const reownProvider = await getReownProvider()
   await reownProvider.open({ namespace: 'eip155' })
 })
 
@@ -59,7 +60,7 @@ export const signEthFx = createEffect(
 )
 
 export const disconnectEthFx = createEffect(async () => {
-  await reownProvider.disconnect()
+  await disconnectReownProvider()
 })
 
 export const loginEthFx = createEffect(

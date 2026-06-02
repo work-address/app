@@ -6,6 +6,7 @@
 
 import { combine, sample, split } from 'effector'
 
+import { getAuthErrorMessage } from './auth-errors'
 import {
   disconnectEthFx,
   ethConnectedPub,
@@ -43,10 +44,7 @@ import {
   loginTonFx,
   openTonModalFx,
   tonAuthError,
-  tonAuthSuccess,
 } from './ton.model'
-import './reown.model'
-import './solana.gate'
 
 import { showToast } from '@/shared'
 
@@ -133,7 +131,7 @@ sample({
  * TON flow: after wallet provides valid proof, verify it on backend.
  */
 sample({
-  clock: tonAuthSuccess,
+  clock: openTonModalFx.doneData,
   target: loginTonFx,
 })
 
@@ -157,7 +155,7 @@ sample({
  * After successful login (either provider), persist tokens to localStorage.
  */
 sample({
-  clock: [loginEthFx.doneData, loginTonFx.doneData],
+  clock: [loginEthFx.doneData, loginTonFx.doneData, loginSolanaFx.doneData],
   target: saveTokensFx,
 })
 
@@ -179,13 +177,13 @@ sample({
 
 /**
  * Solana flow: after wallet connected (and user intends to log in),
- * fetch nonce, sign it, then call the backend stub.
+ * fetch nonce for the connected address, sign it, then verify on backend.
  */
 sample({
   clock: solanaConnectedPub,
   source: combine($authenticated, $loginMode),
   filter: ([authenticated, mode]) => !authenticated && mode === 'solana',
-  fn: () => undefined as void,
+  fn: (_, { address }) => address,
   target: getNonceSolanaFx,
 })
 
@@ -205,7 +203,16 @@ sample({
 })
 
 sample({
-  clock: [signEthFx.fail, tonAuthError, solanaConnectError],
+  clock: [
+    signEthFx.fail,
+    loginEthFx.fail,
+    tonAuthError,
+    openTonModalFx.fail,
+    loginTonFx.fail,
+    signSolanaFx.fail,
+    loginSolanaFx.fail,
+    solanaConnectError,
+  ],
   target: logout,
 })
 
@@ -226,7 +233,7 @@ sample({
  */
 sample({
   clock: fetchStatusFx.fail,
-  target: [$authenticated.reinit, logout],
+  target: logout,
 })
 
 sample({
@@ -239,42 +246,72 @@ sample({
  * Replace with proper UI feedback or remove if handled by components.
  */
 
-tonAuthSuccess.watch(() => {
+loginTonFx.done.watch(() => {
   showToast('success', {
     message: 'Ton login successful.',
     position: 'top-center',
   })
 })
 
-tonAuthError.watch(() => {
+openTonModalFx.fail.watch(({ error }) => {
+  const message = getAuthErrorMessage(error, 'Ton login error')
+
+  if (!message) {
+    return
+  }
+
   showToast('error', {
-    message: 'Ton login error',
+    message,
     position: 'top-center',
   })
 })
 
-signEthFx.done.watch(() => {
+loginTonFx.fail.watch(({ error }) => {
+  const message = getAuthErrorMessage(error, 'Ton login error')
+
+  if (!message) {
+    return
+  }
+
+  showToast('error', {
+    message,
+    position: 'top-center',
+  })
+})
+
+tonAuthError.watch((message) => {
+  showToast('error', {
+    message,
+    position: 'top-center',
+  })
+})
+
+loginEthFx.done.watch(() => {
   showToast('success', {
     message: 'Ethereum login successful.',
     position: 'top-center',
   })
 })
 
-signEthFx.fail.watch(() => {
+sample({
+  clock: [signEthFx.fail, loginEthFx.fail],
+}).watch(() => {
   showToast('error', {
     message: 'Ethereum login error.',
     position: 'top-center',
   })
 })
 
-solanaConnectedPub.watch(() => {
+loginSolanaFx.done.watch(() => {
   showToast('success', {
-    message: 'Solana wallet connected.',
+    message: 'Solana login successful.',
     position: 'top-center',
   })
 })
 
-solanaConnectError.watch(() => {
+sample({
+  clock: [signSolanaFx.fail, loginSolanaFx.fail, solanaConnectError],
+}).watch(() => {
   showToast('error', {
     message: 'Solana connection error.',
     position: 'top-center',

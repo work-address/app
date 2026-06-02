@@ -27,6 +27,36 @@ client.instance.interceptors.request.use(
   },
 )
 
+// Single-flight refresh: concurrent 401s share one refresh request so a
+// rotating refresh token isn't consumed multiple times in parallel.
+let refreshPromise: Promise<string | undefined> | null = null
+
+const refreshTokens = async (refreshToken: string) => {
+  const result = await authControllerRefresh({
+    headers: {
+      'Refresh-Token': refreshToken,
+      Authorization: '',
+    },
+    body: { refreshToken },
+  })
+
+  if (result instanceof AxiosError) {
+    throw result
+  }
+
+  const newAccessToken = result.headers?.authorization
+  const newRefreshToken = result.headers?.['refresh-token']
+
+  if (newAccessToken) {
+    localStorage.setItem(ACCESS_TOKEN_KEY, newAccessToken)
+  }
+  if (newRefreshToken) {
+    localStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken)
+  }
+
+  return newAccessToken
+}
+
 // Response interceptor - обрабатываем 401 и обновляем токен
 client.instance.interceptors.response.use(
   (response: AxiosResponse) => response,
@@ -45,29 +75,15 @@ client.instance.interceptors.response.use(
       }
 
       try {
-        const result = await authControllerRefresh({
-          headers: {
-            'Refresh-Token': refreshToken,
-            Authorization: '',
-          },
-          body: { refreshToken },
-        })
-
-        if (result instanceof AxiosError) {
-          throw result
+        if (!refreshPromise) {
+          refreshPromise = refreshTokens(refreshToken).finally(() => {
+            refreshPromise = null
+          })
         }
 
-        const newAccessToken = result.headers?.authorization
-        const newRefreshToken = result.headers?.['refresh-token']
+        const newAccessToken = await refreshPromise
 
-        if (newAccessToken) {
-          localStorage.setItem(ACCESS_TOKEN_KEY, newAccessToken)
-        }
-        if (newRefreshToken) {
-          localStorage.setItem(REFRESH_TOKEN_KEY, newRefreshToken)
-        }
-
-        if (originalRequest.headers) {
+        if (originalRequest.headers && newAccessToken) {
           originalRequest.headers.Authorization = newAccessToken
         }
 

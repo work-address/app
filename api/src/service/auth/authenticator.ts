@@ -54,6 +54,15 @@ export class Authenticator {
     return nonce
   }
 
+  public async getTonNonce(): Promise<string> {
+    const nonce = this.signer.generateNonce()
+    const key = `nonce:ton:${nonce}`
+
+    await this.redis.setWithExpiry(key, nonce, Authenticator.nonceExpiresIn)
+
+    return nonce
+  }
+
   public async loginEth(
     signature: string,
     address: string,
@@ -71,6 +80,8 @@ export class Authenticator {
       throw new AuthenticationException('Signature is not valid')
     }
 
+    await this.redis.del(key)
+
     let user = await this.userRepository.findByAddressPublic(address)
 
     if (!user) {
@@ -80,25 +91,50 @@ export class Authenticator {
     return this.getTokens(user)
   }
 
-  // TODO: review TON login flow
   public async loginTon(payload: IAuthTonPayload): Promise<IAuthTokens> {
     const address = payload.address
-    // const key = `nonce:${address}`;
-    // const nonce = await this.redis.get(key);
+    const key = `nonce:ton:${payload.proof.payload}`
+    const nonce = await this.redis.get(key)
 
-    // console.log(nonce);
-    // console.log(address);
-    // console.log(payload);
+    if (!nonce) {
+      throw new AuthenticationException('Nonce is not available or expired')
+    }
 
-    // if (!nonce) {
-    //   throw new AuthenticationException('Nonce is not available or expired');
-    // }
-
-    const isValid = this.tonProofService.checkProof(payload)
+    const isValid = await this.tonProofService.checkProof(payload)
 
     if (!isValid) {
       throw new AuthenticationException('Signature is not valid')
     }
+
+    await this.redis.del(key)
+
+    let user = await this.userRepository.findByAddressPublic(address)
+
+    if (!user) {
+      user = await this.createUserWithDemoData(address)
+    }
+
+    return this.getTokens(user)
+  }
+
+  public async loginSolana(
+    signature: string,
+    address: string,
+  ): Promise<IAuthTokens> {
+    const key = `nonce:${address}`
+    const nonceRaw = await this.redis.get(key)
+    if (typeof nonceRaw !== 'string' || !nonceRaw) {
+      throw new AuthenticationException('Nonce is not available or expired')
+    }
+    const nonce = nonceRaw
+
+    const isValid = this.signer.verifySolana(nonce, signature, address)
+
+    if (!isValid) {
+      throw new AuthenticationException('Signature is not valid')
+    }
+
+    await this.redis.del(key)
 
     let user = await this.userRepository.findByAddressPublic(address)
 

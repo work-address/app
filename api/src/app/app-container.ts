@@ -14,7 +14,9 @@ import { Mailer } from '@/service/mailer'
 import { Faker } from '@/service/faker'
 import { Authenticator } from '@/service/auth/authenticator'
 import { ProjectRepository } from '@/repository/project-repository'
+import { ProjectStatisticsRepository } from '@/repository/project-statistics-repository'
 import { ProjectManager } from '@/service/project-manager'
+import { ProjectStatisticsManager } from '@/service/project-statistics-manager'
 import { TimeFixture } from '@/test/fixture/time-fixture'
 import { InvoiceFixture } from '@/test/fixture/invoice-fixture'
 import { TimeRepository } from '@/repository/time-repository'
@@ -48,6 +50,9 @@ export class AppContainer {
     // Repositories
     container.bind<UserRepository>('UserRepository').to(UserRepository)
     container.bind<ProjectRepository>('ProjectRepository').to(ProjectRepository)
+    container
+      .bind<ProjectStatisticsRepository>('ProjectStatisticsRepository')
+      .to(ProjectStatisticsRepository)
     container.bind<TimeRepository>('TimeRepository').to(TimeRepository)
     container.bind<InvoiceRepository>('InvoiceRepository').to(InvoiceRepository)
 
@@ -65,6 +70,9 @@ export class AppContainer {
     container.bind<Mailer>('Mailer').to(Mailer)
     container.bind<ImageResizer>('ImageResizer').to(ImageResizer)
     container.bind<ProjectManager>('ProjectManager').to(ProjectManager)
+    container
+      .bind<ProjectStatisticsManager>('ProjectStatisticsManager')
+      .to(ProjectStatisticsManager)
     container.bind<TonProofService>('TonProofService').to(TonProofService)
     container.bind<Faker>('Faker').to(Faker)
 

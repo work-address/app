@@ -43,6 +43,7 @@ export class UserController {
       options: { isPagination: true, serializationGroup: 'search' },
     },
   })
+  @Authorized([EUserRole.ROLE_USER])
   @Post('/search')
   public search(@Body() search: UserSearchDto) {
     return this.userRepository.findAndCount(search)

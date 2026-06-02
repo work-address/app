@@ -1,3 +1,4 @@
+import { AxiosError } from 'axios'
 import {
   attach,
   createEffect,
@@ -5,9 +6,12 @@ import {
   createStore,
   sample,
 } from 'effector'
-import { nanoid } from 'nanoid'
+import { createGate } from 'effector-react'
 
+import type { AuthorizationHeaders } from './types.ts'
 import type { PublicKey } from '@solana/web3.js'
+
+import { baseApi } from '@/shared/api/base'
 
 export type SolanaWalletState = {
   publicKey: PublicKey | null
@@ -20,6 +24,16 @@ export type SolanaWalletState = {
 export type SolanaModalResult = {
   address: string
 }
+
+export const SolanaWalletGate =
+  createGate<SolanaWalletState>('SolanaWalletGate')
+
+export const requestSolanaWalletMount = createEvent()
+
+export const $solanaWalletMountRequested = createStore(false).on(
+  requestSolanaWalletMount,
+  () => true,
+)
 
 export const $solanaWallet = createStore<SolanaWalletState>({
   publicKey: null,
@@ -42,6 +56,24 @@ export const $solanaConnectionStatus = createStore<
   .on(solanaDisconnectedPub, () => 'disconnected')
 
 sample({
+  clock: SolanaWalletGate.state.updates,
+  target: $solanaWallet,
+})
+
+sample({
+  clock: SolanaWalletGate.state.updates,
+  filter: (state) => state.connected && state.publicKey !== null,
+  fn: (state) => ({ address: state.publicKey!.toBase58() }),
+  target: solanaConnected,
+})
+
+sample({
+  clock: SolanaWalletGate.state.updates,
+  filter: (state) => !state.connected,
+  target: solanaDisconnected,
+})
+
+sample({
   clock: solanaConnected,
   source: $solanaConnectionStatus,
   filter: (status) => status === 'disconnected',
@@ -56,22 +88,49 @@ sample({
   target: solanaDisconnectedPub,
 })
 
-export const openSolanaModalFx = attach({
-  source: $solanaWallet,
-  effect: (wallet) => {
-    wallet.openModal(true)
-  },
+/** Resolves once the lazily-mounted Solana shell has opened the gate. */
+function whenSolanaWalletReady() {
+  if (SolanaWalletGate.status.getState()) {
+    return Promise.resolve()
+  }
+
+  return new Promise<void>((resolve) => {
+    const unwatch = SolanaWalletGate.status.watch((opened) => {
+      if (opened) {
+        unwatch()
+        resolve()
+      }
+    })
+  })
+}
+
+export const openSolanaModalFx = createEffect(async () => {
+  requestSolanaWalletMount()
+  await whenSolanaWalletReady()
+  $solanaWallet.getState().openModal(true)
 })
 
 export const disconnectSolanaFx = attach({
   source: $solanaWallet,
   effect: async (wallet) => {
+    if (!SolanaWalletGate.status.getState()) {
+      return
+    }
+
     await wallet.disconnect()
   },
 })
 
-export const getNonceSolanaFx = createEffect((): string => {
-  return nanoid()
+export const getNonceSolanaFx = createEffect(async (address: string) => {
+  const result = await baseApi.authControllerNonce({
+    body: { address },
+  })
+
+  if (result instanceof AxiosError) {
+    throw result
+  }
+
+  return result.data as string
 })
 
 export const signSolanaFx = attach({
@@ -79,7 +138,7 @@ export const signSolanaFx = attach({
   effect: async (
     wallet,
     nonce: string,
-  ): Promise<{ signature: string; address: string; nonce: string }> => {
+  ): Promise<{ signature: string; address: string }> => {
     if (!wallet.signMessage || !wallet.publicKey) {
       throw new Error(
         'Solana wallet is not connected or does not support signMessage',
@@ -90,14 +149,29 @@ export const signSolanaFx = attach({
     const signatureBytes = await wallet.signMessage(encoded)
     const signature = btoa(String.fromCharCode(...signatureBytes))
 
-    return { signature, address: wallet.publicKey.toBase58(), nonce }
+    return { signature, address: wallet.publicKey.toBase58() }
   },
 })
 
 export const loginSolanaFx = createEffect(
-  async (_: { signature: string; address: string; nonce: string }) => {
-    // TODO: replace with real API call once backend is ready
-    // POST /api/auth/solana/verify → { address, signature, nonce } → { token: string }
-    throw new Error('Solana login backend not ready yet')
+  async (params: {
+    signature: string
+    address: string
+  }): Promise<AuthorizationHeaders> => {
+    const result = await baseApi.authControllerLoginSolana({
+      body: {
+        signature: params.signature,
+        address: params.address,
+      },
+    })
+
+    if (result instanceof AxiosError) {
+      throw result
+    }
+
+    return {
+      authorization: result.headers['authorization'],
+      refreshToken: result.headers['refresh-token'],
+    }
   },
 )

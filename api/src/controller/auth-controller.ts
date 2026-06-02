@@ -17,6 +17,7 @@ import {
   AuthEthLoginDto,
   AuthNonceRequestDto,
   AuthRefreshTokenDto,
+  AuthSolanaLoginDto,
   AuthTonLoginDto,
 } from '@/model/dto/auth'
 import { User } from '@/entity/user'
@@ -45,7 +46,6 @@ const authSessionJsonHeadersResponse: OpenAPIExtendedResponsePart<
   },
 }
 
-// TODO: support login with solana blockchain
 @JsonController('/auth')
 export class AuthController {
   protected authenticator: Authenticator
@@ -84,6 +84,29 @@ export class AuthController {
   }
 
   @OpenAPIExtended({
+    summary: 'Login with Solana wallet',
+    body: { schema: AuthSolanaLoginDto },
+    response: authSessionJsonHeadersResponse,
+  })
+  @Post('/solana')
+  @HttpCode(200)
+  public async loginSolana(
+    @Body() payload: AuthSolanaLoginDto,
+    @Res() res: express.Response,
+  ): Promise<express.Response> {
+    const tokens = await this.authenticator.loginSolana(
+      payload.signature,
+      payload.address,
+    )
+
+    res.setHeader('Authorization', tokens.accessToken)
+    res.setHeader('Refresh-Token', tokens.refreshToken)
+
+    res.end()
+    return res
+  }
+
+  @OpenAPIExtended({
     summary: 'Login with TON Connect proof',
     body: { schema: AuthTonLoginDto },
     response: authSessionJsonHeadersResponse,
@@ -94,8 +117,6 @@ export class AuthController {
     @Body() payload: AuthTonLoginDto,
     @Res() res: express.Response,
   ): Promise<express.Response> {
-    console.log(payload)
-
     const tokens = await this.authenticator.loginTon(payload)
 
     res.setHeader('Authorization', tokens.accessToken)
@@ -118,6 +139,20 @@ export class AuthController {
   @Post('/nonce')
   public nonce(@Body() payload: AuthNonceRequestDto): Promise<string> {
     return this.authenticator.getNonce(payload.address)
+  }
+
+  @OpenAPIExtended({
+    summary: 'Request nonce for TON Connect login',
+    response: {
+      schema: String,
+      options: {},
+      example: '550e8400-e29b-41d4-a716-446655440000',
+    },
+  })
+  @HttpCode(200)
+  @Post('/ton/nonce')
+  public tonNonce(): Promise<string> {
+    return this.authenticator.getTonNonce()
   }
 
   @OpenAPIExtended({

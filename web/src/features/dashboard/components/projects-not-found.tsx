@@ -1,13 +1,11 @@
 import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { routes } from '@/routes'
+import { openDocs } from '@/routes'
 import { Button } from '@/shared'
 
 export const ProjectsNotFound = () => {
   const { t } = useTranslation()
-  const navigate = useNavigate()
 
   return (
     <Root>
@@ -23,7 +21,7 @@ export const ProjectsNotFound = () => {
       <Desc>{t('dashboard.page.projectsNotFound.description')}</Desc>
 
       <Button
-        onClick={() => navigate(routes.docs.build())}
+        onClick={openDocs}
         variant={'outline'}
         color={'gray'}
         size={'2'}

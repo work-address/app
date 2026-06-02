@@ -42,15 +42,4 @@ export class ProjectFixture {
 
     return this.projectRepository.saveSingle(project)
   }
-
-  public createImported(): Promise<Project> {
-    const project = new Project()
-
-    project.title = faker.datatype.uuid()
-    project.text = faker.datatype.uuid()
-    project.rateHour = 0
-    project.state = EProjectState.ACTIVE
-
-    return this.projectRepository.saveSingle(project)
-  }
 }

@@ -4,6 +4,7 @@ export interface IConfigParameters {
   sentry: string
   redis: string
   jwtSecret: string
+  tonAllowedDomains: string[]
   database: {
     type: string
     host: string

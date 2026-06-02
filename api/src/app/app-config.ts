@@ -1,7 +1,16 @@
 import 'reflect-metadata'
-import 'dotenv/config'
+import path from 'path'
+import { config as loadEnv } from 'dotenv'
 
 import { IConfigParameters } from '@/model/config'
+
+const apiRoot = path.resolve(__dirname, '../..')
+const isTestEnv = process.env.NODE_ENV === 'test'
+
+loadEnv({
+  path: path.join(apiRoot, isTestEnv ? '.env.test' : '.env'),
+  override: isTestEnv,
+})
 
 export class AppConfig {
   public static readonly ENV = {
@@ -33,6 +42,10 @@ export class AppConfig {
       sentry: process.env.APP_SENTRY as string,
       redis: process.env.APP_REDIS as string,
       jwtSecret: process.env.APP_JWT_SECRET as string,
+      tonAllowedDomains: (process.env.APP_TON_ALLOWED_DOMAINS ?? '')
+        .split(',')
+        .map((domain) => domain.trim())
+        .filter((domain) => domain.length > 0),
       database: {
         type: 'postgres',
         host: process.env.APP_DB_HOST as string,

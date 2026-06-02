@@ -136,7 +136,7 @@ const SKILLS_SUGGESTIONS = [
 
 type FormState = Pick<
   baseApi.User,
-  'title' | 'company' | 'price' | 'bio' | 'facebook' | 'linkedIn' | 'telegram'
+  'title' | 'company' | 'rate' | 'bio' | 'facebook' | 'linkedIn' | 'telegram'
 > & { skills: string[] }
 
 const normalizeLink = (prefix: string, value: string) =>
@@ -180,7 +180,7 @@ export const EditProfile = () => {
       title: '',
       company: '',
       skills: [],
-      price: '',
+      rate: '',
       bio: '',
       facebook: '',
       linkedIn: '',
@@ -273,7 +273,7 @@ export const EditProfile = () => {
         title: user.title ?? '',
         company: user.company || '',
         skills: user.skills ? user.skills?.split(',') : [],
-        price: user.price || '',
+        rate: user.rate || '',
         bio: user.bio || '',
         facebook: user.facebook || '',
         linkedIn: user.linkedIn || '',
@@ -414,14 +414,14 @@ export const EditProfile = () => {
                       $
                     </Text>
                   }
-                  label={t('profile.form.price')}
+                  label={t('profile.form.rate')}
                   placeholder="0"
                   labelWidth={INPUT_LABEL_WIDTH}
-                  id={'price'}
+                  id={'rate'}
                   disabled={profileSaving}
-                  state={errors.price ? 'error' : undefined}
+                  state={errors.rate ? 'error' : undefined}
                   inputMode="decimal"
-                  {...register('price', {
+                  {...register('rate', {
                     pattern: /^\d*([,.]\d{1,2})?$/,
                     required: true,
                   })}

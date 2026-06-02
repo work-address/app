@@ -55,7 +55,7 @@ export class UserFixture {
 
     user.address = account.address
     user.tz = 'UTC'
-    user.price = 0
+    user.rate = 0
     user.email = email
     user.emailOrPhone = email
     user.roles = [EUserRole.ROLE_USER]

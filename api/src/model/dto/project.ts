@@ -89,3 +89,8 @@ export class ProjectSearchDto extends SearchDto {
   @Type(() => ProjectSearchFilterDto)
   filter: ProjectSearchFilterDto
 }
+
+export type ProjectAccessAddresses = {
+  workerAddresses: string[]
+  viewerAddresses: string[]
+}

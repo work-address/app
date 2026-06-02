@@ -12,7 +12,14 @@ import {
   connectTimeTrackerFx,
   login,
 } from '@/entities/profile'
-import { AuthFormStyles as S, ProviderButton } from '@/features/auth'
+import {
+  AuthFormStyles as S,
+  ETHEREUM_WALLETS,
+  ProviderButton,
+  SOLANA_WALLETS,
+  TON_WALLETS,
+  WalletList,
+} from '@/features/auth'
 import { routes } from '@/routes'
 import {
   Button,
@@ -65,9 +72,7 @@ export default function SignInPage() {
       />
 
       <S.Logo
-        src={
-          isDesktop ? '/img/photo/address-work-logo.svg' : '/img/photo/logo.svg'
-        }
+        src={isDesktop ? '/img/photo/logo-label.svg' : '/img/photo/logo.svg'}
         alt={t('signIn.logoAlt')}
       />
 
@@ -98,30 +103,26 @@ export default function SignInPage() {
 
           <S.Actions>
             <ProviderButton
-              iconUrl={'/img/photo/ethereum-logo.svg'}
-              iconAlt={t('signIn.alt.ethereum')}
-              onClick={() => onSignIn('eth')}
-            >
-              {t('signIn.providers.ethereum')}
-            </ProviderButton>
-
-            <ProviderButton
               iconUrl={'/img/photo/ton-logo.svg'}
               iconAlt={t('signIn.alt.ton')}
               onClick={() => onSignIn('ton')}
             >
               {t('signIn.providers.ton')}
             </ProviderButton>
-
-            {FEATURE_FLAGS.SOLANA_ENABLED && (
-              <ProviderButton
-                iconUrl={'/img/photo/solana-logo.png'}
-                iconAlt={t('signIn.alt.solana')}
-                onClick={() => onSignIn('solana')}
-              >
-                {t('signIn.providers.solana')}
-              </ProviderButton>
-            )}
+            <ProviderButton
+              iconUrl={'/img/photo/solana-logo.png'}
+              iconAlt={t('signIn.alt.solana')}
+              onClick={() => onSignIn('solana')}
+            >
+              {t('signIn.providers.solana')}
+            </ProviderButton>
+            <ProviderButton
+              iconUrl={'/img/photo/ethereum-logo.svg'}
+              iconAlt={t('signIn.alt.ethereum')}
+              onClick={() => onSignIn('eth')}
+            >
+              {t('signIn.providers.ethereum')}
+            </ProviderButton>
           </S.Actions>
 
           <S.Learn to={routes.docs.build()} target={routes.docs.target}>
@@ -133,22 +134,21 @@ export default function SignInPage() {
       {!nonce && (
         <S.Foot>
           <S.FootLine>
-            <S.FootLabel>{t('signIn.footer.ethereumWallets')}</S.FootLabel>
-
-            <Trans
-              i18nKey="signIn.footer.ethereumWalletsList"
-              components={{ db: <S.DesktopBreak /> }}
-            />
+            <S.FootLabel>{t('signIn.footer.ethereumWallets')}</S.FootLabel>{' '}
+            <WalletList wallets={ETHEREUM_WALLETS} />
           </S.FootLine>
 
           <S.FootLine>
-            <S.FootLabel>{t('signIn.footer.tonWallets')}</S.FootLabel>
-
-            <Trans
-              i18nKey="signIn.footer.tonWalletsList"
-              components={{ db: <S.DesktopBreak /> }}
-            />
+            <S.FootLabel>{t('signIn.footer.tonWallets')}</S.FootLabel>{' '}
+            <WalletList wallets={TON_WALLETS} />
           </S.FootLine>
+
+          {FEATURE_FLAGS.SOLANA_ENABLED && (
+            <S.FootLine>
+              <S.FootLabel>{t('signIn.footer.solanaWallets')}</S.FootLabel>{' '}
+              <WalletList wallets={SOLANA_WALLETS} breakAfter={3} />
+            </S.FootLine>
+          )}
 
           <S.CommitSha>
             Version: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}

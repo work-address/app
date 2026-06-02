@@ -1,9 +1,13 @@
 import { TonConnectUI } from '@tonconnect/ui'
 
+const manifestUrl =
+  import.meta.env.VITE_TON_DEV_MANIFEST_URL ||
+  `${window.location.origin}/tonconnect-manifest.json`
+
 export const tonConnectProvider = new TonConnectUI({
-  manifestUrl: import.meta.env.DEV
-    ? import.meta.env.VITE_TON_DEV_MANIFEST_URL
-    : `${window.location.origin}/tonconnect-manifest.json`,
+  manifestUrl,
+  // Auth always requires a fresh connect with tonProof; restored sessions omit proof.
+  restoreConnection: false,
 })
 
 export type {

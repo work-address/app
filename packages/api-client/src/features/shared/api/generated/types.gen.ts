@@ -20,7 +20,17 @@ export type Invoice = {
     updatedAt?: string | string;
 };
 
+export type ProjectStatistics = {
+    processName: string;
+    timeMin: number;
+    period: '1D' | '7D' | '1W' | '1M' | '6M' | '1Y';
+    id?: string;
+    createdAt?: string | string;
+    updatedAt?: string | string;
+};
+
 export type Time = {
+    isPaid?: boolean;
     note?: string;
     screenshot?: string;
     processes?: Array<unknown>;
@@ -37,6 +47,10 @@ export type Time = {
 
 export type Project = {
     title: string;
+    workerAddresses?: Array<string>;
+    viewerAddresses?: Array<string>;
+    workers?: Array<unknown>;
+    viewers?: Array<unknown>;
     trackScreenshots?: boolean;
     trackProcesses?: boolean;
     text: string;
@@ -52,10 +66,11 @@ export type User = {
     emailOrPhone: string;
     email?: string;
     phone?: string;
+    name?: string;
     title?: string;
     company?: string;
     bio?: string;
-    price?: string;
+    rate?: string;
     skills?: string;
     facebook?: string;
     linkedIn?: string;
@@ -78,6 +93,11 @@ export type AuthForgotPasswordDto = {
 };
 
 export type AuthEthLoginDto = {
+    signature: string;
+    address: string;
+};
+
+export type AuthSolanaLoginDto = {
     signature: string;
     address: string;
 };
@@ -223,6 +243,10 @@ export type TimeInsertionErrorDto = {
     errors?: unknown;
 };
 
+export type TimeIdsDto = {
+    ids: Array<string>;
+};
+
 export type TimeInsertionResultDto = {
     id?: string;
     error?: TimeInsertionErrorDto;
@@ -274,10 +298,11 @@ export type UserSearch = {
     emailOrPhone?: string;
     email?: string;
     phone?: string;
+    name?: string;
     title?: string;
     company?: string;
     bio?: string;
-    price?: string;
+    rate?: string;
     skills?: string;
     facebook?: string;
     linkedIn?: string;
@@ -298,10 +323,11 @@ export type UserEdit = {
     emailOrPhone?: string;
     email?: string;
     phone?: string;
+    name?: string;
     title?: string;
     company?: string;
     bio?: string;
-    price?: string;
+    rate?: string;
     skills?: string;
     facebook?: string;
     linkedIn?: string;
@@ -323,11 +349,18 @@ export type ProjectSearch = {
     createdAt?: string | string;
     updatedAt?: string | string;
     title?: string;
+    workerAddresses?: Array<string>;
+    viewerAddresses?: Array<string>;
+    workers?: Array<UserSearch>;
+    viewers?: Array<UserSearch>;
     trackScreenshots?: boolean;
     trackProcesses?: boolean;
     text?: string;
     rateHour?: string;
     state?: string;
+    user?: UserSearch;
+    invoices?: InvoiceSearch;
+    time?: TimeSearch;
 };
 
 /**
@@ -336,6 +369,8 @@ export type ProjectSearch = {
 export type ProjectCreate = {
     id?: string;
     title?: string;
+    workerAddresses?: Array<string>;
+    viewerAddresses?: Array<string>;
     trackScreenshots?: boolean;
     trackProcesses?: boolean;
     text?: string;
@@ -344,10 +379,24 @@ export type ProjectCreate = {
 };
 
 /**
+ * Subset of ProjectStatistics serialized with class-transformer group "search".
+ */
+export type ProjectStatisticsSearch = {
+    id?: string;
+    createdAt?: string | string;
+    updatedAt?: string | string;
+    processName?: string;
+    timeMin?: number;
+    period?: '1D' | '7D' | '1W' | '1M' | '6M' | '1Y';
+};
+
+/**
  * Subset of Project serialized with class-transformer group "edit".
  */
 export type ProjectEdit = {
     title?: string;
+    workerAddresses?: Array<string>;
+    viewerAddresses?: Array<string>;
     trackScreenshots?: boolean;
     trackProcesses?: boolean;
     text?: string;
@@ -362,6 +411,9 @@ export type TimeSearch = {
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
+    project?: ProjectSearch;
+    user?: UserSearch;
+    isPaid?: boolean;
     note?: string;
     screenshot?: string;
     processes?: Array<unknown>;
@@ -374,12 +426,21 @@ export type TimeSearch = {
 };
 
 /**
+ * Subset of Time serialized with class-transformer group "edit".
+ */
+export type TimeEdit = {
+    isPaid?: boolean;
+    note?: string;
+};
+
+/**
  * Subset of Invoice serialized with class-transformer group "search".
  */
 export type InvoiceSearch = {
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
+    project?: ProjectSearch;
     fromAt?: string | string;
     toAt?: string | string;
     amount?: string;
@@ -397,12 +458,8 @@ export type HelpControllerSwaggerResponses = {
     /**
      * Successful response
      */
-    200: {
-        [key: string]: unknown;
-    };
+    200: unknown;
 };
-
-export type HelpControllerSwaggerResponse = HelpControllerSwaggerResponses[keyof HelpControllerSwaggerResponses];
 
 export type AuthControllerLoginEthData = {
     body: AuthEthLoginDto;
@@ -412,6 +469,17 @@ export type AuthControllerLoginEthData = {
 };
 
 export type AuthControllerLoginEthResponses = {
+    200: unknown;
+};
+
+export type AuthControllerLoginSolanaData = {
+    body: AuthSolanaLoginDto;
+    path?: never;
+    query?: never;
+    url: '/api/auth/solana';
+};
+
+export type AuthControllerLoginSolanaResponses = {
     200: unknown;
 };
 
@@ -438,6 +506,19 @@ export type AuthControllerNonceResponses = {
 };
 
 export type AuthControllerNonceResponse = AuthControllerNonceResponses[keyof AuthControllerNonceResponses];
+
+export type AuthControllerTonNonceData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/auth/ton/nonce';
+};
+
+export type AuthControllerTonNonceResponses = {
+    200: string;
+};
+
+export type AuthControllerTonNonceResponse = AuthControllerTonNonceResponses[keyof AuthControllerTonNonceResponses];
 
 export type AuthControllerRefreshData = {
     body: AuthRefreshTokenDto;
@@ -485,11 +566,23 @@ export type UserControllerSearchResponse = UserControllerSearchResponses[keyof U
 export type UserControllerReadData = {
     body?: never;
     path: {
-        address: string;
+        address: User;
     };
     query?: never;
     url: '/api/user/{address}/address';
 };
+
+export type UserControllerReadErrors = {
+    /**
+     * User does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type UserControllerReadError = UserControllerReadErrors[keyof UserControllerReadErrors];
 
 export type UserControllerReadResponses = {
     200: UserSearch;
@@ -543,21 +636,42 @@ export type ProjectControllerDeleteData = {
     url: '/api/project/{id}';
 };
 
+export type ProjectControllerDeleteErrors = {
+    /**
+     * Project does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type ProjectControllerDeleteError = ProjectControllerDeleteErrors[keyof ProjectControllerDeleteErrors];
+
 export type ProjectControllerDeleteResponses = {
     200: unknown;
 };
 
 export type ProjectControllerReadData = {
     body?: never;
-    headers?: {
-        Authorization?: string;
-    };
     path: {
         id: Project;
     };
     query?: never;
     url: '/api/project/{id}';
 };
+
+export type ProjectControllerReadErrors = {
+    /**
+     * Project does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type ProjectControllerReadError = ProjectControllerReadErrors[keyof ProjectControllerReadErrors];
 
 export type ProjectControllerReadResponses = {
     200: ProjectSearch;
@@ -574,9 +688,49 @@ export type ProjectControllerEditData = {
     url: '/api/project/{id}';
 };
 
+export type ProjectControllerEditErrors = {
+    /**
+     * Project does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type ProjectControllerEditError = ProjectControllerEditErrors[keyof ProjectControllerEditErrors];
+
 export type ProjectControllerEditResponses = {
     200: unknown;
 };
+
+export type ProjectControllerGetStatsData = {
+    body?: never;
+    path: {
+        id: Project;
+        period: unknown;
+    };
+    query?: never;
+    url: '/api/project/{id}/stats/{period}';
+};
+
+export type ProjectControllerGetStatsErrors = {
+    /**
+     * Project does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type ProjectControllerGetStatsError = ProjectControllerGetStatsErrors[keyof ProjectControllerGetStatsErrors];
+
+export type ProjectControllerGetStatsResponses = {
+    200: Array<ProjectStatisticsSearch>;
+};
+
+export type ProjectControllerGetStatsResponse = ProjectControllerGetStatsResponses[keyof ProjectControllerGetStatsResponses];
 
 export type ProjectControllerCloseData = {
     body?: never;
@@ -586,6 +740,18 @@ export type ProjectControllerCloseData = {
     query?: never;
     url: '/api/project/{id}/close';
 };
+
+export type ProjectControllerCloseErrors = {
+    /**
+     * Project does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type ProjectControllerCloseError = ProjectControllerCloseErrors[keyof ProjectControllerCloseErrors];
 
 export type ProjectControllerCloseResponses = {
     200: unknown;
@@ -604,14 +770,48 @@ export type TimeControllerSearchResponses = {
 
 export type TimeControllerSearchResponse = TimeControllerSearchResponses[keyof TimeControllerSearchResponses];
 
+export type TimeControllerMarkPaidData = {
+    body: TimeIdsDto;
+    path?: never;
+    query?: never;
+    url: '/api/time/paid';
+};
+
+export type TimeControllerMarkPaidResponses = {
+    200: unknown;
+};
+
+export type TimeControllerMarkUnpaidData = {
+    body: TimeIdsDto;
+    path?: never;
+    query?: never;
+    url: '/api/time/unpaid';
+};
+
+export type TimeControllerMarkUnpaidResponses = {
+    200: unknown;
+};
+
 export type TimeControllerGetTotalsData = {
     body?: never;
-    path?: never;
-    query?: {
-        projectId?: string;
+    path: {
+        id: Project;
     };
-    url: '/api/time/totals';
+    query?: never;
+    url: '/api/time/totals/{id}/project';
 };
+
+export type TimeControllerGetTotalsErrors = {
+    /**
+     * Project does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type TimeControllerGetTotalsError = TimeControllerGetTotalsErrors[keyof TimeControllerGetTotalsErrors];
 
 export type TimeControllerGetTotalsResponses = {
     200: Array<{
@@ -629,6 +829,18 @@ export type TimeControllerGetReportData = {
     query?: never;
     url: '/api/time/report/{id}';
 };
+
+export type TimeControllerGetReportErrors = {
+    /**
+     * Project does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type TimeControllerGetReportError = TimeControllerGetReportErrors[keyof TimeControllerGetReportErrors];
 
 export type TimeControllerGetReportResponses = {
     200: {
@@ -660,6 +872,18 @@ export type TimeControllerDeleteData = {
     url: '/api/time/{id}';
 };
 
+export type TimeControllerDeleteErrors = {
+    /**
+     * Time does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type TimeControllerDeleteError = TimeControllerDeleteErrors[keyof TimeControllerDeleteErrors];
+
 export type TimeControllerDeleteResponses = {
     200: unknown;
 };
@@ -673,11 +897,98 @@ export type TimeControllerReadData = {
     url: '/api/time/{id}';
 };
 
+export type TimeControllerReadErrors = {
+    /**
+     * Time does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type TimeControllerReadError = TimeControllerReadErrors[keyof TimeControllerReadErrors];
+
 export type TimeControllerReadResponses = {
     200: TimeSearch;
 };
 
 export type TimeControllerReadResponse = TimeControllerReadResponses[keyof TimeControllerReadResponses];
+
+export type TimeControllerEditData = {
+    body: TimeEdit;
+    path: {
+        id: Time;
+    };
+    query?: never;
+    url: '/api/time/{id}';
+};
+
+export type TimeControllerEditErrors = {
+    /**
+     * Time does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type TimeControllerEditError = TimeControllerEditErrors[keyof TimeControllerEditErrors];
+
+export type TimeControllerEditResponses = {
+    200: unknown;
+};
+
+export type TimeControllerRemoveScreenshotData = {
+    body?: never;
+    path: {
+        id: Time;
+    };
+    query?: never;
+    url: '/api/time/{id}/screenshot';
+};
+
+export type TimeControllerRemoveScreenshotErrors = {
+    /**
+     * Time does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type TimeControllerRemoveScreenshotError = TimeControllerRemoveScreenshotErrors[keyof TimeControllerRemoveScreenshotErrors];
+
+export type TimeControllerRemoveScreenshotResponses = {
+    200: unknown;
+};
+
+export type TimeControllerRemoveProcessesData = {
+    body?: never;
+    path: {
+        id: Time;
+    };
+    query?: never;
+    url: '/api/time/{id}/processes';
+};
+
+export type TimeControllerRemoveProcessesErrors = {
+    /**
+     * Time does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type TimeControllerRemoveProcessesError = TimeControllerRemoveProcessesErrors[keyof TimeControllerRemoveProcessesErrors];
+
+export type TimeControllerRemoveProcessesResponses = {
+    200: unknown;
+};
 
 export type InvoiceControllerSearchData = {
     body: InvoiceSearchDto;
@@ -701,6 +1012,18 @@ export type InvoiceControllerCreateData = {
     url: '/api/invoice/project/{projectId}';
 };
 
+export type InvoiceControllerCreateErrors = {
+    /**
+     * Project does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type InvoiceControllerCreateError = InvoiceControllerCreateErrors[keyof InvoiceControllerCreateErrors];
+
 export type InvoiceControllerCreateResponses = {
     200: InvoiceSearch;
 };
@@ -715,6 +1038,18 @@ export type InvoiceControllerReadData = {
     query?: never;
     url: '/api/invoice/{id}';
 };
+
+export type InvoiceControllerReadErrors = {
+    /**
+     * Invoice does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type InvoiceControllerReadError = InvoiceControllerReadErrors[keyof InvoiceControllerReadErrors];
 
 export type InvoiceControllerReadResponses = {
     200: InvoiceSearch;

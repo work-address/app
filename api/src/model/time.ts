@@ -7,16 +7,19 @@ export interface ITime {
   keyboardKeys: number
   mouseKeys: number
   mouseDistance: number
+  isPaid: boolean
   fromAt: Date
   toAt: Date
   project?: {
     id: string
   }
-  processes?: {
-    name: string
-    description?: string
-    timeMin: number
-  }[]
+  processes?:
+    | {
+        name: string
+        description?: string
+        timeMin: number
+      }[]
+    | null
   screenshot?: string | null
 }
 
@@ -26,6 +29,8 @@ export interface ITimeTotals {
   rateTotal: number
   minutes: number
   minutesActive: number
+  minutesPaid: number
+  minutesUnpaid: number
   keyboardKeys: number
   mouseKeys: number
   mouseDistance: number

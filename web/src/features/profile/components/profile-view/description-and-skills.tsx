@@ -59,7 +59,7 @@ export const DescriptionAndSkills = ({ gridArea }: DescriptionProps) => {
               <Flex gap={'1'} align={'end'}>
                 <Skeleton loading={profileLoading}>
                   <Text size={isMobile ? '4' : '8'} weight={'medium'}>
-                    {user?.price || 0}
+                    {user?.rate || 0}
                   </Text>
                 </Skeleton>
 

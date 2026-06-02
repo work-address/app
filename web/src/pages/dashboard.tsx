@@ -1,4 +1,3 @@
-import { PlusIcon } from '@radix-ui/react-icons'
 import { Badge, Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useEffect, useState } from 'react'
@@ -8,6 +7,7 @@ import {
   fetchActivities,
   $activitiesLoading,
   $hasProjects,
+  $activities,
 } from '@/entities/activities'
 import {
   ApplicationsUsage,
@@ -18,7 +18,6 @@ import {
   ProjectsSearchInput,
 } from '@/features/dashboard'
 import {
-  Button,
   PageHelmet,
   Text,
   Wrapper,
@@ -36,10 +35,12 @@ export default function DashboardPage() {
     fetchActivities: fetchActivitiesEvent,
     activitiesLoading,
     hasProjects,
+    activities,
   } = useUnit({
     fetchActivities,
     activitiesLoading: $activitiesLoading,
     hasProjects: $hasProjects,
+    activities: $activities,
   })
 
   const showSkeletons = activitiesLoading || hasProjects
@@ -69,30 +70,19 @@ export default function DashboardPage() {
                   {t('dashboard.page.title')}
                 </Text>
 
-                {showSkeletons && (
-                  <Badge size={'2'} color={'gray'}>
-                    <Text weight={'medium'} size={'1'}>
-                      {t('dashboard.page.projectsCount', { count: 4 })}
-                    </Text>
-                  </Badge>
-                )}
+                <Badge size={'2'} color={'gray'}>
+                  <Text weight={'medium'} size={'1'}>
+                    {t('dashboard.page.projectsCount', {
+                      count: activities.length,
+                    })}
+                  </Text>
+                </Badge>
               </Flex>
 
-              {showSkeletons ? (
+              {showSkeletons && (
                 <Flex mb={{ initial: '3', sm: '0' }}>
                   <ProjectsSearchInput />
                 </Flex>
-              ) : (
-                <S.TopRight>
-                  <Button
-                    themeVariant="primary"
-                    onClick={() => setCreateProjectOpen(true)}
-                  >
-                    <PlusIcon />
-
-                    <Text>{t('dashboard.page.createProject')}</Text>
-                  </Button>
-                </S.TopRight>
               )}
             </Flex>
 
@@ -119,10 +109,11 @@ export default function DashboardPage() {
           <WorklogsTable />
         ) : (
           <DashboardEmptyState
-            imageSrc="/img/photo/help.svg"
             title={t('dashboard.page.empty.title')}
             description={t('dashboard.page.empty.description')}
             actionLabel={t('dashboard.page.empty.action')}
+            buttonThemeVariant="primary"
+            buttonSize={'3'}
           />
         )}
       </Wrapper>

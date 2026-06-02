@@ -1,6 +1,6 @@
 import * as _ from 'lodash'
 import { inject, injectable } from 'inversify'
-import { SelectQueryBuilder } from 'typeorm'
+import { Brackets, SelectQueryBuilder } from 'typeorm'
 
 import { Filter } from '@/service/filter'
 import { AbstractRepositoryTemplate } from '@/repository/abstract-repository-template'
@@ -8,11 +8,14 @@ import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
 import { EProjectState } from '@/model/project'
 import { ProjectSearchDto } from '@/model/dto/project'
+import { UserRepository } from '@/repository/user-repository'
 
 @injectable()
 export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
   @inject('Filter')
   protected filter: Filter
+  @inject('UserRepository')
+  protected userRepository: UserRepository
   protected target = Project
 
   public findProjectAsOwner(
@@ -28,16 +31,35 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
       .getOne()
   }
 
-  public findProjectAsWorkerOrFail(id: string): Promise<Project> {
-    return this.getRepo()
+  public async findProjectWithAccess(
+    project: Project,
+    user: User,
+  ): Promise<Project | undefined> {
+    const qb = this.getRepo()
       .createQueryBuilder('project')
-      .innerJoinAndSelect('project.user', 'user')
-      .andWhere('project.id = :id', { id })
-      .andWhere(`project.state IN (:...state)`, {
-        state: [EProjectState.ACTIVE],
-      })
-      .select()
-      .getOneOrFail()
+      .innerJoinAndSelect('project.user', 'owner')
+      .where('project.id = :projectId', { projectId: project.id })
+
+    this.applyViewAccessFilter(qb, 'owner', user)
+
+    const found = await qb.getOne()
+    if (!found) {
+      return undefined
+    }
+
+    return this.attachAccessUsers(found)
+  }
+
+  public findProjectForTimeTracking(id: string, user: User): Promise<Project> {
+    const qb = this.getRepo()
+      .createQueryBuilder('project')
+      .innerJoinAndSelect('project.user', 'owner')
+      .where('project.id = :id', { id })
+      .andWhere('project.state = :state', { state: EProjectState.ACTIVE })
+
+    this.applyWorkerAccessFilter(qb, 'owner', user)
+
+    return qb.getOneOrFail()
   }
 
   public findProjectOwnedBy(
@@ -69,12 +91,12 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
     const sort = this.filter.buildOrderByCondition('project', s)
     const limit = this.filter.buildLimit(search)
 
-    return this.getRepo()
+    const [projects, count] = await this.getRepo()
       .createQueryBuilder('project')
       .leftJoinAndSelect('project.user', 'user')
       .select()
       .where((qb: SelectQueryBuilder<Project>) => {
-        qb.andWhere('user.id = :userId', { userId: user.id })
+        this.applyViewAccessFilter(qb, 'user', user)
 
         if ('userId' in s.filter) {
           qb.andWhere('user.id = :ownerId', {
@@ -134,5 +156,96 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
       .skip(limit * s.page)
       .take(limit)
       .getManyAndCount()
+
+    await this.attachAccessUsersToProjects(projects)
+
+    return [projects, count]
+  }
+
+  private async attachAccessUsers(project: Project): Promise<Project> {
+    await this.attachAccessUsersToProjects([project])
+    return project
+  }
+
+  private async attachAccessUsersToProjects(
+    projects: Project[],
+  ): Promise<void> {
+    if (!projects.length) {
+      return
+    }
+
+    const addresses = [
+      ...new Set(
+        projects.flatMap((project) => [
+          ...(project.workerAddresses ?? []),
+          ...(project.viewerAddresses ?? []),
+        ]),
+      ),
+    ]
+
+    if (!addresses.length) {
+      for (const project of projects) {
+        project.workers = []
+        project.viewers = []
+      }
+      return
+    }
+
+    const users = await this.userRepository.findByAddresses(addresses)
+    const usersByAddress = new Map(users.map((u) => [u.address, u]))
+
+    for (const project of projects) {
+      const workerAddresses = project.workerAddresses ?? []
+      const viewerAddresses = project.viewerAddresses ?? []
+
+      project.workers = workerAddresses
+        .map((address) => usersByAddress.get(address))
+        .filter((u): u is User => u !== undefined)
+      project.viewers = viewerAddresses
+        .map((address) => usersByAddress.get(address))
+        .filter((u): u is User => u !== undefined)
+    }
+  }
+
+  private applyViewAccessFilter(
+    qb: SelectQueryBuilder<unknown>,
+    ownerAlias: string,
+    user: User,
+  ): void {
+    const { accessUserId, userAddress } = Project.accessParams(user)
+
+    qb.andWhere(
+      new Brackets((subQb) => {
+        subQb
+          .where(`${ownerAlias}.id = :accessUserId`, { accessUserId })
+          .orWhere(
+            ":userAddress = ANY(COALESCE(project.workerAddresses, '{}'))",
+            { userAddress },
+          )
+          .orWhere(
+            ":userAddress = ANY(COALESCE(project.viewerAddresses, '{}'))",
+            { userAddress },
+          )
+      }),
+    )
+  }
+
+  private applyWorkerAccessFilter(
+    qb: SelectQueryBuilder<unknown>,
+    ownerAlias: string,
+    user: User,
+  ): void {
+    const { accessUserId, userAddress } = Project.accessParams(user)
+
+    qb.andWhere(
+      new Brackets((subQb) => {
+        subQb
+          .where(`${ownerAlias}.id = :accessUserId`, { accessUserId })
+          .orWhere(
+            ":userAddress = ANY(COALESCE(project.workerAddresses, '{}'))",
+            { userAddress },
+          )
+      }),
+    )
   }
 }

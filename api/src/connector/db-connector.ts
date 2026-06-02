@@ -12,6 +12,17 @@ export class DbConnector {
 
   public connect(): Promise<Connection> {
     const manager = getConnectionManager()
+
+    if (manager.has('default')) {
+      const existing = manager.get('default')
+
+      if (existing.isConnected) {
+        return Promise.resolve(existing)
+      }
+
+      return existing.connect()
+    }
+
     const directory = ['test', 'development'].includes(this.env)
       ? 'src'
       : 'build'

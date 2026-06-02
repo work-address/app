@@ -19,6 +19,16 @@ export class AuthEthLoginDto {
   address: string
 }
 
+export class AuthSolanaLoginDto {
+  @IsString()
+  @IsNotEmpty()
+  signature: string
+
+  @IsString()
+  @IsNotEmpty()
+  address: string
+}
+
 export class AuthNonceRequestDto {
   @IsString()
   @IsNotEmpty()
@@ -36,6 +46,7 @@ export class AuthTonProofDomainDto {
   lengthBytes: number
 
   @IsString()
+  @IsNotEmpty()
   value: string
 }
 
@@ -48,23 +59,29 @@ export class AuthTonProofPayloadDto {
   domain: AuthTonProofDomainDto
 
   @IsString()
+  @IsNotEmpty()
   payload: string
 
   @IsString()
+  @IsNotEmpty()
   signature: string
 
   @IsString()
+  @IsNotEmpty()
   state_init: string
 }
 
 export class AuthTonLoginDto implements IAuthTonPayload {
   @IsString()
+  @IsNotEmpty()
   address: string
 
   @IsString()
+  @IsNotEmpty()
   network: string
 
   @IsString()
+  @IsNotEmpty()
   public_key: string
 
   @ValidateNested()

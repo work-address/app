@@ -17,4 +17,6 @@ export interface IProject {
   state: EProjectState
   trackScreenshots?: boolean | null
   trackProcesses?: boolean | null
+  workerAddresses?: string[]
+  viewerAddresses?: string[]
 }

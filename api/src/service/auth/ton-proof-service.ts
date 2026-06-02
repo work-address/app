@@ -1,5 +1,5 @@
 import { Buffer } from 'buffer'
-import { injectable } from 'inversify'
+import { inject, injectable } from 'inversify'
 import { sha256 } from '@ton/crypto'
 import {
   Address,
@@ -12,14 +12,21 @@ import { sign } from 'tweetnacl'
 
 import { tryParsePublicKey } from '@/service/auth/ton-wallets'
 import { IAuthTonPayload } from '@/model/auth'
+import { IConfigParameters } from '@/model/config'
 
 @injectable()
 export class TonProofService {
+  @inject('parameters')
+  protected parameters: IConfigParameters
+
   public async checkProof(payload: IAuthTonPayload): Promise<boolean> {
     const tonProofPrefix = 'ton-proof-item-v2/'
     const tonConnectPrefix = 'ton-connect'
-    const allowedDomains = ['ton-connect.github.io']
-    const validAuthTime = 60 // 1 minute
+    const allowedDomains = this.parameters.tonAllowedDomains
+    // Proof freshness window. The nonce is single-use and expires in Redis, so
+    // this is defense-in-depth. 60s was too short for real wallet-approval UX.
+    const validAuthTime = 15 * 60 // 15 minutes
+    const clockSkewTolerance = 5 * 60 // accept small future drift
 
     try {
       const stateInit = loadStateInit(
@@ -51,12 +58,22 @@ export class TonProofService {
         return false
       }
 
-      if (!allowedDomains.includes(payload.proof.domain.value)) {
+      if (
+        allowedDomains.length > 0 &&
+        !allowedDomains.some(
+          (allowedDomain) =>
+            payload.proof.domain.value === allowedDomain ||
+            payload.proof.domain.value.startsWith(`${allowedDomain}:`),
+        )
+      ) {
         return false
       }
 
       const now = Math.floor(Date.now() / 1000)
       if (now - validAuthTime > payload.proof.timestamp) {
+        return false
+      }
+      if (payload.proof.timestamp > now + clockSkewTolerance) {
         return false
       }
 

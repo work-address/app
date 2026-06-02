@@ -4,10 +4,11 @@ import { Invoice } from '@/entity/invoice'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { User } from '@/entity/user'
 import { InvoiceCreateDto } from '@/model/dto/invoice'
+import { EInvoiceState } from '@/model/invoice'
 import moment from 'moment'
 import { ProjectRepository } from '@/repository/project-repository'
 import { Project } from '@/entity/project'
-import RejectedExecutionException from '@/exception/rejected-execution-exception'
+import AccessException from '@/exception/access-exception'
 import { TimeRepository } from '@/repository/time-repository'
 
 @injectable()
@@ -32,7 +33,7 @@ export class InvoiceManager {
     )
 
     if (!projectExisting) {
-      throw new RejectedExecutionException(
+      throw new AccessException(
         `Wrong user: the given project belongs to someone else`,
       )
     }
@@ -52,6 +53,7 @@ export class InvoiceManager {
     invoice.toAt = moment.utc(data.toUnix).toDate()
     invoice.project = project
     invoice.amount = rate * hours
+    invoice.state = EInvoiceState.REQUESTED
 
     return this.invoiceRepository.validateAndSave(invoice)
   }

@@ -61,6 +61,14 @@ export function mergeRegisteredSerializationGroupSchemas(
       propertyName?: string
       options?: { groups?: string[] }
     }>
+    findTypeMetadata?(
+      target: Function,
+      propertyName: string,
+    ):
+      | {
+          typeFunction?: () => unknown
+        }
+      | undefined
   },
 ): void {
   for (const [componentName, reg] of serializationGroupComponentsByName) {

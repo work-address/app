@@ -118,7 +118,16 @@ export class HelpControllerTest extends BaseControllerTest {
         components?: {
           schemas?: Record<
             string,
-            { properties?: Record<string, { $ref?: string }> }
+            {
+              properties?: Record<
+                string,
+                {
+                  $ref?: string
+                  type?: string
+                  items?: { $ref?: string }
+                }
+              >
+            }
           >
         }
       }
@@ -126,6 +135,53 @@ export class HelpControllerTest extends BaseControllerTest {
     expect(projectSearchSchema?.properties?.user?.$ref).to.be.equal(
       '#/components/schemas/User_search',
     )
+    expect(projectSearchSchema?.properties?.workerAddresses?.type).to.be.equal(
+      'array',
+    )
+    expect(projectSearchSchema?.properties?.viewerAddresses?.type).to.be.equal(
+      'array',
+    )
+    expect(projectSearchSchema?.properties?.workers?.items?.$ref).to.be.equal(
+      '#/components/schemas/User_search',
+    )
+    expect(projectSearchSchema?.properties?.viewers?.items?.$ref).to.be.equal(
+      '#/components/schemas/User_search',
+    )
+
+    const projectEditSchema = (
+      res.data as {
+        components?: {
+          schemas?: Record<
+            string,
+            { properties?: Record<string, { type?: string }> }
+          >
+        }
+      }
+    ).components?.schemas?.Project_edit
+    expect(projectEditSchema?.properties?.workerAddresses?.type).to.be.equal(
+      'array',
+    )
+    expect(projectEditSchema?.properties?.viewerAddresses?.type).to.be.equal(
+      'array',
+    )
+
+    const projectCreateSchema = (
+      res.data as {
+        components?: {
+          schemas?: Record<
+            string,
+            { properties?: Record<string, { type?: string }> }
+          >
+        }
+      }
+    ).components?.schemas?.Project_create
+    expect(projectCreateSchema?.properties?.workerAddresses?.type).to.be.equal(
+      'array',
+    )
+    expect(projectCreateSchema?.properties?.viewerAddresses?.type).to.be.equal(
+      'array',
+    )
+
     expect(projectReadGet?.responses?.['404']).to.exist
     expect(projectReadGet?.responses?.['404']?.description).to.be.equal(
       'Project does not exist',
