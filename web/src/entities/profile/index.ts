@@ -43,7 +43,6 @@ import {
   loginTonFx,
   openTonModalFx,
   tonAuthError,
-  tonAuthSuccess,
 } from './ton.model'
 
 import type { SolanaNonceParams } from '@/entities/profile/types.ts'
@@ -145,7 +144,7 @@ sample({
  * TON flow: after wallet provides valid proof, verify it on backend.
  */
 sample({
-  clock: tonAuthSuccess,
+  clock: openTonModalFx.doneData,
   target: loginTonFx,
 })
 
@@ -221,6 +220,7 @@ sample({
     signEthFx.fail,
     loginEthFx.fail,
     tonAuthError,
+    openTonModalFx.fail,
     loginTonFx.fail,
     signSolanaFx.fail,
     loginSolanaFx.fail,
@@ -266,9 +266,33 @@ loginTonFx.done.watch(() => {
   })
 })
 
-sample({
-  clock: [tonAuthError, loginTonFx.fail],
-}).watch(() => {
+openTonModalFx.fail.watch(({ error }) => {
+  const message = getAuthErrorMessage(error, 'Ton login error')
+
+  if (!message) {
+    return
+  }
+
+  showToast('error', {
+    message,
+    position: 'top-center',
+  })
+})
+
+loginTonFx.fail.watch(({ error }) => {
+  const message = getAuthErrorMessage(error, 'Ton login error')
+
+  if (!message) {
+    return
+  }
+
+  showToast('error', {
+    message,
+    position: 'top-center',
+  })
+})
+
+tonAuthError.watch((message) => {
   showToast('error', {
     message,
     position: 'top-center',

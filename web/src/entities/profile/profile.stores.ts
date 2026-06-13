@@ -14,7 +14,12 @@ import {
 import { login, logout, setInitialized } from './profile.events'
 import { saveProfileMutation } from './profile.mutations'
 import { getNonceSolanaFx, loginSolanaFx, signSolanaFx } from './solana.model'
-import { disconnectTonFx, loginTonFx, tonDisconnected } from './ton.model'
+import {
+  disconnectTonFx,
+  loginTonFx,
+  openTonModalFx,
+  tonDisconnected,
+} from './ton.model'
 
 import type { EthModalResult, LoginMode } from './types.ts'
 

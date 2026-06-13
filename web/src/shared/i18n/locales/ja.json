@@ -185,7 +185,7 @@
   "signIn.footer.ethereumWallets": "EVM ウォレット：",
   "signIn.footer.tonWallets": "TON ウォレット：",
   "signIn.footer.solanaWallets": "Solana ウォレット：",
-  "signIn.learnMore": "ヘルプセンター",
+  "signIn.learnMore": "ドキュメントを読む",
   "signIn.logoAlt": "Address Work",
   "signIn.providers.ethereum": "Ethereum でログイン",
   "signIn.providers.ton": "TON でログイン",

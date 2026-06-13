@@ -6,6 +6,8 @@ const manifestUrl =
 
 export const tonConnectProvider = new TonConnectUI({
   manifestUrl,
+  // Auth always requires a fresh connect with tonProof; restored sessions omit proof.
+  restoreConnection: false,
 })
 
 export type {
