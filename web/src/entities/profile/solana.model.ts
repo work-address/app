@@ -6,11 +6,12 @@ import {
   createStore,
   sample,
 } from 'effector'
+import { createGate } from 'effector-react'
 
 import type { AuthorizationHeaders } from './types.ts'
 import type { PublicKey } from '@solana/web3.js'
 
-import { baseApi } from '@/shared'
+import { baseApi } from '@/shared/api/base'
 
 export type SolanaWalletState = {
   publicKey: PublicKey | null
@@ -27,6 +28,16 @@ export const toggleSolanaModalMounted = createEvent()
 
 export const $solanaWalletMounted = createStore(false).on(
   toggleSolanaModalMounted,
+  () => true,
+)
+
+export const SolanaWalletGate =
+  createGate<SolanaWalletState>('SolanaWalletGate')
+
+export const requestSolanaWalletMount = createEvent()
+
+export const $solanaWalletMountRequested = createStore(false).on(
+  requestSolanaWalletMount,
   () => true,
 )
 
@@ -85,6 +96,24 @@ sample({
 })
 
 sample({
+  clock: SolanaWalletGate.state.updates,
+  target: $solanaWallet,
+})
+
+sample({
+  clock: SolanaWalletGate.state.updates,
+  filter: (state) => state.connected && state.publicKey !== null,
+  fn: (state) => ({ address: state.publicKey!.toBase58() }),
+  target: solanaConnected,
+})
+
+sample({
+  clock: SolanaWalletGate.state.updates,
+  filter: (state) => !state.connected,
+  target: solanaDisconnected,
+})
+
+sample({
   clock: solanaConnected,
   source: $solanaConnectionStatus,
   filter: (status) => status === 'disconnected',
@@ -99,16 +128,35 @@ sample({
   target: solanaDisconnectedPub,
 })
 
-export const openSolanaModalFx = attach({
-  source: $solanaWallet,
-  effect: (wallet) => {
-    wallet.openModal(true)
-  },
+/** Resolves once the lazily-mounted Solana shell has opened the gate. */
+function whenSolanaWalletReady() {
+  if (SolanaWalletGate.status.getState()) {
+    return Promise.resolve()
+  }
+
+  return new Promise<void>((resolve) => {
+    const unwatch = SolanaWalletGate.status.watch((opened) => {
+      if (opened) {
+        unwatch()
+        resolve()
+      }
+    })
+  })
+}
+
+export const openSolanaModalFx = createEffect(async () => {
+  requestSolanaWalletMount()
+  await whenSolanaWalletReady()
+  $solanaWallet.getState().openModal(true)
 })
 
 export const disconnectSolanaFx = attach({
   source: $solanaWallet,
   effect: async (wallet) => {
+    if (!SolanaWalletGate.status.getState()) {
+      return
+    }
+
     await wallet.disconnect()
   },
 })

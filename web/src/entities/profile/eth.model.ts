@@ -5,6 +5,12 @@ import type { AuthorizationHeaders, EthModalResult } from './types.ts'
 
 import { baseApi, disconnectReownProvider, getReownProvider } from '@/shared'
 
+export type EthModalResult = {
+  signer: JsonRpcSigner
+  address: string
+  ethersProvider: BrowserProvider
+}
+
 export const ethConnected = createEvent<EthModalResult>()
 
 export const ethConnectedPub = createEvent<EthModalResult>()

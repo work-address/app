@@ -45,8 +45,6 @@ import {
   tonAuthError,
 } from './ton.model'
 
-import type { SolanaNonceParams } from '@/entities/profile/types.ts'
-
 import { showToast } from '@/shared'
 
 /**
