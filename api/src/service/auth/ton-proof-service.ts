@@ -59,7 +59,6 @@ export class TonProofService {
       }
 
       if (
-        allowedDomains.length > 0 &&
         !allowedDomains.some(
           (allowedDomain) =>
             payload.proof.domain.value === allowedDomain ||

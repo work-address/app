@@ -6,15 +6,19 @@ import {
   createStore,
   sample,
 } from 'effector'
-import { createGate } from 'effector-react'
 
-import type {
-  AuthorizationHeaders,
-  SolanaWalletState,
-  SolanaModalResult,
-} from './types.ts'
+import type { AuthorizationHeaders } from './types.ts'
+import type { PublicKey } from '@solana/web3.js'
 
 import { baseApi } from '@/shared'
+
+export type SolanaWalletState = {
+  publicKey: PublicKey | null
+  signMessage: ((message: Uint8Array) => Promise<Uint8Array>) | undefined
+  disconnect: () => Promise<void>
+  openModal: (visible: boolean) => void
+  connected: boolean
+}
 
 export const SolanaWalletGate =
   createGate<SolanaWalletState>('SolanaWalletGate')
@@ -93,6 +97,32 @@ sample({
   source: $solanaConnectionStatus,
   filter: (status) => status === 'connected',
   target: solanaDisconnectedPub,
+})
+
+export const openSolanaModalFx = attach({
+  source: $solanaWallet,
+  effect: (wallet) => {
+    wallet.openModal(true)
+  },
+})
+
+export const disconnectSolanaFx = attach({
+  source: $solanaWallet,
+  effect: async (wallet) => {
+    await wallet.disconnect()
+  },
+})
+
+export const getNonceSolanaFx = createEffect(async (address: string) => {
+  const result = await baseApi.authControllerNonce({
+    body: { address },
+  })
+
+  if (result instanceof AxiosError) {
+    throw result
+  }
+
+  return result.data as string
 })
 
 export const signSolanaFx = attach({

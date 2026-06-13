@@ -52,7 +52,8 @@ const unsubscribeTonUI = tonConnectProvider.onStatusChange((wallet) => {
     proofItemReply &&
     'proof' in proofItemReply &&
     wallet &&
-    wallet.account.publicKey
+    wallet.account.publicKey &&
+    wallet.account.walletStateInit
   ) {
     return tonAuthSuccess({
       address: wallet.account.address,

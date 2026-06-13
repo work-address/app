@@ -107,7 +107,7 @@
           "state"
         ],
         "example": {
-          "id": "15a2b640-1791-4b81-b8e2-90d364214eb5"
+          "id": "58f69cdb-ed35-40d5-a4dc-ffacca7f41ea"
         }
       },
       "ProjectStatistics": {
@@ -168,7 +168,7 @@
           "period"
         ],
         "example": {
-          "id": "83b6883f-ea7e-4227-9246-16fef01d1b48"
+          "id": "44d4a073-b2b8-40e5-b76e-451b9ec8dcfc"
         }
       },
       "Time": {
@@ -262,7 +262,7 @@
           "toAt"
         ],
         "example": {
-          "id": "8fe63609-ce42-4b60-a014-581dbc665da5"
+          "id": "ebdf0ff6-0e3d-4381-be27-60d4a083b6cc"
         }
       },
       "Project": {
@@ -345,7 +345,7 @@
           "state"
         ],
         "example": {
-          "id": "5899fefe-8c17-4157-8f50-5cc6da25af44"
+          "id": "c382a47e-ed48-4700-b2df-baa89aba3f22"
         }
       },
       "User": {
@@ -454,7 +454,7 @@
           "emailOrPhone"
         ],
         "example": {
-          "id": "d7028c0e-4029-4065-a1d5-15185f2a8fc3"
+          "id": "c166ff1b-bc2c-4656-b363-d121075b8f6a"
         }
       },
       "AuthForgotPasswordDto": {
@@ -3214,7 +3214,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "7523283d-b345-4b5a-9d16-855c96e97f6f"
+                  "projectId": "2d838054-6e28-45c5-a688-2a5a60bdd021"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -3282,8 +3282,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1780421508757,
-                "toUnix": 1780507908758
+                "fromUnix": 1781301344322,
+                "toUnix": 1781387744322
               }
             }
           },
@@ -3460,7 +3460,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "bff1e445-63fc-41f8-8182-669479ee7bd8"
+                "nonce": "32853542-6104-41fb-924a-5b600f9cd31e"
               },
               "schema": {
                 "properties": {
@@ -3505,7 +3505,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "c88d2ffe-68e0-428c-9229-e63f89e16119"
+                "nonce": "83ca445d-489d-4876-b57f-95ad1caa4cad"
               },
               "schema": {
                 "properties": {
@@ -3546,21 +3546,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "733cfff6-75e8-4250-98c9-54a12fa03735",
+                      "nonce": "58825a81-abc7-488b-bd2c-932bfb359cdf",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "d0b6c197-5938-40b8-9254-6199ff0012a5",
+                      "nonce": "0df1f552-6213-4694-9cfa-4032a256dbd2",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "f0aae470-c8f1-41c9-b44e-a4236ba780a4",
+                      "nonce": "217e7d04-613a-4501-af44-c44b050825f1",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

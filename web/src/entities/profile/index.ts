@@ -189,10 +189,20 @@ sample({
   target: [disconnectTonFx, disconnectEthFx, disconnectSolanaFx, clearTokensFx],
 })
 
+/**
+ * Solana flow: after wallet connected (and user intends to log in),
+ * fetch nonce for the connected address, sign it, then verify on backend.
+ */
 sample({
-  clock: getNonceFx.done,
-  filter: ({ params }) => params.mode === 'solana',
-  fn: ({ result }) => result,
+  clock: solanaConnectedPub,
+  source: combine($authenticated, $loginMode),
+  filter: ([authenticated, mode]) => !authenticated && mode === 'solana',
+  fn: (_, { address }) => address,
+  target: getNonceSolanaFx,
+})
+
+sample({
+  clock: getNonceSolanaFx.doneData,
   target: signSolanaFx,
 })
 
@@ -211,7 +221,6 @@ sample({
     signEthFx.fail,
     loginEthFx.fail,
     tonAuthError,
-    openTonModalFx.fail,
     loginTonFx.fail,
     signSolanaFx.fail,
     loginSolanaFx.fail,
@@ -257,35 +266,11 @@ loginTonFx.done.watch(() => {
   })
 })
 
-openTonModalFx.fail.watch(({ error }) => {
-  const message = getAuthErrorMessage(error, 'Ton login error')
-
-  if (!message) {
-    return
-  }
-
+sample({
+  clock: [tonAuthError, loginTonFx.fail],
+}).watch(() => {
   showToast('error', {
     message,
-    position: 'top-center',
-  })
-})
-
-loginTonFx.fail.watch(({ error }) => {
-  const message = getAuthErrorMessage(error, 'Ton login error')
-
-  if (!message) {
-    return
-  }
-
-  showToast('error', {
-    message,
-    position: 'top-center',
-  })
-})
-
-tonAuthError.watch(() => {
-  showToast('error', {
-    message: 'Ton auth error.',
     position: 'top-center',
   })
 })

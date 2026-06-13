@@ -34,10 +34,7 @@ export class TonProofServiceTest extends AbstractDatabaseIntegration {
   async checkProof_rejectsInvalidSignature() {
     const domain = getTestTonDomain(this.parameters)
     const nonce = 'test-ton-nonce-invalid-signature'
-    const payload = await buildTonAuthPayloadWithInvalidSignature({
-      nonce,
-      domain,
-    })
+    const payload = await buildTonAuthPayloadWithInvalidSignature({ nonce, domain })
 
     const isValid = await this.tonProofService.checkProof(payload)
 
@@ -58,25 +55,6 @@ export class TonProofServiceTest extends AbstractDatabaseIntegration {
     const isValid = await this.tonProofService.checkProof(payload)
 
     expect(isValid).to.be.equal(false)
-  }
-
-  @test()
-  async checkProof_skipsDomainCheckWhenAllowedDomainsEmpty() {
-    const service = new TonProofService()
-    service['parameters'] = {
-      ...this.parameters,
-      tonAllowedDomains: [],
-    }
-
-    const nonce = 'test-ton-nonce-no-domain-restriction'
-    const { payload } = await buildTonAuthPayload({
-      nonce,
-      domain: 'evil.example.com',
-    })
-
-    const isValid = await service.checkProof(payload)
-
-    expect(isValid).to.be.equal(true)
   }
 
   @test()
