@@ -185,7 +185,7 @@
   "signIn.footer.ethereumWallets": "EVM 钱包：",
   "signIn.footer.tonWallets": "TON 钱包：",
   "signIn.footer.solanaWallets": "Solana 钱包：",
-  "signIn.learnMore": "阅读文档",
+  "signIn.learnMore": "帮助中心",
   "signIn.logoAlt": "Address Work",
   "signIn.providers.ethereum": "使用 Ethereum 登录",
   "signIn.providers.ton": "使用 TON 登录",

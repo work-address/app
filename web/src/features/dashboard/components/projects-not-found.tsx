@@ -1,15 +1,11 @@
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { routes } from '@/routes'
+import { openDocs } from '@/routes'
 import { Button } from '@/shared'
 
 export const ProjectsNotFound = () => {
   const { t } = useTranslation()
-
-  const onOpenDocsClick = () => {
-    window.open(routes.docs.build(), routes.docs.target)
-  }
 
   return (
     <Root>
@@ -25,7 +21,7 @@ export const ProjectsNotFound = () => {
       <Desc>{t('dashboard.page.projectsNotFound.description')}</Desc>
 
       <Button
-        onClick={onOpenDocsClick}
+        onClick={openDocs}
         variant={'outline'}
         color={'gray'}
         size={'2'}

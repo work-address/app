@@ -1,4 +1,3 @@
-import { PlusIcon } from '@radix-ui/react-icons'
 import { Badge, Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useEffect, useState } from 'react'
@@ -111,13 +110,11 @@ export default function DashboardPage() {
           <WorklogsTable />
         ) : (
           <DashboardEmptyState
-            imageSrc={DashboardEmptyStateImage}
             title={t('dashboard.page.empty.title')}
             description={t('dashboard.page.empty.description')}
             actionLabel={t('dashboard.page.empty.action')}
             buttonThemeVariant="primary"
             buttonSize={'3'}
-            buttonIcon={<PlusIcon width={18} height={18} />}
           />
         )}
       </Wrapper>
