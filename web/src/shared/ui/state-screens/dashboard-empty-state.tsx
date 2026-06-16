@@ -1,6 +1,8 @@
 import styled from 'styled-components'
 
-import { Button } from '@/shared'
+import type React from 'react'
+
+import { Button, type ButtonProps } from '@/shared'
 
 type DashboardEmptyStateProps = {
   imageSrc: string
@@ -10,6 +12,9 @@ type DashboardEmptyStateProps = {
   onAction?: () => void
   className?: string
   style?: React.CSSProperties
+  buttonThemeVariant?: ButtonProps['themeVariant']
+  buttonSize?: ButtonProps['size']
+  buttonIcon?: React.ReactNode
 }
 
 export const DashboardEmptyState = ({
@@ -20,6 +25,9 @@ export const DashboardEmptyState = ({
   onAction,
   className,
   style,
+  buttonThemeVariant,
+  buttonSize,
+  buttonIcon,
 }: DashboardEmptyStateProps) => {
   return (
     <Root className={className} style={style}>
@@ -32,7 +40,12 @@ export const DashboardEmptyState = ({
         <EmptyDesc>{description}</EmptyDesc>
       </Text>
 
-      <EmptyAction themeVariant="secondary" onClick={onAction}>
+      <EmptyAction
+        themeVariant={buttonThemeVariant}
+        size={buttonSize}
+        onClick={onAction}
+      >
+        {buttonIcon}
         {actionLabel}
       </EmptyAction>
     </Root>
@@ -62,12 +75,12 @@ const HeroImg = styled.img`
 `
 
 const Text = styled.div`
-  margin-top: 18px;
+  margin-top: var(--space-6);
   display: flex;
   flex-direction: column;
   align-items: center;
   text-align: center;
-  gap: 6px;
+  gap: 4px;
   max-width: 520px;
 `
 
@@ -89,12 +102,5 @@ const EmptyDesc = styled.p`
 `
 
 const EmptyAction = styled(Button)`
-  margin-top: 24px;
-  padding: 6px 16px;
-  border-radius: 4px;
-  height: 32px;
-  color: #1c2024;
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 143%;
+  margin-top: var(--space-5);
 `
