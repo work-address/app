@@ -70,6 +70,8 @@ export const ProjectsTable = () => {
     resetDeleteMutationEvent: deleteActivityMutation.reset,
   })
 
+  const renderingData = isActivitiesLoading ? [] : projects
+
   const { confirm } = useConfirm()
 
   const { t } = useTranslation()
@@ -305,7 +307,7 @@ export const ProjectsTable = () => {
               <ProjectsTableContext value={projectsContextValues}>
                 {isMobile ? (
                   <MobileDataTable
-                    data={projects}
+                    data={renderingData}
                     getRowId={rowIdGetter}
                     config={mobileConfig}
                     BodyComponent={MobileBody}
@@ -319,7 +321,7 @@ export const ProjectsTable = () => {
                   />
                 ) : (
                   <DataTable
-                    data={projects}
+                    data={renderingData}
                     config={desktopConfig}
                     getRowId={rowIdGetter}
                     allowSelection

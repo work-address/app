@@ -1,7 +1,6 @@
 import { createQuery } from '@farfetched/core'
 
-import type { WorklogSort } from './types'
-import type { ITimeTotal } from './types'
+import type { TimeTotalsRow, WorklogSort } from './types'
 
 import { baseApi } from '@/shared'
 
@@ -26,19 +25,8 @@ export const activitiesQuery = createQuery({
   },
 })
 
-type TimeTotalsRow = {
-  projectId: string
-  rateHour: number
-  rateTotal: number
-  minutes: number
-  minutesActive: number
-  keyboardKeys: number
-  mouseKeys: number
-  mouseDistance: number
-}
-
 export const activitiesStatsQuery = createQuery({
-  handler: async (projectIds: string[]): Promise<ITimeTotal[]> => {
+  handler: async (projectIds: string[]): Promise<TimeTotalsRow[]> => {
     if (projectIds.length === 0) {
       return []
     }
@@ -51,20 +39,9 @@ export const activitiesStatsQuery = createQuery({
       ),
     )
 
-    return responses.flatMap((response) => {
-      const rows = (response.data ?? []) as TimeTotalsRow[]
-
-      return rows.map((row) => ({
-        activityId: row.projectId,
-        rateHour: row.rateHour,
-        rateTotal: row.rateTotal,
-        minutes: row.minutes,
-        minutesActive: row.minutesActive,
-        keyboardKeys: row.keyboardKeys,
-        mouseKeys: row.mouseKeys,
-        mouseDistance: row.mouseDistance,
-      }))
-    })
+    return responses.flatMap(
+      (response) => (response.data ?? []) as TimeTotalsRow[],
+    )
   },
 })
 

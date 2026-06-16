@@ -5,6 +5,17 @@ export type ProjectsFilter = {
   containsText: string
 }
 
+export type TimeTotalsRow = {
+  projectId: string
+  rateHour: number
+  rateTotal: number
+  minutes: number
+  minutesActive: number
+  keyboardKeys: number
+  mouseKeys: number
+  mouseDistance: number
+}
+
 export type ITimeTotal = {
   activityId: string
   rateHour: number
@@ -16,7 +27,7 @@ export type ITimeTotal = {
   mouseDistance: number
 }
 
-export type ITimeTotalDetail = {
+export type TimeTotalDetail = {
   createdAt: string
   note: string
   fromAt: string
@@ -24,7 +35,7 @@ export type ITimeTotalDetail = {
   id: string
 } & ITimeTotal
 
-export type ITimeTotalComputed = {
+export type TimeTotalComputed = {
   hoursTotal: number
   minutesTotal: number
   hoursActiveTotal: number
@@ -33,8 +44,8 @@ export type ITimeTotalComputed = {
 }
 
 export type ProjectWithStats = Omit<baseApi.Project, 'rateHour'> &
-  ITimeTotal &
-  ITimeTotalComputed
+  TimeTotalsRow &
+  TimeTotalComputed
 
 export type Time = baseApi.Time & {
   project?: baseApi.Project

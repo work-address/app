@@ -1,26 +1,30 @@
-import type { ITimeTotal, ITimeTotalComputed, ProjectWithStats } from './types'
+import type {
+  TimeTotalComputed,
+  ProjectWithStats,
+  TimeTotalsRow,
+} from './types'
 import type { baseApi } from '@/shared'
 
 export const mapProjectsAndStats = (
   projects: baseApi.Project[] = [],
-  stats: ITimeTotal[] = [],
+  stats: TimeTotalsRow[] = [],
 ) => {
   const recordStats = stats.reduce(
     (acc, stat) => {
-      if (stat?.activityId) {
-        acc[stat.activityId] = stat
+      if (stat?.projectId) {
+        acc[stat.projectId] = stat
       }
       return acc
     },
-    {} as Record<string, ITimeTotal>,
+    {} as Record<string, TimeTotalsRow>,
   )
 
   return projects.map((project): ProjectWithStats => {
-    const stats: ITimeTotal =
+    const stats: TimeTotalsRow =
       project?.id && recordStats[project.id]
         ? recordStats[project.id]
         : {
-            activityId: '',
+            projectId: '',
             rateHour: 0,
             rateTotal: 0,
             minutes: 0,
@@ -36,7 +40,7 @@ export const mapProjectsAndStats = (
       (stats.minutesActive - (stats.minutesActive % 60)) / 60
     const minutesActiveTotal = stats.minutesActive - hoursActiveTotal * 60
 
-    const computed: ITimeTotalComputed = {
+    const computed: TimeTotalComputed = {
       hoursTotal,
       minutesTotal,
       minutesActiveTotal,

@@ -42,17 +42,12 @@ sample({
 sample({
   clock: [fetchWorklogs, applyWorklogFilters],
   source: combine($worklogsFilters, $worklogSort),
-  fn: ([filters, sort]): WorklogsQueryParams => {
-    return {
-      ...Object.fromEntries(
-        Object.entries(filters).map(([key, value]) => [
-          key,
-          value ?? undefined,
-        ]),
-      ),
-      sort,
-    }
-  },
+  fn: ([filters, sort]): WorklogsQueryParams => ({
+    ...Object.fromEntries(
+      Object.entries(filters).map(([key, value]) => [key, value ?? undefined]),
+    ),
+    sort,
+  }),
   target: worklogsQuery.start,
 })
 
@@ -87,7 +82,7 @@ sample({
 export {
   type ProjectWithStats,
   type ITimeTotal,
-  type ITimeTotalDetail,
+  type TimeTotalDetail as ITimeTotalDetail,
   type Time,
   type WorklogsFilters,
   type WorklogSort,
