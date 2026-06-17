@@ -1,19 +1,9 @@
 import { AxiosError } from 'axios'
 import { createEffect, createEvent } from 'effector'
 
-import type { AuthorizationHeaders } from './types.ts'
-import type { TonProofItemReplySuccess } from '@/shared'
+import type { AuthorizationHeaders, TonAuthSuccessPayload } from './types.ts'
 
 import { baseApi, tonConnectProvider } from '@/shared'
-
-type TonAuthSuccessPayload = {
-  address: string
-  network: string
-  public_key: string
-  proof: TonProofItemReplySuccess['proof'] & {
-    state_init: string
-  }
-}
 
 export const tonAuthSuccess = createEvent<TonAuthSuccessPayload>()
 

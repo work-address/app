@@ -7,15 +7,13 @@ import {
   signEthFx,
 } from './eth.model'
 import {
-  clearTokensFx,
   fetchStatusFx,
   getNonceFx,
   LOCAL_STORAGE_AUTH_KEY,
-  saveTokensFx,
 } from './profile.effects'
 import { login, logout, setInitialized } from './profile.events'
 import { saveProfileMutation } from './profile.mutations'
-import { getNonceSolanaFx, loginSolanaFx, signSolanaFx } from './solana.model'
+import { loginSolanaFx, signSolanaFx } from './solana.model'
 import {
   disconnectTonFx,
   loginTonFx,
@@ -65,16 +63,6 @@ export const $normalizedUser = $user.map((user) =>
 
 export const $initialized = createStore(false).on(setInitialized, () => true)
 
-export const $headers = createStore<{
-  access: string | null
-  refresh: string | null
-}>({ access: null, refresh: null })
-  .on(saveTokensFx, (_, payload) => ({
-    access: payload.authorization,
-    refresh: payload.refreshToken,
-  }))
-  .on(clearTokensFx, () => ({ access: null, refresh: null }))
-
 export const $pending = combine(
   getNonceFx.pending,
   openTonModalFx.pending,
@@ -84,7 +72,6 @@ export const $pending = combine(
   fetchStatusFx.pending,
   loginEthFx.pending,
   loginTonFx.pending,
-  getNonceSolanaFx.pending,
   signSolanaFx.pending,
   loginSolanaFx.pending,
 ).map((state) => state.some(Boolean))

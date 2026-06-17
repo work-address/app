@@ -1,17 +1,9 @@
 import { AxiosError } from 'axios'
 import { createEffect, createEvent, createStore, sample } from 'effector'
 
-import type { AuthorizationHeaders } from './types.ts'
-import type { BrowserProvider } from 'ethers'
-import type { JsonRpcSigner } from 'ethers'
+import type { AuthorizationHeaders, EthModalResult } from './types.ts'
 
 import { baseApi, disconnectReownProvider, getReownProvider } from '@/shared'
-
-export type EthModalResult = {
-  signer: JsonRpcSigner
-  address: string
-  ethersProvider: BrowserProvider
-}
 
 export const ethConnected = createEvent<EthModalResult>()
 

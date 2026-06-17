@@ -8,22 +8,13 @@ import {
 } from 'effector'
 import { createGate } from 'effector-react'
 
-import type { AuthorizationHeaders } from './types.ts'
-import type { PublicKey } from '@solana/web3.js'
+import type {
+  AuthorizationHeaders,
+  SolanaWalletState,
+  SolanaModalResult,
+} from './types.ts'
 
-import { baseApi } from '@/shared/api/base'
-
-export type SolanaWalletState = {
-  publicKey: PublicKey | null
-  signMessage: ((message: Uint8Array) => Promise<Uint8Array>) | undefined
-  disconnect: () => Promise<void>
-  openModal: (visible: boolean) => void
-  connected: boolean
-}
-
-export type SolanaModalResult = {
-  address: string
-}
+import { baseApi } from '@/shared'
 
 export const SolanaWalletGate =
   createGate<SolanaWalletState>('SolanaWalletGate')
