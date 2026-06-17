@@ -1,7 +1,7 @@
 /**
  * Auth orchestration module.
  * Coordinates login flows, session management, and side effects.
- * Pure business logic - all state lives in auth.stores, events in auth.events.
+ * Pure business logic - all state lives in auth.stores.ts, events in auth.events.
  */
 
 import { combine, sample, split } from 'effector'
@@ -44,6 +44,7 @@ import {
   loginTonFx,
   openTonModalFx,
   tonAuthError,
+  tonAuthSuccess,
 } from './ton.model'
 
 import { showToast } from '@/shared'
@@ -81,7 +82,7 @@ sample({
 })
 
 /**
- * ETH flow: after wallet connects and we're in login mode (no provider data yet),
+ * ETH flow: after wallet connects, and we're in login mode (no provider data yet),
  * fetch nonce for the connected address to sign.
  */
 sample({
@@ -131,7 +132,7 @@ sample({
  * TON flow: after wallet provides valid proof, verify it on backend.
  */
 sample({
-  clock: openTonModalFx.doneData,
+  clock: tonAuthSuccess,
   target: loginTonFx,
 })
 
@@ -279,9 +280,9 @@ loginTonFx.fail.watch(({ error }) => {
   })
 })
 
-tonAuthError.watch((message) => {
+tonAuthError.watch(() => {
   showToast('error', {
-    message,
+    message: 'Ton auth error.',
     position: 'top-center',
   })
 })
