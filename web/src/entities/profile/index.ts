@@ -32,7 +32,6 @@ import {
 } from './profile.stores'
 import {
   disconnectSolanaFx,
-  getNonceSolanaFx,
   loginSolanaFx,
   openSolanaModalFx,
   signSolanaFx,
@@ -46,6 +45,8 @@ import {
   tonAuthError,
   tonAuthSuccess,
 } from './ton.model'
+
+import type { SolanaNonceParams } from '@/entities/profile/types.ts'
 
 import { showToast } from '@/shared'
 
@@ -108,7 +109,7 @@ sample({
   fn: (providerData, { result }) => ({
     nonce: result,
     signer: providerData?.signer,
-    ethersProdiver: providerData?.ethersProvider,
+    ethersProvider: providerData?.ethersProvider,
   }),
   target: [signEthFx],
 })
@@ -126,6 +127,18 @@ sample({
     signature,
   }),
   target: loginEthFx,
+})
+
+/**
+ * Solana flow: after wallet connected (and user intends to log in),
+ * fetch nonce for the connected address, sign it, then verify on backend.
+ */
+sample({
+  clock: solanaConnectedPub,
+  source: combine($authenticated, $loginMode),
+  filter: ([authenticated, mode]) => !authenticated && mode === 'solana',
+  fn: (_, { address }): SolanaNonceParams => ({ address, mode: 'solana' }),
+  target: getNonceFx,
 })
 
 /**
@@ -176,20 +189,10 @@ sample({
   target: [disconnectTonFx, disconnectEthFx, disconnectSolanaFx, clearTokensFx],
 })
 
-/**
- * Solana flow: after wallet connected (and user intends to log in),
- * fetch nonce for the connected address, sign it, then verify on backend.
- */
 sample({
-  clock: solanaConnectedPub,
-  source: combine($authenticated, $loginMode),
-  filter: ([authenticated, mode]) => !authenticated && mode === 'solana',
-  fn: (_, { address }) => address,
-  target: getNonceSolanaFx,
-})
-
-sample({
-  clock: getNonceSolanaFx.doneData,
+  clock: getNonceFx.done,
+  filter: ({ params }) => params.mode === 'solana',
+  fn: ({ result }) => result,
   target: signSolanaFx,
 })
 

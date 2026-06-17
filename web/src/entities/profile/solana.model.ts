@@ -121,18 +121,6 @@ export const disconnectSolanaFx = attach({
   },
 })
 
-export const getNonceSolanaFx = createEffect(async (address: string) => {
-  const result = await baseApi.authControllerNonce({
-    body: { address },
-  })
-
-  if (result instanceof AxiosError) {
-    throw result
-  }
-
-  return result.data as string
-})
-
 export const signSolanaFx = attach({
   source: $solanaWallet,
   effect: async (
