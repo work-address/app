@@ -40,13 +40,28 @@ export const solanaConnectedPub = createEvent<SolanaModalResult>()
 export const solanaDisconnected = createEvent()
 export const solanaDisconnectedPub = createEvent()
 export const solanaConnectError = createEvent()
-const disconnectSolana = createEvent()
 
 export const $solanaConnectionStatus = createStore<
   'connected' | 'disconnected'
 >('disconnected')
   .on(solanaConnectedPub, () => 'connected')
   .on(solanaDisconnectedPub, () => 'disconnected')
+
+export const openSolanaModalFx = attach({
+  source: $solanaWallet,
+  effect: (solanaWallet) => {
+    solanaWallet.openModal(true)
+  },
+})
+
+export const disconnectSolanaFx = attach({
+  source: combine($solanaWallet, SolanaWalletGate.status),
+  effect: async ([solanaWallet, solanaWalletGateStatus]) => {
+    if (solanaWalletGateStatus) {
+      await solanaWallet.disconnect()
+    }
+  },
+})
 
 sample({
   clock: SolanaWalletGate.state.updates,
@@ -81,45 +96,9 @@ sample({
   target: solanaDisconnectedPub,
 })
 
-/** Resolves once the lazily-mounted Solana shell has opened the gate. */
-function whenSolanaWalletReady() {
-  if (SolanaWalletGate.status.getState()) {
-    return Promise.resolve()
-  }
-
-  return new Promise<void>((resolve) => {
-    const unwatch = SolanaWalletGate.status.watch((opened) => {
-      if (opened) {
-        unwatch()
-        resolve()
-      }
-    })
-  })
-}
-
-export const openSolanaModalFx = createEffect(async () => {
-  await whenSolanaWalletReady()
-})
-
 sample({
   clock: openSolanaModalFx,
   target: requestSolanaWalletMount,
-})
-
-sample({
-  clock: openSolanaModalFx,
-  source: $solanaWallet,
-}).watch((solanaWallet) => {
-  solanaWallet.openModal(true)
-})
-
-sample({
-  clock: disconnectSolana,
-  source: combine($solanaWallet, SolanaWalletGate.status),
-}).watch(([solanaWallet, solanaWalletGateStatus]) => {
-  if (solanaWalletGateStatus) {
-    solanaWallet.disconnect()
-  }
 })
 
 export const signSolanaFx = attach({
