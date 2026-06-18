@@ -5,6 +5,7 @@ import {
   createEvent,
   createStore,
   sample,
+  combine,
 } from 'effector'
 import { createGate } from 'effector-react'
 
@@ -39,6 +40,7 @@ export const solanaConnectedPub = createEvent<SolanaModalResult>()
 export const solanaDisconnected = createEvent()
 export const solanaDisconnectedPub = createEvent()
 export const solanaConnectError = createEvent()
+const disconnectSolana = createEvent()
 
 export const $solanaConnectionStatus = createStore<
   'connected' | 'disconnected'
@@ -54,7 +56,7 @@ sample({
 sample({
   clock: SolanaWalletGate.state.updates,
   filter: (state) => state.connected && state.publicKey !== null,
-  fn: (state) => ({ address: state.publicKey!.toBase58() }),
+  fn: (state) => ({ address: state.publicKey?.toBase58() ?? '' }),
   target: solanaConnected,
 })
 
@@ -96,20 +98,28 @@ function whenSolanaWalletReady() {
 }
 
 export const openSolanaModalFx = createEffect(async () => {
-  requestSolanaWalletMount()
   await whenSolanaWalletReady()
-  $solanaWallet.getState().openModal(true)
 })
 
-export const disconnectSolanaFx = attach({
-  source: $solanaWallet,
-  effect: async (wallet) => {
-    if (!SolanaWalletGate.status.getState()) {
-      return
-    }
+sample({
+  clock: openSolanaModalFx,
+  target: requestSolanaWalletMount,
+})
 
-    await wallet.disconnect()
-  },
+sample({
+  clock: openSolanaModalFx,
+  source: $solanaWallet,
+}).watch((solanaWallet) => {
+  solanaWallet.openModal(true)
+})
+
+sample({
+  clock: disconnectSolana,
+  source: combine($solanaWallet, SolanaWalletGate.status),
+}).watch(([solanaWallet, solanaWalletGateStatus]) => {
+  if (solanaWalletGateStatus) {
+    solanaWallet.disconnect()
+  }
 })
 
 export const signSolanaFx = attach({
