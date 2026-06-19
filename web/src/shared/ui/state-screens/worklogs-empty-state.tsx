@@ -1,19 +1,21 @@
 import { useTranslation } from 'react-i18next'
 
-import { openDocs } from '@/routes'
-
 import { DashboardEmptyState } from './dashboard-empty-state'
 
+import type { CSSProperties } from 'react'
+
+import { routes } from '@/routes'
+
 type WorklogsEmptyStateProps = {
-  onHelp?: () => void
-  style?: React.CSSProperties
+  style?: CSSProperties
 }
 
-export const WorklogsEmptyState = ({
-  onHelp,
-  style,
-}: WorklogsEmptyStateProps) => {
+export const WorklogsEmptyState = ({ style }: WorklogsEmptyStateProps) => {
   const { t } = useTranslation()
+
+  const handleAction = () => {
+    window.open(routes.docs.build(), routes.docs.target)
+  }
 
   return (
     <DashboardEmptyState
@@ -21,7 +23,7 @@ export const WorklogsEmptyState = ({
       title={t('dashboard.worklogsEmpty.title')}
       description={t('dashboard.worklogsEmpty.description')}
       actionLabel={t('dashboard.worklogsEmpty.action')}
-      onAction={onHelp ?? openDocs}
+      onAction={handleAction}
       style={style}
     />
   )
