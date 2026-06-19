@@ -60,8 +60,7 @@ const unsubscribeTonUI = tonConnectProvider.onStatusChange((wallet) => {
       public_key: wallet.account.publicKey,
       proof: {
         ...proofItemReply.proof,
-        // TODO: get state_init from wallet
-        state_init: '',
+        state_init: wallet.account.walletStateInit,
       },
     })
   } else if (!wallet) {
