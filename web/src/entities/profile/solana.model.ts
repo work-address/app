@@ -5,7 +5,6 @@ import {
   createEvent,
   createStore,
   sample,
-  combine,
 } from 'effector'
 import { createGate } from 'effector-react'
 
@@ -20,10 +19,10 @@ import { baseApi } from '@/shared'
 export const SolanaWalletGate =
   createGate<SolanaWalletState>('SolanaWalletGate')
 
-export const requestSolanaWalletMount = createEvent()
+export const toggleSolanaModalMounted = createEvent()
 
-export const $solanaWalletMountRequested = createStore(false).on(
-  requestSolanaWalletMount,
+export const $solanaModalMounted = createStore(false).on(
+  toggleSolanaModalMounted,
   () => true,
 )
 
@@ -55,9 +54,9 @@ export const openSolanaModalFx = attach({
 })
 
 export const disconnectSolanaFx = attach({
-  source: combine($solanaWallet, SolanaWalletGate.status),
-  effect: async ([solanaWallet, solanaWalletGateStatus]) => {
-    if (solanaWalletGateStatus) {
+  source: $solanaWallet,
+  effect: async (solanaWallet) => {
+    if (solanaWallet.connected) {
       await solanaWallet.disconnect()
     }
   },
@@ -98,7 +97,7 @@ sample({
 
 sample({
   clock: openSolanaModalFx,
-  target: requestSolanaWalletMount,
+  target: toggleSolanaModalMounted,
 })
 
 export const signSolanaFx = attach({
