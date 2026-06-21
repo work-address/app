@@ -13,7 +13,7 @@ import {
 } from './profile.effects'
 import { login, logout, setInitialized } from './profile.events'
 import { saveProfileMutation } from './profile.mutations'
-import { getNonceSolanaFx, loginSolanaFx, signSolanaFx } from './solana.model'
+import { loginSolanaFx, signSolanaFx } from './solana.model'
 import {
   disconnectTonFx,
   loginTonFx,
