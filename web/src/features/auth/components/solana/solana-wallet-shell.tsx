@@ -21,9 +21,11 @@ import '@solana/wallet-adapter-react-ui/styles.css'
 export const SolanaWalletShell = memo(() => {
   const endpoint = useMemo(() => clusterApiUrl('mainnet-beta'), [])
 
+  const wallets = useMemo(() => [], [])
+
   return (
     <ConnectionProvider endpoint={endpoint}>
-      <WalletProvider wallets={[]} autoConnect>
+      <WalletProvider wallets={wallets} autoConnect>
         <WalletModalProvider>
           <SolanaWalletUiStyle />
           <SolanaWalletBridge />
