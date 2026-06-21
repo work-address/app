@@ -20,10 +20,9 @@ import {
 } from '@/shared'
 
 const ROOT_ELEMENT_ID = 'root'
+const REACT_STRICT_MODE = false
 
 const ROOT_ELEMENT = document.getElementById(ROOT_ELEMENT_ID)
-
-const REACT_STRICT_MODE = false
 
 if (ROOT_ELEMENT === null) {
   throw new Error(
