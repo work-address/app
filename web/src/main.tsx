@@ -10,13 +10,13 @@ import '@/shared/i18n/i18n'
 
 import { App } from './app/app'
 
+import { SolanaWalletMount } from '@/features/auth'
 import {
   ToastStyle,
   theme,
   Confirm,
   BreakpointsWatcher,
   SonnerRadixTheme,
-  SolanaWalletMount,
 } from '@/shared'
 
 const ROOT_ELEMENT_ID = 'root'
@@ -35,8 +35,6 @@ const AppWrapper = REACT_STRICT_MODE ? StrictMode : Fragment
 
 createRoot(ROOT_ELEMENT).render(
   <AppWrapper>
-    <SolanaWalletMount />
-
     <Theme>
       <ThemeProvider theme={theme}>
         <Confirm />
@@ -52,6 +50,8 @@ createRoot(ROOT_ELEMENT).render(
     <SonnerRadixTheme>
       <Toaster />
     </SonnerRadixTheme>
+
+    <SolanaWalletMount />
   </AppWrapper>,
 )
 

@@ -21,7 +21,7 @@ export const SolanaWalletGate =
 
 export const toggleSolanaModalMounted = createEvent()
 
-export const $solanaModalMounted = createStore(false).on(
+export const $solanaWalletMounted = createStore(false).on(
   toggleSolanaModalMounted,
   () => true,
 )
@@ -93,11 +93,6 @@ sample({
   source: $solanaConnectionStatus,
   filter: (status) => status === 'connected',
   target: solanaDisconnectedPub,
-})
-
-sample({
-  clock: openSolanaModalFx,
-  target: toggleSolanaModalMounted,
 })
 
 export const signSolanaFx = attach({

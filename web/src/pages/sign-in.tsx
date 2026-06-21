@@ -109,6 +109,7 @@ export default function SignInPage() {
             >
               {t('signIn.providers.ton')}
             </ProviderButton>
+
             <ProviderButton
               iconUrl={'/img/photo/solana-logo.png'}
               iconAlt={t('signIn.alt.solana')}
@@ -116,6 +117,7 @@ export default function SignInPage() {
             >
               {t('signIn.providers.solana')}
             </ProviderButton>
+
             <ProviderButton
               iconUrl={'/img/photo/ethereum-logo.svg'}
               iconAlt={t('signIn.alt.ethereum')}
