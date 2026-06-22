@@ -3,7 +3,11 @@ import { createEffect, createEvent, createStore, sample } from 'effector'
 
 import type { AuthorizationHeaders, EthModalResult } from './types.ts'
 
-import { baseApi, disconnectReownProvider, getReownProvider } from '@/shared'
+import { baseApi } from '@/shared'
+import {
+  getReownProvider,
+  getBrowserProvider,
+} from '@/shared/lib/wallet-provders/reown-provider.lazy.ts'
 
 export type EthModalResult = {
   signer: JsonRpcSigner
@@ -44,7 +48,7 @@ sample({
 
 export const openEthModalFx = createEffect(async () => {
   const reownProvider = await getReownProvider()
-  await reownProvider.open({ namespace: 'eip155' })
+  await reownProvider?.open({ namespace: 'eip155' })
 })
 
 export const signEthFx = createEffect(
@@ -56,10 +60,6 @@ export const signEthFx = createEffect(
     return params.signer.signMessage(params.nonce)
   },
 )
-
-export const disconnectEthFx = createEffect(async () => {
-  await disconnectReownProvider()
-})
 
 export const loginEthFx = createEffect(
   async (params: {
@@ -83,3 +83,38 @@ export const loginEthFx = createEffect(
     }
   },
 )
+
+export const disconnectEthFx = createEffect(async () => {
+  return await getReownProvider().then((r) => r.disconnect())
+})
+
+export const subscribeEthEventsFx = createEffect(async () => {
+  const reown = await getReownProvider()
+
+  return reown.subscribeEvents(async (event) => {
+    if (
+      event.data.event === 'CONNECT_SUCCESS' &&
+      event.data.properties.view === 'Connect'
+    ) {
+      const walletProvider = reown.getWalletProvider()
+
+      if (!walletProvider) {
+        // eslint-disable-next-line no-console
+        return console.error(
+          'Wallet is not connected. Check the ethUI resolve status.',
+        )
+      }
+
+      const BrowserProvider = await getBrowserProvider()
+      const ethersProvider = new BrowserProvider(walletProvider as never)
+      const signer = await ethersProvider.getSigner()
+      const address = await signer.getAddress()
+
+      ethConnected({ signer, address, ethersProvider })
+    } else if (event.data.event === 'CONNECT_ERROR') {
+      ethConnectError()
+    } else if (event.data.event === 'DISCONNECT_SUCCESS') {
+      ethDisconnected()
+    }
+  })
+})

@@ -8,11 +8,11 @@ import { combine, sample, split } from 'effector'
 
 import { getAuthErrorMessage } from './auth-errors'
 import {
-  disconnectEthFx,
   ethConnectedPub,
   loginEthFx,
   openEthModalFx,
   signEthFx,
+  disconnectEthFx,
 } from './eth.model'
 import {
   clearTokensFx,
@@ -348,3 +348,4 @@ export {
   $normalizedUser as $user,
 } from './profile.stores'
 export { saveProfileMutation } from './profile.mutations'
+export { subscribeEthEventsFx } from './eth.model'
