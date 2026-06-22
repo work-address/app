@@ -349,3 +349,4 @@ export {
 } from './profile.stores'
 export { saveProfileMutation } from './profile.mutations'
 export { subscribeEthEventsFx } from './eth.model'
+export { subscribeTonUiEventsFx } from './ton.model'

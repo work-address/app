@@ -3,7 +3,8 @@ import { createEffect, createEvent } from 'effector'
 
 import type { AuthorizationHeaders, TonAuthSuccessPayload } from './types.ts'
 
-import { baseApi, tonConnectProvider } from '@/shared'
+import { baseApi } from '@/shared'
+import { getTonProvider } from '@/shared/lib/wallet-provders/ton-provider.lazy.ts'
 
 type TonAuthSuccessPayload = {
   address: string
@@ -84,8 +85,8 @@ function extractTonAuthPayload(
 }
 
 export const openTonModalFx = createEffect(
-  async (params: { nonce: string }): Promise<TonAuthSuccessPayload> => {
-    await ensureTonWalletDisconnected()
+  async (params: { nonce: string }) => {
+    const tonConnectProvider = await getTonProvider()
 
     tonConnectProvider.setConnectRequestParameters({
       value: {
@@ -118,18 +119,32 @@ export const loginTonFx = createEffect(
 )
 
 export const disconnectTonFx = createEffect(async () => {
-  await ensureTonWalletDisconnected()
-  tonDisconnected()
+  await getTonProvider().then((ton) => ton.disconnect())
 })
 
-const unsubscribeTonUI = tonConnectProvider.onStatusChange((wallet) => {
-  if (!wallet) {
-    tonDisconnected()
-  }
-})
+export const subscribeTonUiEventsFx = createEffect(async () => {
+  const tonConnectProvider = await getTonProvider()
 
-if (import.meta.hot) {
-  import.meta.hot.dispose(() => {
-    unsubscribeTonUI?.()
+  return tonConnectProvider.onStatusChange((wallet) => {
+    const proofItemReply = wallet?.connectItems?.tonProof
+
+    if (
+      proofItemReply &&
+      'proof' in proofItemReply &&
+      wallet &&
+      wallet.account.publicKey
+    ) {
+      return tonAuthSuccess({
+        address: wallet.account.address,
+        network: wallet.account.chain,
+        public_key: wallet.account.publicKey,
+        proof: {
+          ...proofItemReply.proof,
+          state_init: wallet.account.walletStateInit,
+        },
+      })
+    } else if (!wallet) {
+      tonDisconnected()
+    }
   })
-}
+})

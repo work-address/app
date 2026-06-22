@@ -4,7 +4,11 @@ import { useUnit } from 'effector-react'
 import { lazy, Suspense, useEffect } from 'react'
 import { createBrowserRouter, RouterProvider } from 'react-router-dom'
 
-import { initAuth, subscribeEthEventsFx } from '@/entities/profile'
+import {
+  initAuth,
+  subscribeEthEventsFx,
+  subscribeTonUiEventsFx,
+} from '@/entities/profile'
 import * as Layouts from '@/layouts'
 import { routes } from '@/routes'
 import { ErrorBoundary } from '@/shared'
@@ -52,20 +56,29 @@ const router = createBrowserRouter([
 
 export const App = () => {
   const initAuthEvent = useUnit(initAuth)
+
   const subEthFx = useUnit(subscribeEthEventsFx)
+  const subTonFx = useUnit(subscribeTonUiEventsFx)
 
   useEffect(() => {
     initAuthEvent()
 
-    let unsub: (() => void) | null = null
+    let unsubEth: (() => void) | null = null
+    let unsubTon: (() => void) | null = null
+
     void subEthFx().then((sub) => {
-      unsub = sub
+      unsubEth = sub
+    })
+
+    void subTonFx().then((sub) => {
+      unsubTon = sub
     })
 
     return () => {
-      unsub?.()
+      unsubEth?.()
+      unsubTon?.()
     }
-  }, [initAuthEvent, subEthFx])
+  }, [initAuthEvent, subEthFx, subTonFx])
 
   return (
     <Suspense>
