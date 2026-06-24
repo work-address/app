@@ -52,7 +52,7 @@ export default defineConfig(({ command, mode }) => {
     ],
     server: {
       host: true,
-      port: 3000,
+      port: 8000,
       strictPort: true,
       proxy: {
         '/api': {

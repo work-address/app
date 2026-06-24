@@ -28,4 +28,4 @@ WORKDIR /app/api
 EXPOSE 4000
 
 # Align DB schema with entities, then start the dev server (override CMD in compose if needed)
-CMD ["sh", "-c", "pnpm run typeorm:cli -- schema:sync && pnpm run dev"]
+CMD ["sh", "-c", "TS_NODE_PROJECT=tsconfig.json pnpm exec ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js schema:sync -f src/ormconfig.ts && pnpm run dev"]

@@ -8,7 +8,9 @@
     "build": "rimraf build tsconfig.tsbuildinfo && tsc -p tsconfig.json",
     "prettier:fix": "prettier --write \"**/*.{ts,js,md}\"",
     "prettier:check": "prettier --check \"**/*.{ts,js,md}\"",
-    "typeorm:cli": "TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli -f src/ormconfig.ts"
+    "typeorm:cli": "TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
+    "schema:sync": "TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js schema:sync -f src/ormconfig.ts",
+    "schema:drop": "TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js schema:drop -f src/ormconfig.ts"
   },
   "dependencies": {
     "@sentry/node": "^6.19.7",

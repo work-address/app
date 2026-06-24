@@ -23,7 +23,7 @@ COPY web/ web/
 RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install
 
 # Expose the port used by the Vite development server
-EXPOSE 3000
+EXPOSE 8000
 
 # Run dev server from web workspace
 WORKDIR /app/web

@@ -28,15 +28,15 @@ CREATE DATABASE address_work_test;
 Apply the schema with TypeORM (run from **`api/`**):
 
 ```sh
-NODE_ENV=development npm run typeorm:cli -- schema:sync
-NODE_ENV=test npm run typeorm:cli -- schema:sync
+NODE_ENV=development pnpm run schema:sync
+NODE_ENV=test pnpm run schema:sync
 ```
 
 Drop and recreate (destructive):
 
 ```sh
-NODE_ENV=test npm run typeorm:cli -- schema:drop
-NODE_ENV=test npm run typeorm:cli -- schema:sync
+pnpm run schema:drop
+pnpm run schema:sync
 ```
 
 ## Scripts
@@ -49,7 +49,8 @@ NODE_ENV=test npm run typeorm:cli -- schema:sync
 | `pnpm test`                                | Tests with coverage (`nyc` + `mocha` + `ts-node`)  |
 | `pnpm run lint` / `lint:check` / `lint:fix` | ESLint (`@app/eslint-config`, `eslint.config.js`) |
 | `pnpm run prettier:check` / `prettier:fix` | Formatting                                         |
-| `pnpm run typeorm:cli`                     | TypeORM CLI (`src/ormconfig.ts`)                   |
+| `pnpm run schema:sync` / `schema:drop`    | TypeORM schema sync/drop (`src/ormconfig.ts`)      |
+| `pnpm run typeorm:cli`                     | TypeORM CLI (pass subcommand + `-f src/ormconfig.ts`) |
 
 ## API documentation
 

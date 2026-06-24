@@ -15,7 +15,7 @@ services:
       dockerfile: web/dockerfile.dev
     image: app-web-dev
     ports:
-      - "3000:3000"
+      - "8000:8000"
     develop:
       watch:
         - action: sync
@@ -54,6 +54,12 @@ services:
     depends_on:
       redis:
         condition: service_healthy
+    command:
+      [
+        "sh",
+        "-c",
+        "TS_NODE_PROJECT=tsconfig.json pnpm exec ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js schema:sync -f src/ormconfig.ts && pnpm run dev",
+      ]
     develop:
       watch:
         - action: sync
@@ -61,8 +67,6 @@ services:
           target: /app/api
           ignore:
             - node_modules
-        - action: rebuild
-          path: ./api/package.json
         - action: rebuild
           path: ./pnpm-lock.yaml
         - action: rebuild

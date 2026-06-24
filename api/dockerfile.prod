@@ -60,4 +60,4 @@ USER nodejs
 EXPOSE 4000
 
 # Align DB schema with entities, then start the API server
-CMD ["sh", "-c", "npm run typeorm:cli -- schema:sync && node build/server.js"]
+CMD ["sh", "-c", "npm run schema:sync && node build/server.js"]
