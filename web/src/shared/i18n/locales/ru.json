@@ -204,5 +204,18 @@
   "dashboard.projectsTable.head.keyboardKeys": "Клавиатура",
   "dashboard.projectsTable.head.mouseKeys": "Мышь",
   "dashboard.projectsTable.drawer.meta.createdAt": "Дата начала",
-  "dashboard.projectsTable.drawer.meta.state": "Опубликовано в"
+  "dashboard.projectsTable.drawer.meta.state": "Опубликовано в",
+  "connect.title": "Подключение TimeTracker",
+  "connect.heading": "TimeTracker",
+  "connect.description.default": "TimeTracker ожидает подключения к вашему web3-кошельку",
+  "connect.description.connected": "Аутентификация завершена, вы можете закрыть окно",
+  "connect.missingNonce": "Отсутствует nonce для подключения. Откройте эту страницу из приложения TimeTracker.",
+  "connect.toast.success": "TimeTracker подключён к вашему кошельку",
+  "connect.status.loginState": "Статус входа",
+  "connect.status.walletState": "Статус кошелька",
+  "connect.status.address": "Адрес",
+  "connect.status.nonce": "Nonce",
+  "connect.status.error": "Ошибка",
+  "connect.status.authenticated": "аутентифицирован",
+  "connect.status.unauthenticated": "не аутентифицирован"
 }

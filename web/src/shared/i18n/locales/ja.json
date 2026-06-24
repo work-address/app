@@ -206,5 +206,18 @@
   "dashboard.projectsTable.head.keyboardKeys": "キーボード",
   "dashboard.projectsTable.head.mouseKeys": "マウス",
   "dashboard.projectsTable.drawer.meta.createdAt": "開始日",
-  "dashboard.projectsTable.drawer.meta.state": "公開先"
+  "dashboard.projectsTable.drawer.meta.state": "公開先",
+  "connect.title": "TimeTracker を接続",
+  "connect.heading": "TimeTracker",
+  "connect.description.default": "TimeTracker は web3 ウォレットとのペアリングを待っています",
+  "connect.description.connected": "認証が完了しました。このウィンドウを閉じてください",
+  "connect.missingNonce": "ペアリング用の nonce がありません。TimeTracker アプリからこのページを開いてください。",
+  "connect.toast.success": "TimeTracker がウォレットに接続されました",
+  "connect.status.loginState": "ログイン状態",
+  "connect.status.walletState": "ウォレット状態",
+  "connect.status.address": "アドレス",
+  "connect.status.nonce": "Nonce",
+  "connect.status.error": "エラー",
+  "connect.status.authenticated": "認証済み",
+  "connect.status.unauthenticated": "未認証"
 }

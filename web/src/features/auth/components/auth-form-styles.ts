@@ -4,6 +4,18 @@ import styled from 'styled-components'
 
 import { Card } from '@/shared'
 
+export const CloseLink = styled(Link)`
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+
+  ${({ theme }) => theme.breakpoints.up('md')} {
+    top: 24px;
+    right: 24px;
+  }
+`
+
 export const Logo = styled.img`
   width: auto;
   display: block;
@@ -191,6 +203,22 @@ export const CommitSha = styled.div`
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     margin-top: 21px;
+    font-size: 12px;
+  }
+`
+
+export const StatusNote = styled.p`
+  margin-top: 20px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(0, 7, 20, 0.52);
+  letter-spacing: 0.2px;
+  line-height: 1.5;
+  text-align: center;
+
+  ${({ theme }) => theme.breakpoints.up('md')} {
+    margin-top: 24px;
     font-size: 12px;
   }
 `

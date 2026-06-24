@@ -204,5 +204,18 @@
   "dashboard.projectsTable.head.keyboardKeys": "键盘",
   "dashboard.projectsTable.head.mouseKeys": "鼠标",
   "dashboard.projectsTable.drawer.meta.createdAt": "开始日期",
-  "dashboard.projectsTable.drawer.meta.state": "发布位置"
+  "dashboard.projectsTable.drawer.meta.state": "发布位置",
+  "connect.title": "连接 TimeTracker",
+  "connect.heading": "TimeTracker",
+  "connect.description.default": "TimeTracker 正在等待与您的 web3 钱包配对",
+  "connect.description.connected": "认证已完成，您可以关闭此窗口",
+  "connect.missingNonce": "缺少配对 nonce。请从 TimeTracker 应用打开此页面。",
+  "connect.toast.success": "TimeTracker 已连接到您的钱包",
+  "connect.status.loginState": "登录状态",
+  "connect.status.walletState": "钱包状态",
+  "connect.status.address": "地址",
+  "connect.status.nonce": "Nonce",
+  "connect.status.error": "错误",
+  "connect.status.authenticated": "已认证",
+  "connect.status.unauthenticated": "未认证"
 }

@@ -244,5 +244,18 @@
   "dashboard.projectsTable.drawer.meta.state": "Published in",
   "project.createModal.createSuccess": "Project created successfully",
   "project.createModal.createError": "Project create error",
-  "signIn.connected": "Authentication is complete, you may close the window"
+  "signIn.connected": "Authentication is complete, you may close the window",
+  "connect.title": "Connect TimeTracker",
+  "connect.heading": "TimeTracker",
+  "connect.description.default": "TimeTracker is awaiting to be paired with your web3 wallet",
+  "connect.description.connected": "Authentication is complete, you may close the window",
+  "connect.missingNonce": "Missing pairing nonce. Open this page from the TimeTracker app.",
+  "connect.toast.success": "TimeTracker connected with your wallet",
+  "connect.status.loginState": "Login state",
+  "connect.status.walletState": "Wallet state",
+  "connect.status.address": "Address",
+  "connect.status.nonce": "Nonce",
+  "connect.status.error": "Error",
+  "connect.status.authenticated": "authenticated",
+  "connect.status.unauthenticated": "unauthenticated"
 }

@@ -1,0 +1,260 @@
+import { Cross1Icon } from '@radix-ui/react-icons'
+import { useUnit } from 'effector-react'
+import { useEffect } from 'react'
+import { Trans, useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
+
+import { $authenticated, $pending, $user, login, type LoginMode } from '@/entities/profile'
+import {
+  AuthFormStyles as S,
+  ETHEREUM_WALLETS,
+  ProviderButton,
+  SOLANA_WALLETS,
+  TON_WALLETS,
+  WalletList,
+} from '@/features/auth'
+import type { TimeTrackerConnectPhase } from '@/features/time-tracker-connect'
+import {
+  initTimeTrackerConnect,
+  resetTimeTrackerConnect,
+  $phase,
+  $errorMessage,
+  $errorName,
+  getTimeTrackerNonceStorageKey,
+} from '@/features/time-tracker-connect'
+import { routes } from '@/routes'
+import {
+  Button,
+  IconButton,
+  PageHelmet,
+  Spinner,
+  Text,
+  useBreakpoint,
+} from '@/shared'
+
+function getLoginStateLabel(
+  phase: TimeTrackerConnectPhase,
+  nonce: string | null,
+): string {
+  if (
+    !nonce ||
+    phase === 'idle' ||
+    phase === 'error' ||
+    phase === 'awaiting_auth' ||
+    phase === 'awaiting_pair'
+  ) {
+    if (
+      nonce &&
+      phase !== 'error' &&
+      localStorage.getItem(getTimeTrackerNonceStorageKey(nonce))
+    ) {
+      return 'init'
+    }
+
+    return 'disconnected'
+  }
+
+  if (phase === 'connected') {
+    return 'connected'
+  }
+
+  if (phase === 'loading' || phase === 'connecting') {
+    return 'progress'
+  }
+
+  return 'disconnected'
+}
+
+export default function ConnectPage() {
+  const { t, i18n } = useTranslation()
+  const isDesktop = useBreakpoint('isDesktop')
+  const [searchParams] = useSearchParams()
+  const nonce = searchParams.get('nonce')
+
+  const { initConnect, resetConnect, phase, errorMessage, errorName, loading, authenticated, user } =
+    useUnit({
+      initConnect: initTimeTrackerConnect,
+      resetConnect: resetTimeTrackerConnect,
+      phase: $phase,
+      errorMessage: $errorMessage,
+      errorName: $errorName,
+      loading: $pending,
+      authenticated: $authenticated,
+      user: $user,
+    })
+
+  useEffect(() => {
+    if (!nonce) {
+      resetConnect()
+      return
+    }
+
+    initConnect(nonce)
+
+    return () => {
+      resetConnect()
+    }
+  }, [nonce, initConnect, resetConnect])
+
+  const onSignIn = (mode: LoginMode) => {
+    login(mode)
+  }
+
+  const isAuthError = errorName === 'AuthenticationException'
+  const isTimeTrackerError = errorName === 'TimeTrackerException'
+  const showError = phase === 'error' && Boolean(errorMessage)
+  const showWalletProviders =
+    Boolean(nonce) && phase === 'awaiting_auth' && !isAuthError
+  const showPairingMessage =
+    Boolean(nonce) &&
+    (phase === 'awaiting_auth' ||
+      phase === 'awaiting_pair' ||
+      phase === 'connecting' ||
+      showError)
+  const showConnected = phase === 'connected'
+  const showLoading =
+    Boolean(nonce) &&
+    (phase === 'loading' || loading || phase === 'connecting')
+  const closeHref = showConnected
+    ? routes.dashboard.build()
+    : routes.signIn.build()
+
+  let description = t('connect.description.default')
+
+  if (showError && errorMessage) {
+    description = errorMessage
+  } else if (isTimeTrackerError && errorMessage) {
+    description = errorMessage
+  } else if (showConnected) {
+    description = t('connect.description.connected')
+  } else if (isAuthError && errorMessage) {
+    description = errorMessage
+  }
+
+  return (
+    <>
+      <PageHelmet
+        htmlAttributes={{ lang: i18n.language }}
+        title={t('connect.title')}
+      />
+
+      <S.CloseLink to={closeHref}>
+        <IconButton variant="ghost" radius="full" color="gray" size="3">
+          <Cross1Icon />
+        </IconButton>
+      </S.CloseLink>
+
+      <S.Logo
+        src={isDesktop ? '/img/photo/logo-label.svg' : '/img/photo/logo.svg'}
+        alt={t('signIn.logoAlt')}
+      />
+
+      <S.SignInCard>
+        {showLoading && (
+          <S.FlexOverlay align="center" justify="center">
+            <Spinner size={80} />
+          </S.FlexOverlay>
+        )}
+
+        <S.Title>{t('connect.heading')}</S.Title>
+
+        {nonce ? (
+          <>
+            {showPairingMessage && !showConnected && (
+              <S.Desc>{description}</S.Desc>
+            )}
+
+            {showConnected && (
+              <Text size="5" as="p" align="center">
+                <i>{t('connect.description.connected')}</i>
+              </Text>
+            )}
+
+            {showWalletProviders && (
+              <S.Actions>
+                <ProviderButton
+                  iconUrl="/img/photo/ton-logo.svg"
+                  iconAlt={t('signIn.alt.ton')}
+                  onClick={() => onSignIn('ton')}
+                >
+                  {t('signIn.providers.ton')}
+                </ProviderButton>
+
+                <ProviderButton
+                  iconUrl="/img/photo/solana-logo.png"
+                  iconAlt={t('signIn.alt.solana')}
+                  onClick={() => onSignIn('solana')}
+                >
+                  {t('signIn.providers.solana')}
+                </ProviderButton>
+
+                <ProviderButton
+                  iconUrl="/img/photo/ethereum-logo.svg"
+                  iconAlt={t('signIn.alt.ethereum')}
+                  onClick={() => onSignIn('eth')}
+                >
+                  {t('signIn.providers.ethereum')}
+                </ProviderButton>
+              </S.Actions>
+            )}
+          </>
+        ) : (
+          <S.Desc>
+            <Trans
+              i18nKey="connect.missingNonce"
+              components={{ mb: <S.MobileBreak /> }}
+            />
+          </S.Desc>
+        )}
+      </S.SignInCard>
+
+      {showWalletProviders && (
+        <S.Foot>
+          <S.FootLine>
+            <S.FootLabel>{t('signIn.footer.ethereumWallets')}</S.FootLabel>{' '}
+            <WalletList wallets={ETHEREUM_WALLETS} />
+          </S.FootLine>
+
+          <S.FootLine>
+            <S.FootLabel>{t('signIn.footer.tonWallets')}</S.FootLabel>{' '}
+            <WalletList wallets={TON_WALLETS} />
+          </S.FootLine>
+
+          <S.FootLine>
+            <S.FootLabel>{t('signIn.footer.solanaWallets')}</S.FootLabel>{' '}
+            <WalletList wallets={SOLANA_WALLETS} breakAfter={3} />
+          </S.FootLine>
+
+          <S.CommitSha>
+            Version: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}
+          </S.CommitSha>
+        </S.Foot>
+      )}
+
+      <S.HiddenButtonRow>
+        <Button themeVariant="secondary" onClick={() => onSignIn('eth')}>
+          {t('signIn.continue')}
+        </Button>
+      </S.HiddenButtonRow>
+
+      <S.StatusNote>
+        {t('connect.status.loginState')}: {getLoginStateLabel(phase, nonce)}
+        <br />
+        {t('connect.status.walletState')}:{' '}
+        {authenticated
+          ? t('connect.status.authenticated')
+          : t('connect.status.unauthenticated')}
+        <br />
+        {t('connect.status.address')}: {user?.friendlyWalletAddress ?? ''}
+        <br />
+        {t('connect.status.nonce')}: {nonce ?? ''}
+        {errorMessage && (
+          <>
+            <br />
+            {t('connect.status.error')}: {errorMessage}
+          </>
+        )}
+      </S.StatusNote>
+    </>
+  )
+}

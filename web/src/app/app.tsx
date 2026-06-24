@@ -17,13 +17,17 @@ const DashboardPage = lazy(() => import('@/pages/dashboard'))
 const ProfilePage = lazy(() => import('@/pages/profile'))
 const ProfileEditPage = lazy(() => import('@/pages/profile/edit'))
 const SignInPage = lazy(() => import('@/pages/sign-in'))
+const ConnectPage = lazy(() => import('@/pages/connect'))
 const InvoicePage = lazy(() => import('@/pages/invoice'))
 const BalancePage = lazy(() => import('@/pages/balance'))
 
 const router = createBrowserRouter([
   {
     element: <Layouts.AuthLayout />,
-    children: [{ path: routes.signIn.schema, element: <SignInPage /> }],
+    children: [
+      { path: routes.signIn.schema, element: <SignInPage /> },
+      { path: routes.connect.schema, element: <ConnectPage /> },
+    ],
     errorElement: <ErrorBoundary />,
   },
   {

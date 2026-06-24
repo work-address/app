@@ -11,6 +11,7 @@ type MainRoutes =
   & Route<'/sign-in', 'signIn'>
   & Route<'/profile/:walletAddress', 'profile', ProfileRoutes, { walletAddress: string }>
   & Route<'https://address.work/docs', 'docs'>
+  & Route<'/connect', 'connect', NoChildRoutes, { nonce?: string }>
   & Route<'/time-tracker', 'timeTracker'>
   & Route<'/download', 'download'>
   & Route<'/invoice/:id', 'invoice', NoChildRoutes, IdRouteParams>
@@ -133,6 +134,12 @@ export const routes: MainRoutes = {
   signIn: {
     schema: '/sign-in',
     build: () => '/sign-in',
+  },
+
+  connect: {
+    schema: '/connect',
+    build: ({ nonce }: { nonce?: string } = {}) =>
+      nonce ? `/connect?nonce=${encodeURIComponent(nonce)}` : '/connect',
   },
 
   invoice: {

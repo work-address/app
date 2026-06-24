@@ -204,5 +204,18 @@
   "dashboard.projectsTable.head.keyboardKeys": "Teclado",
   "dashboard.projectsTable.head.mouseKeys": "Ratón",
   "dashboard.projectsTable.drawer.meta.createdAt": "Fecha de inicio",
-  "dashboard.projectsTable.drawer.meta.state": "Publicado en"
+  "dashboard.projectsTable.drawer.meta.state": "Publicado en",
+  "connect.title": "Conectar TimeTracker",
+  "connect.heading": "TimeTracker",
+  "connect.description.default": "TimeTracker está esperando vincularse con tu wallet web3",
+  "connect.description.connected": "La autenticación se completó, puedes cerrar la ventana",
+  "connect.missingNonce": "Falta el nonce de emparejamiento. Abre esta página desde la app TimeTracker.",
+  "connect.toast.success": "TimeTracker conectado con tu wallet",
+  "connect.status.loginState": "Estado de inicio de sesión",
+  "connect.status.walletState": "Estado de la wallet",
+  "connect.status.address": "Dirección",
+  "connect.status.nonce": "Nonce",
+  "connect.status.error": "Error",
+  "connect.status.authenticated": "autenticado",
+  "connect.status.unauthenticated": "no autenticado"
 }
