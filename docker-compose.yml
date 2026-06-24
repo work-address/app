@@ -20,6 +20,7 @@ services:
       dockerfile: web/dockerfile.prod
       args:
         GIT_COMMIT: ${GIT_COMMIT:-unknown}
+        VITE_API_URL: "https://app.address.work"
     image: app-web-prod
     pull_policy: build
     # ports:
