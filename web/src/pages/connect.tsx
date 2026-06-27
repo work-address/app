@@ -2,18 +2,19 @@ import { Cross1Icon } from '@radix-ui/react-icons'
 import { useUnit } from 'effector-react'
 import { useEffect } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
-import { useSearchParams } from 'react-router-dom'
+import { Link, useSearchParams } from 'react-router-dom'
+import styled from 'styled-components'
 
-import { $authenticated, $pending, $user, login, type LoginMode } from '@/entities/profile'
-import {
-  AuthFormStyles as S,
-  ETHEREUM_WALLETS,
-  ProviderButton,
-  SOLANA_WALLETS,
-  TON_WALLETS,
-  WalletList,
-} from '@/features/auth'
 import type { TimeTrackerConnectPhase } from '@/features/time-tracker-connect'
+
+import {
+  $authenticated,
+  $pending,
+  $user,
+  login,
+  type LoginMode,
+} from '@/entities/profile'
+import { AuthFormStyles as S, ProviderButton } from '@/features/auth'
 import {
   initTimeTrackerConnect,
   resetTimeTrackerConnect,
@@ -71,17 +72,25 @@ export default function ConnectPage() {
   const [searchParams] = useSearchParams()
   const nonce = searchParams.get('nonce')
 
-  const { initConnect, resetConnect, phase, errorMessage, errorName, loading, authenticated, user } =
-    useUnit({
-      initConnect: initTimeTrackerConnect,
-      resetConnect: resetTimeTrackerConnect,
-      phase: $phase,
-      errorMessage: $errorMessage,
-      errorName: $errorName,
-      loading: $pending,
-      authenticated: $authenticated,
-      user: $user,
-    })
+  const {
+    initConnect,
+    resetConnect,
+    phase,
+    errorMessage,
+    errorName,
+    loading,
+    authenticated,
+    user,
+  } = useUnit({
+    initConnect: initTimeTrackerConnect,
+    resetConnect: resetTimeTrackerConnect,
+    phase: $phase,
+    errorMessage: $errorMessage,
+    errorName: $errorName,
+    loading: $pending,
+    authenticated: $authenticated,
+    user: $user,
+  })
 
   useEffect(() => {
     if (!nonce) {
@@ -103,18 +112,24 @@ export default function ConnectPage() {
   const isAuthError = errorName === 'AuthenticationException'
   const isTimeTrackerError = errorName === 'TimeTrackerException'
   const showError = phase === 'error' && Boolean(errorMessage)
+  const showConnected = phase === 'connected'
   const showWalletProviders =
-    Boolean(nonce) && phase === 'awaiting_auth' && !isAuthError
+    Boolean(nonce) &&
+    !authenticated &&
+    !showConnected &&
+    !isAuthError &&
+    phase !== 'connecting'
   const showPairingMessage =
     Boolean(nonce) &&
-    (phase === 'awaiting_auth' ||
+    !showConnected &&
+    (showWalletProviders ||
+      showError ||
       phase === 'awaiting_pair' ||
-      phase === 'connecting' ||
-      showError)
-  const showConnected = phase === 'connected'
+      phase === 'connecting')
   const showLoading =
     Boolean(nonce) &&
-    (phase === 'loading' || loading || phase === 'connecting')
+    (loading ||
+      (authenticated && (phase === 'loading' || phase === 'connecting')))
   const closeHref = showConnected
     ? routes.dashboard.build()
     : routes.signIn.build()
@@ -138,11 +153,11 @@ export default function ConnectPage() {
         title={t('connect.title')}
       />
 
-      <S.CloseLink to={closeHref}>
-        <IconButton variant="ghost" radius="full" color="gray" size="3">
+      <CloseLink to={closeHref}>
+        <IconButton variant="ghost" radius="full" color="gray" size="4">
           <Cross1Icon />
         </IconButton>
-      </S.CloseLink>
+      </CloseLink>
 
       <S.Logo
         src={isDesktop ? '/img/photo/logo-label.svg' : '/img/photo/logo.svg'}
@@ -208,29 +223,6 @@ export default function ConnectPage() {
         )}
       </S.SignInCard>
 
-      {showWalletProviders && (
-        <S.Foot>
-          <S.FootLine>
-            <S.FootLabel>{t('signIn.footer.ethereumWallets')}</S.FootLabel>{' '}
-            <WalletList wallets={ETHEREUM_WALLETS} />
-          </S.FootLine>
-
-          <S.FootLine>
-            <S.FootLabel>{t('signIn.footer.tonWallets')}</S.FootLabel>{' '}
-            <WalletList wallets={TON_WALLETS} />
-          </S.FootLine>
-
-          <S.FootLine>
-            <S.FootLabel>{t('signIn.footer.solanaWallets')}</S.FootLabel>{' '}
-            <WalletList wallets={SOLANA_WALLETS} breakAfter={3} />
-          </S.FootLine>
-
-          <S.CommitSha>
-            Version: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}
-          </S.CommitSha>
-        </S.Foot>
-      )}
-
       <S.HiddenButtonRow>
         <Button themeVariant="secondary" onClick={() => onSignIn('eth')}>
           {t('signIn.continue')}
@@ -258,3 +250,15 @@ export default function ConnectPage() {
     </>
   )
 }
+
+const CloseLink = styled(Link)`
+  position: fixed;
+  top: 16px;
+  right: 16px;
+  z-index: 10;
+
+  ${({ theme }) => theme.breakpoints.up('md')} {
+    top: 24px;
+    right: 24px;
+  }
+`

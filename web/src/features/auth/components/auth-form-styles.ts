@@ -4,18 +4,6 @@ import styled from 'styled-components'
 
 import { Card } from '@/shared'
 
-export const CloseLink = styled(Link)`
-  position: fixed;
-  top: 16px;
-  right: 16px;
-  z-index: 10;
-
-  ${({ theme }) => theme.breakpoints.up('md')} {
-    top: 24px;
-    right: 24px;
-  }
-`
-
 export const Logo = styled.img`
   width: auto;
   display: block;
