@@ -92,10 +92,14 @@ export const subscribeEthEventsFx = createEffect(async () => {
   const reown = await getReownProvider()
 
   return reown.subscribeEvents(async (event) => {
-    if (
-      event.data.event === 'CONNECT_SUCCESS' &&
-      event.data.properties.view === 'Connect'
-    ) {
+    if (event.data.event === 'CONNECT_SUCCESS') {
+      const caipAddress = reown.getCaipAddress()
+      const isEvm = caipAddress?.startsWith('eip155:')
+
+      if (!isEvm) {
+        return
+      }
+
       const walletProvider = reown.getWalletProvider()
 
       if (!walletProvider) {
