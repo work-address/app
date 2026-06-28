@@ -48,6 +48,11 @@ export class App {
   }
 
   public async start(port?: number) {
+    // Behind a reverse proxy (nginx in prod, vite dev-server proxy locally),
+    // so derive req.ip from X-Forwarded-For instead of the socket peer
+    // (which is the proxy container's docker network address, e.g. 172.19.0.2).
+    this.express.set('trust proxy', true)
+
     if (!AppConfig.isLocal()) {
       Sentry.init({
         dsn: this.parameters.sentry,

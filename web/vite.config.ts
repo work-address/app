@@ -58,6 +58,9 @@ export default defineConfig(({ command, mode }) => {
         '/api': {
           target: process.env.VITE_API_PROXY_TARGET ?? 'http://api:4000',
           changeOrigin: true,
+          // Forward X-Forwarded-For/Proto/Host so the API can see the real client IP
+          // instead of the vite/web container's docker network address.
+          xfwd: true,
         },
       },
     },
