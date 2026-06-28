@@ -1,5 +1,6 @@
 export * from './lib'
 export * from './assets'
+export * from './icons'
 export * from './ui'
 export * from './mocks'
 export * from './hooks'

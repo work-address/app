@@ -9,6 +9,7 @@ import type { Time } from '@/entities/activities'
 
 import {
   type DesktopBodyCellRenderProps,
+  ExampleScreenshot,
   formatDurationFromMinutes,
   getTimeActiveColor,
   Text,
@@ -34,7 +35,7 @@ const BodyCellComponent = memo((props: DesktopBodyCellRenderProps<Time>) => {
         />
       ) : (
         <Screenshot
-          src={'/img/photo/example-screenshot.png'}
+          src={ExampleScreenshot}
           alt={t('dashboard.worklogsTable.screenshotNoData')}
         />
       )

@@ -12,7 +12,16 @@ import { MobileMenu, itemVariants } from './mobile-menu.tsx'
 
 import { $user, logout } from '@/entities/profile'
 import { routes } from '@/routes'
-import { Button, formatWalletAddress, useBreakpoint } from '@/shared'
+import {
+  CrossIcon,
+  ExitIcon,
+  formatWalletAddress,
+  HamburgerMenuIcon,
+  Logo,
+  PersonIcon,
+  useBreakpoint,
+  Button,
+} from '@/shared'
 
 export const Header = () => {
   const { t } = useTranslation()
@@ -58,7 +67,7 @@ export const Header = () => {
     <HeaderRoot ref={rootRef}>
       <HeaderInner>
         <LogoLink to={routes.dashboard.build()} viewTransition>
-          <LogoImg src="/img/photo/logo.svg" alt={t('header.logoAlt')} />
+          <LogoImg src={Logo} alt={t('header.logoAlt')} />
         </LogoLink>
 
         {isDesktop && (
@@ -76,10 +85,7 @@ export const Header = () => {
             <Button variant="ghost" color="gray" radius="large">
               <UserBox>
                 <UserAvatar>
-                  <IconImg
-                    src="/img/icons/person.svg"
-                    alt={t('header.userAlt')}
-                  />
+                  <IconImg src={PersonIcon} alt={t('header.userAlt')} />
                 </UserAvatar>
 
                 <UserText>
@@ -97,7 +103,7 @@ export const Header = () => {
             aria-label={t('header.exit')}
             onClick={() => logoutEvent()}
           >
-            <IconImg src="/img/icons/exit.svg" alt={t('header.exit')} />
+            <IconImg src={ExitIcon} alt={t('header.exit')} />
           </ExitButton>
         </Right>
 
@@ -113,13 +119,13 @@ export const Header = () => {
           >
             {mobileMenuOpen ? (
               <BurgerToggleImg
-                src="/img/icons/cross-1.svg"
+                src={CrossIcon}
                 alt={t('header.closeMenu')}
                 aria-hidden="true"
               />
             ) : (
               <BurgerToggleImg
-                src="/img/icons/hamburger-menu.svg"
+                src={HamburgerMenuIcon}
                 alt={t('header.openMenu')}
                 aria-hidden="true"
               />
@@ -151,10 +157,7 @@ export const Header = () => {
                     <Button variant="ghost" color="gray" width="100%">
                       <UserBox>
                         <UserAvatar>
-                          <IconImg
-                            src="/img/icons/person.svg"
-                            alt={t('header.userAlt')}
-                          />
+                          <IconImg src={PersonIcon} alt={t('header.userAlt')} />
                         </UserAvatar>
 
                         <UserText>
@@ -190,7 +193,7 @@ export const Header = () => {
                     }}
                     variants={itemVariants}
                   >
-                    <IconImg src="/img/icons/exit.svg" alt={t('header.exit')} />
+                    <IconImg src={ExitIcon} alt={t('header.exit')} />
                     <span>{t('header.exit')}</span>
                   </MobileMenuButton>
                 </MobileMenuNav>

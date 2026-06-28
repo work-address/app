@@ -12,7 +12,7 @@ import {
 } from './inputs'
 
 import { $worklogsFilters, applyWorklogFilters } from '@/entities/activities'
-import { Button, Drawer, Text } from '@/shared'
+import { Button, Drawer, FilterIcon, Text } from '@/shared'
 
 export type WorklogsMobileFiltersProps = {
   filtersOpen: boolean
@@ -56,7 +56,7 @@ export const WorklogsMobileFilters = ({
             variant={'outline'}
           >
             <S.FilterImage
-              src="/img/icons/filter-icon.svg"
+              src={FilterIcon}
               alt={t('dashboard.page.filters.filterIconAlt')}
               width={20}
               height={20}

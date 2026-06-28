@@ -1,6 +1,8 @@
 import { Outlet } from 'react-router-dom'
 import styled from 'styled-components'
 
+import { SignBg } from '@/shared/icons'
+
 export const AuthLayout = () => {
   return (
     <Stage>
@@ -13,7 +15,7 @@ export const AuthLayout = () => {
 
 const Stage = styled.main`
   min-height: 100vh;
-  background: url('/img/photo/sign-bg.webp') center / cover no-repeat;
+  background: url(${SignBg}) center / cover no-repeat;
   display: flex;
   flex-direction: column;
   align-items: center;

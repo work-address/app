@@ -5,6 +5,15 @@ import type {
   MappingRoute,
 } from './types.ts'
 
+import {
+  DashboardIcon,
+  ExternalLinkIcon,
+  GithubLogo,
+  PersonIcon,
+  QuestionMarkCircledIcon,
+  TimeTrackerIcon,
+} from '@/shared/icons'
+
 /* eslint-disable */
 type MainRoutes =
   & Route<'/', 'dashboard'>
@@ -40,7 +49,7 @@ export const routes: MainRoutes = {
     showInMenu: true,
     translateKeyDesktop: 'header.nav.dashboard',
     translateKeyMobile: 'header.nav.dashboard',
-    mobileIcon: '/img/icons/dashboard.svg',
+    mobileIcon: DashboardIcon,
   },
 
   profile: {
@@ -50,7 +59,7 @@ export const routes: MainRoutes = {
     desktopOrder: 1,
     mobileOrder: 0,
 
-    mobileIcon: '/img/icons/person.svg',
+    mobileIcon: PersonIcon,
     showInMenu: true,
     translateKeyDesktop: 'header.nav.profile',
     translateKeyMobile: 'header.nav.profile',
@@ -73,7 +82,7 @@ export const routes: MainRoutes = {
     desktopOrder: 2,
     mobileOrder: 2,
 
-    mobileIcon: '/img/icons/question-mark-circled.svg',
+    mobileIcon: QuestionMarkCircledIcon,
   },
 
   timeTracker: {
@@ -83,7 +92,7 @@ export const routes: MainRoutes = {
     mobileOrder: 3,
 
     translateKeyMobile: 'header.nav.timeTracker',
-    mobileIcon: '/img/icons/time-tracker.svg',
+    mobileIcon: TimeTrackerIcon,
   },
 
   download: {
@@ -93,8 +102,8 @@ export const routes: MainRoutes = {
     desktopOrder: 3,
 
     translateKeyDesktop: 'header.nav.download',
-    desktopIcon: '/img/icons/external-link.svg',
-    mobileIcon: '/img/icons/external-link.svg',
+    desktopIcon: ExternalLinkIcon,
+    mobileIcon: ExternalLinkIcon,
     target: '_blank',
 
     desktopRender: 'textWithIcon',
@@ -107,8 +116,8 @@ export const routes: MainRoutes = {
     desktopOrder: 4,
     mobileOrder: 4,
 
-    desktopIcon: '/img/photo/github-logo.svg',
-    mobileIcon: '/img/photo/github-logo.svg',
+    desktopIcon: GithubLogo,
+    mobileIcon: GithubLogo,
     translateKeyDesktop: 'header.aria.github',
     translateKeyMobile: 'header.aria.github',
     target: '_blank',

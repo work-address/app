@@ -15,7 +15,17 @@ import {
   WalletList,
 } from '@/features/auth'
 import { routes } from '@/routes'
-import { Button, PageHelmet, Spinner, useBreakpoint } from '@/shared'
+import {
+  Button,
+  EthereumLogo,
+  Logo,
+  LogoLabel,
+  PageHelmet,
+  SolanaLogo,
+  Spinner,
+  TonLogo,
+  useBreakpoint,
+} from '@/shared'
 
 export default function SignInPage() {
   const { t, i18n } = useTranslation()
@@ -44,10 +54,7 @@ export default function SignInPage() {
         title={t('signIn.title')}
       />
 
-      <S.Logo
-        src={isDesktop ? '/img/photo/logo-label.svg' : '/img/photo/logo.svg'}
-        alt={t('signIn.logoAlt')}
-      />
+      <S.Logo src={isDesktop ? LogoLabel : Logo} alt={t('signIn.logoAlt')} />
 
       <S.SignInCard>
         {loading && (
@@ -67,7 +74,7 @@ export default function SignInPage() {
 
         <S.Actions>
           <ProviderButton
-            iconUrl={'/img/photo/ton-logo.svg'}
+            iconUrl={TonLogo}
             iconAlt={t('signIn.alt.ton')}
             onClick={() => onSignIn('ton')}
           >
@@ -75,7 +82,7 @@ export default function SignInPage() {
           </ProviderButton>
 
           <ProviderButton
-            iconUrl={'/img/photo/solana-logo.png'}
+            iconUrl={SolanaLogo}
             iconAlt={t('signIn.alt.solana')}
             onClick={() => onSignIn('solana')}
           >
@@ -83,7 +90,7 @@ export default function SignInPage() {
           </ProviderButton>
 
           <ProviderButton
-            iconUrl={'/img/photo/ethereum-logo.svg'}
+            iconUrl={EthereumLogo}
             iconAlt={t('signIn.alt.ethereum')}
             onClick={() => onSignIn('eth')}
           >

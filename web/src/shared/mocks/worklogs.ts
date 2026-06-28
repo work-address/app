@@ -1,5 +1,7 @@
 import type { WorklogRow } from '@/features/dashboard/components/worklogs-table/types'
 
+import { MockScreenshot } from '@/shared/icons'
+
 export const worklogsMock: WorklogRow[] = [
   {
     key: '1',
@@ -12,7 +14,7 @@ export const worklogsMock: WorklogRow[] = [
     keyboard: '2 092',
     mouse: '412',
     mouseDistance: '224 047',
-    screenshot: '/img/photo/mock.jpg',
+    screenshot: MockScreenshot,
   },
   {
     key: '2',

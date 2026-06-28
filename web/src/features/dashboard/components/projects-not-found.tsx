@@ -1,8 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { openDocs } from '@/routes'
-import { Button } from '@/shared'
+import { routes } from '@/routes'
+import { Button, FeaturedIcon } from '@/shared'
 
 export const ProjectsNotFound = () => {
   const { t } = useTranslation()
@@ -11,7 +11,7 @@ export const ProjectsNotFound = () => {
     <Root>
       <IconInner>
         <img
-          src="/img/icons/featured-icon.svg"
+          src={FeaturedIcon}
           alt={t('dashboard.page.projectsNotFound.title')}
         />
       </IconInner>

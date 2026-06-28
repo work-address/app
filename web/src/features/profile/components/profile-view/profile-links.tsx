@@ -15,7 +15,16 @@ import { InfoRow } from '../info-row'
 import { ProfileViewCard } from './styled'
 
 import { routes } from '@/routes'
-import { Button, Text, useBreakpoint, formatWalletAddress } from '@/shared'
+import {
+  Button,
+  CaseIcon,
+  FacebookIcon,
+  LinkedinIcon,
+  TelegramIcon,
+  Text,
+  formatWalletAddress,
+  useBreakpoint,
+} from '@/shared'
 
 type ProfileLinksProps = {
   gridArea?: string
@@ -104,7 +113,7 @@ export const ProfileLinks = ({
               hoverEffects={false}
               icon={
                 <img
-                  src={'/img/icons/case.svg'}
+                  src={CaseIcon}
                   alt={t('profile.view.alt.case')}
                 />
               }
@@ -124,7 +133,7 @@ export const ProfileLinks = ({
             <InfoRow
               icon={
                 <img
-                  src={'/img/icons/linkedin.svg'}
+                  src={LinkedinIcon}
                   alt={t('profile.links.linkedin')}
                 />
               }
@@ -150,7 +159,7 @@ export const ProfileLinks = ({
             <InfoRow
               icon={
                 <img
-                  src={'/img/icons/facebook.svg'}
+                  src={FacebookIcon}
                   alt={t('profile.links.facebook')}
                 />
               }
@@ -176,7 +185,7 @@ export const ProfileLinks = ({
             <InfoRow
               icon={
                 <img
-                  src={'/img/icons/telegram.svg'}
+                  src={TelegramIcon}
                   alt={t('profile.links.telegram')}
                 />
               }

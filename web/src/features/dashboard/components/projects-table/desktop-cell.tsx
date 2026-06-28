@@ -11,6 +11,7 @@ import { routes } from '@/routes'
 import {
   type DesktopBodyCellRenderProps,
   IconButton,
+  PrintIcon,
   Text,
   formatDurationFromMinutes,
 } from '@/shared'
@@ -101,7 +102,7 @@ const Actions = React.memo(
           onClick={() => handleActionClick(props.data, 'Print')}
         >
           <img
-            src={'/img/icons/print.svg'}
+            src={PrintIcon}
             alt={t('dashboard.projectsTable.actions.print')}
             style={{ width: 28, height: 28, margin: -4, padding: 0 }}
           />

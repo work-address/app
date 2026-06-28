@@ -7,6 +7,7 @@ import { DashboardEmptyState } from './dashboard-empty-state'
 import type { CSSProperties } from 'react'
 
 import { routes } from '@/routes'
+import { WorklogsHelpImage } from '@/shared'
 
 type WorklogsEmptyStateProps = {
   style?: CSSProperties
@@ -21,7 +22,7 @@ export const WorklogsEmptyState = ({ style }: WorklogsEmptyStateProps) => {
 
   return (
     <DashboardEmptyState
-      imageSrc="/img/photo/worklogs-help.svg"
+      imageSrc={WorklogsHelpImage}
       title={t('dashboard.worklogsEmpty.title')}
       description={t('dashboard.worklogsEmpty.description')}
       actionLabel={t('dashboard.worklogsEmpty.action')}

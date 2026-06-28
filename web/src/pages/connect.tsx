@@ -26,10 +26,15 @@ import {
 import { routes } from '@/routes'
 import {
   Button,
+  EthereumLogo,
   IconButton,
+  Logo,
+  LogoLabel,
   PageHelmet,
+  SolanaLogo,
   Spinner,
   Text,
+  TonLogo,
   useBreakpoint,
 } from '@/shared'
 
@@ -160,7 +165,7 @@ export default function ConnectPage() {
       </CloseLink>
 
       <S.Logo
-        src={isDesktop ? '/img/photo/logo-label.svg' : '/img/photo/logo.svg'}
+        src={isDesktop ? LogoLabel : Logo}
         alt={t('signIn.logoAlt')}
       />
 
@@ -188,7 +193,7 @@ export default function ConnectPage() {
             {showWalletProviders && (
               <S.Actions>
                 <ProviderButton
-                  iconUrl="/img/photo/ton-logo.svg"
+                  iconUrl={TonLogo}
                   iconAlt={t('signIn.alt.ton')}
                   onClick={() => onSignIn('ton')}
                 >
@@ -196,7 +201,7 @@ export default function ConnectPage() {
                 </ProviderButton>
 
                 <ProviderButton
-                  iconUrl="/img/photo/solana-logo.png"
+                  iconUrl={SolanaLogo}
                   iconAlt={t('signIn.alt.solana')}
                   onClick={() => onSignIn('solana')}
                 >
@@ -204,7 +209,7 @@ export default function ConnectPage() {
                 </ProviderButton>
 
                 <ProviderButton
-                  iconUrl="/img/photo/ethereum-logo.svg"
+                  iconUrl={EthereumLogo}
                   iconAlt={t('signIn.alt.ethereum')}
                   onClick={() => onSignIn('eth')}
                 >
