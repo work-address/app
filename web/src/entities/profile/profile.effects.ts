@@ -41,13 +41,15 @@ export const writeAuthenticatedToLsFx = createEffect((value: boolean) => {
 })
 
 export const getNonceFx = createEffect(async (params: GetNonceParams) => {
-  if (params.mode === 'eth') {
+  if (params.mode === 'ton') {
     return baseApi
-      .authControllerNonce({ body: { address: params.address } })
+      .authControllerTonNonce()
       .then((response) => response.data as string)
-  } else {
-    return baseApi.authControllerTonNonce().then((response) => response.data as string)
   }
+
+  return baseApi
+    .authControllerNonce({ body: { address: params.address } })
+    .then((response) => response.data as string)
 })
 
 export const connectTimeTrackerFx = createEffect(async (nonce: string) => {
