@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 
 import type { baseApi } from '@/shared'
 
-import { createActivityMutation } from '@/entities/activities'
+import { createProjectMutation } from '@/entities/projects'
 import {
   AdaptiveDialog,
   Button,
@@ -38,11 +38,11 @@ export const CreateProjectModal = ({
   const { t } = useTranslation()
   const isMobile = useBreakpoint('isMobile')
 
-  const { createActivity, status, resetMutation, pending } = useUnit({
-    createActivity: createActivityMutation.start,
-    status: createActivityMutation.$status,
-    resetMutation: createActivityMutation.reset,
-    pending: createActivityMutation.$pending,
+  const { createProject, status, resetMutation, pending } = useUnit({
+    createProject: createProjectMutation.start,
+    status: createProjectMutation.$status,
+    resetMutation: createProjectMutation.reset,
+    pending: createProjectMutation.$pending,
   })
 
   const {
@@ -67,7 +67,7 @@ export const CreateProjectModal = ({
   }
 
   const handleFormSubmit = (data: baseApi.Project) => {
-    createActivity(data)
+    createProject(data)
   }
 
   useEffect(() => {

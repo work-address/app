@@ -11,7 +11,7 @@ import {
   ProjectsSelect,
 } from './inputs'
 
-import { $worklogsFilters, applyWorklogFilters } from '@/entities/activities'
+import { $worklogsFilters, applyWorklogFilters } from '@/entities/time'
 import { Button, Drawer, FilterIcon, Text } from '@/shared'
 
 export type WorklogsMobileFiltersProps = {

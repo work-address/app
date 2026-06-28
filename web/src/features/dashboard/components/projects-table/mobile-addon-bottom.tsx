@@ -4,7 +4,7 @@ import React, { useContext } from 'react'
 
 import { ProjectsTableContext } from './context.ts'
 
-import type { ProjectWithStats } from '@/entities/activities'
+import type { ProjectWithStats } from '@/entities/projects'
 
 import { Button, type MobileAddonBottomProps } from '@/shared'
 

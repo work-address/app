@@ -10,7 +10,7 @@ import { WorklogsContext } from './worklogs-context'
 import type { WorklogsContextProps } from './worklogs-context'
 import type { DesktopBodyCellRenderProps, DataTableConfig } from '@/shared'
 
-import { type ITimeTotalDetail } from '@/entities/activities'
+import { type ITimeTotalDetail } from '@/entities/time'
 import {
   formatDurationFromMinutes,
   getTimeActiveColor,

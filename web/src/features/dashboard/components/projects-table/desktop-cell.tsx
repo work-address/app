@@ -5,7 +5,7 @@ import { NavLink } from 'react-router-dom'
 
 import { ProjectsTableContext } from './context.ts'
 
-import type { ProjectWithStats } from '@/entities/activities'
+import type { ProjectWithStats } from '@/entities/projects'
 
 import { routes } from '@/routes'
 import {

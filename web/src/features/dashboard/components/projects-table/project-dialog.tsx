@@ -13,10 +13,10 @@ import { useTranslation } from 'react-i18next'
 import type { baseApi } from '@/shared'
 
 import {
-  $rawActivities,
-  editActivityMutation,
+  $rawProjects,
+  editProjectMutation,
   type ProjectWithStats,
-} from '@/entities/activities'
+} from '@/entities/projects'
 import {
   formatDurationFromMinutes,
   Input,
@@ -50,8 +50,8 @@ export const ProjectDialog = ({
   const [modalMode, setModalMode] = useState<'view' | 'edit'>('view')
 
   const { editingStatus, resetEditingMutation } = useUnit({
-    editingStatus: editActivityMutation.$status,
-    resetEditingMutation: editActivityMutation.reset,
+    editingStatus: editProjectMutation.$status,
+    resetEditingMutation: editProjectMutation.reset,
   })
 
   useEffect(() => {
@@ -249,23 +249,23 @@ export const ProjectDialogContent = ({
     },
   })
 
-  const { editActivity, editingStatus } = useUnit({
-    editActivity: editActivityMutation.start,
-    editingStatus: editActivityMutation.$status,
+  const { editProject, editingStatus } = useUnit({
+    editProject: editProjectMutation.start,
+    editingStatus: editProjectMutation.$status,
   })
 
   const textSize = isMobile ? '2' : '3'
 
-  const editingActivity = useStoreMap({
-    store: $rawActivities,
+  const editingProject = useStoreMap({
+    store: $rawProjects,
     keys: [data.id],
-    fn: (activities, [id]) => (id ? activities[id] : null),
+    fn: (projects, [id]) => (id ? projects[id] : null),
   })
 
   const handleFormSubmit = (data: FormValues) => {
-    if (editingActivity) {
-      editActivity({
-        ...editingActivity,
+    if (editingProject) {
+      editProject({
+        ...editingProject,
         ...data,
       })
     }

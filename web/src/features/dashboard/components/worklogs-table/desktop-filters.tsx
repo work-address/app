@@ -11,7 +11,7 @@ import {
   NoteInput,
 } from './inputs'
 
-import { $worklogsFilters } from '@/entities/activities'
+import { $worklogsFilters } from '@/entities/time'
 import { Text } from '@/shared'
 
 export const WorklogsDesktopFilters = () => {

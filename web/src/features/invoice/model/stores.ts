@@ -3,7 +3,7 @@ import { combine } from 'effector'
 import { activityDetailQuery, activityReportQuery } from './queries'
 
 import type { ProjectInvoice } from './types'
-import type { ITimeTotalDetail } from '@/entities/activities'
+import type { ITimeTotalDetail } from '@/entities/time'
 
 export const $invoice = combine(
   activityDetailQuery.$data,

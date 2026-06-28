@@ -1,6 +1,6 @@
 import { createContext } from 'react'
 
-import type { ProjectWithStats } from '@/entities/activities'
+import type { ProjectWithStats } from '@/entities/projects'
 import type { useTranslation } from 'react-i18next'
 
 export type ProjectTableContextValues = {

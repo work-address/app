@@ -20,15 +20,15 @@ import { MobileHeader } from './mobile-header.tsx'
 import { ProjectDialog } from './project-dialog.tsx'
 
 import {
-  $filteredActivities,
-  $activitiesLoading,
-  $activityStateFilter,
-  $isActivitiesFiltering,
-  changeActivityStateFilter,
+  $filteredProjects,
+  $projectsLoading,
+  $projectStateFilter,
+  $isProjectsFiltering,
+  changeProjectStateFilter,
   type ProjectsFilter,
   type ProjectWithStats,
-  deleteActivityMutation,
-} from '@/entities/activities'
+  deleteProjectMutation,
+} from '@/entities/projects'
 import { type MobileDataTableConfig, type DataTableConfig } from '@/shared'
 import {
   DataTable,
@@ -50,27 +50,27 @@ export const ProjectsTable = () => {
 
   const {
     projects,
-    isActivitiesLoading,
-    isActivitiesFiltering,
+    isProjectsLoading,
+    isProjectsFiltering,
     filter,
     isProjectDeleting,
     deleteStatus,
-    changeActivityStateFilterEvent,
+    changeProjectStateFilterEvent,
     deleteProjectEvent,
     resetDeleteMutationEvent,
   } = useUnit({
-    projects: $filteredActivities,
-    isActivitiesLoading: $activitiesLoading,
-    isActivitiesFiltering: $isActivitiesFiltering,
-    filter: $activityStateFilter,
-    changeActivityStateFilterEvent: changeActivityStateFilter,
-    isProjectDeleting: deleteActivityMutation.$pending,
-    deleteProjectEvent: deleteActivityMutation.start,
-    deleteStatus: deleteActivityMutation.$status,
-    resetDeleteMutationEvent: deleteActivityMutation.reset,
+    projects: $filteredProjects,
+    isProjectsLoading: $projectsLoading,
+    isProjectsFiltering: $isProjectsFiltering,
+    filter: $projectStateFilter,
+    changeProjectStateFilterEvent: changeProjectStateFilter,
+    isProjectDeleting: deleteProjectMutation.$pending,
+    deleteProjectEvent: deleteProjectMutation.start,
+    deleteStatus: deleteProjectMutation.$status,
+    resetDeleteMutationEvent: deleteProjectMutation.reset,
   })
 
-  const renderingData = isActivitiesLoading ? [] : projects
+  const renderingData = isProjectsLoading ? [] : projects
 
   const { confirm } = useConfirm()
 
@@ -82,7 +82,7 @@ export const ProjectsTable = () => {
   const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
 
   const handleTabClick = (tab: string) => {
-    changeActivityStateFilterEvent({
+    changeProjectStateFilterEvent({
       projectState: tab as ProjectsFilter['projectState'],
       containsText: '',
     })
@@ -296,7 +296,7 @@ export const ProjectsTable = () => {
             exit={{ opacity: 0 }}
             transition={{ duration: 0.2 }}
           >
-            {projects.length === 0 && !isActivitiesLoading ? (
+            {projects.length === 0 && !isProjectsLoading ? (
               <ProjectsNotFound />
             ) : (
               <ProjectsTableContext value={projectsContextValues}>
@@ -312,7 +312,7 @@ export const ProjectsTable = () => {
                     allowSelection
                     selectedIds={selectedIds}
                     onSelectedIdsChange={setSelectedIds}
-                    loading={isActivitiesLoading}
+                    loading={isProjectsLoading}
                   />
                 ) : (
                   <DataTable
@@ -326,10 +326,10 @@ export const ProjectsTable = () => {
                     onSelectedIdsChange={setSelectedIds}
                     verticalAlign={'middle'}
                     nowrap
-                    loading={isActivitiesLoading}
+                    loading={isProjectsLoading}
                     skeletonHeight="31px"
                     mockDataLength={4}
-                    isFiltering={isProjectDeleting || isActivitiesFiltering}
+                    isFiltering={isProjectDeleting || isProjectsFiltering}
                   />
                 )}
               </ProjectsTableContext>

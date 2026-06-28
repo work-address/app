@@ -8,9 +8,9 @@ import type { InputProps } from '@/shared'
 import {
   changeWorklogFilters,
   $worklogsFilters,
-  $activities,
   type WorklogsFilters,
-} from '@/entities/activities'
+} from '@/entities/time'
+import { $projects } from '@/entities/projects'
 import { Input, Text, DatePickerInput, Select } from '@/shared'
 
 type TwoSideInputProps = {
@@ -138,18 +138,18 @@ export const ProjectsSelect = () => {
     fn: (filters) => filters.activityId,
   })
 
-  const { changeFiltersEvent, activities } = useUnit({
+  const { changeFiltersEvent, projects } = useUnit({
     changeFiltersEvent: changeWorklogFilters,
-    activities: $activities,
+    projects: $projects,
   })
 
   const options = useMemo(
     () =>
-      activities.map((activity) => ({
-        value: activity.id ?? '',
-        label: activity.title,
+      projects.map((project) => ({
+        value: project.id ?? '',
+        label: project.title,
       })),
-    [activities],
+    [projects],
   )
 
   return (

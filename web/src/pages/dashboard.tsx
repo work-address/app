@@ -4,11 +4,12 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
-  fetchActivities,
-  $activitiesLoading,
+  fetchProjects,
+  $projectsLoading,
   $hasProjects,
-  $activities,
-} from '@/entities/activities'
+  $projects,
+} from '@/entities/projects'
+import { fetchWorklogs, $worklogsLoading } from '@/entities/time'
 import {
   ApplicationsUsage,
   WorklogsTable,
@@ -33,22 +34,27 @@ export default function DashboardPage() {
   const [createProjectOpen, setCreateProjectOpen] = useState(false)
 
   const {
-    fetchActivities: fetchActivitiesEvent,
-    activitiesLoading,
+    fetchProjects: fetchProjectsEvent,
+    fetchWorklogs: fetchWorklogsEvent,
+    projectsLoading,
+    worklogsLoading,
     hasProjects,
-    activities,
+    projects,
   } = useUnit({
-    fetchActivities,
-    activitiesLoading: $activitiesLoading,
+    fetchProjects,
+    fetchWorklogs,
+    projectsLoading: $projectsLoading,
+    worklogsLoading: $worklogsLoading,
     hasProjects: $hasProjects,
-    activities: $activities,
+    projects: $projects,
   })
 
-  const showSkeletons = activitiesLoading || hasProjects
+  const showSkeletons = projectsLoading || worklogsLoading || hasProjects
 
   useEffect(() => {
-    fetchActivitiesEvent()
-  }, [fetchActivitiesEvent])
+    fetchProjectsEvent()
+    fetchWorklogsEvent()
+  }, [fetchProjectsEvent, fetchWorklogsEvent])
 
   return (
     <>
@@ -72,7 +78,7 @@ export default function DashboardPage() {
                 <Badge size={'2'} color={'gray'}>
                   <Text weight={'medium'} size={'1'}>
                     {t('dashboard.page.projectsCount', {
-                      count: activities.length,
+                      count: projects.length,
                     })}
                   </Text>
                 </Badge>

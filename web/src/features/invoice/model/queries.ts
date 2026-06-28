@@ -1,6 +1,6 @@
 import { createQuery } from '@farfetched/core'
 
-import type { ITimeTotal, ITimeTotalDetail } from '@/entities/activities'
+import type { ITimeTotal, ITimeTotalDetail } from '@/entities/time'
 
 import { baseApi } from '@/shared'
 

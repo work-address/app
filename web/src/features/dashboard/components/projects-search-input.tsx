@@ -3,10 +3,10 @@ import { useEffect, useState } from 'react'
 import { useDebounce } from 'react-use'
 
 import {
-  $activityStateFilter,
-  changeActivityStateFilter,
-  setActivitiesStateFiltering,
-} from '@/entities/activities'
+  $projectStateFilter,
+  changeProjectStateFilter,
+  setProjectsStateFiltering,
+} from '@/entities/projects'
 import { useBreakpoint } from '@/shared'
 import { SearchInput } from '@/shared'
 
@@ -16,29 +16,29 @@ export const ProjectsSearchInput = () => {
   const isDesktop = useBreakpoint('isDesktop')
 
   const searchTextFromStore = useStoreMap({
-    store: $activityStateFilter,
+    store: $projectStateFilter,
     keys: [],
     fn: (state) => state.containsText,
   })
 
   const [searchText, setSearchText] = useState(searchTextFromStore)
 
-  const { changeActivityStateFilterEvent, setActivitiesStateFilteringEvent } =
+  const { changeProjectStateFilterEvent, setProjectsStateFilteringEvent } =
     useUnit({
-      changeActivityStateFilterEvent: changeActivityStateFilter,
-      setActivitiesStateFilteringEvent: setActivitiesStateFiltering,
+      changeProjectStateFilterEvent: changeProjectStateFilter,
+      setProjectsStateFilteringEvent: setProjectsStateFiltering,
     })
 
   useDebounce(
     () => {
-      changeActivityStateFilterEvent({ containsText: searchText })
+      changeProjectStateFilterEvent({ containsText: searchText })
     },
     SEARCH_DEBOUNCE_TIME,
     [searchText],
   )
 
   const handleChange = (title: string) => {
-    setActivitiesStateFilteringEvent(true)
+    setProjectsStateFilteringEvent(true)
     setSearchText(title)
   }
 

@@ -4,7 +4,7 @@ import { memo, useContext } from 'react'
 
 import { ProjectsTableContext } from './context.ts'
 
-import type { ProjectWithStats } from '@/entities/activities'
+import type { ProjectWithStats } from '@/entities/projects'
 import type { MobileBodyRenderProps } from '@/shared'
 
 import { formatDurationFromMinutes, Text } from '@/shared'

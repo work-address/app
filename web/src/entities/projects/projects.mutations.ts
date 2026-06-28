@@ -3,10 +3,10 @@ import { AxiosError } from 'axios'
 
 import { baseApi } from '@/shared'
 
-export const createActivityMutation = createMutation({
-  handler: async (activity: baseApi.Project) => {
+export const createProjectMutation = createMutation({
+  handler: async (project: baseApi.Project) => {
     const result = await baseApi.projectControllerCreate({
-      body: activity,
+      body: project,
     })
 
     if (result instanceof AxiosError) {
@@ -17,7 +17,7 @@ export const createActivityMutation = createMutation({
   },
 })
 
-export const deleteActivityMutation = createMutation({
+export const deleteProjectMutation = createMutation({
   handler: async (id: string) => {
     const result = await baseApi.projectControllerDelete({
       path: { id: id as never },
@@ -31,13 +31,13 @@ export const deleteActivityMutation = createMutation({
   },
 })
 
-export const editActivityMutation = createMutation({
-  handler: async (activity: baseApi.Project) => {
+export const editProjectMutation = createMutation({
+  handler: async (project: baseApi.Project) => {
     const result = await baseApi.projectControllerEdit({
       path: {
-        id: activity.id as never,
+        id: project.id as never,
       },
-      body: activity,
+      body: project,
     })
 
     if (result instanceof AxiosError) {

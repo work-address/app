@@ -17,7 +17,7 @@ import {
   $worklogsLoading,
   type Time,
   resetWorklogSort,
-} from '@/entities/activities'
+} from '@/entities/time'
 import {
   type DataTableConfig,
   DataTable,

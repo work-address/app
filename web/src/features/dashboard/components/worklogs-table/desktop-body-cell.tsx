@@ -5,7 +5,7 @@ import styled from 'styled-components'
 
 import { WorklogsContext } from './worklogs-context'
 
-import type { Time } from '@/entities/activities'
+import type { Time } from '@/entities/time'
 
 import {
   type DesktopBodyCellRenderProps,
