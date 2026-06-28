@@ -73,7 +73,6 @@ export const TwoSideInput = ({
       >
         {label}
       </Text>
-
       <Grid columns={'1fr 1fr'} gap={'2'}>
         <Input
           id={leftId}
@@ -83,7 +82,6 @@ export const TwoSideInput = ({
           {...inputProps}
           inputMode={inputMode}
         />
-
         <Input
           id={rightId}
           value={rightValue}
@@ -121,7 +119,6 @@ export const DateRangePicker = () => {
         onChange={(date) => changeFiltersEvent({ fromAt: date?.getTime() })}
         placeholder={t('dashboard.page.filters.from')}
       />
-
       <DatePickerInput
         id={'toAt'}
         value={to}

@@ -84,7 +84,6 @@ export const RichEditor = ({
           >
             <ResetIcon />
           </CustomIconButton>
-
           <CustomIconButton
             variant="ghost"
             onClick={() => editor?.chain().focus().redo().run()}
@@ -94,9 +93,7 @@ export const RichEditor = ({
           >
             <ResetIcon />
           </CustomIconButton>
-
           <Separator orientation="vertical" />
-
           <CustomIconButton
             variant="ghost"
             data-active={editor?.isActive('bold')}
@@ -106,7 +103,6 @@ export const RichEditor = ({
           >
             <FontBoldIcon />
           </CustomIconButton>
-
           <CustomIconButton
             variant="ghost"
             data-active={editor?.isActive('italic')}
@@ -116,7 +112,6 @@ export const RichEditor = ({
           >
             <FontItalicIcon />
           </CustomIconButton>
-
           <CustomIconButton
             variant="ghost"
             data-active={editor?.isActive('underline')}
@@ -126,7 +121,6 @@ export const RichEditor = ({
           >
             <UnderlineIcon />
           </CustomIconButton>
-
           <CustomIconButton
             variant="ghost"
             data-active={editor?.isActive('strike')}
@@ -136,9 +130,7 @@ export const RichEditor = ({
           >
             <StrikethroughIcon />
           </CustomIconButton>
-
           <Separator orientation="vertical" />
-
           <CustomIconButton
             variant="ghost"
             data-active={editor?.isActive({ textAlign: 'left' })}
@@ -148,7 +140,6 @@ export const RichEditor = ({
           >
             <TextAlignLeftIcon />
           </CustomIconButton>
-
           <CustomIconButton
             variant="ghost"
             data-active={editor?.isActive({ textAlign: 'center' })}
@@ -158,7 +149,6 @@ export const RichEditor = ({
           >
             <TextAlignCenterIcon />
           </CustomIconButton>
-
           <CustomIconButton
             variant="ghost"
             data-active={editor?.isActive({ textAlign: 'right' })}
@@ -168,7 +158,6 @@ export const RichEditor = ({
           >
             <TextAlignRightIcon />
           </CustomIconButton>
-
           <CustomIconButton
             variant="ghost"
             data-active={editor?.isActive({ textAlign: 'justify' })}
@@ -180,9 +169,7 @@ export const RichEditor = ({
           >
             <TextAlignJustifyIcon />
           </CustomIconButton>
-
           <Separator orientation="vertical" />
-
           <CustomIconButton
             variant="ghost"
             data-active={editor?.isActive('link')}
@@ -199,7 +186,6 @@ export const RichEditor = ({
           </CustomIconButton>
         </FlexToolbar>
       )}
-
       <EditorWrapper>
         <StyledEditorContent disabled={disabled} editor={editor} id={id} />
       </EditorWrapper>

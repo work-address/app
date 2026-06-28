@@ -34,12 +34,10 @@ export const DashboardEmptyState = ({
       <Hero>
         <HeroImg src={imageSrc} alt={title} />
       </Hero>
-
       <Text>
         <EmptyTitle>{title}</EmptyTitle>
         <EmptyDesc>{description}</EmptyDesc>
       </Text>
-
       <EmptyAction
         themeVariant={buttonThemeVariant}
         size={buttonSize}

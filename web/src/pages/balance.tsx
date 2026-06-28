@@ -40,7 +40,6 @@ export default function BalancePage() {
         htmlAttributes={{ lang: i18n.language }}
         title={t('balance.documentTitle')}
       />
-
       <CardWrapper shadow={false} as={isMobile ? 'div' : CardWrapper}>
         <Flex direction={'column'} gap={'20px'}>
           <Flex align={'center'} gap={'2'}>
@@ -51,18 +50,13 @@ export default function BalancePage() {
                 </IconButton>
               </IconWrapper>
             )}
-
             <Text size={isMobile ? '5' : '6'} weight={'medium'}>
               {t('balance.page.title')}
             </Text>
           </Flex>
-
           <BalanceCard />
-
           <TopUpCard />
-
           <TopUpEthCard />
-
           <TransactionsList />
         </Flex>
       </CardWrapper>

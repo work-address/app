@@ -31,20 +31,17 @@ export const BalanceCard = ({ onTopUp, onWithdraw }: BalanceCardProps) => {
           <Text size={'2'} color={'gray'}>
             {t('balance.card.subtitle')}
           </Text>
-
           <Skeleton loading={loading}>
             <Text size={'8'} weight={'bold'}>
               {formattedAmount} {currency}
             </Text>
           </Skeleton>
         </Flex>
-
         <Flex gap={'3'} wrap={'wrap'}>
           <Button themeVariant={'primary'} onClick={onTopUp}>
             <ArrowDownIcon />
             <Text>{t('balance.card.topUp')}</Text>
           </Button>
-
           <Button
             themeVariant={'secondary'}
             variant={'outline'}

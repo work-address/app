@@ -92,7 +92,6 @@ export const Select = ({
   const Content = (
     <>
       {title && <MenuTitle>{title}</MenuTitle>}
-
       <MenuList>
         {options.map((o) => {
           const checked = selectedSet.has(o.value)
@@ -104,11 +103,9 @@ export const Select = ({
               onClick={() => toggle(o.value)}
             >
               {isDesktop && multi && <Checkbox checked={checked} />}
-
               <Text size={'3'} style={{ color: '#000' }}>
                 {o.label}
               </Text>
-
               {isMobile && multi && checked && <CheckIcon aria-hidden="true" />}
             </MenuItem>
           )
@@ -159,7 +156,6 @@ export const Select = ({
   return (
     <Popover.Root open={open} onOpenChange={setOpen}>
       <Popover.Trigger>{TriggerEl}</Popover.Trigger>
-
       <PopoverContent>
         <AnimatePresence>
           {open && (

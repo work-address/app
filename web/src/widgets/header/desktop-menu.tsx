@@ -79,9 +79,7 @@ export const DesktopMenu = ({
                   {desktopRender === 'textWithIcon' && (
                     <IconImg src={desktopIcon} alt={renderText} />
                   )}
-
                   {renderText}
-
                   {children.length > 0 && (
                     <DesktopMenu mappedRoutes={children} />
                   )}

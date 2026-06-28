@@ -134,7 +134,6 @@ export const WorklogsTable = () => {
     <S.Section>
       <S.SectionTitleRow>
         <S.SectionTitle>{t('dashboard.page.worklogs.title')}</S.SectionTitle>
-
         {isMobile && (
           <WorklogsMobileFilters
             filtersOpen={filtersOpen}
@@ -142,9 +141,7 @@ export const WorklogsTable = () => {
           />
         )}
       </S.SectionTitleRow>
-
       {isDesktop && <WorklogsDesktopFilters />}
-
       {hasWorklogs ? (
         <WorklogsContext.Provider value={worklogsContextValue}>
           <DataTable<Time>

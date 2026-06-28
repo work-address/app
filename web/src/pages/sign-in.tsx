@@ -53,25 +53,20 @@ export default function SignInPage() {
         htmlAttributes={{ lang: i18n.language }}
         title={t('signIn.title')}
       />
-
       <S.Logo src={isDesktop ? LogoLabel : Logo} alt={t('signIn.logoAlt')} />
-
       <S.SignInCard>
         {loading && (
           <S.FlexOverlay align={'center'} justify={'center'}>
             <Spinner size={80} />
           </S.FlexOverlay>
         )}
-
         <S.Title>{t('signIn.title')}</S.Title>
-
         <S.Desc>
           <Trans
             i18nKey="signIn.description"
             components={{ mb: <S.MobileBreak /> }}
           />
         </S.Desc>
-
         <S.Actions>
           <ProviderButton
             iconUrl={TonLogo}
@@ -80,7 +75,6 @@ export default function SignInPage() {
           >
             {t('signIn.providers.ton')}
           </ProviderButton>
-
           <ProviderButton
             iconUrl={SolanaLogo}
             iconAlt={t('signIn.alt.solana')}
@@ -88,7 +82,6 @@ export default function SignInPage() {
           >
             {t('signIn.providers.solana')}
           </ProviderButton>
-
           <ProviderButton
             iconUrl={EthereumLogo}
             iconAlt={t('signIn.alt.ethereum')}
@@ -97,33 +90,27 @@ export default function SignInPage() {
             {t('signIn.providers.ethereum')}
           </ProviderButton>
         </S.Actions>
-
         <S.Learn to={routes.docs.build()} target={routes.docs.target}>
           {t('signIn.learnMore')}
         </S.Learn>
       </S.SignInCard>
-
       <S.Foot>
         <S.FootLine>
           <S.FootLabel>{t('signIn.footer.ethereumWallets')}</S.FootLabel>{' '}
           <WalletList wallets={ETHEREUM_WALLETS} />
         </S.FootLine>
-
         <S.FootLine>
           <S.FootLabel>{t('signIn.footer.tonWallets')}</S.FootLabel>{' '}
           <WalletList wallets={TON_WALLETS} />
         </S.FootLine>
-
         <S.FootLine>
           <S.FootLabel>{t('signIn.footer.solanaWallets')}</S.FootLabel>{' '}
           <WalletList wallets={SOLANA_WALLETS} breakAfter={3} />
         </S.FootLine>
-
         <S.CommitSha>
           Version: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}
         </S.CommitSha>
       </S.Foot>
-
       <S.HiddenButtonRow>
         <Button themeVariant="secondary" onClick={() => onSignIn('eth')}>
           {t('signIn.continue')}

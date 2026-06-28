@@ -122,7 +122,6 @@ export const MobileDataTable = <T extends AnyRecord>(
                     />
                   </CheckboxWrapper>
                 )}
-
                 <Header
                   onClick={() =>
                     setExpanded((expanded) => ({
@@ -146,7 +145,6 @@ export const MobileDataTable = <T extends AnyRecord>(
                       }
                       DefaultHeaderCellComponent={MobileHeaderComponent}
                     />
-
                     <Flex alignSelf={'end'}>
                       <IconButton
                         variant={'ghost'}
@@ -164,7 +162,6 @@ export const MobileDataTable = <T extends AnyRecord>(
                   </Flex>
                 </Header>
               </Flex>
-
               <AnimatePresence initial={false}>
                 {expanded[rowId] && (
                   <motion.div
@@ -175,7 +172,6 @@ export const MobileDataTable = <T extends AnyRecord>(
                     style={{ overflow: 'hidden' }}
                   >
                     <Separator size={'4'} />
-
                     <FlexFields direction={'column'} gap={'3'}>
                       {configWithoutHeader.map((configItem) => (
                         <div
@@ -200,7 +196,6 @@ export const MobileDataTable = <T extends AnyRecord>(
                         </div>
                       ))}
                     </FlexFields>
-
                     {AddonBottomComponent && (
                       <AddonWrapper>
                         <AddonBottomComponent data={row} />
@@ -212,7 +207,6 @@ export const MobileDataTable = <T extends AnyRecord>(
             </CardContent>
           )
         })}
-
       {!isDataExists &&
         loading &&
         mockedData.map((_, index) => (
@@ -227,11 +221,9 @@ export const MobileDataTable = <T extends AnyRecord>(
                   <Skeleton width="18px" height="18px" />
                 </CheckboxWrapper>
               )}
-
               <Header>
                 <Flex justify={'between'} align={'center'}>
                   <Skeleton width="150px" height="20px" />
-
                   <Flex alignSelf={'end'}>
                     <IconButton
                       variant={'ghost'}

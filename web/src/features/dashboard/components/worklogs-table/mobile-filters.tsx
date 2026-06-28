@@ -72,7 +72,6 @@ export const WorklogsMobileFilters = ({
       >
         <Flex direction={'column'} gap={'2'}>
           <ProjectsSelect />
-
           <Flex direction={'column'} gap={'2'}>
             <Text
               as={'label'}
@@ -82,14 +81,11 @@ export const WorklogsMobileFilters = ({
             >
               {t('dashboard.page.filters.date')}
             </Text>
-
             <Flex gap={'2'}>
               <DateRangePicker />
             </Flex>
           </Flex>
-
           <NoteInput />
-
           <TwoSideInput
             label={t('dashboard.page.filters.timeActive')}
             leftId={'timeActiveMin'}
@@ -98,7 +94,6 @@ export const WorklogsMobileFilters = ({
             rightPlaceholder={t('dashboard.page.filters.max')}
             inputMode="numeric"
           />
-
           <TwoSideInput
             label={t('dashboard.page.filters.keyboard')}
             leftId={'keyboardKeysMin'}
@@ -107,7 +102,6 @@ export const WorklogsMobileFilters = ({
             rightPlaceholder={t('dashboard.page.filters.max')}
             inputMode="numeric"
           />
-
           <TwoSideInput
             label={t('dashboard.page.filters.mouse')}
             leftId={'mouseKeysMin'}
@@ -116,7 +110,6 @@ export const WorklogsMobileFilters = ({
             rightPlaceholder={t('dashboard.page.filters.max')}
             inputMode="numeric"
           />
-
           <TwoSideInput
             label={t('dashboard.page.filters.mouseDistance')}
             leftId={'mouseDistanceMin'}

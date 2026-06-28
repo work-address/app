@@ -66,12 +66,10 @@ export const ProfileView = () => {
           onWalletAddressCopy={handleCopyWalletAddress}
           onShareProfile={handleShareProfile}
         />
-
         <ProfileLinks
           gridArea={'profile'}
           onWalletAddressCopy={handleCopyWalletAddress}
         />
-
         <DescriptionAndSkills gridArea={'description'} />
       </Grid>
     </Wrapper>

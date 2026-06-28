@@ -47,7 +47,6 @@ export const DesktopHeaderCellComponent = <T extends AnyRecord>(
               String(props.dataKey ?? '') || props.customKey,
             )}
         </Text>
-
         {props.columnConfig.sortable && (
           <>
             {(sortKey === 'ASC' || sortKey === 'DESC') && (

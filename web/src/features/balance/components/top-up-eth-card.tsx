@@ -47,22 +47,18 @@ export const TopUpEthCard = () => {
         align={{ md: 'center' }}
       >
         <QrPlaceholder>QR</QrPlaceholder>
-
         <Flex direction={'column'} gap={'3'} flexGrow={'1'}>
           <Flex direction={'column'} gap={'1'}>
             <Text size={'4'} weight={'medium'}>
               {t('balance.topUpEth.title')}
             </Text>
-
             <Text size={'2'} color={'gray'}>
               {t('balance.topUpEth.description')}
             </Text>
           </Flex>
-
           <Skeleton loading={loading}>
             <AddressBox>{address || '—'}</AddressBox>
           </Skeleton>
-
           <Flex gap={'2'} wrap={'wrap'}>
             <Button
               variant={'soft'}
@@ -73,7 +69,6 @@ export const TopUpEthCard = () => {
               <CopyIcon />
               <Text>{t('balance.topUpEth.copyAddress')}</Text>
             </Button>
-
             <Button
               variant={'soft'}
               color={'gray'}

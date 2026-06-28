@@ -20,25 +20,20 @@ export const Modal = ({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       {trigger && <Dialog.Trigger>{trigger}</Dialog.Trigger>}
-
       <SContent $width={width} $padding={padding}>
         {showClose && (
           <SClose>
             <Cross1Icon />
           </SClose>
         )}
-
         {title && (
           <STitle>
             {title}
             {showTitleSeparator && <Separator size={'4'} mt={'4'} />}
           </STitle>
         )}
-
         {children}
-
         {description && <Dialog.Description>{description}</Dialog.Description>}
-
         {footer && (
           <footer>
             <Flex direction={'column'} mt={'4'}>

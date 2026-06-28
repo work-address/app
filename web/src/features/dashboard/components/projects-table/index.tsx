@@ -245,17 +245,14 @@ export const ProjectsTable = () => {
             <TabsTrigger value={'All'}>
               {t('dashboard.page.tabs.all')}
             </TabsTrigger>
-
             <TabsTrigger value={'Active'}>
               {t('dashboard.page.tabs.active')}
             </TabsTrigger>
-
             <TabsTrigger value={'Inactive'}>
               {t('dashboard.page.tabs.inactive')}
             </TabsTrigger>
           </TabsList>
         </TabsRoot>
-
         <Flex gap={'var(--space-2)'}>
           {allowDeleteAll && (
             <>
@@ -271,7 +268,6 @@ export const ProjectsTable = () => {
               )}
             </>
           )}
-
           {isMobile ? (
             <IconButton
               themeVariant={'primary'}
@@ -290,7 +286,6 @@ export const ProjectsTable = () => {
           )}
         </Flex>
       </Flex>
-
       <ProjectsTableWrapper>
         <AnimatePresence mode={'wait'}>
           <motion.div
@@ -342,14 +337,12 @@ export const ProjectsTable = () => {
           </motion.div>
         </AnimatePresence>
       </ProjectsTableWrapper>
-
       <ProjectDialog
         open={isProjectDialogOpen}
         setOpen={setIsProjectDialogOpen}
         row={selectedRow}
         onDeleteClick={(row) => row && handleActionClick(row, 'Delete')}
       />
-
       <CreateProjectModal
         open={isCreateDialogOpen}
         onOpenChange={setIsCreateDialogOpen}

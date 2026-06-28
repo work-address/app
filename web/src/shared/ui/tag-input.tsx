@@ -244,7 +244,6 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
             {label}
           </Text>
         )}
-
         <Popover.Root open={hasSuggestions && focused} modal={false}>
           <Popover.Trigger>
             <span style={{ width: '100%' }}>
@@ -275,7 +274,6 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
                         >
                           <Flex align="center" gap="1">
                             {tag}
-
                             <Flex p="1">
                               <IconButton
                                 size="1"
@@ -298,7 +296,6 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
               </Skeleton>
             </span>
           </Popover.Trigger>
-
           <Popover.Content
             style={{ padding: 0, width: 'var(--radix-popover-anchor-width)' }}
             align="start"

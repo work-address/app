@@ -36,12 +36,10 @@ export const MobileHeader = React.memo(
               {props.data.title}
             </Text>
           </NavLink>
-
           <Badge color={props.data.state === 'Active' ? 'green' : 'gray'}>
             {statusKey === null ? props.data.state : t(statusKey)}
           </Badge>
         </Flex>
-
         <Text color={'gray'} size={'2'}>
           {props.data.earnings} {t('currency.usdt')}
         </Text>

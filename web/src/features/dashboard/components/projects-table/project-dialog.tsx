@@ -83,7 +83,6 @@ export const ProjectDialog = ({
         ) : (
           <Flex justify={'between'} align={'center'}>
             <Text>{row?.title}</Text>
-
             <IconButton
               color={'red'}
               variant={'outline'}
@@ -111,7 +110,6 @@ export const ProjectDialog = ({
               <TrashIcon />
               {t('common.delete')}
             </Button>
-
             <Flex gap={'3'}>
               {modalMode === 'view' ? (
                 <>
@@ -140,7 +138,6 @@ export const ProjectDialog = ({
                   >
                     {t('common.cancel')}
                   </Button>
-
                   <Button
                     themeVariant={'primary'}
                     size={'3'}
@@ -170,7 +167,6 @@ export const ProjectDialog = ({
                     <DownloadIcon />
                     {t('dashboard.projectsTable.drawer.invoice')}
                   </Button>
-
                   <Button
                     themeVariant={'primary'}
                     onClick={(e) => {
@@ -194,7 +190,6 @@ export const ProjectDialog = ({
                   >
                     {t('common.cancel')}
                   </Button>
-
                   <Button
                     themeVariant={'primary'}
                     form="edit-project-form"
@@ -313,7 +308,6 @@ export const ProjectDialogContent = ({
             {...inputProps}
             {...register('title', { required: true })}
           />
-
           <Controller
             render={({ field }) => (
               <Select
@@ -332,7 +326,6 @@ export const ProjectDialogContent = ({
             control={control}
             disabled={editingStatus === 'pending'}
           />
-
           <Input
             label={'Rate'}
             addonRight={'$'}
@@ -342,9 +335,7 @@ export const ProjectDialogContent = ({
             {...inputProps}
             {...register('rateHour', { required: true })}
           />
-
           <Separator size={'4'} />
-
           <TextArea
             label={'Description'}
             placeholder={'Enter a brief description of your project'}
@@ -370,7 +361,6 @@ export const ProjectDialogContent = ({
                 <Text color={'gray'} size={textSize}>
                   {t(`dashboard.projectsTable.drawer.meta.${key}`)}
                 </Text>
-
                 <Text weight={'medium'} size={textSize}>
                   {key === 'createdAt' && data[key]
                     ? dateFormatter.format(new Date(data[key]))
@@ -381,11 +371,9 @@ export const ProjectDialogContent = ({
           },
         )}
       </Grid>
-
       {isMobile && (
         <>
           <Separator size={'4'} />
-
           <Grid columns={{ initial: '125px 1fr' }} gap={isDesktop ? '4' : '3'}>
             {(
               [
@@ -402,17 +390,13 @@ export const ProjectDialogContent = ({
                     <Text color={'gray'} size={textSize}>
                       {t(`dashboard.projectsTable.head.${key}`)}
                     </Text>
-
                     <QuestionMarkCircledIcon />
                   </Flex>
-
                   <Text weight={'medium'} size={textSize}>
                     {key === 'timeTotal' &&
                       formatDurationFromMinutes(data.minutesTotal, t)}
-
                     {key === 'timeActive' &&
                       formatDurationFromMinutes(data.minutesActive, t)}
-
                     {key !== 'timeActive' && key !== 'timeTotal' && data[key]}
                   </Text>
                 </>
@@ -421,9 +405,7 @@ export const ProjectDialogContent = ({
           </Grid>
         </>
       )}
-
       <Separator size={'4'} />
-
       <div>
         <TextArea
           label="Description"

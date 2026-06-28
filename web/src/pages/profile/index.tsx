@@ -22,13 +22,11 @@ export default function ProfilePage() {
 
   return (
     <>
-      <ProfileGate userId={id} />
-
+      <ProfileGate friendlyWalletAddress={walletAddress} />
       <PageHelmet
         htmlAttributes={{ lang: i18n.language }}
         title={t('profile.title')}
       />
-
       <ProfileView />
     </>
   )

@@ -33,12 +33,10 @@ export default function FreelancerProfilePage() {
   return (
     <>
       <ProfileGate friendlyWalletAddress={walletAddress || ''} />
-
       <PageHelmet
         htmlAttributes={{ lang: i18n.language }}
         title={t('app.documentTitle.profileEdit')}
       />
-
       <EditProfile />
     </>
   )

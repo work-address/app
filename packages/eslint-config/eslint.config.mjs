@@ -264,6 +264,7 @@ export const reactConfig = [
       ...reactPlugin.configs.flat.recommended.rules,
       'react/react-in-jsx-scope': OFF,
       'react/prop-types': OFF,
+      'react/jsx-newline': [ERROR, { prevent: true }],
       'react/no-unknown-property': [ERROR, { ignore: ['css'] }],
       'react/display-name': OFF,
     },

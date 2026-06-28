@@ -29,11 +29,9 @@ export const MobileBodyComponent = <T extends AnyRecord>(
         <Flex gap={'1'} align={'center'}>
           {props.columnConfig.headerText ??
             normalizeDataKeyToReadableString(dataKey)}
-
           {props.description && <QuestionMarkCircledIcon />}
         </Flex>
       </Text>
-
       <Text align={'left'} size={'2'} weight={'medium'}>
         {props.columnConfig.getValue
           ? props.columnConfig.getValue(props.data)

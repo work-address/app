@@ -42,7 +42,6 @@ export const TransactionsList = () => {
         <Text size={'4'} weight={'medium'}>
           {t('balance.transactions.title')}
         </Text>
-
         {loading ? (
           <Skeleton width={'100%'} height={'120px'} />
         ) : transactions.length === 0 ? (
@@ -67,7 +66,6 @@ export const TransactionsList = () => {
                 </Table.ColumnHeaderCell>
               </Table.Row>
             </Table.Header>
-
             <Table.Body>
               {transactions.map((tx) => (
                 <TransactionRow
@@ -99,18 +97,15 @@ const TransactionRow = ({ tx, dateFormatter, t }: TransactionRowProps) => {
       <Table.Cell>
         <Text size={'2'}>{dateFormatter.format(new Date(tx.createdAt))}</Text>
       </Table.Cell>
-
       <Table.Cell>
         <Text size={'2'}>{t(`balance.transactions.type.${tx.type}`)}</Text>
       </Table.Cell>
-
       <Table.Cell>
         <Text size={'2'} weight={'medium'}>
           {sign}
           {tx.amount.toFixed(2)} {tx.currency}
         </Text>
       </Table.Cell>
-
       <Table.Cell>
         <Badge color={statusColor[tx.status]}>
           {t(`balance.transactions.status.${tx.status}`)}

@@ -33,7 +33,6 @@ export const Confirm = () => {
                   {entry.props.title}
                 </Text>
               </Dialog.Title>
-
               {entry.props.description && (
                 <Dialog.Description>
                   <Text
@@ -45,7 +44,6 @@ export const Confirm = () => {
                   </Text>
                 </Dialog.Description>
               )}
-
               <Flex
                 justify={{ initial: 'between', sm: 'end' }}
                 gap={{ initial: '3', sm: '3' }}
@@ -60,7 +58,6 @@ export const Confirm = () => {
                 >
                   {entry.props.cancelLabel}
                 </Button>
-
                 <Button
                   variant="solid"
                   color="red"

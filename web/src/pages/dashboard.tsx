@@ -56,7 +56,6 @@ export default function DashboardPage() {
         htmlAttributes={{ lang: i18n.language }}
         title={t('dashboard.page.title')}
       />
-
       <Wrapper>
         <S.Content>
           <S.Left>
@@ -70,7 +69,6 @@ export default function DashboardPage() {
                 <Text size={isDesktop ? '6' : '4'} weight={'medium'}>
                   {t('dashboard.page.title')}
                 </Text>
-
                 <Badge size={'2'} color={'gray'}>
                   <Text weight={'medium'} size={'1'}>
                     {t('dashboard.page.projectsCount', {
@@ -79,33 +77,28 @@ export default function DashboardPage() {
                   </Text>
                 </Badge>
               </Flex>
-
               {showSkeletons && (
                 <Flex mb={{ initial: '3', sm: '0' }}>
                   <ProjectsSearchInput />
                 </Flex>
               )}
             </Flex>
-
             {showSkeletons && (
               <S.TableArea>
                 <ProjectsTable />
               </S.TableArea>
             )}
           </S.Left>
-
           {showSkeletons && (
             <S.Right>
               <ApplicationsUsage />
             </S.Right>
           )}
         </S.Content>
-
         <CreateProjectModal
           open={createProjectOpen}
           onOpenChange={setCreateProjectOpen}
         />
-
         {showSkeletons ? (
           <WorklogsTable />
         ) : (

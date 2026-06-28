@@ -69,13 +69,11 @@ export const Header = () => {
         <LogoLink to={routes.dashboard.build()} viewTransition>
           <LogoImg src={Logo} alt={t('header.logoAlt')} />
         </LogoLink>
-
         {isDesktop && (
           <Nav>
             <DesktopMenu />
           </Nav>
         )}
-
         <Right>
           <NavLink
             to={routes.profile.build({
@@ -87,10 +85,8 @@ export const Header = () => {
                 <UserAvatar>
                   <IconImg src={PersonIcon} alt={t('header.userAlt')} />
                 </UserAvatar>
-
                 <UserText>
                   <UserName>{user?.title || ''}</UserName>
-
                   <UserSub>
                     {formatWalletAddress(user?.friendlyWalletAddress || '')}
                   </UserSub>
@@ -98,7 +94,6 @@ export const Header = () => {
               </UserBox>
             </Button>
           </NavLink>
-
           <ExitButton
             aria-label={t('header.exit')}
             onClick={() => logoutEvent()}
@@ -106,7 +101,6 @@ export const Header = () => {
             <IconImg src={ExitIcon} alt={t('header.exit')} />
           </ExitButton>
         </Right>
-
         <MobileRight>
           <BurgerButton
             type="button"
@@ -133,7 +127,6 @@ export const Header = () => {
           </BurgerButton>
         </MobileRight>
       </HeaderInner>
-
       {!isDesktop && (
         <AnimatePresence>
           {mobileMenuOpen ? (
@@ -159,10 +152,8 @@ export const Header = () => {
                         <UserAvatar>
                           <IconImg src={PersonIcon} alt={t('header.userAlt')} />
                         </UserAvatar>
-
                         <UserText>
                           <UserName>{user?.title || ''}</UserName>
-
                           <UserSub>
                             {formatWalletAddress(
                               user?.friendlyWalletAddress || '',
@@ -173,9 +164,7 @@ export const Header = () => {
                     </Button>
                   </NavLink>
                 </MobileMenuTop>
-
                 <Divider />
-
                 <MobileMenuNav
                   variants={menuVariants}
                   initial="initial"
@@ -183,7 +172,6 @@ export const Header = () => {
                   exit="exit"
                 >
                   <MobileMenu setOpen={setMobileMenuOpen} />
-
                   <MobileMenuButton
                     type="button"
                     aria-label={t('header.exit')}

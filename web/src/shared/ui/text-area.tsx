@@ -28,7 +28,6 @@ export const TextArea = ({ label, id, state, ...props }: TextAreaProps) => {
       <Text as={'label'} size={'2'} weight={'medium'} htmlFor={id}>
         {label}
       </Text>
-
       <RadixTextArea id={id} size={'3'} {...props} {...errorProps} />
     </Grid>
   )

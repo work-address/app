@@ -150,7 +150,6 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
             })}
           </tr>
         </THead>
-
         <TBody>
           {isDataExists &&
             data.map((row) => {
@@ -186,7 +185,6 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                               }
                             />
                           )}
-
                           <BodyComponent
                             columnConfig={columnConfig}
                             data={row}
@@ -210,7 +208,6 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                 </Tr>
               )
             })}
-
           {!isDataExists &&
             loading &&
             mockedData.map((_, index) => (

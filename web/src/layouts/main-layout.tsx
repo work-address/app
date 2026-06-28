@@ -23,11 +23,9 @@ export const MainLayout = () => {
   return (
     <Layout>
       <PageIndicator />
-
       <StickyHeader>
         <Header />
       </StickyHeader>
-
       <PageContent />
     </Layout>
   )

@@ -35,19 +35,16 @@ const AppWrapper = REACT_STRICT_MODE ? StrictMode : Fragment
 createRoot(ROOT_ELEMENT).render(
   <AppWrapper>
     <SolanaWalletMount />
-
     <Theme>
       <ThemeProvider theme={theme}>
         <Confirm />
         <BreakpointsWatcher />
         <ToastStyle />
-
         <HelmetProvider>
           <App />
         </HelmetProvider>
       </ThemeProvider>
     </Theme>
-
     <SonnerRadixTheme>
       <Toaster />
     </SonnerRadixTheme>

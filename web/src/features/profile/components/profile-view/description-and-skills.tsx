@@ -54,7 +54,6 @@ export const DescriptionAndSkills = ({ gridArea }: DescriptionProps) => {
             <Text size={'6'} weight={'medium'}>
               {t('profile.view.jobTitle')}
             </Text>
-
             <Text color={'blue'} $themeVariant={'primary'}>
               <Flex gap={'1'} align={'end'}>
                 <Skeleton loading={profileLoading}>
@@ -62,7 +61,6 @@ export const DescriptionAndSkills = ({ gridArea }: DescriptionProps) => {
                     {user?.rate || 0}
                   </Text>
                 </Skeleton>
-
                 <Text size={isMobile ? '2' : undefined}>
                   {t('profile.view.usdtUnit')}
                 </Text>
@@ -70,9 +68,7 @@ export const DescriptionAndSkills = ({ gridArea }: DescriptionProps) => {
             </Text>
           </Flex>
         </div>
-
         <Separator size={'4'} />
-
         <Skeleton loading={profileLoading}>
           <Text
             dangerouslySetInnerHTML={{
@@ -80,15 +76,12 @@ export const DescriptionAndSkills = ({ gridArea }: DescriptionProps) => {
             }}
           />
         </Skeleton>
-
         <Separator size={'4'} />
-
         <div>
           <Text size={'4'} weight={'medium'}>
             {t('profile.form.skills')}
           </Text>
         </div>
-
         <Skeleton loading={profileLoading}>
           <Flex gap={'2'} wrap={'wrap'} mb={{ initial: '0', md: '2' }}>
             {skills.map((skill) => (

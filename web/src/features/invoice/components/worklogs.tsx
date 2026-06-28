@@ -91,7 +91,6 @@ export const Worklogs = () => {
   return (
     <>
       <Text size={'5'}>{t('dashboard.page.worklogs.title')}</Text>
-
       {loading ? (
         <WorklogsContext value={contextValue}>
           <DataTable
@@ -150,7 +149,6 @@ const CreatedAtCell = memo(
           {timeFormatter.format(new Date(props.data.fromAt))} -{' '}
           {timeFormatter.format(new Date(props.data.toAt))}
         </Text>
-
         <Text size="2" color={'gray'}>
           {dateFormatter.format(new Date(props.data.createdAt))}
         </Text>

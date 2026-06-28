@@ -62,7 +62,6 @@ export const QrCode = ({
                   {user?.title ?? t('profile.view.mockName')}
                 </Text>
               </Skeleton>
-
               <Flex gap={'2'} align={'center'}>
                 <Skeleton loading={profileLoading}>
                   <Button variant={'ghost'} onClick={onWalletAddressCopy}>
@@ -75,14 +74,12 @@ export const QrCode = ({
                         ? formatWalletAddress(user?.friendlyWalletAddress)
                         : '...'}
                     </Text>
-
                     <CopyIcon />
                   </Button>
                 </Skeleton>
               </Flex>
             </Flex>
           )}
-
           <QrCodeWrapper onClick={() => setQrModalOpened(true)}>
             <Skeleton loading={profileLoading}>
               <QRCodeSVG
@@ -95,7 +92,6 @@ export const QrCode = ({
               />
             </Skeleton>
           </QrCodeWrapper>
-
           {isMobile ? (
             <Flex gap={'2'} direction={'column'} width={'100%'}>
               {isAuthenticatedUserProfile && (
@@ -110,7 +106,6 @@ export const QrCode = ({
                   </Button>
                 </Link>
               )}
-
               <Button
                 stretch
                 variant={'outline'}
@@ -132,7 +127,6 @@ export const QrCode = ({
           )}
         </Flex>
       </StyledCard>
-
       <Modal
         open={qrModalOpened}
         onOpenChange={setQrModalOpened}
@@ -156,7 +150,6 @@ export const QrCode = ({
             bgColor="transparent"
             marginSize={1}
           />
-
           <Text size={isMobile ? '1' : '2'} align={'center'}>
             Use your crypto wallet to scan the QR code and send the payment
             instantly. Ensure the amount and recipient details are correct

@@ -127,7 +127,6 @@ export const CreateProjectModal = ({
             >
               {t('dashboard.projectsTable.confirmDelete.cancel')}
             </Button>
-
             <Button
               themeVariant={'primary'}
               size={'3'}
@@ -146,7 +145,6 @@ export const CreateProjectModal = ({
         <Text color={isMobile ? 'gray' : undefined} size={isMobile ? '2' : '3'}>
           {t('project.createModal.intro')}
         </Text>
-
         <form
           id="create-project-form"
           onSubmit={handleSubmit(handleFormSubmit)}
@@ -161,7 +159,6 @@ export const CreateProjectModal = ({
               {...inputProps}
               {...register('title', { required: true })}
             />
-
             <Input
               label={t('dashboard.projectsTable.form.rate')}
               id={'rate'}
@@ -173,7 +170,6 @@ export const CreateProjectModal = ({
               {...inputProps}
               {...register('rateHour', { required: true })}
             />
-
             <TextArea
               label={t('dashboard.projectsTable.form.description')}
               id={'description'}

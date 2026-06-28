@@ -157,39 +157,29 @@ export default function ConnectPage() {
         htmlAttributes={{ lang: i18n.language }}
         title={t('connect.title')}
       />
-
       <CloseLink to={closeHref}>
         <IconButton variant="ghost" radius="full" color="gray" size="4">
           <Cross1Icon />
         </IconButton>
       </CloseLink>
-
-      <S.Logo
-        src={isDesktop ? LogoLabel : Logo}
-        alt={t('signIn.logoAlt')}
-      />
-
+      <S.Logo src={isDesktop ? LogoLabel : Logo} alt={t('signIn.logoAlt')} />
       <S.SignInCard>
         {showLoading && (
           <S.FlexOverlay align="center" justify="center">
             <Spinner size={80} />
           </S.FlexOverlay>
         )}
-
         <S.Title>{t('connect.heading')}</S.Title>
-
         {nonce ? (
           <>
             {showPairingMessage && !showConnected && (
               <S.Desc>{description}</S.Desc>
             )}
-
             {showConnected && (
               <Text size="5" as="p" align="center">
                 <i>{t('connect.description.connected')}</i>
               </Text>
             )}
-
             {showWalletProviders && (
               <S.Actions>
                 <ProviderButton
@@ -199,7 +189,6 @@ export default function ConnectPage() {
                 >
                   {t('signIn.providers.ton')}
                 </ProviderButton>
-
                 <ProviderButton
                   iconUrl={SolanaLogo}
                   iconAlt={t('signIn.alt.solana')}
@@ -207,7 +196,6 @@ export default function ConnectPage() {
                 >
                   {t('signIn.providers.solana')}
                 </ProviderButton>
-
                 <ProviderButton
                   iconUrl={EthereumLogo}
                   iconAlt={t('signIn.alt.ethereum')}
@@ -227,13 +215,11 @@ export default function ConnectPage() {
           </S.Desc>
         )}
       </S.SignInCard>
-
       <S.HiddenButtonRow>
         <Button themeVariant="secondary" onClick={() => onSignIn('eth')}>
           {t('signIn.continue')}
         </Button>
       </S.HiddenButtonRow>
-
       <S.StatusNote>
         {t('connect.status.loginState')}: {getLoginStateLabel(phase, nonce)}
         <br />

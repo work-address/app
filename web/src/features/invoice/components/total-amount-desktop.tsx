@@ -32,12 +32,10 @@ export const TotalAmountDesktop = () => {
             marginSize={1}
           />
         )}
-
         <Text color={'gray'} align={'center'}>
           <Trans i18nKey="invoice.qrScan.desktop" components={{ br: <br /> }} />
         </Text>
       </Flex>
-
       <Flex gap={'3'} direction={'column'} justify={'between'}>
         <Flex align={'end'} gap={'3'}>
           {loading ? (
@@ -47,9 +45,7 @@ export const TotalAmountDesktop = () => {
               {invoice?.title}
             </Text>
           )}
-
           <Text>{t('invoice.amount.for')}</Text>
-
           {loading ? (
             <Skeleton width="50px" height="18px" loading={loading} />
           ) : (
@@ -58,19 +54,15 @@ export const TotalAmountDesktop = () => {
             </Text>
           )}
         </Flex>
-
         {loading ? (
           <Skeleton width="300px" height="18px" loading={loading} />
         ) : (
           <Text color={'gray'}>{invoice?.id}</Text>
         )}
-
         <Separator size={'4'} />
-
         <Text size={'4'} weight={'medium'}>
           {t('invoice.summary.heading')}
         </Text>
-
         <Grid columns={'1fr 1fr'} gap={'5'} flow={'column'} rows={'3'}>
           {infoFields.map((field) => (
             <Grid
@@ -82,7 +74,6 @@ export const TotalAmountDesktop = () => {
               <Text size={'3'} color={'gray'}>
                 {t(`invoice.fields.${field.id}`)}
               </Text>
-
               {loading ? (
                 <Skeleton />
               ) : (
@@ -94,7 +85,6 @@ export const TotalAmountDesktop = () => {
           ))}
         </Grid>
       </Flex>
-
       <Flex gap={'3'}>
         <Button themeVariant={'secondary'}>{t('invoice.actions.share')}</Button>
         <Button themeVariant={'primary'}>{t('invoice.actions.savePdf')}</Button>

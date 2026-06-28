@@ -316,12 +316,10 @@ export const EditProfile = () => {
                     </IconButton>
                   </Link>
                 )}
-
                 <Text size={isDesktop ? '6' : '4'} weight={'medium'}>
                   {t('profile.title')}
                 </Text>
               </Flex>
-
               {isDesktop && (
                 <Flex gap={'4'}>
                   <Button
@@ -332,7 +330,6 @@ export const EditProfile = () => {
                   >
                     {t('profile.actions.cancel')}
                   </Button>
-
                   <Button
                     themeVariant={'primary'}
                     disabled={!isDirty || profileSaving}
@@ -344,9 +341,7 @@ export const EditProfile = () => {
                 </Flex>
               )}
             </Flex>
-
             {isDesktop && <Separator size={'4'} mb={'5'} />}
-
             <Flex direction={'column'} gap={{ initial: '4', md: '5' }}>
               <Skeleton loading={profileLoading}>
                 <Input
@@ -357,7 +352,6 @@ export const EditProfile = () => {
                   id={'friendlyWalletAddress'}
                 />
               </Skeleton>
-
               <Skeleton loading={profileLoading}>
                 <Input
                   label={t('profile.form.username')}
@@ -371,7 +365,6 @@ export const EditProfile = () => {
                   })}
                 />
               </Skeleton>
-
               <Skeleton loading={profileLoading}>
                 <Input
                   label={t('profile.form.company')}
@@ -385,7 +378,6 @@ export const EditProfile = () => {
                   })}
                 />
               </Skeleton>
-
               <Controller
                 control={control}
                 name="skills"
@@ -404,9 +396,7 @@ export const EditProfile = () => {
                   />
                 )}
               />
-
               <Separator size={'4'} />
-
               <Skeleton loading={profileLoading}>
                 <Input
                   addonLeft={
@@ -427,9 +417,7 @@ export const EditProfile = () => {
                   })}
                 />
               </Skeleton>
-
               <Separator size={'4'} />
-
               <Controller
                 control={control}
                 render={({ field }) => {
@@ -439,7 +427,6 @@ export const EditProfile = () => {
                         <Text size={'2'} weight={'medium'} mb={'2'}>
                           {t('profile.form.bio')}
                         </Text>
-
                         <RichEditor
                           value={field.value}
                           onChange={field.onChange}
@@ -455,7 +442,6 @@ export const EditProfile = () => {
               />
             </Flex>
           </FreelancerViewCard>
-
           <FreelancerViewCard style={{ paddingTop: isDesktop ? undefined : 0 }}>
             <Text
               size={isDesktop ? '6' : '4'}
@@ -464,7 +450,6 @@ export const EditProfile = () => {
             >
               {t('profile.links.title')}
             </Text>
-
             <Grid gap={{ initial: '4', md: '5' }}>
               <Skeleton loading={profileLoading}>
                 <StyledLinkInput
@@ -477,7 +462,6 @@ export const EditProfile = () => {
                   {...register('facebook')}
                 />
               </Skeleton>
-
               <Skeleton loading={profileLoading}>
                 <StyledLinkInput
                   label={t('profile.links.linkedin')}
@@ -489,7 +473,6 @@ export const EditProfile = () => {
                   {...register('linkedIn')}
                 />
               </Skeleton>
-
               <Skeleton loading={profileLoading}>
                 <StyledLinkInput
                   label={t('profile.links.telegram')}
@@ -501,7 +484,6 @@ export const EditProfile = () => {
                   {...register('telegram')}
                 />
               </Skeleton>
-
               {!isDesktop && (
                 <BottomSheet columns={'1fr 1fr'} gap={'var(--space-4)'}>
                   <Button
@@ -512,7 +494,6 @@ export const EditProfile = () => {
                   >
                     {t('profile.actions.cancel')}
                   </Button>
-
                   <Button
                     themeVariant={'primary'}
                     disabled={!isDirty}

@@ -83,7 +83,6 @@ export const Input = forwardRef(
             {label}
           </Text>
         )}
-
         <TextFieldRoot
           id={id}
           size={size ?? (isDesktop ? undefined : '3')}
@@ -95,7 +94,6 @@ export const Input = forwardRef(
           {addonLeft && (
             <TextField.Slot side={'left'}>{addonLeft}</TextField.Slot>
           )}
-
           {addonRight && (
             <TextField.Slot side={'right'}>{addonRight}</TextField.Slot>
           )}

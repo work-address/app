@@ -26,15 +26,12 @@ export const Drawer = ({
           <Theme> {trigger} </Theme>
         </Vaul.Drawer.Trigger>
       )}
-
       <Vaul.Drawer.Portal>
         <DrawerOverlay />
-
         <DrawerContent $maxHeight={mobileHeight}>
           <DrawerHandleWrapper>
             <DrawerHandle />
           </DrawerHandleWrapper>
-
           <DrawerInner>
             {title && (
               <Vaul.Drawer.Title>
@@ -43,15 +40,12 @@ export const Drawer = ({
                 </Theme>
               </Vaul.Drawer.Title>
             )}
-
             <DrawerBody>
               <Theme>{children}</Theme>
             </DrawerBody>
-
             {description && (
               <DrawerDescription>{description}</DrawerDescription>
             )}
-
             {footer && (
               <footer>
                 <Theme>

@@ -28,23 +28,19 @@ export const WorklogsDesktopFilters = () => {
       <S.Field $basis={214}>
         <ProjectsSelect />
       </S.Field>
-
       <S.Field $basis={300}>
         <Flex gap={'2'} direction={'column'}>
           <Text weight={'medium'} as="label" htmlFor={activeDateId}>
             {t('dashboard.page.filters.date')}
           </Text>
-
           <Grid columns={'1fr 1fr'} gap={'2'}>
             <DateRangePicker />
           </Grid>
         </Flex>
       </S.Field>
-
       <S.Field $basis={214}>
         <NoteInput />
       </S.Field>
-
       <S.Field $basis={160}>
         <TwoSideInput
           label={t('dashboard.page.filters.timeActive')}
@@ -55,7 +51,6 @@ export const WorklogsDesktopFilters = () => {
           rightPlaceholder={t('dashboard.page.filters.max')}
         />
       </S.Field>
-
       <S.Field $basis={160}>
         <TwoSideInput
           label={t('dashboard.page.filters.keyboard')}
@@ -66,7 +61,6 @@ export const WorklogsDesktopFilters = () => {
           rightPlaceholder={t('dashboard.page.filters.max')}
         />
       </S.Field>
-
       <S.Field $basis={160}>
         <TwoSideInput
           label={t('dashboard.page.filters.mouse')}
@@ -77,7 +71,6 @@ export const WorklogsDesktopFilters = () => {
           rightPlaceholder={t('dashboard.page.filters.max')}
         />
       </S.Field>
-
       <S.Field>
         <TwoSideInput
           label={t('dashboard.page.filters.mouseDistance')}

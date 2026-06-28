@@ -59,7 +59,6 @@ export default function InvoicePage() {
                     <ArrowLeftIcon />
                   </IconButton>
                 </IconWrapper>
-
                 {loading ? (
                   <Skeleton width="150px" height="24px" />
                 ) : (
@@ -68,7 +67,6 @@ export default function InvoicePage() {
                   </Text>
                 )}
               </Flex>
-
               {loading ? (
                 <Skeleton width="200px" height="20px" />
               ) : (
@@ -78,7 +76,6 @@ export default function InvoicePage() {
               )}
             </Flex>
           )}
-
           {isMobile ? (
             <InvoiceCard shadow={false}>
               <TotalAmountMobile />
@@ -86,14 +83,12 @@ export default function InvoicePage() {
           ) : (
             <TotalAmountDesktop />
           )}
-
           {!isMobile && (
             <>
               <Separator size={'4'} />
               <Separator size={'4'} />
             </>
           )}
-
           <Worklogs />
         </Flex>
       </CardWrapper>

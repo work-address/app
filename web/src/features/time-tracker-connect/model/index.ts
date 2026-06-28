@@ -2,11 +2,8 @@ import { combine, sample } from 'effector'
 import { createEffect } from 'effector'
 import i18n from 'i18next'
 
+import { connectTimeTrackerFx, fetchTimeTrackerNonceFx } from './effects'
 import { initTimeTrackerConnect } from './events'
-import {
-  connectTimeTrackerFx,
-  fetchTimeTrackerNonceFx,
-} from './effects'
 import { $nonce, $phase } from './stores'
 import {
   getTimeTrackerNonceStorageKey,
@@ -81,10 +78,7 @@ connectTimeTrackerFx.done.watch(() => {
   })
 })
 
-export {
-  initTimeTrackerConnect,
-  resetTimeTrackerConnect,
-} from './events'
+export { initTimeTrackerConnect, resetTimeTrackerConnect } from './events'
 export { $nonce, $phase, $errorMessage, $errorName } from './stores'
 export type { TimeTrackerConnectPhase } from './types'
 export { getTimeTrackerNonceStorageKey } from './types'

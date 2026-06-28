@@ -107,7 +107,6 @@ const Actions = React.memo(
             style={{ width: 28, height: 28, margin: -4, padding: 0 }}
           />
         </IconButton>
-
         <IconButton
           variant={'ghost'}
           color={'gray'}
@@ -116,7 +115,6 @@ const Actions = React.memo(
         >
           <TrashIcon height={20} width={20} />
         </IconButton>
-
         <IconButton
           variant={'ghost'}
           color={'gray'}

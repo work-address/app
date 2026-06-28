@@ -132,7 +132,6 @@ export const DatePickerInput = ({
           />
         </span>
       </Popover.Trigger>
-
       <Popover.Content
         style={{ padding: 0, width: 340, zIndex: 100 }}
         align="start"
@@ -148,13 +147,11 @@ export const DatePickerInput = ({
             >
               <ChevronLeftIcon width={18} height={18} />
             </NavButton>
-
             <MonthLabel>
               <Text size="4" weight="bold">
                 {format(viewDate, 'LLLL yyyy', { locale: dateFnsLocale })}
               </Text>
             </MonthLabel>
-
             <NavButton
               type="button"
               aria-label={t('ui.datePicker.nextMonth')}
@@ -163,7 +160,6 @@ export const DatePickerInput = ({
               <ChevronRightIcon width={18} height={18} />
             </NavButton>
           </CalendarHeader>
-
           <CalendarGrid>
             {weekDayLabels.map((d, i) => (
               <WeekDay key={`${d}-${i}`}>
@@ -172,7 +168,6 @@ export const DatePickerInput = ({
                 </Text>
               </WeekDay>
             ))}
-
             {days.map((day) => {
               const isSelected = pendingDate
                 ? isSameDay(day, pendingDate)
@@ -196,7 +191,6 @@ export const DatePickerInput = ({
               )
             })}
           </CalendarGrid>
-
           <CalendarFooter>
             <Button themeVariant="secondary" onClick={handleCancel}>
               {t('ui.datePicker.cancel')}

@@ -161,7 +161,6 @@ export const ApplicationsUsage = () => {
           />
         </PeriodSelect>
       </Head>
-
       <StyledCard>
         <Plot>
           <ChartWrap>

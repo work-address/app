@@ -1,6 +1,7 @@
 import { createQuery } from '@farfetched/core'
 
 import type { ITimeTotal, ITimeTotalDetail } from '@/entities/activities'
+
 import { baseApi } from '@/shared'
 
 export const activityDetailQuery = createQuery({

@@ -70,7 +70,6 @@ export const ProfileLinks = ({
                     {user?.title || t('profile.view.mockName')}
                   </Text>
                 </Skeleton>
-
                 <Flex gap={'2'} align={'center'}>
                   <Button variant={'ghost'} onClick={onWalletAddressCopy}>
                     <Skeleton loading={profileLoading}>
@@ -82,12 +81,10 @@ export const ProfileLinks = ({
                         {walletAddress}
                       </Text>
                     </Skeleton>
-
                     <CopyIcon />
                   </Button>
                 </Flex>
               </Flex>
-
               {isAuthenticatedUserProfile && (
                 <Link
                   to={routes.profile.children.edit.build({
@@ -106,21 +103,14 @@ export const ProfileLinks = ({
             <div />
           )}
         </Flex>
-
         <Flex direction={'column'} gap={{ initial: '3', md: '4' }}>
           {user?.company && (
             <InfoRow
               hoverEffects={false}
-              icon={
-                <img
-                  src={CaseIcon}
-                  alt={t('profile.view.alt.case')}
-                />
-              }
+              icon={<img src={CaseIcon} alt={t('profile.view.alt.case')} />}
               text={
                 <Flex gap={{ initial: '5px', md: '6px' }}>
                   <Text color={'gray'}>{t('profile.view.worksAt')}</Text>
-
                   <Text weight={'medium'}>
                     {user?.company ?? t('profile.view.mockCompany')}
                   </Text>
@@ -128,14 +118,10 @@ export const ProfileLinks = ({
               }
             />
           )}
-
           {user?.linkedIn && (
             <InfoRow
               icon={
-                <img
-                  src={LinkedinIcon}
-                  alt={t('profile.links.linkedin')}
-                />
+                <img src={LinkedinIcon} alt={t('profile.links.linkedin')} />
               }
               text={
                 <NavLink
@@ -154,14 +140,10 @@ export const ProfileLinks = ({
               }
             />
           )}
-
           {user?.facebook && (
             <InfoRow
               icon={
-                <img
-                  src={FacebookIcon}
-                  alt={t('profile.links.facebook')}
-                />
+                <img src={FacebookIcon} alt={t('profile.links.facebook')} />
               }
               text={
                 <NavLink
@@ -180,14 +162,10 @@ export const ProfileLinks = ({
               }
             />
           )}
-
           {user?.telegram && (
             <InfoRow
               icon={
-                <img
-                  src={TelegramIcon}
-                  alt={t('profile.links.telegram')}
-                />
+                <img src={TelegramIcon} alt={t('profile.links.telegram')} />
               }
               text={
                 <NavLink

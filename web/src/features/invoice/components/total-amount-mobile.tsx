@@ -27,7 +27,6 @@ export const TotalAmountMobile = () => {
         <Text size={'4'} color={'gray'}>
           {t('invoice.totalAmount')}
         </Text>
-
         {loading ? (
           <Skeleton height="40px" width="80px" />
         ) : (
@@ -36,9 +35,7 @@ export const TotalAmountMobile = () => {
           </Text>
         )}
       </Flex>
-
       <Separator size={'4'} />
-
       <Grid
         columns={{ initial: '137px 1fr' }}
         gap={{ initial: '4' }}
@@ -51,14 +48,12 @@ export const TotalAmountMobile = () => {
               <Text size={'3'} color={'gray'}>
                 {t(`invoice.fields.${field.id}`)}
               </Text>
-
               {field.hasDesc === true ? (
                 <StyledQuestionMarkCircledIcon
                   aria-label={t(`invoice.fieldDesc.${field.id}`)}
                 />
               ) : null}
             </Flex>
-
             {loading ? (
               <Skeleton height="20px" width="100%" />
             ) : (
@@ -67,9 +62,7 @@ export const TotalAmountMobile = () => {
           </Fragment>
         ))}
       </Grid>
-
       <Separator size={'4'} />
-
       <Flex justify={'center'}>
         {loading ? (
           <Skeleton height="194px" width="194px" />
@@ -83,7 +76,6 @@ export const TotalAmountMobile = () => {
           />
         )}
       </Flex>
-
       <Text color={'gray'} weight={'regular'} align={'center'}>
         {t('invoice.qrScan.mobile')}
       </Text>

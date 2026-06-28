@@ -27,7 +27,6 @@ export const MobileBody = memo(
               {props.columnConfig.description && <QuestionMarkCircledIcon />}
             </Flex>
           </Text>
-
           <Text align={'left'} size={'2'} weight={'medium'}>
             {formatDurationFromMinutes(minutes, t)}
           </Text>

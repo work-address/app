@@ -22,7 +22,6 @@ export const MobileAddonBottom = React.memo(
           {t('dashboard.projectsTable.actions.delete')}
           <TrashIcon />
         </Button>
-
         <Button
           color={'gray'}
           variant={'outline'}
