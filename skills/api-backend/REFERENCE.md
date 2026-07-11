@@ -309,7 +309,7 @@ export interface IConfigParameters {
 ### `AppConfig` (`app/app-config.ts`)
 
 - Loads `.env` (or `.env.test` when `NODE_ENV=test`)
-- `getEnv()`, `isTest()`, `isLocal()`, `isProduction()`
+- `getEnv()`, `isTest()`, `isProduction()`
 - `readConfig()` maps env vars (`APP_HOST`, `APP_PORT`, `APP_DB_*`, `APP_REDIS`, …)
 
 Injected as `@inject('parameters')` or `App.container.get('parameters')`.

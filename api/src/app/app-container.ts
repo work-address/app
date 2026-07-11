@@ -27,6 +27,9 @@ import { AuthenticatorTimeTracker } from '@/service/auth/authenticator-time-trac
 import { TonProofService } from '@/service/auth/ton-proof-service'
 import { ImageResizer } from '@/service/image-resizer'
 import { ProjectFixture } from '@/test/fixture/project-fixture'
+import { WinstonClient } from '@/service/winston-client'
+import { Logger } from '@/service/logger'
+import { ILogger } from '@/model/logging'
 
 export class AppContainer {
   private static container: Container
@@ -57,6 +60,11 @@ export class AppContainer {
     container.bind<InvoiceRepository>('InvoiceRepository').to(InvoiceRepository)
 
     // Services
+    container
+      .bind<WinstonClient>('WinstonClient')
+      .to(WinstonClient)
+      .inSingletonScope()
+    container.bind<ILogger>('ILogger').to(Logger).inSingletonScope()
     container.bind<Signer>('Signer').to(Signer)
     container.bind<Authenticator>('Authenticator').to(Authenticator)
     container

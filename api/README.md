@@ -14,7 +14,7 @@ Copy the example env and adjust values:
 cp .env.example .env
 ```
 
-Key variables (see `.env.example`): `APP_HOST`, `APP_PORT`, `APP_DB_*`, `APP_REDIS`, `APP_JWT_SECRET`, `APP_SENTRY`.
+Key variables (see `.env.example`): `APP_HOST`, `APP_PORT`, `APP_DB_*`, `APP_REDIS`, `APP_JWT_SECRET`, `APP_SENTRY`, `APP_LOGGLY`.
 
 ## Database
 

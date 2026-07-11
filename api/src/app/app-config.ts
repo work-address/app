@@ -27,10 +27,6 @@ export class AppConfig {
     return AppConfig.ENV.test.indexOf(AppConfig.getEnv()) > -1
   }
 
-  public static isLocal(): boolean {
-    return AppConfig.ENV.local.indexOf(AppConfig.getEnv()) > -1
-  }
-
   public static isProduction(): boolean {
     return AppConfig.ENV.production.indexOf(AppConfig.getEnv()) > -1
   }
@@ -42,6 +38,7 @@ export class AppConfig {
       sentry: process.env.APP_SENTRY as string,
       redis: process.env.APP_REDIS as string,
       jwtSecret: process.env.APP_JWT_SECRET as string,
+      loggly: (process.env.APP_LOGGLY ?? '').trim(),
       tonAllowedDomains: (process.env.APP_TON_ALLOWED_DOMAINS ?? '')
         .split(',')
         .map((domain) => domain.trim())

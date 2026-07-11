@@ -12,7 +12,7 @@ import { AppContainer } from '@/app/app-container'
 import { DbConnector } from '@/connector/db-connector'
 import { HelpController } from '@/controller/help-controller'
 import { ErrorHandler } from '@/middleware/error-handler'
-import { AppConfig } from '@/app/app-config'
+import { PayloadLogger } from '@/middleware/payload-logger'
 import { IConfigParameters } from '@/model/config'
 
 import { AuthController } from '@/controller/auth-controller'
@@ -53,7 +53,7 @@ export class App {
     // (which is the proxy container's docker network address, e.g. 172.19.0.2).
     this.express.set('trust proxy', true)
 
-    if (!AppConfig.isLocal()) {
+    if (this.parameters.sentry) {
       Sentry.init({
         dsn: this.parameters.sentry,
         integrations: [
@@ -150,7 +150,7 @@ export class App {
   private initControllers() {
     useExpressServer(this.express, {
       defaultErrorHandler: false,
-      middlewares: [ErrorHandler],
+      middlewares: [ErrorHandler, PayloadLogger],
       authorizationChecker: ValidateRoles,
       cors: {
         origin: '*',

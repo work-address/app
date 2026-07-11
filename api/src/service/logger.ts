@@ -1,4 +1,4 @@
-import { injectable } from 'inversify'
+import { inject, injectable } from 'inversify'
 import { ILogger } from '@/model/logging'
 import { WinstonClient } from '@/service/winston-client'
 
@@ -6,23 +6,41 @@ import { WinstonClient } from '@/service/winston-client'
 export class Logger implements ILogger {
   private logger: WinstonClient
 
-  constructor() {
-    this.logger = new WinstonClient()
+  constructor(@inject('WinstonClient') winstonClient: WinstonClient) {
+    this.logger = winstonClient
   }
 
   public error(message: string, object?: unknown): void {
-    this.logger.client.error(message, object)
+    this.write('error', message, object)
   }
 
   public info(message: string, object?: unknown): void {
-    this.logger.client.info(message, object)
+    this.write('info', message, object)
   }
 
   public debug(message: string, object?: unknown): void {
-    this.logger.client.debug(message, object)
+    this.write('debug', message, object)
   }
 
   public warn(message: string, object?: unknown): void {
-    this.logger.client.warn(message, object)
+    this.write('warn', message, object)
+  }
+
+  private write(
+    level: 'error' | 'info' | 'debug' | 'warn',
+    message: string,
+    object?: unknown,
+  ): void {
+    if (object && typeof object === 'object') {
+      // Single info object — metadata is part of the log event (no splat dependency)
+      this.logger.client.log({
+        level,
+        message,
+        ...(object as Record<string, unknown>),
+      })
+      return
+    }
+
+    this.logger.client.log(level, message)
   }
 }

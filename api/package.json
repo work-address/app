@@ -45,7 +45,8 @@
     "tweetnacl": "^1.0.3",
     "typeorm": "^0.2.45",
     "web3": "^4.16.0",
-    "winston": "^3.19.0"
+    "winston": "^3.19.0",
+    "winston-transport": "^4.9.0"
   },
   "devDependencies": {
     "@app/api-client": "workspace:*",

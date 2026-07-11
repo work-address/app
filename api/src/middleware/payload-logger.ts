@@ -1,53 +1,67 @@
 import { ExpressMiddlewareInterface, Middleware } from 'routing-controllers'
 import express from 'express'
-import getDecorators from 'inversify-inject-decorators'
+import * as jwt from 'jsonwebtoken'
+
 import { AppContainer } from '@/app/app-container'
 import { Authenticator } from '@/service/auth/authenticator'
-import * as jwt from 'jsonwebtoken'
 import { ILogger } from '@/model/logging'
 
-const { lazyInject } = getDecorators(AppContainer.getContainer())
-
-@Middleware({ type: 'after' })
+@Middleware({ type: 'before' })
 export class PayloadLogger implements ExpressMiddlewareInterface {
-  @lazyInject('ILogger')
-  private logger: ILogger
-  @lazyInject('Authenticator')
-  private authenticator: Authenticator
-
   use(
     request: express.Request,
-    _response: express.Response,
-    _next: express.NextFunction,
+    response: express.Response,
+    next: express.NextFunction,
   ) {
-    let user = {}
+    response.on('finish', () => {
+      this.logRequest(request, response)
+    })
 
-    const authorization = request.header('Authorization')
-    if (authorization) {
-      const { id, emailOrPhone } = this.authenticator.decodeJwtToken(
-        authorization,
-      ) as jwt.JwtPayload
-      user = {
-        id,
-        emailOrPhone,
+    next()
+  }
+
+  private logRequest(request: express.Request, response: express.Response) {
+    try {
+      const logger = AppContainer.getContainer().get<ILogger>('ILogger')
+      const authenticator =
+        AppContainer.getContainer().get<Authenticator>('Authenticator')
+
+      let user = {}
+
+      const authorization = request.header('Authorization')
+      if (authorization) {
+        try {
+          const { id, emailOrPhone } = authenticator.decodeJwtToken(
+            authorization,
+          ) as jwt.JwtPayload
+          user = {
+            id,
+            emailOrPhone,
+          }
+        } catch {
+          // Invalid/expired token — still log the request without user context
+        }
       }
+
+      const dataToLog = Object.fromEntries(
+        Object.entries({
+          method: request.method,
+          url: request.originalUrl,
+          ip: request.ip,
+          statusCode: response.statusCode,
+          body: request.body,
+          query: request.query,
+          user,
+        }).filter(([_key, val]) => {
+          return typeof val === 'object'
+            ? Object.keys(val).length > 0
+            : Boolean(val) === true
+        }),
+      )
+
+      logger.info('request data', dataToLog)
+    } catch (error) {
+      console.error('PayloadLogger failed', error)
     }
-
-    const dataToLog = Object.fromEntries(
-      Object.entries({
-        body: request.body,
-        url: request.originalUrl,
-        query: request.query,
-        user,
-      }).filter(([_key, val]) => {
-        return typeof val === 'object'
-          ? Object.keys(val).length > 0
-          : Boolean(val) === true
-      }),
-    )
-
-    this.logger.info('request data', dataToLog)
-
-    _next()
   }
 }
