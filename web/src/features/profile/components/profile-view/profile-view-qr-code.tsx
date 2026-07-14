@@ -9,7 +9,7 @@ import styled from 'styled-components'
 
 import { $profile, $isAuthenticatedUserProfile } from '../../model'
 
-import { ProfileViewCard } from './styled'
+import { ProfileViewCard } from './profile-view-styled'
 
 import { $pending } from '@/entities/profile'
 import { routes } from '@/routes'
@@ -21,18 +21,18 @@ import {
   formatWalletAddress,
 } from '@/shared'
 
-type QrCodeProps = {
+type ProfileViewQrCodeProps = {
   gridArea?: string
   padding?: string
   onWalletAddressCopy?: () => void
   onShareProfile?: () => void
 }
 
-export const QrCode = ({
+export const ProfileViewQrCode = ({
   gridArea,
   onWalletAddressCopy,
   onShareProfile,
-}: QrCodeProps) => {
+}: ProfileViewQrCodeProps) => {
   const isMobile = useBreakpoint('isMobile')
   const isDesktop = useBreakpoint('isDesktop')
 
@@ -45,6 +45,7 @@ export const QrCode = ({
   })
 
   const [qrModalOpened, setQrModalOpened] = useState(false)
+  const qrCodeSize = isMobile ? 140 : 180
 
   return (
     <>
@@ -59,7 +60,7 @@ export const QrCode = ({
             <Flex direction={'column'} align={'center'} gap={{ initial: '2' }}>
               <Skeleton loading={profileLoading}>
                 <Text size={'6'} weight={'medium'}>
-                  {user?.title ?? t('profile.view.mockName')}
+                  {user?.name ?? user?.title ?? t('profile.view.mockName')}
                 </Text>
               </Skeleton>
               <Flex gap={'2'} align={'center'}>
@@ -80,11 +81,14 @@ export const QrCode = ({
               </Flex>
             </Flex>
           )}
-          <QrCodeWrapper onClick={() => setQrModalOpened(true)}>
+          <QrCodeWrapper
+            $size={qrCodeSize}
+            onClick={() => setQrModalOpened(true)}
+          >
             <Skeleton loading={profileLoading}>
               <QRCodeSVG
                 value={user?.friendlyWalletAddress || ''}
-                size={isMobile ? 140 : 180}
+                size={qrCodeSize}
                 level="M"
                 fgColor="var(--ds-accent-11)"
                 bgColor="transparent"
@@ -92,7 +96,7 @@ export const QrCode = ({
               />
             </Skeleton>
           </QrCodeWrapper>
-          {isMobile ? (
+          {isMobile && (
             <Flex gap={'2'} direction={'column'} width={'100%'}>
               {isAuthenticatedUserProfile && (
                 <Link
@@ -115,15 +119,6 @@ export const QrCode = ({
                 {t('common.share')} <Share1Icon />
               </Button>
             </Flex>
-          ) : (
-            <Button
-              width={'146px'}
-              themeVariant={'primary'}
-              size={'3'}
-              onClick={onShareProfile}
-            >
-              {t('profile.view.shareProfile')}
-            </Button>
           )}
         </Flex>
       </StyledCard>
@@ -135,7 +130,7 @@ export const QrCode = ({
         title={
           <Flex align={'center'} direction={'column'}>
             <Text size={'4'} weight={'medium'}>
-              Scan to Pay
+              {t('profile.view.qrModal.title')}
             </Text>
           </Flex>
         }
@@ -151,9 +146,7 @@ export const QrCode = ({
             marginSize={1}
           />
           <Text size={isMobile ? '1' : '2'} align={'center'}>
-            Use your crypto wallet to scan the QR code and send the payment
-            instantly. Ensure the amount and recipient details are correct
-            before confirming the transaction.
+            {t('profile.view.qrModal.description')}
           </Text>
         </Flex>
       </Modal>
@@ -162,8 +155,8 @@ export const QrCode = ({
 }
 
 const StyledCard = styled(ProfileViewCard)`
+  box-shadow: var(--shadow-4);
   height: 100%;
-
   ${(p) => p.theme.breakpoints.down('md')} {
     border-bottom: none;
     padding-top: var(--space-3);
@@ -177,18 +170,13 @@ const StyledCard = styled(ProfileViewCard)`
   }
 `
 
-const QrCodeWrapper = styled.div`
-  width: 140px;
-  height: 140px;
+const QrCodeWrapper = styled.div<{ $size: number }>`
+  width: ${(p) => p.$size}px;
+  height: ${(p) => p.$size}px;
   cursor: pointer;
   display: flex;
   align-items: center;
   justify-content: center;
-
-  ${(p) => p.theme.breakpoints.up('md')} {
-    width: 180px;
-    height: 180px;
-  }
 
   svg {
     width: 100%;

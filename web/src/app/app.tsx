@@ -31,16 +31,22 @@ const router = createBrowserRouter([
     errorElement: <ErrorBoundary />,
   },
   {
+    element: <Layouts.PublicLayout />,
+    errorElement: <ErrorBoundary />,
+    children: [
+      {
+        path: routes.profile.schema,
+        element: <ProfilePage />,
+      },
+    ],
+  },
+  {
     element: <Layouts.MainLayout />,
     errorElement: <ErrorBoundary />,
     children: [
       {
         path: routes.dashboard.schema,
         element: <DashboardPage />,
-      },
-      {
-        path: routes.profile.schema,
-        element: <ProfilePage />,
       },
       {
         path: routes.profile.children.edit.schema,

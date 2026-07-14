@@ -6,8 +6,13 @@ import { match } from 'ts-pattern'
 
 import { NavLink, IconLink, IconImg } from '../styled.ts'
 
-import { $user } from '@/entities/profile'
-import { defaultMappedRoutes, routes, type MappingRoute } from '@/routes'
+import { $authenticated, $user } from '@/entities/profile'
+import {
+  AUTH_REQUIRED_ROUTES,
+  defaultMappedRoutes,
+  routes,
+  type MappingRoute,
+} from '@/routes'
 
 type DesktopMenuProps = {
   mappedRoutes?: MappingRoute[]
@@ -18,7 +23,10 @@ export const DesktopMenu = ({
 }: DesktopMenuProps) => {
   const { pathname } = useLocation()
   const { t } = useTranslation()
-  const user = useUnit($user)
+  const { user, authenticated } = useUnit({
+    user: $user,
+    authenticated: $authenticated,
+  })
 
   const sorted = useMemo(() => {
     const copy = [...mappedRoutes]
@@ -42,6 +50,10 @@ export const DesktopMenu = ({
         }) => {
           const hasDesktopOrder = typeof desktopOrder === 'number'
           const renderText = translateKeyDesktop ? t(translateKeyDesktop) : text
+
+          if (!authenticated && AUTH_REQUIRED_ROUTES.has(schema)) {
+            return null
+          }
 
           const url = match(schema)
             .with(routes.profile.schema, () =>

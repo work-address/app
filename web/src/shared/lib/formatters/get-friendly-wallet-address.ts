@@ -28,8 +28,13 @@ export const decodeFriendWalletAddress = (
 
   if (friendWalletAddress.startsWith('0x')) {
     return friendWalletAddress
-  } else {
-    const addr = Address.parse(friendWalletAddress)
-    return addr.toRawString() ?? friendWalletAddress
   }
+  if (
+    Address.isFriendly(friendWalletAddress) ||
+    Address.isRaw(friendWalletAddress)
+  ) {
+    return Address.parse(friendWalletAddress).toRawString()
+  }
+
+  return friendWalletAddress
 }

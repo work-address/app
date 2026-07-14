@@ -6,12 +6,12 @@ import styled from 'styled-components'
 
 import { $profile } from '../../model'
 
-import { ProfileViewCard } from './styled'
+import { ProfileViewCard } from './profile-view-styled'
 
 import { $pending } from '@/entities/profile'
 import { Text, useBreakpoint } from '@/shared'
 
-type DescriptionProps = {
+type ProfileViewDescriptionAndSkillsProps = {
   gridArea?: string
 }
 
@@ -29,7 +29,9 @@ const mockData = [
   '+12',
 ]
 
-export const DescriptionAndSkills = ({ gridArea }: DescriptionProps) => {
+export const ProfileViewDescriptionAndSkills = ({
+  gridArea,
+}: ProfileViewDescriptionAndSkillsProps) => {
   const isMobile = useBreakpoint('isMobile')
   const { t } = useTranslation()
 
@@ -38,6 +40,11 @@ export const DescriptionAndSkills = ({ gridArea }: DescriptionProps) => {
     profileLoading: $pending,
   })
 
+  const displayName = user?.name || user?.title
+  const jobTitle =
+    user?.title && user.title !== displayName
+      ? user.title
+      : t('profile.view.jobTitle')
   const skills = useMemo(
     () =>
       user?.skills
@@ -50,18 +57,22 @@ export const DescriptionAndSkills = ({ gridArea }: DescriptionProps) => {
     <StyledCard $gridArea={gridArea} shadow={false}>
       <Flex gap={'4'} direction={'column'}>
         <div>
-          <Flex justify={'between'}>
-            <Text size={'6'} weight={'medium'}>
-              {t('profile.view.jobTitle')}
+          <Flex
+            justify={{ md: 'between' }}
+            direction={{ initial: 'column', md: 'row' }}
+            gap={{ initial: '1', md: '0' }}
+          >
+            <Text size={isMobile ? '5' : '6'} weight={'medium'}>
+              {jobTitle}
             </Text>
             <Text color={'blue'} $themeVariant={'primary'}>
               <Flex gap={'1'} align={'end'}>
                 <Skeleton loading={profileLoading}>
                   <Text size={isMobile ? '4' : '8'} weight={'medium'}>
-                    {user?.rate || 0}
+                    ${user?.rate || 0}
                   </Text>
                 </Skeleton>
-                <Text size={isMobile ? '2' : undefined}>
+                <Text size={isMobile ? '2' : '5'}>
                   {t('profile.view.usdtUnit')}
                 </Text>
               </Flex>
@@ -99,9 +110,9 @@ export const DescriptionAndSkills = ({ gridArea }: DescriptionProps) => {
 }
 
 const StyledCard = styled(ProfileViewCard)`
+  box-shadow: var(--shadow-4);
   ${(p) => p.theme.breakpoints.up('md')} {
-    padding-top: 26px;
-    padding-bottom: 24px;
+    padding: var(--space-5);
   }
 
   ${(p) => p.theme.breakpoints.down('md')} {

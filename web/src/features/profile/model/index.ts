@@ -37,38 +37,56 @@ const $isAuthenticatedUserProfile = combine(
   $user,
   ProfileGate.state,
   (user, gateState) =>
+    Boolean(user) &&
     user?.friendlyWalletAddress === gateState.friendlyWalletAddress,
 )
 
+const $gateAddress = ProfileGate.state.map(
+  (gateState) => gateState.friendlyWalletAddress,
+)
+
+// Сбрасываем данные предыдущего профиля до старта новой загрузки,
+// чтобы при переходе между профилями не мелькали чужие данные.
 sample({
-  clock: ProfileGate.open,
-  source: combine($user, $isAuthenticatedUserProfile),
-  filter: ([user, isAuthenticatedUserProfile]) =>
-    !isAuthenticatedUserProfile && user?.id !== '',
-  fn: (_, gateState) =>
-    gateState.friendlyWalletAddress
-      ? decodeFriendWalletAddress(gateState.friendlyWalletAddress)
-      : '',
+  clock: $gateAddress,
+  target: profileQuery.reset,
+})
+
+// Публичный профиль грузим всегда — и гостю, и владельцу (одинаковые поля с API)
+sample({
+  clock: $gateAddress,
+  filter: Boolean,
+  fn: (address) => decodeFriendWalletAddress(address as string),
   target: profileQuery.start,
+})
+
+sample({
+  clock: ProfileGate.close,
+  target: profileQuery.reset,
 })
 
 const $profile = combine(
   $user,
   profileQuery.$data,
-  ProfileGate.state,
-  (user, loadedProfileData, gateState) => {
-    if (gateState.friendlyWalletAddress === user?.friendlyWalletAddress) {
+  $gateAddress,
+  (user, loadedProfileData, gateAddress) => {
+    if (!gateAddress) {
+      return null
+    }
+
+    if (loadedProfileData) {
+      return {
+        ...loadedProfileData,
+        friendlyWalletAddress:
+          getFriendlyWalletAddress(loadedProfileData.address) ?? gateAddress,
+      }
+    }
+
+    if (user?.friendlyWalletAddress === gateAddress) {
       return user
     }
 
-    return loadedProfileData
-      ? {
-          ...loadedProfileData,
-          friendlyWalletAddress: getFriendlyWalletAddress(
-            loadedProfileData.address,
-          ),
-        }
-      : null
+    return null
   },
 )
 

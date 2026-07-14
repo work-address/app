@@ -8,146 +8,91 @@ import {
 } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import React, { useEffect, useState } from 'react'
-import { Controller, type SubmitHandler, useForm } from 'react-hook-form'
+import {
+  Controller,
+  type RegisterOptions,
+  type SubmitHandler,
+  useForm,
+} from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
-import { match } from 'ts-pattern'
 
-import { $profile, $profileLoading } from '../model'
+import { $profile, $profileLoading } from '../../model'
+import {
+  containsHost,
+  normalizeLink,
+  SKILLS_SUGGESTIONS,
+  SOCIAL_DOMAIN_BY_FIELD,
+  SOCIAL_LINKS,
+  type SocialLinkField,
+} from '../../model/profile-field'
 
-import type { baseApi } from '@/shared'
+import { ProfileEditActions } from './profile-edit-actions'
+import {
+  ProfileEditField,
+  INPUT_LABEL_WIDTH,
+  type ProfileEditFormState,
+} from './profile-edit-field'
 
 import { saveProfileMutation } from '@/entities/profile'
 import { routes } from '@/routes'
 import {
-  Button,
   Card,
   Input,
   TagInput,
+  Select,
   useLeaveConfirm,
   useConfirm,
   showToast,
   useBreakpoint,
   RichEditor,
-  Spinner,
+  COUNTRY_OPTIONS,
 } from '@/shared'
 import { type CardProps } from '@/shared'
 
-const INPUT_LABEL_WIDTH = '106px'
+const EMPTY_FORM_VALUES: ProfileEditFormState = {
+  name: '',
+  title: '',
+  company: '',
+  skills: [],
+  rate: '',
+  bio: '',
+  facebook: '',
+  linkedIn: '',
+  telegram: '',
+  twitter: '',
+  instagram: '',
+  youtube: '',
+  city: '',
+  country: '',
+}
 
-const SKILLS_SUGGESTIONS = [
-  'Python',
-  'JavaScript',
-  'TypeScript',
-  'React',
-  'Node.js',
-  'UI/UX Design',
-  'Figma',
-  'Graphic Design',
-  'Java',
-  'Go',
-  'Copywriting',
-  'Content Writing',
-  'SEO',
-  'Vue.js',
-  'Angular',
-  'Social Media Marketing',
-  'Email Marketing',
-  'Rust',
-  'C++',
-  'C#',
-  'PHP',
-  'Ruby',
-  'Swift',
-  'Kotlin',
-  'Video Editing',
-  'Motion Graphics',
-  'After Effects',
-  'Premiere Pro',
-  'Next.js',
-  'Express.js',
-  'NestJS',
-  'Django',
-  'FastAPI',
-  'Spring Boot',
-  'Illustration',
-  'Brand Identity',
-  'Logo Design',
-  'PostgreSQL',
-  'MySQL',
-  'MongoDB',
-  'Redis',
-  'GraphQL',
-  'REST API',
-  'Docker',
-  'Kubernetes',
-  'AWS',
-  'Google Cloud',
-  'Azure',
-  'GitHub',
-  'CI/CD',
-  'Unit Testing',
-  'WebSockets',
-  'Solidity',
-  'Web3',
-  'Smart Contracts',
-  'Project Management',
-  'Scrum',
-  'Agile',
-  'Technical Writing',
-  'Data Analysis',
-  'Machine Learning',
-  'Data Visualization',
-  'Excel',
-  'Power BI',
-  'Tableau',
-  'Photoshop',
-  'Illustrator',
-  'Sketch',
-  'WordPress',
-  'Shopify',
-  'Webflow',
-  'Mobile Development',
-  'iOS',
-  'Android',
-  'Flutter',
-  'React Native',
-  'Game Development',
-  'Unity',
-  'Unreal Engine',
-  '3D Modeling',
-  'Blender',
-  'Voice Over',
-  'Transcription',
-  'Translation',
-  'Legal Writing',
-  'Business Analysis',
-  'Financial Modeling',
-  'Accounting',
-  'Blockchain',
-  'NFT',
-  'Cybersecurity',
-  'Penetration Testing',
-  'DevOps',
-  'Linux',
-  'Networking',
+const TEXT_FIELDS = [
+  {
+    name: 'name' as const,
+    labelKey: 'profile.form.name',
+    placeholderKey: 'profile.form.namePlaceholder',
+    rules: {
+      required: true,
+    } satisfies RegisterOptions<ProfileEditFormState, 'name'>,
+  },
+  {
+    name: 'title' as const,
+    labelKey: 'profile.form.title',
+    placeholderKey: 'profile.form.titlePlaceholder',
+  },
+  {
+    name: 'company' as const,
+    labelKey: 'profile.form.company',
+    placeholderKey: 'profile.form.companyPlaceholder',
+    rules: {
+      required: true,
+    } satisfies RegisterOptions<ProfileEditFormState, 'company'>,
+  },
 ]
 
-type FormState = Pick<
-  baseApi.User,
-  'title' | 'company' | 'rate' | 'bio' | 'facebook' | 'linkedIn' | 'telegram'
-> & { skills: string[] }
-
-const normalizeLink = (prefix: string, value: string) =>
-  value
-    .replace(/^https?:\/\//, '')
-    .replace(/^www\./, '')
-    .replace(new RegExp(`^${prefix}`), '')
-    .replace(/\/$/, '')
-    .replace(/^\//, '')
-
-export const EditProfile = () => {
+export const ProfileEdit = () => {
   const { t } = useTranslation()
   const navigate = useNavigate()
 
@@ -175,20 +120,11 @@ export const EditProfile = () => {
     handleSubmit,
     reset: resetForm,
     setValue,
-  } = useForm<FormState>({
-    values: {
-      title: '',
-      company: '',
-      skills: [],
-      rate: '',
-      bio: '',
-      facebook: '',
-      linkedIn: '',
-      telegram: '',
-    },
+  } = useForm<ProfileEditFormState>({
+    values: EMPTY_FORM_VALUES,
   })
 
-  const onSubmit: SubmitHandler<FormState> = async (values) => {
+  const onSubmit: SubmitHandler<ProfileEditFormState> = async (values) => {
     saveProfile({
       ...values,
       skills: values.skills.join(',') || '',
@@ -202,20 +138,17 @@ export const EditProfile = () => {
   }
 
   const handleSocialPaste = (
-    type: 'facebook' | 'linkedIn' | 'telegram',
+    type: SocialLinkField,
     e: React.ClipboardEvent<HTMLInputElement>,
   ) => {
     e.preventDefault()
     const text = e.clipboardData.getData('text')
+    const domain = SOCIAL_DOMAIN_BY_FIELD[type]
 
-    const domain = match(type)
-      .with('facebook', () => 'facebook.com')
-      .with('linkedIn', () => 'linkedin.com')
-      .with('telegram', () => 't.me')
-      .exhaustive()
-
+    const isXDomain = type === 'twitter' && containsHost(text, 'x.com')
     const randomLinkPasted = text.includes('http')
-    const notAllowedTextPasted = !text.includes(domain)
+    const allowedDomain = containsHost(text, domain) || isXDomain
+    const notAllowedTextPasted = !allowedDomain
 
     if (notAllowedTextPasted && randomLinkPasted) {
       showToast('error', {
@@ -226,7 +159,8 @@ export const EditProfile = () => {
       return
     }
 
-    const normalized = normalizeLink(domain, text)
+    const prefix = isXDomain ? 'x.com' : domain
+    const normalized = normalizeLink(prefix, text)
     setValue(type, normalized, { shouldDirty: true, shouldValidate: true })
   }
 
@@ -270,7 +204,8 @@ export const EditProfile = () => {
   useEffect(() => {
     if (user) {
       resetForm({
-        title: user.title ?? '',
+        name: user.name ?? user.title ?? '',
+        title: user.name ? (user.title ?? '') : '',
         company: user.company || '',
         skills: user.skills ? user.skills?.split(',') : [],
         rate: user.rate || '',
@@ -278,6 +213,11 @@ export const EditProfile = () => {
         facebook: user.facebook || '',
         linkedIn: user.linkedIn || '',
         telegram: user.telegram || '',
+        twitter: user.twitter || '',
+        instagram: user.instagram || '',
+        youtube: user.youtube || '',
+        city: user.city || '',
+        country: user.country || '',
       })
     }
   }, [user, resetForm])
@@ -322,22 +262,12 @@ export const EditProfile = () => {
               </Flex>
               {isDesktop && (
                 <Flex gap={'4'}>
-                  <Button
-                    themeVariant="secondary"
-                    onClick={onReset}
-                    disabled={!isDirty || profileSaving}
-                    type="button"
-                  >
-                    {t('profile.actions.cancel')}
-                  </Button>
-                  <Button
-                    themeVariant={'primary'}
-                    disabled={!isDirty || profileSaving}
-                    type={'submit'}
-                  >
-                    {profileSaving && <Spinner useCase="button" />}
-                    {t('profile.actions.save')}
-                  </Button>
+                  <ProfileEditActions
+                    isDirty={isDirty}
+                    profileSaving={profileSaving}
+                    onReset={onReset}
+                    showSpinner
+                  />
                 </Flex>
               )}
             </Flex>
@@ -352,32 +282,57 @@ export const EditProfile = () => {
                   id={'friendlyWalletAddress'}
                 />
               </Skeleton>
-              <Skeleton loading={profileLoading}>
-                <Input
-                  label={t('profile.form.username')}
-                  placeholder={t('profile.form.usernamePlaceholder')}
-                  labelWidth={INPUT_LABEL_WIDTH}
-                  id={'username'}
+              {TEXT_FIELDS.map((field) => (
+                <ProfileEditField
+                  key={field.name}
+                  name={field.name}
+                  label={t(field.labelKey)}
+                  placeholder={t(field.placeholderKey)}
+                  register={register}
+                  rules={field.rules}
+                  error={Boolean(errors[field.name])}
+                  loading={profileLoading}
                   disabled={profileSaving}
-                  state={errors.title ? 'error' : undefined}
-                  {...register('title', {
-                    required: true,
-                  })}
                 />
-              </Skeleton>
-              <Skeleton loading={profileLoading}>
-                <Input
-                  label={t('profile.form.company')}
-                  placeholder={t('profile.form.companyPlaceholder')}
-                  labelWidth={INPUT_LABEL_WIDTH}
-                  id={'company'}
-                  disabled={profileSaving}
-                  state={errors.company ? 'error' : undefined}
-                  {...register('company', {
-                    required: true,
-                  })}
-                />
-              </Skeleton>
+              ))}
+              <Controller
+                control={control}
+                name="country"
+                render={({ field }) => (
+                  <Skeleton loading={profileLoading}>
+                    <Select
+                      label={t('profile.form.country')}
+                      placeholder={t('profile.form.countryPlaceholder')}
+                      options={COUNTRY_OPTIONS}
+                      value={field.value || ''}
+                      menuMaxHeight={240}
+                      onChange={(value) => {
+                        if (!Array.isArray(value)) {
+                          field.onChange(value)
+                        }
+                      }}
+                      inputProps={{
+                        labelWidth: INPUT_LABEL_WIDTH,
+                        columns: {
+                          initial: '1',
+                          md: `${INPUT_LABEL_WIDTH} 1fr`,
+                        },
+                        disabled: profileSaving,
+                        id: 'country',
+                      }}
+                    />
+                  </Skeleton>
+                )}
+              />
+              <ProfileEditField
+                name="city"
+                label={t('profile.form.city')}
+                placeholder={t('profile.form.cityPlaceholder')}
+                register={register}
+                error={Boolean(errors.city)}
+                loading={profileLoading}
+                disabled={profileSaving}
+              />
               <Controller
                 control={control}
                 name="skills"
@@ -397,26 +352,25 @@ export const EditProfile = () => {
                 )}
               />
               <Separator size={'4'} />
-              <Skeleton loading={profileLoading}>
-                <Input
-                  addonLeft={
-                    <Text size={'2'} color={'gray'}>
-                      $
-                    </Text>
-                  }
-                  label={t('profile.form.rate')}
-                  placeholder="0"
-                  labelWidth={INPUT_LABEL_WIDTH}
-                  id={'rate'}
-                  disabled={profileSaving}
-                  state={errors.rate ? 'error' : undefined}
-                  inputMode="decimal"
-                  {...register('rate', {
-                    pattern: /^\d*([,.]\d{1,2})?$/,
-                    required: true,
-                  })}
-                />
-              </Skeleton>
+              <ProfileEditField
+                name="rate"
+                label={t('profile.form.rate')}
+                placeholder="0"
+                register={register}
+                rules={{
+                  pattern: /^\d*([,.]\d{1,2})?$/,
+                  required: true,
+                }}
+                error={Boolean(errors.rate)}
+                loading={profileLoading}
+                disabled={profileSaving}
+                inputMode="decimal"
+                addonLeft={
+                  <Text size={'2'} color={'gray'}>
+                    $
+                  </Text>
+                }
+              />
               <Separator size={'4'} />
               <Controller
                 control={control}
@@ -451,57 +405,27 @@ export const EditProfile = () => {
               {t('profile.links.title')}
             </Text>
             <Grid gap={{ initial: '4', md: '5' }}>
-              <Skeleton loading={profileLoading}>
-                <StyledLinkInput
-                  label={t('profile.links.facebook')}
-                  addonLeft={'facebook.com/'}
-                  labelWidth={INPUT_LABEL_WIDTH}
-                  onPaste={(e) => handleSocialPaste('facebook', e)}
-                  disabled={profileSaving}
-                  state={errors.facebook ? 'error' : undefined}
-                  {...register('facebook')}
-                />
-              </Skeleton>
-              <Skeleton loading={profileLoading}>
-                <StyledLinkInput
-                  label={t('profile.links.linkedin')}
-                  addonLeft={'linkedin.com/'}
-                  labelWidth={INPUT_LABEL_WIDTH}
-                  disabled={profileSaving}
-                  onPaste={(e) => handleSocialPaste('linkedIn', e)}
-                  state={errors.linkedIn ? 'error' : undefined}
-                  {...register('linkedIn')}
-                />
-              </Skeleton>
-              <Skeleton loading={profileLoading}>
-                <StyledLinkInput
-                  label={t('profile.links.telegram')}
-                  addonLeft={'t.me/'}
-                  labelWidth={INPUT_LABEL_WIDTH}
-                  disabled={profileSaving}
-                  onPaste={(e) => handleSocialPaste('telegram', e)}
-                  state={errors.telegram ? 'error' : undefined}
-                  {...register('telegram')}
-                />
-              </Skeleton>
+              {SOCIAL_LINKS.map(({ name, labelKey, domain }) => (
+                <Skeleton key={name} loading={profileLoading}>
+                  <StyledLinkInput
+                    label={t(labelKey)}
+                    addonLeft={`${domain}/`}
+                    labelWidth={INPUT_LABEL_WIDTH}
+                    disabled={profileSaving}
+                    onPaste={(e) => handleSocialPaste(name, e)}
+                    state={errors[name] ? 'error' : undefined}
+                    {...register(name)}
+                  />
+                </Skeleton>
+              ))}
               {!isDesktop && (
                 <BottomSheet columns={'1fr 1fr'} gap={'var(--space-4)'}>
-                  <Button
-                    themeVariant="secondary"
-                    onClick={onReset}
-                    disabled={!isDirty}
+                  <ProfileEditActions
+                    isDirty={isDirty}
+                    profileSaving={profileSaving}
+                    onReset={onReset}
                     stretch
-                  >
-                    {t('profile.actions.cancel')}
-                  </Button>
-                  <Button
-                    themeVariant={'primary'}
-                    disabled={!isDirty}
-                    type={'submit'}
-                    stretch
-                  >
-                    {t('profile.actions.save')}
-                  </Button>
+                  />
                 </BottomSheet>
               )}
             </Grid>

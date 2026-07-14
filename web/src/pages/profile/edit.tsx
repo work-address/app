@@ -3,7 +3,7 @@ import { useTranslation } from 'react-i18next'
 import { useParams, Navigate } from 'react-router-dom'
 
 import { $user } from '@/entities/profile'
-import { EditProfile, ProfileGate } from '@/features/profile'
+import { ProfileEdit, ProfileGate } from '@/features/profile'
 import { routes } from '@/routes'
 import { PageHelmet } from '@/shared'
 
@@ -37,7 +37,7 @@ export default function FreelancerProfilePage() {
         htmlAttributes={{ lang: i18n.language }}
         title={t('app.documentTitle.profileEdit')}
       />
-      <EditProfile />
+      <ProfileEdit />
     </>
   )
 }

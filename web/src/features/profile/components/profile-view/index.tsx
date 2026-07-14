@@ -1,22 +1,24 @@
 import { Grid } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { $profile } from '../../model'
 
-import { DescriptionAndSkills } from './description-and-skills.tsx'
-import { ProfileLinks } from './profile-links.tsx'
-import { QrCode } from './qr-code.tsx'
+import { ProfileViewDescriptionAndSkills } from './profile-view-description-and-skills'
+import { ProfileViewLinks } from './profile-view-links'
+import { ProfileViewQrCode } from './profile-view-qr-code'
 
 import { showToast, copyToClipboard } from '@/shared'
 
 export const ProfileView = () => {
+  const { t } = useTranslation()
   const { user } = useUnit({ user: $profile })
 
   const handleCopyWalletAddress = () => {
     copyToClipboard(user?.friendlyWalletAddress || '').then(() => {
       showToast('info', {
-        message: 'Address copied to clipboard',
+        message: t('profile.view.addressCopied'),
         position: 'top-center',
       })
     })
@@ -25,7 +27,7 @@ export const ProfileView = () => {
   const handleShareProfile = () => {
     copyToClipboard(window.location.href).then(() => {
       showToast('info', {
-        message: 'Profile link copied to clipboard',
+        message: t('profile.view.profileLinkCopied'),
         position: 'top-center',
       })
     })
@@ -61,16 +63,17 @@ export const ProfileView = () => {
           md: 'center',
         }}
       >
-        <QrCode
+        <ProfileViewQrCode
           gridArea={'qrcode'}
           onWalletAddressCopy={handleCopyWalletAddress}
           onShareProfile={handleShareProfile}
         />
-        <ProfileLinks
+        <ProfileViewLinks
           gridArea={'profile'}
           onWalletAddressCopy={handleCopyWalletAddress}
+          onShareProfile={handleShareProfile}
         />
-        <DescriptionAndSkills gridArea={'description'} />
+        <ProfileViewDescriptionAndSkills gridArea={'description'} />
       </Grid>
     </Wrapper>
   )

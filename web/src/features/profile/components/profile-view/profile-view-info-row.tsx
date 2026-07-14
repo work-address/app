@@ -5,13 +5,17 @@ import type { ReactNode } from 'react'
 
 import { Text } from '@/shared'
 
-type InfoRowProps = {
+type ProfileViewInfoRowProps = {
   icon?: ReactNode
   text?: ReactNode
   hoverEffects?: boolean
 }
 
-export const InfoRow = ({ text, icon, hoverEffects = true }: InfoRowProps) => {
+export const ProfileViewInfoRow = ({
+  text,
+  icon,
+  hoverEffects = true,
+}: ProfileViewInfoRowProps) => {
   return (
     <Flex gap={'2'} align={'center'}>
       {icon}

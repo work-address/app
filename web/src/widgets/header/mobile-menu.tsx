@@ -8,8 +8,8 @@ import { match } from 'ts-pattern'
 
 import { IconImg } from '../styled.ts'
 
-import { $user } from '@/entities/profile'
-import { defaultMappedRoutes, routes } from '@/routes'
+import { $authenticated, $user } from '@/entities/profile'
+import { AUTH_REQUIRED_ROUTES, defaultMappedRoutes, routes } from '@/routes'
 
 type MobileMenuProps = {
   setOpen: (value: boolean) => void
@@ -19,7 +19,10 @@ export const MobileMenu = ({ setOpen }: MobileMenuProps) => {
   const { t } = useTranslation()
   const { pathname } = useLocation()
   const navigate = useNavigate()
-  const user = useUnit($user)
+  const { user, authenticated } = useUnit({
+    user: $user,
+    authenticated: $authenticated,
+  })
 
   const sorted = useMemo(() => {
     const copy = [...defaultMappedRoutes]
@@ -56,6 +59,10 @@ export const MobileMenu = ({ setOpen }: MobileMenuProps) => {
           target,
         }) => {
           if (disabled || mobileOrder === undefined) {
+            return null
+          }
+
+          if (!authenticated && AUTH_REQUIRED_ROUTES.has(schema)) {
             return null
           }
 

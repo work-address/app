@@ -10,7 +10,7 @@ import { IconImg, MobileMenuNav } from '../styled.ts'
 import { DesktopMenu } from './desktop-menu.tsx'
 import { MobileMenu, itemVariants } from './mobile-menu.tsx'
 
-import { $user, logout } from '@/entities/profile'
+import { $authenticated, $user, logout } from '@/entities/profile'
 import { routes } from '@/routes'
 import {
   CrossIcon,
@@ -26,7 +26,10 @@ import {
 export const Header = () => {
   const { t } = useTranslation()
   const logoutEvent = useUnit(logout)
-  const user = useUnit($user)
+  const { user, authenticated } = useUnit({
+    user: $user,
+    authenticated: $authenticated,
+  })
   const isDesktop = useBreakpoint('isDesktop')
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false)
   const rootRef = useRef<HTMLElement | null>(null)
@@ -66,7 +69,14 @@ export const Header = () => {
   return (
     <HeaderRoot ref={rootRef}>
       <HeaderInner>
-        <LogoLink to={routes.dashboard.build()} viewTransition>
+        <LogoLink
+          to={
+            authenticated
+              ? routes.dashboard.build()
+              : routes.signIn.build()
+          }
+          viewTransition
+        >
           <LogoImg src={Logo} alt={t('header.logoAlt')} />
         </LogoLink>
         {isDesktop && (
@@ -75,31 +85,41 @@ export const Header = () => {
           </Nav>
         )}
         <Right>
-          <NavLink
-            to={routes.profile.build({
-              walletAddress: user?.friendlyWalletAddress ?? '',
-            })}
-          >
-            <Button variant="ghost" color="gray" radius="large">
-              <UserBox>
-                <UserAvatar>
-                  <IconImg src={PersonIcon} alt={t('header.userAlt')} />
-                </UserAvatar>
-                <UserText>
-                  <UserName>{user?.title || ''}</UserName>
-                  <UserSub>
-                    {formatWalletAddress(user?.friendlyWalletAddress || '')}
-                  </UserSub>
-                </UserText>
-              </UserBox>
-            </Button>
-          </NavLink>
-          <ExitButton
-            aria-label={t('header.exit')}
-            onClick={() => logoutEvent()}
-          >
-            <IconImg src={ExitIcon} alt={t('header.exit')} />
-          </ExitButton>
+          {authenticated ? (
+            <>
+              <NavLink
+                to={routes.profile.build({
+                  walletAddress: user?.friendlyWalletAddress ?? '',
+                })}
+              >
+                <Button variant="ghost" color="gray" radius="large">
+                  <UserBox>
+                    <UserAvatar>
+                      <IconImg src={PersonIcon} alt={t('header.userAlt')} />
+                    </UserAvatar>
+                    <UserText>
+                      <UserName>{user?.name || user?.title || ''}</UserName>
+                      <UserSub>
+                        {formatWalletAddress(user?.friendlyWalletAddress || '')}
+                      </UserSub>
+                    </UserText>
+                  </UserBox>
+                </Button>
+              </NavLink>
+              <ExitButton
+                aria-label={t('header.exit')}
+                onClick={() => logoutEvent()}
+              >
+                <IconImg src={ExitIcon} alt={t('header.exit')} />
+              </ExitButton>
+            </>
+          ) : (
+            <NavLink to={routes.signIn.build()} viewTransition>
+              <Button themeVariant="primary" size="3">
+                {t('signIn.title')}
+              </Button>
+            </NavLink>
+          )}
         </Right>
         <MobileRight>
           <BurgerButton
@@ -140,31 +160,53 @@ export const Header = () => {
               transition={{ duration: 0.18, ease: 'easeInOut' }}
             >
               <MobileMenuInner>
-                <MobileMenuTop>
-                  <NavLink
-                    to={routes.profile.build({
-                      walletAddress: user?.friendlyWalletAddress ?? '',
-                    })}
-                    style={{ width: '100%' }}
-                  >
-                    <Button variant="ghost" color="gray" width="100%">
-                      <UserBox>
-                        <UserAvatar>
-                          <IconImg src={PersonIcon} alt={t('header.userAlt')} />
-                        </UserAvatar>
-                        <UserText>
-                          <UserName>{user?.title || ''}</UserName>
-                          <UserSub>
-                            {formatWalletAddress(
-                              user?.friendlyWalletAddress || '',
-                            )}
-                          </UserSub>
-                        </UserText>
-                      </UserBox>
-                    </Button>
-                  </NavLink>
-                </MobileMenuTop>
-                <Divider />
+                {authenticated ? (
+                  <>
+                    <MobileMenuTop>
+                      <NavLink
+                        to={routes.profile.build({
+                          walletAddress: user?.friendlyWalletAddress ?? '',
+                        })}
+                        style={{ width: '100%' }}
+                      >
+                        <Button variant="ghost" color="gray" width="100%">
+                          <UserBox>
+                            <UserAvatar>
+                              <IconImg
+                                src={PersonIcon}
+                                alt={t('header.userAlt')}
+                              />
+                            </UserAvatar>
+                            <UserText>
+                              <UserName>{user?.name || user?.title || ''}</UserName>
+                              <UserSub>
+                                {formatWalletAddress(
+                                  user?.friendlyWalletAddress || '',
+                                )}
+                              </UserSub>
+                            </UserText>
+                          </UserBox>
+                        </Button>
+                      </NavLink>
+                    </MobileMenuTop>
+                    <Divider />
+                  </>
+                ) : (
+                  <>
+                    <MobileMenuTop>
+                      <NavLink
+                        to={routes.signIn.build()}
+                        style={{ width: '100%' }}
+                        onClick={() => setMobileMenuOpen(false)}
+                      >
+                        <Button themeVariant="primary" stretch>
+                          {t('signIn.title')}
+                        </Button>
+                      </NavLink>
+                    </MobileMenuTop>
+                    <Divider />
+                  </>
+                )}
                 <MobileMenuNav
                   variants={menuVariants}
                   initial="initial"
@@ -172,18 +214,20 @@ export const Header = () => {
                   exit="exit"
                 >
                   <MobileMenu setOpen={setMobileMenuOpen} />
-                  <MobileMenuButton
-                    type="button"
-                    aria-label={t('header.exit')}
-                    onClick={() => {
-                      setMobileMenuOpen(false)
-                      logoutEvent()
-                    }}
-                    variants={itemVariants}
-                  >
-                    <IconImg src={ExitIcon} alt={t('header.exit')} />
-                    <span>{t('header.exit')}</span>
-                  </MobileMenuButton>
+                  {authenticated && (
+                    <MobileMenuButton
+                      type="button"
+                      aria-label={t('header.exit')}
+                      onClick={() => {
+                        setMobileMenuOpen(false)
+                        logoutEvent()
+                      }}
+                      variants={itemVariants}
+                    >
+                      <IconImg src={ExitIcon} alt={t('header.exit')} />
+                      <span>{t('header.exit')}</span>
+                    </MobileMenuButton>
+                  )}
                 </MobileMenuNav>
               </MobileMenuInner>
             </MobileMenuStyled>

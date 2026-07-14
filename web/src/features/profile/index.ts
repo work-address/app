@@ -1,3 +1,3 @@
 export * from './components/profile-view'
-export * from './components/edit-profile.tsx'
+export * from './components/profile-edit'
 export * from './model'

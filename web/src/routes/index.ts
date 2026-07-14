@@ -29,6 +29,9 @@ type MainRoutes =
   & Route<'https://facebook.com/:userId', 'facebook', NoChildRoutes, { userId: string }>
   & Route<'https://t.me/:userId', 'telegram', NoChildRoutes, { userId: string }>
   & Route<'https://linkedin.com/in/:userId', 'linkedin', NoChildRoutes, { userId: string }>
+  & Route<'https://twitter.com/:userId', 'twitter', NoChildRoutes, { userId: string }>
+  & Route<'https://instagram.com/:userId', 'instagram', NoChildRoutes, { userId: string }>
+  & Route<'https://youtube.com/:userId', 'youtube', NoChildRoutes, { userId: string }>
 
 type ProfileRoutes =
   & Route<'/profile/:walletAddress/edit', 'edit', NoChildRoutes, { walletAddress: string }>
@@ -140,6 +143,21 @@ export const routes: MainRoutes = {
     build: ({ userId }) => `https://linkedin.com/in/${userId}`,
   },
 
+  twitter: {
+    schema: 'https://twitter.com/:userId',
+    build: ({ userId }) => `https://twitter.com/${userId}`,
+  },
+
+  instagram: {
+    schema: 'https://instagram.com/:userId',
+    build: ({ userId }) => `https://instagram.com/${userId}`,
+  },
+
+  youtube: {
+    schema: 'https://youtube.com/:userId',
+    build: ({ userId }) => `https://youtube.com/${userId}`,
+  },
+
   signIn: {
     schema: '/sign-in',
     build: () => '/sign-in',
@@ -161,6 +179,13 @@ export const routes: MainRoutes = {
     build: () => '/balance',
   },
 }
+
+/** Routes hidden from the menu for unauthenticated visitors. */
+export const AUTH_REQUIRED_ROUTES = new Set<string>([
+  routes.dashboard.schema,
+  routes.profile.schema,
+  routes.timeTracker.schema,
+])
 
 // eslint-disable-next-line
 export const mapRoutes = (tree: Record<string, any>): MappingRoute[] => {

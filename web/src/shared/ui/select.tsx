@@ -35,6 +35,8 @@ type SelectProps = {
   label?: string
   allSelectedText?: string
   inputProps?: InputProps
+  /** Макс. высота списка опций; при превышении появляется скролл */
+  menuMaxHeight?: string | number
 }
 
 export const Select = ({
@@ -48,6 +50,7 @@ export const Select = ({
   label,
   allSelectedText,
   inputProps,
+  menuMaxHeight,
 }: SelectProps) => {
   const { t } = useTranslation()
   const isMobile = useBreakpoint('isMobile')
@@ -92,7 +95,7 @@ export const Select = ({
   const Content = (
     <>
       {title && <MenuTitle>{title}</MenuTitle>}
-      <MenuList>
+      <MenuList $maxHeight={menuMaxHeight}>
         {options.map((o) => {
           const checked = selectedSet.has(o.value)
 
@@ -188,9 +191,16 @@ const MenuTitle = styled.div`
   color: rgba(0, 5, 29, 0.55);
 `
 
-const MenuList = styled.div`
+const MenuList = styled.div<{ $maxHeight?: string | number }>`
   display: flex;
   flex-direction: column;
+
+  ${(p) =>
+    p.$maxHeight != null &&
+    `
+    max-height: ${typeof p.$maxHeight === 'number' ? `${p.$maxHeight}px` : p.$maxHeight};
+    overflow-y: auto;
+  `}
 `
 
 const MenuItem = styled.button`
