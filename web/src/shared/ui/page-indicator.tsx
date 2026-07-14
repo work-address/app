@@ -2,7 +2,11 @@ import { useEffect, useState } from 'react'
 import { useLocation, useViewTransitionState } from 'react-router-dom'
 import styled, { keyframes } from 'styled-components'
 
-export const PageIndicator = () => {
+type PageIndicatorProps = {
+  className?: string
+}
+
+export const PageIndicator = ({ className }: PageIndicatorProps) => {
   const location = useLocation()
   const transition = useViewTransitionState(location.pathname)
 
@@ -25,7 +29,7 @@ export const PageIndicator = () => {
   }, [transition])
 
   return (
-    <PageIndicatorContainer>
+    <PageIndicatorContainer className={className}>
       <StyledPageIndicator
         $showAnimation={transition || animationStarted}
         $animationFinished={!transition && animationStarted}
@@ -70,6 +74,10 @@ const PageIndicatorContainer = styled.div`
   left: 0;
   right: 0;
   z-index: 11;
+
+  @media print {
+    display: none;
+  }
 `
 
 const StyledPageIndicator = styled.div<{

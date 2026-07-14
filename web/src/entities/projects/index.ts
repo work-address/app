@@ -31,10 +31,7 @@ sample({
   target: projectsQuery.start,
 })
 
-export {
-  type ProjectWithStats,
-  type ProjectsFilter,
-} from './types'
+export { type ProjectWithStats, type ProjectsFilter } from './types'
 
 export {
   fetchProjects,

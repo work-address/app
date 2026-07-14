@@ -1,9 +1,10 @@
 import { Badge, Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { memo, useContext, useMemo, useState } from 'react'
+import { memo, useContext, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import styled, { css } from 'styled-components'
 
-import { $invoice, $invoiceWorklogs, $invoiceLoading } from '../model'
+import { $invoiceWorklogs, $invoiceLoading } from '../model'
 
 import { WorklogsContext } from './worklogs-context'
 
@@ -12,24 +13,19 @@ import type { DesktopBodyCellRenderProps, DataTableConfig } from '@/shared'
 
 import { type ITimeTotalDetail } from '@/entities/time'
 import {
+  DataTable,
   formatDurationFromMinutes,
   getTimeActiveColor,
-  DataTable,
   Text,
-  WorklogsEmptyState,
 } from '@/shared'
 
 export const Worklogs = () => {
   const { t, i18n } = useTranslation()
-  const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
 
-  const { worklogs, invoice, loading } = useUnit({
+  const { worklogs, loading } = useUnit({
     worklogs: $invoiceWorklogs,
-    invoice: $invoice,
     loading: $invoiceLoading,
   })
-
-  const showSkeletons = loading || worklogs.length > 0
 
   const contextValue = useMemo<WorklogsContextProps>(
     () => ({
@@ -50,14 +46,8 @@ export const Worklogs = () => {
     (): DataTableConfig<ITimeTotalDetail> => [
       {
         dataKey: 'createdAt',
-        width: 165,
+        width: 200,
         headerText: t('dashboard.worklogsTable.head.date'),
-      },
-      {
-        customKey: 'projectName',
-        getValue: () => invoice?.title,
-        width: 240,
-        headerText: t('dashboard.worklogsTable.head.projectName'),
       },
       {
         dataKey: 'note',
@@ -66,13 +56,10 @@ export const Worklogs = () => {
       },
       {
         customKey: 'timeActive',
-        width: 130,
         headerText: t('dashboard.worklogsTable.head.timeActive'),
-        horizontalAlign: 'center',
       },
       {
         dataKey: 'keyboardKeys',
-        width: 118,
         headerText: t('dashboard.worklogsTable.head.keyboard'),
       },
       {
@@ -81,36 +68,27 @@ export const Worklogs = () => {
       },
       {
         dataKey: 'mouseDistance',
-        width: 155,
         headerText: t('dashboard.worklogsTable.head.mouseDistance'),
       },
     ],
-    [t, invoice],
+    [t],
   )
 
   return (
     <>
       <Text size={'5'}>{t('dashboard.page.worklogs.title')}</Text>
-      {loading ? (
-        <WorklogsContext value={contextValue}>
-          <DataTable
-            loading={showSkeletons}
-            data={worklogs}
-            config={tableConfig}
-            getRowId={rowIdGetter}
-            verticalAlign={'middle'}
-            BodyComponent={Cell}
-            allowSelection
-            selectedIds={selectedIds}
-            onSelectedIdsChange={setSelectedIds}
-            nowrap
-          />
-        </WorklogsContext>
-      ) : (
-        <Flex pt="1" pb="4">
-          <WorklogsEmptyState />
-        </Flex>
-      )}
+      <WorklogsContext value={contextValue}>
+        <InvoiceWorklogsTable
+          loading={loading}
+          data={worklogs}
+          config={tableConfig}
+          getRowId={rowIdGetter}
+          verticalAlign={'middle'}
+          BodyComponent={Cell}
+          nowrap
+          height={worklogs.length > 0 ? '' : '340px'}
+        />
+      </WorklogsContext>
     </>
   )
 }
@@ -144,7 +122,7 @@ const CreatedAtCell = memo(
     const { dateFormatter, timeFormatter } = useContext(WorklogsContext)
 
     return (
-      <Flex direction={'column'}>
+      <Flex gap={'2'}>
         <Text size="2">
           {timeFormatter.format(new Date(props.data.fromAt))} -{' '}
           {timeFormatter.format(new Date(props.data.toAt))}
@@ -156,3 +134,71 @@ const CreatedAtCell = memo(
     )
   },
 )
+
+// Print column widths, in the same order as `tableConfig` above:
+// date | note | time | keyboard | mouse | distance
+const PRINT_COLUMN_WIDTHS = ['20%', '28%', '15%', '12%', '12%', '12%']
+
+const printColumnWidths = css`
+  ${PRINT_COLUMN_WIDTHS.map(
+    (width, index) => css`
+      && th:nth-child(${index + 1}),
+      && td:nth-child(${index + 1}) {
+        width: ${width};
+      }
+    `,
+  )}
+`
+
+const InvoiceWorklogsTable = styled(DataTable<ITimeTotalDetail>)`
+  && tr {
+    transition: none;
+  }
+
+  && tr:hover td {
+    background-color: var(--white) !important;
+  }
+
+  @media print {
+    overflow: visible;
+    max-height: none;
+    height: auto;
+    box-shadow: none;
+    break-inside: auto;
+
+    && table {
+      table-layout: fixed;
+      width: 100%;
+      font-size: 11px;
+      white-space: normal;
+    }
+
+    && th,
+    && td {
+      position: static;
+      min-width: 0;
+      padding: 6px 8px;
+      white-space: normal;
+      word-break: break-word;
+      line-height: 1.3;
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    ${printColumnWidths}
+
+    && tr {
+      break-inside: avoid;
+      page-break-inside: avoid;
+    }
+
+    && thead {
+      display: table-header-group;
+    }
+
+    && * {
+      -webkit-print-color-adjust: exact;
+      print-color-adjust: exact;
+    }
+  }
+`

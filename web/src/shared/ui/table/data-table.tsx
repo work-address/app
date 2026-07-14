@@ -25,6 +25,7 @@ export type DataTableProps<T extends AnyRecord> = {
   config: DataTableConfig<T>
   minHeight?: string
   maxHeight?: string
+  className?: string
   HeaderComponent?: (props: DesktopHeaderCellRenderProps<T>) => ReactNode
   BodyComponent?: (props: DesktopBodyCellRenderProps<T>) => ReactNode
   skeletonHeight?: string
@@ -53,6 +54,7 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
     skeletonHeight,
     sort,
     onSortChange,
+    className,
   } = props
 
   const selectedIds = 'selectedIds' in props ? props.selectedIds : undefined
@@ -92,6 +94,7 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
 
   return (
     <TableCard
+      className={className}
       $height={height}
       $minHeight={minHeight}
       $maxHeight={maxHeight}

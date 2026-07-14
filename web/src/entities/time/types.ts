@@ -6,6 +6,8 @@ export type ITimeTotal = {
   rateTotal: number
   minutes: number
   minutesActive: number
+  minutesPaid: number
+  minutesUnpaid: number
   keyboardKeys: number
   mouseKeys: number
   mouseDistance: number

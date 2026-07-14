@@ -95,17 +95,17 @@ const Actions = React.memo(
 
     return (
       <Flex gap={'3'} align={'center'}>
-        <IconButton
-          variant={'ghost'}
-          color={'gray'}
-          radius={'full'}
-          onClick={() => handleActionClick(props.data, 'Print')}
-        >
-          <img
-            src={PrintIcon}
-            alt={t('dashboard.projectsTable.actions.print')}
-            style={{ width: 28, height: 28, margin: -4, padding: 0 }}
-          />
+        <IconButton variant={'ghost'} color={'gray'} radius={'full'} asChild>
+          <NavLink
+            to={routes.invoice.build({ id: props.data.id ?? '' })}
+            viewTransition
+          >
+            <img
+              src={PrintIcon}
+              alt={t('dashboard.projectsTable.actions.print')}
+              style={{ width: 28, height: 28, margin: -4, padding: 0 }}
+            />
+          </NavLink>
         </IconButton>
         <IconButton
           variant={'ghost'}

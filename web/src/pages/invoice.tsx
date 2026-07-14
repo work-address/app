@@ -1,17 +1,16 @@
 import { ArrowLeftIcon } from '@radix-ui/react-icons'
-import { Flex, Separator, Skeleton } from '@radix-ui/themes'
+import { Flex, Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { NavLink, useParams } from 'react-router-dom'
-import styled from 'styled-components'
+import styled, { createGlobalStyle } from 'styled-components'
 
 import {
   fetchInvoice,
   $invoice,
   $invoiceLoading,
   resetInvoice,
-  InvoiceCard,
   TotalAmountDesktop,
   TotalAmountMobile,
   Worklogs,
@@ -45,14 +44,15 @@ export default function InvoicePage() {
 
   return (
     <>
+      <InvoicePrintGlobalStyle />
       <PageHelmet
         htmlAttributes={{ lang: i18n.language }}
         title={t('app.documentTitle.invoice')}
       />
-      <CardWrapper shadow={false} as={isMobile ? 'div' : CardWrapper}>
+      <InvoicePageCard shadow={false} as={isMobile ? 'div' : undefined}>
         <Flex direction={'column'} gap={'20px'}>
           {isMobile && (
-            <Flex gap={'2'} direction={'column'}>
+            <InvoiceNoPrint gap={'4'} direction={'column'}>
               <Flex direction={'column'}>
                 <IconWrapper to={routes.dashboard.build()}>
                   <IconButton variant={'ghost'} radius={'full'} color={'gray'}>
@@ -74,7 +74,7 @@ export default function InvoicePage() {
                   {invoice?.id}
                 </Text>
               )}
-            </Flex>
+            </InvoiceNoPrint>
           )}
           {isMobile ? (
             <InvoiceCard shadow={false}>
@@ -83,28 +83,61 @@ export default function InvoicePage() {
           ) : (
             <TotalAmountDesktop />
           )}
-          {!isMobile && (
-            <>
-              <Separator size={'4'} />
-              <Separator size={'4'} />
-            </>
-          )}
           <Worklogs />
         </Flex>
-      </CardWrapper>
+      </InvoicePageCard>
     </>
   )
 }
 
-const IconWrapper = styled(NavLink)`
-  padding-left: var(--space-2);
+const InvoicePrintGlobalStyle = createGlobalStyle`
+  @media print {
+    @page {
+      size: A4;
+      margin: 12mm 12mm;
+    }
+
+    html,
+    body,
+    #root {
+      height: auto;
+      overflow: visible;
+      background: #fff;
+    }
+  }
 `
 
-const CardWrapper = styled(Card)`
+const InvoicePageCard = styled(Card)`
   padding: 20px var(--space-3);
 
   ${(p) => p.theme.breakpoints.up('md')} {
     width: 1196px;
     margin: var(--space-5) auto;
   }
+
+  @media print {
+    width: 100%;
+    max-width: none;
+    margin: 0;
+    padding: 0;
+    box-shadow: none;
+    border-radius: 0;
+    background: #fff;
+  }
+`
+
+const InvoiceCard = styled(Card)`
+  ${(p) => p.theme.breakpoints.down('md')} {
+    padding: 12px;
+  }
+`
+
+const InvoiceNoPrint = styled(Flex)`
+  @media print {
+    display: none;
+  }
+`
+
+const IconWrapper = styled(NavLink)`
+  padding-left: var(--space-2);
 `

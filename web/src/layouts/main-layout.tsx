@@ -65,9 +65,9 @@ const PageContent = memo(() => {
   return (
     <Content>
       <AnimatePresence mode="wait">
-        <motion.div key={pathname} {...motionProps}>
+        <PageTransition key={pathname} {...motionProps}>
           <WrappedOutlet />
-        </motion.div>
+        </PageTransition>
       </AnimatePresence>
     </Content>
   )
@@ -81,12 +81,24 @@ const Layout = styled.div`
   height: 100%;
   background: var(--ds-secondary);
   position: relative;
+
+  @media print {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    background: #fff;
+    border-radius: 0;
+  }
 `
 
 const StickyHeader = styled.div`
   position: sticky;
   top: 0;
   z-index: 10;
+
+  @media print {
+    display: none;
+  }
 `
 
 const Content = styled.div`
@@ -95,4 +107,20 @@ const Content = styled.div`
 
   border-top-left-radius: 40px;
   border-top-right-radius: 40px;
+
+  @media print {
+    height: auto;
+    min-height: 0;
+    overflow: visible;
+    background: #fff;
+    border-radius: 0;
+  }
+`
+
+const PageTransition = styled(motion.div)`
+  @media print {
+    /* motion sets transform/opacity inline — !important is required to override */
+    opacity: 1 !important;
+    transform: none !important;
+  }
 `

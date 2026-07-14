@@ -1,12 +1,17 @@
-import { Flex, Grid, Separator, Skeleton } from '@radix-ui/themes'
+import { Flex, Grid, Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Trans, useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
 import { useInvoiceInfoFields } from '../hooks'
 import { $invoice, $invoiceLoading } from '../model'
 
-import { Text, Button } from '@/shared'
+import { Text, Button, copyToClipboard, showToast } from '@/shared'
+
+const handleSavePdf = () => {
+  window.print()
+}
 
 export const TotalAmountDesktop = () => {
   const { t } = useTranslation()
@@ -18,9 +23,25 @@ export const TotalAmountDesktop = () => {
     loading: $invoiceLoading,
   })
 
+  const handleShare = () => {
+    copyToClipboard(window.location.href)
+      .then(() => {
+        showToast('info', {
+          message: t('invoice.actions.linkCopied'),
+          position: 'top-center',
+        })
+      })
+      .catch(() => {
+        showToast('error', {
+          message: t('invoice.actions.linkCopyFailed'),
+          position: 'top-center',
+        })
+      })
+  }
+
   return (
-    <Grid gap={'5'} justify={'between'} columns={'auto 1fr auto'}>
-      <Flex direction={'column'} gap={'3'} align={'center'}>
+    <Grid gap={'5'} columns={'auto 1fr'}>
+      <Flex direction={'column'} align={'center'}>
         {loading ? (
           <Skeleton width="194px" height="194px" loading={loading} />
         ) : (
@@ -36,39 +57,49 @@ export const TotalAmountDesktop = () => {
           <Trans i18nKey="invoice.qrScan.desktop" components={{ br: <br /> }} />
         </Text>
       </Flex>
-      <Flex gap={'3'} direction={'column'} justify={'between'}>
-        <Flex align={'end'} gap={'3'}>
-          {loading ? (
-            <Skeleton width="200px" height="18px" loading={loading} />
-          ) : (
-            <Text size={'6'} weight={'medium'}>
-              {invoice?.title}
-            </Text>
-          )}
-          <Text>{t('invoice.amount.for')}</Text>
-          {loading ? (
-            <Skeleton width="50px" height="18px" loading={loading} />
-          ) : (
-            <Text $themeVariant={'primary'} weight={'medium'} size={'4'}>
-              {invoice?.totalAmount} {t('currency.usdt')}
-            </Text>
-          )}
+      <Flex gap={'3'} direction={'column'}>
+        <Flex justify={'between'} align={'center'} gap={'4'}>
+          <Flex align={'end'} gap={'3'} wrap={'wrap'}>
+            {loading ? (
+              <Skeleton width="200px" height="18px" loading={loading} />
+            ) : (
+              <Text size={'6'} weight={'medium'}>
+                {invoice?.title}
+              </Text>
+            )}
+            <Text>{t('invoice.amount.for')}</Text>
+            {loading ? (
+              <Skeleton width="50px" height="18px" loading={loading} />
+            ) : (
+              <Text $themeVariant={'primary'} weight={'medium'} size={'4'}>
+                {invoice?.totalAmount} {t('currency.usdt')}
+              </Text>
+            )}
+          </Flex>
+          <InvoiceNoPrint gap={'3'}>
+            <Button themeVariant={'secondary'} onClick={handleShare}>
+              {t('invoice.actions.share')}
+            </Button>
+            <Button themeVariant={'primary'} onClick={handleSavePdf}>
+              {t('invoice.actions.savePdf')}
+            </Button>
+          </InvoiceNoPrint>
         </Flex>
-        {loading ? (
-          <Skeleton width="300px" height="18px" loading={loading} />
-        ) : (
-          <Text color={'gray'}>{invoice?.id}</Text>
-        )}
-        <Separator size={'4'} />
         <Text size={'4'} weight={'medium'}>
           {t('invoice.summary.heading')}
         </Text>
-        <Grid columns={'1fr 1fr'} gap={'5'} flow={'column'} rows={'3'}>
+        <Grid
+          columns={'1fr 1fr'}
+          flow={'column'}
+          rows={'5'}
+          gapY={'1'}
+          gapX={'8'}
+        >
           {infoFields.map((field) => (
             <Grid
               key={field.id}
               gap={'2'}
-              columns={'120px 204px'}
+              columns={'200px max-content'}
               align="center"
             >
               <Text size={'3'} color={'gray'}>
@@ -85,10 +116,12 @@ export const TotalAmountDesktop = () => {
           ))}
         </Grid>
       </Flex>
-      <Flex gap={'3'}>
-        <Button themeVariant={'secondary'}>{t('invoice.actions.share')}</Button>
-        <Button themeVariant={'primary'}>{t('invoice.actions.savePdf')}</Button>
-      </Flex>
     </Grid>
   )
 }
+
+const InvoiceNoPrint = styled(Flex)`
+  @media print {
+    display: none;
+  }
+`

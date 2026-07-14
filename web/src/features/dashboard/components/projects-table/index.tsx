@@ -114,11 +114,6 @@ export const ProjectsTable = () => {
             })
             break
           }
-
-          case 'Print': {
-            alert(`${row.id} ${action}`)
-            break
-          }
         }
       },
       [confirm, t, deleteProjectEvent],

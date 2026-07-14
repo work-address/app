@@ -4,10 +4,7 @@ import type { ProjectWithStats } from '@/entities/projects'
 import type { useTranslation } from 'react-i18next'
 
 export type ProjectTableContextValues = {
-  handleActionClick: (
-    row: ProjectWithStats,
-    action: 'Edit' | 'Print' | 'Delete',
-  ) => void
+  handleActionClick: (row: ProjectWithStats, action: 'Edit' | 'Delete') => void
   t: ReturnType<typeof useTranslation>['t']
 }
 

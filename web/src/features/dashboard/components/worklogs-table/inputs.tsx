@@ -5,12 +5,12 @@ import { useTranslation } from 'react-i18next'
 
 import type { InputProps } from '@/shared'
 
+import { $projects } from '@/entities/projects'
 import {
   changeWorklogFilters,
   $worklogsFilters,
   type WorklogsFilters,
 } from '@/entities/time'
-import { $projects } from '@/entities/projects'
 import { Input, Text, DatePickerInput, Select } from '@/shared'
 
 type TwoSideInputProps = {
