@@ -21,7 +21,14 @@ export default tseslint.config(
   {
     rules: {
       'import/extensions': 'off',
-      'unicorn/filename-case': 'off',
+      'unicorn/filename-case': [
+        'error',
+        {
+          cases: {
+            kebabCase: true,
+          },
+        },
+      ],
       'unicorn/no-nested-ternary': 'off',
     },
   },

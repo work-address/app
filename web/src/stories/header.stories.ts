@@ -1,4 +1,4 @@
-import { Header } from './Header'
+import { Header } from './header'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
