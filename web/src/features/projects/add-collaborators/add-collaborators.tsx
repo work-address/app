@@ -1,0 +1,205 @@
+import { PlusIcon, TrashIcon } from '@radix-ui/react-icons'
+import { Flex, IconButton } from '@radix-ui/themes'
+import { useMemo } from 'react'
+import {
+  useFieldArray,
+  useWatch,
+  type Control,
+  type FieldErrors,
+  type UseFormRegister,
+} from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
+
+import { ProjectFormSelect } from '../project-form'
+
+import { isValidWalletAddress, normalizeAddress } from './lib'
+
+import type { CollaboratorRole, ProjectFormValues } from './types'
+
+import { Button, Input, Text, type InputProps } from '@/shared'
+
+type AddCollaboratorsProps = {
+  control: Control<ProjectFormValues>
+  register: UseFormRegister<ProjectFormValues>
+  errors: FieldErrors<ProjectFormValues>
+  disabled?: boolean
+  /** View mode: hide add/remove and render fields read-only. */
+  readOnly?: boolean
+  inputProps?: InputProps
+}
+
+const ID_PREFIX = 'add-collaborators-'
+
+export const AddCollaborators = ({
+  control,
+  register,
+  errors,
+  disabled,
+  readOnly,
+  inputProps,
+}: AddCollaboratorsProps) => {
+  const { t } = useTranslation()
+  const fieldsDisabled = Boolean(disabled || readOnly)
+
+  const { fields, append, remove } = useFieldArray({
+    control,
+    name: 'collaborators',
+  })
+
+  const watchedCollaborators = useWatch({ control, name: 'collaborators' })
+
+  const roleOptions = useMemo(
+    () => [
+      {
+        value: 'Worker' satisfies CollaboratorRole,
+        label: t('project.createModal.collaborators.role.worker'),
+      },
+      {
+        value: 'Viewer' satisfies CollaboratorRole,
+        label: t('project.createModal.collaborators.role.viewer'),
+      },
+    ],
+    [t],
+  )
+
+  const getRoleLabel = (role: CollaboratorRole) =>
+    roleOptions.find((option) => option.value === role)?.label ?? role
+
+  const validateAddress = (value: string) => {
+    const address = value?.trim() ?? ''
+
+    if (!address) {
+      return t('project.createModal.collaborators.errorRequired')
+    }
+
+    if (!isValidWalletAddress(address)) {
+      return t('project.createModal.collaborators.errorInvalid')
+    }
+
+    const normalized = normalizeAddress(address)
+    const occurrences = (watchedCollaborators ?? []).filter(
+      (row) => normalizeAddress(row.address) === normalized,
+    ).length
+
+    if (occurrences > 1) {
+      return t('project.createModal.collaborators.errorDuplicate')
+    }
+
+    return true
+  }
+
+  return (
+    <Flex direction={'column'} gap={'4'}>
+      <Text size={'3'} weight={'medium'}>
+        {t(
+          readOnly
+            ? 'project.createModal.collaborators.viewTitle'
+            : 'project.createModal.collaborators.title',
+        )}
+      </Text>
+      {fields.map((field, index) => {
+        const addressError = errors.collaborators?.[index]?.address
+
+        return (
+          <Flex key={field.id} direction={'column'} gap={'1'}>
+            <Flex gap={'4'} align={'end'}>
+              <AddCollaboratorsAddressField>
+                <Input
+                  label={t('project.createModal.collaborators.walletAddress')}
+                  id={`${ID_PREFIX}address-${index}`}
+                  placeholder={t(
+                    'project.createModal.collaborators.walletPlaceholder',
+                  )}
+                  disabled={fieldsDisabled}
+                  state={addressError ? 'error' : 'valid'}
+                  {...inputProps}
+                  {...register(`collaborators.${index}.address`, {
+                    validate: validateAddress,
+                  })}
+                />
+              </AddCollaboratorsAddressField>
+              <AddCollaboratorsRoleField>
+                {readOnly ? (
+                  <Input
+                    label={t('project.createModal.collaborators.role')}
+                    id={`${ID_PREFIX}role-${index}`}
+                    value={getRoleLabel(field.role)}
+                    disabled
+                    {...inputProps}
+                  />
+                ) : (
+                  <ProjectFormSelect
+                    control={control}
+                    name={`collaborators.${index}.role`}
+                    label={t('project.createModal.collaborators.role')}
+                    options={roleOptions}
+                    fallbackValue={'Viewer'}
+                    id={`role-${index}`}
+                    disabled={fieldsDisabled}
+                    hasError={Boolean(errors.collaborators?.[index]?.role)}
+                    inputProps={inputProps}
+                  />
+                )}
+              </AddCollaboratorsRoleField>
+              {!readOnly && (
+                <IconButton
+                  style={{ cursor: 'pointer' }}
+                  type={'button'}
+                  variant={'ghost'}
+                  color={'red'}
+                  radius={'full'}
+                  mb={'1'}
+                  disabled={fieldsDisabled}
+                  aria-label={t('project.createModal.collaborators.remove')}
+                  onClick={() => remove(index)}
+                >
+                  <TrashIcon width={18} height={18} />
+                </IconButton>
+              )}
+            </Flex>
+            {!readOnly && addressError?.message && (
+              <Text size={'1'} color={'red'}>
+                {addressError.message}
+              </Text>
+            )}
+          </Flex>
+        )
+      })}
+      {!readOnly && (
+        <AddCollaboratorsAddMoreButton
+          type={'button'}
+          variant={'ghost'}
+          color={'gray'}
+          disabled={fieldsDisabled}
+          onClick={() => append({ address: '', role: 'Viewer' })}
+        >
+          <PlusIcon />
+          {t('project.createModal.collaborators.addMore')}
+        </AddCollaboratorsAddMoreButton>
+      )}
+    </Flex>
+  )
+}
+
+const AddCollaboratorsAddressField = styled.div`
+  flex: 1;
+  min-width: 0;
+`
+
+const AddCollaboratorsRoleField = styled.div`
+  width: 160px;
+  flex-shrink: 0;
+`
+
+const AddCollaboratorsAddMoreButton = styled(Button)`
+  margin-left: 12px;
+  align-self: flex-start;
+  color: var(--gray-11);
+  padding-inline: 0;
+
+  &:hover {
+    background: transparent;
+    color: var(--gray-12);
+  }
+`

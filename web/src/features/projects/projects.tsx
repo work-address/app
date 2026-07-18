@@ -6,7 +6,7 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { ProjectsNotFound } from '../projects-not-found'
+import { ProjectsNotFound } from '@/features/dashboard/components/projects-not-found'
 
 import {
   ProjectsTableContext,
@@ -43,7 +43,6 @@ import {
   showToast,
 } from '@/shared'
 
-export type ProjectStatus = 'Active' | 'Paused' | 'Finished'
 
 export const ProjectsTable = () => {
   const isMobile = useBreakpoint('isMobile')
@@ -356,5 +355,3 @@ const ProjectsTableWrapper = styled.div`
     overflow: auto;
   }
 `
-
-export { type ProjectRow } from './types'

@@ -1,4 +1,5 @@
 export * from './tag-input'
+export * from './checkbox'
 export * from './button'
 export * from './confirm-modal'
 export * from './date-picker-input'

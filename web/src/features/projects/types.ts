@@ -1,4 +1,4 @@
-import type { ProjectStatus } from '@/features/dashboard'
+export type ProjectStatus = 'Active' | 'Paused' | 'Finished'
 
 export type ProjectRow = {
   key: string

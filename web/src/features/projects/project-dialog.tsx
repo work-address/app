@@ -7,10 +7,16 @@ import {
 import { Flex, Grid, Separator } from '@radix-ui/themes'
 import { useStoreMap, useUnit } from 'effector-react'
 import { Fragment, useEffect, useMemo, useRef, useState } from 'react'
-import { useForm, Controller } from 'react-hook-form'
+import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
-import type { baseApi } from '@/shared'
+import {
+  AddCollaborators,
+  mapAddressesToCollaborators,
+  mapCollaboratorsToAddresses,
+  type ProjectFormValues,
+} from './add-collaborators'
+import { ProjectFormSelect, ProjectFormTrackingOptions } from './project-form'
 
 import {
   $rawProjects,
@@ -29,7 +35,6 @@ import {
   Spinner,
   type InputProps,
   useDateFormatter,
-  Select,
 } from '@/shared'
 
 type ProjectDialogProps = {
@@ -221,8 +226,6 @@ type ProjectDialogContentProps = {
   mode: 'view' | 'edit'
 }
 
-type FormValues = Pick<baseApi.Project, 'title' | 'rateHour' | 'text' | 'state'>
-
 export const ProjectDialogContent = ({
   data,
   mode,
@@ -234,18 +237,36 @@ export const ProjectDialogContent = ({
 
   const formRef = useRef<HTMLFormElement>(null)
 
+  const collaborators = useMemo(
+    () =>
+      mapAddressesToCollaborators(data.workerAddresses, data.viewerAddresses),
+    [data.workerAddresses, data.viewerAddresses],
+  )
+
+  const collaboratorInputProps: InputProps = {
+    rows: 'auto auto',
+    columns: '1fr',
+    gap: '2',
+    size: '3',
+  }
+
   const {
     register,
     handleSubmit,
     reset: resetForm,
     formState: { errors },
     control,
-  } = useForm<FormValues>({
+  } = useForm<ProjectFormValues>({
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
     values: {
-      title: data.title,
-      state: data.state,
+      title: data.title ?? '',
+      state: data.state ?? 'Active',
       rateHour: data.rateHour.toString(),
-      text: data.text,
+      text: data.text ?? '',
+      collaborators,
+      trackScreenshots: data.trackScreenshots ?? false,
+      trackProcesses: data.trackProcesses ?? false,
     },
   })
 
@@ -262,13 +283,26 @@ export const ProjectDialogContent = ({
     fn: (projects, [id]) => (id ? projects[id] : null),
   })
 
-  const handleFormSubmit = (data: FormValues) => {
-    if (editingProject) {
-      editProject({
-        ...editingProject,
-        ...data,
-      })
+  const handleFormSubmit = (formData: ProjectFormValues) => {
+    if (!editingProject) {
+      return
     }
+
+    const { workerAddresses, viewerAddresses } = mapCollaboratorsToAddresses(
+      formData.collaborators,
+    )
+
+    editProject({
+      ...editingProject,
+      title: formData.title,
+      rateHour: formData.rateHour,
+      text: formData.text,
+      state: formData.state,
+      workerAddresses,
+      viewerAddresses,
+      trackScreenshots: formData.trackScreenshots,
+      trackProcesses: formData.trackProcesses,
+    })
   }
 
   useEffect(() => {
@@ -279,10 +313,16 @@ export const ProjectDialogContent = ({
 
   const stateOptions = useMemo(
     () => [
-      { label: 'Active', value: 'Active' },
-      { label: 'Inactive', value: 'Inactive' },
+      {
+        label: t('dashboard.projectsTable.status.active'),
+        value: 'Active',
+      },
+      {
+        label: t('dashboard.page.tabs.inactive'),
+        value: 'Inactive',
+      },
     ],
-    [],
+    [t],
   )
 
   if (mode === 'edit') {
@@ -308,23 +348,16 @@ export const ProjectDialogContent = ({
             {...inputProps}
             {...register('title', { required: true })}
           />
-          <Controller
-            render={({ field }) => (
-              <Select
-                label={'Published in'}
-                options={stateOptions}
-                disabled={editingStatus === 'pending'}
-                inputProps={{
-                  ...inputProps,
-                  state: errors.state ? 'error' : 'valid',
-                  id: 'state',
-                }}
-                {...field}
-              />
-            )}
-            name="state"
+          <ProjectFormSelect
             control={control}
+            name="state"
+            label={t('dashboard.projectsTable.form.status')}
+            options={stateOptions}
+            fallbackValue={'Active'}
+            id={'state'}
             disabled={editingStatus === 'pending'}
+            hasError={Boolean(errors.state)}
+            inputProps={inputProps}
           />
           <Input
             label={'Rate'}
@@ -345,6 +378,18 @@ export const ProjectDialogContent = ({
             disabled={editingStatus === 'pending'}
             state={errors.text ? 'error' : 'valid'}
             {...register('text', { required: true })}
+          />
+          <ProjectFormTrackingOptions
+            control={control}
+            disabled={editingStatus === 'pending'}
+            idSuffix={'-edit'}
+          />
+          <AddCollaborators
+            control={control}
+            register={register}
+            errors={errors}
+            disabled={editingStatus === 'pending'}
+            inputProps={inputProps}
           />
         </Flex>
       </form>
@@ -415,6 +460,18 @@ export const ProjectDialogContent = ({
           size={'3'}
         />
       </div>
+      {collaborators.length > 0 && (
+        <>
+          <Separator size={'4'} />
+          <AddCollaborators
+            control={control}
+            register={register}
+            errors={errors}
+            readOnly
+            inputProps={collaboratorInputProps}
+          />
+        </>
+      )}
     </Flex>
   )
 }

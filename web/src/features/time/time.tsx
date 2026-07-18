@@ -3,7 +3,7 @@ import { useUnit } from 'effector-react'
 import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import * as S from '../dashboard-styles.ts'
+import * as S from '@/features/dashboard/components/dashboard-styles'
 
 import { BodyCellComponent } from './desktop-body-cell'
 import { WorklogsDesktopFilters } from './desktop-filters'
@@ -170,4 +170,3 @@ export const WorklogsTable = () => {
   )
 }
 
-export type { PaymentStatus, WorklogFormFilters, WorklogRow } from './types'

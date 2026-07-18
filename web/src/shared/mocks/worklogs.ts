@@ -1,4 +1,4 @@
-import type { WorklogRow } from '@/features/dashboard/components/worklogs-table/types'
+import type { WorklogRow } from '@/features/time'
 
 import { MockScreenshot } from '@/shared/icons'
 

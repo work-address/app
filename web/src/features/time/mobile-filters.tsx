@@ -2,7 +2,7 @@ import { Flex } from '@radix-ui/themes'
 import { useStoreMap, useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
 
-import * as S from '../dashboard-styles.ts'
+import * as S from '@/features/dashboard/components/dashboard-styles'
 
 import {
   TwoSideInput,

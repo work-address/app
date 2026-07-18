@@ -1,10 +1,15 @@
 import { Flex, Grid } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { useEffect } from 'react'
+import { useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
-import type { baseApi } from '@/shared'
+import {
+  AddCollaborators,
+  mapCollaboratorsToAddresses,
+  type ProjectFormValues,
+} from './add-collaborators'
+import { ProjectFormSelect, ProjectFormTrackingOptions } from './project-form'
 
 import { createProjectMutation } from '@/entities/projects'
 import {
@@ -49,15 +54,35 @@ export const CreateProjectModal = ({
     register,
     handleSubmit,
     reset: resetForm,
+    control,
     formState: { errors },
-  } = useForm<baseApi.Project>({
+  } = useForm<ProjectFormValues>({
+    mode: 'onSubmit',
+    reValidateMode: 'onSubmit',
     defaultValues: {
       title: '',
       rateHour: '',
       text: '',
       state: 'Active',
+      collaborators: [],
+      trackScreenshots: false,
+      trackProcesses: false,
     },
   })
+
+  const stateOptions = useMemo(
+    () => [
+      {
+        value: 'Active',
+        label: t('dashboard.projectsTable.status.active'),
+      },
+      {
+        value: 'Inactive',
+        label: t('dashboard.page.tabs.inactive'),
+      },
+    ],
+    [t],
+  )
 
   const inputProps: InputProps = {
     rows: 'auto 1fr',
@@ -66,12 +91,26 @@ export const CreateProjectModal = ({
     size: '3',
   }
 
-  const handleFormSubmit = (data: baseApi.Project) => {
-    createProject(data)
+  const handleFormSubmit = (data: ProjectFormValues) => {
+    const { workerAddresses, viewerAddresses } = mapCollaboratorsToAddresses(
+      data.collaborators,
+    )
+
+    createProject({
+      title: data.title,
+      rateHour: data.rateHour,
+      text: data.text,
+      state: data.state,
+      workerAddresses,
+      viewerAddresses,
+      trackScreenshots: data.trackScreenshots,
+      trackProcesses: data.trackProcesses,
+    })
   }
 
   useEffect(() => {
     if (!open) {
+      resetForm()
       return
     }
 
@@ -159,17 +198,30 @@ export const CreateProjectModal = ({
               {...inputProps}
               {...register('title', { required: true })}
             />
-            <Input
-              label={t('dashboard.projectsTable.form.rate')}
-              id={'rate'}
-              placeholder={t('project.createModal.ratePlaceholder')}
-              addonRight={'$'}
-              disabled={pending}
-              inputMode="decimal"
-              state={errors.rateHour ? 'error' : 'valid'}
-              {...inputProps}
-              {...register('rateHour', { required: true })}
-            />
+            <Grid columns={'1fr 1fr'} gap={'2'}>
+              <Input
+                label={t('dashboard.projectsTable.form.rate')}
+                id={'rate'}
+                placeholder={t('project.createModal.ratePlaceholder')}
+                addonRight={'$'}
+                disabled={pending}
+                inputMode="decimal"
+                state={errors.rateHour ? 'error' : 'valid'}
+                {...inputProps}
+                {...register('rateHour', { required: true })}
+              />
+              <ProjectFormSelect
+                control={control}
+                name="state"
+                label={t('dashboard.projectsTable.form.status')}
+                options={stateOptions}
+                fallbackValue={'Active'}
+                id={'state'}
+                disabled={pending}
+                hasError={Boolean(errors.state)}
+                inputProps={inputProps}
+              />
+            </Grid>
             <TextArea
               label={t('dashboard.projectsTable.form.description')}
               id={'description'}
@@ -178,6 +230,14 @@ export const CreateProjectModal = ({
               disabled={pending}
               state={errors.text ? 'error' : 'valid'}
               {...register('text', { required: true })}
+            />
+            <ProjectFormTrackingOptions control={control} disabled={pending} />
+            <AddCollaborators
+              control={control}
+              register={register}
+              errors={errors}
+              disabled={pending}
+              inputProps={inputProps}
             />
           </Flex>
         </form>
