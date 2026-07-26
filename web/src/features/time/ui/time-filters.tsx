@@ -2,19 +2,18 @@ import { Flex, Grid } from '@radix-ui/themes'
 import { useStoreMap } from 'effector-react'
 import { useTranslation } from 'react-i18next'
 
-import * as S from '@/features/dashboard/components/dashboard-styles'
-
 import {
   DateRangePicker,
   TwoSideInput,
   ProjectsSelect,
   NoteInput,
-} from './inputs'
+} from './common'
 
 import { $worklogsFilters } from '@/entities/time'
+import * as S from '@/features/dashboard/components/dashboard-styles'
 import { Text } from '@/shared'
 
-export const WorklogsDesktopFilters = () => {
+export const TimeFilters = () => {
   const { t } = useTranslation()
 
   const activeDateId = useStoreMap({

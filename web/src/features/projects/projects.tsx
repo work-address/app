@@ -6,8 +6,6 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { ProjectsNotFound } from '@/features/dashboard/components/projects-not-found'
-
 import {
   ProjectsTableContext,
   type ProjectTableContextValues,
@@ -29,6 +27,7 @@ import {
   type ProjectWithStats,
   deleteProjectMutation,
 } from '@/entities/projects'
+import { ProjectsNotFound } from '@/features/dashboard/components/projects-not-found'
 import { type MobileDataTableConfig, type DataTableConfig } from '@/shared'
 import {
   DataTable,
@@ -42,7 +41,6 @@ import {
   useConfirm,
   showToast,
 } from '@/shared'
-
 
 export const ProjectsTable = () => {
   const isMobile = useBreakpoint('isMobile')

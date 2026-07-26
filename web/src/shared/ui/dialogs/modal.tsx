@@ -59,7 +59,12 @@ const SContent = styled(Dialog.Content)<{ $width?: string; $padding?: string }>`
     padding: 40px;
   }
 
-  ${(p) => p.$width && `width: ${p.$width};`}
+  ${(p) =>
+    p.$width &&
+    `
+      width: ${p.$width};
+      max-width: ${p.$width};
+    `}
 `
 
 const SClose = styled(Dialog.Close).attrs({ type: 'button' })`

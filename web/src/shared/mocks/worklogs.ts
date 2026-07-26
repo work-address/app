@@ -1,8 +1,8 @@
-import type { WorklogRow } from '@/features/time'
+import type { TimeRow } from '@/features/time/model'
 
 import { MockScreenshot } from '@/shared/icons'
 
-export const worklogsMock: WorklogRow[] = [
+export const worklogsMock: TimeRow[] = [
   {
     key: '1',
     dateRange: '10:25 - 10:45',

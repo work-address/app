@@ -70,11 +70,7 @@ export const Header = () => {
     <HeaderRoot ref={rootRef}>
       <HeaderInner>
         <LogoLink
-          to={
-            authenticated
-              ? routes.dashboard.build()
-              : routes.signIn.build()
-          }
+          to={authenticated ? routes.dashboard.build() : routes.signIn.build()}
           viewTransition
         >
           <LogoImg src={Logo} alt={t('header.logoAlt')} />
@@ -178,7 +174,9 @@ export const Header = () => {
                               />
                             </UserAvatar>
                             <UserText>
-                              <UserName>{user?.name || user?.title || ''}</UserName>
+                              <UserName>
+                                {user?.name || user?.title || ''}
+                              </UserName>
                               <UserSub>
                                 {formatWalletAddress(
                                   user?.friendlyWalletAddress || '',

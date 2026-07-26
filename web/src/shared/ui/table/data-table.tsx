@@ -31,6 +31,7 @@ export type DataTableProps<T extends AnyRecord> = {
   skeletonHeight?: string
   sort?: Record<string, 'ASC' | 'DESC'>
   onSortChange?: (sort: Record<string, 'ASC' | 'DESC'>) => void
+  onRowClick?: (row: T) => void
 } & DataProps<T>
 
 const DEFAULT_SKELETON_HEIGHT = '30px'
@@ -54,6 +55,7 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
     skeletonHeight,
     sort,
     onSortChange,
+    onRowClick,
     className,
   } = props
 
@@ -159,7 +161,11 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
               const rowId = getRowId(row)
 
               return (
-                <Tr key={rowId}>
+                <Tr
+                  key={rowId}
+                  $clickable={Boolean(onRowClick)}
+                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                >
                   {config.map((columnConfig, index) => {
                     const selected = selectedIds?.[rowId] ?? false
 
@@ -181,12 +187,15 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                           justify={columnConfig.horizontalAlign}
                         >
                           {allowSelection && index === 0 && (
-                            <Checkbox
-                              checked={selected}
-                              onCheckedChange={() =>
-                                rowId && handleSelectedChange(rowId.toString())
-                              }
-                            />
+                            <div onClick={(event) => event.stopPropagation()}>
+                              <Checkbox
+                                checked={selected}
+                                onCheckedChange={() =>
+                                  rowId &&
+                                  handleSelectedChange(rowId.toString())
+                                }
+                              />
+                            </div>
                           )}
                           <BodyComponent
                             columnConfig={columnConfig}
@@ -214,7 +223,7 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
           {!isDataExists &&
             loading &&
             mockedData.map((_, index) => (
-              <Tr key={`loading-${index}`}>
+              <Tr key={`loading-${index}`} $clickable={false}>
                 {config.map((columnConfig, index) => (
                   <Td
                     key={`loading-${index}`}
@@ -363,8 +372,10 @@ const Td = styled.td<{
   ${(p) => getStickyProperties(p.$sticky, 'var(--white)')}
 `
 
-const Tr = styled.tr`
+const Tr = styled.tr<{ $clickable: boolean }>`
   transition: 0.25s;
+
+  ${(p) => p.$clickable && 'cursor: pointer;'}
 
   &:not(:last-child) {
     border-bottom: 1px solid var(--ds-neutral-alpha-6);

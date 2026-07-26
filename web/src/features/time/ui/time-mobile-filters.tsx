@@ -2,27 +2,26 @@ import { Flex } from '@radix-ui/themes'
 import { useStoreMap, useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
 
-import * as S from '@/features/dashboard/components/dashboard-styles'
-
 import {
   TwoSideInput,
   DateRangePicker,
   NoteInput,
   ProjectsSelect,
-} from './inputs'
+} from './common'
 
 import { $worklogsFilters, applyWorklogFilters } from '@/entities/time'
+import * as S from '@/features/dashboard/components/dashboard-styles'
 import { Button, Drawer, FilterIcon, Text } from '@/shared'
 
-export type WorklogsMobileFiltersProps = {
+export type TimeMobileFiltersProps = {
   filtersOpen: boolean
   onFiltersOpenChange: (open: boolean) => void
 }
 
-export const WorklogsMobileFilters = ({
+export const TimeMobileFilters = ({
   filtersOpen,
   onFiltersOpenChange,
-}: WorklogsMobileFiltersProps) => {
+}: TimeMobileFiltersProps) => {
   const { t } = useTranslation()
 
   const { applyWorklogFiltersEvent } = useUnit({

@@ -9,6 +9,12 @@ import {
   setWorklogsLoading,
   debouncedChangeWorklogFilters,
 } from './time.events'
+import {
+  deleteWorklogMutation,
+  editWorklogMutation,
+  removeWorklogProcessesMutation,
+  removeWorklogScreenshotMutation,
+} from './time.mutations'
 import { worklogsQuery, type WorklogsQueryParams } from './time.queries'
 import { $worklogSort, $worklogsFilters } from './time.stores'
 
@@ -45,6 +51,16 @@ sample({
   target: setWorklogsLoading.prepend(() => true),
 })
 
+sample({
+  clock: [
+    deleteWorklogMutation.finished.success.map(() => void 0),
+    editWorklogMutation.finished.success.map(() => void 0),
+    removeWorklogScreenshotMutation.finished.success.map(() => void 0),
+    removeWorklogProcessesMutation.finished.success.map(() => void 0),
+  ],
+  target: applyWorklogFilters,
+})
+
 export {
   type ITimeTotal,
   type TimeTotalDetail as ITimeTotalDetail,
@@ -60,6 +76,13 @@ export {
   applyWorklogFilters,
   resetWorklogSort,
 } from './time.events'
+
+export {
+  deleteWorklogMutation,
+  editWorklogMutation,
+  removeWorklogProcessesMutation,
+  removeWorklogScreenshotMutation,
+} from './time.mutations'
 
 export {
   $allWorklogs,

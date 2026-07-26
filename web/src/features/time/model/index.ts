@@ -1,20 +1,20 @@
-export type PaymentStatus = 'Paid' | 'Unpaid'
+export type TimePaymentStatus = 'Paid' | 'Unpaid'
 
-export type WorklogRow = {
+export type TimeRow = {
   key: string
   dateRange: string
   date: string
   projectName: string
   note: string
   timeActive: number
-  paymentStatus: PaymentStatus
+  paymentStatus: TimePaymentStatus
   keyboard: string
   mouse: string
   mouseDistance: string
   screenshot?: string
 }
 
-export type WorklogFormFilters = {
+export type TimeFormFilters = {
   timeActiveMin: string
   timeActiveMax: string
   keyboardMin: string

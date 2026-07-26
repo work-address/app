@@ -12,7 +12,7 @@ import {
 import { fetchWorklogs, $worklogsLoading } from '@/entities/time'
 import {
   ApplicationsUsage,
-  WorklogsTable,
+  TimeTable,
   ProjectsTable,
   CreateProjectModal,
   DashboardStyles as S,
@@ -106,7 +106,7 @@ export default function DashboardPage() {
           onOpenChange={setCreateProjectOpen}
         />
         {showSkeletons ? (
-          <WorklogsTable />
+          <TimeTable />
         ) : (
           <DashboardEmptyState
             title={t('dashboard.page.empty.title')}

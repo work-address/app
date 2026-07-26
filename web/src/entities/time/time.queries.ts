@@ -1,4 +1,5 @@
 import { createQuery } from '@farfetched/core'
+import { endOfDay } from 'date-fns'
 
 import type { WorklogSort } from './types'
 
@@ -13,14 +14,24 @@ export type WorklogsQueryParams = {
   sort?: WorklogSort
 }
 
+const toDateTime = (ms?: number, endOfSelectedDay = false) => {
+  if (ms == null) {
+    return
+  }
+
+  const date = new Date(ms)
+
+  return (endOfSelectedDay ? endOfDay(date) : date).toISOString()
+}
+
 export const worklogsQuery = createQuery({
   handler: async (params: WorklogsQueryParams) => {
     const response = await baseApi.timeControllerSearch({
       body: {
         filter: {
           projectId: params?.activityId,
-          fromAt: params?.fromAt?.toString().slice(0, -3),
-          toAt: params?.toAt?.toString().slice(0, -3),
+          fromAt: toDateTime(params?.fromAt),
+          toAt: toDateTime(params?.toAt, true),
           note: params.note,
         },
         page: params?.page ?? 0,

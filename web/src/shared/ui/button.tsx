@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import type { ButtonProps as RadixButtonProps } from '@radix-ui/themes'
 
 export type ButtonProps = {
-  themeVariant?: 'primary' | 'secondary'
+  themeVariant?: 'primary' | 'secondary' | 'danger'
   stretch?: boolean
   width?: string
 } & RadixButtonProps
@@ -65,6 +65,13 @@ const StyledRadixButton = styled(RadixButton)<{
     --accent-a8: var(--ds-neutral-alpha-8);
     --accent-a11: var(--ds-neutral-11);
   `}
+
+  ${(p) =>
+    p.$themeVariant === 'danger' &&
+    `
+      background-color: var(--ds-secondary);
+      color: var(--error-11);
+    `}
 
   ${(p) => p.$stretch && `width: 100%;`}
 `

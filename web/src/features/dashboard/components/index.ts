@@ -1,4 +1,4 @@
-export * from '@/features/time'
+export * from '@/features/time/ui'
 export * from './applications-usage'
 export * from './projects-not-found'
 export * from '@/features/projects'

@@ -1,9 +1,8 @@
-import { Pencil1Icon } from '@radix-ui/react-icons'
-import { Badge, Flex, IconButton } from '@radix-ui/themes'
+import { Badge, Flex } from '@radix-ui/themes'
 import { memo, useContext } from 'react'
 import styled from 'styled-components'
 
-import { WorklogsContext } from './worklogs-context'
+import { TimeContext } from './time-context'
 
 import type { Time } from '@/entities/time'
 
@@ -13,10 +12,11 @@ import {
   formatDurationFromMinutes,
   getTimeActiveColor,
   Text,
+  toImageDataUrl,
 } from '@/shared'
 
-const BodyCellComponent = memo((props: DesktopBodyCellRenderProps<Time>) => {
-  const { dateFormatter, timeFormatter, t } = useContext(WorklogsContext)
+const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
+  const { dateFormatter, timeFormatter, t } = useContext(TimeContext)
 
   switch (props.dataKey) {
     case 'note': {
@@ -28,11 +28,10 @@ const BodyCellComponent = memo((props: DesktopBodyCellRenderProps<Time>) => {
     }
 
     case 'screenshot': {
-      return props.data.screenshot ? (
-        <Screenshot
-          src={props.data.screenshot}
-          alt={props.data.project?.title || ''}
-        />
+      const screenshotSrc = toImageDataUrl(props.data.screenshot)
+
+      return screenshotSrc ? (
+        <Screenshot src={screenshotSrc} alt={props.data.project?.title || ''} />
       ) : (
         <Screenshot
           src={ExampleScreenshot}
@@ -64,16 +63,6 @@ const BodyCellComponent = memo((props: DesktopBodyCellRenderProps<Time>) => {
     }
 
     default: {
-      if (props.customKey === 'actions') {
-        return (
-          <Flex>
-            <IconButton variant={'ghost'} radius={'full'} color={'gray'}>
-              <Pencil1Icon />
-            </IconButton>
-          </Flex>
-        )
-      }
-
       return (
         <Text size="2">
           <props.DefaultBodyComponent {...props} />
@@ -83,7 +72,7 @@ const BodyCellComponent = memo((props: DesktopBodyCellRenderProps<Time>) => {
   }
 })
 
-export { BodyCellComponent }
+export { TimeTableCell }
 
 const Screenshot = styled.img`
   max-width: 64px;

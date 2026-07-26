@@ -1,14 +1,13 @@
 import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { useMemo, useState } from 'react'
+import { useCallback, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import * as S from '@/features/dashboard/components/dashboard-styles'
-
-import { BodyCellComponent } from './desktop-body-cell'
-import { WorklogsDesktopFilters } from './desktop-filters'
-import { WorklogsMobileFilters } from './mobile-filters'
-import { WorklogsContext } from './worklogs-context'
+import { TimeContext } from './time-context'
+import { TimeDialog } from './time-dialog'
+import { TimeFilters } from './time-filters'
+import { TimeMobileFilters } from './time-mobile-filters'
+import { TimeTableCell } from './time-table-cell'
 
 import {
   $allWorklogs,
@@ -18,6 +17,7 @@ import {
   type Time,
   resetWorklogSort,
 } from '@/entities/time'
+import * as S from '@/features/dashboard/components/dashboard-styles'
 import {
   type DataTableConfig,
   DataTable,
@@ -25,7 +25,7 @@ import {
   WorklogsEmptyState,
 } from '@/shared'
 
-export const WorklogsTable = () => {
+export const TimeTable = () => {
   const { t, i18n } = useTranslation()
 
   const isMobile = useBreakpoint('isMobile')
@@ -50,10 +50,17 @@ export const WorklogsTable = () => {
   const hasWorklogs = worklogsLoading || worklogRows.length > 0
 
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
+  const [selectedWorklog, setSelectedWorklog] = useState<Time | null>(null)
+  const [isTimeDialogOpen, setIsTimeDialogOpen] = useState(false)
 
   const handleOnSortChange = (sort: Record<string, 'ASC' | 'DESC'>) => {
     resetWorklogSortEvent(sort)
   }
+
+  const handleRowClick = useCallback((row: Time): void => {
+    setSelectedWorklog(row)
+    setIsTimeDialogOpen(true)
+  }, [])
 
   const config = useMemo(
     (): DataTableConfig<Time> => [
@@ -105,16 +112,11 @@ export const WorklogsTable = () => {
         width: 114,
         horizontalAlign: 'center',
       },
-      {
-        customKey: 'actions',
-        width: 64,
-        headerText: '',
-      },
     ],
     [t],
   )
 
-  const worklogsContextValue = useMemo(
+  const timeContextValue = useMemo(
     () => ({
       dateFormatter: new Intl.DateTimeFormat(i18n.language, {
         day: 'numeric',
@@ -135,21 +137,21 @@ export const WorklogsTable = () => {
       <S.SectionTitleRow>
         <S.SectionTitle>{t('dashboard.page.worklogs.title')}</S.SectionTitle>
         {isMobile && (
-          <WorklogsMobileFilters
+          <TimeMobileFilters
             filtersOpen={filtersOpen}
             onFiltersOpenChange={setFiltersOpen}
           />
         )}
       </S.SectionTitleRow>
-      {isDesktop && <WorklogsDesktopFilters />}
+      {isDesktop && <TimeFilters />}
       {hasWorklogs ? (
-        <WorklogsContext.Provider value={worklogsContextValue}>
+        <TimeContext.Provider value={timeContextValue}>
           <DataTable<Time>
             nowrap
             data={worklogRows}
             config={config}
             getRowId={(row) => row.id ?? ''}
-            BodyComponent={BodyCellComponent}
+            BodyComponent={TimeTableCell}
             allowSelection
             selectedIds={selectedIds}
             onSelectedIdsChange={setSelectedIds}
@@ -158,9 +160,15 @@ export const WorklogsTable = () => {
             isFiltering={isWorklogsFiltering}
             sort={worklogSort}
             onSortChange={handleOnSortChange}
+            onRowClick={handleRowClick}
             skeletonHeight="40px"
           />
-        </WorklogsContext.Provider>
+          <TimeDialog
+            open={isTimeDialogOpen}
+            row={selectedWorklog}
+            onOpenChange={setIsTimeDialogOpen}
+          />
+        </TimeContext.Provider>
       ) : (
         <Flex pt="7">
           <WorklogsEmptyState style={{ height: 560 }} />
@@ -169,4 +177,3 @@ export const WorklogsTable = () => {
     </S.Section>
   )
 }
-

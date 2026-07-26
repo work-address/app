@@ -107,8 +107,6 @@ export const routes: MainRoutes = {
     translateKeyDesktop: 'header.nav.download',
     desktopIcon: ExternalLinkIcon,
     mobileIcon: ExternalLinkIcon,
-    target: '_blank',
-
     desktopRender: 'textWithIcon',
   },
 

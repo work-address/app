@@ -26,6 +26,8 @@ export default tseslint.config(
         {
           cases: {
             kebabCase: true,
+            pascalCase: false,
+            camelCase: false,
           },
         },
       ],
