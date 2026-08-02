@@ -1,8 +1,14 @@
-import { Badge, Flex } from '@radix-ui/themes'
+import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { type ReactNode, useEffect, useState } from 'react'
+import { useEffect, useState } from 'react'
+import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
+
+import { TimeDialogFooter } from './time-dialog-footer'
+import { TimeDialogMetrics } from './time-dialog-metrics'
+import { TimeDialogNav } from './time-dialog-nav'
+import { TimeDialogProcesses } from './time-dialog-processes'
 
 import type { Time } from '@/entities/time'
 
@@ -14,9 +20,7 @@ import {
 } from '@/entities/time'
 import {
   AdaptiveDialog,
-  Button,
-  formatDurationFromMinutes,
-  Spinner,
+  Select,
   Text,
   TextArea,
   toImageDataUrl,
@@ -24,13 +28,60 @@ import {
   useConfirm,
 } from '@/shared'
 
+type PaymentStatusValue = 'paid' | 'unpaid'
+
+type TimeDialogFormValues = {
+  note: string
+  paymentStatus: PaymentStatusValue
+}
+
 type TimeDialogProps = {
   open: boolean
   row: Time | null
   onOpenChange: (open: boolean) => void
+  hasPrev?: boolean
+  hasNext?: boolean
+  onPrev?: () => void
+  onNext?: () => void
 }
 
-export const TimeDialog = ({ open, row, onOpenChange }: TimeDialogProps) => {
+const getFormValues = (row: Time | null): TimeDialogFormValues => ({
+  note: row?.note ?? '',
+  paymentStatus: row?.isPaid ? 'paid' : 'unpaid',
+})
+
+const isEditableTarget = (target: EventTarget | null) => {
+  if (!(target instanceof HTMLElement)) {
+    return false
+  }
+
+  const tagName = target.tagName
+
+  if (
+    tagName === 'INPUT' ||
+    tagName === 'TEXTAREA' ||
+    tagName === 'SELECT' ||
+    target.isContentEditable
+  ) {
+    return true
+  }
+
+  return Boolean(
+    target.closest(
+      '[role="listbox"], [role="option"], [role="combobox"], [data-radix-select-content]',
+    ),
+  )
+}
+
+export const TimeDialog = ({
+  open,
+  row,
+  onOpenChange,
+  hasPrev = false,
+  hasNext = false,
+  onPrev,
+  onNext,
+}: TimeDialogProps) => {
   const { t, i18n } = useTranslation()
   const isDesktop = useBreakpoint('isDesktop')
   const { confirm } = useConfirm()
@@ -63,19 +114,38 @@ export const TimeDialog = ({ open, row, onOpenChange }: TimeDialogProps) => {
     resetRemoveProcesses: removeWorklogProcessesMutation.reset,
   })
 
-  const [note, setNote] = useState('')
   const [screenshotRemoved, setScreenshotRemoved] = useState(false)
   const [processesRemoved, setProcessesRemoved] = useState(false)
+
+  const {
+    control,
+    handleSubmit,
+    reset,
+    formState: { isDirty },
+  } = useForm<TimeDialogFormValues>({
+    defaultValues: getFormValues(null),
+  })
+
+  const paymentStatusOptions = [
+    {
+      value: 'paid' satisfies PaymentStatusValue,
+      label: t('dashboard.worklogsTable.paymentStatus.paid'),
+    },
+    {
+      value: 'unpaid' satisfies PaymentStatusValue,
+      label: t('dashboard.worklogsTable.paymentStatus.unpaid'),
+    },
+  ]
 
   useEffect(() => {
     if (!open || !row) {
       return
     }
 
-    setNote(row.note ?? '')
+    reset(getFormValues(row))
     setScreenshotRemoved(false)
     setProcessesRemoved(false)
-  }, [open, row])
+  }, [open, row, reset])
 
   useEffect(() => {
     if (!open) {
@@ -84,9 +154,10 @@ export const TimeDialog = ({ open, row, onOpenChange }: TimeDialogProps) => {
 
     if (editStatus === 'done') {
       resetEdit()
+      reset(getFormValues(row))
       onOpenChange(false)
     }
-  }, [open, editStatus, resetEdit, onOpenChange])
+  }, [open, editStatus, resetEdit, reset, row, onOpenChange])
 
   useEffect(() => {
     if (!open) {
@@ -116,6 +187,43 @@ export const TimeDialog = ({ open, row, onOpenChange }: TimeDialogProps) => {
     resetRemoveProcesses,
   ])
 
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    const handleKeyDown = (event: KeyboardEvent) => {
+      if (isDirty || isEditableTarget(event.target)) {
+        return
+      }
+
+      if (event.key === 'ArrowLeft' || event.key === 'ArrowUp') {
+        if (!hasPrev || !onPrev) {
+          return
+        }
+
+        event.preventDefault()
+        onPrev()
+        return
+      }
+
+      if (event.key === 'ArrowRight' || event.key === 'ArrowDown') {
+        if (!hasNext || !onNext) {
+          return
+        }
+
+        event.preventDefault()
+        onNext()
+      }
+    }
+
+    window.addEventListener('keydown', handleKeyDown)
+
+    return () => {
+      window.removeEventListener('keydown', handleKeyDown)
+    }
+  }, [open, isDirty, hasPrev, hasNext, onPrev, onNext])
+
   const dateTimeFormatter = new Intl.DateTimeFormat(i18n.language, {
     day: '2-digit',
     month: '2-digit',
@@ -128,7 +236,6 @@ export const TimeDialog = ({ open, row, onOpenChange }: TimeDialogProps) => {
     hour12: false,
   })
 
-  const paymentStatus = row?.isPaid ? 'paid' : 'unpaid'
   const hasScreenshot = Boolean(row?.screenshot) && !screenshotRemoved
   const hasProcesses =
     Boolean(row?.processes && row.processes.length > 0) && !processesRemoved
@@ -137,6 +244,9 @@ export const TimeDialog = ({ open, row, onOpenChange }: TimeDialogProps) => {
     editStatus === 'pending' ||
     removeScreenshotStatus === 'pending' ||
     removeProcessesStatus === 'pending'
+  const screenshotSrc = hasScreenshot
+    ? toImageDataUrl(row?.screenshot)
+    : undefined
 
   const handleDelete = () => {
     if (!row?.id) {
@@ -192,12 +302,21 @@ export const TimeDialog = ({ open, row, onOpenChange }: TimeDialogProps) => {
     })
   }
 
-  const handleSave = () => {
-    if (!row?.id) {
+  const handleDiscard = () => {
+    reset(getFormValues(row))
+    onOpenChange(false)
+  }
+
+  const onSubmit: SubmitHandler<TimeDialogFormValues> = (values) => {
+    if (!row?.id || !isDirty) {
       return
     }
 
-    editWorklog({ id: row.id, note })
+    editWorklog({
+      id: row.id,
+      note: values.note,
+      isPaid: values.paymentStatus === 'paid',
+    })
   }
 
   const rangeLabel = row
@@ -215,77 +334,18 @@ export const TimeDialog = ({ open, row, onOpenChange }: TimeDialogProps) => {
       desktopShowClose
       footer={
         isDesktop && row ? (
-          <Flex direction="column" gap="3" width="100%">
-            {!hasScreenshot && hasProcesses && (
-              <Button
-                themeVariant="danger"
-                size="3"
-                type="button"
-                disabled={isPending}
-                onClick={handleRemoveProcesses}
-              >
-                {t('dashboard.worklogsTable.removeProcesses')}
-              </Button>
-            )}
-            <Flex justify="between" align="center" width="100%">
-              <Flex gap="3">
-                <Button
-                  color="red"
-                  size="3"
-                  type="button"
-                  disabled={isPending}
-                  onClick={handleDelete}
-                >
-                  {t('dashboard.worklogsTable.dialog.deleteEntry')}
-                </Button>
-                {hasScreenshot && (
-                  <Button
-                    themeVariant="danger"
-                    size="3"
-                    type="button"
-                    disabled={isPending}
-                    onClick={handleRemoveScreenshot}
-                  >
-                    {t('dashboard.worklogsTable.removeScreenshot')}
-                  </Button>
-                )}
-                {hasScreenshot && hasProcesses && (
-                  <Button
-                    themeVariant="danger"
-                    size="3"
-                    type="button"
-                    disabled={isPending}
-                    onClick={handleRemoveProcesses}
-                  >
-                    {t('dashboard.worklogsTable.removeProcesses')}
-                  </Button>
-                )}
-              </Flex>
-              <Flex gap="3">
-                <Button
-                  themeVariant="secondary"
-                  size="3"
-                  type="button"
-                  disabled={isPending}
-                  onClick={() => onOpenChange(false)}
-                >
-                  {t('dashboard.worklogsTable.dialog.discard')}
-                </Button>
-                <Button
-                  themeVariant="primary"
-                  size="3"
-                  type="button"
-                  disabled={isPending}
-                  onClick={handleSave}
-                >
-                  {editStatus === 'pending' && (
-                    <Spinner color="#FFF" width="3px" />
-                  )}
-                  {t('common.save')}
-                </Button>
-              </Flex>
-            </Flex>
-          </Flex>
+          <TimeDialogFooter
+            isPending={isPending}
+            isSaving={editStatus === 'pending'}
+            canSave={isDirty}
+            hasScreenshot={hasScreenshot}
+            hasProcesses={hasProcesses}
+            onDelete={handleDelete}
+            onRemoveScreenshot={handleRemoveScreenshot}
+            onRemoveProcesses={handleRemoveProcesses}
+            onDiscard={handleDiscard}
+            onSave={handleSubmit(onSubmit)}
+          />
         ) : undefined
       }
     >
@@ -293,15 +353,19 @@ export const TimeDialog = ({ open, row, onOpenChange }: TimeDialogProps) => {
         <>
           <Flex align="center" gap="2" mb="4" justify="between">
             <Text size="2">{rangeLabel}</Text>
-            <Badge color={row.isPaid ? 'green' : 'red'}>
-              {t(`dashboard.worklogsTable.paymentStatus.${paymentStatus}`)}
-            </Badge>
+            <TimeDialogNav
+              hasPrev={hasPrev}
+              hasNext={hasNext}
+              disabled={isDirty || isPending}
+              onPrev={onPrev}
+              onNext={onNext}
+            />
           </Flex>
           <Content $singleColumn={!hasScreenshot}>
-            {hasScreenshot && (
+            {hasScreenshot && screenshotSrc && (
               <ScreenshotColumn>
                 <Screenshot
-                  src={toImageDataUrl(row.screenshot)!}
+                  src={screenshotSrc}
                   alt={row.project?.title ?? ''}
                 />
                 <TimeDialogMetrics row={row} />
@@ -309,17 +373,47 @@ export const TimeDialog = ({ open, row, onOpenChange }: TimeDialogProps) => {
             )}
             <DetailsColumn $fullWidth={!hasScreenshot}>
               {!hasScreenshot && <TimeDialogMetrics row={row} />}
-              <TextArea
-                label={t('dashboard.worklogsTable.head.note')}
-                value={note}
-                onChange={(e) => setNote(e.target.value)}
-                rows={7}
+              <Controller
+                name="paymentStatus"
+                control={control}
+                render={({ field }) => (
+                  <Select
+                    options={paymentStatusOptions}
+                    value={field.value}
+                    onChange={(value) => {
+                      if (isPending || Array.isArray(value)) {
+                        return
+                      }
+
+                      field.onChange(value)
+                    }}
+                    label={t('dashboard.worklogsTable.head.paymentStatus')}
+                    inputProps={{
+                      gap: '9px',
+                      textSize: '3',
+                      textWeight: 'regular',
+                    }}
+                  />
+                )}
+              />
+              <Controller
+                name="note"
+                control={control}
+                render={({ field }) => (
+                  <TextArea
+                    id="worklog-note"
+                    label={t('dashboard.worklogsTable.head.note')}
+                    value={field.value}
+                    onChange={field.onChange}
+                    onBlur={field.onBlur}
+                    name={field.name}
+                    rows={3}
+                    disabled={isPending}
+                  />
+                )}
               />
               {hasProcesses && (
-                <TimeDialogProcesses
-                  processes={row.processes}
-                  columns={hasScreenshot ? 1 : 2}
-                />
+                <TimeDialogProcesses processes={row.processes} />
               )}
             </DetailsColumn>
           </Content>
@@ -329,102 +423,16 @@ export const TimeDialog = ({ open, row, onOpenChange }: TimeDialogProps) => {
   )
 }
 
-type MetricProps = {
-  label: string
-  children: ReactNode
-}
-
-const Metric = ({ label, children }: MetricProps) => (
-  <Flex direction="column" gap="1">
-    <Text color="gray" size="2">
-      {label}
-    </Text>
-    <Text size="2" weight="medium">
-      {children}
-    </Text>
-  </Flex>
-)
-
-type TimeDialogMetricsProps = {
-  row: Time
-}
-
-const TimeDialogMetrics = ({ row }: TimeDialogMetricsProps) => {
-  const { t } = useTranslation()
-
-  return (
-    <>
-      <Text size="2" weight="medium">
-        {t('dashboard.worklogsTable.head.activeMetrics')}
-      </Text>
-      <Flex gap={'4'}>
-        <Metric label={t('dashboard.worklogsTable.head.timeActive')}>
-          <Badge color="green">
-            {formatDurationFromMinutes(row.minutesActive, t)}
-          </Badge>
-        </Metric>
-        <Metric label={t('dashboard.worklogsTable.head.keyboard')}>
-          {row.keyboardKeys}
-        </Metric>
-        <Metric label={t('dashboard.worklogsTable.head.mouse')}>
-          {row.mouseKeys}
-        </Metric>
-        <Metric label={t('dashboard.worklogsTable.head.mouseDistance')}>
-          {row.mouseDistance}
-        </Metric>
-      </Flex>
-    </>
-  )
-}
-
-type WorklogProcessItem = {
-  name?: string
-  timeMin?: number
-}
-
-type TimeDialogProcessesProps = {
-  processes?: Time['processes']
-  columns?: 1 | 2
-}
-
-const TimeDialogProcesses = ({
-  processes,
-  columns = 1,
-}: TimeDialogProcessesProps) => {
-  const { t } = useTranslation()
-
-  const processNames = (processes ?? [])
-    .map((item) => (item as WorklogProcessItem)?.name)
-    .filter((name): name is string => Boolean(name))
-
-  if (processNames.length === 0) {
-    return null
-  }
-
-  return (
-    <Flex direction="column" gap="2" width="100%">
-      <Text size="2" weight="medium">
-        {t('dashboard.worklogsTable.confirmRemoveProcesses.processes')}
-      </Text>
-      <ProcessesList $columns={columns}>
-        {processNames.map((name, index) => (
-          <Text key={`${name}-${index}`} size="2" color="gray">
-            {name}
-          </Text>
-        ))}
-      </ProcessesList>
-    </Flex>
-  )
-}
-
-const ProcessesList = styled.div<{ $columns: 1 | 2 }>`
-  display: grid;
-  grid-template-columns: ${(p) => (p.$columns === 2 ? '1fr 1fr' : '1fr')};
-  gap: var(--space-2);
-  max-height: 200px;
-  overflow-y: auto;
-  padding-right: var(--space-2);
+const Content = styled.div<{ $singleColumn?: boolean }>`
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-6);
+  flex-direction: ${(p) => (p.$singleColumn ? 'column' : 'row')};
   width: 100%;
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    flex-direction: column;
+  }
 `
 
 const DetailsColumn = styled.div<{ $fullWidth?: boolean }>`
@@ -437,18 +445,6 @@ const DetailsColumn = styled.div<{ $fullWidth?: boolean }>`
 
   & > * {
     width: 100%;
-  }
-`
-
-const Content = styled.div<{ $singleColumn?: boolean }>`
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-6);
-  flex-direction: ${(p) => (p.$singleColumn ? 'column' : 'row')};
-  width: 100%;
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    flex-direction: column;
   }
 `
 

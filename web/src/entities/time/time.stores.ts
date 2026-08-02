@@ -3,6 +3,7 @@ import { combine, createStore, restore } from 'effector'
 import {
   changeWorklogFilters,
   appendWorklogSort,
+  resetWorklogFilters,
   resetWorklogSort,
   setWorklogsLoading,
 } from './time.events'
@@ -10,7 +11,7 @@ import { worklogsQuery } from './time.queries'
 
 import type { WorklogsFilters, WorklogSort } from './types'
 
-export const $worklogsFilters = createStore<WorklogsFilters>({
+const DEFAULT_WORKLOGS_FILTERS: WorklogsFilters = {
   page: 0,
   fromAt: null,
   toAt: null,
@@ -24,7 +25,19 @@ export const $worklogsFilters = createStore<WorklogsFilters>({
   mouseKeysMax: null,
   mouseDistanceMin: null,
   mouseDistanceMax: null,
-}).on(changeWorklogFilters, (state, filters) => ({ ...state, ...filters }))
+}
+
+export const $worklogsFilters = createStore<WorklogsFilters>(
+  DEFAULT_WORKLOGS_FILTERS,
+)
+  .on(changeWorklogFilters, (state, filters) => ({ ...state, ...filters }))
+  .reset(resetWorklogFilters)
+
+export const $hasActiveWorklogFilters = $worklogsFilters.map((filters) =>
+  (Object.keys(DEFAULT_WORKLOGS_FILTERS) as (keyof WorklogsFilters)[]).some(
+    (key) => key !== 'page' && filters[key] !== DEFAULT_WORKLOGS_FILTERS[key],
+  ),
+)
 
 export const $worklogSort = createStore<WorklogSort>({ fromAt: 'DESC' })
   .on(appendWorklogSort, (state, sort) => ({ ...state, ...sort }))

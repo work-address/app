@@ -18,10 +18,18 @@ export const deleteWorklogMutation = createMutation({
 })
 
 export const editWorklogMutation = createMutation({
-  handler: async ({ id, note }: { id: string; note: string }) => {
+  handler: async ({
+    id,
+    note,
+    isPaid,
+  }: {
+    id: string
+    note: string
+    isPaid: boolean
+  }) => {
     const result = await baseApi.timeControllerEdit({
       path: { id: id as never },
-      body: { note },
+      body: { note, isPaid },
     })
 
     if (result instanceof AxiosError) {
@@ -37,6 +45,20 @@ export const removeWorklogScreenshotMutation = createMutation({
     const result = await baseApi.timeControllerRemoveScreenshot({
       path: { id: id as never },
     })
+
+    if (result instanceof AxiosError) {
+      throw result
+    }
+
+    return result
+  },
+})
+
+export const setWorklogPaidStatusMutation = createMutation({
+  handler: async ({ ids, isPaid }: { ids: string[]; isPaid: boolean }) => {
+    const result = isPaid
+      ? await baseApi.timeControllerMarkPaid({ body: { ids } })
+      : await baseApi.timeControllerMarkUnpaid({ body: { ids } })
 
     if (result instanceof AxiosError) {
       throw result

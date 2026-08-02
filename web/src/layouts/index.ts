@@ -1,3 +1,2 @@
-export * from './auth-layout.tsx'
-export * from './main-layout.tsx'
-export * from './public-layout.tsx'
+export { AuthLayout } from './auth-layout.tsx'
+export { MainLayout, PublicLayout } from './main-layout.tsx'

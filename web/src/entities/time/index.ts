@@ -5,6 +5,7 @@ import {
   applyWorklogFilters,
   changeWorklogFilters,
   appendWorklogSort,
+  resetWorklogFilters,
   resetWorklogSort,
   setWorklogsLoading,
   debouncedChangeWorklogFilters,
@@ -14,6 +15,7 @@ import {
   editWorklogMutation,
   removeWorklogProcessesMutation,
   removeWorklogScreenshotMutation,
+  setWorklogPaidStatusMutation,
 } from './time.mutations'
 import { worklogsQuery, type WorklogsQueryParams } from './time.queries'
 import { $worklogSort, $worklogsFilters } from './time.stores'
@@ -33,7 +35,7 @@ sample({
 })
 
 sample({
-  clock: [resetWorklogSort, appendWorklogSort],
+  clock: [resetWorklogSort, appendWorklogSort, resetWorklogFilters],
   target: applyWorklogFilters,
 })
 
@@ -57,6 +59,7 @@ sample({
     editWorklogMutation.finished.success.map(() => void 0),
     removeWorklogScreenshotMutation.finished.success.map(() => void 0),
     removeWorklogProcessesMutation.finished.success.map(() => void 0),
+    setWorklogPaidStatusMutation.finished.success.map(() => void 0),
   ],
   target: applyWorklogFilters,
 })
@@ -74,6 +77,7 @@ export {
   changeWorklogFilters,
   appendWorklogSort as changeWorklogSort,
   applyWorklogFilters,
+  resetWorklogFilters,
   resetWorklogSort,
 } from './time.events'
 
@@ -82,11 +86,13 @@ export {
   editWorklogMutation,
   removeWorklogProcessesMutation,
   removeWorklogScreenshotMutation,
+  setWorklogPaidStatusMutation,
 } from './time.mutations'
 
 export {
   $allWorklogs,
   $worklogsFilters,
+  $hasActiveWorklogFilters,
   $worklogSort,
   $worklogsLoading,
   $isWorklogsFiltering,

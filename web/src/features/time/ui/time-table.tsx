@@ -1,10 +1,15 @@
 import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { useCallback, useMemo, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
+import {
+  getWorklogNavigationState,
+  getWorklogSiblingId,
+} from '../lib/get-worklog-sibling-id'
+
 import { TimeContext } from './time-context'
-import { TimeDialog } from './time-dialog'
+import { TimeDialog } from './time-dialog/time-dialog'
 import { TimeFilters } from './time-filters'
 import { TimeMobileFilters } from './time-mobile-filters'
 import { TimeTableCell } from './time-table-cell'
@@ -14,13 +19,16 @@ import {
   $isWorklogsFiltering,
   $worklogSort,
   $worklogsLoading,
+  setWorklogPaidStatusMutation,
   type Time,
   resetWorklogSort,
 } from '@/entities/time'
 import * as S from '@/features/dashboard/components/dashboard-styles'
 import {
+  Button,
   type DataTableConfig,
   DataTable,
+  showToast,
   useBreakpoint,
   WorklogsEmptyState,
 } from '@/shared'
@@ -37,12 +45,18 @@ export const TimeTable = () => {
     isWorklogsFiltering,
     worklogSort,
     resetWorklogSortEvent,
+    setPaidStatus,
+    setPaidStatusStatus,
+    resetSetPaidStatus,
   } = useUnit({
     allWorklogs: $allWorklogs,
     worklogsLoading: $worklogsLoading,
     isWorklogsFiltering: $isWorklogsFiltering,
     worklogSort: $worklogSort,
     resetWorklogSortEvent: resetWorklogSort,
+    setPaidStatus: setWorklogPaidStatusMutation.start,
+    setPaidStatusStatus: setWorklogPaidStatusMutation.$status,
+    resetSetPaidStatus: setWorklogPaidStatusMutation.reset,
   })
 
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -50,17 +64,84 @@ export const TimeTable = () => {
   const hasWorklogs = worklogsLoading || worklogRows.length > 0
 
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
-  const [selectedWorklog, setSelectedWorklog] = useState<Time | null>(null)
+  const [selectedWorklogId, setSelectedWorklogId] = useState<string | null>(
+    null,
+  )
   const [isTimeDialogOpen, setIsTimeDialogOpen] = useState(false)
+
+  const selectedWorklogIds = useMemo(
+    () =>
+      Object.entries(selectedIds)
+        .filter(([, isSelected]) => Boolean(isSelected))
+        .map(([id]) => id),
+    [selectedIds],
+  )
+  const selectedWorklogsCount = selectedWorklogIds.length
+
+  // Берём строку из стора по id, чтобы модалка видела актуальные данные после рефетча
+  const selectedWorklog = useMemo(
+    () => worklogRows.find((row) => row.id === selectedWorklogId) ?? null,
+    [worklogRows, selectedWorklogId],
+  )
+
+  const { hasPrev, hasNext } = useMemo(
+    () => getWorklogNavigationState(worklogRows, selectedWorklogId),
+    [worklogRows, selectedWorklogId],
+  )
 
   const handleOnSortChange = (sort: Record<string, 'ASC' | 'DESC'>) => {
     resetWorklogSortEvent(sort)
   }
 
   const handleRowClick = useCallback((row: Time): void => {
-    setSelectedWorklog(row)
+    setSelectedWorklogId(row.id ?? null)
     setIsTimeDialogOpen(true)
   }, [])
+
+  const goToSibling = useCallback(
+    (direction: -1 | 1) => {
+      const siblingId = getWorklogSiblingId(
+        worklogRows,
+        selectedWorklogId,
+        direction,
+      )
+
+      if (!siblingId) {
+        return
+      }
+
+      setSelectedWorklogId(siblingId)
+    },
+    [worklogRows, selectedWorklogId],
+  )
+
+  const handlePrevWorklog = useCallback(() => {
+    goToSibling(-1)
+  }, [goToSibling])
+
+  const handleNextWorklog = useCallback(() => {
+    goToSibling(1)
+  }, [goToSibling])
+
+  useEffect(() => {
+    if (setPaidStatusStatus === 'done') {
+      resetSetPaidStatus()
+      setSelectedIds({})
+
+      showToast('success', {
+        message: t('dashboard.worklogsTable.paymentStatus.changed'),
+        position: 'top-center',
+      })
+    }
+  }, [t, setPaidStatusStatus, resetSetPaidStatus])
+
+  const handleBulkSetPaidStatus = (isPaid: boolean) => {
+    if (setPaidStatusStatus === 'pending' || selectedWorklogsCount === 0) {
+      return
+    }
+
+    setPaidStatus({ ids: selectedWorklogIds, isPaid })
+  }
 
   const config = useMemo(
     (): DataTableConfig<Time> => [
@@ -77,6 +158,10 @@ export const TimeTable = () => {
         width: 229,
       },
       {
+        customKey: 'paidStatus',
+        headerText: t('dashboard.worklogsTable.head.paymentStatus'),
+      },
+      {
         dataKey: 'note',
         headerText: t('dashboard.worklogsTable.head.note'),
         sortable: true,
@@ -91,13 +176,13 @@ export const TimeTable = () => {
       {
         dataKey: 'keyboardKeys',
         headerText: t('dashboard.worklogsTable.head.keyboard'),
-        width: 103,
+        width: 100,
         sortable: true,
       },
       {
         dataKey: 'mouseKeys',
         headerText: t('dashboard.worklogsTable.head.mouse'),
-        width: 87,
+        width: 100,
         sortable: true,
       },
       {
@@ -109,8 +194,7 @@ export const TimeTable = () => {
       {
         dataKey: 'screenshot',
         headerText: t('dashboard.worklogsTable.head.screenshot'),
-        width: 114,
-        horizontalAlign: 'center',
+        horizontalAlign: 'end',
       },
     ],
     [t],
@@ -131,7 +215,6 @@ export const TimeTable = () => {
     }),
     [i18n.language, t],
   )
-
   return (
     <S.Section>
       <S.SectionTitleRow>
@@ -146,6 +229,43 @@ export const TimeTable = () => {
       {isDesktop && <TimeFilters />}
       {hasWorklogs ? (
         <TimeContext.Provider value={timeContextValue}>
+          {isDesktop && selectedWorklogsCount > 0 && (
+            <Flex gap="2" align="center" mb="3">
+              <S.Label>
+                {t('dashboard.worklogsTable.bulk.selectedCount', {
+                  count: selectedWorklogsCount,
+                })}
+              </S.Label>
+              <Button
+                themeVariant="primary"
+                size="3"
+                type="button"
+                disabled={setPaidStatusStatus === 'pending'}
+                onClick={() => handleBulkSetPaidStatus(true)}
+              >
+                {t('dashboard.worklogsTable.paymentStatus.paid')}
+              </Button>
+              <Button
+                themeVariant="secondary"
+                size="3"
+                type="button"
+                disabled={setPaidStatusStatus === 'pending'}
+                onClick={() => handleBulkSetPaidStatus(false)}
+              >
+                {t('dashboard.worklogsTable.paymentStatus.unpaid')}
+              </Button>
+              <Button
+                variant="outline"
+                color="gray"
+                size="3"
+                type="button"
+                disabled={setPaidStatusStatus === 'pending'}
+                onClick={() => setSelectedIds({})}
+              >
+                {t('dashboard.worklogsTable.bulk.clearSelection')}
+              </Button>
+            </Flex>
+          )}
           <DataTable<Time>
             nowrap
             data={worklogRows}
@@ -167,6 +287,10 @@ export const TimeTable = () => {
             open={isTimeDialogOpen}
             row={selectedWorklog}
             onOpenChange={setIsTimeDialogOpen}
+            hasPrev={hasPrev}
+            hasNext={hasNext}
+            onPrev={handlePrevWorklog}
+            onNext={handleNextWorklog}
           />
         </TimeContext.Provider>
       ) : (

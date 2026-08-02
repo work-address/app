@@ -31,7 +31,7 @@ export type DataTableProps<T extends AnyRecord> = {
   skeletonHeight?: string
   sort?: Record<string, 'ASC' | 'DESC'>
   onSortChange?: (sort: Record<string, 'ASC' | 'DESC'>) => void
-  onRowClick?: (row: T) => void
+  onRowClick?: (row: T, action: 'Edit' | 'Delete') => void
 } & DataProps<T>
 
 const DEFAULT_SKELETON_HEIGHT = '30px'
@@ -164,7 +164,9 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                 <Tr
                   key={rowId}
                   $clickable={Boolean(onRowClick)}
-                  onClick={onRowClick ? () => onRowClick(row) : undefined}
+                  onClick={
+                    onRowClick ? () => onRowClick(row, 'Edit') : undefined
+                  }
                 >
                   {config.map((columnConfig, index) => {
                     const selected = selectedIds?.[rowId] ?? false

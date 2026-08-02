@@ -15,7 +15,7 @@ import { DesktopCell } from './desktop-cell.tsx'
 import { MobileAddonBottom } from './mobile-addon-bottom.tsx'
 import { MobileBody } from './mobile-body.tsx'
 import { MobileHeader } from './mobile-header.tsx'
-import { ProjectDialog } from './project-dialog.tsx'
+import { ProjectDialog } from './project-dialog/project-dialog.tsx'
 
 import {
   $filteredProjects,
@@ -159,11 +159,6 @@ export const ProjectsTable = () => {
         dataKey: 'mouseDistance',
         width: 160,
         headerText: t('dashboard.projectsTable.head.mouseDistance'),
-      },
-      {
-        customKey: 'actions',
-        headerText: 'Actions',
-        sticky: 'right',
       },
     ],
     [t],
@@ -322,6 +317,7 @@ export const ProjectsTable = () => {
                     skeletonHeight="31px"
                     mockDataLength={4}
                     isFiltering={isProjectDeleting || isProjectsFiltering}
+                    onRowClick={handleActionClick}
                   />
                 )}
               </ProjectsTableContext>

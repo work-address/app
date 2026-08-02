@@ -1,4 +1,4 @@
-import { Pencil1Icon, TrashIcon } from '@radix-ui/react-icons'
+import { Pencil1Icon } from '@radix-ui/react-icons'
 import { Grid } from '@radix-ui/themes'
 import React, { useContext } from 'react'
 
@@ -13,15 +13,7 @@ export const MobileAddonBottom = React.memo(
     const { handleActionClick, t } = useContext(ProjectsTableContext)
 
     return (
-      <Grid columns={'1fr 1fr'} gap={'2'}>
-        <Button
-          onClick={() => handleActionClick(data, 'Delete')}
-          color={'red'}
-          variant={'outline'}
-        >
-          {t('dashboard.projectsTable.actions.delete')}
-          <TrashIcon />
-        </Button>
+      <Grid columns={'1fr'} gap={'2'}>
         <Button
           color={'gray'}
           variant={'outline'}

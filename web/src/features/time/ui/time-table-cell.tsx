@@ -1,4 +1,5 @@
 import { Badge, Flex } from '@radix-ui/themes'
+import { useUnit } from 'effector-react'
 import { memo, useContext } from 'react'
 import styled from 'styled-components'
 
@@ -6,6 +7,7 @@ import { TimeContext } from './time-context'
 
 import type { Time } from '@/entities/time'
 
+import { setWorklogPaidStatusMutation } from '@/entities/time'
 import {
   type DesktopBodyCellRenderProps,
   ExampleScreenshot,
@@ -17,6 +19,11 @@ import {
 
 const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
   const { dateFormatter, timeFormatter, t } = useContext(TimeContext)
+
+  const { setPaidStatus, setPaidStatusStatus } = useUnit({
+    setPaidStatus: setWorklogPaidStatusMutation.start,
+    setPaidStatusStatus: setWorklogPaidStatusMutation.$status,
+  })
 
   switch (props.dataKey) {
     case 'note': {
@@ -63,6 +70,32 @@ const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
     }
 
     default: {
+      if (props.customKey === 'paidStatus') {
+        const worklogId = props.data.id
+
+        return (
+          <PaidStatusBadge
+            color={props.data.isPaid ? 'green' : 'red'}
+            onClick={(event) => {
+              // Не даём клику по бейджу открыть модалку строки
+              event.stopPropagation()
+
+              if (!worklogId || setPaidStatusStatus === 'pending') {
+                return
+              }
+
+              setPaidStatus({ ids: [worklogId], isPaid: !props.data.isPaid })
+            }}
+          >
+            {t(
+              props.data.isPaid
+                ? 'dashboard.worklogsTable.paymentStatus.paid'
+                : 'dashboard.worklogsTable.paymentStatus.unpaid',
+            )}
+          </PaidStatusBadge>
+        )
+      }
+
       return (
         <Text size="2">
           <props.DefaultBodyComponent {...props} />
@@ -76,4 +109,8 @@ export { TimeTableCell }
 
 const Screenshot = styled.img`
   max-width: 64px;
+`
+
+const PaidStatusBadge = styled(Badge)`
+  cursor: pointer;
 `

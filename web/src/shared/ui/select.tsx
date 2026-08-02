@@ -132,8 +132,10 @@ export const Select = ({
           whiteSpace: 'nowrap',
           overflow: 'hidden',
           textOverflow: 'ellipsis',
+          caretColor: 'transparent',
         }}
         {...inputProps}
+        readOnly
       />
     </InputWrapper>
   )

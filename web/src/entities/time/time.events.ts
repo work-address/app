@@ -20,6 +20,8 @@ export const debouncedChangeWorklogFilters = debounce(
 
 export const applyWorklogFilters = createEvent()
 
+export const resetWorklogFilters = createEvent()
+
 export const appendWorklogSort = createEvent<WorklogSort>()
 
 export const resetWorklogSort = createEvent<WorklogSort | null>()

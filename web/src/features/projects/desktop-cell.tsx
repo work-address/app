@@ -1,28 +1,20 @@
-import { TrashIcon, Pencil1Icon } from '@radix-ui/react-icons'
 import { Badge, Flex } from '@radix-ui/themes'
 import React, { type ReactNode, useContext } from 'react'
 import { NavLink } from 'react-router-dom'
+import styled from 'styled-components'
 
 import { ProjectsTableContext } from './context.ts'
+import { getProjectStatusTranslationKey } from './lib'
 
 import type { ProjectWithStats } from '@/entities/projects'
 
 import { routes } from '@/routes'
 import {
   type DesktopBodyCellRenderProps,
-  IconButton,
   PrintIcon,
   Text,
   formatDurationFromMinutes,
 } from '@/shared'
-
-const statusTranslationKey = (status: string) => {
-  const key = status.toLowerCase()
-  if (key === 'active' || key === 'paused' || key === 'finished') {
-    return `dashboard.projectsTable.status.${key}` as const
-  }
-  return null
-}
 
 export const DesktopCell = React.memo(
   (props: DesktopBodyCellRenderProps<ProjectWithStats>) => {
@@ -32,20 +24,29 @@ export const DesktopCell = React.memo(
     switch (props.dataKey) {
       case 'title': {
         content = (
-          <Text $themeVariant={'primary'}>
-            <NavLink
+          <TitleCell align="center" gap="2">
+            <Text $themeVariant={'primary'}>{props.data.title}</Text>
+            <InvoiceLink
               to={routes.invoice.build({ id: props.data.id ?? '' })}
               viewTransition
+              onClick={(event) => event.stopPropagation()}
+              aria-label={t('dashboard.projectsTable.actions.invoice')}
             >
-              {props.data.title}
-            </NavLink>
-          </Text>
+              <Text color={'gray'} size={'2'} as="span">
+                |
+              </Text>
+              <Text size={'2'} as="span">
+                {t('dashboard.projectsTable.actions.invoice')}
+              </Text>
+              <img src={PrintIcon} alt="" width={28} height={28} />
+            </InvoiceLink>
+          </TitleCell>
         )
         break
       }
 
       case 'state': {
-        const statusKey = statusTranslationKey(props.data.state)
+        const statusKey = getProjectStatusTranslationKey(props.data.state)
         content = (
           <Badge color={props.data.state === 'Active' ? 'green' : 'gray'}>
             {statusKey === null ? props.data.state : t(statusKey)}
@@ -64,11 +65,9 @@ export const DesktopCell = React.memo(
         } else if (props.customKey === 'timeActive') {
           content = (
             <Text color={'gray'}>
-              {formatDurationFromMinutes(props.data.minutesActiveTotal, t)}
+              {formatDurationFromMinutes(props.data.minutesActive, t)}
             </Text>
           )
-        } else if (props.customKey === 'actions') {
-          content = <Actions {...props} />
         } else {
           content = (
             <Text color={'gray'}>
@@ -89,41 +88,23 @@ export const DesktopCell = React.memo(
   },
 )
 
-const Actions = React.memo(
-  (props: DesktopBodyCellRenderProps<ProjectWithStats>) => {
-    const { handleActionClick, t } = useContext(ProjectsTableContext)
+const TitleCell = styled(Flex)`
+  min-width: 0;
+`
 
-    return (
-      <Flex gap={'3'} align={'center'}>
-        <IconButton variant={'ghost'} color={'gray'} radius={'full'} asChild>
-          <NavLink
-            to={routes.invoice.build({ id: props.data.id ?? '' })}
-            viewTransition
-          >
-            <img
-              src={PrintIcon}
-              alt={t('dashboard.projectsTable.actions.print')}
-              style={{ width: 28, height: 28, margin: -4, padding: 0 }}
-            />
-          </NavLink>
-        </IconButton>
-        <IconButton
-          variant={'ghost'}
-          color={'gray'}
-          radius={'full'}
-          onClick={() => handleActionClick(props.data, 'Delete')}
-        >
-          <TrashIcon height={20} width={20} />
-        </IconButton>
-        <IconButton
-          variant={'ghost'}
-          color={'gray'}
-          radius={'full'}
-          onClick={() => handleActionClick(props.data, 'Edit')}
-        >
-          <Pencil1Icon height={20} width={20} />
-        </IconButton>
-      </Flex>
-    )
-  },
-)
+const InvoiceLink = styled(NavLink)`
+  display: inline-flex;
+  align-items: center;
+  flex-shrink: 0;
+  gap: var(--space-2);
+  text-decoration: none;
+  color: inherit;
+  opacity: 0;
+  pointer-events: none;
+  transition: opacity 0.15s ease;
+
+  tr:hover & {
+    opacity: 1;
+    pointer-events: auto;
+  }
+`
