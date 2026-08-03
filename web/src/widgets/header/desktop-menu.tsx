@@ -104,11 +104,11 @@ export const DesktopMenu = ({
                 <IconLink
                   key={key}
                   to={schema}
-                  aria-label={t('header.aria.github')}
+                  aria-label={renderText}
                   target={target}
                   viewTransition
                 >
-                  <IconImg src={desktopIcon} alt={t('header.aria.github')} />
+                  <IconImg src={desktopIcon} alt={renderText} />
                 </IconLink>
               )
             }

@@ -7,8 +7,6 @@ import type {
 
 import {
   DashboardIcon,
-  ExternalLinkIcon,
-  GithubLogo,
   PersonIcon,
   QuestionMarkCircledIcon,
   TimeTrackerIcon,
@@ -25,7 +23,6 @@ type MainRoutes =
   & Route<'/download', 'download'>
   & Route<'/invoice/:id', 'invoice', NoChildRoutes, IdRouteParams>
   & Route<'/balance', 'balance'>
-  & Route<'https://github.com', 'github'>
   & Route<'https://facebook.com/:userId', 'facebook', NoChildRoutes, { userId: string }>
   & Route<'https://t.me/:userId', 'telegram', NoChildRoutes, { userId: string }>
   & Route<'https://linkedin.com/in/:userId', 'linkedin', NoChildRoutes, { userId: string }>
@@ -101,29 +98,6 @@ export const routes: MainRoutes = {
   download: {
     schema: '/download',
     build: () => '/download',
-
-    desktopOrder: 3,
-
-    translateKeyDesktop: 'header.nav.download',
-    desktopIcon: ExternalLinkIcon,
-    mobileIcon: ExternalLinkIcon,
-    desktopRender: 'textWithIcon',
-  },
-
-  github: {
-    schema: 'https://github.com',
-    build: () => 'https://github.com',
-
-    desktopOrder: 4,
-    mobileOrder: 4,
-
-    desktopIcon: GithubLogo,
-    mobileIcon: GithubLogo,
-    translateKeyDesktop: 'header.aria.github',
-    translateKeyMobile: 'header.aria.github',
-    target: '_blank',
-
-    desktopRender: 'icon',
   },
 
   facebook: {
