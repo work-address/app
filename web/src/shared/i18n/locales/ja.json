@@ -160,6 +160,7 @@
   "dashboard.worklogsTable.head.activeMetrics": "アクティビティ",
   "dashboard.worklogsTable.dialog.nav.prev": "前のエントリ",
   "dashboard.worklogsTable.dialog.nav.next": "次のエントリ",
+  "dashboard.worklogsTable.loadMoreError": "作業ログを追加で読み込めませんでした。もう一度スクロールして再試行してください。",
   "dashboard.worklogsTable.head.date": "日付",
   "dashboard.worklogsTable.head.keyboard": "キーボード",
   "dashboard.worklogsTable.head.mouse": "マウス",

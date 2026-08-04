@@ -26,7 +26,6 @@ export type Time = baseApi.Time & {
 }
 
 export type WorklogsFilters = {
-  page: number
   fromAt: number | null
   toAt: number | null
   activityId: string | null

@@ -160,6 +160,7 @@
   "dashboard.worklogsTable.head.activeMetrics": "Activity",
   "dashboard.worklogsTable.dialog.nav.prev": "Previous entry",
   "dashboard.worklogsTable.dialog.nav.next": "Next entry",
+  "dashboard.worklogsTable.loadMoreError": "Could not load more worklogs. Scroll again to retry.",
   "dashboard.worklogsTable.head.date": "Date",
   "dashboard.worklogsTable.head.keyboard": "Keyboard",
   "dashboard.worklogsTable.head.mouse": "Mouse",

@@ -1,9 +1,10 @@
 import { Flex, Skeleton } from '@radix-ui/themes'
-import { useMemo, type ReactNode } from 'react'
+import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import styled, { keyframes } from 'styled-components'
 
 import { Card } from '../card.tsx'
 import { Checkbox } from '../checkbox.tsx'
+import { Spinner } from '../spinner-ring.tsx'
 
 import {
   type DesktopBodyCellRenderProps,
@@ -32,9 +33,12 @@ export type DataTableProps<T extends AnyRecord> = {
   sort?: Record<string, 'ASC' | 'DESC'>
   onSortChange?: (sort: Record<string, 'ASC' | 'DESC'>) => void
   onRowClick?: (row: T, action: 'Edit' | 'Delete') => void
+  onReachEnd?: () => void
+  isLoadingMore?: boolean
 } & DataProps<T>
 
 const DEFAULT_SKELETON_HEIGHT = '30px'
+const REACH_END_THRESHOLD_PX = 120
 
 export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
   const {
@@ -56,8 +60,46 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
     sort,
     onSortChange,
     onRowClick,
+    onReachEnd,
+    isLoadingMore,
     className,
   } = props
+
+  const scrollRef = useRef<HTMLDivElement>(null)
+  const sentinelRef = useRef<HTMLDivElement>(null)
+  const onReachEndRef = useRef(onReachEnd)
+
+  useEffect(() => {
+    onReachEndRef.current = onReachEnd
+  })
+
+  const hasReachEndHandler = Boolean(onReachEnd)
+
+  useEffect(() => {
+    const root = scrollRef.current
+    const sentinel = sentinelRef.current
+
+    if (!hasReachEndHandler || !root || !sentinel) {
+      return
+    }
+
+    const observer = new IntersectionObserver(
+      (entries) => {
+        if (entries.some((entry) => entry.isIntersecting)) {
+          onReachEndRef.current?.()
+        }
+      },
+      { root, rootMargin: `0px 0px ${REACH_END_THRESHOLD_PX}px 0px` },
+    )
+
+    observer.observe(sentinel)
+
+    return () => observer.disconnect()
+    // Re-observing after each appended page re-reports the current
+    // intersection, so a page shorter than the root margin still asks for the
+    // next one. Deliberately not keyed on the loading flag: a failed request
+    // must not re-trigger by itself, the user retries by scrolling.
+  }, [hasReachEndHandler, data.length])
 
   const selectedIds = 'selectedIds' in props ? props.selectedIds : undefined
 
@@ -102,155 +144,166 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
       $maxHeight={maxHeight}
       $isFiltering={isFiltering}
     >
-      <StyledTable $nowrap={nowrap}>
-        <THead>
-          <tr>
-            {config.map((configEntry, index) => {
-              const rowsSelected = isPartiallySelected
-                ? 'indeterminate'
-                : isAllSelected
+      <TableScroll ref={scrollRef}>
+        <StyledTable $nowrap={nowrap}>
+          <THead>
+            <tr>
+              {config.map((configEntry, index) => {
+                const rowsSelected = isPartiallySelected
+                  ? 'indeterminate'
+                  : isAllSelected
 
-              const key =
-                'dataKey' in configEntry
-                  ? configEntry.dataKey
-                  : configEntry.customKey
+                const key =
+                  'dataKey' in configEntry
+                    ? configEntry.dataKey
+                    : configEntry.customKey
 
-              return (
-                <HeaderTd
-                  key={key.toString()}
-                  $width={configEntry.width}
-                  $sticky={configEntry.sticky}
-                >
-                  <Flex
-                    gap={'3'}
-                    align={'center'}
-                    justify={configEntry.horizontalAlign}
-                  >
-                    {allowSelection && index === 0 && (
-                      <Checkbox
-                        checked={rowsSelected}
-                        onCheckedChange={() => handleToggleAllSelected()}
-                      />
-                    )}
-                    <HeaderComponent
-                      columnConfig={configEntry}
-                      DefaultHeaderComponent={DesktopHeaderCellComponent}
-                      selected={rowsSelected}
-                      sortParams={sortParams}
-                      dataKey={
-                        'dataKey' in configEntry
-                          ? configEntry.dataKey
-                          : undefined
-                      }
-                      customKey={
-                        'customKey' in configEntry
-                          ? configEntry.customKey
-                          : undefined
-                      }
-                      onSortChange={onSortChange}
-                    />
-                  </Flex>
-                </HeaderTd>
-              )
-            })}
-          </tr>
-        </THead>
-        <TBody>
-          {isDataExists &&
-            data.map((row) => {
-              const rowId = getRowId(row)
-
-              return (
-                <Tr
-                  key={rowId}
-                  $clickable={Boolean(onRowClick)}
-                  onClick={
-                    onRowClick ? () => onRowClick(row, 'Edit') : undefined
-                  }
-                >
-                  {config.map((columnConfig, index) => {
-                    const selected = selectedIds?.[rowId] ?? false
-
-                    const key =
-                      'dataKey' in columnConfig
-                        ? columnConfig.dataKey
-                        : columnConfig.customKey
-
-                    return (
-                      <Td
-                        key={`${key.toString()}-${rowId}`}
-                        $verticalAlign={verticalAlign}
-                        $width={columnConfig.width}
-                        $sticky={columnConfig.sticky}
-                      >
-                        <Flex
-                          gap={'3'}
-                          align={'center'}
-                          justify={columnConfig.horizontalAlign}
-                        >
-                          {allowSelection && index === 0 && (
-                            <div onClick={(event) => event.stopPropagation()}>
-                              <Checkbox
-                                checked={selected}
-                                onCheckedChange={() =>
-                                  rowId &&
-                                  handleSelectedChange(rowId.toString())
-                                }
-                              />
-                            </div>
-                          )}
-                          <BodyComponent
-                            columnConfig={columnConfig}
-                            data={row}
-                            DefaultBodyComponent={DesktopBodyCellComponent}
-                            selected={selected}
-                            dataKey={
-                              'dataKey' in columnConfig
-                                ? columnConfig.dataKey
-                                : undefined
-                            }
-                            customKey={
-                              'customKey' in columnConfig
-                                ? columnConfig.customKey
-                                : undefined
-                            }
-                          />
-                        </Flex>
-                      </Td>
-                    )
-                  })}
-                </Tr>
-              )
-            })}
-          {!isDataExists &&
-            loading &&
-            mockedData.map((_, index) => (
-              <Tr key={`loading-${index}`} $clickable={false}>
-                {config.map((columnConfig, index) => (
-                  <Td
-                    key={`loading-${index}`}
-                    $verticalAlign={verticalAlign}
-                    $width={columnConfig.width}
+                return (
+                  <HeaderTd
+                    key={key.toString()}
+                    $width={configEntry.width}
+                    $sticky={configEntry.sticky}
                   >
                     <Flex
                       gap={'3'}
                       align={'center'}
-                      justify={columnConfig.horizontalAlign}
+                      justify={configEntry.horizontalAlign}
                     >
                       {allowSelection && index === 0 && (
-                        <Checkbox checked={false} onCheckedChange={() => {}} />
+                        <Checkbox
+                          checked={rowsSelected}
+                          onCheckedChange={() => handleToggleAllSelected()}
+                        />
                       )}
-                      <Skeleton
-                        height={skeletonHeight ?? DEFAULT_SKELETON_HEIGHT}
-                        width="100%"
+                      <HeaderComponent
+                        columnConfig={configEntry}
+                        DefaultHeaderComponent={DesktopHeaderCellComponent}
+                        selected={rowsSelected}
+                        sortParams={sortParams}
+                        dataKey={
+                          'dataKey' in configEntry
+                            ? configEntry.dataKey
+                            : undefined
+                        }
+                        customKey={
+                          'customKey' in configEntry
+                            ? configEntry.customKey
+                            : undefined
+                        }
+                        onSortChange={onSortChange}
                       />
                     </Flex>
-                  </Td>
-                ))}
-              </Tr>
-            ))}
-        </TBody>
-      </StyledTable>
+                  </HeaderTd>
+                )
+              })}
+            </tr>
+          </THead>
+          <TBody>
+            {isDataExists &&
+              data.map((row) => {
+                const rowId = getRowId(row)
+
+                return (
+                  <Tr
+                    key={rowId}
+                    $clickable={Boolean(onRowClick)}
+                    onClick={
+                      onRowClick ? () => onRowClick(row, 'Edit') : undefined
+                    }
+                  >
+                    {config.map((columnConfig, index) => {
+                      const selected = selectedIds?.[rowId] ?? false
+
+                      const key =
+                        'dataKey' in columnConfig
+                          ? columnConfig.dataKey
+                          : columnConfig.customKey
+
+                      return (
+                        <Td
+                          key={`${key.toString()}-${rowId}`}
+                          $verticalAlign={verticalAlign}
+                          $width={columnConfig.width}
+                          $sticky={columnConfig.sticky}
+                        >
+                          <Flex
+                            gap={'3'}
+                            align={'center'}
+                            justify={columnConfig.horizontalAlign}
+                          >
+                            {allowSelection && index === 0 && (
+                              <div onClick={(event) => event.stopPropagation()}>
+                                <Checkbox
+                                  checked={selected}
+                                  onCheckedChange={() =>
+                                    rowId &&
+                                    handleSelectedChange(rowId.toString())
+                                  }
+                                />
+                              </div>
+                            )}
+                            <BodyComponent
+                              columnConfig={columnConfig}
+                              data={row}
+                              DefaultBodyComponent={DesktopBodyCellComponent}
+                              selected={selected}
+                              dataKey={
+                                'dataKey' in columnConfig
+                                  ? columnConfig.dataKey
+                                  : undefined
+                              }
+                              customKey={
+                                'customKey' in columnConfig
+                                  ? columnConfig.customKey
+                                  : undefined
+                              }
+                            />
+                          </Flex>
+                        </Td>
+                      )
+                    })}
+                  </Tr>
+                )
+              })}
+            {!isDataExists &&
+              loading &&
+              mockedData.map((_, index) => (
+                <Tr key={`loading-${index}`} $clickable={false}>
+                  {config.map((columnConfig, index) => (
+                    <Td
+                      key={`loading-${index}`}
+                      $verticalAlign={verticalAlign}
+                      $width={columnConfig.width}
+                    >
+                      <Flex
+                        gap={'3'}
+                        align={'center'}
+                        justify={columnConfig.horizontalAlign}
+                      >
+                        {allowSelection && index === 0 && (
+                          <Checkbox
+                            checked={false}
+                            onCheckedChange={() => {}}
+                          />
+                        )}
+                        <Skeleton
+                          height={skeletonHeight ?? DEFAULT_SKELETON_HEIGHT}
+                          width="100%"
+                        />
+                      </Flex>
+                    </Td>
+                  ))}
+                </Tr>
+              ))}
+          </TBody>
+        </StyledTable>
+        {isLoadingMore && (
+          <LoadingMoreRow>
+            <Spinner />
+          </LoadingMoreRow>
+        )}
+        {hasReachEndHandler && <ReachEndSentinel ref={sentinelRef} />}
+      </TableScroll>
     </TableCard>
   )
 }
@@ -279,8 +332,10 @@ const TableCard = styled(Card)<{
   $isFiltering?: boolean
 }>`
   padding: 0;
-  overflow: auto;
   position: relative;
+  display: flex;
+  flex-direction: column;
+  overflow: hidden;
 
   ${(p) => p.$height && `height: ${p.$height};`}
   ${(p) => p.$minHeight && `min-height: ${p.$minHeight};`}
@@ -304,6 +359,12 @@ const TableCard = styled(Card)<{
     offset-path: rect(0% 100% 100% 0% round var(--radius-4));
     animation: ${pulseAnimation} 2s ease-in-out infinite;
   }
+`
+
+const TableScroll = styled.div`
+  overflow: auto;
+  flex: 1;
+  min-height: 0;
 `
 
 const StyledTable = styled.table<{ $nowrap?: boolean }>`
@@ -386,6 +447,17 @@ const Tr = styled.tr<{ $clickable: boolean }>`
   &:hover ${Td} {
     background-color: rgb(242, 242, 242);
   }
+`
+
+const ReachEndSentinel = styled.div`
+  height: 1px;
+`
+
+const LoadingMoreRow = styled.div`
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  padding: var(--space-3);
 `
 
 export type { DataTableConfig } from './types'

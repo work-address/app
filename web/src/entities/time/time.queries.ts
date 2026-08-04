@@ -1,7 +1,7 @@
-import { createQuery } from '@farfetched/core'
+import { concurrency, createQuery } from '@farfetched/core'
 import { endOfDay } from 'date-fns'
 
-import type { WorklogSort } from './types'
+import type { Time, WorklogSort } from './types'
 
 import { baseApi } from '@/shared'
 
@@ -66,8 +66,12 @@ export const worklogsQuery = createQuery({
     })
 
     return {
-      items: (response.data?.[0] ?? []) as baseApi.Time[],
+      items: (response.data?.[0] ?? []) as Time[],
       total: (response.data?.[1] ?? 0) as number,
     }
   },
 })
+
+// Pagination reads the previous page from the store, so a stale response must
+// never land after a newer one.
+concurrency(worklogsQuery, { strategy: 'TAKE_LATEST' })

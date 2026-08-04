@@ -162,6 +162,7 @@
   "dashboard.worklogsTable.dialog.nav.next": "Следующая запись",
   "dashboard.worklogsTable.removeScreenshot": "Удалить снимок экрана",
   "dashboard.worklogsTable.removeProcesses": "Удалить процессы",
+  "dashboard.worklogsTable.loadMoreError": "Не удалось загрузить ещё записи. Прокрутите ещё раз, чтобы повторить.",
   "dashboard.worklogsTable.head.date": "Дата",
   "dashboard.worklogsTable.head.keyboard": "Клавиатура",
   "dashboard.worklogsTable.head.mouse": "Мышь",

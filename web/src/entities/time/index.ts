@@ -1,4 +1,5 @@
 import { combine, sample } from 'effector'
+import i18n from 'i18next'
 
 import {
   fetchWorklogs,
@@ -9,28 +10,52 @@ import {
   resetWorklogSort,
   setWorklogsLoading,
   debouncedChangeWorklogFilters,
+  loadMoreWorklogs,
 } from './time.events'
-import {
-  deleteWorklogMutation,
-  editWorklogMutation,
-  removeWorklogProcessesMutation,
-  removeWorklogScreenshotMutation,
-  setWorklogPaidStatusMutation,
-} from './time.mutations'
 import { worklogsQuery, type WorklogsQueryParams } from './time.queries'
-import { $worklogSort, $worklogsFilters } from './time.stores'
+import {
+  $hasMoreWorklogs,
+  $worklogSort,
+  $worklogsFilters,
+  $worklogsPage,
+} from './time.stores'
 
-import { $breakpoints } from '@/shared'
+import type { WorklogsFilters, WorklogSort } from './types'
+
+import { $breakpoints, showToast } from '@/shared'
+
+const toWorklogsQueryParams = (
+  filters: WorklogsFilters,
+  sort: WorklogSort,
+  page: number,
+): WorklogsQueryParams => ({
+  ...Object.fromEntries(
+    Object.entries(filters).map(([key, value]) => [key, value ?? undefined]),
+  ),
+  page,
+  sort,
+})
 
 sample({
   clock: [fetchWorklogs, applyWorklogFilters],
   source: combine($worklogsFilters, $worklogSort),
-  fn: ([filters, sort]): WorklogsQueryParams => ({
-    ...Object.fromEntries(
-      Object.entries(filters).map(([key, value]) => [key, value ?? undefined]),
-    ),
-    sort,
-  }),
+  fn: ([filters, sort]): WorklogsQueryParams =>
+    toWorklogsQueryParams(filters, sort, 0),
+  target: worklogsQuery.start,
+})
+
+sample({
+  clock: loadMoreWorklogs,
+  source: {
+    filters: $worklogsFilters,
+    sort: $worklogSort,
+    page: $worklogsPage,
+    hasMore: $hasMoreWorklogs,
+    pending: worklogsQuery.$pending,
+  },
+  filter: ({ hasMore, pending }) => hasMore && !pending,
+  fn: ({ filters, sort, page }): WorklogsQueryParams =>
+    toWorklogsQueryParams(filters, sort, page + 1),
   target: worklogsQuery.start,
 })
 
@@ -53,15 +78,15 @@ sample({
   target: setWorklogsLoading.prepend(() => true),
 })
 
-sample({
-  clock: [
-    deleteWorklogMutation.finished.success.map(() => void 0),
-    editWorklogMutation.finished.success.map(() => void 0),
-    removeWorklogScreenshotMutation.finished.success.map(() => void 0),
-    removeWorklogProcessesMutation.finished.success.map(() => void 0),
-    setWorklogPaidStatusMutation.finished.success.map(() => void 0),
-  ],
-  target: applyWorklogFilters,
+worklogsQuery.finished.failure.watch(({ params }) => {
+  if ((params.page ?? 0) === 0) {
+    return
+  }
+
+  showToast('error', {
+    message: i18n.t('dashboard.worklogsTable.loadMoreError'),
+    position: 'top-center',
+  })
 })
 
 export {
@@ -79,6 +104,7 @@ export {
   applyWorklogFilters,
   resetWorklogFilters,
   resetWorklogSort,
+  loadMoreWorklogs,
 } from './time.events'
 
 export {
@@ -96,4 +122,6 @@ export {
   $worklogSort,
   $worklogsLoading,
   $isWorklogsFiltering,
+  $hasMoreWorklogs,
+  $isLoadingMoreWorklogs,
 } from './time.stores'

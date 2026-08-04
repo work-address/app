@@ -25,3 +25,5 @@ export const resetWorklogFilters = createEvent()
 export const appendWorklogSort = createEvent<WorklogSort>()
 
 export const resetWorklogSort = createEvent<WorklogSort | null>()
+
+export const loadMoreWorklogs = createEvent()

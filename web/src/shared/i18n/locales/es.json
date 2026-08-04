@@ -160,6 +160,7 @@
   "dashboard.worklogsTable.head.activeMetrics": "Actividad",
   "dashboard.worklogsTable.dialog.nav.prev": "Entrada anterior",
   "dashboard.worklogsTable.dialog.nav.next": "Entrada siguiente",
+  "dashboard.worklogsTable.loadMoreError": "No se pudieron cargar más registros. Desplázate de nuevo para reintentar.",
   "dashboard.worklogsTable.head.date": "Fecha",
   "dashboard.worklogsTable.head.keyboard": "Teclado",
   "dashboard.worklogsTable.head.mouse": "Ratón",

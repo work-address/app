@@ -160,6 +160,7 @@
   "dashboard.worklogsTable.head.activeMetrics": "活动",
   "dashboard.worklogsTable.dialog.nav.prev": "上一条",
   "dashboard.worklogsTable.dialog.nav.next": "下一条",
+  "dashboard.worklogsTable.loadMoreError": "无法加载更多工时记录。请再次滚动以重试。",
   "dashboard.worklogsTable.head.date": "日期",
   "dashboard.worklogsTable.head.keyboard": "键盘",
   "dashboard.worklogsTable.head.mouse": "鼠标",

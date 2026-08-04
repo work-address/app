@@ -16,9 +16,11 @@ import { TimeTableCell } from './time-table-cell'
 
 import {
   $allWorklogs,
+  $isLoadingMoreWorklogs,
   $isWorklogsFiltering,
   $worklogSort,
   $worklogsLoading,
+  loadMoreWorklogs,
   setWorklogPaidStatusMutation,
   type Time,
   resetWorklogSort,
@@ -48,6 +50,8 @@ export const TimeTable = () => {
     setPaidStatus,
     setPaidStatusStatus,
     resetSetPaidStatus,
+    loadMore,
+    isLoadingMoreWorklogs,
   } = useUnit({
     allWorklogs: $allWorklogs,
     worklogsLoading: $worklogsLoading,
@@ -57,6 +61,8 @@ export const TimeTable = () => {
     setPaidStatus: setWorklogPaidStatusMutation.start,
     setPaidStatusStatus: setWorklogPaidStatusMutation.$status,
     resetSetPaidStatus: setWorklogPaidStatusMutation.reset,
+    loadMore: loadMoreWorklogs,
+    isLoadingMoreWorklogs: $isLoadingMoreWorklogs,
   })
 
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -281,6 +287,8 @@ export const TimeTable = () => {
             sort={worklogSort}
             onSortChange={handleOnSortChange}
             onRowClick={handleRowClick}
+            onReachEnd={loadMore}
+            isLoadingMore={isLoadingMoreWorklogs}
             skeletonHeight="40px"
           />
           <TimeDialog
