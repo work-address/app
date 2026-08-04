@@ -1,6 +1,8 @@
 import { createQuery } from '@farfetched/core'
 
-import type { TimeTotalsRow } from './types'
+import { normalizeProcessName } from './utils'
+
+import type { ProjectProcessStats, StatsPeriod, TimeTotalsRow } from './types'
 
 import { baseApi } from '@/shared'
 
@@ -55,3 +57,45 @@ export const projectsStatsQuery = createQuery({
     })
   },
 })
+
+export const projectsProcessStatsQuery = createQuery({
+  handler: async ({
+    projectIds,
+    period,
+  }: {
+    projectIds: string[]
+    period: StatsPeriod
+  }): Promise<ProjectProcessStats[]> => {
+    if (projectIds.length === 0) {
+      return []
+    }
+
+    const results = await Promise.allSettled(
+      projectIds.map((id) => fetchProjectProcesses(id, period)),
+    )
+
+    // One project's failed stats should not blank the chart for the rest.
+    return results.map((result, index) => ({
+      projectId: projectIds[index],
+      processes: result.status === 'fulfilled' ? result.value : [],
+      failed: result.status === 'rejected',
+    }))
+  },
+})
+
+const fetchProjectProcesses = async (id: string, period: StatsPeriod) => {
+  const response = await baseApi.projectControllerGetStats({
+    path: { id: id as never, period },
+  })
+
+  if (response.error) {
+    throw response.error
+  }
+
+  const stats = (response.data ?? []) as baseApi.ProjectStatisticsSearch[]
+
+  return stats.map((stat) => ({
+    processName: normalizeProcessName(stat.processName),
+    timeMin: stat.timeMin ?? 0,
+  }))
+}

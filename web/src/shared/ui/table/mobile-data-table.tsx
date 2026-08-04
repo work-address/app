@@ -4,9 +4,9 @@ import { AnimatePresence, motion } from 'motion/react'
 import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import styled from 'styled-components'
 
+import { IconButton } from '../button/ui/icon-button'
 import { Card } from '../card'
 import { Checkbox } from '../checkbox'
-import { IconButton } from '../button/ui/icon-button'
 
 import { MobileBodyComponent } from './mobile-body-component'
 import { MobileHeaderComponent } from './mobile-header-component'

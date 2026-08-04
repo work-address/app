@@ -1,9 +1,4 @@
-import type {
-  Route,
-  IdRouteParams,
-  NoChildRoutes,
-  MappingRoute,
-} from './types'
+import type { Route, IdRouteParams, NoChildRoutes, MappingRoute } from './types'
 
 import {
   DashboardIcon,

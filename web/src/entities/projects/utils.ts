@@ -5,6 +5,15 @@ import type {
 } from './types'
 import type { baseApi } from '@/shared'
 
+// Sentinel that cannot collide with a real process name from the tracker.
+export const OTHER_PROCESS_NAME = '__other__'
+
+export const normalizeProcessName = (processName?: string | null) => {
+  const trimmed = processName?.trim()
+
+  return trimmed ? trimmed : OTHER_PROCESS_NAME
+}
+
 export const mapProjectsAndStats = (
   projects: baseApi.Project[] = [],
   stats: TimeTotalsRow[] = [],

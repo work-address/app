@@ -4,10 +4,18 @@ import {
   changeProjectStateFilter,
   setProjectsStateFiltering,
 } from './projects.events'
-import { projectsQuery, projectsStatsQuery } from './projects.queries'
+import {
+  projectsProcessStatsQuery,
+  projectsQuery,
+  projectsStatsQuery,
+} from './projects.queries'
 import { mapProjectsAndStats } from './utils'
 
-import type { ProjectWithStats, ProjectsFilter } from './types'
+import type {
+  ProjectWithStats,
+  ProjectsFilter,
+  ProjectProcessStats,
+} from './types'
 import type { baseApi } from '@/shared'
 
 export const $projectStateFilter = createStore<ProjectsFilter>({
@@ -79,3 +87,17 @@ export const $isProjectsFiltering = createStore(false)
   .on($filteredProjects, () => false)
 
 export const $hasProjects = $projects.map((projects) => projects.length > 0)
+
+export const $projectsWithProcessTracking = $projects.map((projects) =>
+  projects.filter((project) => Boolean(project.trackProcesses)),
+)
+
+export const $hasProjectsWithProcessTracking = $projectsWithProcessTracking.map(
+  (projects) => projects.length > 0,
+)
+
+export const $projectsProcessStats = projectsProcessStatsQuery.$data.map(
+  (stats): ProjectProcessStats[] => stats ?? [],
+)
+
+export const $projectsProcessStatsLoading = projectsProcessStatsQuery.$pending

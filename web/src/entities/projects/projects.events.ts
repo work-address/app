@@ -1,9 +1,11 @@
 import { createEvent } from 'effector'
 import { debounce } from 'patronum/debounce'
 
-import { type ProjectsFilter } from './types'
+import { type ProjectsFilter, type StatsPeriod } from './types'
 
 export const fetchProjects = createEvent()
+
+export const fetchProjectsProcessStats = createEvent<StatsPeriod>()
 
 export const changeProjectStateFilter = createEvent<Partial<ProjectsFilter>>()
 

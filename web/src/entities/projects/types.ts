@@ -27,3 +27,16 @@ export type TimeTotalComputed = {
 export type ProjectWithStats = Omit<baseApi.Project, 'rateHour'> &
   TimeTotalsRow &
   TimeTotalComputed
+
+export type StatsPeriod = NonNullable<baseApi.ProjectStatisticsSearch['period']>
+
+export type ProjectProcessStat = {
+  processName: string
+  timeMin: number
+}
+
+export type ProjectProcessStats = {
+  projectId: string
+  processes: ProjectProcessStat[]
+  failed: boolean
+}
