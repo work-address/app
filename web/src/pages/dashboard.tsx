@@ -112,8 +112,8 @@ export default function DashboardPage() {
             title={t('dashboard.page.empty.title')}
             description={t('dashboard.page.empty.description')}
             actionLabel={t('dashboard.page.empty.action')}
-            buttonThemeVariant="primary"
-            buttonSize={'3'}
+            size="l"
+            buttonIcon={<PlusIcon width={18} height={18} />}
           />
         )}
       </Wrapper>

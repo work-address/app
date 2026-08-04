@@ -88,7 +88,7 @@ export const Header = () => {
                   walletAddress: user?.friendlyWalletAddress ?? '',
                 })}
               >
-                <Button variant="ghost" color="gray" radius="large">
+                <Button variant="ghost" color="neutral">
                   <UserBox>
                     <UserAvatar>
                       <IconImg src={PersonIcon} alt={t('header.userAlt')} />
@@ -111,9 +111,7 @@ export const Header = () => {
             </>
           ) : (
             <NavLink to={routes.signIn.build()} viewTransition>
-              <Button themeVariant="primary" size="3">
-                {t('signIn.title')}
-              </Button>
+              <Button size="l">{t('signIn.title')}</Button>
             </NavLink>
           )}
         </Right>
@@ -165,7 +163,7 @@ export const Header = () => {
                         })}
                         style={{ width: '100%' }}
                       >
-                        <Button variant="ghost" color="gray" width="100%">
+                        <Button variant="ghost" color="neutral" stretch>
                           <UserBox>
                             <UserAvatar>
                               <IconImg
@@ -197,9 +195,7 @@ export const Header = () => {
                         style={{ width: '100%' }}
                         onClick={() => setMobileMenuOpen(false)}
                       >
-                        <Button themeVariant="primary" stretch>
-                          {t('signIn.title')}
-                        </Button>
+                        <Button stretch>{t('signIn.title')}</Button>
                       </NavLink>
                     </MobileMenuTop>
                     <Divider />

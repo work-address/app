@@ -11,7 +11,7 @@ import styled from 'styled-components'
 
 import { useBreakpoint } from '../hooks'
 
-import { Button } from './button'
+import { Button } from './button/ui/button'
 import { Checkbox } from './checkbox'
 import { Drawer } from './dialogs/drawer'
 import { Input } from './input'
@@ -148,7 +148,7 @@ export const Select = ({
         title={title ?? ph}
         trigger={TriggerEl}
         footer={
-          <Button stretch themeVariant="primary" onClick={() => setOpen(false)}>
+          <Button stretch onClick={() => setOpen(false)}>
             {t('common.apply')}
           </Button>
         }

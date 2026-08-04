@@ -1,13 +1,12 @@
 import { useTranslation } from 'react-i18next'
 
-import { Button, Spinner } from '@/shared'
+import { Button } from '@/shared'
 
 type ProfileEditActionsProps = {
   isDirty: boolean
   profileSaving: boolean
   onReset: () => void
   stretch?: boolean
-  showSpinner?: boolean
 }
 
 export const ProfileEditActions = ({
@@ -15,7 +14,6 @@ export const ProfileEditActions = ({
   profileSaving,
   onReset,
   stretch,
-  showSpinner,
 }: ProfileEditActionsProps) => {
   const { t } = useTranslation()
   const disabled = !isDirty || profileSaving
@@ -23,7 +21,8 @@ export const ProfileEditActions = ({
   return (
     <>
       <Button
-        themeVariant="secondary"
+        color="neutral"
+        variant="soft"
         onClick={onReset}
         disabled={disabled}
         type="button"
@@ -32,12 +31,11 @@ export const ProfileEditActions = ({
         {t('profile.actions.cancel')}
       </Button>
       <Button
-        themeVariant={'primary'}
         disabled={disabled}
-        type={'submit'}
+        type="submit"
         stretch={stretch}
+        loading={profileSaving}
       >
-        {showSpinner && profileSaving && <Spinner useCase="button" />}
         {t('profile.actions.save')}
       </Button>
     </>

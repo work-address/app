@@ -35,7 +35,6 @@ export const WorklogsEmptyState = ({ style }: WorklogsEmptyStateProps) => {
         description={t('dashboard.worklogsEmpty.description.afterFilters')}
         actionLabel={t('dashboard.worklogsEmpty.action.filtersReset')}
         onAction={resetWorklogFiltersEvent}
-        buttonThemeVariant="primary"
         style={style}
       />
     )

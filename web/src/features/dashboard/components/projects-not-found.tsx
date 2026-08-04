@@ -17,15 +17,7 @@ export const ProjectsNotFound = () => {
       </IconInner>
       <Title>{t('dashboard.page.projectsNotFound.title')}</Title>
       <Desc>{t('dashboard.page.projectsNotFound.description')}</Desc>
-      <Button
-        onClick={openDocs}
-        variant={'outline'}
-        color={'gray'}
-        size={'2'}
-        style={{
-          color: 'black',
-        }}
-      >
+      <Button color="neutral" variant="outline" onClick={onOpenDocsClick}>
         {t('dashboard.page.empty.action')}
       </Button>
     </Root>

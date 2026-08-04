@@ -243,8 +243,7 @@ export const TimeTable = () => {
                 })}
               </S.Label>
               <Button
-                themeVariant="primary"
-                size="3"
+                size="l"
                 type="button"
                 disabled={setPaidStatusStatus === 'pending'}
                 onClick={() => handleBulkSetPaidStatus(true)}
@@ -252,8 +251,9 @@ export const TimeTable = () => {
                 {t('dashboard.worklogsTable.paymentStatus.paid')}
               </Button>
               <Button
-                themeVariant="secondary"
-                size="3"
+                color="neutral"
+                variant="soft"
+                size="l"
                 type="button"
                 disabled={setPaidStatusStatus === 'pending'}
                 onClick={() => handleBulkSetPaidStatus(false)}
@@ -262,8 +262,8 @@ export const TimeTable = () => {
               </Button>
               <Button
                 variant="outline"
-                color="gray"
-                size="3"
+                color="neutral"
+                size="l"
                 type="button"
                 disabled={setPaidStatusStatus === 'pending'}
                 onClick={() => setSelectedIds({})}

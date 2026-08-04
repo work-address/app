@@ -76,7 +76,11 @@ export const ProfileViewLinks = ({
                   </Text>
                 </Skeleton>
                 <Flex gap={'2'} align={'center'}>
-                  <Button variant={'ghost'} onClick={onWalletAddressCopy}>
+                  <Button
+                    variant="ghost"
+                    color="neutral"
+                    onClick={onWalletAddressCopy}
+                  >
                     <Skeleton loading={profileLoading}>
                       <Text
                         $themeVariant={'primary'}
@@ -92,9 +96,9 @@ export const ProfileViewLinks = ({
               </Flex>
               <Flex gap={'2'} align={'center'}>
                 <Button
-                  variant={'outline'}
-                  color={'gray'}
-                  size={'3'}
+                  variant="outline"
+                  color="neutral"
+                  size="l"
                   onClick={onShareProfile}
                 >
                   {t('common.share')}
@@ -107,7 +111,7 @@ export const ProfileViewLinks = ({
                     })}
                     viewTransition
                   >
-                    <Button themeVariant={'primary'} size={'3'}>
+                    <Button size="l">
                       {t('common.edit')}
                       <Pencil1Icon />
                     </Button>

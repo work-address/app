@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 
 import type { ProjectDialogMode } from './types'
 
-import { Button, Spinner, useBreakpoint } from '@/shared'
+import { Button, useBreakpoint } from '@/shared'
 
 type ProjectDialogFooterProps = {
   mode: ProjectDialogMode
@@ -35,44 +35,39 @@ export const ProjectDialogFooter = ({
     return (
       <Flex justify="between">
         <Button
-          color="red"
+          color="danger"
           variant="outline"
-          size="3"
+          size="l"
+          iconLeft={<TrashIcon />}
           onClick={onDelete}
-          type="button"
         >
-          <TrashIcon />
           {t('common.delete')}
         </Button>
         <Flex gap="3">
           {mode === 'view' ? (
             <Button
-              themeVariant="primary"
-              size="3"
+              size="l"
+              iconLeft={<Pencil1Icon />}
               onClick={handleEditClick}
-              type="button"
             >
-              <Pencil1Icon />
               {t('dashboard.projectsTable.drawer.edit')}
             </Button>
           ) : (
             <>
               <Button
-                themeVariant="secondary"
+                color="neutral"
+                variant="soft"
+                size="l"
                 onClick={onCancel}
-                size="3"
-                type="button"
               >
                 {t('common.cancel')}
               </Button>
               <Button
-                themeVariant="primary"
-                size="3"
+                size="l"
                 form="edit-project-form"
                 type="submit"
-                disabled={isPending}
+                loading={isPending}
               >
-                {isPending && <Spinner color="#FFF" width="3px" />}
                 {t('common.save')}
               </Button>
             </>
@@ -84,8 +79,7 @@ export const ProjectDialogFooter = ({
 
   if (mode === 'view') {
     return (
-      <Button themeVariant="primary" onClick={handleEditClick} type="button">
-        <Pencil1Icon />
+      <Button iconLeft={<Pencil1Icon />} onClick={handleEditClick}>
         {t('dashboard.projectsTable.drawer.edit')}
       </Button>
     )
@@ -93,17 +87,15 @@ export const ProjectDialogFooter = ({
 
   return (
     <Grid columns="1fr 1fr" gap="2">
-      <Button themeVariant="secondary" onClick={onCancel} type="button">
+      <Button color="neutral" variant="soft" onClick={onCancel}>
         {t('common.cancel')}
       </Button>
       <Button
-        themeVariant="primary"
         form="edit-project-form"
         type="submit"
-        disabled={isPending}
+        loading={isPending}
         autoFocus={false}
       >
-        {isPending && <Spinner width="2px" color="#FFF" size={15} />}
         {t('common.save')}
       </Button>
     </Grid>

@@ -266,7 +266,6 @@ export const ProfileEdit = () => {
                     isDirty={isDirty}
                     profileSaving={profileSaving}
                     onReset={onReset}
-                    showSpinner
                   />
                 </Flex>
               )}

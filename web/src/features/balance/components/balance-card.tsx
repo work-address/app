@@ -38,15 +38,11 @@ export const BalanceCard = ({ onTopUp, onWithdraw }: BalanceCardProps) => {
           </Skeleton>
         </Flex>
         <Flex gap={'3'} wrap={'wrap'}>
-          <Button themeVariant={'primary'} onClick={onTopUp}>
+          <Button onClick={onTopUp}>
             <ArrowDownIcon />
             <Text>{t('balance.card.topUp')}</Text>
           </Button>
-          <Button
-            themeVariant={'secondary'}
-            variant={'outline'}
-            onClick={onWithdraw}
-          >
+          <Button color="neutral" variant="outline" onClick={onWithdraw}>
             <ArrowUpIcon />
             <Text>{t('balance.card.withdraw')}</Text>
           </Button>

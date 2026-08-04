@@ -1,9 +1,10 @@
-import { Flex, Text, Button, Dialog } from '@radix-ui/themes'
+import { Flex, Text, Dialog } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import styled from 'styled-components'
 
 import { useBreakpoint } from '../../hooks'
 import { $confirmStack, confirmed, cancelled } from '../../model/confirm.model'
+import { Button } from '../button/ui/button'
 
 export const Confirm = () => {
   const stack = useUnit($confirmStack)
@@ -51,19 +52,13 @@ export const Confirm = () => {
                 mt={{ initial: '4', md: '3' }}
               >
                 <Button
+                  color="neutral"
                   variant="soft"
-                  color="gray"
                   onClick={() => cancelledEvent(entry.id)}
-                  style={{ cursor: 'pointer' }}
                 >
                   {entry.props.cancelLabel}
                 </Button>
-                <Button
-                  variant="solid"
-                  color="red"
-                  onClick={() => confirmedEvent(entry.id)}
-                  style={{ cursor: 'pointer' }}
-                >
+                <Button color="danger" onClick={() => confirmedEvent(entry.id)}>
                   {entry.props.confirmLabel}
                 </Button>
               </Flex>

@@ -248,8 +248,11 @@ export const ProjectsTable = () => {
                   <TrashIcon />
                 </IconButton>
               ) : (
-                <Button variant={'outline'} color={'red'}>
-                  <TrashIcon />
+                <Button
+                  color="danger"
+                  variant="outline"
+                  iconLeft={<TrashIcon />}
+                >
                   {t('dashboard.page.deleteAll')}
                 </Button>
               )}
@@ -264,10 +267,9 @@ export const ProjectsTable = () => {
             </IconButton>
           ) : (
             <Button
-              themeVariant={'primary'}
+              iconLeft={<PlusIcon />}
               onClick={() => setIsCreateDialogOpen(true)}
             >
-              <PlusIcon />
               {t('dashboard.page.createProject')}
             </Button>
           )}

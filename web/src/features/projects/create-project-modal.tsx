@@ -21,7 +21,6 @@ import {
   Text,
   TextArea,
   useBreakpoint,
-  Spinner,
 } from '@/shared'
 
 type CreateProjectPayload = {
@@ -142,38 +141,32 @@ export const CreateProjectModal = ({
         isMobile ? (
           <Grid gap={'3'} columns={'1fr 1fr'}>
             <Button
-              themeVariant={'secondary'}
+              color="neutral"
+              variant="soft"
               onClick={() => onOpenChange(false)}
             >
               {t('dashboard.projectsTable.confirmDelete.cancel')}
             </Button>
-            <Button
-              themeVariant={'primary'}
-              type="submit"
-              form="create-project-form"
-              disabled={pending}
-            >
-              {pending && <Spinner color="#FFF" width="2px" size={15} />}
+            <Button type="submit" form="create-project-form" loading={pending}>
               {t('dashboard.page.createProject')}
             </Button>
           </Grid>
         ) : (
           <Flex gap={'3'} justify={'end'}>
             <Button
-              themeVariant={'secondary'}
-              size={'3'}
+              color="neutral"
+              variant="soft"
+              size="l"
               onClick={() => onOpenChange(false)}
             >
               {t('dashboard.projectsTable.confirmDelete.cancel')}
             </Button>
             <Button
-              themeVariant={'primary'}
-              size={'3'}
+              size="l"
               type="submit"
               form="create-project-form"
-              disabled={pending}
+              loading={pending}
             >
-              {pending && <Spinner color="#FFF" width={'2px'} />}
               {t('dashboard.page.createProject')}
             </Button>
           </Flex>

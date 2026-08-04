@@ -216,7 +216,7 @@ export default function ConnectPage() {
         )}
       </S.SignInCard>
       <S.HiddenButtonRow>
-        <Button themeVariant="secondary" onClick={() => onSignIn('eth')}>
+        <Button color="neutral" variant="soft" onClick={() => onSignIn('eth')}>
           {t('signIn.continue')}
         </Button>
       </S.HiddenButtonRow>

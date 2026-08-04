@@ -1,7 +1,7 @@
 import { Flex } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
 
-import { Button, Spinner } from '@/shared'
+import { ProcessesIcon, ScreenshotsIcon, Tooltip, Button } from '@/shared'
 
 type TimeDialogFooterProps = {
   isPending: boolean
@@ -33,56 +33,58 @@ export const TimeDialogFooter = ({
   return (
     <Flex justify="between" align="center" width="100%">
       <Flex gap="3">
-        <Button
-          color="red"
-          size="3"
-          type="button"
-          disabled={isPending}
-          onClick={onDelete}
-        >
+        <Button color="danger" size="l" disabled={isPending} onClick={onDelete}>
           {t('dashboard.worklogsTable.dialog.deleteEntry')}
         </Button>
         {hasScreenshot && (
-          <Button
-            themeVariant="danger"
-            size="3"
-            type="button"
-            disabled={isPending}
-            onClick={onRemoveScreenshot}
-          >
-            {t('dashboard.worklogsTable.removeScreenshot')}
-          </Button>
+          <Tooltip content={t('dashboard.worklogsTable.removeScreenshot')}>
+            <span>
+              <Button
+                color="danger"
+                variant="soft"
+                size="l"
+                disabled={isPending}
+                onClick={onRemoveScreenshot}
+                aria-label={t('dashboard.worklogsTable.removeScreenshot')}
+              >
+                <ScreenshotsIcon width={20} height={20} />
+              </Button>
+            </span>
+          </Tooltip>
         )}
         {hasProcesses && (
-          <Button
-            themeVariant="danger"
-            size="3"
-            type="button"
-            disabled={isPending}
-            onClick={onRemoveProcesses}
-          >
-            {t('dashboard.worklogsTable.removeProcesses')}
-          </Button>
+          <Tooltip content={t('dashboard.worklogsTable.removeProcesses')}>
+            <span>
+              <Button
+                color="danger"
+                variant="soft"
+                size="l"
+                disabled={isPending}
+                onClick={onRemoveProcesses}
+                aria-label={t('dashboard.worklogsTable.removeProcesses')}
+              >
+                <ProcessesIcon width={20} height={20} />
+              </Button>
+            </span>
+          </Tooltip>
         )}
       </Flex>
       <Flex gap="3">
         <Button
-          themeVariant="secondary"
-          size="3"
-          type="button"
+          color="neutral"
+          variant="soft"
+          size="l"
           disabled={isPending}
           onClick={onDiscard}
         >
           {t('dashboard.worklogsTable.dialog.discard')}
         </Button>
         <Button
-          themeVariant="primary"
-          size="3"
-          type="button"
+          size="l"
           disabled={isPending || !canSave}
+          loading={isSaving}
           onClick={onSave}
         >
-          {isSaving && <Spinner color="#FFF" width="3px" />}
           {t('common.save')}
         </Button>
       </Flex>

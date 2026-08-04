@@ -12,10 +12,8 @@ type DashboardEmptyStateProps = {
   onAction?: () => void
   className?: string
   style?: React.CSSProperties
-  buttonThemeVariant?: ButtonProps['themeVariant']
-  buttonSize?: ButtonProps['size']
   buttonIcon?: React.ReactNode
-}
+} & ButtonProps
 
 export const DashboardEmptyState = ({
   imageSrc,
@@ -25,9 +23,8 @@ export const DashboardEmptyState = ({
   onAction,
   className,
   style,
-  buttonThemeVariant,
-  buttonSize,
   buttonIcon,
+  ...buttonProps
 }: DashboardEmptyStateProps) => {
   return (
     <Root className={className} style={style}>
@@ -38,12 +35,7 @@ export const DashboardEmptyState = ({
         <EmptyTitle>{title}</EmptyTitle>
         <EmptyDesc>{description}</EmptyDesc>
       </Text>
-      <EmptyAction
-        themeVariant={buttonThemeVariant}
-        size={buttonSize}
-        onClick={onAction}
-      >
-        {buttonIcon}
+      <EmptyAction iconLeft={buttonIcon} {...buttonProps} onClick={onAction}>
         {actionLabel}
       </EmptyAction>
     </Root>

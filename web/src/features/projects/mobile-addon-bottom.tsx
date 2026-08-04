@@ -15,12 +15,12 @@ export const MobileAddonBottom = React.memo(
     return (
       <Grid columns={'1fr'} gap={'2'}>
         <Button
-          color={'gray'}
-          variant={'outline'}
+          color="neutral"
+          variant="outline"
+          iconRight={<Pencil1Icon />}
           onClick={() => handleActionClick(data, 'Edit')}
         >
           {t('dashboard.projectsTable.actions.edit')}
-          <Pencil1Icon />
         </Button>
       </Grid>
     )

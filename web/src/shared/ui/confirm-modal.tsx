@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef } from 'react'
 import styled from 'styled-components'
 
-import { Button } from './button.tsx'
+import { Button } from './button/ui/button.tsx'
 
 type ConfirmModalProps = {
   open: boolean
@@ -76,12 +76,12 @@ export const ConfirmModal = ({
             <Title>{title}</Title>
             <Desc>{description}</Desc>
             <Btns>
-              <CancelButton themeVariant="secondary" onClick={onCancel}>
+              <Button color="neutral" variant="soft" onClick={onCancel}>
                 {cancelLabel}
-              </CancelButton>
-              <DangerBtn type="button" onClick={onConfirm}>
+              </Button>
+              <Button color="danger" onClick={onConfirm}>
                 {confirmLabel}
-              </DangerBtn>
+              </Button>
             </Btns>
           </Box>
         </Stage>
@@ -154,38 +154,9 @@ const Btns = styled.div`
   @media (max-width: 768px) {
     flex-direction: column-reverse;
     width: 100%;
-  }
-`
 
-const CancelButton = styled(Button)`
-  height: 32px;
-  padding: 6px 14px;
-  color: #60646c;
-  border: none;
-  background-color: rgba(0, 0, 51, 0.06);
-
-  @media (max-width: 768px) {
-    width: 100%;
-    justify-content: center;
-  }
-`
-
-const DangerBtn = styled.button`
-  height: 32px;
-  padding: 0px 14px;
-  border-radius: 4px;
-  border: 1px solid transparent;
-  font-weight: 500;
-  font-size: 14px;
-  line-height: 143%;
-  background: #e5484d;
-  color: #fff;
-
-  @media (max-width: 768px) {
-    width: 100%;
-  }
-
-  &:hover {
-    filter: brightness(0.98);
+    button {
+      width: 100%;
+    }
   }
 `

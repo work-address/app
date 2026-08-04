@@ -29,10 +29,10 @@ export const DesktopHeaderCellComponent = <T extends AnyRecord>(
       {...(Wrapper === Button
         ? {
             variant: 'ghost',
+            color: 'neutral',
             style: {
               cursor: props.columnConfig.sortable ? 'pointer' : 'default',
             },
-            color: 'gray',
             onClick: () => {
               const nextOrder = sortKey === 'ASC' ? 'DESC' : 'ASC'
               props?.onSortChange?.({ [key]: nextOrder })

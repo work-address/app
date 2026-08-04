@@ -77,10 +77,10 @@ export const TotalAmountDesktop = () => {
             )}
           </Flex>
           <InvoiceNoPrint gap={'3'}>
-            <Button themeVariant={'secondary'} onClick={handleShare}>
+            <Button color="neutral" variant="soft" onClick={handleShare}>
               {t('invoice.actions.share')}
             </Button>
-            <Button themeVariant={'primary'} onClick={handleSavePdf}>
+            <Button onClick={handleSavePdf}>
               {t('invoice.actions.savePdf')}
             </Button>
           </InvoiceNoPrint>

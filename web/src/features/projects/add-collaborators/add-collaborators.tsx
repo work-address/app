@@ -168,13 +168,12 @@ export const AddCollaborators = ({
       })}
       {!readOnly && (
         <AddCollaboratorsAddMoreButton
-          type={'button'}
-          variant={'ghost'}
-          color={'gray'}
+          variant="ghost"
+          color="neutral"
+          iconLeft={<PlusIcon />}
           disabled={fieldsDisabled}
           onClick={() => append({ address: '', role: 'Viewer' })}
         >
-          <PlusIcon />
           {t('project.createModal.collaborators.addMore')}
         </AddCollaboratorsAddMoreButton>
       )}
@@ -198,7 +197,7 @@ const AddCollaboratorsAddMoreButton = styled(Button)`
   color: var(--gray-11);
   padding-inline: 0;
 
-  &:hover {
+  &:hover:not(:disabled) {
     background: transparent;
     color: var(--gray-12);
   }

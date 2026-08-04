@@ -61,8 +61,8 @@ export const TopUpEthCard = () => {
           </Skeleton>
           <Flex gap={'2'} wrap={'wrap'}>
             <Button
-              variant={'soft'}
-              color={'gray'}
+              variant="soft"
+              color="neutral"
               onClick={handleCopy}
               disabled={!address}
             >
@@ -70,8 +70,8 @@ export const TopUpEthCard = () => {
               <Text>{t('balance.topUpEth.copyAddress')}</Text>
             </Button>
             <Button
-              variant={'soft'}
-              color={'gray'}
+              variant="soft"
+              color="neutral"
               onClick={handleOpenInWallet}
               disabled={!address}
             >

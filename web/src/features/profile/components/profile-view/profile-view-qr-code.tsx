@@ -65,7 +65,11 @@ export const ProfileViewQrCode = ({
               </Skeleton>
               <Flex gap={'2'} align={'center'}>
                 <Skeleton loading={profileLoading}>
-                  <Button variant={'ghost'} onClick={onWalletAddressCopy}>
+                  <Button
+                    variant="ghost"
+                    color="neutral"
+                    onClick={onWalletAddressCopy}
+                  >
                     <Text
                       $themeVariant={'primary'}
                       size={'2'}
@@ -105,15 +109,15 @@ export const ProfileViewQrCode = ({
                   })}
                   viewTransition
                 >
-                  <Button stretch themeVariant={'primary'}>
+                  <Button stretch>
                     {t('common.edit')} <Pencil1Icon />
                   </Button>
                 </Link>
               )}
               <Button
                 stretch
-                variant={'outline'}
-                color={'gray'}
+                variant="outline"
+                color="neutral"
                 onClick={onShareProfile}
               >
                 {t('common.share')} <Share1Icon />

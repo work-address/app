@@ -24,7 +24,7 @@ import { useMemo, useState, type MouseEventHandler } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { Button } from './button'
+import { Button } from './button/ui/button'
 import { Input, type InputProps } from './input'
 
 type DatePickerProps = {
@@ -192,10 +192,10 @@ export const DatePickerInput = ({
             })}
           </CalendarGrid>
           <CalendarFooter>
-            <Button themeVariant="secondary" onClick={handleCancel}>
+            <Button color="neutral" variant="soft" onClick={handleCancel}>
               {t('ui.datePicker.cancel')}
             </Button>
-            <Button themeVariant="primary" onClick={handleConfirm}>
+            <Button onClick={handleConfirm}>
               {t('ui.datePicker.confirm')}
             </Button>
           </CalendarFooter>

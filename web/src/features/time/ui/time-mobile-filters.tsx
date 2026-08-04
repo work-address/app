@@ -49,22 +49,23 @@ export const TimeMobileFilters = ({
         }
         trigger={
           <Button
-            type="button"
-            themeVariant={'secondary'}
-            size={'1'}
-            variant={'outline'}
+            color="neutral"
+            variant="outline"
+            size="s"
+            iconLeft={
+              <S.FilterImage
+                src={FilterIcon}
+                alt={t('dashboard.page.filters.filterIconAlt')}
+                width={20}
+                height={20}
+              />
+            }
           >
-            <S.FilterImage
-              src={FilterIcon}
-              alt={t('dashboard.page.filters.filterIconAlt')}
-              width={20}
-              height={20}
-            />
             {t('dashboard.page.filters.title')}
           </Button>
         }
         footer={
-          <Button stretch themeVariant={'primary'} onClick={handleFiltersApply}>
+          <Button stretch onClick={handleFiltersApply}>
             {t('dashboard.page.filters.apply')}
           </Button>
         }
