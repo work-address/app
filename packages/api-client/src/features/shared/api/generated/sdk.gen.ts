@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthControllerCheckProofHandlerData, AuthControllerCheckProofHandlerResponses, AuthControllerLoginEthData, AuthControllerLoginEthResponses, AuthControllerLoginSolanaData, AuthControllerLoginSolanaResponses, AuthControllerNonceData, AuthControllerNonceResponses, AuthControllerRefreshData, AuthControllerRefreshResponses, AuthControllerStatusData, AuthControllerStatusResponses, AuthControllerTonNonceData, AuthControllerTonNonceResponses, AuthTimeTrackerControllerTimeTrackerConnectData, AuthTimeTrackerControllerTimeTrackerConnectResponses, AuthTimeTrackerControllerTimeTrackerLoginData, AuthTimeTrackerControllerTimeTrackerLoginResponses, AuthTimeTrackerControllerTimeTrackerNonceGenerateData, AuthTimeTrackerControllerTimeTrackerNonceGenerateResponses, AuthTimeTrackerControllerTimeTrackerNonceGetData, AuthTimeTrackerControllerTimeTrackerNonceGetResponses, HelpControllerSwaggerData, HelpControllerSwaggerResponses, InvoiceControllerCreateData, InvoiceControllerCreateErrors, InvoiceControllerCreateResponses, InvoiceControllerReadData, InvoiceControllerReadErrors, InvoiceControllerReadResponses, InvoiceControllerSearchData, InvoiceControllerSearchResponses, ProjectControllerCloseData, ProjectControllerCloseErrors, ProjectControllerCloseResponses, ProjectControllerCreateData, ProjectControllerCreateResponses, ProjectControllerDeleteData, ProjectControllerDeleteErrors, ProjectControllerDeleteResponses, ProjectControllerEditData, ProjectControllerEditErrors, ProjectControllerEditResponses, ProjectControllerGetStatsData, ProjectControllerGetStatsErrors, ProjectControllerGetStatsResponses, ProjectControllerReadData, ProjectControllerReadErrors, ProjectControllerReadResponses, ProjectControllerSearchData, ProjectControllerSearchResponses, TimeControllerCreateOrUpdateManyData, TimeControllerCreateOrUpdateManyResponses, TimeControllerDeleteData, TimeControllerDeleteErrors, TimeControllerDeleteResponses, TimeControllerEditData, TimeControllerEditErrors, TimeControllerEditResponses, TimeControllerGetReportData, TimeControllerGetReportErrors, TimeControllerGetReportResponses, TimeControllerGetTotalsData, TimeControllerGetTotalsErrors, TimeControllerGetTotalsResponses, TimeControllerMarkPaidData, TimeControllerMarkPaidResponses, TimeControllerMarkUnpaidData, TimeControllerMarkUnpaidResponses, TimeControllerReadData, TimeControllerReadErrors, TimeControllerReadResponses, TimeControllerRemoveProcessesData, TimeControllerRemoveProcessesErrors, TimeControllerRemoveProcessesResponses, TimeControllerRemoveScreenshotData, TimeControllerRemoveScreenshotErrors, TimeControllerRemoveScreenshotResponses, TimeControllerSearchData, TimeControllerSearchResponses, UserControllerEditData, UserControllerEditResponses, UserControllerReadData, UserControllerReadErrors, UserControllerReadResponses, UserControllerSearchData, UserControllerSearchResponses } from './types.gen';
+import type { AuthControllerCheckProofHandlerData, AuthControllerCheckProofHandlerResponses, AuthControllerLoginEthData, AuthControllerLoginEthResponses, AuthControllerLoginSolanaData, AuthControllerLoginSolanaResponses, AuthControllerNonceData, AuthControllerNonceResponses, AuthControllerRefreshData, AuthControllerRefreshResponses, AuthControllerStatusData, AuthControllerStatusResponses, AuthControllerTonNonceData, AuthControllerTonNonceResponses, AuthTimeTrackerControllerTimeTrackerConnectData, AuthTimeTrackerControllerTimeTrackerConnectResponses, AuthTimeTrackerControllerTimeTrackerLoginData, AuthTimeTrackerControllerTimeTrackerLoginResponses, AuthTimeTrackerControllerTimeTrackerNonceGenerateData, AuthTimeTrackerControllerTimeTrackerNonceGenerateResponses, AuthTimeTrackerControllerTimeTrackerNonceGetData, AuthTimeTrackerControllerTimeTrackerNonceGetResponses, HelpControllerSwaggerData, HelpControllerSwaggerResponses, InvoiceControllerCreateData, InvoiceControllerCreateErrors, InvoiceControllerCreateResponses, InvoiceControllerReadData, InvoiceControllerReadErrors, InvoiceControllerReadResponses, InvoiceControllerSearchData, InvoiceControllerSearchResponses, ProjectControllerCloseData, ProjectControllerCloseErrors, ProjectControllerCloseResponses, ProjectControllerCreateData, ProjectControllerCreateResponses, ProjectControllerDeleteData, ProjectControllerDeleteErrors, ProjectControllerDeleteResponses, ProjectControllerEditData, ProjectControllerEditErrors, ProjectControllerEditResponses, ProjectControllerGetStatsData, ProjectControllerGetStatsErrors, ProjectControllerGetStatsResponses, ProjectControllerReadData, ProjectControllerReadErrors, ProjectControllerReadResponses, ProjectControllerSearchData, ProjectControllerSearchResponses, TimeControllerCreateOrUpdateManyData, TimeControllerCreateOrUpdateManyResponses, TimeControllerDeleteData, TimeControllerDeleteResponses, TimeControllerEditData, TimeControllerEditErrors, TimeControllerEditResponses, TimeControllerGetReportData, TimeControllerGetReportErrors, TimeControllerGetReportResponses, TimeControllerGetTotalsData, TimeControllerGetTotalsErrors, TimeControllerGetTotalsResponses, TimeControllerMarkPaidData, TimeControllerMarkPaidResponses, TimeControllerMarkUnpaidData, TimeControllerMarkUnpaidResponses, TimeControllerReadData, TimeControllerReadErrors, TimeControllerReadResponses, TimeControllerRemoveProcessesData, TimeControllerRemoveProcessesResponses, TimeControllerRemoveScreenshotsData, TimeControllerRemoveScreenshotsResponses, TimeControllerSearchData, TimeControllerSearchResponses, UserControllerEditData, UserControllerEditResponses, UserControllerReadData, UserControllerReadErrors, UserControllerReadResponses, UserControllerSearchData, UserControllerSearchResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -259,6 +259,32 @@ export const timeControllerMarkUnpaid = <ThrowOnError extends boolean = false>(o
 });
 
 /**
+ * Remove screenshots from time entries (tracking worker only)
+ */
+export const timeControllerRemoveScreenshots = <ThrowOnError extends boolean = false>(options: Options<TimeControllerRemoveScreenshotsData, ThrowOnError>) => (options.client ?? client).delete<TimeControllerRemoveScreenshotsResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/time/screenshots',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Remove processes from time entries (tracking worker only)
+ */
+export const timeControllerRemoveProcesses = <ThrowOnError extends boolean = false>(options: Options<TimeControllerRemoveProcessesData, ThrowOnError>) => (options.client ?? client).delete<TimeControllerRemoveProcessesResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/time/processes',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * Aggregated time totals for project owner, workers, and viewers
  */
 export const timeControllerGetTotals = <ThrowOnError extends boolean = false>(options: Options<TimeControllerGetTotalsData, ThrowOnError>) => (options.client ?? client).get<TimeControllerGetTotalsResponses, TimeControllerGetTotalsErrors, ThrowOnError>({
@@ -279,6 +305,18 @@ export const timeControllerGetReport = <ThrowOnError extends boolean = false>(op
 });
 
 /**
+ * Delete time entries (tracking worker only)
+ */
+export const timeControllerDelete = <ThrowOnError extends boolean = false>(options: Options<TimeControllerDeleteData, ThrowOnError>) => (options.client ?? client).delete<TimeControllerDeleteResponses, unknown, ThrowOnError>({
+    url: '/api/time',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * Create or update many time rows (batch)
  */
 export const timeControllerCreateOrUpdateMany = <ThrowOnError extends boolean = false>(options: Options<TimeControllerCreateOrUpdateManyData, ThrowOnError>) => (options.client ?? client).post<TimeControllerCreateOrUpdateManyResponses, unknown, ThrowOnError>({
@@ -289,15 +327,6 @@ export const timeControllerCreateOrUpdateMany = <ThrowOnError extends boolean = 
         'Content-Type': 'application/json',
         ...options.headers
     }
-});
-
-/**
- * Delete time entry (tracking worker only)
- */
-export const timeControllerDelete = <ThrowOnError extends boolean = false>(options: Options<TimeControllerDeleteData, ThrowOnError>) => (options.client ?? client).delete<TimeControllerDeleteResponses, TimeControllerDeleteErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/time/{id}',
-    ...options
 });
 
 /**
@@ -321,24 +350,6 @@ export const timeControllerEdit = <ThrowOnError extends boolean = false>(options
         'Content-Type': 'application/json',
         ...options.headers
     }
-});
-
-/**
- * Remove screenshot from time entry (tracking worker only)
- */
-export const timeControllerRemoveScreenshot = <ThrowOnError extends boolean = false>(options: Options<TimeControllerRemoveScreenshotData, ThrowOnError>) => (options.client ?? client).delete<TimeControllerRemoveScreenshotResponses, TimeControllerRemoveScreenshotErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/time/{id}/screenshot',
-    ...options
-});
-
-/**
- * Remove processes from time entry (tracking worker only)
- */
-export const timeControllerRemoveProcesses = <ThrowOnError extends boolean = false>(options: Options<TimeControllerRemoveProcessesData, ThrowOnError>) => (options.client ?? client).delete<TimeControllerRemoveProcessesResponses, TimeControllerRemoveProcessesErrors, ThrowOnError>({
-    security: [{ scheme: 'bearer', type: 'http' }],
-    url: '/api/time/{id}/processes',
-    ...options
 });
 
 /**

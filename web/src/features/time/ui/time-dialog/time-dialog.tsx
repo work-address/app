@@ -259,7 +259,7 @@ export const TimeDialog = ({
       confirmLabel: t('dashboard.worklogsTable.confirmDelete.confirm'),
       cancelLabel: t('common.cancel'),
       onConfirm: () => {
-        deleteWorklog(row.id!)
+        deleteWorklog([row.id!])
       },
     })
   }
@@ -279,7 +279,7 @@ export const TimeDialog = ({
       ),
       cancelLabel: t('common.cancel'),
       onConfirm: () => {
-        removeScreenshot(row.id!)
+        removeScreenshot([row.id!])
       },
     })
   }
@@ -297,7 +297,7 @@ export const TimeDialog = ({
       confirmLabel: t('dashboard.worklogsTable.confirmRemoveProcesses.confirm'),
       cancelLabel: t('common.cancel'),
       onConfirm: () => {
-        removeProcesses(row.id!)
+        removeProcesses([row.id!])
       },
     })
   }

@@ -544,10 +544,15 @@ export class TimeControllerCrudTest extends BaseControllerTest {
       moment.utc().subtract(60, 'minutes').toDate(),
       moment.utc().toDate(),
     )
+    const second = await this.timeFixture.create(
+      project,
+      moment.utc().subtract(180, 'minutes').toDate(),
+      moment.utc().subtract(120, 'minutes').toDate(),
+    )
 
     const res = await timeControllerDelete({
       client: this.apiClient(),
-      path: { id: time.id as never },
+      body: { ids: [time.id, second.id] },
       headers: {
         Authorization: this.authenticator.getTokens(owner).accessToken,
       },
@@ -557,10 +562,14 @@ export class TimeControllerCrudTest extends BaseControllerTest {
     const removed = await this.timeRepository.findOneBy({
       where: { id: time.id },
     })
+    const removedSecond = await this.timeRepository.findOneBy({
+      where: { id: second.id },
+    })
 
     expect(res.status).to.be.equal(200)
     this.expectEmptyResponseBody(res.data)
     expect(removed).to.be.undefined
+    expect(removedSecond).to.be.undefined
   }
 
   @test()
@@ -582,7 +591,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
     try {
       await timeControllerDelete({
         client: this.apiClient(),
-        path: { id: time.id as never },
+        body: { ids: [time.id] },
         headers: {
           Authorization: this.authenticator.getTokens(other).accessToken,
         },
@@ -622,7 +631,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
     try {
       await timeControllerDelete({
         client: this.apiClient(),
-        path: { id: time.id as never },
+        body: { ids: [time.id] },
         headers: {
           Authorization: this.authenticator.getTokens(owner).accessToken,
         },

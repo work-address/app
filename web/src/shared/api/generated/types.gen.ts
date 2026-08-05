@@ -792,6 +792,28 @@ export type TimeControllerMarkUnpaidResponses = {
     200: unknown;
 };
 
+export type TimeControllerRemoveScreenshotsData = {
+    body: TimeIdsDto;
+    path?: never;
+    query?: never;
+    url: '/api/time/screenshots';
+};
+
+export type TimeControllerRemoveScreenshotsResponses = {
+    200: unknown;
+};
+
+export type TimeControllerRemoveProcessesData = {
+    body: TimeIdsDto;
+    path?: never;
+    query?: never;
+    url: '/api/time/processes';
+};
+
+export type TimeControllerRemoveProcessesResponses = {
+    200: unknown;
+};
+
 export type TimeControllerGetTotalsData = {
     body?: never;
     path: {
@@ -850,6 +872,17 @@ export type TimeControllerGetReportResponses = {
 
 export type TimeControllerGetReportResponse = TimeControllerGetReportResponses[keyof TimeControllerGetReportResponses];
 
+export type TimeControllerDeleteData = {
+    body: TimeIdsDto;
+    path?: never;
+    query?: never;
+    url: '/api/time';
+};
+
+export type TimeControllerDeleteResponses = {
+    200: unknown;
+};
+
 export type TimeControllerCreateOrUpdateManyData = {
     body: Array<TimeCreateDto>;
     path?: never;
@@ -862,31 +895,6 @@ export type TimeControllerCreateOrUpdateManyResponses = {
 };
 
 export type TimeControllerCreateOrUpdateManyResponse = TimeControllerCreateOrUpdateManyResponses[keyof TimeControllerCreateOrUpdateManyResponses];
-
-export type TimeControllerDeleteData = {
-    body?: never;
-    path: {
-        id: Time;
-    };
-    query?: never;
-    url: '/api/time/{id}';
-};
-
-export type TimeControllerDeleteErrors = {
-    /**
-     * Time does not exist
-     */
-    404: {
-        name?: string;
-        message?: string;
-    };
-};
-
-export type TimeControllerDeleteError = TimeControllerDeleteErrors[keyof TimeControllerDeleteErrors];
-
-export type TimeControllerDeleteResponses = {
-    200: unknown;
-};
 
 export type TimeControllerReadData = {
     body?: never;
@@ -937,56 +945,6 @@ export type TimeControllerEditErrors = {
 export type TimeControllerEditError = TimeControllerEditErrors[keyof TimeControllerEditErrors];
 
 export type TimeControllerEditResponses = {
-    200: unknown;
-};
-
-export type TimeControllerRemoveScreenshotData = {
-    body?: never;
-    path: {
-        id: Time;
-    };
-    query?: never;
-    url: '/api/time/{id}/screenshot';
-};
-
-export type TimeControllerRemoveScreenshotErrors = {
-    /**
-     * Time does not exist
-     */
-    404: {
-        name?: string;
-        message?: string;
-    };
-};
-
-export type TimeControllerRemoveScreenshotError = TimeControllerRemoveScreenshotErrors[keyof TimeControllerRemoveScreenshotErrors];
-
-export type TimeControllerRemoveScreenshotResponses = {
-    200: unknown;
-};
-
-export type TimeControllerRemoveProcessesData = {
-    body?: never;
-    path: {
-        id: Time;
-    };
-    query?: never;
-    url: '/api/time/{id}/processes';
-};
-
-export type TimeControllerRemoveProcessesErrors = {
-    /**
-     * Time does not exist
-     */
-    404: {
-        name?: string;
-        message?: string;
-    };
-};
-
-export type TimeControllerRemoveProcessesError = TimeControllerRemoveProcessesErrors[keyof TimeControllerRemoveProcessesErrors];
-
-export type TimeControllerRemoveProcessesResponses = {
     200: unknown;
 };
 

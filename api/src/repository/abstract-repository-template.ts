@@ -66,6 +66,10 @@ export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
     return await this.getRepo().remove(entity)
   }
 
+  public async removeMany(entities: T[]): Promise<T[]> {
+    return await this.getRepo().remove(entities)
+  }
+
   public async softDelete(conditions: FindConditions<T>) {
     return await this.getRepo().softDelete(conditions)
   }

@@ -4,9 +4,9 @@ import { AxiosError } from 'axios'
 import { baseApi } from '@/shared'
 
 export const deleteWorklogMutation = createMutation({
-  handler: async (id: string) => {
+  handler: async (ids: string[]) => {
     const result = await baseApi.timeControllerDelete({
-      path: { id: id as never },
+      body: { ids },
     })
 
     if (result instanceof AxiosError) {
@@ -41,9 +41,9 @@ export const editWorklogMutation = createMutation({
 })
 
 export const removeWorklogScreenshotMutation = createMutation({
-  handler: async (id: string) => {
-    const result = await baseApi.timeControllerRemoveScreenshot({
-      path: { id: id as never },
+  handler: async (ids: string[]) => {
+    const result = await baseApi.timeControllerRemoveScreenshots({
+      body: { ids },
     })
 
     if (result instanceof AxiosError) {
@@ -69,9 +69,9 @@ export const setWorklogPaidStatusMutation = createMutation({
 })
 
 export const removeWorklogProcessesMutation = createMutation({
-  handler: async (id: string) => {
+  handler: async (ids: string[]) => {
     const result = await baseApi.timeControllerRemoveProcesses({
-      path: { id: id as never },
+      body: { ids },
     })
 
     if (result instanceof AxiosError) {

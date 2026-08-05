@@ -7,7 +7,7 @@ import moment from 'moment'
 import {
   projectControllerEdit,
   timeControllerRemoveProcesses,
-  timeControllerRemoveScreenshot,
+  timeControllerRemoveScreenshots,
 } from '@app/api-client'
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
@@ -46,17 +46,24 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     ]
     await this.timeRepository.saveSingle(time)
 
-    return { owner, time }
+    return { owner, project, time }
   }
 
   @test()
-  async removeScreenshot() {
-    const { owner, time } = await this.createTimeWithMedia()
+  async removeScreenshots() {
+    const { owner, project, time } = await this.createTimeWithMedia()
+    const second = await this.timeFixture.create(
+      project,
+      moment.utc().subtract(120, 'minutes').toDate(),
+      moment.utc().subtract(90, 'minutes').toDate(),
+    )
+    second.screenshot = faker.datatype.uuid()
+    await this.timeRepository.saveSingle(second)
 
     const client = this.apiClient()
-    const res = await timeControllerRemoveScreenshot({
+    const res = await timeControllerRemoveScreenshots({
       client,
-      path: { id: time.id as never },
+      body: { ids: [time.id, second.id] },
       headers: {
         Authorization: this.authenticator.getTokens(owner).accessToken,
       },
@@ -65,22 +72,39 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
 
     const updated = await this.timeRepository.findOneBy({
       where: { id: time.id },
+    })
+    const updatedSecond = await this.timeRepository.findOneBy({
+      where: { id: second.id },
     })
 
     expect(res.status).to.be.equal(200)
     this.expectEmptyResponseBody(res.data)
     expect(updated!.screenshot).to.be.null
+    expect(updatedSecond!.screenshot).to.be.null
     expect(updated!.processes).to.be.deep.eq(time.processes)
   }
 
   @test()
   async removeProcesses() {
-    const { owner, time } = await this.createTimeWithMedia()
+    const { owner, project, time } = await this.createTimeWithMedia()
+    const second = await this.timeFixture.create(
+      project,
+      moment.utc().subtract(180, 'minutes').toDate(),
+      moment.utc().subtract(150, 'minutes').toDate(),
+    )
+    second.processes = [
+      {
+        name: faker.datatype.uuid(),
+        description: faker.datatype.uuid(),
+        timeMin: faker.datatype.number(9),
+      },
+    ]
+    await this.timeRepository.saveSingle(second)
 
     const client = this.apiClient()
     const res = await timeControllerRemoveProcesses({
       client,
-      path: { id: time.id as never },
+      body: { ids: [time.id, second.id] },
       headers: {
         Authorization: this.authenticator.getTokens(owner).accessToken,
       },
@@ -90,21 +114,25 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     const updated = await this.timeRepository.findOneBy({
       where: { id: time.id },
     })
+    const updatedSecond = await this.timeRepository.findOneBy({
+      where: { id: second.id },
+    })
 
     expect(res.status).to.be.equal(200)
     this.expectEmptyResponseBody(res.data)
     expect(updated!.processes).to.be.null
+    expect(updatedSecond!.processes).to.be.null
     expect(updated!.screenshot).to.be.eq(time.screenshot)
   }
 
   @test()
-  async removeScreenshot_requiresAuthorization() {
+  async removeScreenshots_requiresAuthorization() {
     let error: unknown
 
     try {
-      await timeControllerRemoveScreenshot({
+      await timeControllerRemoveScreenshots({
         client: this.apiClient(),
-        path: { id: faker.datatype.uuid() as never },
+        body: { ids: [faker.datatype.uuid()] },
         throwOnError: true,
       })
     } catch (e: unknown) {
@@ -124,7 +152,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     try {
       await timeControllerRemoveProcesses({
         client: this.apiClient(),
-        path: { id: faker.datatype.uuid() as never },
+        body: { ids: [faker.datatype.uuid()] },
         throwOnError: true,
       })
     } catch (e: unknown) {
@@ -138,16 +166,16 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
   }
 
   @test()
-  async removeScreenshot_deniedForNonOwner() {
+  async removeScreenshots_deniedForNonOwner() {
     const { time } = await this.createTimeWithMedia()
     const other = await this.userFixture.createUser()
 
     let error: unknown
 
     try {
-      await timeControllerRemoveScreenshot({
+      await timeControllerRemoveScreenshots({
         client: this.apiClient(),
-        path: { id: time.id as never },
+        body: { ids: [time.id] },
         headers: {
           Authorization: this.authenticator.getTokens(other).accessToken,
         },
@@ -169,7 +197,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
   }
 
   @test()
-  async removeScreenshot_deniedForWorker() {
+  async removeScreenshots_deniedForWorker() {
     const owner = await this.userFixture.createUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
@@ -205,9 +233,9 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     let error: unknown
 
     try {
-      await timeControllerRemoveScreenshot({
+      await timeControllerRemoveScreenshots({
         client: this.apiClient(),
-        path: { id: time.id as never },
+        body: { ids: [time.id] },
         headers: {
           Authorization: this.authenticator.getTokens(worker).accessToken,
         },
@@ -227,7 +255,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
   }
 
   @test()
-  async removeScreenshot_byWorker() {
+  async removeScreenshots_byWorker() {
     const owner = await this.userFixture.createUser()
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -260,9 +288,9 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     time.screenshot = faker.datatype.uuid()
     await this.timeRepository.saveSingle(time)
 
-    const res = await timeControllerRemoveScreenshot({
+    const res = await timeControllerRemoveScreenshots({
       client: this.apiClient(),
-      path: { id: time.id as never },
+      body: { ids: [time.id] },
       headers: {
         Authorization: this.authenticator.getTokens(worker).accessToken,
       },
@@ -287,7 +315,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     try {
       await timeControllerRemoveProcesses({
         client: this.apiClient(),
-        path: { id: time.id as never },
+        body: { ids: [time.id] },
         headers: {
           Authorization: this.authenticator.getTokens(other).accessToken,
         },
@@ -353,7 +381,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     try {
       await timeControllerRemoveProcesses({
         client: this.apiClient(),
-        path: { id: time.id as never },
+        body: { ids: [time.id] },
         headers: {
           Authorization: this.authenticator.getTokens(worker).accessToken,
         },
@@ -414,7 +442,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
 
     const res = await timeControllerRemoveProcesses({
       client: this.apiClient(),
-      path: { id: time.id as never },
+      body: { ids: [time.id] },
       headers: {
         Authorization: this.authenticator.getTokens(worker).accessToken,
       },
@@ -430,15 +458,15 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
   }
 
   @test()
-  async removeScreenshot_unknownTime_notFound() {
+  async removeScreenshots_unknownIdDenied() {
     const owner = await this.userFixture.createUser()
 
     let error: unknown
 
     try {
-      await timeControllerRemoveScreenshot({
+      await timeControllerRemoveScreenshots({
         client: this.apiClient(),
-        path: { id: faker.datatype.uuid() as never },
+        body: { ids: [faker.datatype.uuid()] },
         headers: {
           Authorization: this.authenticator.getTokens(owner).accessToken,
         },
@@ -450,13 +478,36 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
 
     if (!axios.isAxiosError(error)) throw error
     expect(error).to.be.ok
-    expect(error.response?.status).to.be.equal(404)
-    expect(error.response?.data.name).to.be.equal('NotFoundError')
-    expect(error.response?.data.message).to.be.equal('Time does not exist')
+    expect(error.response?.status).to.be.equal(401)
+    expect(error.response?.data.name).to.be.equal('UserAccessException')
   }
 
   @test()
-  async removeProcesses_unknownTime_notFound() {
+  async removeScreenshots_validationRejectsEmptyIds() {
+    const owner = await this.userFixture.createUser()
+
+    let error: unknown
+
+    try {
+      await timeControllerRemoveScreenshots({
+        client: this.apiClient(),
+        body: { ids: [] },
+        headers: {
+          Authorization: this.authenticator.getTokens(owner).accessToken,
+        },
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
+    }
+
+    if (!axios.isAxiosError(error)) throw error
+    expect(error.response?.status).to.be.equal(400)
+    expect(error.response?.data.errors[0].property).to.be.equal('ids')
+  }
+
+  @test()
+  async removeProcesses_unknownIdDenied() {
     const owner = await this.userFixture.createUser()
 
     let error: unknown
@@ -464,7 +515,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     try {
       await timeControllerRemoveProcesses({
         client: this.apiClient(),
-        path: { id: faker.datatype.uuid() as never },
+        body: { ids: [faker.datatype.uuid()] },
         headers: {
           Authorization: this.authenticator.getTokens(owner).accessToken,
         },
@@ -476,8 +527,31 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
 
     if (!axios.isAxiosError(error)) throw error
     expect(error).to.be.ok
-    expect(error.response?.status).to.be.equal(404)
-    expect(error.response?.data.name).to.be.equal('NotFoundError')
-    expect(error.response?.data.message).to.be.equal('Time does not exist')
+    expect(error.response?.status).to.be.equal(401)
+    expect(error.response?.data.name).to.be.equal('UserAccessException')
+  }
+
+  @test()
+  async removeProcesses_validationRejectsEmptyIds() {
+    const owner = await this.userFixture.createUser()
+
+    let error: unknown
+
+    try {
+      await timeControllerRemoveProcesses({
+        client: this.apiClient(),
+        body: { ids: [] },
+        headers: {
+          Authorization: this.authenticator.getTokens(owner).accessToken,
+        },
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
+    }
+
+    if (!axios.isAxiosError(error)) throw error
+    expect(error.response?.status).to.be.equal(400)
+    expect(error.response?.data.errors[0].property).to.be.equal('ids')
   }
 }

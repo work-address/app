@@ -107,7 +107,7 @@
           "state"
         ],
         "example": {
-          "id": "58f69cdb-ed35-40d5-a4dc-ffacca7f41ea"
+          "id": "020b9cd2-91f1-4406-8736-e32221c0b2b9"
         }
       },
       "ProjectStatistics": {
@@ -168,7 +168,7 @@
           "period"
         ],
         "example": {
-          "id": "44d4a073-b2b8-40e5-b76e-451b9ec8dcfc"
+          "id": "2eb64036-c01b-4195-853f-c5320f8228e8"
         }
       },
       "Time": {
@@ -262,7 +262,7 @@
           "toAt"
         ],
         "example": {
-          "id": "ebdf0ff6-0e3d-4381-be27-60d4a083b6cc"
+          "id": "298d89ca-8aba-4ea5-b335-977c785f528f"
         }
       },
       "Project": {
@@ -345,7 +345,7 @@
           "state"
         ],
         "example": {
-          "id": "c382a47e-ed48-4700-b2df-baa89aba3f22"
+          "id": "b49f28e1-6844-4828-a415-c57990b77f36"
         }
       },
       "User": {
@@ -454,7 +454,7 @@
           "emailOrPhone"
         ],
         "example": {
-          "id": "c166ff1b-bc2c-4656-b363-d121075b8f6a"
+          "id": "19719e3d-426a-4c0f-b466-9c7f1650da96"
         }
       },
       "AuthForgotPasswordDto": {
@@ -2747,6 +2747,76 @@
         ]
       }
     },
+    "/api/time/screenshots": {
+      "delete": {
+        "operationId": "TimeController.removeScreenshots",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimeIdsDto"
+              },
+              "example": {
+                "ids": [
+                  "dd8a088d-00c1-499f-a75b-7ca45821a7e3"
+                ]
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Remove screenshots from time entries (tracking worker only)",
+        "tags": [
+          "Time"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/time/processes": {
+      "delete": {
+        "operationId": "TimeController.removeProcesses",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimeIdsDto"
+              },
+              "example": {
+                "ids": [
+                  "dd8a088d-00c1-499f-a75b-7ca45821a7e3"
+                ]
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Remove processes from time entries (tracking worker only)",
+        "tags": [
+          "Time"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/time/totals/{id}/project": {
       "get": {
         "operationId": "TimeController.getTotals",
@@ -2913,6 +2983,34 @@
         "tags": [
           "Time"
         ]
+      },
+      "delete": {
+        "operationId": "TimeController.delete",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimeIdsDto"
+              },
+              "example": {
+                "ids": [
+                  "dd8a088d-00c1-499f-a75b-7ca45821a7e3"
+                ]
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Delete time entries (tracking worker only)",
+        "tags": [
+          "Time"
+        ]
       }
     },
     "/api/time/{id}": {
@@ -3027,151 +3125,6 @@
             "bearerAuth": []
           }
         ]
-      },
-      "delete": {
-        "operationId": "TimeController.delete",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/Time"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          },
-          "404": {
-            "description": "Time does not exist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "name": {
-                      "type": "string",
-                      "example": "NotFoundError"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Time does not exist"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "Delete time entry (tracking worker only)",
-        "tags": [
-          "Time"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/api/time/{id}/screenshot": {
-      "delete": {
-        "operationId": "TimeController.removeScreenshot",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/Time"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          },
-          "404": {
-            "description": "Time does not exist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "name": {
-                      "type": "string",
-                      "example": "NotFoundError"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Time does not exist"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "Remove screenshot from time entry (tracking worker only)",
-        "tags": [
-          "Time"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/api/time/{id}/processes": {
-      "delete": {
-        "operationId": "TimeController.removeProcesses",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/Time"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": ""
-          },
-          "404": {
-            "description": "Time does not exist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "name": {
-                      "type": "string",
-                      "example": "NotFoundError"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Time does not exist"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "Remove processes from time entry (tracking worker only)",
-        "tags": [
-          "Time"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
       }
     },
     "/api/invoice/search": {
@@ -3214,7 +3167,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "2d838054-6e28-45c5-a688-2a5a60bdd021"
+                  "projectId": "f73615ef-47b7-4450-95e0-91064a26162b"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -3282,8 +3235,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1781301344322,
-                "toUnix": 1781387744322
+                "fromUnix": 1785925034436,
+                "toUnix": 1786011434436
               }
             }
           },
@@ -3460,7 +3413,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "32853542-6104-41fb-924a-5b600f9cd31e"
+                "nonce": "38d4694d-1d68-44e9-a96a-245ce3febab6"
               },
               "schema": {
                 "properties": {
@@ -3505,7 +3458,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "83ca445d-489d-4876-b57f-95ad1caa4cad"
+                "nonce": "5a5fbd94-ca89-4923-a5b9-66c0e00fd1e7"
               },
               "schema": {
                 "properties": {
@@ -3546,21 +3499,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "58825a81-abc7-488b-bd2c-932bfb359cdf",
+                      "nonce": "ed04024e-06f7-4c0c-947d-8c24ddf12dfc",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "0df1f552-6213-4694-9cfa-4032a256dbd2",
+                      "nonce": "153024c9-bfab-4482-9c20-92d4413b5b9b",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "217e7d04-613a-4501-af44-c44b050825f1",
+                      "nonce": "3a1d4027-2ace-42a2-b936-65d09c61b0bc",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

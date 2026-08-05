@@ -119,32 +119,30 @@ export class TimeManager {
     await this.timeRepository.validateAndSave(time)
   }
 
-  public async removeScreenshot(time: Time): Promise<void> {
-    time.screenshot = null
-    await this.timeRepository.validateAndSave(time)
-  }
+  public async removeScreenshots(ids: string[], user: User): Promise<void> {
+    const times = await this.timeRepository.findByIdsAsAuthor(ids, user)
 
-  public async removeProcesses(time: Time): Promise<void> {
-    time.processes = null
-    await this.timeRepository.validateAndSave(time)
-  }
-
-  public async remove(time: Time, user: User) {
-    try {
-      const timeExisting = await this.timeRepository.findTimeAsAuthorOrFail(
-        time,
-        user,
-      )
-
-      await this.timeRepository.remove(timeExisting)
-    } catch (e) {
-      if (e instanceof Error && e.name === 'EntityNotFoundError') {
-        throw new AccessException(
-          `Wrong user: the given time belongs to someone else`,
-        )
-      }
-      throw e
+    for (const time of times) {
+      time.screenshot = null
     }
+
+    await this.timeRepository.saveMany(times)
+  }
+
+  public async removeProcesses(ids: string[], user: User): Promise<void> {
+    const times = await this.timeRepository.findByIdsAsAuthor(ids, user)
+
+    for (const time of times) {
+      time.processes = null
+    }
+
+    await this.timeRepository.saveMany(times)
+  }
+
+  public async removeMany(ids: string[], user: User): Promise<void> {
+    const times = await this.timeRepository.findByIdsAsAuthor(ids, user)
+
+    await this.timeRepository.removeMany(times)
   }
 
   public async buildAndCacheReport(

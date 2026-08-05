@@ -127,6 +127,62 @@ export class TimeController {
   }
 
   @OpenAPIExtended({
+    summary: 'Remove screenshots from time entries (tracking worker only)',
+    body: {
+      schema: TimeIdsDto,
+      options: {
+        example: {
+          ids: ['dd8a088d-00c1-499f-a75b-7ca45821a7e3'],
+        },
+      },
+    },
+    response: {
+      schema: {},
+      options: { emptyBody: true },
+    },
+  })
+  @Delete('/screenshots')
+  @HttpCode(200)
+  public async removeScreenshots(
+    @CurrentUser() currentUser: User,
+    @Body() body: TimeIdsDto,
+    @Res() res: express.Response,
+  ): Promise<express.Response> {
+    await this.timeManager.removeScreenshots(body.ids, currentUser)
+
+    res.end()
+    return res
+  }
+
+  @OpenAPIExtended({
+    summary: 'Remove processes from time entries (tracking worker only)',
+    body: {
+      schema: TimeIdsDto,
+      options: {
+        example: {
+          ids: ['dd8a088d-00c1-499f-a75b-7ca45821a7e3'],
+        },
+      },
+    },
+    response: {
+      schema: {},
+      options: { emptyBody: true },
+    },
+  })
+  @Delete('/processes')
+  @HttpCode(200)
+  public async removeProcesses(
+    @CurrentUser() currentUser: User,
+    @Body() body: TimeIdsDto,
+    @Res() res: express.Response,
+  ): Promise<express.Response> {
+    await this.timeManager.removeProcesses(body.ids, currentUser)
+
+    res.end()
+    return res
+  }
+
+  @OpenAPIExtended({
     summary: 'Aggregated time totals for project owner, workers, and viewers',
     response: {
       schema: null,
@@ -257,62 +313,6 @@ export class TimeController {
   }
 
   @OpenAPIExtended({
-    summary: 'Remove screenshot from time entry (tracking worker only)',
-    response: {
-      schema: {},
-      options: { emptyBody: true },
-    },
-  })
-  @Delete('/:id/screenshot')
-  @HttpCode(200)
-  public async removeScreenshot(
-    @CurrentUser() currentUser: User,
-    @EntityFromParam({
-      paramName: 'id',
-      relations: { project: { user: true }, user: true },
-    })
-    time: Time,
-    @Res() res: express.Response,
-  ): Promise<express.Response> {
-    if (!time.isAuthor(currentUser)) {
-      throw new AccessException()
-    }
-
-    await this.timeManager.removeScreenshot(time)
-
-    res.end()
-    return res
-  }
-
-  @OpenAPIExtended({
-    summary: 'Remove processes from time entry (tracking worker only)',
-    response: {
-      schema: {},
-      options: { emptyBody: true },
-    },
-  })
-  @Delete('/:id/processes')
-  @HttpCode(200)
-  public async removeProcesses(
-    @CurrentUser() currentUser: User,
-    @EntityFromParam({
-      paramName: 'id',
-      relations: { project: { user: true }, user: true },
-    })
-    time: Time,
-    @Res() res: express.Response,
-  ): Promise<express.Response> {
-    if (!time.isAuthor(currentUser)) {
-      throw new AccessException()
-    }
-
-    await this.timeManager.removeProcesses(time)
-
-    res.end()
-    return res
-  }
-
-  @OpenAPIExtended({
     summary: 'Get one time entry',
     response: {
       schema: Time,
@@ -332,20 +332,28 @@ export class TimeController {
   }
 
   @OpenAPIExtended({
-    summary: 'Delete time entry (tracking worker only)',
+    summary: 'Delete time entries (tracking worker only)',
+    body: {
+      schema: TimeIdsDto,
+      options: {
+        example: {
+          ids: ['dd8a088d-00c1-499f-a75b-7ca45821a7e3'],
+        },
+      },
+    },
     response: {
       schema: {},
       options: { emptyBody: true },
     },
   })
-  @Delete('/:id')
+  @Delete()
   @HttpCode(200)
   public async delete(
     @CurrentUser() currentUser: User,
-    @EntityFromParam({ paramName: 'id' }) time: Time,
+    @Body() body: TimeIdsDto,
     @Res() res: express.Response,
   ): Promise<express.Response> {
-    await this.timeManager.remove(time, currentUser)
+    await this.timeManager.removeMany(body.ids, currentUser)
 
     res.end()
     return res
