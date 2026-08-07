@@ -5,15 +5,15 @@ import { SignBg } from '@/shared/icons'
 
 export const AuthLayout = () => {
   return (
-    <Stage>
+    <Root>
       <StageContainer>
         <Outlet />
       </StageContainer>
-    </Stage>
+    </Root>
   )
 }
 
-const Stage = styled.main`
+const Root = styled.main`
   min-height: 100vh;
   background: url(${SignBg}) center / cover no-repeat;
   display: flex;

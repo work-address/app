@@ -14,7 +14,7 @@ import {
   login,
   type LoginMode,
 } from '@/entities/profile'
-import { AuthFormStyles as S, ProviderButton } from '@/features/auth'
+import { AuthStyles as S, AuthProviderButton } from '@/features/auth'
 import {
   initTimeTrackerConnect,
   resetTimeTrackerConnect,
@@ -37,39 +37,6 @@ import {
   TonLogo,
   useBreakpoint,
 } from '@/shared'
-
-function getLoginStateLabel(
-  phase: TimeTrackerConnectPhase,
-  nonce: string | null,
-): string {
-  if (
-    !nonce ||
-    phase === 'idle' ||
-    phase === 'error' ||
-    phase === 'awaiting_auth' ||
-    phase === 'awaiting_pair'
-  ) {
-    if (
-      nonce &&
-      phase !== 'error' &&
-      localStorage.getItem(getTimeTrackerNonceStorageKey(nonce))
-    ) {
-      return 'init'
-    }
-
-    return 'disconnected'
-  }
-
-  if (phase === 'connected') {
-    return 'connected'
-  }
-
-  if (phase === 'loading' || phase === 'connecting') {
-    return 'progress'
-  }
-
-  return 'disconnected'
-}
 
 export default function ConnectPage() {
   const { t, i18n } = useTranslation()
@@ -182,27 +149,27 @@ export default function ConnectPage() {
             )}
             {showWalletProviders && (
               <S.Actions>
-                <ProviderButton
+                <AuthProviderButton
                   iconUrl={TonLogo}
                   iconAlt={t('signIn.alt.ton')}
                   onClick={() => onSignIn('ton')}
                 >
                   {t('signIn.providers.ton')}
-                </ProviderButton>
-                <ProviderButton
+                </AuthProviderButton>
+                <AuthProviderButton
                   iconUrl={SolanaLogo}
                   iconAlt={t('signIn.alt.solana')}
                   onClick={() => onSignIn('solana')}
                 >
                   {t('signIn.providers.solana')}
-                </ProviderButton>
-                <ProviderButton
+                </AuthProviderButton>
+                <AuthProviderButton
                   iconUrl={EthereumLogo}
                   iconAlt={t('signIn.alt.ethereum')}
                   onClick={() => onSignIn('eth')}
                 >
                   {t('signIn.providers.ethereum')}
-                </ProviderButton>
+                </AuthProviderButton>
               </S.Actions>
             )}
           </>
@@ -220,7 +187,7 @@ export default function ConnectPage() {
           {t('signIn.continue')}
         </Button>
       </S.HiddenButtonRow>
-      <S.StatusNote>
+      <StatusNote>
         {t('connect.status.loginState')}: {getLoginStateLabel(phase, nonce)}
         <br />
         {t('connect.status.walletState')}:{' '}
@@ -237,9 +204,42 @@ export default function ConnectPage() {
             {t('connect.status.error')}: {errorMessage}
           </>
         )}
-      </S.StatusNote>
+      </StatusNote>
     </>
   )
+}
+
+const getLoginStateLabel = (
+  phase: TimeTrackerConnectPhase,
+  nonce: string | null,
+): string => {
+  if (
+    !nonce ||
+    phase === 'idle' ||
+    phase === 'error' ||
+    phase === 'awaiting_auth' ||
+    phase === 'awaiting_pair'
+  ) {
+    if (
+      nonce &&
+      phase !== 'error' &&
+      localStorage.getItem(getTimeTrackerNonceStorageKey(nonce))
+    ) {
+      return 'init'
+    }
+
+    return 'disconnected'
+  }
+
+  if (phase === 'connected') {
+    return 'connected'
+  }
+
+  if (phase === 'loading' || phase === 'connecting') {
+    return 'progress'
+  }
+
+  return 'disconnected'
 }
 
 const CloseLink = styled(Link)`
@@ -251,5 +251,21 @@ const CloseLink = styled(Link)`
   ${({ theme }) => theme.breakpoints.up('md')} {
     top: 24px;
     right: 24px;
+  }
+`
+
+const StatusNote = styled.p`
+  margin-top: 20px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(0, 7, 20, 0.52);
+  letter-spacing: 0.2px;
+  line-height: 1.5;
+  text-align: center;
+
+  ${({ theme }) => theme.breakpoints.up('md')} {
+    margin-top: 24px;
+    font-size: 12px;
   }
 `

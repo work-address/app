@@ -10,13 +10,13 @@ import { Header } from '@/widgets'
 
 export const PublicLayout = () => {
   return (
-    <Layout>
+    <Root>
       <PageIndicator />
       <StickyHeader>
         <Header />
       </StickyHeader>
       <PageContent />
-    </Layout>
+    </Root>
   )
 }
 
@@ -62,7 +62,7 @@ const PageContent = memo(() => {
   )
 })
 
-const Layout = styled.div`
+const Root = styled.div`
   height: 100%;
   background: var(--ds-secondary);
   position: relative;

@@ -1,4 +1,4 @@
-import type { TimeRow } from '@/features/time/model'
+import type { TimeRow } from '@/features/time'
 
 import { MockScreenshot } from '@/shared/icons'
 

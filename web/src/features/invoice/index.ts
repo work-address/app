@@ -1,4 +1,4 @@
-export * from './components/total-amount-desktop.tsx'
-export * from './components/worklogs'
-export * from './components/total-amount-mobile.tsx'
+export * from './ui/invoice-total-amount-desktop'
+export * from './ui/invoice-total-amount-mobile'
+export * from './ui/invoice-worklogs'
 export * from './model'

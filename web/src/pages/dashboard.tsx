@@ -11,13 +11,12 @@ import {
 } from '@/entities/projects'
 import { fetchWorklogs, $worklogsLoading } from '@/entities/time'
 import {
-  ApplicationsUsage,
-  TimeTable,
-  ProjectsTable,
-  CreateProjectModal,
+  DashboardApplicationsUsage,
+  DashboardProjectsSearchInput,
   DashboardStyles as S,
-  ProjectsSearchInput,
 } from '@/features/dashboard'
+import { ProjectsCreateModal, ProjectsTable } from '@/features/projects'
+import { TimeTable } from '@/features/time'
 import {
   PageHelmet,
   Text,
@@ -85,7 +84,7 @@ export default function DashboardPage() {
               </Flex>
               {showSkeletons && (
                 <Flex mb={{ initial: '3', sm: '0' }}>
-                  <ProjectsSearchInput />
+                  <DashboardProjectsSearchInput />
                 </Flex>
               )}
             </Flex>
@@ -97,11 +96,11 @@ export default function DashboardPage() {
           </S.Left>
           {showSkeletons && (
             <S.Right>
-              <ApplicationsUsage />
+              <DashboardApplicationsUsage />
             </S.Right>
           )}
         </S.Content>
-        <CreateProjectModal
+        <ProjectsCreateModal
           open={createProjectOpen}
           onOpenChange={setCreateProjectOpen}
         />

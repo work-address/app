@@ -2,17 +2,18 @@ import { useUnit } from 'effector-react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router-dom'
 import { useSearchParams } from 'react-router-dom'
+import styled from 'styled-components'
 
 import type { LoginMode } from '@/entities/profile'
 
 import { $authenticated, $pending, login } from '@/entities/profile'
 import {
-  AuthFormStyles as S,
+  AuthStyles as S,
   ETHEREUM_WALLETS,
-  ProviderButton,
+  AuthProviderButton,
   SOLANA_WALLETS,
   TON_WALLETS,
-  WalletList,
+  AuthWalletList,
 } from '@/features/auth'
 import { routes } from '@/routes'
 import {
@@ -68,49 +69,47 @@ export default function SignInPage() {
           />
         </S.Desc>
         <S.Actions>
-          <ProviderButton
+          <AuthProviderButton
             iconUrl={TonLogo}
             iconAlt={t('signIn.alt.ton')}
             onClick={() => onSignIn('ton')}
           >
             {t('signIn.providers.ton')}
-          </ProviderButton>
-          <ProviderButton
+          </AuthProviderButton>
+          <AuthProviderButton
             iconUrl={SolanaLogo}
             iconAlt={t('signIn.alt.solana')}
             onClick={() => onSignIn('solana')}
           >
             {t('signIn.providers.solana')}
-          </ProviderButton>
-          <ProviderButton
+          </AuthProviderButton>
+          <AuthProviderButton
             iconUrl={EthereumLogo}
             iconAlt={t('signIn.alt.ethereum')}
             onClick={() => onSignIn('eth')}
           >
             {t('signIn.providers.ethereum')}
-          </ProviderButton>
+          </AuthProviderButton>
         </S.Actions>
         <S.Learn to={routes.docs.build()} target={routes.docs.target}>
           {t('signIn.learnMore')}
         </S.Learn>
       </S.SignInCard>
-      <S.Foot>
+      <Footer>
         <S.FootLine>
           <S.FootLabel>{t('signIn.footer.ethereumWallets')}</S.FootLabel>{' '}
-          <WalletList wallets={ETHEREUM_WALLETS} />
+          <AuthWalletList wallets={ETHEREUM_WALLETS} />
         </S.FootLine>
         <S.FootLine>
           <S.FootLabel>{t('signIn.footer.tonWallets')}</S.FootLabel>{' '}
-          <WalletList wallets={TON_WALLETS} />
+          <AuthWalletList wallets={TON_WALLETS} />
         </S.FootLine>
         <S.FootLine>
           <S.FootLabel>{t('signIn.footer.solanaWallets')}</S.FootLabel>{' '}
-          <WalletList wallets={SOLANA_WALLETS} breakAfter={3} />
+          <AuthWalletList wallets={SOLANA_WALLETS} breakAfter={3} />
         </S.FootLine>
-        <S.CommitSha>
-          Version: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}
-        </S.CommitSha>
-      </S.Foot>
+        <CommitSha>Version: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}</CommitSha>
+      </Footer>
       <S.HiddenButtonRow>
         <Button color="neutral" variant="soft" onClick={() => onSignIn('eth')}>
           {t('signIn.continue')}
@@ -119,3 +118,35 @@ export default function SignInPage() {
     </>
   )
 }
+
+const Footer = styled.footer`
+  text-align: center;
+  font-size: 12px;
+  color: rgba(0, 7, 20, 0.52);
+  letter-spacing: 0.55px;
+  font-weight: 500;
+  margin-left: -2px;
+  margin-top: 20px;
+  line-height: 16px;
+  padding-bottom: 40px;
+
+  ${({ theme }) => theme.breakpoints.up('md')} {
+    font-size: 14px;
+    margin-top: 20px;
+    line-height: 20px;
+  }
+`
+
+const CommitSha = styled.div`
+  margin-top: 14px;
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: 11px;
+  font-weight: 400;
+  color: rgba(0, 7, 20, 0.38);
+  letter-spacing: 0.2px;
+
+  ${({ theme }) => theme.breakpoints.up('md')} {
+    margin-top: 21px;
+    font-size: 12px;
+  }
+`

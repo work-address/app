@@ -6,10 +6,10 @@ import { useTranslation } from 'react-i18next'
 import {
   getWorklogNavigationState,
   getWorklogSiblingId,
-} from '../lib/get-worklog-sibling-id'
+} from '../model/get-worklog-sibling-id'
 
 import { TimeContext } from './time-context'
-import { TimeDialog } from './time-dialog/time-dialog'
+import { TimeDialog } from './time-dialog'
 import { TimeFilters } from './time-filters'
 import { TimeMobileFilters } from './time-mobile-filters'
 import { TimeTableCell } from './time-table-cell'
@@ -25,7 +25,7 @@ import {
   type Time,
   resetWorklogSort,
 } from '@/entities/time'
-import * as S from '@/features/dashboard/components/dashboard-styles'
+import { DashboardStyles as S } from '@/features/dashboard'
 import {
   Button,
   type DataTableConfig,

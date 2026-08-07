@@ -10,6 +10,7 @@ import '@/shared/i18n/i18n'
 
 import { App } from './app/app'
 
+import { AuthSolanaWalletMount } from '@/features/auth'
 import {
   ToastStyle,
   theme,
@@ -34,7 +35,7 @@ const AppWrapper = REACT_STRICT_MODE ? StrictMode : Fragment
 
 createRoot(ROOT_ELEMENT).render(
   <AppWrapper>
-    <SolanaWalletMount />
+    <AuthSolanaWalletMount />
     <Theme>
       <ThemeProvider theme={theme}>
         <Confirm />

@@ -11,9 +11,9 @@ import {
   $invoice,
   $invoiceLoading,
   resetInvoice,
-  TotalAmountDesktop,
-  TotalAmountMobile,
-  Worklogs,
+  InvoiceTotalAmountDesktop,
+  InvoiceTotalAmountMobile,
+  InvoiceWorklogs,
 } from '@/features/invoice'
 import { routes } from '@/routes'
 import { Card, IconButton, PageHelmet, Text, useBreakpoint } from '@/shared'
@@ -78,12 +78,12 @@ export default function InvoicePage() {
           )}
           {isMobile ? (
             <InvoiceCard shadow={false}>
-              <TotalAmountMobile />
+              <InvoiceTotalAmountMobile />
             </InvoiceCard>
           ) : (
-            <TotalAmountDesktop />
+            <InvoiceTotalAmountDesktop />
           )}
-          <Worklogs />
+          <InvoiceWorklogs />
         </Flex>
       </InvoicePageCard>
     </>

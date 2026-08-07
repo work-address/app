@@ -8,9 +8,9 @@ import styled from 'styled-components'
 
 import {
   BalanceCard,
-  TopUpCard,
-  TopUpEthCard,
-  TransactionsList,
+  BalanceTopUpCard,
+  BalanceTopUpEthCard,
+  BalanceTransactionsList,
   fetchBalance,
   resetBalance,
 } from '@/features/balance'
@@ -55,9 +55,9 @@ export default function BalancePage() {
             </Text>
           </Flex>
           <BalanceCard />
-          <TopUpCard />
-          <TopUpEthCard />
-          <TransactionsList />
+          <BalanceTopUpCard />
+          <BalanceTopUpEthCard />
+          <BalanceTransactionsList />
         </Flex>
       </CardWrapper>
     </>

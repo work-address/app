@@ -15,7 +15,7 @@ import { ErrorBoundary } from '@/shared'
 
 const DashboardPage = lazy(() => import('@/pages/dashboard'))
 const ProfilePage = lazy(() => import('@/pages/profile'))
-const ProfileEditPage = lazy(() => import('@/pages/profile/edit'))
+const ProfileEditPage = lazy(() => import('@/pages/profile-edit'))
 const SignInPage = lazy(() => import('@/pages/sign-in'))
 const ConnectPage = lazy(() => import('@/pages/connect'))
 const InvoicePage = lazy(() => import('@/pages/invoice'))

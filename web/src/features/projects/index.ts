@@ -1,3 +1,3 @@
-export * from './projects'
-export * from './create-project-modal'
-export { type ProjectRow, type ProjectStatus } from './types'
+export * from './ui/projects-table'
+export * from './ui/projects-create-modal'
+export * from './model'

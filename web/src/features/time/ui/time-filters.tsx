@@ -2,15 +2,13 @@ import { Flex, Grid } from '@radix-ui/themes'
 import { useStoreMap } from 'effector-react'
 import { useTranslation } from 'react-i18next'
 
-import {
-  DateRangePicker,
-  TwoSideInput,
-  ProjectsSelect,
-  NoteInput,
-} from './common'
+import { TimeDateRangePicker } from './time-date-range-picker'
+import { TimeNoteInput } from './time-note-input'
+import { TimeProjectsSelect } from './time-projects-select'
+import { TimeTwoSideInput } from './time-two-side-input'
 
 import { $worklogsFilters } from '@/entities/time'
-import * as S from '@/features/dashboard/components/dashboard-styles'
+import { DashboardStyles as S } from '@/features/dashboard'
 import { Text } from '@/shared'
 
 export const TimeFilters = () => {
@@ -25,7 +23,7 @@ export const TimeFilters = () => {
   return (
     <Flex gap={'3'} mb={'4'}>
       <S.Field $basis={214}>
-        <ProjectsSelect />
+        <TimeProjectsSelect />
       </S.Field>
       <S.Field $basis={300}>
         <Flex gap={'2'} direction={'column'}>
@@ -33,15 +31,15 @@ export const TimeFilters = () => {
             {t('dashboard.page.filters.date')}
           </Text>
           <Grid columns={'1fr 1fr'} gap={'2'}>
-            <DateRangePicker />
+            <TimeDateRangePicker />
           </Grid>
         </Flex>
       </S.Field>
       <S.Field $basis={214}>
-        <NoteInput />
+        <TimeNoteInput />
       </S.Field>
       <S.Field $basis={160}>
-        <TwoSideInput
+        <TimeTwoSideInput
           label={t('dashboard.page.filters.timeActive')}
           leftId="timeActiveMin"
           rightId="timeActiveMax"
@@ -51,7 +49,7 @@ export const TimeFilters = () => {
         />
       </S.Field>
       <S.Field $basis={160}>
-        <TwoSideInput
+        <TimeTwoSideInput
           label={t('dashboard.page.filters.keyboard')}
           leftId="keyboardKeysMin"
           rightId="keyboardKeysMax"
@@ -61,7 +59,7 @@ export const TimeFilters = () => {
         />
       </S.Field>
       <S.Field $basis={160}>
-        <TwoSideInput
+        <TimeTwoSideInput
           label={t('dashboard.page.filters.mouse')}
           leftId="mouseKeysMin"
           rightId="mouseKeysMax"
@@ -71,7 +69,7 @@ export const TimeFilters = () => {
         />
       </S.Field>
       <S.Field>
-        <TwoSideInput
+        <TimeTwoSideInput
           label={t('dashboard.page.filters.mouseDistance')}
           leftId="mouseDistanceMin"
           rightId="mouseDistanceMax"

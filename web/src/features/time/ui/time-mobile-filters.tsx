@@ -2,15 +2,13 @@ import { Flex } from '@radix-ui/themes'
 import { useStoreMap, useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
 
-import {
-  TwoSideInput,
-  DateRangePicker,
-  NoteInput,
-  ProjectsSelect,
-} from './common'
+import { TimeDateRangePicker } from './time-date-range-picker'
+import { TimeNoteInput } from './time-note-input'
+import { TimeProjectsSelect } from './time-projects-select'
+import { TimeTwoSideInput } from './time-two-side-input'
 
 import { $worklogsFilters, applyWorklogFilters } from '@/entities/time'
-import * as S from '@/features/dashboard/components/dashboard-styles'
+import { DashboardStyles as S } from '@/features/dashboard'
 import { Button, Drawer, FilterIcon, Text } from '@/shared'
 
 export type TimeMobileFiltersProps = {
@@ -71,7 +69,7 @@ export const TimeMobileFilters = ({
         }
       >
         <Flex direction={'column'} gap={'2'}>
-          <ProjectsSelect />
+          <TimeProjectsSelect />
           <Flex direction={'column'} gap={'2'}>
             <Text
               as={'label'}
@@ -82,11 +80,11 @@ export const TimeMobileFilters = ({
               {t('dashboard.page.filters.date')}
             </Text>
             <Flex gap={'2'}>
-              <DateRangePicker />
+              <TimeDateRangePicker />
             </Flex>
           </Flex>
-          <NoteInput />
-          <TwoSideInput
+          <TimeNoteInput />
+          <TimeTwoSideInput
             label={t('dashboard.page.filters.timeActive')}
             leftId={'timeActiveMin'}
             leftPlaceholder={t('dashboard.page.filters.min')}
@@ -94,7 +92,7 @@ export const TimeMobileFilters = ({
             rightPlaceholder={t('dashboard.page.filters.max')}
             inputMode="numeric"
           />
-          <TwoSideInput
+          <TimeTwoSideInput
             label={t('dashboard.page.filters.keyboard')}
             leftId={'keyboardKeysMin'}
             leftPlaceholder={t('dashboard.page.filters.min')}
@@ -102,7 +100,7 @@ export const TimeMobileFilters = ({
             rightPlaceholder={t('dashboard.page.filters.max')}
             inputMode="numeric"
           />
-          <TwoSideInput
+          <TimeTwoSideInput
             label={t('dashboard.page.filters.mouse')}
             leftId={'mouseKeysMin'}
             leftPlaceholder={t('dashboard.page.filters.min')}
@@ -110,7 +108,7 @@ export const TimeMobileFilters = ({
             rightPlaceholder={t('dashboard.page.filters.max')}
             inputMode="numeric"
           />
-          <TwoSideInput
+          <TimeTwoSideInput
             label={t('dashboard.page.filters.mouseDistance')}
             leftId={'mouseDistanceMin'}
             leftPlaceholder={t('dashboard.page.filters.min')}
