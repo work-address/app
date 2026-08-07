@@ -182,6 +182,7 @@
   "dashboard.worklogsTable.bulk.confirmDelete.description": "Будут безвозвратно удалены {{count}} выбранных записей и связанные данные. Это действие нельзя отменить.",
   "dashboard.worklogsTable.bulk.confirmDelete.confirm": "Удалить",
   "dashboard.worklogsTable.bulk.deletedMessage": "Выбранные записи удалены",
+  "dashboard.worklogsTable.bulk.actionPlaceholder": "Выберите действие",
   "dashboard.worklogsTable.screenshotNoData": "Нет данных",
   "download.documentTitle": "Скачать",
   "download.page.description": "Ваш надёжный помощник для эффективного управления временем.",

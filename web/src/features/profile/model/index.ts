@@ -10,8 +10,8 @@ import {
   decodeFriendWalletAddress,
 } from '@/shared'
 
-const ProfileGate = createGate<{ userId: string | null }>({
-  defaultState: { userId: null },
+const ProfileGate = createGate<{ friendlyWalletAddress: string | null }>({
+  defaultState: { friendlyWalletAddress: null },
 })
 
 const profileQuery = createQuery({
@@ -26,10 +26,7 @@ const profileQuery = createQuery({
       throw result
     }
 
-    return {
-      items: (result.data as [baseApi.User[], number])[0],
-      total: (result.data as [baseApi.User[], number])[1],
-    }
+    return result.data
   },
 })
 

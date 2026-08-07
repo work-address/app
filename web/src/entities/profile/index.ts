@@ -43,6 +43,7 @@ import {
   loginTonFx,
   openTonModalFx,
   tonAuthError,
+  tonAuthSuccess,
 } from './ton.model'
 
 import type { SolanaNonceParams } from '@/entities/profile/types'
@@ -144,7 +145,7 @@ sample({
  * TON flow: after wallet provides valid proof, verify it on backend.
  */
 sample({
-  clock: openTonModalFx.doneData,
+  clock: tonAuthSuccess,
   target: loginTonFx,
 })
 
@@ -188,20 +189,10 @@ sample({
   target: [disconnectTonFx, disconnectEthFx, disconnectSolanaFx, clearTokensFx],
 })
 
-/**
- * Solana flow: after wallet connected (and user intends to log in),
- * fetch nonce for the connected address, sign it, then verify on backend.
- */
 sample({
-  clock: solanaConnectedPub,
-  source: combine($authenticated, $loginMode),
-  filter: ([authenticated, mode]) => !authenticated && mode === 'solana',
-  fn: (_, { address }) => address,
-  target: getNonceSolanaFx,
-})
-
-sample({
-  clock: getNonceSolanaFx.doneData,
+  clock: getNonceFx.done,
+  filter: ({ params }) => params.mode === 'solana',
+  fn: ({ result }) => result,
   target: signSolanaFx,
 })
 
@@ -246,7 +237,7 @@ sample({
  */
 sample({
   clock: fetchStatusFx.fail,
-  target: logout,
+  target: [$authenticated.reinit, logout],
 })
 
 sample({
@@ -292,9 +283,9 @@ loginTonFx.fail.watch(({ error }) => {
   })
 })
 
-tonAuthError.watch((message) => {
+tonAuthError.watch(() => {
   showToast('error', {
-    message,
+    message: 'Ton auth error.',
     position: 'top-center',
   })
 })

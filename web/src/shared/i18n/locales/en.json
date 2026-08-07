@@ -182,6 +182,7 @@
   "dashboard.worklogsTable.bulk.confirmDelete.description": "This will permanently delete {{count}} selected worklog(s) and related data. This action cannot be undone.",
   "dashboard.worklogsTable.bulk.confirmDelete.confirm": "Delete",
   "dashboard.worklogsTable.bulk.deletedMessage": "Selected worklogs have been deleted",
+  "dashboard.worklogsTable.bulk.actionPlaceholder": "Select action",
   "dashboard.worklogsTable.screenshotNoData": "No data",
   "download.documentTitle": "Download",
   "download.page.description": "Your reliable companion for efficient time management.",

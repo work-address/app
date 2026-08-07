@@ -24,7 +24,6 @@ import {
   Text,
   TextArea,
   toImageDataUrl,
-  useBreakpoint,
   useConfirm,
 } from '@/shared'
 
@@ -83,7 +82,6 @@ export const TimeDialog = ({
   onNext,
 }: TimeDialogProps) => {
   const { t, i18n } = useTranslation()
-  const isDesktop = useBreakpoint('isDesktop')
   const { confirm } = useConfirm()
 
   const {
@@ -333,7 +331,7 @@ export const TimeDialog = ({
       desktopWidth={hasScreenshot ? '1000px' : '540px'}
       desktopShowClose
       footer={
-        isDesktop && row ? (
+        row ? (
           <TimeDialogFooter
             isPending={isPending}
             isSaving={editStatus === 'pending'}
@@ -432,6 +430,7 @@ const Content = styled.div<{ $singleColumn?: boolean }>`
 
   ${(p) => p.theme.breakpoints.down('md')} {
     flex-direction: column;
+    gap: var(--space-4);
   }
 `
 
@@ -446,6 +445,10 @@ const DetailsColumn = styled.div<{ $fullWidth?: boolean }>`
   & > * {
     width: 100%;
   }
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    width: 100%;
+  }
 `
 
 const ScreenshotColumn = styled.div`
@@ -455,6 +458,10 @@ const ScreenshotColumn = styled.div`
   flex-shrink: 0;
   width: 540px;
   max-width: 100%;
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    width: 100%;
+  }
 `
 
 const Screenshot = styled.img`
@@ -463,4 +470,9 @@ const Screenshot = styled.img`
   max-width: 100%;
   object-fit: contain;
   border-radius: 12px;
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    width: 100%;
+    height: auto;
+  }
 `

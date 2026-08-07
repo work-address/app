@@ -3,7 +3,6 @@ import { attachLogger } from 'effector-logger'
 import { Fragment, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HelmetProvider } from 'react-helmet-async'
-import { BrowserRouter } from 'react-router-dom'
 import { Toaster } from 'sonner'
 import { ThemeProvider } from 'styled-components'
 import '@/shared/i18n/i18n'
@@ -17,7 +16,6 @@ import {
   Confirm,
   BreakpointsWatcher,
   SonnerRadixTheme,
-  SolanaWalletMount,
 } from '@/shared'
 
 const ROOT_ELEMENT_ID = 'root'

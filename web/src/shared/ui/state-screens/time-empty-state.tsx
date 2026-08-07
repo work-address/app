@@ -1,8 +1,6 @@
 import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
 
-import { openDocs } from '@/routes'
-
 import { DashboardEmptyState } from './dashboard-empty-state'
 
 import type { CSSProperties } from 'react'

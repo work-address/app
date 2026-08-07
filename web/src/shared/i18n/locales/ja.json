@@ -182,6 +182,7 @@
   "dashboard.worklogsTable.bulk.confirmDelete.description": "選択した {{count}} 件のエントリと関連データが完全に削除されます。この操作は取り消せません。",
   "dashboard.worklogsTable.bulk.confirmDelete.confirm": "削除",
   "dashboard.worklogsTable.bulk.deletedMessage": "選択したエントリを削除しました",
+  "dashboard.worklogsTable.bulk.actionPlaceholder": "操作を選択",
   "dashboard.worklogsTable.screenshotNoData": "データなし",
   "download.documentTitle": "ダウンロード",
   "download.page.description": "効率的な時間管理のための頼れるパートナー。",

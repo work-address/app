@@ -14,6 +14,7 @@ import { TimeFilters } from '../time-filters/time-filters'
 import { TimeMobileFilters } from '../time-filters/time-mobile-filters'
 
 import { TimeContext } from './time-context'
+import { TimeMobileBulkActions } from './time-mobile-bulk-actions'
 import { TimeTableCell } from './time-table-cell'
 
 import {
@@ -301,6 +302,14 @@ export const TimeTable = () => {
                 {t('dashboard.worklogsTable.bulk.clearSelection')}
               </Button>
             </Flex>
+          )}
+          {isMobile && selectedTimeCount > 0 && (
+            <TimeMobileBulkActions
+              selectedIds={selectedTimeIds}
+              isPending={isBulkPending}
+              onDelete={requestBulkDelete}
+              onClearSelection={handleClearSelection}
+            />
           )}
           <DataTable<Time>
             nowrap

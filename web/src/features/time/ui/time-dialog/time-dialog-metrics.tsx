@@ -1,6 +1,7 @@
-import { Badge, Flex } from '@radix-ui/themes'
+import { Badge } from '@radix-ui/themes'
 import { type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
 import type { Time } from '@/entities/time'
 
@@ -12,14 +13,14 @@ type MetricProps = {
 }
 
 const Metric = ({ label, children }: MetricProps) => (
-  <Flex direction="column" gap="1">
+  <MetricItem>
     <Text color="gray" size="2">
       {label}
     </Text>
     <Text size="2" weight="medium">
       {children}
     </Text>
-  </Flex>
+  </MetricItem>
 )
 
 type TimeDialogMetricsProps = {
@@ -30,11 +31,11 @@ export const TimeDialogMetrics = ({ row }: TimeDialogMetricsProps) => {
   const { t } = useTranslation()
 
   return (
-    <>
+    <Root>
       <Text size="2" weight="medium">
         {t('dashboard.worklogsTable.head.activeMetrics')}
       </Text>
-      <Flex gap="4">
+      <MetricsGrid>
         <Metric label={t('dashboard.worklogsTable.head.timeActive')}>
           <Badge color="green">
             {formatDurationFromMinutes(row.minutesActive, t)}
@@ -49,7 +50,32 @@ export const TimeDialogMetrics = ({ row }: TimeDialogMetricsProps) => {
         <Metric label={t('dashboard.worklogsTable.head.mouseDistance')}>
           {row.mouseDistance}
         </Metric>
-      </Flex>
-    </>
+      </MetricsGrid>
+    </Root>
   )
 }
+
+const Root = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  width: 100%;
+`
+
+const MetricsGrid = styled.div`
+  display: flex;
+  gap: var(--space-4);
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: var(--space-3) var(--space-4);
+  }
+`
+
+const MetricItem = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  min-width: 0;
+`

@@ -182,6 +182,7 @@
   "dashboard.worklogsTable.bulk.confirmDelete.description": "将永久删除 {{count}} 条所选记录及相关数据。此操作无法撤销。",
   "dashboard.worklogsTable.bulk.confirmDelete.confirm": "删除",
   "dashboard.worklogsTable.bulk.deletedMessage": "所选记录已删除",
+  "dashboard.worklogsTable.bulk.actionPlaceholder": "选择操作",
   "dashboard.worklogsTable.screenshotNoData": "无数据",
   "download.documentTitle": "下载",
   "download.page.description": "您高效时间管理的可靠伙伴。",

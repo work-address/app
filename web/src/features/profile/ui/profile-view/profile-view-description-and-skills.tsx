@@ -89,7 +89,7 @@ export const ProfileViewDescriptionAndSkills = ({
         </Skeleton>
         <Separator size={'4'} />
         <div>
-          <Text size={'4'} weight={'medium'}>
+          <Text size={isMobile ? '3' : '4'} weight={'medium'}>
             {t('profile.form.skills')}
           </Text>
         </div>

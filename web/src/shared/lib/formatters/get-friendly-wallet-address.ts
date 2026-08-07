@@ -1,3 +1,5 @@
+import { Address } from '@ton/core'
+
 import { toUserFriendlyTonAddress } from '../wallet-provders'
 
 // TODO: remove after backend returns chain in status
@@ -13,7 +15,7 @@ export const getFriendlyWalletAddress = (
   }
 
   if (address.includes('x')) {
-    return address.toLowerCase()
+    return address
   }
 
   return address

@@ -1,5 +1,5 @@
-import { Flex } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
 import { ProcessesIcon, ScreenshotsIcon, Tooltip, Button } from '@/shared'
 
@@ -31,8 +31,8 @@ export const TimeDialogFooter = ({
   const { t } = useTranslation()
 
   return (
-    <Flex justify="between" align="center" width="100%">
-      <Flex gap="3">
+    <Root>
+      <DangerActions>
         <Button color="danger" size="l" disabled={isPending} onClick={onDelete}>
           {t('dashboard.worklogsTable.dialog.deleteEntry')}
         </Button>
@@ -68,8 +68,8 @@ export const TimeDialogFooter = ({
             </span>
           </Tooltip>
         )}
-      </Flex>
-      <Flex gap="3">
+      </DangerActions>
+      <PrimaryActions>
         <Button
           color="neutral"
           variant="soft"
@@ -87,7 +87,45 @@ export const TimeDialogFooter = ({
         >
           {t('common.save')}
         </Button>
-      </Flex>
-    </Flex>
+      </PrimaryActions>
+    </Root>
   )
 }
+
+const Root = styled.div`
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  width: 100%;
+  gap: var(--space-3);
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    flex-direction: column;
+    align-items: stretch;
+  }
+`
+
+const DangerActions = styled.div`
+  display: flex;
+  gap: var(--space-3);
+  flex-wrap: wrap;
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    flex-direction: column;
+
+    & > * {
+      width: 100%;
+    }
+  }
+`
+
+const PrimaryActions = styled.div`
+  display: flex;
+  gap: var(--space-3);
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    & > * {
+      flex: 1;
+    }
+  }
+`

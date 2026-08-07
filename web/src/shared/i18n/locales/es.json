@@ -182,6 +182,7 @@
   "dashboard.worklogsTable.bulk.confirmDelete.description": "Se eliminarán permanentemente {{count}} entradas seleccionadas y los datos relacionados. Esta acción no se puede deshacer.",
   "dashboard.worklogsTable.bulk.confirmDelete.confirm": "Eliminar",
   "dashboard.worklogsTable.bulk.deletedMessage": "Las entradas seleccionadas han sido eliminadas",
+  "dashboard.worklogsTable.bulk.actionPlaceholder": "Seleccionar acción",
   "dashboard.worklogsTable.screenshotNoData": "Sin datos",
   "download.documentTitle": "Descargar",
   "download.page.description": "Tu compañero fiable para una gestión eficiente del tiempo.",

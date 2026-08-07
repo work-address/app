@@ -148,9 +148,11 @@ export const Select = ({
         title={title ?? ph}
         trigger={TriggerEl}
         footer={
-          <Button stretch onClick={() => setOpen(false)}>
-            {t('common.apply')}
-          </Button>
+          multi ? (
+            <Button stretch onClick={() => setOpen(false)}>
+              {t('common.apply')}
+            </Button>
+          ) : undefined
         }
       >
         {Content}

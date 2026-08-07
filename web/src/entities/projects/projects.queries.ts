@@ -41,20 +41,9 @@ export const projectsStatsQuery = createQuery({
       ),
     )
 
-    return responses.flatMap((response) => {
-      const rows = (response.data ?? []) as TimeTotalsRow[]
-
-      return rows.map((row) => ({
-        activityId: row.projectId,
-        rateHour: row.rateHour,
-        rateTotal: row.rateTotal,
-        minutes: row.minutes,
-        minutesActive: row.minutesActive,
-        keyboardKeys: row.keyboardKeys,
-        mouseKeys: row.mouseKeys,
-        mouseDistance: row.mouseDistance,
-      }))
-    })
+    return responses.flatMap(
+      (response) => (response.data ?? []) as TimeTotalsRow[],
+    )
   },
 })
 

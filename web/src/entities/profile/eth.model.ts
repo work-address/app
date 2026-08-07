@@ -9,12 +9,6 @@ import {
   getBrowserProvider,
 } from '@/shared/lib/wallet-provders/reown-provider.lazy'
 
-export type EthModalResult = {
-  signer: JsonRpcSigner
-  address: string
-  ethersProvider: BrowserProvider
-}
-
 export const ethConnected = createEvent<EthModalResult>()
 
 export const ethConnectedPub = createEvent<EthModalResult>()
