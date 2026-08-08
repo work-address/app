@@ -1,3 +1,4 @@
+import { TrashIcon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -7,6 +8,7 @@ import {
   getWorklogNavigationState,
   getWorklogSiblingId,
 } from '../model/get-worklog-sibling-id'
+import { useBulkDeleteWorklogs } from '../model/use-bulk-delete-worklogs'
 
 import { TimeContext } from './time-context'
 import { TimeDialog } from './time-dialog'
@@ -84,6 +86,25 @@ export const TimeTable = () => {
   )
   const selectedWorklogsCount = selectedWorklogIds.length
 
+  const handleClearSelection = useCallback(() => {
+    setSelectedIds({})
+  }, [])
+
+  const handleCloseDialog = useCallback(() => {
+    setIsTimeDialogOpen(false)
+    setSelectedWorklogId(null)
+  }, [])
+
+  const { requestBulkDelete, isDeleting } = useBulkDeleteWorklogs({
+    selectedIds,
+    selectedWorklogId,
+    isBlocked: setPaidStatusStatus === 'pending',
+    onClearSelection: handleClearSelection,
+    onCloseDialog: handleCloseDialog,
+  })
+
+  const isBulkPending = setPaidStatusStatus === 'pending' || isDeleting
+
   // Берём строку из стора по id, чтобы модалка видела актуальные данные после рефетча
   const selectedWorklog = useMemo(
     () => worklogRows.find((row) => row.id === selectedWorklogId) ?? null,
@@ -142,7 +163,7 @@ export const TimeTable = () => {
   }, [t, setPaidStatusStatus, resetSetPaidStatus])
 
   const handleBulkSetPaidStatus = (isPaid: boolean) => {
-    if (setPaidStatusStatus === 'pending' || selectedWorklogsCount === 0) {
+    if (isBulkPending || selectedWorklogsCount === 0) {
       return
     }
 
@@ -245,7 +266,7 @@ export const TimeTable = () => {
               <Button
                 size="l"
                 type="button"
-                disabled={setPaidStatusStatus === 'pending'}
+                disabled={isBulkPending}
                 onClick={() => handleBulkSetPaidStatus(true)}
               >
                 {t('dashboard.worklogsTable.paymentStatus.paid')}
@@ -255,18 +276,29 @@ export const TimeTable = () => {
                 variant="soft"
                 size="l"
                 type="button"
-                disabled={setPaidStatusStatus === 'pending'}
+                disabled={isBulkPending}
                 onClick={() => handleBulkSetPaidStatus(false)}
               >
                 {t('dashboard.worklogsTable.paymentStatus.unpaid')}
+              </Button>
+              <Button
+                color="danger"
+                variant="outline"
+                size="l"
+                type="button"
+                iconLeft={<TrashIcon />}
+                disabled={isBulkPending}
+                onClick={() => requestBulkDelete(selectedWorklogIds)}
+              >
+                {t('dashboard.worklogsTable.bulk.delete')}
               </Button>
               <Button
                 variant="outline"
                 color="neutral"
                 size="l"
                 type="button"
-                disabled={setPaidStatusStatus === 'pending'}
-                onClick={() => setSelectedIds({})}
+                disabled={isBulkPending}
+                onClick={handleClearSelection}
               >
                 {t('dashboard.worklogsTable.bulk.clearSelection')}
               </Button>
