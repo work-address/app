@@ -1,12 +1,14 @@
 import { useUnit } from 'effector-react'
 import { useEffect, useMemo, useState } from 'react'
 
-import { buildApplicationsUsageChart, PERIOD_TO_STATS_PERIOD } from '../lib'
+import {
+  buildApplicationsUsageChart,
+  PERIOD_TO_STATS_PERIOD,
+  type Period,
+} from '../../model'
 
 import { DashboardApplicationsUsageCard } from './dashboard-applications-usage-card'
 import { DashboardApplicationsUsageChart } from './dashboard-applications-usage-chart'
-
-import type { Period } from '../lib'
 
 import {
   $projectsLoading,

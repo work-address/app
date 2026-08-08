@@ -4,7 +4,7 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { $profile } from '../model'
+import { $profile } from '../../model'
 
 import { ProfileViewCard } from './profile-view-styles'
 

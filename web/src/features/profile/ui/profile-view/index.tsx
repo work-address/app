@@ -3,7 +3,7 @@ import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { $profile } from '../model'
+import { $profile } from '../../model'
 
 import { ProfileViewDescriptionAndSkills } from './profile-view-description-and-skills'
 import { ProfileViewLinks } from './profile-view-links'

@@ -1,16 +1,17 @@
+import { PlusIcon } from '@radix-ui/react-icons'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { routes } from '@/routes'
 import { Button, FeaturedIcon } from '@/shared'
 
-export const DashboardProjectsNotFound = () => {
-  const { t } = useTranslation()
+type DashboardProjectsNotFoundProps = {
+  onCreateClick: () => void
+}
 
-  const onOpenDocsClick = () => {
-    // TODO: create project handler
-    window.open(routes.docs.build(), routes.docs.target)
-  }
+export const DashboardProjectsNotFound = ({
+  onCreateClick,
+}: DashboardProjectsNotFoundProps) => {
+  const { t } = useTranslation()
 
   return (
     <Root>
@@ -22,8 +23,8 @@ export const DashboardProjectsNotFound = () => {
       </IconInner>
       <Title>{t('dashboard.page.projectsNotFound.title')}</Title>
       <Desc>{t('dashboard.page.projectsNotFound.description')}</Desc>
-      <Button color="neutral" variant="outline" onClick={onOpenDocsClick}>
-        {t('dashboard.page.empty.action')}
+      <Button iconLeft={<PlusIcon />} onClick={onCreateClick}>
+        {t('dashboard.page.createProject')}
       </Button>
     </Root>
   )

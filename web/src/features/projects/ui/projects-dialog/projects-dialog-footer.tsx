@@ -3,7 +3,7 @@ import { Flex, Grid } from '@radix-ui/themes'
 import { type MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import type { ProjectsDialogMode } from '../model'
+import type { ProjectsDialogMode } from '../../model'
 
 import { Button, useBreakpoint } from '@/shared'
 

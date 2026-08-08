@@ -3,7 +3,7 @@ import React, { type ReactNode, useContext } from 'react'
 import { NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { getProjectStatusTranslationKey } from '../lib'
+import { getProjectStatusTranslationKey } from '../../model'
 
 import { ProjectsTableContext } from './projects-table-context'
 
@@ -17,7 +17,7 @@ import {
   formatDurationFromMinutes,
 } from '@/shared'
 
-export const ProjectsDesktopCell = React.memo(
+export const ProjectsTableCell = React.memo(
   (props: DesktopBodyCellRenderProps<ProjectWithStats>) => {
     const { t } = useContext(ProjectsTableContext)
     let content: ReactNode | null

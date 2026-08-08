@@ -3,12 +3,12 @@ import { Fragment, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
-import { mapAddressesToCollaborators } from '../lib'
+import { mapAddressesToCollaborators } from '../../model'
 
-import { ProjectsAddCollaborators } from './projects-add-collaborators'
+import { ProjectsAddCollaborators } from '../projects-add-collaborators'
 import { ProjectsDialogMetrics } from './projects-dialog-metrics'
 
-import type { ProjectFormValues } from '../model'
+import type { ProjectFormValues } from '../../model'
 import type { ProjectWithStats } from '@/entities/projects'
 
 import {

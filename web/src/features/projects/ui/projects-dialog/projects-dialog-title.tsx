@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
-import type { ProjectsDialogMode } from '../model'
+import type { ProjectsDialogMode } from '../../model'
 
 import { routes } from '@/routes'
 import { IconButton, PrintIcon, Text, useBreakpoint } from '@/shared'

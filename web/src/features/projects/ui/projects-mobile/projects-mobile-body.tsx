@@ -2,7 +2,7 @@ import { QuestionMarkCircledIcon } from '@radix-ui/react-icons'
 import { Flex, Grid } from '@radix-ui/themes'
 import { memo, useContext } from 'react'
 
-import { ProjectsTableContext } from './projects-table-context'
+import { ProjectsTableContext } from '../projects-table/projects-table-context'
 
 import type { ProjectWithStats } from '@/entities/projects'
 import type { MobileBodyRenderProps } from '@/shared'

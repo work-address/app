@@ -4,13 +4,13 @@ import { useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
-import { mapCollaboratorsToAddresses } from '../lib'
+import { mapCollaboratorsToAddresses } from '../../model'
 
-import { ProjectsAddCollaborators } from './projects-add-collaborators'
-import { ProjectsFormSelect } from './projects-form-select'
-import { ProjectsFormTrackingOptions } from './projects-form-tracking-options'
+import { ProjectsAddCollaborators } from '../projects-add-collaborators'
+import { ProjectsFormSelect } from '../projects-form-select'
+import { ProjectsFormTrackingOptions } from '../projects-form-tracking-options'
 
-import type { ProjectFormValues } from '../model'
+import type { ProjectFormValues } from '../../model'
 
 import { $rawProjects, editProjectMutation } from '@/entities/projects'
 import { Input, TextArea, type InputProps } from '@/shared'

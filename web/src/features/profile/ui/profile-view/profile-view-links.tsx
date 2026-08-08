@@ -9,7 +9,7 @@ import {
   $profile,
   $isAuthenticatedUserProfile,
   $profileLoading,
-} from '../model'
+} from '../../model'
 
 import { ProfileViewInfoRow } from './profile-view-info-row'
 import { ProfileViewCard } from './profile-view-styles'

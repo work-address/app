@@ -9,11 +9,14 @@ import {
 } from 'recharts'
 import styled from 'styled-components'
 
-import { getBarColor, HIT_AREA_KEY, toProcessKey } from '../lib'
+import {
+  getBarColor,
+  HIT_AREA_KEY,
+  toProcessKey,
+  type ApplicationsUsageChart,
+} from '../../model'
 
 import { DashboardApplicationsUsageTooltip } from './dashboard-applications-usage-tooltip'
-
-import type { ApplicationsUsageChart } from '../lib'
 
 // Projects visible in the chart area before horizontal scroll kicks in.
 const VISIBLE_PROJECTS_COUNT = 4

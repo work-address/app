@@ -1,9 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { isProcessKey, toProcessName } from '../lib'
-
-import type { ChartDatum } from '../lib'
+import { isProcessKey, toProcessName, type ChartDatum } from '../../model'
 import type { TooltipContentProps } from 'recharts'
 import type {
   ValueType,

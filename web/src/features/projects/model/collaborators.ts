@@ -1,4 +1,4 @@
-import type { CollaboratorFormRow } from '../model'
+import type { CollaboratorFormRow } from '.'
 
 /** EVM address, e.g. 0x-prefixed 40 hex chars. */
 const EVM_ADDRESS = /^0x[\dA-Fa-f]{40}$/

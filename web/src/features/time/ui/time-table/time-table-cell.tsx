@@ -17,7 +17,7 @@ import {
   toImageDataUrl,
 } from '@/shared'
 
-const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
+export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
   const { dateFormatter, timeFormatter, t } = useContext(TimeContext)
 
   const { setPaidStatus, setPaidStatusStatus } = useUnit({
@@ -104,8 +104,6 @@ const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
     }
   }
 })
-
-export { TimeTableCell }
 
 const Screenshot = styled.img`
   max-width: 64px;

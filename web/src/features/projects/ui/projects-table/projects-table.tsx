@@ -6,12 +6,13 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { ProjectsCreateModal } from './projects-create-modal'
-import { ProjectsDesktopCell } from './projects-desktop-cell'
-import { ProjectsDialog } from './projects-dialog'
-import { ProjectsMobileAddonBottom } from './projects-mobile-addon-bottom'
-import { ProjectsMobileBody } from './projects-mobile-body'
-import { ProjectsMobileHeader } from './projects-mobile-header'
+import { ProjectsCreateModal } from '../projects-create-modal'
+import { ProjectsDialog } from '../projects-dialog/projects-dialog'
+import { ProjectsMobileAddonBottom } from '../projects-mobile/projects-mobile-addon-bottom'
+import { ProjectsMobileBody } from '../projects-mobile/projects-mobile-body'
+import { ProjectsMobileHeader } from '../projects-mobile/projects-mobile-header'
+
+import { ProjectsTableCell } from './projects-table-cell'
 import {
   ProjectsTableContext,
   type ProjectsTableContextValues,
@@ -125,13 +126,13 @@ export const ProjectsTable = () => {
       },
       {
         dataKey: 'earnings',
-        width: 90,
+        width: 120,
         headerText: t('dashboard.projectsTable.head.earnings'),
-        getValue: (data) => `${data.earnings} ${t('currency.usdt')}`,
+        getValue: (data) => `${data.earnings.toFixed(2)} ${t('currency.usdt')}`,
       },
       {
         dataKey: 'state',
-        width: 100,
+        width: 120,
         horizontalAlign: 'center',
         headerText: t('dashboard.projectsTable.head.status'),
       },
@@ -145,21 +146,21 @@ export const ProjectsTable = () => {
         width: 120,
         headerText: t('dashboard.projectsTable.head.timeActive'),
       },
-      {
-        dataKey: 'keyboardKeys',
-        width: 160,
-        headerText: t('dashboard.projectsTable.head.keyboardKeys'),
-      },
-      {
-        dataKey: 'mouseKeys',
-        width: 160,
-        headerText: t('dashboard.projectsTable.head.mouseKeys'),
-      },
-      {
-        dataKey: 'mouseDistance',
-        width: 160,
-        headerText: t('dashboard.projectsTable.head.mouseDistance'),
-      },
+      // {
+      //   dataKey: 'keyboardKeys',
+      //   width: 160,
+      //   headerText: t('dashboard.projectsTable.head.keyboardKeys'),
+      // },
+      // {
+      //   dataKey: 'mouseKeys',
+      //   width: 160,
+      //   headerText: t('dashboard.projectsTable.head.mouseKeys'),
+      // },
+      // {
+      //   dataKey: 'mouseDistance',
+      //   width: 160,
+      //   headerText: t('dashboard.projectsTable.head.mouseDistance'),
+      // },
     ],
     [t],
   )
@@ -286,7 +287,9 @@ export const ProjectsTable = () => {
             transition={{ duration: 0.2 }}
           >
             {projects.length === 0 && !isProjectsLoading ? (
-              <DashboardProjectsNotFound />
+              <DashboardProjectsNotFound
+                onCreateClick={() => setIsCreateDialogOpen(true)}
+              />
             ) : (
               <ProjectsTableContext value={projectsContextValues}>
                 {isMobile ? (
@@ -309,7 +312,7 @@ export const ProjectsTable = () => {
                     config={desktopConfig}
                     getRowId={rowIdGetter}
                     allowSelection
-                    BodyComponent={ProjectsDesktopCell}
+                    BodyComponent={ProjectsTableCell}
                     height={'100%'}
                     selectedIds={selectedIds}
                     onSelectedIdsChange={setSelectedIds}

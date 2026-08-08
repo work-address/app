@@ -7,13 +7,13 @@ import { useTranslation } from 'react-i18next'
 import {
   getWorklogNavigationState,
   getWorklogSiblingId,
-} from '../model/get-worklog-sibling-id'
-import { useBulkDeleteWorklogs } from '../model/use-bulk-delete-worklogs'
+  useBulkDeleteWorklogs,
+} from '../../model'
+import { TimeDialog } from '../time-dialog/time-dialog'
+import { TimeFilters } from '../time-filters/time-filters'
+import { TimeMobileFilters } from '../time-filters/time-mobile-filters'
 
 import { TimeContext } from './time-context'
-import { TimeDialog } from './time-dialog'
-import { TimeFilters } from './time-filters'
-import { TimeMobileFilters } from './time-mobile-filters'
 import { TimeTableCell } from './time-table-cell'
 
 import {
@@ -175,53 +175,57 @@ export const TimeTable = () => {
       {
         dataKey: 'fromAt',
         headerText: t('dashboard.worklogsTable.head.date'),
-        width: 165,
+        width: 200,
         sortable: true,
       },
       {
         customKey: 'projectName',
         getValue: (row: Time) => row.project?.title ?? '',
         headerText: t('dashboard.worklogsTable.head.projectName'),
-        width: 229,
+        width: 120,
+        // TODO: support sorting
       },
       {
         customKey: 'paidStatus',
         headerText: t('dashboard.worklogsTable.head.paymentStatus'),
+        width: 120,
+        // TODO: support sorting
       },
       {
         dataKey: 'note',
         headerText: t('dashboard.worklogsTable.head.note'),
+        width: 120,
         sortable: true,
       },
       {
         dataKey: 'minutesActive',
         headerText: t('dashboard.worklogsTable.head.timeActive'),
         horizontalAlign: 'center',
-        width: 115,
+        width: 120,
         sortable: true,
       },
       {
         dataKey: 'keyboardKeys',
         headerText: t('dashboard.worklogsTable.head.keyboard'),
-        width: 100,
+        width: 120,
         sortable: true,
       },
       {
         dataKey: 'mouseKeys',
         headerText: t('dashboard.worklogsTable.head.mouse'),
-        width: 100,
+        width: 120,
         sortable: true,
       },
       {
         dataKey: 'mouseDistance',
         headerText: t('dashboard.worklogsTable.head.mouseDistance'),
-        width: 140,
+        width: 120,
         sortable: true,
       },
       {
         dataKey: 'screenshot',
         headerText: t('dashboard.worklogsTable.head.screenshot'),
-        horizontalAlign: 'end',
+        width: 120,
       },
     ],
     [t],

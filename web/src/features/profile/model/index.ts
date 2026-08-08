@@ -94,6 +94,14 @@ const $pending = combine(profileQuery.$pending, $profilePending, (...args) =>
   args.some((arg) => arg),
 )
 
+export {
+  containsHost,
+  normalizeLink,
+  SKILLS_SUGGESTIONS,
+  SOCIAL_DOMAIN_BY_FIELD,
+  SOCIAL_LINKS,
+  type SocialLinkField,
+} from './profile-field'
 export { ProfileGate, $isAuthenticatedUserProfile, $profile }
 
 export { $pending as $profileLoading }

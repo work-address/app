@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import type { Period } from '../lib'
+import type { Period } from '../../model'
 import type { ReactNode } from 'react'
 
 import { Card, Select } from '@/shared'

@@ -11,7 +11,7 @@ import {
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { isValidWalletAddress, normalizeAddress } from '../lib'
+import { isValidWalletAddress, normalizeAddress } from '../model'
 
 import { ProjectsFormSelect } from './projects-form-select'
 

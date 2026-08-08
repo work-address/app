@@ -26,7 +26,7 @@ import {
   SOCIAL_DOMAIN_BY_FIELD,
   SOCIAL_LINKS,
   type SocialLinkField,
-} from '../../model/profile-field'
+} from '../../model'
 
 import { ProfileEditActions } from './profile-edit-actions'
 import {

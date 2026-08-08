@@ -2,7 +2,7 @@ import { Badge, Flex, Grid } from '@radix-ui/themes'
 import { type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { getProjectStatusTranslationKey } from '../lib'
+import { getProjectStatusTranslationKey } from '../../model'
 
 import type { ProjectWithStats } from '@/entities/projects'
 

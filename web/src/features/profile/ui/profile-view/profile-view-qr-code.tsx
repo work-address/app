@@ -7,7 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { $profile, $isAuthenticatedUserProfile } from '../model'
+import { $profile, $isAuthenticatedUserProfile } from '../../model'
 
 import { ProfileViewCard } from './profile-view-styles'
 

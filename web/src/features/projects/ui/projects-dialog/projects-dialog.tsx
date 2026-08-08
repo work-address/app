@@ -1,14 +1,14 @@
 import { useUnit } from 'effector-react'
 import { useEffect, useState } from 'react'
 
-import { mapAddressesToCollaborators } from '../lib'
+import { mapAddressesToCollaborators } from '../../model'
 
 import { ProjectsDialogFooter } from './projects-dialog-footer'
 import { ProjectsDialogForm } from './projects-dialog-form'
 import { ProjectsDialogTitle } from './projects-dialog-title'
 import { ProjectsDialogView } from './projects-dialog-view'
 
-import type { ProjectsDialogMode } from '../model'
+import type { ProjectsDialogMode } from '../../model'
 
 import { editProjectMutation, type ProjectWithStats } from '@/entities/projects'
 import { AdaptiveDialog } from '@/shared'
