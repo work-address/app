@@ -82,18 +82,6 @@ export const TabsTrigger = ({
   )
 }
 
-export const TabsContent = ({
-  children,
-  value,
-  ...props
-}: RadixTabs.TabsContentProps) => {
-  return (
-    <RadixTabs.Content value={value} {...props}>
-      {children}
-    </RadixTabs.Content>
-  )
-}
-
 const StyledTabsRoot = styled(RadixTabs.Root)``
 
 const StyledTabsList = styled(RadixTabs.List)`

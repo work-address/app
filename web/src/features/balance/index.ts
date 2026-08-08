@@ -1,4 +1,3 @@
-export * as BalanceStyles from './ui/balance-styles'
 export * from './ui/balance-card'
 export * from './ui/balance-top-up-card'
 export * from './ui/balance-top-up-eth-card'
