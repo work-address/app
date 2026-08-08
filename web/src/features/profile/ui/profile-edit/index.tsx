@@ -18,7 +18,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { $profile, $profileLoading } from '../model'
+import { $profile, $profileLoading } from '../../model'
 import {
   containsHost,
   normalizeLink,
@@ -26,7 +26,7 @@ import {
   SOCIAL_DOMAIN_BY_FIELD,
   SOCIAL_LINKS,
   type SocialLinkField,
-} from '../model/profile-field'
+} from '../../model/profile-field'
 
 import { ProfileEditActions } from './profile-edit-actions'
 import {

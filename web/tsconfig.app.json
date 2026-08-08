@@ -3,6 +3,7 @@
   "compilerOptions": {
     "composite": true,
     "tsBuildInfoFile": "./node_modules/.tmp/tsconfig.app.tsbuildinfo",
+    "baseUrl": ".",
     "target": "ES2022",
     "useDefineForClassFields": true,
     "lib": ["ES2022", "DOM", "DOM.Iterable"],
@@ -24,7 +25,7 @@
       "@/*": ["./src/*"]
     }
   },
-  "include": ["src", ".storybook/preview.tsx"],
+  "include": ["src/**/*.ts", "src/**/*.tsx", ".storybook/preview.tsx"],
   "exclude": ["node_modules"]
 }
 

@@ -7,6 +7,11 @@ import { Button, FeaturedIcon } from '@/shared'
 export const DashboardProjectsNotFound = () => {
   const { t } = useTranslation()
 
+  const onOpenDocsClick = () => {
+    // TODO: create project handler
+    window.open(routes.docs.build(), routes.docs.target)
+  }
+
   return (
     <Root>
       <IconInner>
