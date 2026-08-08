@@ -1,3 +1,2 @@
-export * from './ton-provider.ts'
-export * from './reown-provider.ts'
-export * from './solana-mount.tsx'
+export * from './ton-provider'
+export * from './reown-provider'

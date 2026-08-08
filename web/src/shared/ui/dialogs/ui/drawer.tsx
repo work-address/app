@@ -2,7 +2,7 @@ import { Separator, Theme } from '@radix-ui/themes'
 import styled from 'styled-components'
 import * as Vaul from 'vaul'
 
-import type { CommonDialogProps } from './types'
+import type { CommonDialogProps } from '../model'
 
 export const Drawer = ({
   trigger,

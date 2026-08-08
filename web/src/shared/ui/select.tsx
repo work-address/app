@@ -13,7 +13,7 @@ import { useBreakpoint } from '../hooks'
 
 import { Button } from './button/ui/button'
 import { Checkbox } from './checkbox'
-import { Drawer } from './dialogs/drawer'
+import { Drawer } from './dialogs/ui/drawer'
 import { Input } from './input'
 import { Text } from './text'
 

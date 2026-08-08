@@ -1,7 +1,7 @@
 import { QuestionMarkCircledIcon } from '@radix-ui/react-icons'
 import { Flex, Grid } from '@radix-ui/themes'
 
-import { normalizeDataKeyToReadableString } from './utils.ts'
+import { normalizeDataKeyToReadableString } from './utils'
 
 import type { AnyRecord, MobileDataTableColumnConfigRecord } from './types'
 import type { ReactNode } from 'react'

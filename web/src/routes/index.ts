@@ -3,7 +3,7 @@ import type {
   IdRouteParams,
   NoChildRoutes,
   MappingRoute,
-} from './types.ts'
+} from './types'
 
 import {
   DashboardIcon,
@@ -191,4 +191,4 @@ export const openDocs = () => {
 
 export type { MainRoutes }
 
-export { type MappingRoute } from './types.ts'
+export { type MappingRoute } from './types'

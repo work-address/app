@@ -5,13 +5,13 @@ import { type ReactNode, useEffect, useMemo, useState } from 'react'
 import styled from 'styled-components'
 
 import { Card } from '../card'
-import { Checkbox } from '../checkbox.tsx'
-import { IconButton } from '../icon-button.tsx'
+import { Checkbox } from '../checkbox'
+import { IconButton } from '../button/ui/icon-button'
 
 import { MobileBodyComponent } from './mobile-body-component'
 import { MobileHeaderComponent } from './mobile-header-component'
-import { useSelection } from './use-selection.ts'
-import { MOCK_DATA_LENGTH } from './utils.ts'
+import { useSelection } from './use-selection'
+import { MOCK_DATA_LENGTH } from './utils'
 
 import type { MobileBodyRenderProps } from './mobile-body-component'
 import type { MobileHeaderRenderProps } from './mobile-header-component'
@@ -20,7 +20,7 @@ import type {
   MobileDataTableConfig,
   AnyRecord,
   MobileAddonBottomProps,
-} from './types.ts'
+} from './types'
 
 export type MobileDataTableProps<T extends AnyRecord> = {
   config: MobileDataTableConfig<T>
@@ -275,7 +275,7 @@ const CheckboxWrapper = styled.div`
 export {
   type MobileDataTableConfig,
   type MobileAddonBottomProps,
-} from './types.ts'
+} from './types'
 
 export { type MobileBodyRenderProps } from './mobile-body-component'
-export { type MobileHeaderRenderProps } from './mobile-header-component.tsx'
+export { type MobileHeaderRenderProps } from './mobile-header-component'

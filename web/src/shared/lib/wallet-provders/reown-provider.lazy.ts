@@ -5,7 +5,7 @@ let reown: ReownProvider | null = null
 
 export const getReownProvider = async (): Promise<ReownProvider> => {
   if (!reown) {
-    reown = (await import('./reown-provider.ts').then(
+    reown = (await import('./reown-provider').then(
       (m) => m.reownProvider,
     )) as ReownProvider
   }

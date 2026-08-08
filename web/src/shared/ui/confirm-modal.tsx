@@ -2,7 +2,7 @@ import { AnimatePresence, motion } from 'motion/react'
 import { useEffect, useRef } from 'react'
 import styled from 'styled-components'
 
-import { Button } from './button/ui/button.tsx'
+import { Button } from './button/ui/button'
 
 type ConfirmModalProps = {
   open: boolean

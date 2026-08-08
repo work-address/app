@@ -21,7 +21,7 @@ import {
   tonDisconnected,
 } from './ton.model'
 
-import type { EthModalResult, LoginMode } from './types.ts'
+import type { EthModalResult, LoginMode } from './types'
 
 import { getFriendlyWalletAddress, type baseApi } from '@/shared'
 

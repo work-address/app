@@ -1,12 +1,12 @@
 import { useUnit } from 'effector-react'
 import { Navigate } from 'react-router-dom'
 
-import { PublicLayout } from './public-layout.tsx'
+import { PublicLayout } from './public-layout'
 
 import { $authenticated } from '@/entities/profile'
 import { routes } from '@/routes'
 
-export { PublicLayout } from './public-layout.tsx'
+export { PublicLayout } from './public-layout'
 
 export const MainLayout = () => {
   const { authenticated } = useUnit({

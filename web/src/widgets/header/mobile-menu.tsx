@@ -6,7 +6,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import { match } from 'ts-pattern'
 
-import { IconImg } from '../styled.ts'
+import { IconImg } from '../styled'
 
 import { $authenticated, $user } from '@/entities/profile'
 import { AUTH_REQUIRED_ROUTES, defaultMappedRoutes, routes } from '@/routes'

@@ -1,7 +1,7 @@
 import { ArrowDownIcon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
 
-import { normalizeDataKeyToReadableString } from './utils.ts'
+import { normalizeDataKeyToReadableString } from './utils'
 
 import type { DataTableColumnConfigRecord, AnyRecord } from './types'
 

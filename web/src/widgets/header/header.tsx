@@ -5,10 +5,10 @@ import { useTranslation } from 'react-i18next'
 import { Link, NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { IconImg, MobileMenuNav } from '../styled.ts'
+import { IconImg, MobileMenuNav } from '../styled'
 
-import { DesktopMenu } from './desktop-menu.tsx'
-import { MobileMenu, itemVariants } from './mobile-menu.tsx'
+import { DesktopMenu } from './desktop-menu'
+import { MobileMenu, itemVariants } from './mobile-menu'
 
 import { $authenticated, $user, logout } from '@/entities/profile'
 import { routes } from '@/routes'

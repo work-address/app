@@ -1,7 +1,7 @@
 import { useEffect, useRef } from 'react'
 import { useBlocker } from 'react-router-dom'
 
-import { useConfirm } from './use-confirm.ts'
+import { useConfirm } from './use-confirm'
 
 interface Options {
   when: boolean

@@ -2,20 +2,20 @@ import { Flex, Skeleton } from '@radix-ui/themes'
 import { useEffect, useMemo, useRef, type ReactNode } from 'react'
 import styled, { keyframes } from 'styled-components'
 
-import { Card } from '../card.tsx'
-import { Checkbox } from '../checkbox.tsx'
-import { Spinner } from '../spinner-ring.tsx'
+import { Card } from '../card'
+import { Checkbox } from '../checkbox'
+import { Spinner } from '../spinner-ring'
 
 import {
   type DesktopBodyCellRenderProps,
   DesktopBodyCellComponent,
-} from './desktop-body-cell-component.tsx'
+} from './desktop-body-cell-component'
 import {
   DesktopHeaderCellComponent,
   type DesktopHeaderCellRenderProps,
-} from './desktop-header-cell.component.tsx'
-import { useSelection } from './use-selection.ts'
-import { MOCK_DATA_LENGTH } from './utils.ts'
+} from './desktop-header-cell.component'
+import { useSelection } from './use-selection'
+import { MOCK_DATA_LENGTH } from './utils'
 
 import type { DataProps, DataTableConfig, AnyRecord } from './types'
 
@@ -461,5 +461,5 @@ const LoadingMoreRow = styled.div`
 `
 
 export type { DataTableConfig } from './types'
-export { type DesktopBodyCellRenderProps } from './desktop-body-cell-component.tsx'
-export { type DesktopHeaderCellRenderProps } from './desktop-header-cell.component.tsx'
+export { type DesktopBodyCellRenderProps } from './desktop-body-cell-component'
+export { type DesktopHeaderCellRenderProps } from './desktop-header-cell.component'

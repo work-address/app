@@ -1,10 +1,10 @@
 import { AxiosError } from 'axios'
 import { createEffect, createEvent } from 'effector'
 
-import type { AuthorizationHeaders, TonAuthSuccessPayload } from './types.ts'
+import type { AuthorizationHeaders, TonAuthSuccessPayload } from './types'
 
 import { baseApi } from '@/shared'
-import { getTonProvider } from '@/shared/lib/wallet-provders/ton-provider.lazy.ts'
+import { getTonProvider } from '@/shared/lib/wallet-provders/ton-provider.lazy'
 
 type TonAuthSuccessPayload = {
   address: string

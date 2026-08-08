@@ -2,7 +2,7 @@ import { Cross1Icon } from '@radix-ui/react-icons'
 import { Dialog, Flex, Separator } from '@radix-ui/themes'
 import styled from 'styled-components'
 
-import type { CommonDialogProps, ModalProps } from './types.ts'
+import type { CommonDialogProps, ModalProps } from '../model'
 
 export const Modal = ({
   children,

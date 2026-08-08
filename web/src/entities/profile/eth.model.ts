@@ -1,13 +1,13 @@
 import { AxiosError } from 'axios'
 import { createEffect, createEvent, createStore, sample } from 'effector'
 
-import type { AuthorizationHeaders, EthModalResult } from './types.ts'
+import type { AuthorizationHeaders, EthModalResult } from './types'
 
 import { baseApi } from '@/shared'
 import {
   getReownProvider,
   getBrowserProvider,
-} from '@/shared/lib/wallet-provders/reown-provider.lazy.ts'
+} from '@/shared/lib/wallet-provders/reown-provider.lazy'
 
 export type EthModalResult = {
   signer: JsonRpcSigner

@@ -1,2 +1,2 @@
-export * from './data-table.tsx'
-export * from './mobile-data-table.tsx'
+export * from './data-table'
+export * from './mobile-data-table'

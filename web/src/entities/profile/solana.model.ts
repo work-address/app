@@ -8,8 +8,11 @@ import {
 } from 'effector'
 import { createGate } from 'effector-react'
 
-import type { AuthorizationHeaders } from './types.ts'
-import type { PublicKey } from '@solana/web3.js'
+import type {
+  AuthorizationHeaders,
+  SolanaWalletState,
+  SolanaModalResult,
+} from './types'
 
 import { baseApi } from '@/shared/api/base'
 

@@ -23,7 +23,7 @@ import styled from 'styled-components'
 
 import { useBreakpoint } from '../hooks'
 
-import { IconButton } from './icon-button'
+import { IconButton } from './button/ui/icon-button'
 
 import type { InputProps } from './input'
 

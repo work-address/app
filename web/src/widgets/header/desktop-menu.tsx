@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 import { useLocation } from 'react-router-dom'
 import { match } from 'ts-pattern'
 
-import { NavLink, IconLink, IconImg } from '../styled.ts'
+import { NavLink, IconLink, IconImg } from '../styled'
 
 import { $authenticated, $user } from '@/entities/profile'
 import {

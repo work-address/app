@@ -1,4 +1,4 @@
-import { normalizeDataKeyToReadableString } from './utils.ts'
+import { normalizeDataKeyToReadableString } from './utils'
 
 import type { AnyRecord, MobileDataTableColumnConfigRecord } from './types'
 

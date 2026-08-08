@@ -4,7 +4,7 @@ import { useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
-import { mapCollaboratorsToAddresses } from '../lib'
+import { mapCollaboratorsToAddresses } from '../lib/collaborators'
 
 import { ProjectsAddCollaborators } from './projects-add-collaborators'
 import { ProjectsFormSelect } from './projects-form-select'

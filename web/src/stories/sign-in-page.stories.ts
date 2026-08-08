@@ -1,6 +1,6 @@
 // import { expect, userEvent, within } from 'storybook/test'
 
-import { SignInPage } from './sign-in-page.tsx'
+import { SignInPage } from './sign-in-page'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
