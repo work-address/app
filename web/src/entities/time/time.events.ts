@@ -1,29 +1,27 @@
 import { createEvent } from 'effector'
 import { debounce } from 'patronum/debounce'
 
-import { type WorklogsFilters } from './types'
+import type { TimeFilters, TimeSort } from './types'
 
-import type { WorklogSort } from './types'
+export const fetchTime = createEvent()
 
-export const fetchWorklogs = createEvent()
+export const setTimeLoading = createEvent<boolean>()
 
-export const setWorklogsLoading = createEvent<boolean>()
+export const changeTimeFilters = createEvent<Partial<TimeFilters>>()
 
-export const changeWorklogFilters = createEvent<Partial<WorklogsFilters>>()
+const DESKTOP_CHANGE_TIME_FILTERS_DEBOUNCE_TIME = 1500
 
-const DESKTOP_CHANGE_WORKLOG_FILTERS_DEBOUNCE_TIME = 1500
-
-export const debouncedChangeWorklogFilters = debounce(
-  changeWorklogFilters,
-  DESKTOP_CHANGE_WORKLOG_FILTERS_DEBOUNCE_TIME,
+export const debouncedChangeTimeFilters = debounce(
+  changeTimeFilters,
+  DESKTOP_CHANGE_TIME_FILTERS_DEBOUNCE_TIME,
 )
 
-export const applyWorklogFilters = createEvent()
+export const applyTimeFilters = createEvent()
 
-export const resetWorklogFilters = createEvent()
+export const resetTimeFilters = createEvent()
 
-export const appendWorklogSort = createEvent<WorklogSort>()
+export const appendTimeSort = createEvent<TimeSort>()
 
-export const resetWorklogSort = createEvent<WorklogSort | null>()
+export const resetTimeSort = createEvent<TimeSort | null>()
 
-export const loadMoreWorklogs = createEvent()
+export const loadMoreTime = createEvent()

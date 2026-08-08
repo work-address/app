@@ -10,7 +10,7 @@ import {
   $projects,
   $hasProjectsWithProcessTracking,
 } from '@/entities/projects'
-import { fetchWorklogs, $worklogsLoading } from '@/entities/time'
+import { fetchTime, $timeLoading } from '@/entities/time'
 import {
   DashboardApplicationsUsage,
   DashboardProjectsSearchInput,
@@ -35,30 +35,30 @@ export default function DashboardPage() {
 
   const {
     fetchProjects: fetchProjectsEvent,
-    fetchWorklogs: fetchWorklogsEvent,
+    fetchTime: fetchTimeEvent,
     projectsLoading,
-    worklogsLoading,
+    timeLoading,
     hasProjects,
     hasProjectsWithProcessTracking,
     projects,
   } = useUnit({
     fetchProjects,
-    fetchWorklogs,
+    fetchTime,
     projectsLoading: $projectsLoading,
-    worklogsLoading: $worklogsLoading,
+    timeLoading: $timeLoading,
     hasProjects: $hasProjects,
     hasProjectsWithProcessTracking: $hasProjectsWithProcessTracking,
     projects: $projects,
   })
 
-  const showSkeletons = projectsLoading || worklogsLoading || hasProjects
+  const showSkeletons = projectsLoading || timeLoading || hasProjects
   // Reserve the chart column while projects load so the layout does not jump.
   const showCharts = projectsLoading || hasProjectsWithProcessTracking
 
   useEffect(() => {
     fetchProjectsEvent()
-    fetchWorklogsEvent()
-  }, [fetchProjectsEvent, fetchWorklogsEvent])
+    fetchTimeEvent()
+  }, [fetchProjectsEvent, fetchTimeEvent])
 
   return (
     <>

@@ -7,7 +7,7 @@ import { TimeNoteInput } from './time-note-input'
 import { TimeProjectsSelect } from './time-projects-select'
 import { TimeTwoSideInput } from './time-two-side-input'
 
-import { $worklogsFilters } from '@/entities/time'
+import { $timeFilters } from '@/entities/time'
 import { DashboardStyles as S } from '@/features/dashboard'
 import { Text } from '@/shared'
 
@@ -15,7 +15,7 @@ export const TimeFilters = () => {
   const { t } = useTranslation()
 
   const activeDateId = useStoreMap({
-    store: $worklogsFilters,
+    store: $timeFilters,
     keys: [],
     fn: (filters) => (filters.fromAt ? 'toAt' : 'fromAt'),
   })

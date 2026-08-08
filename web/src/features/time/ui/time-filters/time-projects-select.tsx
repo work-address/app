@@ -3,20 +3,20 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { $projects } from '@/entities/projects'
-import { changeWorklogFilters, $worklogsFilters } from '@/entities/time'
+import { changeTimeFilters, $timeFilters } from '@/entities/time'
 import { Select } from '@/shared'
 
 export const TimeProjectsSelect = () => {
   const { t } = useTranslation()
 
   const selectedActivity = useStoreMap({
-    store: $worklogsFilters,
+    store: $timeFilters,
     keys: [],
     fn: (filters) => filters.activityId,
   })
 
   const { changeFiltersEvent, projects } = useUnit({
-    changeFiltersEvent: changeWorklogFilters,
+    changeFiltersEvent: changeTimeFilters,
     projects: $projects,
   })
 

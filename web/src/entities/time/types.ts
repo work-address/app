@@ -25,7 +25,7 @@ export type Time = baseApi.Time & {
   project?: baseApi.Project
 }
 
-export type WorklogsFilters = {
+export type TimeFilters = {
   fromAt: number | null
   toAt: number | null
   activityId: string | null
@@ -40,4 +40,4 @@ export type WorklogsFilters = {
   mouseDistanceMax: number | null
 }
 
-export type WorklogSort = Record<string, 'ASC' | 'DESC'>
+export type TimeSort = Record<string, 'ASC' | 'DESC'>

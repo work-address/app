@@ -3,7 +3,6 @@ import React, { useContext } from 'react'
 import { NavLink } from 'react-router-dom'
 
 import { getProjectStatusTranslationKey } from '../../model'
-
 import { ProjectsTableContext } from '../projects-table/projects-table-context'
 
 import type { ProjectWithStats } from '@/entities/projects'

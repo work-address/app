@@ -13,10 +13,10 @@ import { TimeDialogProcesses } from './time-dialog-processes'
 import type { Time } from '@/entities/time'
 
 import {
-  deleteWorklogMutation,
-  editWorklogMutation,
-  removeWorklogProcessesMutation,
-  removeWorklogScreenshotMutation,
+  deleteTimeMutation,
+  editTimeMutation,
+  removeTimeProcessesMutation,
+  removeTimeScreenshotMutation,
 } from '@/entities/time'
 import {
   AdaptiveDialog,
@@ -87,8 +87,8 @@ export const TimeDialog = ({
   const { confirm } = useConfirm()
 
   const {
-    deleteWorklog,
-    editWorklog,
+    deleteTimeEntry,
+    editTimeEntry,
     removeScreenshot,
     removeProcesses,
     deleteStatus,
@@ -100,18 +100,18 @@ export const TimeDialog = ({
     resetRemoveScreenshot,
     resetRemoveProcesses,
   } = useUnit({
-    deleteWorklog: deleteWorklogMutation.start,
-    editWorklog: editWorklogMutation.start,
-    removeScreenshot: removeWorklogScreenshotMutation.start,
-    removeProcesses: removeWorklogProcessesMutation.start,
-    deleteStatus: deleteWorklogMutation.$status,
-    editStatus: editWorklogMutation.$status,
-    removeScreenshotStatus: removeWorklogScreenshotMutation.$status,
-    removeProcessesStatus: removeWorklogProcessesMutation.$status,
-    resetDelete: deleteWorklogMutation.reset,
-    resetEdit: editWorklogMutation.reset,
-    resetRemoveScreenshot: removeWorklogScreenshotMutation.reset,
-    resetRemoveProcesses: removeWorklogProcessesMutation.reset,
+    deleteTimeEntry: deleteTimeMutation.start,
+    editTimeEntry: editTimeMutation.start,
+    removeScreenshot: removeTimeScreenshotMutation.start,
+    removeProcesses: removeTimeProcessesMutation.start,
+    deleteStatus: deleteTimeMutation.$status,
+    editStatus: editTimeMutation.$status,
+    removeScreenshotStatus: removeTimeScreenshotMutation.$status,
+    removeProcessesStatus: removeTimeProcessesMutation.$status,
+    resetDelete: deleteTimeMutation.reset,
+    resetEdit: editTimeMutation.reset,
+    resetRemoveScreenshot: removeTimeScreenshotMutation.reset,
+    resetRemoveProcesses: removeTimeProcessesMutation.reset,
   })
 
   const [screenshotRemoved, setScreenshotRemoved] = useState(false)
@@ -259,7 +259,7 @@ export const TimeDialog = ({
       confirmLabel: t('dashboard.worklogsTable.confirmDelete.confirm'),
       cancelLabel: t('common.cancel'),
       onConfirm: () => {
-        deleteWorklog([row.id!])
+        deleteTimeEntry([row.id!])
       },
     })
   }
@@ -312,7 +312,7 @@ export const TimeDialog = ({
       return
     }
 
-    editWorklog({
+    editTimeEntry({
       id: row.id,
       note: values.note,
       isPaid: values.paymentStatus === 'paid',
@@ -401,7 +401,7 @@ export const TimeDialog = ({
                 control={control}
                 render={({ field }) => (
                   <TextArea
-                    id="worklog-note"
+                    id="time-note"
                     label={t('dashboard.worklogsTable.head.note')}
                     value={field.value}
                     onChange={field.onChange}

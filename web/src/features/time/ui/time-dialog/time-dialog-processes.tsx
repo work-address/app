@@ -6,23 +6,23 @@ import type { Time } from '@/entities/time'
 
 import { Text } from '@/shared'
 
-type WorklogProcessItem = {
+type TimeProcessItem = {
   name?: string
   timeMin?: number
 }
 
-type WorklogDialogProcessesProps = {
+type TimeDialogProcessesProps = {
   processes?: Time['processes']
 }
 
 export const TimeDialogProcesses = ({
   processes,
-}: WorklogDialogProcessesProps) => {
+}: TimeDialogProcessesProps) => {
   const { t } = useTranslation()
 
   const processItems = (processes ?? [])
-    .map((item) => item as WorklogProcessItem)
-    .filter((item): item is WorklogProcessItem & { name: string } =>
+    .map((item) => item as TimeProcessItem)
+    .filter((item): item is TimeProcessItem & { name: string } =>
       Boolean(item?.name),
     )
 

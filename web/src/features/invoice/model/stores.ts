@@ -26,7 +26,7 @@ export const $invoice = combine(
   },
 )
 
-export const $invoiceWorklogs = combine(
+export const $invoiceTime = combine(
   activityReportQuery.$data,
   (report): ITimeTotalDetail[] => report?.time ?? [],
 )

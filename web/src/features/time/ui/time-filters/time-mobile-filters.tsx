@@ -7,7 +7,7 @@ import { TimeNoteInput } from './time-note-input'
 import { TimeProjectsSelect } from './time-projects-select'
 import { TimeTwoSideInput } from './time-two-side-input'
 
-import { $worklogsFilters, applyWorklogFilters } from '@/entities/time'
+import { $timeFilters, applyTimeFilters } from '@/entities/time'
 import { DashboardStyles as S } from '@/features/dashboard'
 import { Button, Drawer, FilterIcon, Text } from '@/shared'
 
@@ -22,18 +22,18 @@ export const TimeMobileFilters = ({
 }: TimeMobileFiltersProps) => {
   const { t } = useTranslation()
 
-  const { applyWorklogFiltersEvent } = useUnit({
-    applyWorklogFiltersEvent: applyWorklogFilters,
+  const { applyTimeFiltersEvent } = useUnit({
+    applyTimeFiltersEvent: applyTimeFilters,
   })
 
   const activeDateId = useStoreMap({
-    store: $worklogsFilters,
+    store: $timeFilters,
     keys: [],
     fn: (filters) => (filters.fromAt ? 'toAt' : 'fromAt'),
   })
 
   const handleFiltersApply = () => {
-    applyWorklogFiltersEvent()
+    applyTimeFiltersEvent()
     onFiltersOpenChange(false)
   }
 

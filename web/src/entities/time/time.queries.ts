@@ -1,17 +1,17 @@
 import { concurrency, createQuery } from '@farfetched/core'
 import { endOfDay } from 'date-fns'
 
-import type { Time, WorklogSort } from './types'
+import type { Time, TimeSort } from './types'
 
 import { baseApi } from '@/shared'
 
-export type WorklogsQueryParams = {
+export type TimeQueryParams = {
   activityId?: string
   note?: string
   fromAt?: number
   toAt?: number
   page?: number
-  sort?: WorklogSort
+  sort?: TimeSort
   timeActiveMin?: number | null
   timeActiveMax?: number | null
   keyboardKeysMin?: number | null
@@ -42,8 +42,8 @@ const toFilterNumber = (value?: number | null | string) => {
   return Number.isNaN(parsed) ? undefined : parsed
 }
 
-export const worklogsQuery = createQuery({
-  handler: async (params: WorklogsQueryParams) => {
+export const timeQuery = createQuery({
+  handler: async (params: TimeQueryParams) => {
     const response = await baseApi.timeControllerSearch({
       body: {
         filter: {
@@ -74,4 +74,4 @@ export const worklogsQuery = createQuery({
 
 // Pagination reads the previous page from the store, so a stale response must
 // never land after a newer one.
-concurrency(worklogsQuery, { strategy: 'TAKE_LATEST' })
+concurrency(timeQuery, { strategy: 'TAKE_LATEST' })

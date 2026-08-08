@@ -2,18 +2,18 @@ import { useStoreMap, useUnit } from 'effector-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { changeWorklogFilters, $worklogsFilters } from '@/entities/time'
+import { changeTimeFilters, $timeFilters } from '@/entities/time'
 import { DatePickerInput } from '@/shared'
 
 export const TimeDateRangePicker = () => {
   const { t } = useTranslation()
 
   const { changeFiltersEvent } = useUnit({
-    changeFiltersEvent: changeWorklogFilters,
+    changeFiltersEvent: changeTimeFilters,
   })
 
   const { fromAt, toAt } = useStoreMap({
-    store: $worklogsFilters,
+    store: $timeFilters,
     keys: [],
     fn: (filters) => ({ fromAt: filters.fromAt, toAt: filters.toAt }),
   })

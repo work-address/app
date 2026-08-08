@@ -1,20 +1,20 @@
 import { useStoreMap, useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
 
-import { changeWorklogFilters, $worklogsFilters } from '@/entities/time'
+import { changeTimeFilters, $timeFilters } from '@/entities/time'
 import { Input } from '@/shared'
 
 export const TimeNoteInput = () => {
   const { t } = useTranslation()
 
   const value = useStoreMap({
-    store: $worklogsFilters,
+    store: $timeFilters,
     keys: [],
     fn: (filters) => filters.note,
   })
 
   const { changeFiltersEvent } = useUnit({
-    changeFiltersEvent: changeWorklogFilters,
+    changeFiltersEvent: changeTimeFilters,
   })
 
   return (

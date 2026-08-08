@@ -4,11 +4,11 @@ import { memo, useContext, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled, { css } from 'styled-components'
 
-import { $invoiceWorklogs, $invoiceLoading } from '../model'
+import { $invoiceTime, $invoiceLoading } from '../model'
 
-import { InvoiceWorklogsContext } from './invoice-worklogs-context'
+import { InvoiceTimeContext } from './invoice-time-context'
 
-import type { InvoiceWorklogsContextProps } from './invoice-worklogs-context'
+import type { InvoiceTimeContextProps } from './invoice-time-context'
 import type { DesktopBodyCellRenderProps, DataTableConfig } from '@/shared'
 
 import { type ITimeTotalDetail } from '@/entities/time'
@@ -19,15 +19,15 @@ import {
   Text,
 } from '@/shared'
 
-export const InvoiceWorklogs = () => {
+export const InvoiceTime = () => {
   const { t, i18n } = useTranslation()
 
-  const { worklogs, loading } = useUnit({
-    worklogs: $invoiceWorklogs,
+  const { timeEntries, loading } = useUnit({
+    timeEntries: $invoiceTime,
     loading: $invoiceLoading,
   })
 
-  const contextValue = useMemo<InvoiceWorklogsContextProps>(
+  const contextValue = useMemo<InvoiceTimeContextProps>(
     () => ({
       dateFormatter: new Intl.DateTimeFormat(i18n.language, {
         day: 'numeric',
@@ -77,18 +77,18 @@ export const InvoiceWorklogs = () => {
   return (
     <>
       <Text size={'5'}>{t('dashboard.page.worklogs.title')}</Text>
-      <InvoiceWorklogsContext value={contextValue}>
-        <InvoiceWorklogsTable
+      <InvoiceTimeContext value={contextValue}>
+        <InvoiceTimeTable
           loading={loading}
-          data={worklogs}
+          data={timeEntries}
           config={tableConfig}
           getRowId={rowIdGetter}
           verticalAlign={'middle'}
           BodyComponent={Cell}
           nowrap
-          height={worklogs.length > 0 ? '' : '340px'}
+          height={timeEntries.length > 0 ? '' : '340px'}
         />
-      </InvoiceWorklogsContext>
+      </InvoiceTimeContext>
     </>
   )
 }
@@ -119,7 +119,7 @@ const Cell = memo((props: DesktopBodyCellRenderProps<ITimeTotalDetail>) => {
 
 const CreatedAtCell = memo(
   (props: DesktopBodyCellRenderProps<ITimeTotalDetail>) => {
-    const { dateFormatter, timeFormatter } = useContext(InvoiceWorklogsContext)
+    const { dateFormatter, timeFormatter } = useContext(InvoiceTimeContext)
 
     return (
       <Flex gap={'2'}>
@@ -150,7 +150,7 @@ const printColumnWidths = css`
   )}
 `
 
-const InvoiceWorklogsTable = styled(DataTable<ITimeTotalDetail>)`
+const InvoiceTimeTable = styled(DataTable<ITimeTotalDetail>)`
   && tr {
     transition: none;
   }

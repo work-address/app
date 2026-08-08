@@ -1,2 +1,2 @@
 export * from './projects'
-export * from './worklogs'
+export * from './time'

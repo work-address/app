@@ -3,7 +3,7 @@ import { AxiosError } from 'axios'
 
 import { baseApi } from '@/shared'
 
-export const deleteWorklogMutation = createMutation({
+export const deleteTimeMutation = createMutation({
   handler: async (ids: string[]) => {
     const result = await baseApi.timeControllerDelete({
       body: { ids },
@@ -17,7 +17,7 @@ export const deleteWorklogMutation = createMutation({
   },
 })
 
-export const editWorklogMutation = createMutation({
+export const editTimeMutation = createMutation({
   handler: async ({
     id,
     note,
@@ -40,7 +40,7 @@ export const editWorklogMutation = createMutation({
   },
 })
 
-export const removeWorklogScreenshotMutation = createMutation({
+export const removeTimeScreenshotMutation = createMutation({
   handler: async (ids: string[]) => {
     const result = await baseApi.timeControllerRemoveScreenshots({
       body: { ids },
@@ -54,7 +54,7 @@ export const removeWorklogScreenshotMutation = createMutation({
   },
 })
 
-export const setWorklogPaidStatusMutation = createMutation({
+export const setTimePaidStatusMutation = createMutation({
   handler: async ({ ids, isPaid }: { ids: string[]; isPaid: boolean }) => {
     const result = isPaid
       ? await baseApi.timeControllerMarkPaid({ body: { ids } })
@@ -68,7 +68,7 @@ export const setWorklogPaidStatusMutation = createMutation({
   },
 })
 
-export const removeWorklogProcessesMutation = createMutation({
+export const removeTimeProcessesMutation = createMutation({
   handler: async (ids: string[]) => {
     const result = await baseApi.timeControllerRemoveProcesses({
       body: { ids },

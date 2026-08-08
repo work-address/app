@@ -15,5 +15,5 @@ sample({
 })
 
 export { fetchInvoice, resetInvoice } from './events'
-export { $invoice, $invoiceWorklogs, $invoiceLoading } from './stores'
+export { $invoice, $invoiceTime, $invoiceLoading } from './stores'
 export type { ProjectInvoice } from './types'

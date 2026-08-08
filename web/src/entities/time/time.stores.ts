@@ -1,26 +1,26 @@
 import { combine, createStore, restore } from 'effector'
 
 import {
-  changeWorklogFilters,
-  appendWorklogSort,
-  resetWorklogFilters,
-  resetWorklogSort,
-  setWorklogsLoading,
-  applyWorklogFilters,
-  fetchWorklogs,
+  applyTimeFilters,
+  appendTimeSort,
+  changeTimeFilters,
+  fetchTime,
+  resetTimeFilters,
+  resetTimeSort,
+  setTimeLoading,
 } from './time.events'
 import {
-  deleteWorklogMutation,
-  editWorklogMutation,
-  removeWorklogProcessesMutation,
-  removeWorklogScreenshotMutation,
-  setWorklogPaidStatusMutation,
+  deleteTimeMutation,
+  editTimeMutation,
+  removeTimeProcessesMutation,
+  removeTimeScreenshotMutation,
+  setTimePaidStatusMutation,
 } from './time.mutations'
-import { worklogsQuery, type WorklogsQueryParams } from './time.queries'
+import { timeQuery, type TimeQueryParams } from './time.queries'
 
-import type { Time, WorklogsFilters, WorklogSort } from './types'
+import type { Time, TimeFilters, TimeSort } from './types'
 
-const DEFAULT_WORKLOGS_FILTERS: WorklogsFilters = {
+const DEFAULT_TIME_FILTERS: TimeFilters = {
   fromAt: null,
   toAt: null,
   activityId: null,
@@ -35,21 +35,21 @@ const DEFAULT_WORKLOGS_FILTERS: WorklogsFilters = {
   mouseDistanceMax: null,
 }
 
-const isFirstPage = (params: WorklogsQueryParams) => (params.page ?? 0) === 0
+const isFirstPage = (params: TimeQueryParams) => (params.page ?? 0) === 0
 
-type WorklogsFeed = {
+type TimeFeed = {
   items: Time[]
   /** Set once a page comes back without adding anything new. */
   endReached: boolean
 }
 
-const EMPTY_FEED: WorklogsFeed = { items: [], endReached: false }
+const EMPTY_FEED: TimeFeed = { items: [], endReached: false }
 
-const patchWorklogs = (
-  feed: WorklogsFeed,
+const patchTimeItems = (
+  feed: TimeFeed,
   ids: string[],
   patch: (item: Time) => Time,
-): WorklogsFeed => {
+): TimeFeed => {
   const targetIds = new Set(ids)
 
   return {
@@ -60,40 +60,38 @@ const patchWorklogs = (
   }
 }
 
-export const $worklogsFilters = createStore<WorklogsFilters>(
-  DEFAULT_WORKLOGS_FILTERS,
-)
-  .on(changeWorklogFilters, (state, filters) => ({ ...state, ...filters }))
-  .reset(resetWorklogFilters)
+export const $timeFilters = createStore<TimeFilters>(DEFAULT_TIME_FILTERS)
+  .on(changeTimeFilters, (state, filters) => ({ ...state, ...filters }))
+  .reset(resetTimeFilters)
 
-export const $hasActiveWorklogFilters = $worklogsFilters.map((filters) =>
-  (Object.keys(DEFAULT_WORKLOGS_FILTERS) as (keyof WorklogsFilters)[]).some(
-    (key) => filters[key] !== DEFAULT_WORKLOGS_FILTERS[key],
+export const $hasActiveTimeFilters = $timeFilters.map((filters) =>
+  (Object.keys(DEFAULT_TIME_FILTERS) as (keyof TimeFilters)[]).some(
+    (key) => filters[key] !== DEFAULT_TIME_FILTERS[key],
   ),
 )
 
-export const $worklogSort = createStore<WorklogSort>({ fromAt: 'DESC' })
-  .on(appendWorklogSort, (state, sort) => ({ ...state, ...sort }))
-  .on(resetWorklogSort, (_, payload) => payload ?? { fromAt: 'DESC' })
+export const $timeSort = createStore<TimeSort>({ fromAt: 'DESC' })
+  .on(appendTimeSort, (state, sort) => ({ ...state, ...sort }))
+  .on(resetTimeSort, (_, payload) => payload ?? { fromAt: 'DESC' })
 
-export const $worklogsPage = createStore(0)
-  .on(worklogsQuery.finished.success, (_, { params }) => params.page ?? 0)
-  .on([applyWorklogFilters, fetchWorklogs, resetWorklogFilters], () => 0)
+export const $timePage = createStore(0)
+  .on(timeQuery.finished.success, (_, { params }) => params.page ?? 0)
+  .on([applyTimeFilters, fetchTime, resetTimeFilters], () => 0)
 
-export const $worklogsTotal = createStore(0)
-  .on(worklogsQuery.finished.success, (_, { result }) => result.total)
-  .on(deleteWorklogMutation.finished.success, (total, { params }) =>
+export const $timeEntriesTotal = createStore(0)
+  .on(timeQuery.finished.success, (_, { result }) => result.total)
+  .on(deleteTimeMutation.finished.success, (total, { params }) =>
     Math.max(0, total - params.length),
   )
-  .reset(resetWorklogFilters)
+  .reset(resetTimeFilters)
 
 /**
  * Accumulates the pages loaded so far. Mutations patch the loaded rows in
  * place instead of refetching, so an edit does not throw away the pages the
  * user has already scrolled through.
  */
-const $worklogsFeed = createStore<WorklogsFeed>(EMPTY_FEED)
-  .on(worklogsQuery.finished.success, (feed, { params, result }) => {
+const $timeFeed = createStore<TimeFeed>(EMPTY_FEED)
+  .on(timeQuery.finished.success, (feed, { params, result }) => {
     const { items } = result
 
     if (isFirstPage(params)) {
@@ -110,7 +108,7 @@ const $worklogsFeed = createStore<WorklogsFeed>(EMPTY_FEED)
       endReached: nextItems.length === 0,
     }
   })
-  .on(deleteWorklogMutation.finished.success, (feed, { params }) => {
+  .on(deleteTimeMutation.finished.success, (feed, { params }) => {
     const deletedIds = new Set(params)
 
     return {
@@ -118,50 +116,51 @@ const $worklogsFeed = createStore<WorklogsFeed>(EMPTY_FEED)
       items: feed.items.filter((item) => !item.id || !deletedIds.has(item.id)),
     }
   })
-  .on(editWorklogMutation.finished.success, (feed, { params }) =>
-    patchWorklogs(feed, [params.id], (item) => ({
+  .on(editTimeMutation.finished.success, (feed, { params }) =>
+    patchTimeItems(feed, [params.id], (item) => ({
       ...item,
       note: params.note,
       isPaid: params.isPaid,
     })),
   )
-  .on(setWorklogPaidStatusMutation.finished.success, (feed, { params }) =>
-    patchWorklogs(feed, params.ids, (item) => ({
+  .on(setTimePaidStatusMutation.finished.success, (feed, { params }) =>
+    patchTimeItems(feed, params.ids, (item) => ({
       ...item,
       isPaid: params.isPaid,
     })),
   )
-  .on(removeWorklogScreenshotMutation.finished.success, (feed, { params }) =>
-    patchWorklogs(feed, params, (item) => ({ ...item, screenshot: undefined })),
+  .on(removeTimeScreenshotMutation.finished.success, (feed, { params }) =>
+    patchTimeItems(feed, params, (item) => ({
+      ...item,
+      screenshot: undefined,
+    })),
   )
-  .on(removeWorklogProcessesMutation.finished.success, (feed, { params }) =>
-    patchWorklogs(feed, params, (item) => ({ ...item, processes: [] })),
+  .on(removeTimeProcessesMutation.finished.success, (feed, { params }) =>
+    patchTimeItems(feed, params, (item) => ({ ...item, processes: [] })),
   )
-  .reset(resetWorklogFilters)
+  .reset(resetTimeFilters)
 
-export const $allWorklogs = $worklogsFeed.map((feed) => feed.items)
+export const $allTime = $timeFeed.map((feed) => feed.items)
 
-export const $hasMoreWorklogs = combine(
-  $worklogsFeed,
-  $worklogsTotal,
+export const $hasMoreTime = combine(
+  $timeFeed,
+  $timeEntriesTotal,
   (feed, total) => !feed.endReached && feed.items.length < total,
 )
 
-export const $isLoadingMoreWorklogs = createStore(false)
-  .on(worklogsQuery.start, (_, params) => !isFirstPage(params))
-  .on(worklogsQuery.finished.finally, (state, { params }) =>
+export const $isLoadingMoreTime = createStore(false)
+  .on(timeQuery.start, (_, params) => !isFirstPage(params))
+  .on(timeQuery.finished.finally, (state, { params }) =>
     isFirstPage(params) ? state : false,
   )
-  .reset(resetWorklogFilters)
+  .reset(resetTimeFilters)
 
-export const $isWorklogsFiltering = createStore(false)
-  .on([$worklogsFilters, $worklogSort], () => true)
-  .on(worklogsQuery.finished.finally, () => false)
+export const $isTimeFiltering = createStore(false)
+  .on([$timeFilters, $timeSort], () => true)
+  .on(timeQuery.finished.finally, () => false)
 
-export const $worklogsLoading = restore(setWorklogsLoading, false)
-  .on(worklogsQuery.start, (state, params) =>
-    isFirstPage(params) ? true : state,
-  )
-  .on(worklogsQuery.finished.finally, (state, { params }) =>
+export const $timeLoading = restore(setTimeLoading, false)
+  .on(timeQuery.start, (state, params) => (isFirstPage(params) ? true : state))
+  .on(timeQuery.finished.finally, (state, { params }) =>
     isFirstPage(params) ? false : state,
   )

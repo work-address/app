@@ -2,7 +2,7 @@ import type { TimeRow } from '@/features/time'
 
 import { MockScreenshot } from '@/shared/icons'
 
-export const worklogsMock: TimeRow[] = [
+export const timeMock: TimeRow[] = [
   {
     key: '1',
     dateRange: '10:25 - 10:45',

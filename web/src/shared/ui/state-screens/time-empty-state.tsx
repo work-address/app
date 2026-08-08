@@ -7,20 +7,20 @@ import { DashboardEmptyState } from './dashboard-empty-state'
 
 import type { CSSProperties } from 'react'
 
-import { $hasActiveWorklogFilters, resetWorklogFilters } from '@/entities/time'
+import { $hasActiveTimeFilters, resetTimeFilters } from '@/entities/time'
 import { routes } from '@/routes'
-import { WorklogsHelpImage } from '@/shared'
+import { TimeHelpImage } from '@/shared'
 
-type WorklogsEmptyStateProps = {
+type TimeEmptyStateProps = {
   style?: CSSProperties
 }
 
-export const WorklogsEmptyState = ({ style }: WorklogsEmptyStateProps) => {
+export const TimeEmptyState = ({ style }: TimeEmptyStateProps) => {
   const { t } = useTranslation()
 
-  const { hasActiveFilters, resetWorklogFiltersEvent } = useUnit({
-    hasActiveFilters: $hasActiveWorklogFilters,
-    resetWorklogFiltersEvent: resetWorklogFilters,
+  const { hasActiveFilters, resetTimeFiltersEvent } = useUnit({
+    hasActiveFilters: $hasActiveTimeFilters,
+    resetTimeFiltersEvent: resetTimeFilters,
   })
 
   const handleHelpAction = () => {
@@ -30,11 +30,11 @@ export const WorklogsEmptyState = ({ style }: WorklogsEmptyStateProps) => {
   if (hasActiveFilters) {
     return (
       <DashboardEmptyState
-        imageSrc={WorklogsHelpImage}
+        imageSrc={TimeHelpImage}
         title={t('dashboard.worklogsEmpty.title.afterFilters')}
         description={t('dashboard.worklogsEmpty.description.afterFilters')}
         actionLabel={t('dashboard.worklogsEmpty.action.filtersReset')}
-        onAction={resetWorklogFiltersEvent}
+        onAction={resetTimeFiltersEvent}
         style={style}
       />
     )
@@ -42,7 +42,7 @@ export const WorklogsEmptyState = ({ style }: WorklogsEmptyStateProps) => {
 
   return (
     <DashboardEmptyState
-      imageSrc={WorklogsHelpImage}
+      imageSrc={TimeHelpImage}
       title={t('dashboard.worklogsEmpty.title')}
       description={t('dashboard.worklogsEmpty.description')}
       actionLabel={t('dashboard.worklogsEmpty.action')}

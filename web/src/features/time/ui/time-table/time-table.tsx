@@ -5,9 +5,9 @@ import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
-  getWorklogNavigationState,
-  getWorklogSiblingId,
-  useBulkDeleteWorklogs,
+  getTimeNavigationState,
+  getTimeSiblingId,
+  useBulkDeleteTime,
 } from '../../model'
 import { TimeDialog } from '../time-dialog/time-dialog'
 import { TimeFilters } from '../time-filters/time-filters'
@@ -17,15 +17,15 @@ import { TimeContext } from './time-context'
 import { TimeTableCell } from './time-table-cell'
 
 import {
-  $allWorklogs,
-  $isLoadingMoreWorklogs,
-  $isWorklogsFiltering,
-  $worklogSort,
-  $worklogsLoading,
-  loadMoreWorklogs,
-  setWorklogPaidStatusMutation,
+  $allTime,
+  $isLoadingMoreTime,
+  $isTimeFiltering,
+  $timeSort,
+  $timeLoading,
+  loadMoreTime,
+  setTimePaidStatusMutation,
   type Time,
-  resetWorklogSort,
+  resetTimeSort,
 } from '@/entities/time'
 import { DashboardStyles as S } from '@/features/dashboard'
 import {
@@ -34,7 +34,7 @@ import {
   DataTable,
   showToast,
   useBreakpoint,
-  WorklogsEmptyState,
+  TimeEmptyState,
 } from '@/shared'
 
 export const TimeTable = () => {
@@ -44,47 +44,45 @@ export const TimeTable = () => {
   const isDesktop = useBreakpoint('isDesktop')
 
   const {
-    allWorklogs: worklogRows,
-    worklogsLoading: worklogsLoading,
-    isWorklogsFiltering,
-    worklogSort,
-    resetWorklogSortEvent,
+    allTime: timeRows,
+    timeLoading,
+    isTimeFiltering,
+    timeSort,
+    resetTimeSortEvent,
     setPaidStatus,
     setPaidStatusStatus,
     resetSetPaidStatus,
     loadMore,
-    isLoadingMoreWorklogs,
+    isLoadingMoreTime,
   } = useUnit({
-    allWorklogs: $allWorklogs,
-    worklogsLoading: $worklogsLoading,
-    isWorklogsFiltering: $isWorklogsFiltering,
-    worklogSort: $worklogSort,
-    resetWorklogSortEvent: resetWorklogSort,
-    setPaidStatus: setWorklogPaidStatusMutation.start,
-    setPaidStatusStatus: setWorklogPaidStatusMutation.$status,
-    resetSetPaidStatus: setWorklogPaidStatusMutation.reset,
-    loadMore: loadMoreWorklogs,
-    isLoadingMoreWorklogs: $isLoadingMoreWorklogs,
+    allTime: $allTime,
+    timeLoading: $timeLoading,
+    isTimeFiltering: $isTimeFiltering,
+    timeSort: $timeSort,
+    resetTimeSortEvent: resetTimeSort,
+    setPaidStatus: setTimePaidStatusMutation.start,
+    setPaidStatusStatus: setTimePaidStatusMutation.$status,
+    resetSetPaidStatus: setTimePaidStatusMutation.reset,
+    loadMore: loadMoreTime,
+    isLoadingMoreTime: $isLoadingMoreTime,
   })
 
   const [filtersOpen, setFiltersOpen] = useState(false)
 
-  const hasWorklogs = worklogsLoading || worklogRows.length > 0
+  const hasTimeEntries = timeLoading || timeRows.length > 0
 
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
-  const [selectedWorklogId, setSelectedWorklogId] = useState<string | null>(
-    null,
-  )
+  const [selectedTimeId, setSelectedTimeId] = useState<string | null>(null)
   const [isTimeDialogOpen, setIsTimeDialogOpen] = useState(false)
 
-  const selectedWorklogIds = useMemo(
+  const selectedTimeIds = useMemo(
     () =>
       Object.entries(selectedIds)
         .filter(([, isSelected]) => Boolean(isSelected))
         .map(([id]) => id),
     [selectedIds],
   )
-  const selectedWorklogsCount = selectedWorklogIds.length
+  const selectedTimeCount = selectedTimeIds.length
 
   const handleClearSelection = useCallback(() => {
     setSelectedIds({})
@@ -92,12 +90,12 @@ export const TimeTable = () => {
 
   const handleCloseDialog = useCallback(() => {
     setIsTimeDialogOpen(false)
-    setSelectedWorklogId(null)
+    setSelectedTimeId(null)
   }, [])
 
-  const { requestBulkDelete, isDeleting } = useBulkDeleteWorklogs({
+  const { requestBulkDelete, isDeleting } = useBulkDeleteTime({
     selectedIds,
-    selectedWorklogId,
+    selectedTimeId,
     isBlocked: setPaidStatusStatus === 'pending',
     onClearSelection: handleClearSelection,
     onCloseDialog: handleCloseDialog,
@@ -106,47 +104,43 @@ export const TimeTable = () => {
   const isBulkPending = setPaidStatusStatus === 'pending' || isDeleting
 
   // Берём строку из стора по id, чтобы модалка видела актуальные данные после рефетча
-  const selectedWorklog = useMemo(
-    () => worklogRows.find((row) => row.id === selectedWorklogId) ?? null,
-    [worklogRows, selectedWorklogId],
+  const selectedTimeEntry = useMemo(
+    () => timeRows.find((row) => row.id === selectedTimeId) ?? null,
+    [timeRows, selectedTimeId],
   )
 
   const { hasPrev, hasNext } = useMemo(
-    () => getWorklogNavigationState(worklogRows, selectedWorklogId),
-    [worklogRows, selectedWorklogId],
+    () => getTimeNavigationState(timeRows, selectedTimeId),
+    [timeRows, selectedTimeId],
   )
 
   const handleOnSortChange = (sort: Record<string, 'ASC' | 'DESC'>) => {
-    resetWorklogSortEvent(sort)
+    resetTimeSortEvent(sort)
   }
 
   const handleRowClick = useCallback((row: Time): void => {
-    setSelectedWorklogId(row.id ?? null)
+    setSelectedTimeId(row.id ?? null)
     setIsTimeDialogOpen(true)
   }, [])
 
   const goToSibling = useCallback(
     (direction: -1 | 1) => {
-      const siblingId = getWorklogSiblingId(
-        worklogRows,
-        selectedWorklogId,
-        direction,
-      )
+      const siblingId = getTimeSiblingId(timeRows, selectedTimeId, direction)
 
       if (!siblingId) {
         return
       }
 
-      setSelectedWorklogId(siblingId)
+      setSelectedTimeId(siblingId)
     },
-    [worklogRows, selectedWorklogId],
+    [timeRows, selectedTimeId],
   )
 
-  const handlePrevWorklog = useCallback(() => {
+  const handlePrevTimeEntry = useCallback(() => {
     goToSibling(-1)
   }, [goToSibling])
 
-  const handleNextWorklog = useCallback(() => {
+  const handleNextTimeEntry = useCallback(() => {
     goToSibling(1)
   }, [goToSibling])
 
@@ -163,11 +157,11 @@ export const TimeTable = () => {
   }, [t, setPaidStatusStatus, resetSetPaidStatus])
 
   const handleBulkSetPaidStatus = (isPaid: boolean) => {
-    if (isBulkPending || selectedWorklogsCount === 0) {
+    if (isBulkPending || selectedTimeCount === 0) {
       return
     }
 
-    setPaidStatus({ ids: selectedWorklogIds, isPaid })
+    setPaidStatus({ ids: selectedTimeIds, isPaid })
   }
 
   const config = useMemo(
@@ -258,13 +252,13 @@ export const TimeTable = () => {
         )}
       </S.SectionTitleRow>
       {isDesktop && <TimeFilters />}
-      {hasWorklogs ? (
+      {hasTimeEntries ? (
         <TimeContext.Provider value={timeContextValue}>
-          {isDesktop && selectedWorklogsCount > 0 && (
+          {isDesktop && selectedTimeCount > 0 && (
             <Flex gap="2" align="center" mb="3">
               <S.Label>
                 {t('dashboard.worklogsTable.bulk.selectedCount', {
-                  count: selectedWorklogsCount,
+                  count: selectedTimeCount,
                 })}
               </S.Label>
               <Button
@@ -292,7 +286,7 @@ export const TimeTable = () => {
                 type="button"
                 iconLeft={<TrashIcon />}
                 disabled={isBulkPending}
-                onClick={() => requestBulkDelete(selectedWorklogIds)}
+                onClick={() => requestBulkDelete(selectedTimeIds)}
               >
                 {t('dashboard.worklogsTable.bulk.delete')}
               </Button>
@@ -310,7 +304,7 @@ export const TimeTable = () => {
           )}
           <DataTable<Time>
             nowrap
-            data={worklogRows}
+            data={timeRows}
             config={config}
             getRowId={(row) => row.id ?? ''}
             BodyComponent={TimeTableCell}
@@ -318,28 +312,28 @@ export const TimeTable = () => {
             selectedIds={selectedIds}
             onSelectedIdsChange={setSelectedIds}
             height={'70vh'}
-            loading={worklogsLoading}
-            isFiltering={isWorklogsFiltering}
-            sort={worklogSort}
+            loading={timeLoading}
+            isFiltering={isTimeFiltering}
+            sort={timeSort}
             onSortChange={handleOnSortChange}
             onRowClick={handleRowClick}
             onReachEnd={loadMore}
-            isLoadingMore={isLoadingMoreWorklogs}
+            isLoadingMore={isLoadingMoreTime}
             skeletonHeight="40px"
           />
           <TimeDialog
             open={isTimeDialogOpen}
-            row={selectedWorklog}
+            row={selectedTimeEntry}
             onOpenChange={setIsTimeDialogOpen}
             hasPrev={hasPrev}
             hasNext={hasNext}
-            onPrev={handlePrevWorklog}
-            onNext={handleNextWorklog}
+            onPrev={handlePrevTimeEntry}
+            onNext={handleNextTimeEntry}
           />
         </TimeContext.Provider>
       ) : (
         <Flex pt="7">
-          <WorklogsEmptyState style={{ height: 560 }} />
+          <TimeEmptyState style={{ height: 560 }} />
         </Flex>
       )}
     </S.Section>

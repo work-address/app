@@ -2,43 +2,43 @@ import { useUnit } from 'effector-react'
 import { useCallback, useEffect, useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { deleteWorklogMutation } from '@/entities/time'
+import { deleteTimeMutation } from '@/entities/time'
 import { showToast, useConfirm } from '@/shared'
 
-type UseBulkDeleteWorklogsParams = {
+type UseBulkDeleteTimeParams = {
   selectedIds: Record<string, boolean>
-  selectedWorklogId: string | null
+  selectedTimeId: string | null
   isBlocked?: boolean
   onClearSelection: () => void
   onCloseDialog: () => void
 }
 
-export const useBulkDeleteWorklogs = ({
+export const useBulkDeleteTime = ({
   selectedIds,
-  selectedWorklogId,
+  selectedTimeId,
   isBlocked = false,
   onClearSelection,
   onCloseDialog,
-}: UseBulkDeleteWorklogsParams) => {
+}: UseBulkDeleteTimeParams) => {
   const { t } = useTranslation()
   const { confirm } = useConfirm()
   const [isBulkInFlight, setIsBulkInFlight] = useState(false)
 
-  const { deleteWorklogs, status, reset } = useUnit({
-    deleteWorklogs: deleteWorklogMutation.start,
-    status: deleteWorklogMutation.$status,
-    reset: deleteWorklogMutation.reset,
+  const { deleteTimeEntries, status, reset } = useUnit({
+    deleteTimeEntries: deleteTimeMutation.start,
+    status: deleteTimeMutation.$status,
+    reset: deleteTimeMutation.reset,
   })
 
   const contextRef = useRef({
     selectedIds,
-    selectedWorklogId,
+    selectedTimeId,
     onClearSelection,
     onCloseDialog,
   })
   contextRef.current = {
     selectedIds,
-    selectedWorklogId,
+    selectedTimeId,
     onClearSelection,
     onCloseDialog,
   }
@@ -59,7 +59,7 @@ export const useBulkDeleteWorklogs = ({
 
     const {
       selectedIds: ids,
-      selectedWorklogId: openId,
+      selectedTimeId: openId,
       onClearSelection: clearSelection,
       onCloseDialog: closeDialog,
     } = contextRef.current
@@ -98,11 +98,11 @@ export const useBulkDeleteWorklogs = ({
         cancelLabel: t('common.cancel'),
         onConfirm: () => {
           setIsBulkInFlight(true)
-          deleteWorklogs(ids)
+          deleteTimeEntries(ids)
         },
       })
     },
-    [confirm, deleteWorklogs, isBlocked, isBulkInFlight, t],
+    [confirm, deleteTimeEntries, isBlocked, isBulkInFlight, t],
   )
 
   return {

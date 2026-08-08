@@ -5,17 +5,17 @@ import { useCallback } from 'react'
 import type { InputProps } from '@/shared'
 
 import {
-  changeWorklogFilters,
-  $worklogsFilters,
-  type WorklogsFilters,
+  changeTimeFilters,
+  $timeFilters,
+  type TimeFilters,
 } from '@/entities/time'
 import { Input, Text } from '@/shared'
 
 type TimeTwoSideInputProps = {
   label: string
-  leftId: keyof WorklogsFilters
+  leftId: keyof TimeFilters
   leftPlaceholder: string
-  rightId: keyof WorklogsFilters
+  rightId: keyof TimeFilters
   rightPlaceholder: string
   inputProps?: InputProps
   inputMode?: InputProps['inputMode']
@@ -31,23 +31,23 @@ export const TimeTwoSideInput = ({
   inputMode,
 }: TimeTwoSideInputProps) => {
   const leftValue = useStoreMap({
-    store: $worklogsFilters,
+    store: $timeFilters,
     keys: [leftId],
     fn: (filters, [key]) => filters[key]?.toString() ?? '',
   })
 
   const rightValue = useStoreMap({
-    store: $worklogsFilters,
+    store: $timeFilters,
     keys: [rightId],
     fn: (filters, [key]) => filters[key]?.toString() ?? '',
   })
 
   const { changeFiltersEvent } = useUnit({
-    changeFiltersEvent: changeWorklogFilters,
+    changeFiltersEvent: changeTimeFilters,
   })
 
   const handleChange = useCallback(
-    (key: keyof WorklogsFilters, value: string) => {
+    (key: keyof TimeFilters, value: string) => {
       const parsedValue = value ? Number(value) : ''
       const oldValue = key === leftId ? leftValue : rightValue
 

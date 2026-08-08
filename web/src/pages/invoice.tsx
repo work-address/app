@@ -13,7 +13,7 @@ import {
   resetInvoice,
   InvoiceTotalAmountDesktop,
   InvoiceTotalAmountMobile,
-  InvoiceWorklogs,
+  InvoiceTime,
 } from '@/features/invoice'
 import { routes } from '@/routes'
 import { Card, IconButton, PageHelmet, Text, useBreakpoint } from '@/shared'
@@ -83,7 +83,7 @@ export default function InvoicePage() {
           ) : (
             <InvoiceTotalAmountDesktop />
           )}
-          <InvoiceWorklogs />
+          <InvoiceTime />
         </Flex>
       </InvoicePageCard>
     </>

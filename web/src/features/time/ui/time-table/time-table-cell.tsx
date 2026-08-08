@@ -7,7 +7,7 @@ import { TimeContext } from './time-context'
 
 import type { Time } from '@/entities/time'
 
-import { setWorklogPaidStatusMutation } from '@/entities/time'
+import { setTimePaidStatusMutation } from '@/entities/time'
 import {
   type DesktopBodyCellRenderProps,
   ExampleScreenshot,
@@ -21,8 +21,8 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
   const { dateFormatter, timeFormatter, t } = useContext(TimeContext)
 
   const { setPaidStatus, setPaidStatusStatus } = useUnit({
-    setPaidStatus: setWorklogPaidStatusMutation.start,
-    setPaidStatusStatus: setWorklogPaidStatusMutation.$status,
+    setPaidStatus: setTimePaidStatusMutation.start,
+    setPaidStatusStatus: setTimePaidStatusMutation.$status,
   })
 
   switch (props.dataKey) {
@@ -71,7 +71,7 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
 
     default: {
       if (props.customKey === 'paidStatus') {
-        const worklogId = props.data.id
+        const timeId = props.data.id
 
         return (
           <PaidStatusBadge
@@ -80,11 +80,11 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
               // Не даём клику по бейджу открыть модалку строки
               event.stopPropagation()
 
-              if (!worklogId || setPaidStatusStatus === 'pending') {
+              if (!timeId || setPaidStatusStatus === 'pending') {
                 return
               }
 
-              setPaidStatus({ ids: [worklogId], isPaid: !props.data.isPaid })
+              setPaidStatus({ ids: [timeId], isPaid: !props.data.isPaid })
             }}
           >
             {t(

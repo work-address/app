@@ -2,33 +2,28 @@ import { combine, sample } from 'effector'
 import i18n from 'i18next'
 
 import {
-  fetchWorklogs,
-  applyWorklogFilters,
-  changeWorklogFilters,
-  appendWorklogSort,
-  resetWorklogFilters,
-  resetWorklogSort,
-  setWorklogsLoading,
-  debouncedChangeWorklogFilters,
-  loadMoreWorklogs,
+  applyTimeFilters,
+  appendTimeSort,
+  changeTimeFilters,
+  debouncedChangeTimeFilters,
+  fetchTime,
+  loadMoreTime,
+  resetTimeFilters,
+  resetTimeSort,
+  setTimeLoading,
 } from './time.events'
-import { worklogsQuery, type WorklogsQueryParams } from './time.queries'
-import {
-  $hasMoreWorklogs,
-  $worklogSort,
-  $worklogsFilters,
-  $worklogsPage,
-} from './time.stores'
+import { timeQuery, type TimeQueryParams } from './time.queries'
+import { $hasMoreTime, $timeFilters, $timePage, $timeSort } from './time.stores'
 
-import type { WorklogsFilters, WorklogSort } from './types'
+import type { TimeFilters, TimeSort } from './types'
 
 import { $breakpoints, showToast } from '@/shared'
 
-const toWorklogsQueryParams = (
-  filters: WorklogsFilters,
-  sort: WorklogSort,
+const toTimeQueryParams = (
+  filters: TimeFilters,
+  sort: TimeSort,
   page: number,
-): WorklogsQueryParams => ({
+): TimeQueryParams => ({
   ...Object.fromEntries(
     Object.entries(filters).map(([key, value]) => [key, value ?? undefined]),
   ),
@@ -37,48 +32,47 @@ const toWorklogsQueryParams = (
 })
 
 sample({
-  clock: [fetchWorklogs, applyWorklogFilters],
-  source: combine($worklogsFilters, $worklogSort),
-  fn: ([filters, sort]): WorklogsQueryParams =>
-    toWorklogsQueryParams(filters, sort, 0),
-  target: worklogsQuery.start,
+  clock: [fetchTime, applyTimeFilters],
+  source: combine($timeFilters, $timeSort),
+  fn: ([filters, sort]): TimeQueryParams => toTimeQueryParams(filters, sort, 0),
+  target: timeQuery.start,
 })
 
 sample({
-  clock: loadMoreWorklogs,
+  clock: loadMoreTime,
   source: {
-    filters: $worklogsFilters,
-    sort: $worklogSort,
-    page: $worklogsPage,
-    hasMore: $hasMoreWorklogs,
-    pending: worklogsQuery.$pending,
+    filters: $timeFilters,
+    sort: $timeSort,
+    page: $timePage,
+    hasMore: $hasMoreTime,
+    pending: timeQuery.$pending,
   },
   filter: ({ hasMore, pending }) => hasMore && !pending,
-  fn: ({ filters, sort, page }): WorklogsQueryParams =>
-    toWorklogsQueryParams(filters, sort, page + 1),
-  target: worklogsQuery.start,
+  fn: ({ filters, sort, page }): TimeQueryParams =>
+    toTimeQueryParams(filters, sort, page + 1),
+  target: timeQuery.start,
 })
 
 sample({
-  clock: [resetWorklogSort, appendWorklogSort, resetWorklogFilters],
-  target: applyWorklogFilters,
+  clock: [resetTimeSort, appendTimeSort, resetTimeFilters],
+  target: applyTimeFilters,
 })
 
 sample({
-  clock: debouncedChangeWorklogFilters,
+  clock: debouncedChangeTimeFilters,
   source: $breakpoints,
   filter: (breakpoints) => breakpoints.isDesktop,
-  target: applyWorklogFilters,
+  target: applyTimeFilters,
 })
 
 sample({
-  clock: changeWorklogFilters,
+  clock: changeTimeFilters,
   source: $breakpoints,
   filter: (breakpoints) => breakpoints.isDesktop,
-  target: setWorklogsLoading.prepend(() => true),
+  target: setTimeLoading.prepend(() => true),
 })
 
-worklogsQuery.finished.failure.watch(({ params }) => {
+timeQuery.finished.failure.watch(({ params }) => {
   if ((params.page ?? 0) === 0) {
     return
   }
@@ -93,35 +87,35 @@ export {
   type ITimeTotal,
   type TimeTotalDetail as ITimeTotalDetail,
   type Time,
-  type WorklogsFilters,
-  type WorklogSort,
+  type TimeFilters,
+  type TimeSort,
 } from './types'
 
 export {
-  fetchWorklogs,
-  changeWorklogFilters,
-  appendWorklogSort as changeWorklogSort,
-  applyWorklogFilters,
-  resetWorklogFilters,
-  resetWorklogSort,
-  loadMoreWorklogs,
+  fetchTime,
+  changeTimeFilters,
+  appendTimeSort as changeTimeSort,
+  applyTimeFilters,
+  resetTimeFilters,
+  resetTimeSort,
+  loadMoreTime,
 } from './time.events'
 
 export {
-  deleteWorklogMutation,
-  editWorklogMutation,
-  removeWorklogProcessesMutation,
-  removeWorklogScreenshotMutation,
-  setWorklogPaidStatusMutation,
+  deleteTimeMutation,
+  editTimeMutation,
+  removeTimeProcessesMutation,
+  removeTimeScreenshotMutation,
+  setTimePaidStatusMutation,
 } from './time.mutations'
 
 export {
-  $allWorklogs,
-  $worklogsFilters,
-  $hasActiveWorklogFilters,
-  $worklogSort,
-  $worklogsLoading,
-  $isWorklogsFiltering,
-  $hasMoreWorklogs,
-  $isLoadingMoreWorklogs,
+  $allTime,
+  $timeFilters,
+  $hasActiveTimeFilters,
+  $timeSort,
+  $timeLoading,
+  $isTimeFiltering,
+  $hasMoreTime,
+  $isLoadingMoreTime,
 } from './time.stores'

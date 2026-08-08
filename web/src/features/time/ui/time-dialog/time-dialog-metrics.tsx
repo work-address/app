@@ -22,11 +22,11 @@ const Metric = ({ label, children }: MetricProps) => (
   </Flex>
 )
 
-type WorklogDialogMetricsProps = {
+type TimeDialogMetricsProps = {
   row: Time
 }
 
-export const TimeDialogMetrics = ({ row }: WorklogDialogMetricsProps) => {
+export const TimeDialogMetrics = ({ row }: TimeDialogMetricsProps) => {
   const { t } = useTranslation()
 
   return (
