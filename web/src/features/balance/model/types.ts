@@ -1,6 +1,8 @@
+import type { BaseCurrencyCode } from '@/shared/constants/currency'
+
 export type Balance = {
   amount: number
-  currency: 'USDT'
+  currency: BaseCurrencyCode
   tonAddress: string
   ethAddress: string
 }
@@ -13,7 +15,7 @@ export type Transaction = {
   type: TransactionType
   status: TransactionStatus
   amount: number
-  currency: 'USDT'
+  currency: BaseCurrencyCode
   createdAt: string
   hash?: string
 }

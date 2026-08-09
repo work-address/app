@@ -7,7 +7,13 @@ import { $balance, $balanceLoading } from '../model'
 
 import { AddressBox, BalanceSectionCard, QrPlaceholder } from './balance-styles'
 
-import { Button, Text, copyToClipboard, showToast } from '@/shared'
+import {
+  BASE_CURRENCY,
+  Button,
+  Text,
+  copyToClipboard,
+  showToast,
+} from '@/shared'
 
 export const BalanceTopUpEthCard = () => {
   const { t } = useTranslation()
@@ -53,7 +59,9 @@ export const BalanceTopUpEthCard = () => {
               {t('balance.topUpEth.title')}
             </Text>
             <Text size={'2'} color={'gray'}>
-              {t('balance.topUpEth.description')}
+              {t('balance.topUpEth.description', {
+                currency: BASE_CURRENCY.code,
+              })}
             </Text>
           </Flex>
           <Skeleton loading={loading}>

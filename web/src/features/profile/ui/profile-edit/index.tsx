@@ -48,6 +48,7 @@ import {
   useBreakpoint,
   RichEditor,
   COUNTRY_OPTIONS,
+  BASE_CURRENCY,
 } from '@/shared'
 import { type CardProps } from '@/shared'
 
@@ -225,7 +226,10 @@ export const ProfileEdit = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Wrapper>
-        <Grid rows={{ initial: 'auto auto' }} gap={{ initial: '1', md: '5' }}>
+        <Grid
+          rows={{ initial: 'auto auto' }}
+          // gap={{ initial: '1', md: '5' }}
+        >
           <FreelancerViewCard>
             <Flex gap={'4'} mb={'4'} align={'center'} justify={'between'}>
               <Flex gap={'4'} align={'center'}>
@@ -366,7 +370,7 @@ export const ProfileEdit = () => {
                 inputMode="decimal"
                 addonLeft={
                   <Text size={'2'} color={'gray'}>
-                    $
+                    {BASE_CURRENCY.code}
                   </Text>
                 }
               />

@@ -12,7 +12,7 @@ import { ProjectsFormTrackingOptions } from '../projects-form-tracking-options'
 import type { ProjectFormValues } from '../../model'
 
 import { $rawProjects, editProjectMutation } from '@/entities/projects'
-import { Input, TextArea, type InputProps } from '@/shared'
+import { Input, TextArea, type InputProps, BASE_CURRENCY } from '@/shared'
 
 type ProjectsDialogFormProps = {
   projectId: string
@@ -123,7 +123,7 @@ export const ProjectsDialogForm = ({
         />
         <Input
           label={t('dashboard.projectsTable.form.rate')}
-          addonRight="$"
+          addonRight={BASE_CURRENCY.symbol}
           id="rate"
           disabled={isPending}
           state={errors.rateHour ? 'error' : 'valid'}

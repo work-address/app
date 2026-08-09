@@ -7,7 +7,14 @@ import styled from 'styled-components'
 import { useInvoiceInfoFields } from '../lib'
 import { $invoice, $invoiceLoading } from '../model'
 
-import { Text, Button, copyToClipboard, showToast } from '@/shared'
+import {
+  BASE_CURRENCY,
+  Text,
+  Button,
+  copyToClipboard,
+  formatAmount,
+  showToast,
+} from '@/shared'
 
 const handleSavePdf = () => {
   window.print()
@@ -54,7 +61,11 @@ export const InvoiceTotalAmountDesktop = () => {
           />
         )}
         <Text color={'gray'} align={'center'}>
-          <Trans i18nKey="invoice.qrScan.desktop" components={{ br: <br /> }} />
+          <Trans
+            i18nKey="invoice.qrScan.desktop"
+            values={{ currency: BASE_CURRENCY.code }}
+            components={{ br: <br /> }}
+          />
         </Text>
       </Flex>
       <Flex gap={'3'} direction={'column'}>
@@ -72,7 +83,7 @@ export const InvoiceTotalAmountDesktop = () => {
               <Skeleton width="50px" height="18px" loading={loading} />
             ) : (
               <Text $themeVariant={'primary'} weight={'medium'} size={'4'}>
-                {invoice?.totalAmount} {t('currency.usdt')}
+                {formatAmount(invoice?.totalAmount)} {BASE_CURRENCY.code}
               </Text>
             )}
           </Flex>

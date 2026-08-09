@@ -17,7 +17,7 @@ import {
   formatDurationFromMinutes,
 } from '@/shared'
 
-export const ProjectsTableCell = React.memo(
+export const ProjectsDesktopCell = React.memo(
   (props: DesktopBodyCellRenderProps<ProjectWithStats>) => {
     const { t } = useContext(ProjectsTableContext)
     let content: ReactNode | null

@@ -54,7 +54,7 @@ export const mapProjectsAndStats = (
       minutesTotal,
       minutesActiveTotal,
       hoursActiveTotal,
-      earnings: stats.minutes * (stats.rateHour / 60),
+      earnings: Number(((stats.minutes * stats.rateHour) / 60).toFixed(2)),
     }
 
     return {

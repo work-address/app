@@ -18,6 +18,7 @@ import {
   Button,
   Input,
   type InputProps,
+  BASE_CURRENCY,
   showToast,
   Text,
   TextArea,
@@ -197,7 +198,7 @@ export const ProjectsCreateModal = ({
                 label={t('dashboard.projectsTable.form.rate')}
                 id={'rate'}
                 placeholder={t('project.createModal.ratePlaceholder')}
-                addonRight={'$'}
+                addonRight={BASE_CURRENCY.symbol}
                 disabled={pending}
                 inputMode="decimal"
                 state={errors.rateHour ? 'error' : 'valid'}

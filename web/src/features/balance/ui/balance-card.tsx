@@ -7,7 +7,7 @@ import { $balance, $balanceLoading } from '../model'
 
 import { BalanceSectionCard } from './balance-styles'
 
-import { Button, Text } from '@/shared'
+import { BASE_CURRENCY, Button, formatAmount, Text } from '@/shared'
 
 type BalanceCardProps = {
   onTopUp?: () => void
@@ -21,8 +21,8 @@ export const BalanceCard = ({ onTopUp, onWithdraw }: BalanceCardProps) => {
     loading: $balanceLoading,
   })
 
-  const formattedAmount = balance ? balance.amount.toFixed(2) : '0.00'
-  const currency = balance?.currency ?? 'USDT'
+  const formattedAmount = formatAmount(balance?.amount)
+  const currency = balance?.currency ?? BASE_CURRENCY.code
 
   return (
     <BalanceSectionCard>

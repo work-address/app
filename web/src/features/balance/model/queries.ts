@@ -2,9 +2,11 @@ import { createQuery } from '@farfetched/core'
 
 import type { Balance, Transaction } from './types'
 
+import { BASE_CURRENCY } from '@/shared/constants/currency'
+
 const MOCK_BALANCE: Balance = {
   amount: 1284.5,
-  currency: 'USDT',
+  currency: BASE_CURRENCY.code,
   tonAddress: 'UQAaPlMqz2Z1m4N5o6P7q8R9s0T1u2V3w4X5y6Z7a8B9c0Dx',
   ethAddress: '0x742d35Cc6634C0532925a3b844Bc454e4438f44e',
 }
@@ -15,7 +17,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     type: 'topUp',
     status: 'confirmed',
     amount: 500,
-    currency: 'USDT',
+    currency: BASE_CURRENCY.code,
     createdAt: '2026-05-18T10:32:00.000Z',
     hash: '6a5b9c7e2f3d4e5f6a7b8c9d0e1f2g3h4i5j6k7l8m9n0o1p2q3r4s5t6u7v8w9',
   },
@@ -24,7 +26,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     type: 'payout',
     status: 'pending',
     amount: 120.5,
-    currency: 'USDT',
+    currency: BASE_CURRENCY.code,
     createdAt: '2026-05-17T18:14:00.000Z',
   },
   {
@@ -32,7 +34,7 @@ const MOCK_TRANSACTIONS: Transaction[] = [
     type: 'topUp',
     status: 'failed',
     amount: 50,
-    currency: 'USDT',
+    currency: BASE_CURRENCY.code,
     createdAt: '2026-05-16T09:02:00.000Z',
   },
 ]

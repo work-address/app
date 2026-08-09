@@ -9,7 +9,7 @@ import { BalanceSectionCard } from './balance-styles'
 
 import type { Transaction, TransactionStatus } from '../model'
 
-import { Text } from '@/shared'
+import { formatAmount, Text } from '@/shared'
 
 const statusColor: Record<TransactionStatus, 'green' | 'amber' | 'red'> = {
   confirmed: 'green',
@@ -103,7 +103,7 @@ const TransactionRow = ({ tx, dateFormatter, t }: TransactionRowProps) => {
       <Table.Cell>
         <Text size={'2'} weight={'medium'}>
           {sign}
-          {tx.amount.toFixed(2)} {tx.currency}
+          {formatAmount(tx.amount)} {tx.currency}
         </Text>
       </Table.Cell>
       <Table.Cell>

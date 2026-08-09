@@ -12,7 +12,7 @@ import { ProjectsMobileAddonBottom } from '../projects-mobile/projects-mobile-ad
 import { ProjectsMobileBody } from '../projects-mobile/projects-mobile-body'
 import { ProjectsMobileHeader } from '../projects-mobile/projects-mobile-header'
 
-import { ProjectsTableCell } from './projects-table-cell'
+import { ProjectsDesktopCell } from './projects-table-cell'
 import {
   ProjectsTableContext,
   type ProjectsTableContextValues,
@@ -29,7 +29,12 @@ import {
   deleteProjectMutation,
 } from '@/entities/projects'
 import { DashboardProjectsNotFound } from '@/features/dashboard'
-import { type MobileDataTableConfig, type DataTableConfig } from '@/shared'
+import {
+  type MobileDataTableConfig,
+  type DataTableConfig,
+  BASE_CURRENCY,
+  formatAmount,
+} from '@/shared'
 import {
   DataTable,
   MobileDataTable,
@@ -40,6 +45,7 @@ import {
   IconButton,
   useBreakpoint,
   useConfirm,
+  useDateFormatter,
   showToast,
 } from '@/shared'
 
@@ -73,6 +79,7 @@ export const ProjectsTable = () => {
   const { confirm } = useConfirm()
 
   const { t } = useTranslation()
+  const dateFormatter = useDateFormatter()
 
   const [selectedRow, setSelectedRow] = useState<ProjectWithStats | null>(null)
   const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
@@ -120,15 +127,23 @@ export const ProjectsTable = () => {
   const desktopConfig = useMemo(
     (): DataTableConfig<ProjectWithStats> => [
       {
+        dataKey: 'createdAt',
+        width: 140,
+        headerText: t('dashboard.projectsTable.drawer.meta.createdAt'),
+        getValue: (data: ProjectWithStats) =>
+          dateFormatter.format(new Date(data.createdAt ?? new Date())),
+      },
+      {
         dataKey: 'title',
-        width: 230,
+        width: 200,
         headerText: t('dashboard.projectsTable.head.projectName'),
       },
       {
         dataKey: 'earnings',
         width: 120,
         headerText: t('dashboard.projectsTable.head.earnings'),
-        getValue: (data) => `${data.earnings.toFixed(2)} ${t('currency.usdt')}`,
+        getValue: (data) =>
+          `${formatAmount(data.earnings)} ${BASE_CURRENCY.code}`,
       },
       {
         dataKey: 'state',
@@ -162,7 +177,7 @@ export const ProjectsTable = () => {
       //   headerText: t('dashboard.projectsTable.head.mouseDistance'),
       // },
     ],
-    [t],
+    [t, dateFormatter],
   )
 
   const mobileConfig = useMemo(
@@ -301,7 +316,7 @@ export const ProjectsTable = () => {
                     AddonBottomComponent={ProjectsMobileAddonBottom}
                     HeaderComponent={ProjectsMobileHeader}
                     expandedId={projects[0]?.id}
-                    allowSelection
+                    // allowSelection
                     selectedIds={selectedIds}
                     onSelectedIdsChange={setSelectedIds}
                     loading={isProjectsLoading}
@@ -311,8 +326,8 @@ export const ProjectsTable = () => {
                     data={renderingData}
                     config={desktopConfig}
                     getRowId={rowIdGetter}
-                    allowSelection
-                    BodyComponent={ProjectsTableCell}
+                    // allowSelection
+                    BodyComponent={ProjectsDesktopCell}
                     height={'100%'}
                     selectedIds={selectedIds}
                     onSelectedIdsChange={setSelectedIds}

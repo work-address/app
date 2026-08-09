@@ -1,12 +1,14 @@
 import type { ProjectRow } from '@/features/projects'
 
+import { BASE_CURRENCY } from '@/shared/constants/currency'
+
 const lorem = `Lorem ipsum dolor sit amet, consectetur adipiscing elit, sed do eiusmod tempor incididunt ut labore et dolore magna aliqua. Ut enim ad minim veniam, quis nostrud exercitation ullamco laboris nisi ut aliquip ex ea commodo consequat. Duis aute irure dolor in reprehenderit in voluptate velit esse cillum dolore eu fugiat nulla pariatur. Excepteur sint occaecat cupidatat non proident, sunt in culpa qui officia deserunt mollit anim id est laborum.`
 
 export const projectsMock: ProjectRow[] = [
   {
     key: '1',
     name: 'Project 1',
-    earnings: '80.5 USD',
+    earnings: `80.5 ${BASE_CURRENCY.code}`,
     status: 'Active',
     timeTotal: 4 * 60 + 10,
     timeActive: 2 * 60 + 10,
@@ -15,13 +17,13 @@ export const projectsMock: ProjectRow[] = [
     mouseDistance: '2 385 910',
     publishedIn: 'Personal',
     startDate: new Date(),
-    rate: '20 USD/hour',
+    rate: `20 ${BASE_CURRENCY.code}/hour`,
     description: lorem,
   },
   {
     key: '2',
     name: 'Project 2',
-    earnings: '63.1 USD',
+    earnings: `63.1 ${BASE_CURRENCY.code}`,
     status: 'Active',
     timeTotal: 2 * 60 + 56,
     timeActive: 1 * 60 + 24,
@@ -30,13 +32,13 @@ export const projectsMock: ProjectRow[] = [
     mouseDistance: '1 839 352',
     publishedIn: 'Personal',
     startDate: new Date(),
-    rate: '20 USD/hour',
+    rate: `20 ${BASE_CURRENCY.code}/hour`,
     description: lorem,
   },
   {
     key: '3',
     name: 'Project 3',
-    earnings: '839.5 USD',
+    earnings: `839.5 ${BASE_CURRENCY.code}`,
     status: 'Active',
     timeTotal: 12 * 60 + 36,
     timeActive: 10 * 60 + 59,
@@ -45,13 +47,13 @@ export const projectsMock: ProjectRow[] = [
     mouseDistance: '9 386 154',
     publishedIn: 'Personal',
     startDate: new Date(),
-    rate: '20 USD/hour',
+    rate: `20 ${BASE_CURRENCY.code}/hour`,
     description: lorem,
   },
   {
     key: '4',
     name: 'Project 4',
-    earnings: '65 USD',
+    earnings: `65 ${BASE_CURRENCY.code}`,
     status: 'Paused',
     timeTotal: 4 * 60 + 12,
     timeActive: 1 * 60 + 44,
@@ -60,7 +62,7 @@ export const projectsMock: ProjectRow[] = [
     mouseDistance: '1 245 431',
     publishedIn: 'Personal',
     startDate: new Date(),
-    rate: '20 USD/hour',
+    rate: `20 ${BASE_CURRENCY.code}/hour`,
     description: lorem,
   },
 ]

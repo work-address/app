@@ -1,5 +1,5 @@
 import { Flex, Grid, Separator } from '@radix-ui/themes'
-import { Fragment, useMemo } from 'react'
+import { useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
@@ -16,10 +16,10 @@ import {
   TextArea,
   useBreakpoint,
   useDateFormatter,
+  formatAmount,
   type InputProps,
+  BASE_CURRENCY,
 } from '@/shared'
-
-type ProjectMetaKey = 'createdAt' | 'rateHour'
 
 type ProjectsDialogViewProps = {
   data: ProjectWithStats
@@ -27,10 +27,8 @@ type ProjectsDialogViewProps = {
 
 export const ProjectsDialogView = ({ data }: ProjectsDialogViewProps) => {
   const { t } = useTranslation()
-  const isMobile = useBreakpoint('isMobile')
   const isDesktop = useBreakpoint('isDesktop')
   const dateFormatter = useDateFormatter()
-  const textSize = isMobile ? '2' : '3'
   const gap = isDesktop ? '4' : '3'
 
   const collaborators = useMemo(
@@ -61,18 +59,18 @@ export const ProjectsDialogView = ({ data }: ProjectsDialogViewProps) => {
   return (
     <Flex direction="column" gap={gap}>
       <Grid columns={{ initial: '125px 1fr' }} gap={gap}>
-        {(['createdAt', 'rateHour'] satisfies ProjectMetaKey[]).map((key) => (
-          <Fragment key={key}>
-            <Text color="gray" size={textSize}>
-              {t(`dashboard.projectsTable.drawer.meta.${key}`)}
-            </Text>
-            <Text weight="medium" size={textSize}>
-              {key === 'createdAt' && data[key]
-                ? dateFormatter.format(new Date(data[key]))
-                : data[key]}
-            </Text>
-          </Fragment>
-        ))}
+        <Text color="gray" size="2">
+          {t(`dashboard.projectsTable.drawer.meta.createdAt`)}
+        </Text>
+        <Text size="2" weight="medium">
+          {dateFormatter.format(new Date(data.createdAt ?? new Date()))}
+        </Text>
+        <Text color="gray" size="2">
+          {t(`dashboard.projectsTable.drawer.meta.rateHour`)}
+        </Text>
+        <Text size="2" weight="medium">
+          {formatAmount(data.rateHour)} {BASE_CURRENCY.code}
+        </Text>
       </Grid>
       <Separator size="4" />
       <ProjectsDialogMetrics data={data} />

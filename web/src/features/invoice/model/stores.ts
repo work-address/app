@@ -16,7 +16,7 @@ export const $invoice = combine(
     const rateHour = report?.totals[0]?.rateHour ?? 0
     const minutesActive = report?.totals[0]?.minutesActive ?? 0
 
-    const totalAmount = (rateHour / 60) * minutesActive
+    const totalAmount = Number(((rateHour / 60) * minutesActive).toFixed(2))
 
     return {
       ...detail,

@@ -15,6 +15,7 @@ sample({
 
 export { fetchBalance, resetBalance } from './events'
 export { $balance, $transactions, $balanceLoading } from './stores'
+export { BASE_CURRENCY } from '@/shared/constants/currency'
 export type {
   Balance,
   Transaction,

@@ -8,7 +8,13 @@ import { ProjectsTableContext } from '../projects-table/projects-table-context'
 import type { ProjectWithStats } from '@/entities/projects'
 
 import { routes } from '@/routes'
-import { type MobileHeaderRenderProps, PrintIcon, Text } from '@/shared'
+import {
+  BASE_CURRENCY,
+  formatAmount,
+  type MobileHeaderRenderProps,
+  PrintIcon,
+  Text,
+} from '@/shared'
 
 export const ProjectsMobileHeader = React.memo(
   (props: MobileHeaderRenderProps<ProjectWithStats>) => {
@@ -48,7 +54,7 @@ export const ProjectsMobileHeader = React.memo(
           </Badge>
         </Flex>
         <Text color={'gray'} size={'2'}>
-          {props.data.earnings} {t('currency.usdt')}
+          {formatAmount(props.data.earnings)} {BASE_CURRENCY.code}
         </Text>
       </Flex>
     )
