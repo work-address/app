@@ -1,12 +1,19 @@
 #web
 web/node_modules
 web/dist
+web/.env
 
 #api
 api/dist
 api/node_modules
+api/.env
+api/.env.prod
 
 node_modules
+.env
+.env.*
+!.env.example
+!.env.test
 /.idea
 **/*.tsbuildinfo
 /.windsurf
