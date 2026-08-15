@@ -25,7 +25,7 @@ export const SignInCard = styled(Card)`
   ${({ theme }) => theme.breakpoints.up('md')} {
     width: 600px;
     padding: 42px 48px 30px 48px;
-    background: rgba(255, 255, 255, 0.92);
+    background: var(--c-rgba-255-255-255-0_92);
   }
 `
 
@@ -39,7 +39,7 @@ export const Title = styled.h1`
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     font-size: 35px;
-    color: #1c2024;
+    color: var(--ds-neutral-12);
     line-height: 150%;
     margin-bottom: 5px;
     letter-spacing: 1.15px;
@@ -58,7 +58,7 @@ export const Desc = styled.p`
     letter-spacing: 0.6px;
     font-size: 16px;
     margin-bottom: 40px;
-    color: rgba(0, 7, 20, 0.62);
+    color: var(--c-rgba-0-7-20-0_62);
     line-height: 150%;
   }
 `
@@ -82,7 +82,7 @@ export const Actions = styled.div`
 `
 
 export const Learn = styled(Link)`
-  color: #3f67a4;
+  color: var(--ds-accent-9);
   font-weight: 500;
   padding: 6px 0 0;
   letter-spacing: 0.5px;
@@ -114,18 +114,18 @@ export const FootWalletLink = styled.a`
   text-decoration: none;
 
   &:hover {
-    color: #3f67a4;
+    color: var(--ds-accent-9);
     text-decoration: underline;
   }
 `
 
-export const HiddenButtonRow = styled.div`
+export const ButtonRow = styled.div`
   display: none;
 `
 
-export const FlexOverlay = styled(Flex)`
+export const Overlay = styled(Flex)`
   position: absolute;
-  background: rgba(255, 255, 255, 0.5);
+  background: var(--c-rgba-255-255-255-0_5);
   top: 0;
   right: 0;
   bottom: 0;

@@ -18,13 +18,13 @@ export const Spinner = ({
   useCase,
 }: SpinnerProps) => {
   return (
-    <SpinnerRing
+    <Root
       size={size}
       style={style}
       $color={color}
       $width={width}
       {...(useCase === 'button'
-        ? { size: 12, $color: '#FFF', $width: '2px' }
+        ? { size: 12, $color: 'var(--white)', $width: '2px' }
         : null)}
     />
   )
@@ -35,7 +35,7 @@ const spin = keyframes`
   to { transform: rotate(360deg); }
 `
 
-const SpinnerRing = styled.div<
+const Root = styled.div<
   Pick<SpinnerProps, 'size'> & { $color?: string; $width?: string }
 >`
   width: ${({ size = 24 }) => size}px;

@@ -54,7 +54,7 @@ export const ProfileViewDescriptionAndSkills = ({
   )
 
   return (
-    <StyledCard $gridArea={gridArea} shadow={false}>
+    <Root $gridArea={gridArea} shadow={false}>
       <Flex gap={'4'} direction={'column'}>
         <div>
           <Flex
@@ -105,11 +105,11 @@ export const ProfileViewDescriptionAndSkills = ({
           </Flex>
         </Skeleton>
       </Flex>
-    </StyledCard>
+    </Root>
   )
 }
 
-const StyledCard = styled(ProfileViewCard)`
+const Root = styled(ProfileViewCard)`
   box-shadow: var(--shadow-4);
   ${(p) => p.theme.breakpoints.up('md')} {
     padding: var(--space-5);

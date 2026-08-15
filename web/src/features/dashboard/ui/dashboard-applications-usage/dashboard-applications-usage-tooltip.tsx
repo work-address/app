@@ -27,12 +27,12 @@ export const DashboardApplicationsUsageTooltip = ({
 
   if (row?.failed) {
     return (
-      <TooltipBox>
-        <TipTitle>{label}</TipTitle>
-        <TipEmpty>
+      <Root>
+        <Title>{label}</Title>
+        <Placeholder>
           {t('dashboard.applicationsUsage.tooltip.loadFailed')}
-        </TipEmpty>
-      </TooltipBox>
+        </Placeholder>
+      </Root>
     )
   }
 
@@ -49,47 +49,49 @@ export const DashboardApplicationsUsageTooltip = ({
 
   if (!row?.hasData || total === 0) {
     return (
-      <TooltipBox>
-        <TipTitle>{label}</TipTitle>
-        <TipEmpty>{t('dashboard.applicationsUsage.tooltip.noData')}</TipEmpty>
-      </TooltipBox>
+      <Root>
+        <Title>{label}</Title>
+        <Placeholder>
+          {t('dashboard.applicationsUsage.tooltip.noData')}
+        </Placeholder>
+      </Root>
     )
   }
 
   return (
-    <TooltipBox>
-      <TipTitle>{label}</TipTitle>
-      <TipList>
+    <Root>
+      <Title>{label}</Title>
+      <List>
         {entries.map((entry) => (
-          <TipRow key={entry.processName}>
-            <TipLeft>
-              <Dot $c={entry.color} />
+          <Row key={entry.processName}>
+            <Label>
+              <Swatch $c={entry.color} />
               {entry.processName === OTHER_PROCESS_NAME
                 ? t('dashboard.applicationsUsage.tooltip.apps.other')
                 : entry.processName}
-            </TipLeft>
-            <TipVal>{formatDurationFromHoursFloat(entry.value, t)}</TipVal>
-          </TipRow>
+            </Label>
+            <Value>{formatDurationFromHoursFloat(entry.value, t)}</Value>
+          </Row>
         ))}
-      </TipList>
-      <TipDivider />
-      <TipTotal>
-        <TipTotalLabel>
+      </List>
+      <Divider />
+      <Total>
+        <TotalLabel>
           {t('dashboard.applicationsUsage.tooltip.total')}
-        </TipTotalLabel>
-        <TipVal>{formatDurationFromHoursFloat(total, t)}</TipVal>
-      </TipTotal>
-    </TooltipBox>
+        </TotalLabel>
+        <Value>{formatDurationFromHoursFloat(total, t)}</Value>
+      </Total>
+    </Root>
   )
 }
 
-const TooltipBox = styled.div`
+const Root = styled.div`
   background: var(--white);
   border: 1px solid var(--c-rgba-0-0-51-0_12);
   border-radius: 10px;
   padding: 8px 10px;
   box-shadow: 0 1px 6px var(--c-rgba-0-0-0-0_08);
-  color: var(--ds-primary);
+  color: var(--ds-neutral-12);
   font-size: 12px;
   min-width: 200px;
   position: relative;
@@ -120,21 +122,21 @@ const TooltipBox = styled.div`
   }
 `
 
-const TipTitle = styled.div`
+const Title = styled.div`
   font-weight: 600;
   font-size: 16px;
   line-height: 20px;
   padding: 4px 4px 8px;
 `
 
-const TipEmpty = styled.div`
+const Placeholder = styled.div`
   padding: 4px;
   font-size: 14px;
   line-height: 20px;
-  color: rgba(0, 7, 20, 0.62);
+  color: var(--c-rgba-0-7-20-0_62);
 `
 
-const TipList = styled.div`
+const List = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
@@ -143,49 +145,52 @@ const TipList = styled.div`
   overflow-y: auto;
 `
 
-const TipRow = styled.div`
+const Row = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 14px;
 `
 
-const TipLeft = styled.div`
+const Label = styled.div`
   display: inline-flex;
   align-items: center;
   gap: 10px;
-  color: rgba(0, 7, 20, 0.82);
+  color: var(--c-rgba-0-7-20-0_82);
   font-size: 14px;
 `
 
-const Dot = styled.span<{ $c: string }>`
+// Per-series swatch color comes from the chart's bounded palette at runtime
+// (see getBarColor in ../../model); it can't be expressed as a fixed data-*
+// variant since the mapping is data-driven, not a UI state.
+const Swatch = styled.span<{ $c: string }>`
   width: 12px;
   height: 12px;
   border-radius: 999px;
   background: ${(p) => p.$c};
 `
 
-const TipVal = styled.div`
+const Value = styled.div`
   font-weight: 600;
   font-size: 16px;
   line-height: 20px;
-  color: rgba(0, 7, 20, 0.88);
+  color: var(--c-rgba-0-7-20-0_88);
 `
 
-const TipDivider = styled.div`
+const Divider = styled.div`
   height: 1px;
-  background: rgba(0, 0, 51, 0.12);
+  background: var(--c-rgba-0-0-51-0_12);
   margin: 6px 4px 8px;
 `
 
-const TipTotal = styled.div`
+const Total = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
   padding: 4px;
 `
 
-const TipTotalLabel = styled.div`
+const TotalLabel = styled.div`
   font-size: 14px;
-  color: rgba(0, 7, 20, 0.62);
+  color: var(--c-rgba-0-7-20-0_62);
 `

@@ -73,9 +73,9 @@ export const RichEditor = ({
   }, [value, editor])
 
   return (
-    <Wrapper $disabled={disabled}>
+    <Root data-disabled={disabled || undefined}>
       {showEditPanel && (
-        <FlexToolbar gap={'1'} align={'center'}>
+        <Toolbar gap={'1'} align={'center'}>
           <CustomIconButton
             variant="ghost"
             onClick={() => editor?.chain().focus().undo().run()}
@@ -96,7 +96,7 @@ export const RichEditor = ({
           <Separator orientation="vertical" />
           <CustomIconButton
             variant="ghost"
-            data-active={editor?.isActive('bold')}
+            data-active={editor?.isActive('bold') || undefined}
             onClick={() => editor?.chain().focus().toggleBold().run()}
             color={'gray'}
             type={'button'}
@@ -105,7 +105,7 @@ export const RichEditor = ({
           </CustomIconButton>
           <CustomIconButton
             variant="ghost"
-            data-active={editor?.isActive('italic')}
+            data-active={editor?.isActive('italic') || undefined}
             onClick={() => editor?.chain().focus().toggleItalic().run()}
             color={'gray'}
             type={'button'}
@@ -114,7 +114,7 @@ export const RichEditor = ({
           </CustomIconButton>
           <CustomIconButton
             variant="ghost"
-            data-active={editor?.isActive('underline')}
+            data-active={editor?.isActive('underline') || undefined}
             onClick={() => editor?.chain().focus().toggleUnderline().run()}
             color={'gray'}
             type={'button'}
@@ -123,7 +123,7 @@ export const RichEditor = ({
           </CustomIconButton>
           <CustomIconButton
             variant="ghost"
-            data-active={editor?.isActive('strike')}
+            data-active={editor?.isActive('strike') || undefined}
             onClick={() => editor?.chain().focus().toggleStrike().run()}
             color={'gray'}
             type={'button'}
@@ -133,7 +133,7 @@ export const RichEditor = ({
           <Separator orientation="vertical" />
           <CustomIconButton
             variant="ghost"
-            data-active={editor?.isActive({ textAlign: 'left' })}
+            data-active={editor?.isActive({ textAlign: 'left' }) || undefined}
             onClick={() => editor?.chain().focus().setTextAlign('left').run()}
             color={'gray'}
             type={'button'}
@@ -142,7 +142,7 @@ export const RichEditor = ({
           </CustomIconButton>
           <CustomIconButton
             variant="ghost"
-            data-active={editor?.isActive({ textAlign: 'center' })}
+            data-active={editor?.isActive({ textAlign: 'center' }) || undefined}
             onClick={() => editor?.chain().focus().setTextAlign('center').run()}
             color={'gray'}
             type={'button'}
@@ -151,7 +151,7 @@ export const RichEditor = ({
           </CustomIconButton>
           <CustomIconButton
             variant="ghost"
-            data-active={editor?.isActive({ textAlign: 'right' })}
+            data-active={editor?.isActive({ textAlign: 'right' }) || undefined}
             onClick={() => editor?.chain().focus().setTextAlign('right').run()}
             color={'gray'}
             type={'button'}
@@ -160,7 +160,9 @@ export const RichEditor = ({
           </CustomIconButton>
           <CustomIconButton
             variant="ghost"
-            data-active={editor?.isActive({ textAlign: 'justify' })}
+            data-active={
+              editor?.isActive({ textAlign: 'justify' }) || undefined
+            }
             onClick={() =>
               editor?.chain().focus().setTextAlign('justify').run()
             }
@@ -172,7 +174,7 @@ export const RichEditor = ({
           <Separator orientation="vertical" />
           <CustomIconButton
             variant="ghost"
-            data-active={editor?.isActive('link')}
+            data-active={editor?.isActive('link') || undefined}
             color={'gray'}
             onClick={() => {
               const url = window.prompt(t('profile.editor.linkPrompt'))
@@ -184,23 +186,21 @@ export const RichEditor = ({
           >
             <Link2Icon />
           </CustomIconButton>
-        </FlexToolbar>
+        </Toolbar>
       )}
-      <EditorWrapper>
-        <StyledEditorContent disabled={disabled} editor={editor} id={id} />
-      </EditorWrapper>
-    </Wrapper>
+      <Content>
+        <Editor disabled={disabled} editor={editor} id={id} />
+      </Content>
+    </Root>
   )
 }
 
-const Wrapper = styled.div<{ $disabled?: boolean }>`
+const Root = styled.div`
   border: 1px solid var(--gray-6);
   border-radius: var(--radius-3);
   overflow: hidden;
 
-  ${(p) =>
-    p.$disabled &&
-    `
+  &[data-disabled] {
     pointer-events: none;
     cursor: not-allowed;
     background-color: var(--gray-3);
@@ -213,28 +213,30 @@ const Wrapper = styled.div<{ $disabled?: boolean }>`
     div[contenteditable] {
       cursor: not-allowed;
     }
-  `}
+  }
 `
 
-const FlexToolbar = styled(Flex)`
+const Toolbar = styled(Flex)`
   padding: var(--space-2) var(--space-3);
   border-bottom: 1px solid var(--gray-6);
-
-  [data-active='true'] {
-    background-color: var(--ds-accent-3) !important;
-    color: var(--ds-accent-11) !important;
-  }
 `
 
 const CustomIconButton = styled(IconButton)`
   margin: 0;
+
+  /* Radix IconButton's own ghost-variant rule sets background/color for this
+     class; doubling our generated class beats it without reaching for !important. */
+  &&[data-active] {
+    background-color: var(--ds-accent-3);
+    color: var(--ds-accent-11);
+  }
 `
 
 const Separator = styled(RadixSeparator)`
   height: 24px;
 `
 
-const EditorWrapper = styled.div`
+const Content = styled.div`
   padding: var(--space-3);
 
   .tiptap {
@@ -248,7 +250,7 @@ const EditorWrapper = styled.div`
   }
 `
 
-const StyledEditorContent = styled(EditorContent)`
+const Editor = styled(EditorContent)`
   ${(p) => p.theme.breakpoints.down('md')} {
     div[contenteditable='true'] {
       font-size: var(--font-size-3);

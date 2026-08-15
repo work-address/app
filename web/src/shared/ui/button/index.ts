@@ -1,4 +1,2 @@
-export { Button } from './ui/button'
-export { IconButton } from './ui/icon-button'
-export type { ButtonProps } from './ui/button'
+export { Button, IconButton, type ButtonProps } from './ui'
 export type { ButtonSize, ButtonVariant, ButtonColor } from './model'

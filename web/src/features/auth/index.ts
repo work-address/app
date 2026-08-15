@@ -1,6 +1,2 @@
-export * as AuthStyles from './ui/auth-styles'
-export * from './ui/auth-provider-button'
-export * from './ui/auth-wallet-list'
+export * from './ui'
 export * from './model'
-export * from './ui/auth-solana-wallet-shell'
-export * from './ui/auth-solana-mount'

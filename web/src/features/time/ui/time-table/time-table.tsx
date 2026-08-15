@@ -24,15 +24,15 @@ import {
   setTimePaidStatusMutation,
   type Time,
   resetTimeSort,
+  TimeEmptyState,
 } from '@/entities/time'
-import { DashboardStyles as S } from '@/features/dashboard'
 import {
   Button,
   type DataTableConfig,
   DataTable,
   showToast,
   useBreakpoint,
-  TimeEmptyState,
+  ListPageLayout as S,
 } from '@/shared'
 
 export const TimeTable = () => {

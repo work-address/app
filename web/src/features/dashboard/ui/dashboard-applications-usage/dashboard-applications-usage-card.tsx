@@ -22,7 +22,7 @@ export const DashboardApplicationsUsageCard = ({
   const { t } = useTranslation()
 
   return (
-    <Wrapper>
+    <Root>
       <Head>
         <Title>{t('dashboard.applicationsUsage.title')}</Title>
         <PeriodSelect>
@@ -46,7 +46,7 @@ export const DashboardApplicationsUsageCard = ({
           />
         </PeriodSelect>
       </Head>
-      <StyledCard>
+      <Body>
         <Plot>
           {isLoading ? (
             <Status>{t('dashboard.applicationsUsage.loading')}</Status>
@@ -54,12 +54,12 @@ export const DashboardApplicationsUsageCard = ({
             children
           )}
         </Plot>
-      </StyledCard>
-    </Wrapper>
+      </Body>
+    </Root>
   )
 }
 
-const Wrapper = styled.aside`
+const Root = styled.aside`
   width: 100%;
 `
 
@@ -76,7 +76,7 @@ const Title = styled.h2`
   font-size: 24px;
   line-height: 125%;
   letter-spacing: 0em;
-  color: var(--ds-primary);
+  color: var(--ds-neutral-12);
 `
 
 const PeriodSelect = styled.div`
@@ -87,7 +87,7 @@ const PeriodSelect = styled.div`
   }
 `
 
-const StyledCard = styled(Card)`
+const Body = styled(Card)`
   padding: 12px 12px 14px;
 `
 

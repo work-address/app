@@ -1,11 +1,12 @@
 import { ArrowDownIcon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
 
+import { Button } from '../button'
+import { Text } from '../text'
+
 import { normalizeDataKeyToReadableString } from './utils'
 
 import type { DataTableColumnConfigRecord, AnyRecord } from './types'
-
-import { Button, Text } from '@/shared'
 
 export type DesktopHeaderCellRenderProps<T extends AnyRecord> = {
   DefaultHeaderComponent: typeof DesktopHeaderCellComponent<T>

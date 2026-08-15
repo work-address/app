@@ -13,32 +13,25 @@ export const IconButton = ({
   ...props
 }: IconButtonProps) => {
   return (
-    <StyledRadixIconButton
-      $themeVariant={themeVariant}
+    <Root
+      data-theme-variant={themeVariant}
+      $variant={props.variant}
       type={type}
       {...props}
     />
   )
 }
 
-const StyledRadixIconButton = styled(RadixIconButton)<
-  {
-    $themeVariant?: IconButtonProps['themeVariant']
-  } & Omit<IconButtonProps, 'themeVariant'>
->`
+// Radix's IconButton doesn't reflect `variant` as a DOM attribute (only
+// `data-disabled`/`data-accent-color`/`data-radius`), so it can't be
+// selected in CSS and has to stay a prop interpolation.
+const Root = styled(RadixIconButton)<{ $variant?: IconButtonProps['variant'] }>`
   cursor: pointer;
 
-  ${(p) =>
-    p.$themeVariant === 'primary' &&
-    p.variant !== 'ghost' &&
-    `
-      background-color: var(--ds-accent-9);
-  `}
-
-  ${(p) =>
-    p.$themeVariant === 'primary' &&
-    p.variant === 'ghost' &&
-    `
-    color: var(--ds-accent-11);
-  `}
+  &[data-theme-variant='primary'] {
+    ${(p) =>
+      p.$variant === 'ghost'
+        ? `color: var(--ds-accent-11);`
+        : `background-color: var(--ds-accent-9);`}
+  }
 `

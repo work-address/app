@@ -8,8 +8,7 @@ import { TimeProjectsSelect } from './time-projects-select'
 import { TimeTwoSideInput } from './time-two-side-input'
 
 import { $timeFilters } from '@/entities/time'
-import { DashboardStyles as S } from '@/features/dashboard'
-import { Text } from '@/shared'
+import { ListPageLayout as S, Text } from '@/shared'
 
 export const TimeFilters = () => {
   const { t } = useTranslation()

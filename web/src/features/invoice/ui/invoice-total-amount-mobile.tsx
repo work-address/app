@@ -49,9 +49,7 @@ export const InvoiceTotalAmountMobile = () => {
                 {t(`invoice.fields.${field.id}`)}
               </Text>
               {field.hasDesc === true ? (
-                <StyledQuestionMarkCircledIcon
-                  aria-label={t(`invoice.fieldDesc.${field.id}`)}
-                />
+                <HintIcon aria-label={t(`invoice.fieldDesc.${field.id}`)} />
               ) : null}
             </Flex>
             {loading ? (
@@ -83,7 +81,7 @@ export const InvoiceTotalAmountMobile = () => {
   )
 }
 
-const StyledQuestionMarkCircledIcon = styled(QuestionMarkCircledIcon)`
+const HintIcon = styled(QuestionMarkCircledIcon)`
   height: 16px;
   width: 16px;
 `

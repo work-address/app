@@ -22,7 +22,7 @@ export const TextArea = ({ label, id, state, ...props }: TextAreaProps) => {
   return (
     <Grid
       columns={{ initial: '1' }}
-      gap={isUpMd ? '12px' : 'var(--space-2)'}
+      gap={isUpMd ? 'var(--space-3)' : 'var(--space-2)'}
       align={'center'}
     >
       <Text as={'label'} size={'2'} weight={'medium'} htmlFor={id}>

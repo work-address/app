@@ -57,9 +57,9 @@ export default function SignInPage() {
       <S.Logo src={isDesktop ? LogoLabel : Logo} alt={t('signIn.logoAlt')} />
       <S.SignInCard>
         {loading && (
-          <S.FlexOverlay align={'center'} justify={'center'}>
+          <S.Overlay align={'center'} justify={'center'}>
             <Spinner size={80} />
-          </S.FlexOverlay>
+          </S.Overlay>
         )}
         <S.Title>{t('signIn.title')}</S.Title>
         <S.Desc>
@@ -110,11 +110,11 @@ export default function SignInPage() {
         </S.FootLine>
         <CommitSha>Version: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}</CommitSha>
       </Footer>
-      <S.HiddenButtonRow>
+      <S.ButtonRow>
         <Button color="neutral" variant="soft" onClick={() => onSignIn('eth')}>
           {t('signIn.continue')}
         </Button>
-      </S.HiddenButtonRow>
+      </S.ButtonRow>
     </>
   )
 }
@@ -122,7 +122,7 @@ export default function SignInPage() {
 const Footer = styled.footer`
   text-align: center;
   font-size: 12px;
-  color: rgba(0, 7, 20, 0.52);
+  color: var(--c-rgba-0-7-20-0_52);
   letter-spacing: 0.55px;
   font-weight: 500;
   margin-left: -2px;
@@ -142,7 +142,7 @@ const CommitSha = styled.div`
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 11px;
   font-weight: 400;
-  color: rgba(0, 7, 20, 0.38);
+  color: var(--c-rgba-0-7-20-0_38);
   letter-spacing: 0.2px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {

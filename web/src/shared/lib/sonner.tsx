@@ -87,6 +87,10 @@ export const ToastStyle = createGlobalStyle`
                   0px 4px 16px -8px var(--overlays-black-alpha-2);
       */
 
+      /* sonner positions its close button via its own inline/global styles;
+         createGlobalStyle can't use the && specificity-doubling trick since
+         it isn't scoped to a single generated class, so !important is the
+         only way to override the library's own positioning here. */
       [data-close-button] {
         position: absolute;
         top: var(--space-4) !important;
@@ -122,7 +126,7 @@ export const ToastStyle = createGlobalStyle`
 
   .error-toast {
     ${baseToastStyle(
-      'rgba(255, 247, 247, 1)',
+      'var(--c-fff7f7)',
       'var(--error-alpha-6)',
       'var(--error-11)',
     )}
@@ -130,13 +134,17 @@ export const ToastStyle = createGlobalStyle`
 
   .warning-toast {
     ${baseToastStyle(
-      'rgba(255, 252, 242, 1)',
+      'var(--c-fffcf2)',
       'var(--warning-alpha-6)',
       'var(--warning-11)',
     )}
   }
 
   .info-toast {
-    ${baseToastStyle('var(--ds-accent-3)', 'var(--ds-accent-alpha-6)', '#000')}
+    ${baseToastStyle(
+      'var(--ds-accent-3)',
+      'var(--ds-accent-alpha-6)',
+      'var(--c-000000)',
+    )}
   }
 `

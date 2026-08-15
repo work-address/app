@@ -40,15 +40,15 @@ export default function BalancePage() {
         htmlAttributes={{ lang: i18n.language }}
         title={t('balance.documentTitle')}
       />
-      <CardWrapper shadow={false} as={isMobile ? 'div' : CardWrapper}>
+      <Root shadow={false} as={isMobile ? 'div' : Root}>
         <Flex direction={'column'} gap={'20px'}>
           <Flex align={'center'} gap={'2'}>
             {isMobile && (
-              <IconWrapper to={routes.dashboard.build()}>
+              <BackLink to={routes.dashboard.build()}>
                 <IconButton variant={'ghost'} radius={'full'} color={'gray'}>
                   <ArrowLeftIcon />
                 </IconButton>
-              </IconWrapper>
+              </BackLink>
             )}
             <Text size={isMobile ? '5' : '6'} weight={'medium'}>
               {t('balance.page.title')}
@@ -59,16 +59,16 @@ export default function BalancePage() {
           <BalanceTopUpEthCard />
           <BalanceTransactionsList />
         </Flex>
-      </CardWrapper>
+      </Root>
     </>
   )
 }
 
-const IconWrapper = styled(NavLink)`
+const BackLink = styled(NavLink)`
   padding-left: var(--space-2);
 `
 
-const CardWrapper = styled(Card)`
+const Root = styled(Card)`
   padding: 20px var(--space-3);
 
   ${(p) => p.theme.breakpoints.up('md')} {

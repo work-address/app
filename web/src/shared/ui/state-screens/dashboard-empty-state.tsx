@@ -1,8 +1,8 @@
 import styled from 'styled-components'
 
-import type React from 'react'
+import { Button, type ButtonProps } from '../button'
 
-import { Button, type ButtonProps } from '@/shared'
+import type React from 'react'
 
 type DashboardEmptyStateProps = {
   imageSrc: string
@@ -55,7 +55,7 @@ const Hero = styled.div`
   max-width: 800px;
   border-radius: 12px;
   overflow: hidden;
-  background: rgba(0, 0, 51, 0.02);
+  background: var(--c-rgba-0-0-51-0_02);
 `
 
 const HeroImg = styled.img`
@@ -79,7 +79,7 @@ const EmptyTitle = styled.h3`
   font-size: 16px;
   line-height: 150%;
   text-align: center;
-  color: #1c2024;
+  color: var(--ds-neutral-12);
 `
 
 const EmptyDesc = styled.p`
@@ -88,7 +88,7 @@ const EmptyDesc = styled.p`
   font-size: 14px;
   line-height: 143%;
   text-align: center;
-  color: #60646c;
+  color: var(--ds-neutral-11);
 `
 
 const EmptyAction = styled(Button)`

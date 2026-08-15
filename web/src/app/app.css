@@ -10,7 +10,7 @@
 
 body {
   font-family: "Inter", sans-serif;
-  background-color: var(--bg);
+  background-color: var(--ds-neutral-2);
 }
 
 ul,

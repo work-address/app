@@ -1,9 +1,9 @@
 import { Fragment } from 'react'
 import styled from 'styled-components'
 
-import type { SupportedWallet } from '../model'
+import * as S from './auth-styles'
 
-import { AuthStyles as S } from '@/features/auth'
+import type { SupportedWallet } from '../model'
 
 type Props = {
   wallets: SupportedWallet[]

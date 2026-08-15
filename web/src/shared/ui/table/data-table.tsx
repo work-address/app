@@ -19,6 +19,9 @@ import { MOCK_DATA_LENGTH } from './utils'
 
 import type { DataProps, DataTableConfig, AnyRecord } from './types'
 
+const DEFAULT_SKELETON_HEIGHT = '30px'
+const REACH_END_THRESHOLD_PX = 120
+
 export type DataTableProps<T extends AnyRecord> = {
   nowrap?: boolean
   height?: string
@@ -36,9 +39,6 @@ export type DataTableProps<T extends AnyRecord> = {
   onReachEnd?: () => void
   isLoadingMore?: boolean
 } & DataProps<T>
-
-const DEFAULT_SKELETON_HEIGHT = '30px'
-const REACH_END_THRESHOLD_PX = 120
 
 export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
   const {
@@ -142,10 +142,10 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
       $height={height}
       $minHeight={minHeight}
       $maxHeight={maxHeight}
-      $isFiltering={isFiltering}
+      data-filtering={isFiltering || undefined}
     >
       <TableScroll ref={scrollRef}>
-        <StyledTable $nowrap={nowrap}>
+        <Root data-nowrap={nowrap || undefined}>
           <THead>
             <tr>
               {config.map((configEntry, index) => {
@@ -162,7 +162,7 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                   <HeaderTd
                     key={key.toString()}
                     $width={configEntry.width}
-                    $sticky={configEntry.sticky}
+                    data-sticky={configEntry.sticky}
                   >
                     <Flex
                       gap={'3'}
@@ -206,7 +206,7 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                 return (
                   <Tr
                     key={rowId}
-                    $clickable={Boolean(onRowClick)}
+                    data-clickable={Boolean(onRowClick) || undefined}
                     onClick={
                       onRowClick ? () => onRowClick(row, 'Edit') : undefined
                     }
@@ -222,9 +222,9 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                       return (
                         <Td
                           key={`${key.toString()}-${rowId}`}
-                          $verticalAlign={verticalAlign}
+                          data-vertical-align={verticalAlign}
                           $width={columnConfig.width}
-                          $sticky={columnConfig.sticky}
+                          data-sticky={columnConfig.sticky}
                         >
                           <Flex
                             gap={'3'}
@@ -268,11 +268,11 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
             {!isDataExists &&
               loading &&
               mockedData.map((_, index) => (
-                <Tr key={`loading-${index}`} $clickable={false}>
+                <Tr key={`loading-${index}`}>
                   {config.map((columnConfig, index) => (
                     <Td
                       key={`loading-${index}`}
-                      $verticalAlign={verticalAlign}
+                      data-vertical-align={verticalAlign}
                       $width={columnConfig.width}
                     >
                       <Flex
@@ -296,7 +296,7 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                 </Tr>
               ))}
           </TBody>
-        </StyledTable>
+        </Root>
         {isLoadingMore && (
           <LoadingMoreRow>
             <Spinner />
@@ -329,7 +329,6 @@ const TableCard = styled(Card)<{
   $height: DataTableProps<never>['height']
   $minHeight: DataTableProps<never>['minHeight']
   $maxHeight: DataTableProps<never>['maxHeight']
-  $isFiltering?: boolean
 }>`
   padding: 0;
   position: relative;
@@ -343,7 +342,7 @@ const TableCard = styled(Card)<{
 
   &::before {
     content: '';
-    display: ${(p) => (p.$isFiltering ? 'block' : 'none')};
+    display: none;
     position: absolute;
     width: 120px;
     height: 4px;
@@ -359,6 +358,10 @@ const TableCard = styled(Card)<{
     offset-path: rect(0% 100% 100% 0% round var(--radius-4));
     animation: ${pulseAnimation} 2s ease-in-out infinite;
   }
+
+  &[data-filtering]::before {
+    display: block;
+  }
 `
 
 const TableScroll = styled.div`
@@ -367,32 +370,18 @@ const TableScroll = styled.div`
   min-height: 0;
 `
 
-const StyledTable = styled.table<{ $nowrap?: boolean }>`
+const Root = styled.table`
   table-layout: fixed;
   min-width: 100%;
   border-collapse: separate;
   border-spacing: 0;
 
-  ${(p) => p.$nowrap && `white-space: nowrap;`}
+  &[data-nowrap] {
+    white-space: nowrap;
+  }
 `
 
-type StickyPositionProp = 'left' | 'right'
-
-const getStickyProperties = (position?: StickyPositionProp, bg?: string) => {
-  if (!position) {
-    return ''
-  }
-
-  const positionStyle = `${position}: 0;`
-
-  return `
-    ${positionStyle}
-    position: sticky;
-    ${bg ? `background: ${bg};` : ''}
-  `
-}
-
-const HeaderTd = styled.td<{ $width?: number; $sticky?: StickyPositionProp }>`
+const HeaderTd = styled.td<{ $width?: number }>`
   background: var(--ds-neutral-2);
   padding: 12px var(--space-3);
   font-size: 14px;
@@ -404,7 +393,13 @@ const HeaderTd = styled.td<{ $width?: number; $sticky?: StickyPositionProp }>`
 
   ${(p) => p.$width && `width: ${p.$width}px; min-width: ${p.$width}px;`}
 
-  ${(p) => getStickyProperties(p.$sticky)}
+  &[data-sticky='left'] {
+    left: 0;
+  }
+
+  &[data-sticky='right'] {
+    right: 0;
+  }
 `
 
 const THead = styled.thead`
@@ -421,36 +416,54 @@ const THead = styled.thead`
 
 const TBody = styled.tbody``
 
-const Td = styled.td<{
-  $verticalAlign?: DataTableProps<never>['verticalAlign']
-  $width?: number
-  $sticky?: StickyPositionProp
-}>`
+const Td = styled.td<{ $width?: number }>`
   padding: var(--space-4) var(--space-3);
-
-  ${(p) => p.$verticalAlign && `vertical-align: ${p.$verticalAlign};`}
 
   ${(p) => p.$width && `width: ${p.$width}px; min-width: ${p.$width}px;`}
 
-  ${(p) => getStickyProperties(p.$sticky, 'var(--white)')}
+  &[data-vertical-align='top'] {
+    vertical-align: top;
+  }
+
+  &[data-vertical-align='middle'] {
+    vertical-align: middle;
+  }
+
+  &[data-vertical-align='bottom'] {
+    vertical-align: bottom;
+  }
+
+  &[data-vertical-align='baseline'] {
+    vertical-align: baseline;
+  }
+
+  &[data-sticky='left'] {
+    position: sticky;
+    left: 0;
+    background: var(--white);
+  }
+
+  &[data-sticky='right'] {
+    position: sticky;
+    right: 0;
+    background: var(--white);
+  }
 `
 
-const Tr = styled.tr<{ $clickable: boolean }>`
+const Tr = styled.tr`
   transition: 0.25s;
-
-  ${(p) => p.$clickable && 'cursor: pointer;'}
 
   &:not(:last-child) {
     border-bottom: 1px solid var(--ds-neutral-alpha-6);
   }
 
   &:hover ${Td} {
-    background-color: rgb(242, 242, 242);
+    background-color: var(--c-f2f2f2);
   }
-`
 
-const ReachEndSentinel = styled.div`
-  height: 1px;
+  &[data-clickable] {
+    cursor: pointer;
+  }
 `
 
 const LoadingMoreRow = styled.div`
@@ -458,6 +471,10 @@ const LoadingMoreRow = styled.div`
   justify-content: center;
   align-items: center;
   padding: var(--space-3);
+`
+
+const ReachEndSentinel = styled.div`
+  height: 1px;
 `
 
 export type { DataTableConfig } from './types'

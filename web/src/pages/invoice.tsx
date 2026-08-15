@@ -102,7 +102,7 @@ const InvoicePrintGlobalStyle = createGlobalStyle`
     #root {
       height: auto;
       overflow: visible;
-      background: #fff;
+      background: var(--white);
     }
   }
 `
@@ -122,7 +122,7 @@ const InvoicePageCard = styled(Card)`
     padding: 0;
     box-shadow: none;
     border-radius: 0;
-    background: #fff;
+    background: var(--white);
   }
 `
 

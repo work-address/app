@@ -1,8 +1,8 @@
+import { Text } from '../text'
+
 import { normalizeDataKeyToReadableString } from './utils'
 
 import type { AnyRecord, MobileDataTableColumnConfigRecord } from './types'
-
-import { Text } from '@/shared'
 
 export type MobileHeaderRenderProps<T extends AnyRecord> = Omit<
   MobileDataTableColumnConfigRecord<T>,

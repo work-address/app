@@ -22,28 +22,27 @@ export const Content = styled.div`
   }
 `
 
-export const Left = styled.section`
+export const Main = styled.section`
   min-width: 0;
   height: 100%;
   display: flex;
   flex-direction: column;
 
-  @media (max-width: 1024px) {
+  ${(p) => p.theme.breakpoints.down('lg')} {
     grid-column: 1 / -1;
     padding-right: 8px;
   }
 `
 
-export const Right = styled.section`
+export const Aside = styled.section`
   min-width: 0;
 
-  @media (max-width: 1024px) {
+  ${(p) => p.theme.breakpoints.down('lg')} {
     display: none;
   }
 `
 
 export const Section = styled.section`
-  /* margin-top: 48px; */
   margin-bottom: 48px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
@@ -56,10 +55,10 @@ export const SectionTitle = styled.h2`
   font-size: 24px;
   line-height: 125%;
   letter-spacing: 0;
-  color: #1c2024;
+  color: var(--ds-neutral-12);
   margin: 0;
 
-  @media (max-width: 768px) {
+  ${(p) => p.theme.breakpoints.down('md')} {
     font-size: 18px;
   }
 `
@@ -85,6 +84,6 @@ export const Field = styled.div<{ $basis?: number }>`
 export const Label = styled.div`
   font-size: 14px;
   line-height: 14px;
-  color: #1c2024;
+  color: var(--ds-neutral-12);
   font-weight: 500;
 `

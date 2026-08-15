@@ -8,8 +8,7 @@ import { TimeProjectsSelect } from './time-projects-select'
 import { TimeTwoSideInput } from './time-two-side-input'
 
 import { $timeFilters, applyTimeFilters } from '@/entities/time'
-import { DashboardStyles as S } from '@/features/dashboard'
-import { Button, Drawer, FilterIcon, Text } from '@/shared'
+import { Button, Drawer, FilterIcon, Text, ListPageLayout as S } from '@/shared'
 
 export type TimeMobileFiltersProps = {
   filtersOpen: boolean

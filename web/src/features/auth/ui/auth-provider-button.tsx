@@ -1,6 +1,6 @@
 import styled from 'styled-components'
 
-type SignButtonProps = {
+type Props = {
   iconUrl: string
   iconAlt: string
   children: string
@@ -12,7 +12,7 @@ export const AuthProviderButton = ({
   iconAlt,
   iconUrl,
   onClick,
-}: SignButtonProps) => {
+}: Props) => {
   return (
     <Button onClick={onClick} type={'button'}>
       <Icon src={iconUrl} alt={iconAlt} />
@@ -24,7 +24,7 @@ export const AuthProviderButton = ({
 export const Button = styled.button`
   width: 100%;
   border-radius: 8px;
-  background: #fff;
+  background: var(--white);
   display: flex;
   align-items: center;
   gap: 12px;
@@ -33,13 +33,13 @@ export const Button = styled.button`
   color: var(--ds-accent-11);
 
   &:hover {
-    background: rgba(0, 0, 51, 0.02);
+    background: var(--c-rgba-0-0-51-0_02);
   }
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     padding: 0 14px;
     height: 76px;
-    border: 1px solid rgba(0, 0, 51, 0.12);
+    border: 1px solid var(--c-rgba-0-0-51-0_12);
   }
 `
 
@@ -63,7 +63,7 @@ export const Text = styled.div`
   letter-spacing: -0.45px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
-    color: rgba(0, 7, 20, 0.82);
+    color: var(--c-rgba-0-7-20-0_82);
     letter-spacing: 0.54px;
   }
 `

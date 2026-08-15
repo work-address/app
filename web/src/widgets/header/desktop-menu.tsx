@@ -14,13 +14,11 @@ import {
   type MappingRoute,
 } from '@/routes'
 
-type DesktopMenuProps = {
+type Props = {
   mappedRoutes?: MappingRoute[]
 }
 
-export const DesktopMenu = ({
-  mappedRoutes = defaultMappedRoutes,
-}: DesktopMenuProps) => {
+export const DesktopMenu = ({ mappedRoutes = defaultMappedRoutes }: Props) => {
   const { pathname } = useLocation()
   const { t } = useTranslation()
   const { user, authenticated } = useUnit({
@@ -80,10 +78,10 @@ export const DesktopMenu = ({
                 <NavLink
                   key={key}
                   to={url}
-                  $active={
-                    schema === '/'
+                  data-active={
+                    (schema === '/'
                       ? schema === pathname
-                      : pathname.includes(url)
+                      : pathname.includes(url)) || undefined
                   }
                   target={target}
                   viewTransition

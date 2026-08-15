@@ -6,9 +6,9 @@ import { SignBg } from '@/shared/icons'
 export const AuthLayout = () => {
   return (
     <Root>
-      <StageContainer>
+      <Stage>
         <Outlet />
-      </StageContainer>
+      </Stage>
     </Root>
   )
 }
@@ -22,7 +22,7 @@ const Root = styled.main`
   justify-content: center;
 `
 
-const StageContainer = styled.div`
+const Stage = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;

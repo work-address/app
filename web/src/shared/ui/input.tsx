@@ -44,7 +44,7 @@ export const Input = forwardRef(
     const isDesktop = useBreakpoint('isDesktop')
 
     const usingGap = label
-      ? (gap ?? (isDesktop ? '24px' : 'var(--space-2)'))
+      ? (gap ?? (isDesktop ? 'var(--space-5)' : 'var(--space-2)'))
       : '0'
 
     const errorProps: InputProps | null =

@@ -5,7 +5,6 @@ import { createRoot } from 'react-dom/client'
 import { HelmetProvider } from 'react-helmet-async'
 import { Toaster } from 'sonner'
 import { ThemeProvider } from 'styled-components'
-import '@/shared/i18n/i18n'
 
 import { App } from './app/app'
 
@@ -17,6 +16,7 @@ import {
   BreakpointsWatcher,
   SonnerRadixTheme,
 } from '@/shared'
+import '@/shared/i18n'
 
 const ROOT_ELEMENT_ID = 'root'
 const REACT_STRICT_MODE = false

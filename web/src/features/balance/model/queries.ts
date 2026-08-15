@@ -2,7 +2,7 @@ import { createQuery } from '@farfetched/core'
 
 import type { Balance, Transaction } from './types'
 
-import { BASE_CURRENCY } from '@/shared/constants/currency'
+import { BASE_CURRENCY } from '@/shared'
 
 const MOCK_BALANCE: Balance = {
   amount: 1284.5,

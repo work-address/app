@@ -36,7 +36,7 @@ export const DashboardApplicationsUsageChart = ({
   const isScrollable = data.length > VISIBLE_PROJECTS_COUNT
 
   return (
-    <Scroll>
+    <Root>
       <ChartWrap
         style={
           isScrollable
@@ -102,11 +102,11 @@ export const DashboardApplicationsUsageChart = ({
           </BarChart>
         </ResponsiveContainer>
       </ChartWrap>
-    </Scroll>
+    </Root>
   )
 }
 
-const Scroll = styled.div`
+const Root = styled.div`
   overflow-x: auto;
 `
 

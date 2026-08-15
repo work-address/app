@@ -8,7 +8,7 @@ export const IconImg = styled.img`
   display: block;
 `
 
-export const NavLink = styled(Link)<{ $active?: boolean; $download?: boolean }>`
+export const NavLink = styled(Link)`
   display: flex;
   align-items: center;
   gap: 6px;
@@ -16,12 +16,14 @@ export const NavLink = styled(Link)<{ $active?: boolean; $download?: boolean }>`
   line-height: 20px;
   font-weight: 400;
   position: relative;
+  color: var(--ds-neutral-12);
+  opacity: 0.8;
 
   &:after {
     transition: 0.25s;
     content: '';
     display: block;
-    background: rgba(0, 0, 0, 0.12);
+    background: var(--c-rgba-0-0-0-0_12);
     height: 2px;
     width: 100%;
     position: absolute;
@@ -29,22 +31,20 @@ export const NavLink = styled(Link)<{ $active?: boolean; $download?: boolean }>`
     opacity: 0;
   }
 
-  color: ${(p) => {
-    if (p.$download) {
-      return 'var(--download, #003482)'
-    }
-    return 'var(--ds-primary)'
-  }};
+  &[data-download] {
+    color: var(--download);
+    opacity: 1;
+  }
 
-  ${(p) =>
-    p.$active &&
-    `&:after {
+  &[data-active] {
+    opacity: 1;
+
+    &:after {
       opacity: 1;
-    }`}
+    }
+  }
 
-  opacity: ${(p) => (p.$download ? 1 : p.$active ? 1 : 0.8)};
-
-  @media (max-width: 1024px) {
+  ${(p) => p.theme.breakpoints.down('lg')} {
     font-size: 14px;
   }
 
@@ -59,7 +59,7 @@ export const IconLink = styled(Link)`
   justify-content: center;
 
   &:hover {
-    background: rgba(28, 32, 36, 0.06);
+    background: var(--c-rgba-28-32-36-0_06);
   }
 `
 

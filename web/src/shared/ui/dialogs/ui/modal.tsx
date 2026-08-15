@@ -23,22 +23,22 @@ export const Modal = ({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       {trigger && <Dialog.Trigger>{trigger}</Dialog.Trigger>}
-      <SContent $width={width} $padding={padding}>
+      <Root $width={width} $padding={padding}>
         {(title || hasHeaderActions) && (
           <>
-            <SHeader>
-              {title && <STitle>{title}</STitle>}
+            <Header>
+              {title && <Title>{title}</Title>}
               {hasHeaderActions && (
-                <SHeaderActions>
+                <Actions>
                   {headerActions}
                   {showClose && (
-                    <SClose>
+                    <Close>
                       <Cross1Icon />
-                    </SClose>
+                    </Close>
                   )}
-                </SHeaderActions>
+                </Actions>
               )}
-            </SHeader>
+            </Header>
             {title && showTitleSeparator && <Separator size={'4'} mt={'4'} />}
           </>
         )}
@@ -51,33 +51,12 @@ export const Modal = ({
             </Flex>
           </footer>
         )}
-      </SContent>
+      </Root>
     </Dialog.Root>
   )
 }
 
-const SHeader = styled.div`
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  gap: var(--space-3);
-`
-
-const STitle = styled(Dialog.Title)`
-  font-size: var(--font-size-6);
-  font-weight: var(--font-weight-medium);
-  flex: 1;
-  min-width: 0;
-`
-
-const SHeaderActions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  flex-shrink: 0;
-`
-
-const SContent = styled(Dialog.Content)<{ $width?: string; $padding?: string }>`
+const Root = styled(Dialog.Content)<{ $width?: string; $padding?: string }>`
   padding: var(--space-5);
   ${(p) => p.$padding && `padding: ${p.$padding};`}
 
@@ -93,7 +72,28 @@ const SContent = styled(Dialog.Content)<{ $width?: string; $padding?: string }>`
     `}
 `
 
-const SClose = styled(Dialog.Close).attrs({ type: 'button' })`
+const Header = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+`
+
+const Title = styled(Dialog.Title)`
+  font-size: var(--font-size-6);
+  font-weight: var(--font-weight-medium);
+  flex: 1;
+  min-width: 0;
+`
+
+const Actions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
+`
+
+const Close = styled(Dialog.Close).attrs({ type: 'button' })`
   display: inline-flex;
   align-items: center;
   justify-content: center;

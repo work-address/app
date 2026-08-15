@@ -11,11 +11,17 @@ import { IconImg } from '../styled'
 import { $authenticated, $user } from '@/entities/profile'
 import { AUTH_REQUIRED_ROUTES, defaultMappedRoutes, routes } from '@/routes'
 
-type MobileMenuProps = {
+export const itemVariants = {
+  initial: { opacity: 0, y: -6 },
+  animate: { opacity: 1, y: 0, transition: { duration: 0.14 } },
+  exit: { opacity: 0, y: -6, transition: { duration: 0.1 } },
+}
+
+type Props = {
   setOpen: (value: boolean) => void
 }
 
-export const MobileMenu = ({ setOpen }: MobileMenuProps) => {
+export const MobileMenu = ({ setOpen }: Props) => {
   const { t } = useTranslation()
   const { pathname } = useLocation()
   const navigate = useNavigate()
@@ -84,7 +90,10 @@ export const MobileMenu = ({ setOpen }: MobileMenuProps) => {
               key={key}
               href={url}
               onClick={onClick}
-              $active={url === '/' ? pathname === url : pathname.includes(url)}
+              data-active={
+                (url === '/' ? pathname === url : pathname.includes(url)) ||
+                undefined
+              }
               variants={itemVariants}
               target={target}
             >
@@ -101,27 +110,24 @@ export const MobileMenu = ({ setOpen }: MobileMenuProps) => {
   )
 }
 
-export const itemVariants = {
-  initial: { opacity: 0, y: -6 },
-  animate: { opacity: 1, y: 0, transition: { duration: 0.14 } },
-  exit: { opacity: 0, y: -6, transition: { duration: 0.1 } },
-}
-
-const MobileMenuItem = styled(motion.a)<{ $active?: boolean }>`
+const MobileMenuItem = styled(motion.a)`
   padding: 10px 10px;
   border-radius: 10px;
-  color: var(--ds-primary);
+  color: var(--ds-neutral-12);
   text-decoration: none;
   font-size: 16px;
   line-height: 22px;
   display: flex;
   align-items: center;
   gap: 10px;
-  background: ${(p) =>
-    p.$active ? 'rgba(5, 86, 205, 0.0588)' : 'transparent'};
+  background: transparent;
+
+  &[data-active] {
+    background: var(--c-rgba-5-86-205-0_0588);
+  }
 
   &:hover {
-    background: rgba(28, 32, 36, 0.06);
+    background: var(--c-rgba-28-32-36-0_06);
   }
 
   img {

@@ -8,6 +8,7 @@ import styled from 'styled-components'
 import { IconImg, MobileMenuNav } from '../styled'
 
 import { DesktopMenu } from './desktop-menu'
+import { HeaderUserLink } from './header-user-link'
 import { MobileMenu, itemVariants } from './mobile-menu'
 
 import { $authenticated, $user, logout } from '@/entities/profile'
@@ -15,13 +16,23 @@ import { routes } from '@/routes'
 import {
   CrossIcon,
   ExitIcon,
-  formatWalletAddress,
   HamburgerMenuIcon,
   Logo,
-  PersonIcon,
   useBreakpoint,
   Button,
 } from '@/shared'
+
+const menuVariants = {
+  initial: { opacity: 1 },
+  animate: {
+    opacity: 1,
+    transition: { staggerChildren: 0.04, delayChildren: 0.04 },
+  },
+  exit: {
+    opacity: 1,
+    transition: { staggerChildren: 0.02, staggerDirection: -1 },
+  },
+}
 
 export const Header = () => {
   const { t } = useTranslation()
@@ -67,7 +78,7 @@ export const Header = () => {
   }, [mobileMenuOpen])
 
   return (
-    <HeaderRoot ref={rootRef}>
+    <Root ref={rootRef}>
       <HeaderInner>
         <LogoLink
           to={authenticated ? routes.dashboard.build() : routes.signIn.build()}
@@ -84,25 +95,7 @@ export const Header = () => {
         <Right>
           {authenticated ? (
             <>
-              <NavLink
-                to={routes.profile.build({
-                  walletAddress: user?.friendlyWalletAddress ?? '',
-                })}
-              >
-                <Button variant="ghost" color="neutral">
-                  <UserBox>
-                    <UserAvatar>
-                      <IconImg src={PersonIcon} alt={t('header.userAlt')} />
-                    </UserAvatar>
-                    <UserText>
-                      <UserName>{user?.name || user?.title || ''}</UserName>
-                      <UserSub>
-                        {formatWalletAddress(user?.friendlyWalletAddress || '')}
-                      </UserSub>
-                    </UserText>
-                  </UserBox>
-                </Button>
-              </NavLink>
+              <HeaderUserLink user={user} userAlt={t('header.userAlt')} />
               <ExitButton
                 aria-label={t('header.exit')}
                 onClick={() => logoutEvent()}
@@ -145,7 +138,7 @@ export const Header = () => {
       {!isDesktop && (
         <AnimatePresence>
           {mobileMenuOpen ? (
-            <MobileMenuStyled
+            <Panel
               id="mobile-menu"
               role="dialog"
               aria-label={t('header.mobileNavAria')}
@@ -158,33 +151,11 @@ export const Header = () => {
                 {authenticated ? (
                   <>
                     <MobileMenuTop>
-                      <NavLink
-                        to={routes.profile.build({
-                          walletAddress: user?.friendlyWalletAddress ?? '',
-                        })}
-                        style={{ width: '100%' }}
-                      >
-                        <Button variant="ghost" color="neutral" stretch>
-                          <UserBox>
-                            <UserAvatar>
-                              <IconImg
-                                src={PersonIcon}
-                                alt={t('header.userAlt')}
-                              />
-                            </UserAvatar>
-                            <UserText>
-                              <UserName>
-                                {user?.name || user?.title || ''}
-                              </UserName>
-                              <UserSub>
-                                {formatWalletAddress(
-                                  user?.friendlyWalletAddress || '',
-                                )}
-                              </UserSub>
-                            </UserText>
-                          </UserBox>
-                        </Button>
-                      </NavLink>
+                      <HeaderUserLink
+                        user={user}
+                        userAlt={t('header.userAlt')}
+                        stretch
+                      />
                     </MobileMenuTop>
                     <Divider />
                   </>
@@ -225,27 +196,15 @@ export const Header = () => {
                   )}
                 </MobileMenuNav>
               </MobileMenuInner>
-            </MobileMenuStyled>
+            </Panel>
           ) : null}
         </AnimatePresence>
       )}
-    </HeaderRoot>
+    </Root>
   )
 }
 
-const menuVariants = {
-  initial: { opacity: 1 },
-  animate: {
-    opacity: 1,
-    transition: { staggerChildren: 0.04, delayChildren: 0.04 },
-  },
-  exit: {
-    opacity: 1,
-    transition: { staggerChildren: 0.02, staggerDirection: -1 },
-  },
-}
-
-const HeaderRoot = styled.header`
+const Root = styled.header`
   width: 100%;
   background: var(--ds-secondary);
 `
@@ -271,7 +230,7 @@ const LogoImg = styled.img`
   display: block;
   object-fit: cover;
 
-  @media (max-width: 768px) {
+  ${(p) => p.theme.breakpoints.down('md')} {
     width: 48px;
     height: 48px;
   }
@@ -283,11 +242,11 @@ const Nav = styled.nav`
   justify-content: center;
   gap: 32px;
 
-  @media (max-width: 1024px) {
+  ${(p) => p.theme.breakpoints.down('lg')} {
     gap: 15px;
   }
 
-  @media (max-width: 770px) {
+  ${(p) => p.theme.breakpoints.down('md')} {
     display: none;
   }
 `
@@ -298,7 +257,7 @@ const Right = styled.div`
   justify-content: flex-end;
   gap: 44px;
 
-  @media (max-width: 770px) {
+  ${(p) => p.theme.breakpoints.down('md')} {
     display: none;
   }
 `
@@ -307,7 +266,7 @@ const MobileRight = styled.div`
   display: none;
   align-items: center;
 
-  @media (max-width: 770px) {
+  ${(p) => p.theme.breakpoints.down('md')} {
     display: flex;
   }
 `
@@ -317,16 +276,16 @@ const BurgerButton = styled.button`
   height: 45px;
   display: grid;
   place-items: center;
-  border: 1px solid rgba(0, 8, 48, 0.27);
+  border: 1px solid var(--c-rgba-0-8-48-0_27);
   border-radius: 6px;
   background: transparent;
   cursor: pointer;
 
   &:hover {
-    background: rgba(28, 32, 36, 0.06);
+    background: var(--c-rgba-28-32-36-0_06);
   }
 
-  @media (max-width: 768px) {
+  ${(p) => p.theme.breakpoints.down('md')} {
     width: 32px;
     height: 32px;
     border-radius: 4px;
@@ -338,24 +297,24 @@ const BurgerToggleImg = styled.img`
   height: 18px;
   display: block;
 
-  @media (max-width: 768px) {
+  ${(p) => p.theme.breakpoints.down('md')} {
     width: 16px;
     height: 16px;
   }
 `
 
-const MobileMenuStyled = styled(motion.div)`
+const Panel = styled(motion.div)`
   width: 100%;
   overflow: hidden;
 
-  @media (min-width: 771px) {
+  ${(p) => p.theme.breakpoints.up('md')} {
     display: none;
   }
 `
 
 const MobileMenuInner = styled.div`
   padding: 12px 16px 14px;
-  /* background: #fff; */
+  /* background: var(--white); */
 `
 
 const MobileMenuTop = styled.div`
@@ -367,14 +326,14 @@ const MobileMenuTop = styled.div`
 
 const Divider = styled.div`
   height: 1px;
-  background: rgba(0, 8, 48, 0.12);
+  background: var(--c-rgba-0-8-48-0_12);
   margin: 12px 0;
 `
 
 const MobileMenuButton = styled(motion.button)`
   padding: 10px 10px;
   border-radius: 10px;
-  color: var(--ds-primary);
+  color: var(--ds-neutral-12);
   font-size: 16px;
   line-height: 22px;
   display: flex;
@@ -386,51 +345,13 @@ const MobileMenuButton = styled(motion.button)`
   text-align: left;
 
   &:hover {
-    background: rgba(28, 32, 36, 0.06);
+    background: var(--c-rgba-28-32-36-0_06);
   }
 
   img {
     width: 18px;
     height: 18px;
   }
-`
-
-const UserBox = styled.div`
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  width: 100%;
-`
-
-const UserAvatar = styled.div`
-  width: 40px;
-  height: 40px;
-  border-radius: 6px;
-  background: var(--gray-100);
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-`
-
-const UserText = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 4px;
-  align-items: start;
-`
-
-const UserName = styled.span`
-  font-size: 14px;
-  line-height: 16px;
-  font-weight: 500;
-  color: var(--ds-primary);
-`
-
-const UserSub = styled.span`
-  font-size: 12px;
-  line-height: 14px;
-  font-weight: 400;
-  color: var(--muted);
 `
 
 const ExitButton = styled.button`
@@ -440,16 +361,16 @@ const ExitButton = styled.button`
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid rgba(0, 8, 48, 0.27);
+  border: 1px solid var(--c-rgba-0-8-48-0_27);
 
   &:hover {
-    background: rgba(28, 32, 36, 0.06);
+    background: var(--c-rgba-28-32-36-0_06);
   }
 `
 
 const Beta = styled.span`
-  color: #fff;
-  background: #253854;
+  color: var(--white);
+  background: var(--c-253854);
 
   position: absolute;
   right: 9px;

@@ -15,7 +15,6 @@ import { fetchTime, $timeLoading } from '@/entities/time'
 import {
   DashboardApplicationsUsage,
   DashboardProjectsSearchInput,
-  DashboardStyles as S,
 } from '@/features/dashboard'
 import { ProjectsCreateModal, ProjectsTable } from '@/features/projects'
 import { TimeTable } from '@/features/time'
@@ -25,6 +24,7 @@ import {
   Wrapper,
   useBreakpoint,
   DashboardEmptyState,
+  ListPageLayout as S,
 } from '@/shared'
 import { DashboardEmptyStateImage } from '@/shared'
 
@@ -69,7 +69,7 @@ export default function DashboardPage() {
       />
       <Wrapper>
         <S.Content>
-          <S.Left>
+          <S.Main>
             <Flex
               gap={'10px'}
               align={{ md: 'center' }}
@@ -99,11 +99,11 @@ export default function DashboardPage() {
                 <ProjectsTable />
               </S.TableArea>
             )}
-          </S.Left>
+          </S.Main>
           {showCharts && (
-            <S.Right>
+            <S.Aside>
               <DashboardApplicationsUsage />
-            </S.Right>
+            </S.Aside>
           )}
         </S.Content>
         <ProjectsCreateModal

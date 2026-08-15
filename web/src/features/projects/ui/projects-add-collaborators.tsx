@@ -19,7 +19,9 @@ import type { CollaboratorRole, ProjectFormValues } from '../model'
 
 import { Button, Input, Text, type InputProps } from '@/shared'
 
-type ProjectsAddCollaboratorsProps = {
+const ID_PREFIX = 'add-collaborators-'
+
+type Props = {
   control: Control<ProjectFormValues>
   register: UseFormRegister<ProjectFormValues>
   errors: FieldErrors<ProjectFormValues>
@@ -29,8 +31,6 @@ type ProjectsAddCollaboratorsProps = {
   inputProps?: InputProps
 }
 
-const ID_PREFIX = 'add-collaborators-'
-
 export const ProjectsAddCollaborators = ({
   control,
   register,
@@ -38,7 +38,7 @@ export const ProjectsAddCollaborators = ({
   disabled,
   readOnly,
   inputProps,
-}: ProjectsAddCollaboratorsProps) => {
+}: Props) => {
   const { t } = useTranslation()
   const fieldsDisabled = Boolean(disabled || readOnly)
 
@@ -104,7 +104,7 @@ export const ProjectsAddCollaborators = ({
         return (
           <Flex key={field.id} direction={'column'} gap={'1'}>
             <Flex gap={'4'} align={'end'}>
-              <AddCollaboratorsAddressField>
+              <AddressField>
                 <Input
                   label={t('project.createModal.collaborators.walletAddress')}
                   id={`${ID_PREFIX}address-${index}`}
@@ -118,8 +118,8 @@ export const ProjectsAddCollaborators = ({
                     validate: validateAddress,
                   })}
                 />
-              </AddCollaboratorsAddressField>
-              <AddCollaboratorsRoleField>
+              </AddressField>
+              <RoleField>
                 {readOnly ? (
                   <Input
                     label={t('project.createModal.collaborators.role')}
@@ -141,7 +141,7 @@ export const ProjectsAddCollaborators = ({
                     inputProps={inputProps}
                   />
                 )}
-              </AddCollaboratorsRoleField>
+              </RoleField>
               {!readOnly && (
                 <IconButton
                   style={{ cursor: 'pointer' }}
@@ -167,7 +167,7 @@ export const ProjectsAddCollaborators = ({
         )
       })}
       {!readOnly && (
-        <AddCollaboratorsAddMoreButton
+        <AddMoreButton
           variant="ghost"
           color="neutral"
           iconLeft={<PlusIcon />}
@@ -175,23 +175,23 @@ export const ProjectsAddCollaborators = ({
           onClick={() => append({ address: '', role: 'Viewer' })}
         >
           {t('project.createModal.collaborators.addMore')}
-        </AddCollaboratorsAddMoreButton>
+        </AddMoreButton>
       )}
     </Flex>
   )
 }
 
-const AddCollaboratorsAddressField = styled.div`
+const AddressField = styled.div`
   flex: 1;
   min-width: 0;
 `
 
-const AddCollaboratorsRoleField = styled.div`
+const RoleField = styled.div`
   width: 160px;
   flex-shrink: 0;
 `
 
-const AddCollaboratorsAddMoreButton = styled(Button)`
+const AddMoreButton = styled(Button)`
   margin-left: 12px;
   align-self: flex-start;
   color: var(--gray-11);

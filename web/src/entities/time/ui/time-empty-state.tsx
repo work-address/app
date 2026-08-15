@@ -1,13 +1,13 @@
 import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
 
-import { DashboardEmptyState } from './dashboard-empty-state'
+import { resetTimeFilters } from '../time.events'
+import { $hasActiveTimeFilters } from '../time.stores'
 
 import type { CSSProperties } from 'react'
 
-import { $hasActiveTimeFilters, resetTimeFilters } from '@/entities/time'
 import { routes } from '@/routes'
-import { TimeHelpImage } from '@/shared'
+import { DashboardEmptyState, TimeHelpImage } from '@/shared'
 
 type TimeEmptyStateProps = {
   style?: CSSProperties

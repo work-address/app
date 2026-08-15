@@ -9,6 +9,8 @@ import {
   $profile,
   $isAuthenticatedUserProfile,
   $profileLoading,
+  SOCIAL_LINKS,
+  type SocialLinkField,
 } from '../../model'
 
 import { ProfileViewInfoRow } from './profile-view-info-row'
@@ -37,6 +39,53 @@ type ProfileViewLinksProps = {
   onShareProfile?: () => void
 }
 
+const SOCIAL_LINK_VIEW_CONFIG: Record<
+  SocialLinkField,
+  {
+    icon: string
+    altKey: string
+    prefixKey: string
+    route: { build: (params: { userId: string }) => string }
+  }
+> = {
+  linkedIn: {
+    icon: LinkedinIcon,
+    altKey: 'profile.links.linkedin',
+    prefixKey: 'profile.view.social.linkedinPrefix',
+    route: routes.linkedin,
+  },
+  facebook: {
+    icon: FacebookIcon,
+    altKey: 'profile.links.facebook',
+    prefixKey: 'profile.view.social.facebookPrefix',
+    route: routes.facebook,
+  },
+  telegram: {
+    icon: TelegramIcon,
+    altKey: 'profile.links.telegram',
+    prefixKey: 'profile.view.social.telegramPrefix',
+    route: routes.telegram,
+  },
+  twitter: {
+    icon: TwitterIcon,
+    altKey: 'profile.links.twitter',
+    prefixKey: 'profile.view.social.twitterPrefix',
+    route: routes.twitter,
+  },
+  instagram: {
+    icon: InstagramIcon,
+    altKey: 'profile.links.instagram',
+    prefixKey: 'profile.view.social.instagramPrefix',
+    route: routes.instagram,
+  },
+  youtube: {
+    icon: YoutubeIcon,
+    altKey: 'profile.links.youtube',
+    prefixKey: 'profile.view.social.youtubePrefix',
+    route: routes.youtube,
+  },
+}
+
 export const ProfileViewLinks = ({
   gridArea,
   onWalletAddressCopy,
@@ -60,7 +109,7 @@ export const ProfileViewLinks = ({
   }
 
   return (
-    <StyledCard $gridArea={gridArea} shadow={false}>
+    <Root $gridArea={gridArea} shadow={false}>
       <Flex
         gap={{ initial: '4', md: '5' }}
         direction={'column'}
@@ -158,146 +207,41 @@ export const ProfileViewLinks = ({
             columns={{ initial: '1', md: '2' }}
             gap={{ initial: '3', md: '4' }}
           >
-            {user?.linkedIn && (
-              <ProfileViewInfoRow
-                icon={
-                  <img src={LinkedinIcon} alt={t('profile.links.linkedin')} />
-                }
-                text={
-                  <NavLink
-                    to={routes.linkedin.build({
-                      userId: user.linkedIn,
-                    })}
-                    target="_blank"
-                  >
-                    <Flex gap={infoRowGap}>
-                      <Text color={'gray'}>
-                        {t('profile.view.social.linkedinPrefix')}
-                      </Text>
-                      <Text weight={'medium'}>{user.linkedIn}</Text>
-                    </Flex>
-                  </NavLink>
-                }
-              />
-            )}
-            {user?.facebook && (
-              <ProfileViewInfoRow
-                icon={
-                  <img src={FacebookIcon} alt={t('profile.links.facebook')} />
-                }
-                text={
-                  <NavLink
-                    to={routes.facebook.build({
-                      userId: user.facebook,
-                    })}
-                    target="_blank"
-                  >
-                    <Flex gap={infoRowGap}>
-                      <Text color={'gray'}>
-                        {t('profile.view.social.facebookPrefix')}
-                      </Text>
-                      <Text weight={'medium'}>{user.facebook}</Text>
-                    </Flex>
-                  </NavLink>
-                }
-              />
-            )}
-            {user?.telegram && (
-              <ProfileViewInfoRow
-                icon={
-                  <img src={TelegramIcon} alt={t('profile.links.telegram')} />
-                }
-                text={
-                  <NavLink
-                    to={routes.telegram.build({
-                      userId: user.telegram,
-                    })}
-                    target="_blank"
-                  >
-                    <Flex gap={infoRowGap}>
-                      <Text color={'gray'}>
-                        {t('profile.view.social.telegramPrefix')}
-                      </Text>
-                      <Text weight={'medium'}>{user.telegram}</Text>
-                    </Flex>
-                  </NavLink>
-                }
-              />
-            )}
-            {user?.twitter && (
-              <ProfileViewInfoRow
-                icon={
-                  <img src={TwitterIcon} alt={t('profile.links.twitter')} />
-                }
-                text={
-                  <NavLink
-                    to={routes.twitter.build({
-                      userId: user.twitter,
-                    })}
-                    target="_blank"
-                  >
-                    <Flex gap={infoRowGap}>
-                      <Text color={'gray'}>
-                        {t('profile.view.social.twitterPrefix')}
-                      </Text>
-                      <Text weight={'medium'}>{user.twitter}</Text>
-                    </Flex>
-                  </NavLink>
-                }
-              />
-            )}
-            {user?.instagram && (
-              <ProfileViewInfoRow
-                icon={
-                  <img src={InstagramIcon} alt={t('profile.links.instagram')} />
-                }
-                text={
-                  <NavLink
-                    to={routes.instagram.build({
-                      userId: user.instagram,
-                    })}
-                    target="_blank"
-                  >
-                    <Flex gap={infoRowGap}>
-                      <Text color={'gray'}>
-                        {t('profile.view.social.instagramPrefix')}
-                      </Text>
-                      <Text weight={'medium'}>{user.instagram}</Text>
-                    </Flex>
-                  </NavLink>
-                }
-              />
-            )}
-            {user?.youtube && (
-              <ProfileViewInfoRow
-                icon={
-                  <img src={YoutubeIcon} alt={t('profile.links.youtube')} />
-                }
-                text={
-                  <NavLink
-                    to={routes.youtube.build({
-                      userId: user.youtube,
-                    })}
-                    target="_blank"
-                  >
-                    <Flex gap={infoRowGap}>
-                      <Text color={'gray'}>
-                        {t('profile.view.social.youtubePrefix')}
-                      </Text>
-                      <Text weight={'medium'}>{user.youtube}</Text>
-                    </Flex>
-                  </NavLink>
-                }
-              />
-            )}
+            {SOCIAL_LINKS.map(({ name }) => {
+              const value = user?.[name]
+
+              if (!value) {
+                return null
+              }
+
+              const config = SOCIAL_LINK_VIEW_CONFIG[name]
+
+              return (
+                <ProfileViewInfoRow
+                  key={name}
+                  icon={<img src={config.icon} alt={t(config.altKey)} />}
+                  text={
+                    <NavLink
+                      to={config.route.build({ userId: value })}
+                      target="_blank"
+                    >
+                      <Flex gap={infoRowGap}>
+                        <Text color={'gray'}>{t(config.prefixKey)}</Text>
+                        <Text weight={'medium'}>{value}</Text>
+                      </Flex>
+                    </NavLink>
+                  }
+                />
+              )
+            })}
           </Grid>
         </Flex>
       </Flex>
-    </StyledCard>
+    </Root>
   )
 }
 
-const StyledCard = styled(ProfileViewCard)`
+const Root = styled(ProfileViewCard)`
   box-shadow: var(--shadow-4);
 
   ${(p) => p.theme.breakpoints.up('md')} {

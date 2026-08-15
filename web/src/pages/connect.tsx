@@ -132,9 +132,9 @@ export default function ConnectPage() {
       <S.Logo src={isDesktop ? LogoLabel : Logo} alt={t('signIn.logoAlt')} />
       <S.SignInCard>
         {showLoading && (
-          <S.FlexOverlay align="center" justify="center">
+          <S.Overlay align="center" justify="center">
             <Spinner size={80} />
-          </S.FlexOverlay>
+          </S.Overlay>
         )}
         <S.Title>{t('connect.heading')}</S.Title>
         {nonce ? (
@@ -182,11 +182,11 @@ export default function ConnectPage() {
           </S.Desc>
         )}
       </S.SignInCard>
-      <S.HiddenButtonRow>
+      <S.ButtonRow>
         <Button color="neutral" variant="soft" onClick={() => onSignIn('eth')}>
           {t('signIn.continue')}
         </Button>
-      </S.HiddenButtonRow>
+      </S.ButtonRow>
       <StatusNote>
         {t('connect.status.loginState')}: {getLoginStateLabel(phase, nonce)}
         <br />
@@ -259,7 +259,7 @@ const StatusNote = styled.p`
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: 11px;
   font-weight: 400;
-  color: rgba(0, 7, 20, 0.52);
+  color: var(--c-rgba-0-7-20-0_52);
   letter-spacing: 0.2px;
   line-height: 1.5;
   text-align: center;

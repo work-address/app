@@ -72,7 +72,7 @@ export const Drawer = ({
 const DrawerOverlay = styled(Vaul.Drawer.Overlay)`
   position: fixed;
   inset: 0;
-  background: rgba(0, 0, 0, 0.5);
+  background: var(--c-rgba-0-0-0-0_5);
 `
 
 const DrawerContent = styled(Vaul.Drawer.Content)<{ $maxHeight?: string }>`

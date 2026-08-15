@@ -179,9 +179,9 @@ export const DatePickerInput = ({
               return (
                 <DayCell
                   key={day.toISOString()}
-                  $selected={isSelected}
-                  $otherMonth={!isCurrentMonth}
-                  $today={isTodayDate && !isSelected}
+                  data-selected={isSelected || undefined}
+                  data-other-month={!isCurrentMonth || undefined}
+                  data-today={(isTodayDate && !isSelected) || undefined}
                   onClick={() => setPendingDate(day)}
                 >
                   <Text size="2" weight={isSelected ? 'bold' : 'regular'}>
@@ -254,11 +254,7 @@ const WeekDay = styled.div`
   height: 36px;
 `
 
-const DayCell = styled.div<{
-  $selected?: boolean
-  $otherMonth?: boolean
-  $today?: boolean
-}>`
+const DayCell = styled.div`
   display: flex;
   align-items: center;
   justify-content: center;
@@ -266,20 +262,29 @@ const DayCell = styled.div<{
   border-radius: 50%;
   cursor: pointer;
   transition: background 0.15s;
-  opacity: ${({ $otherMonth }) => ($otherMonth ? 0.3 : 1)};
-
-  background: ${({ $selected }) =>
-    $selected ? 'var(--ds-accent-11)' : 'transparent'};
-
-  color: ${({ $selected }) =>
-    $selected ? 'var(--white)' : 'var(--ds-neutral-12)'};
-
-  outline: ${({ $today }) =>
-    $today ? '1.5px solid var(--ds-accent-11)' : 'none'};
+  background: transparent;
+  color: var(--ds-neutral-12);
+  outline: none;
 
   &:hover {
-    background: ${({ $selected }) =>
-      $selected ? 'var(--ds-accent-11)' : 'var(--ds-neutral-alpha-3)'};
+    background: var(--ds-neutral-alpha-3);
+  }
+
+  &[data-other-month] {
+    opacity: 0.3;
+  }
+
+  &[data-today] {
+    outline: 1.5px solid var(--ds-accent-11);
+  }
+
+  &[data-selected] {
+    background: var(--ds-accent-11);
+    color: var(--white);
+
+    &:hover {
+      background: var(--ds-accent-11);
+    }
   }
 `
 

@@ -4,7 +4,7 @@ import { useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
 
 export const TabsRoot = ({ children, ...props }: RadixTabs.TabsProps) => {
-  return <StyledTabsRoot {...props}>{children}</StyledTabsRoot>
+  return <Root {...props}>{children}</Root>
 }
 
 export const TabsList = ({ children, ...props }: RadixTabs.TabsListProps) => {
@@ -57,7 +57,7 @@ export const TabsList = ({ children, ...props }: RadixTabs.TabsListProps) => {
   }, [])
 
   return (
-    <StyledTabsList ref={listRef} {...props}>
+    <List ref={listRef} {...props}>
       {children}
       {indicator.visible ? (
         <ActiveTabIndicator
@@ -66,7 +66,7 @@ export const TabsList = ({ children, ...props }: RadixTabs.TabsListProps) => {
           transition={{ type: 'spring', stiffness: 380, damping: 34 }}
         />
       ) : null}
-    </StyledTabsList>
+    </List>
   )
 }
 
@@ -76,20 +76,20 @@ export const TabsTrigger = ({
   ...props
 }: RadixTabs.TabsTriggerProps) => {
   return (
-    <StyledTabsTrigger value={value} {...props}>
+    <Trigger value={value} {...props}>
       {children}
-    </StyledTabsTrigger>
+    </Trigger>
   )
 }
 
-const StyledTabsRoot = styled(RadixTabs.Root)``
+const Root = styled(RadixTabs.Root)``
 
-const StyledTabsList = styled(RadixTabs.List)`
+const List = styled(RadixTabs.List)`
   display: flex;
   position: relative;
 `
 
-const StyledTabsTrigger = styled(RadixTabs.TabsTrigger)`
+const Trigger = styled(RadixTabs.TabsTrigger)`
   font-weight: 400;
   color: var(--gray-10);
   position: relative;

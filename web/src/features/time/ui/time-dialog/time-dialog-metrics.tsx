@@ -7,22 +7,6 @@ import type { Time } from '@/entities/time'
 
 import { formatDurationFromMinutes, Text } from '@/shared'
 
-type MetricProps = {
-  label: string
-  children: ReactNode
-}
-
-const Metric = ({ label, children }: MetricProps) => (
-  <MetricItem>
-    <Text color="gray" size="2">
-      {label}
-    </Text>
-    <Text size="2" weight="medium">
-      {children}
-    </Text>
-  </MetricItem>
-)
-
 type TimeDialogMetricsProps = {
   row: Time
 }
@@ -54,6 +38,22 @@ export const TimeDialogMetrics = ({ row }: TimeDialogMetricsProps) => {
     </Root>
   )
 }
+
+type MetricProps = {
+  label: string
+  children: ReactNode
+}
+
+const Metric = ({ label, children }: MetricProps) => (
+  <MetricItem>
+    <Text color="gray" size="2">
+      {label}
+    </Text>
+    <Text size="2" weight="medium">
+      {children}
+    </Text>
+  </MetricItem>
+)
 
 const Root = styled.div`
   display: flex;

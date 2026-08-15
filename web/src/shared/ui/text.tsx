@@ -3,21 +3,21 @@ import styled from 'styled-components'
 
 import type { TextProps as RadixTextProps } from '@radix-ui/themes'
 
+export type TextThemeVariant = 'primary' | 'secondary'
+
 type TextProps = {
-  $themeVariant?: 'primary' | 'secondary'
+  $themeVariant?: TextThemeVariant
   $letterSpacing?: string
 } & RadixTextProps
 
-export const Text = ({ ...props }: TextProps) => {
-  return <StyledRadixText {...props} />
+export const Text = ({ $themeVariant, ...props }: TextProps) => {
+  return <Root data-theme-variant={$themeVariant} {...props} />
 }
 
-const StyledRadixText = styled(RadixText)<TextProps>`
-  ${(p) =>
-    p.$themeVariant === 'primary' &&
-    `
-      color: var(--ds-accent-11);
-    `}
+const Root = styled(RadixText)<Pick<TextProps, '$letterSpacing'>>`
+  &[data-theme-variant='primary'] {
+    color: var(--ds-accent-11);
+  }
 
   ${(p) =>
     p.$letterSpacing &&

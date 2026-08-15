@@ -104,7 +104,7 @@ export const MobileDataTable = <T extends AnyRecord>(
   }
 
   return (
-    <CardWrapper shadow={false}>
+    <Root shadow={false}>
       {isDataExists &&
         data.map((row) => {
           const rowId = getRowId(row)
@@ -113,14 +113,14 @@ export const MobileDataTable = <T extends AnyRecord>(
             <CardContent key={rowId}>
               <Flex gap={'3'}>
                 {allowSelection && (
-                  <CheckboxWrapper>
+                  <Selection>
                     <Checkbox
                       checked={selectedIds?.[rowId] ?? false}
                       onCheckedChange={() =>
                         handleSelectedChange(rowId.toString())
                       }
                     />
-                  </CheckboxWrapper>
+                  </Selection>
                 )}
                 <Header
                   onClick={() =>
@@ -172,7 +172,7 @@ export const MobileDataTable = <T extends AnyRecord>(
                     style={{ overflow: 'hidden' }}
                   >
                     <Separator size={'4'} />
-                    <FlexFields direction={'column'} gap={'3'}>
+                    <Fields direction={'column'} gap={'3'}>
                       {configWithoutHeader.map((configItem) => (
                         <div
                           key={`${getRowId(row)}-${'dataKey' in configItem ? String(configItem.dataKey) : configItem.customKey}`}
@@ -195,11 +195,11 @@ export const MobileDataTable = <T extends AnyRecord>(
                           />
                         </div>
                       ))}
-                    </FlexFields>
+                    </Fields>
                     {AddonBottomComponent && (
-                      <AddonWrapper>
+                      <Addon>
                         <AddonBottomComponent data={row} />
-                      </AddonWrapper>
+                      </Addon>
                     )}
                   </motion.div>
                 )}
@@ -211,15 +211,11 @@ export const MobileDataTable = <T extends AnyRecord>(
         loading &&
         mockedData.map((_, index) => (
           <CardContent key={index}>
-            <Flex
-              gap={'3'}
-              align="center"
-              style={{ height: 40, padding: '8px 0' }}
-            >
+            <SkeletonRow gap={'3'} align="center">
               {allowSelection && (
-                <CheckboxWrapper>
+                <Selection>
                   <Skeleton width="18px" height="18px" />
-                </CheckboxWrapper>
+                </Selection>
               )}
               <Header>
                 <Flex justify={'between'} align={'center'}>
@@ -237,16 +233,18 @@ export const MobileDataTable = <T extends AnyRecord>(
                   </Flex>
                 </Flex>
               </Header>
-            </Flex>
+            </SkeletonRow>
           </CardContent>
         ))}
-    </CardWrapper>
+    </Root>
   )
 }
 
+// A targetable, undecorated reference for the `${CardContent}:not(:last-child)`
+// selector on `Root` below — it renders no styles of its own.
 const CardContent = styled.div``
 
-const CardWrapper = styled(Card)`
+const Root = styled(Card)`
   padding: 8px 12px;
 
   ${CardContent}:not(:last-child) {
@@ -260,16 +258,21 @@ const Header = styled.div`
   width: 100%;
 `
 
-const FlexFields = styled(Flex)`
+const Fields = styled(Flex)`
   padding: 16px 16px 16px 28px;
 `
 
-const AddonWrapper = styled.div`
+const Addon = styled.div`
   margin-bottom: var(--space-4);
 `
 
-const CheckboxWrapper = styled.div`
+const Selection = styled.div`
   margin-top: var(--space-3);
+`
+
+const SkeletonRow = styled(Flex)`
+  height: 40px;
+  padding: 8px 0;
 `
 
 export {

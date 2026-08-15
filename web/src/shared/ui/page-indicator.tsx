@@ -2,6 +2,8 @@ import { useEffect, useState } from 'react'
 import { useLocation, useViewTransitionState } from 'react-router-dom'
 import styled, { keyframes } from 'styled-components'
 
+export type PageIndicatorState = 'idle' | 'running' | 'finished'
+
 type PageIndicatorProps = {
   className?: string
 }
@@ -28,13 +30,19 @@ export const PageIndicator = ({ className }: PageIndicatorProps) => {
     }
   }, [transition])
 
+  const showAnimation = transition || animationStarted
+  const animationFinished = !transition && animationStarted
+
+  const state: PageIndicatorState = animationFinished
+    ? 'finished'
+    : showAnimation
+      ? 'running'
+      : 'idle'
+
   return (
-    <PageIndicatorContainer className={className}>
-      <StyledPageIndicator
-        $showAnimation={transition || animationStarted}
-        $animationFinished={!transition && animationStarted}
-      />
-    </PageIndicatorContainer>
+    <Root className={className}>
+      <Bar data-state={state} />
+    </Root>
   )
 }
 
@@ -68,7 +76,7 @@ const finishAnimation = keyframes`
   }
 `
 
-const PageIndicatorContainer = styled.div`
+const Root = styled.div`
   position: sticky;
   top: 0;
   left: 0;
@@ -80,10 +88,7 @@ const PageIndicatorContainer = styled.div`
   }
 `
 
-const StyledPageIndicator = styled.div<{
-  $showAnimation: boolean
-  $animationFinished: boolean
-}>`
+const Bar = styled.div`
   position: absolute;
   transform: translateX(-100%);
   top: 0;
@@ -101,20 +106,15 @@ const StyledPageIndicator = styled.div<{
   animation-iteration-count: 0;
   animation-timing-function: ease-out;
 
-  animation-name: ${(p) =>
-    p.$animationFinished ? finishAnimation : pageIndicatorAnimation};
+  &[data-state='running'] {
+    animation-name: ${pageIndicatorAnimation};
+    animation-duration: 10s;
+    animation-iteration-count: 1;
+  }
 
-  ${(p) =>
-    p.$showAnimation &&
-    `
-      animation-duration: 10s;
-      animation-iteration-count: 1;
-    `}
-
-  ${(p) =>
-    p.$animationFinished &&
-    `
-      animation-duration: 1s;
-      animation-iteration-count: 1;
-    `}
+  &[data-state='finished'] {
+    animation-name: ${finishAnimation};
+    animation-duration: 1s;
+    animation-iteration-count: 1;
+  }
 `

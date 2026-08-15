@@ -46,7 +46,7 @@ import {
   tonAuthSuccess,
 } from './ton.model'
 
-import type { SolanaNonceParams } from '@/entities/profile/types'
+import type { SolanaNonceParams } from './types'
 
 import { showToast } from '@/shared'
 
@@ -325,7 +325,8 @@ sample({
 // eslint-disable-next-line
 ;(window as any)['logout'] = logout
 
-export { type LoginMode } from './types'
+export { type LoginMode, type SolanaWalletState } from './types'
+export { SolanaWalletGate } from './solana.model'
 
 export { initAuth, login, logout } from './profile.events'
 export {

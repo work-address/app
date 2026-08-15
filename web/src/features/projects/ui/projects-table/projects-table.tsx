@@ -8,15 +8,17 @@ import styled from 'styled-components'
 
 import { ProjectsCreateModal } from '../projects-create-modal'
 import { ProjectsDialog } from '../projects-dialog/projects-dialog'
-import { ProjectsMobileAddonBottom } from '../projects-mobile/projects-mobile-addon-bottom'
-import { ProjectsMobileBody } from '../projects-mobile/projects-mobile-body'
-import { ProjectsMobileHeader } from '../projects-mobile/projects-mobile-header'
+import {
+  ProjectsMobileAddonBottom,
+  ProjectsMobileBody,
+  ProjectsMobileHeader,
+} from '../projects-mobile'
 
-import { ProjectsDesktopCell } from './projects-table-cell'
 import {
   ProjectsTableContext,
   type ProjectsTableContextValues,
 } from './projects-table-context'
+import { ProjectsDesktopCell } from './projects-table-desktop-cell'
 
 import {
   $filteredProjects,
@@ -28,7 +30,6 @@ import {
   type ProjectWithStats,
   deleteProjectMutation,
 } from '@/entities/projects'
-import { DashboardProjectsNotFound } from '@/features/dashboard'
 import {
   type MobileDataTableConfig,
   type DataTableConfig,
@@ -47,7 +48,10 @@ import {
   useConfirm,
   useDateFormatter,
   showToast,
+  ProjectsEmptyState,
 } from '@/shared'
+
+const rowIdGetter = (row: ProjectWithStats) => row.id ?? ''
 
 export const ProjectsTable = () => {
   const isMobile = useBreakpoint('isMobile')
@@ -291,7 +295,7 @@ export const ProjectsTable = () => {
           )}
         </Flex>
       </Flex>
-      <ProjectsTableWrapper>
+      <Root>
         <AnimatePresence mode={'wait'}>
           <motion.div
             key={filter.projectState}
@@ -302,7 +306,7 @@ export const ProjectsTable = () => {
             transition={{ duration: 0.2 }}
           >
             {projects.length === 0 && !isProjectsLoading ? (
-              <DashboardProjectsNotFound
+              <ProjectsEmptyState
                 onCreateClick={() => setIsCreateDialogOpen(true)}
               />
             ) : (
@@ -344,7 +348,7 @@ export const ProjectsTable = () => {
             )}
           </motion.div>
         </AnimatePresence>
-      </ProjectsTableWrapper>
+      </Root>
       <ProjectsDialog
         open={isProjectDialogOpen}
         setOpen={setIsProjectDialogOpen}
@@ -359,9 +363,7 @@ export const ProjectsTable = () => {
   )
 }
 
-const rowIdGetter = (row: ProjectWithStats) => row.id ?? ''
-
-const ProjectsTableWrapper = styled.div`
+const Root = styled.div`
   height: 100%;
 
   ${(p) => p.theme.breakpoints.up('md')} {

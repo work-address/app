@@ -34,7 +34,7 @@ export const ProfileView = () => {
   }
 
   return (
-    <Wrapper>
+    <Root>
       <Grid
         areas={{
           initial: `
@@ -75,10 +75,10 @@ export const ProfileView = () => {
         />
         <ProfileViewDescriptionAndSkills gridArea={'description'} />
       </Grid>
-    </Wrapper>
+    </Root>
   )
 }
 
-const Wrapper = styled.div`
+const Root = styled.div`
   padding: 24px;
 `

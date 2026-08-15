@@ -1,6 +1,6 @@
 import { Helmet, type HelmetProps } from 'react-helmet-async'
 
-import { formatPageTitle } from '@/shared/lib/app-document-title'
+import { formatPageTitle } from '../lib/app-document-title'
 
 type PageHelmetProps = Omit<
   HelmetProps,

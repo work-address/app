@@ -106,7 +106,7 @@ export const Select = ({
               onClick={() => toggle(o.value)}
             >
               {isDesktop && multi && <Checkbox checked={checked} />}
-              <Text size={'3'} style={{ color: '#000' }}>
+              <Text size={'3'} style={{ color: 'var(--c-000000)' }}>
                 {o.label}
               </Text>
               {isMobile && multi && checked && <CheckIcon aria-hidden="true" />}
@@ -192,7 +192,7 @@ const MenuTitle = styled.div`
   padding: var(--space-2) var(--space-3);
   font-size: 12px;
   letter-spacing: 0.06em;
-  color: rgba(0, 5, 29, 0.55);
+  color: var(--c-rgba-0-5-29-0_55);
 `
 
 const MenuList = styled.div<{ $maxHeight?: string | number }>`
@@ -221,7 +221,7 @@ const MenuItem = styled.button`
   padding: 12px;
 
   &:hover {
-    background: rgba(0, 0, 51, 0.04);
+    background: var(--c-rgba-0-0-51-0_04);
   }
 
   ${(p) => p.theme.breakpoints.up('md')} {
@@ -233,7 +233,13 @@ const MenuItem = styled.button`
 
 const InputWrapper = styled.span`
   width: 100%;
-  cursor: pointer !important;
+
+  /* The wrapped input has pointer-events disabled, so hover falls through
+     to this element; && doubles our class so the pointer cursor wins over
+     the Radix text field's own default cursor instead of reaching for !important. */
+  && {
+    cursor: pointer;
+  }
 
   & .rt-TextFieldInput {
     pointer-events: none;

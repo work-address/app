@@ -22,7 +22,7 @@ export const Confirm = () => {
           onOpenChange={(v) => !v && cancelledEvent(entry.id)}
           i18nIsDynamicList
         >
-          <SContent>
+          <Content>
             <Flex direction="column" gap={{ initial: '1', sm: '2' }}>
               <Dialog.Title style={{ marginBottom: 0 }}>
                 <Text
@@ -63,14 +63,14 @@ export const Confirm = () => {
                 </Button>
               </Flex>
             </Flex>
-          </SContent>
+          </Content>
         </Dialog.Root>
       ))}
     </>
   )
 }
 
-const SContent = styled(Dialog.Content)`
+const Content = styled(Dialog.Content)`
   position: fixed;
   top: 50%;
   left: 50%;

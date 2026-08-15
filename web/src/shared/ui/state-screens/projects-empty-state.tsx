@@ -2,15 +2,16 @@ import { PlusIcon } from '@radix-ui/react-icons'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { Button, FeaturedIcon } from '@/shared'
+import { FeaturedIcon } from '../../icons'
+import { Button } from '../button'
 
-type DashboardProjectsNotFoundProps = {
+type ProjectsEmptyStateProps = {
   onCreateClick: () => void
 }
 
-export const DashboardProjectsNotFound = ({
+export const ProjectsEmptyState = ({
   onCreateClick,
-}: DashboardProjectsNotFoundProps) => {
+}: ProjectsEmptyStateProps) => {
   const { t } = useTranslation()
 
   return (
@@ -57,7 +58,7 @@ const Title = styled.div`
   font-weight: 500;
   font-size: 16px;
   line-height: 150%;
-  color: #1c2024;
+  color: var(--ds-neutral-12);
   margin-bottom: 6px;
 `
 
@@ -65,6 +66,6 @@ const Desc = styled.div`
   max-width: 352px;
   font-size: 14px;
   line-height: 143%;
-  color: #60646c;
+  color: var(--ds-neutral-11);
   margin-bottom: 24px;
 `

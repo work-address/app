@@ -15,15 +15,25 @@ export const Card = ({
   rounded = true,
   ...props
 }: CardProps) => {
-  return <Layer $shadow={shadow} $rounded={rounded} {...props} />
+  return (
+    <Root
+      data-rounded={rounded || undefined}
+      data-shadow={shadow || undefined}
+      {...props}
+    />
+  )
 }
 
-const Layer = styled.section<{ $rounded: boolean; $shadow: boolean }>`
+const Root = styled.section`
   /* border: 1px solid var(--ds-neutral-alpha-6); */
   background-color: var(--white);
   padding: var(--spacing-5);
 
-  ${(p) => p.$rounded && `border-radius: var(--radius-4);`}
+  &[data-rounded] {
+    border-radius: var(--radius-4);
+  }
 
-  ${(p) => p.$shadow && `box-shadow: var(--shadow-4);`}
+  &[data-shadow] {
+    box-shadow: var(--shadow-4);
+  }
 `

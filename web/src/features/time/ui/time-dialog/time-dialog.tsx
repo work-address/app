@@ -363,7 +363,7 @@ export const TimeDialog = ({
           <Flex mb="4">
             <Text size="2">{rangeLabel}</Text>
           </Flex>
-          <Content $singleColumn={!hasScreenshot}>
+          <Content data-single-column={!hasScreenshot || undefined}>
             {hasScreenshot && screenshotSrc && (
               <ScreenshotColumn>
                 <Screenshot
@@ -373,7 +373,7 @@ export const TimeDialog = ({
                 <TimeDialogMetrics row={row} />
               </ScreenshotColumn>
             )}
-            <DetailsColumn $fullWidth={!hasScreenshot}>
+            <DetailsColumn data-full-width={!hasScreenshot || undefined}>
               {!hasScreenshot && <TimeDialogMetrics row={row} />}
               <Controller
                 name="paymentStatus"
@@ -425,12 +425,16 @@ export const TimeDialog = ({
   )
 }
 
-const Content = styled.div<{ $singleColumn?: boolean }>`
+const Content = styled.div`
   display: flex;
   align-items: flex-start;
   gap: var(--space-6);
-  flex-direction: ${(p) => (p.$singleColumn ? 'column' : 'row')};
+  flex-direction: row;
   width: 100%;
+
+  &[data-single-column] {
+    flex-direction: column;
+  }
 
   ${(p) => p.theme.breakpoints.down('md')} {
     flex-direction: column;
@@ -438,13 +442,17 @@ const Content = styled.div<{ $singleColumn?: boolean }>`
   }
 `
 
-const DetailsColumn = styled.div<{ $fullWidth?: boolean }>`
+const DetailsColumn = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
   flex: 1;
   min-width: 0;
-  width: ${(p) => (p.$fullWidth ? '100%' : 'auto')};
+  width: auto;
+
+  &[data-full-width] {
+    width: 100%;
+  }
 
   & > * {
     width: 100%;

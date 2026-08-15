@@ -1,12 +1,12 @@
 import { QuestionMarkCircledIcon } from '@radix-ui/react-icons'
 import { Flex, Grid } from '@radix-ui/themes'
 
+import { Text } from '../text'
+
 import { normalizeDataKeyToReadableString } from './utils'
 
 import type { AnyRecord, MobileDataTableColumnConfigRecord } from './types'
 import type { ReactNode } from 'react'
-
-import { Text } from '@/shared'
 
 export type MobileBodyRenderProps<T extends AnyRecord> = {
   data: T

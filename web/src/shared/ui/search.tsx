@@ -2,7 +2,8 @@ import { MagnifyingGlassIcon, Cross1Icon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
 
-import { IconButton, Input, type InputProps } from '@/shared'
+import { IconButton } from './button'
+import { Input, type InputProps } from './input'
 
 type SearchProps = {
   value?: string

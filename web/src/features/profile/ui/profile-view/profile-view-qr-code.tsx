@@ -49,7 +49,7 @@ export const ProfileViewQrCode = ({
 
   return (
     <>
-      <StyledCard $gridArea={gridArea} shadow={false}>
+      <Root $gridArea={gridArea} shadow={false}>
         <Flex
           direction={'column'}
           gap={{ initial: '4' }}
@@ -125,7 +125,7 @@ export const ProfileViewQrCode = ({
             </Flex>
           )}
         </Flex>
-      </StyledCard>
+      </Root>
       <Modal
         open={qrModalOpened}
         onOpenChange={setQrModalOpened}
@@ -158,7 +158,7 @@ export const ProfileViewQrCode = ({
   )
 }
 
-const StyledCard = styled(ProfileViewCard)`
+const Root = styled(ProfileViewCard)`
   box-shadow: var(--shadow-4);
   height: 100%;
   ${(p) => p.theme.breakpoints.down('md')} {

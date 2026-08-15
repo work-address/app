@@ -12,9 +12,9 @@ import { useGate } from 'effector-react'
 import { useMemo, memo } from 'react'
 import { createGlobalStyle } from 'styled-components'
 
-import type { SolanaWalletState } from '@/entities/profile/types'
+import type { SolanaWalletState } from '@/entities/profile'
 
-import { SolanaWalletGate } from '@/entities/profile/solana.model'
+import { SolanaWalletGate } from '@/entities/profile'
 
 import '@solana/wallet-adapter-react-ui/styles.css'
 

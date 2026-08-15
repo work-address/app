@@ -3,8 +3,7 @@ import { createEffect, createEvent } from 'effector'
 
 import type { AuthorizationHeaders, TonAuthSuccessPayload } from './types'
 
-import { baseApi } from '@/shared'
-import { getTonProvider } from '@/shared/lib/wallet-provders/ton-provider.lazy'
+import { baseApi, getTonProvider } from '@/shared'
 
 export const tonAuthSuccess = createEvent<TonAuthSuccessPayload>()
 

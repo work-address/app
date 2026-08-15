@@ -151,6 +151,9 @@ const printColumnWidths = css`
 `
 
 const InvoiceTimeTable = styled(DataTable<ITimeTotalDetail>)`
+  /* DataTable's shared Tr (src/shared/ui/table/data-table.tsx) applies a 0.25s
+     transition and an rgb(242, 242, 242) hover background to every row; this
+     printable summary table isn't interactive, so neutralize both. */
   && tr {
     transition: none;
   }
@@ -166,6 +169,9 @@ const InvoiceTimeTable = styled(DataTable<ITimeTotalDetail>)`
     box-shadow: none;
     break-inside: auto;
 
+    /* DataTable's base rules (fixed sticky headers/cells, nowrap, flex-based
+       scroll container) target screen rendering; double the class here to win
+       over them and lay the table out for paper instead. */
     && table {
       table-layout: fixed;
       width: 100%;

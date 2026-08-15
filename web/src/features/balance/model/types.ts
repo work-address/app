@@ -1,4 +1,4 @@
-import type { BaseCurrencyCode } from '@/shared/constants/currency'
+import type { BaseCurrencyCode } from '@/shared'
 
 export type Balance = {
   amount: number

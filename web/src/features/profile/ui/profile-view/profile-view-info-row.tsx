@@ -19,22 +19,23 @@ export const ProfileViewInfoRow = ({
   return (
     <Flex gap={'2'} align={'center'}>
       {icon}
-      <StyledText size={{ initial: '2', md: '4' }} $hoverEffects={hoverEffects}>
+      <Value
+        size={{ initial: '2', md: '4' }}
+        data-hover-effects={hoverEffects || undefined}
+      >
         {text}
-      </StyledText>
+      </Value>
     </Flex>
   )
 }
 
-const StyledText = styled(Text)<{ $hoverEffects?: boolean }>`
-  ${(p) =>
-    p.$hoverEffects &&
-    `
+const Value = styled(Text)`
+  &[data-hover-effects] {
     border-bottom: 1px solid transparent;
     transition: border-bottom 0.2s ease-in-out;
 
     &:hover {
       border-bottom: 1px solid var(--gray-6);
     }
-  `}
+  }
 `

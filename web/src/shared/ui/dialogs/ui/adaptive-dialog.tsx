@@ -6,9 +6,6 @@ import { Modal } from './modal'
 
 import type { CommonDialogProps } from '../model'
 
-export { Modal } from './modal'
-export { Drawer } from './drawer'
-
 export const AdaptiveDialog = ({
   desktopPadding,
   desktopShowClose,

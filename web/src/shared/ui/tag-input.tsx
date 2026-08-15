@@ -40,26 +40,6 @@ export type TagInputProps = {
   suggestions?: string[]
 }
 
-const SuggestionList = styled.div`
-  display: flex;
-  flex-direction: column;
-  padding: var(--space-1) 0;
-`
-
-const SuggestionItem = styled.button<{ $active?: boolean }>`
-  all: unset;
-  box-sizing: border-box;
-  width: 100%;
-  padding: var(--space-1) var(--space-3);
-  font-size: var(--font-size-2);
-  cursor: pointer;
-  background: ${(p) => (p.$active ? 'var(--accent-a3)' : 'transparent')};
-
-  &:hover {
-    background: var(--accent-a3);
-  }
-`
-
 export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
   (
     {
@@ -248,7 +228,7 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
           <Popover.Trigger>
             <span style={{ width: '100%' }}>
               <Skeleton loading={showSkeleton}>
-                <StyledTextFieldRoot
+                <Field
                   disabled={disabled}
                   onFocus={handleFocus}
                   id={id}
@@ -257,7 +237,7 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
                   onBlur={handleBlur}
                   value={inputValue}
                   placeholder={value.length === 0 ? placeholder : ''}
-                  $grow={focused || value.length === 0}
+                  data-grow={focused || value.length === 0 || undefined}
                   ref={innerInputRef}
                   size={isDesktop ? undefined : '3'}
                   {...errorProps}
@@ -265,12 +245,12 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
                   {value.length > 0 && (
                     <>
                       {value.map((tag) => (
-                        <StyledBadge
+                        <Tag
                           key={tag}
                           color="gray"
                           size="2"
                           variant="surface"
-                          $disabled={disabled}
+                          data-disabled={disabled || undefined}
                         >
                           <Flex align="center" gap="1">
                             {tag}
@@ -288,11 +268,11 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
                               </IconButton>
                             </Flex>
                           </Flex>
-                        </StyledBadge>
+                        </Tag>
                       ))}
                     </>
                   )}
-                </StyledTextFieldRoot>
+                </Field>
               </Skeleton>
             </span>
           </Popover.Trigger>
@@ -305,21 +285,21 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
             container={document.body}
           >
             <ScrollArea style={{ maxHeight: 220 }}>
-              <SuggestionList ref={suggestionsRef}>
+              <List ref={suggestionsRef}>
                 {filteredSuggestions.map((s, i) => (
-                  <SuggestionItem
+                  <Item
                     key={s}
                     type="button"
-                    $active={i === activeIndex}
+                    data-active={i === activeIndex || undefined}
                     onMouseDown={handleSuggestionClick}
                     onMouseOver={handleSuggestionOver}
                     data-tag={s}
                     data-active-index={i}
                   >
                     {s}
-                  </SuggestionItem>
+                  </Item>
                 ))}
-              </SuggestionList>
+              </List>
             </ScrollArea>
           </Popover.Content>
         </Popover.Root>
@@ -328,7 +308,7 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
   },
 )
 
-const StyledTextFieldRoot = styled(TextField.Root)<{ $grow?: boolean }>`
+const Field = styled(TextField.Root)`
   min-height: var(--space-7);
   max-height: initial;
   height: initial;
@@ -356,29 +336,49 @@ const StyledTextFieldRoot = styled(TextField.Root)<{ $grow?: boolean }>`
     }
   }
 
-  ${(p) =>
-    p.$grow &&
-    `
+  &[data-grow] {
     input {
       flex-grow: 1;
       flex-basis: 80px;
       max-width: none;
     }
-  `}
+  }
 `
 
-const StyledBadge = styled(Badge)<{ $disabled?: boolean }>`
+const Tag = styled(Badge)`
   flex-shrink: 1;
   flex-grow: 0;
 
-  ${(p) =>
-    p.$disabled &&
-    `
+  &[data-disabled] {
     opacity: 0.5;
-  `}
+  }
 
   ${(p) => p.theme.breakpoints.up('md')} {
     padding-top: 2px;
     padding-bottom: 2px;
+  }
+`
+
+const List = styled.div`
+  display: flex;
+  flex-direction: column;
+  padding: var(--space-1) 0;
+`
+
+const Item = styled.button`
+  all: unset;
+  box-sizing: border-box;
+  width: 100%;
+  padding: var(--space-1) var(--space-3);
+  font-size: var(--font-size-2);
+  cursor: pointer;
+  background: transparent;
+
+  &[data-active] {
+    background: var(--accent-a3);
+  }
+
+  &:hover {
+    background: var(--accent-a3);
   }
 `
