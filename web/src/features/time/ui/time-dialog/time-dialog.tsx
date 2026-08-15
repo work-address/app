@@ -330,6 +330,17 @@ export const TimeDialog = ({
       title={row?.project?.title ?? t('dashboard.page.worklogs.title')}
       desktopWidth={hasScreenshot ? '1000px' : '540px'}
       desktopShowClose
+      headerActions={
+        row ? (
+          <TimeDialogNav
+            hasPrev={hasPrev}
+            hasNext={hasNext}
+            disabled={isDirty || isPending}
+            onPrev={onPrev}
+            onNext={onNext}
+          />
+        ) : undefined
+      }
       footer={
         row ? (
           <TimeDialogFooter
@@ -349,15 +360,8 @@ export const TimeDialog = ({
     >
       {row && (
         <>
-          <Flex align="center" gap="2" mb="4" justify="between">
+          <Flex mb="4">
             <Text size="2">{rangeLabel}</Text>
-            <TimeDialogNav
-              hasPrev={hasPrev}
-              hasNext={hasNext}
-              disabled={isDirty || isPending}
-              onPrev={onPrev}
-              onNext={onNext}
-            />
           </Flex>
           <Content $singleColumn={!hasScreenshot}>
             {hasScreenshot && screenshotSrc && (

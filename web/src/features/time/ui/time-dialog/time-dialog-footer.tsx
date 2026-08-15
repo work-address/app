@@ -38,34 +38,30 @@ export const TimeDialogFooter = ({
         </Button>
         {hasScreenshot && (
           <Tooltip content={t('dashboard.worklogsTable.removeScreenshot')}>
-            <span>
-              <Button
-                color="danger"
-                variant="soft"
-                size="l"
-                disabled={isPending}
-                onClick={onRemoveScreenshot}
-                aria-label={t('dashboard.worklogsTable.removeScreenshot')}
-              >
-                <ScreenshotsIcon width={20} height={20} />
-              </Button>
-            </span>
+            <Button
+              color="danger"
+              variant="soft"
+              size="l"
+              disabled={isPending}
+              onClick={onRemoveScreenshot}
+              aria-label={t('dashboard.worklogsTable.removeScreenshot')}
+            >
+              <ScreenshotsIcon width={20} height={20} />
+            </Button>
           </Tooltip>
         )}
         {hasProcesses && (
           <Tooltip content={t('dashboard.worklogsTable.removeProcesses')}>
-            <span>
-              <Button
-                color="danger"
-                variant="soft"
-                size="l"
-                disabled={isPending}
-                onClick={onRemoveProcesses}
-                aria-label={t('dashboard.worklogsTable.removeProcesses')}
-              >
-                <ProcessesIcon width={20} height={20} />
-              </Button>
-            </span>
+            <Button
+              color="danger"
+              variant="soft"
+              size="l"
+              disabled={isPending}
+              onClick={onRemoveProcesses}
+              aria-label={t('dashboard.worklogsTable.removeProcesses')}
+            >
+              <ProcessesIcon width={20} height={20} />
+            </Button>
           </Tooltip>
         )}
       </DangerActions>
@@ -111,10 +107,11 @@ const DangerActions = styled.div`
   flex-wrap: wrap;
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    flex-direction: column;
+    flex-wrap: nowrap;
 
-    & > * {
-      width: 100%;
+    & > :first-child {
+      flex: 1;
+      min-width: 0;
     }
   }
 `

@@ -5,6 +5,7 @@ export type CommonDialogProps = {
   trigger?: ReactNode
   open?: boolean
   title?: ReactNode
+  headerActions?: ReactNode
   footer?: ReactNode
   description?: ReactNode
   onOpenChange?: (open: boolean) => void

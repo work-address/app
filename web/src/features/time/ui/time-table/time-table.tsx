@@ -4,11 +4,7 @@ import { useUnit } from 'effector-react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import {
-  getTimeNavigationState,
-  getTimeSiblingId,
-  useBulkDeleteTime,
-} from '../../model'
+import { useBulkDeleteTime, useTimeDialogNavigation } from '../../model'
 import { TimeDialog } from '../time-dialog/time-dialog'
 import { TimeFilters } from '../time-filters/time-filters'
 import { TimeMobileFilters } from '../time-filters/time-mobile-filters'
@@ -19,6 +15,7 @@ import { TimeTableCell } from './time-table-cell'
 
 import {
   $allTime,
+  $hasMoreTime,
   $isLoadingMoreTime,
   $isTimeFiltering,
   $timeSort,
@@ -55,6 +52,7 @@ export const TimeTable = () => {
     resetSetPaidStatus,
     loadMore,
     isLoadingMoreTime,
+    hasMoreTime,
   } = useUnit({
     allTime: $allTime,
     timeLoading: $timeLoading,
@@ -66,6 +64,7 @@ export const TimeTable = () => {
     resetSetPaidStatus: setTimePaidStatusMutation.reset,
     loadMore: loadMoreTime,
     isLoadingMoreTime: $isLoadingMoreTime,
+    hasMoreTime: $hasMoreTime,
   })
 
   const [filtersOpen, setFiltersOpen] = useState(false)
@@ -110,11 +109,6 @@ export const TimeTable = () => {
     [timeRows, selectedTimeId],
   )
 
-  const { hasPrev, hasNext } = useMemo(
-    () => getTimeNavigationState(timeRows, selectedTimeId),
-    [timeRows, selectedTimeId],
-  )
-
   const handleOnSortChange = (sort: Record<string, 'ASC' | 'DESC'>) => {
     resetTimeSortEvent(sort)
   }
@@ -124,26 +118,15 @@ export const TimeTable = () => {
     setIsTimeDialogOpen(true)
   }, [])
 
-  const goToSibling = useCallback(
-    (direction: -1 | 1) => {
-      const siblingId = getTimeSiblingId(timeRows, selectedTimeId, direction)
-
-      if (!siblingId) {
-        return
-      }
-
-      setSelectedTimeId(siblingId)
-    },
-    [timeRows, selectedTimeId],
-  )
-
-  const handlePrevTimeEntry = useCallback(() => {
-    goToSibling(-1)
-  }, [goToSibling])
-
-  const handleNextTimeEntry = useCallback(() => {
-    goToSibling(1)
-  }, [goToSibling])
+  const { hasPrev, hasNext, onPrev, onNext } = useTimeDialogNavigation({
+    timeEntries: timeRows,
+    selectedTimeId,
+    isOpen: isTimeDialogOpen,
+    hasMore: hasMoreTime,
+    isLoadingMore: isLoadingMoreTime,
+    onLoadMore: loadMore,
+    onSelect: setSelectedTimeId,
+  })
 
   useEffect(() => {
     if (setPaidStatusStatus === 'done') {
@@ -336,8 +319,8 @@ export const TimeTable = () => {
             onOpenChange={setIsTimeDialogOpen}
             hasPrev={hasPrev}
             hasNext={hasNext}
-            onPrev={handlePrevTimeEntry}
-            onNext={handleNextTimeEntry}
+            onPrev={onPrev}
+            onNext={onNext}
           />
         </TimeContext.Provider>
       ) : (

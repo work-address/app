@@ -25,11 +25,13 @@ export const getTimeSiblingId = (
 export const getTimeNavigationState = (
   timeEntries: Time[],
   currentId: string | null,
+  hasMore = false,
 ) => {
   const currentIndex = timeEntries.findIndex((row) => row.id === currentId)
 
   return {
     hasPrev: currentIndex > 0,
-    hasNext: currentIndex >= 0 && currentIndex < timeEntries.length - 1,
+    hasNext:
+      currentIndex >= 0 && (currentIndex < timeEntries.length - 1 || hasMore),
   }
 }

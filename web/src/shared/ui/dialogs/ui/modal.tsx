@@ -11,26 +11,36 @@ export const Modal = ({
   onOpenChange,
   footer,
   title,
+  headerActions,
   width,
   padding,
   showClose = false,
   showTitleSeparator = true,
   description,
 }: CommonDialogProps & ModalProps) => {
+  const hasHeaderActions = Boolean(headerActions) || showClose
+
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       {trigger && <Dialog.Trigger>{trigger}</Dialog.Trigger>}
       <SContent $width={width} $padding={padding}>
-        {showClose && (
-          <SClose>
-            <Cross1Icon />
-          </SClose>
-        )}
-        {title && (
-          <STitle>
-            {title}
-            {showTitleSeparator && <Separator size={'4'} mt={'4'} />}
-          </STitle>
+        {(title || hasHeaderActions) && (
+          <>
+            <SHeader>
+              {title && <STitle>{title}</STitle>}
+              {hasHeaderActions && (
+                <SHeaderActions>
+                  {headerActions}
+                  {showClose && (
+                    <SClose>
+                      <Cross1Icon />
+                    </SClose>
+                  )}
+                </SHeaderActions>
+              )}
+            </SHeader>
+            {title && showTitleSeparator && <Separator size={'4'} mt={'4'} />}
+          </>
         )}
         {children}
         {description && <Dialog.Description>{description}</Dialog.Description>}
@@ -46,9 +56,25 @@ export const Modal = ({
   )
 }
 
+const SHeader = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: var(--space-3);
+`
+
 const STitle = styled(Dialog.Title)`
   font-size: var(--font-size-6);
   font-weight: var(--font-weight-medium);
+  flex: 1;
+  min-width: 0;
+`
+
+const SHeaderActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  flex-shrink: 0;
 `
 
 const SContent = styled(Dialog.Content)<{ $width?: string; $padding?: string }>`
@@ -68,8 +94,8 @@ const SContent = styled(Dialog.Content)<{ $width?: string; $padding?: string }>`
 `
 
 const SClose = styled(Dialog.Close).attrs({ type: 'button' })`
-  position: absolute;
-  right: var(--space-5);
-  top: var(--space-5);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
   cursor: pointer;
 `

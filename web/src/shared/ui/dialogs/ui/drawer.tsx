@@ -9,6 +9,7 @@ export const Drawer = ({
   children,
   open,
   title,
+  headerActions,
   footer,
   onOpenChange,
   mobileHeight,
@@ -33,12 +34,17 @@ export const Drawer = ({
             <DrawerHandle />
           </DrawerHandleWrapper>
           <DrawerInner>
-            {title && (
-              <Vaul.Drawer.Title>
-                <Theme>
-                  <DrawerTitle>{title}</DrawerTitle>
-                </Theme>
-              </Vaul.Drawer.Title>
+            {(title || headerActions) && (
+              <DrawerTitleRow>
+                {title && (
+                  <Vaul.Drawer.Title>
+                    <Theme>
+                      <DrawerTitle>{title}</DrawerTitle>
+                    </Theme>
+                  </Vaul.Drawer.Title>
+                )}
+                {headerActions && <Theme>{headerActions}</Theme>}
+              </DrawerTitleRow>
             )}
             <DrawerBody>
               <Theme>{children}</Theme>
@@ -109,6 +115,18 @@ const DrawerInner = styled.div`
   flex-direction: column;
   flex: 1;
   min-height: 0;
+`
+
+const DrawerTitleRow = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+
+  & > :first-child {
+    flex: 1;
+    min-width: 0;
+  }
 `
 
 const DrawerTitle = styled.span`
