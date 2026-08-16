@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { IconImg, MobileMenuNav } from '../styled'
+import { IconImg, MobileMenuNav, mobileMenuRowStyles } from '../styled'
 
 import { DesktopMenu } from './desktop-menu'
 import { HeaderUserLink } from './header-user-link'
@@ -331,27 +331,10 @@ const Divider = styled.div`
 `
 
 const MobileMenuButton = styled(motion.button)`
-  padding: 10px 10px;
-  border-radius: 10px;
-  color: var(--ds-neutral-12);
-  font-size: 16px;
-  line-height: 22px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: transparent;
+  ${mobileMenuRowStyles}
   border: none;
   cursor: pointer;
   text-align: left;
-
-  &:hover {
-    background: var(--c-rgba-28-32-36-0_06);
-  }
-
-  img {
-    width: 18px;
-    height: 18px;
-  }
 `
 
 const ExitButton = styled.button`

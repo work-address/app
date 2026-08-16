@@ -121,7 +121,7 @@ export default function SignInPage() {
 
 const Footer = styled.footer`
   text-align: center;
-  font-size: 12px;
+  font-size: var(--font-size-1);
   color: var(--c-rgba-0-7-20-0_52);
   letter-spacing: 0.55px;
   font-weight: 500;
@@ -131,7 +131,7 @@ const Footer = styled.footer`
   padding-bottom: 40px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
-    font-size: 14px;
+    font-size: var(--font-size-2);
     margin-top: 20px;
     line-height: 20px;
   }
@@ -140,13 +140,13 @@ const Footer = styled.footer`
 const CommitSha = styled.div`
   margin-top: 14px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 11px;
+  font-size: var(--font-size-0);
   font-weight: 400;
   color: var(--c-rgba-0-7-20-0_38);
   letter-spacing: 0.2px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     margin-top: 21px;
-    font-size: 12px;
+    font-size: var(--font-size-1);
   }
 `

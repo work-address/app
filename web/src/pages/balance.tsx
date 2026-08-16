@@ -15,7 +15,13 @@ import {
   resetBalance,
 } from '@/features/balance'
 import { routes } from '@/routes'
-import { Card, IconButton, PageHelmet, Text, useBreakpoint } from '@/shared'
+import {
+  IconButton,
+  PageHelmet,
+  Text,
+  useBreakpoint,
+  WidePageCard,
+} from '@/shared'
 
 export default function BalancePage() {
   const { t, i18n } = useTranslation()
@@ -68,11 +74,4 @@ const BackLink = styled(NavLink)`
   padding-left: var(--space-2);
 `
 
-const Root = styled(Card)`
-  padding: 20px var(--space-3);
-
-  ${(p) => p.theme.breakpoints.up('md')} {
-    width: 1196px;
-    margin: var(--space-5) auto;
-  }
-`
+const Root = WidePageCard

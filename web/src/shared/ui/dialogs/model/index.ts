@@ -1,5 +1,10 @@
 import type { ReactNode } from 'react'
 
+// The standard width for a single-column form dialog (create/edit modals).
+// Dialogs with materially different content (e.g. a two-column layout) size
+// themselves independently rather than using this.
+export const DIALOG_WIDTH_STANDARD = '600px'
+
 export type CommonDialogProps = {
   children: ReactNode
   trigger?: ReactNode

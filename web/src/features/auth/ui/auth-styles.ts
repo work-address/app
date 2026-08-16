@@ -32,13 +32,13 @@ export const SignInCard = styled(Card)`
 export const Title = styled.h1`
   font-weight: 500;
   letter-spacing: 0.45px;
-  font-size: 20px;
+  font-size: var(--font-size-5);
   margin-bottom: 12px;
   color: var(--ds-accent-11);
   line-height: 28px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
-    font-size: 35px;
+    font-size: var(--font-size-8);
     color: var(--ds-neutral-12);
     line-height: 150%;
     margin-bottom: 5px;
@@ -48,7 +48,7 @@ export const Title = styled.h1`
 
 export const Desc = styled.p`
   font-weight: 400;
-  font-size: 14px;
+  font-size: var(--font-size-2);
   margin-bottom: 24px;
   color: var(--ds-accent-11);
   line-height: 20px;
@@ -56,7 +56,7 @@ export const Desc = styled.p`
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     letter-spacing: 0.6px;
-    font-size: 16px;
+    font-size: var(--font-size-3);
     margin-bottom: 40px;
     color: var(--c-rgba-0-7-20-0_62);
     line-height: 150%;
@@ -86,7 +86,7 @@ export const Learn = styled(Link)`
   font-weight: 500;
   padding: 6px 0 0;
   letter-spacing: 0.5px;
-  font-size: 14px;
+  font-size: var(--font-size-2);
 
   &:hover {
     text-decoration: underline;
@@ -94,7 +94,7 @@ export const Learn = styled(Link)`
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     line-height: 150%;
-    font-size: 16px;
+    font-size: var(--font-size-3);
   }
 `
 export const FootLine = styled.div`

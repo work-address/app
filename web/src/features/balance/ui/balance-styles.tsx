@@ -18,7 +18,7 @@ export const QrPlaceholder = styled.div`
   justify-content: center;
   background: var(--ds-neutral-alpha-2);
   color: var(--ds-neutral-11);
-  font-size: 12px;
+  font-size: var(--font-size-1);
   text-align: center;
   padding: 8px;
 `

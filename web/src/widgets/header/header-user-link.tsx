@@ -70,14 +70,14 @@ const UserText = styled.div`
 `
 
 const UserName = styled.span`
-  font-size: 14px;
+  font-size: var(--font-size-2);
   line-height: 16px;
   font-weight: 500;
   color: var(--ds-neutral-12);
 `
 
 const UserSub = styled.span`
-  font-size: 12px;
+  font-size: var(--font-size-1);
   line-height: 14px;
   font-weight: 400;
   color: var(--muted);

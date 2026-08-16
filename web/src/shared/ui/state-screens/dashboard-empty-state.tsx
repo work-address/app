@@ -2,6 +2,8 @@ import styled from 'styled-components'
 
 import { Button, type ButtonProps } from '../button'
 
+import { EmptyStateDescription, EmptyStateTitle } from './empty-state-text'
+
 import type React from 'react'
 
 type DashboardEmptyStateProps = {
@@ -32,8 +34,8 @@ export const DashboardEmptyState = ({
         <HeroImg src={imageSrc} alt={title} />
       </Hero>
       <Text>
-        <EmptyTitle>{title}</EmptyTitle>
-        <EmptyDesc>{description}</EmptyDesc>
+        <EmptyStateTitle>{title}</EmptyStateTitle>
+        <EmptyStateDescription>{description}</EmptyStateDescription>
       </Text>
       <EmptyAction iconLeft={buttonIcon} {...buttonProps} onClick={onAction}>
         {actionLabel}
@@ -72,23 +74,6 @@ const Text = styled.div`
   text-align: center;
   gap: 4px;
   max-width: 520px;
-`
-
-const EmptyTitle = styled.h3`
-  font-weight: 500;
-  font-size: 16px;
-  line-height: 150%;
-  text-align: center;
-  color: var(--ds-neutral-12);
-`
-
-const EmptyDesc = styled.p`
-  max-width: 350px;
-  font-weight: 400;
-  font-size: 14px;
-  line-height: 143%;
-  text-align: center;
-  color: var(--ds-neutral-11);
 `
 
 const EmptyAction = styled(Button)`

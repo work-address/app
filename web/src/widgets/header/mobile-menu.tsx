@@ -6,7 +6,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import { match } from 'ts-pattern'
 
-import { IconImg } from '../styled'
+import { IconImg, mobileMenuRowStyles } from '../styled'
 
 import { $authenticated, $user } from '@/entities/profile'
 import { AUTH_REQUIRED_ROUTES, defaultMappedRoutes, routes } from '@/routes'
@@ -111,27 +111,10 @@ export const MobileMenu = ({ setOpen }: Props) => {
 }
 
 const MobileMenuItem = styled(motion.a)`
-  padding: 10px 10px;
-  border-radius: 10px;
-  color: var(--ds-neutral-12);
+  ${mobileMenuRowStyles}
   text-decoration: none;
-  font-size: 16px;
-  line-height: 22px;
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: transparent;
 
   &[data-active] {
     background: var(--c-rgba-5-86-205-0_0588);
-  }
-
-  &:hover {
-    background: var(--c-rgba-28-32-36-0_06);
-  }
-
-  img {
-    width: 18px;
-    height: 18px;
   }
 `

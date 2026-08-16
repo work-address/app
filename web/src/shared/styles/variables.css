@@ -1,4 +1,7 @@
 :root {
+  /* One step below Radix's smallest --font-size-1 (12px), for micro/hint text. */
+  --font-size-0: 11px;
+
   --white: #fff;
   --ds-secondary: #f0f0f3;
   --muted: #80838d;

@@ -5,6 +5,8 @@ import styled from 'styled-components'
 import { FeaturedIcon } from '../../icons'
 import { Button } from '../button'
 
+import { EmptyStateDescription, EmptyStateTitle } from './empty-state-text'
+
 type ProjectsEmptyStateProps = {
   onCreateClick: () => void
 }
@@ -54,18 +56,10 @@ const IconInner = styled.div`
   }
 `
 
-const Title = styled.div`
-  font-weight: 500;
-  font-size: 16px;
-  line-height: 150%;
-  color: var(--ds-neutral-12);
+const Title = styled(EmptyStateTitle)`
   margin-bottom: 6px;
 `
 
-const Desc = styled.div`
-  max-width: 352px;
-  font-size: 14px;
-  line-height: 143%;
-  color: var(--ds-neutral-11);
+const Desc = styled(EmptyStateDescription)`
   margin-bottom: 24px;
 `

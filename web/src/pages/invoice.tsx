@@ -16,7 +16,14 @@ import {
   InvoiceTime,
 } from '@/features/invoice'
 import { routes } from '@/routes'
-import { Card, IconButton, PageHelmet, Text, useBreakpoint } from '@/shared'
+import {
+  Card,
+  IconButton,
+  PageHelmet,
+  Text,
+  useBreakpoint,
+  WidePageCard,
+} from '@/shared'
 
 export default function InvoicePage() {
   const { id } = useParams<{ id: string }>()
@@ -49,16 +56,16 @@ export default function InvoicePage() {
         htmlAttributes={{ lang: i18n.language }}
         title={t('app.documentTitle.invoice')}
       />
-      <InvoicePageCard shadow={false} as={isMobile ? 'div' : undefined}>
+      <Root shadow={false} as={isMobile ? 'div' : undefined}>
         <Flex direction={'column'} gap={'20px'}>
           {isMobile && (
             <InvoiceNoPrint gap={'4'} direction={'column'}>
               <Flex direction={'column'}>
-                <IconWrapper to={routes.dashboard.build()}>
+                <BackLink to={routes.dashboard.build()}>
                   <IconButton variant={'ghost'} radius={'full'} color={'gray'}>
                     <ArrowLeftIcon />
                   </IconButton>
-                </IconWrapper>
+                </BackLink>
                 {loading ? (
                   <Skeleton width="150px" height="24px" />
                 ) : (
@@ -85,7 +92,7 @@ export default function InvoicePage() {
           )}
           <InvoiceTime />
         </Flex>
-      </InvoicePageCard>
+      </Root>
     </>
   )
 }
@@ -107,14 +114,7 @@ const InvoicePrintGlobalStyle = createGlobalStyle`
   }
 `
 
-const InvoicePageCard = styled(Card)`
-  padding: 20px var(--space-3);
-
-  ${(p) => p.theme.breakpoints.up('md')} {
-    width: 1196px;
-    margin: var(--space-5) auto;
-  }
-
+const Root = styled(WidePageCard)`
   @media print {
     width: 100%;
     max-width: none;
@@ -138,6 +138,6 @@ const InvoiceNoPrint = styled(Flex)`
   }
 `
 
-const IconWrapper = styled(NavLink)`
+const BackLink = styled(NavLink)`
   padding-left: var(--space-2);
 `

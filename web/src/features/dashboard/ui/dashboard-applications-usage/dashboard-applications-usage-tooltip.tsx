@@ -92,7 +92,7 @@ const Root = styled.div`
   padding: 8px 10px;
   box-shadow: 0 1px 6px var(--c-rgba-0-0-0-0_08);
   color: var(--ds-neutral-12);
-  font-size: 12px;
+  font-size: var(--font-size-1);
   min-width: 200px;
   position: relative;
 
@@ -124,14 +124,14 @@ const Root = styled.div`
 
 const Title = styled.div`
   font-weight: 600;
-  font-size: 16px;
+  font-size: var(--font-size-3);
   line-height: 20px;
   padding: 4px 4px 8px;
 `
 
 const Placeholder = styled.div`
   padding: 4px;
-  font-size: 14px;
+  font-size: var(--font-size-2);
   line-height: 20px;
   color: var(--c-rgba-0-7-20-0_62);
 `
@@ -157,7 +157,7 @@ const Label = styled.div`
   align-items: center;
   gap: 10px;
   color: var(--c-rgba-0-7-20-0_82);
-  font-size: 14px;
+  font-size: var(--font-size-2);
 `
 
 // Per-series swatch color comes from the chart's bounded palette at runtime
@@ -172,7 +172,7 @@ const Swatch = styled.span<{ $c: string }>`
 
 const Value = styled.div`
   font-weight: 600;
-  font-size: 16px;
+  font-size: var(--font-size-3);
   line-height: 20px;
   color: var(--c-rgba-0-7-20-0_88);
 `
@@ -191,6 +191,6 @@ const Total = styled.div`
 `
 
 const TotalLabel = styled.div`
-  font-size: 14px;
+  font-size: var(--font-size-2);
   color: var(--c-rgba-0-7-20-0_62);
 `

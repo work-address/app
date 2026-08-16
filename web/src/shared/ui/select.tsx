@@ -190,7 +190,7 @@ const PopoverContent = styled(Popover.Content)`
 
 const MenuTitle = styled.div`
   padding: var(--space-2) var(--space-3);
-  font-size: 12px;
+  font-size: var(--font-size-1);
   letter-spacing: 0.06em;
   color: var(--c-rgba-0-5-29-0_55);
 `

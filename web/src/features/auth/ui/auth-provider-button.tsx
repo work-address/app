@@ -56,7 +56,7 @@ export const Icon = styled.img`
 
 export const Text = styled.div`
   font-weight: 500;
-  font-size: 18px;
+  font-size: var(--font-size-4);
   line-height: 24px;
   font-family: Inter, sans-serif;
   color: var(--ds-accent-11);

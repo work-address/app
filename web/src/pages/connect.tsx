@@ -257,7 +257,7 @@ const CloseLink = styled(Link)`
 const StatusNote = styled.p`
   margin-top: 20px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: 11px;
+  font-size: var(--font-size-0);
   font-weight: 400;
   color: var(--c-rgba-0-7-20-0_52);
   letter-spacing: 0.2px;
@@ -266,6 +266,6 @@ const StatusNote = styled.p`
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     margin-top: 24px;
-    font-size: 12px;
+    font-size: var(--font-size-1);
   }
 `

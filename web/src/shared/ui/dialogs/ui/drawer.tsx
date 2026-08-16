@@ -132,7 +132,7 @@ const DrawerTitleRow = styled.div`
 const DrawerTitle = styled.span`
   margin: 0;
   font-weight: 500;
-  font-size: 18px;
+  font-size: var(--font-size-4);
   width: 100%;
 `
 

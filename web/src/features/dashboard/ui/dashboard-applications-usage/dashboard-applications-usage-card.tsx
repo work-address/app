@@ -4,7 +4,7 @@ import styled from 'styled-components'
 import type { Period } from '../../model'
 import type { ReactNode } from 'react'
 
-import { Card, Select } from '@/shared'
+import { Card, Select, SectionTitle } from '@/shared'
 
 type DashboardApplicationsUsageCardProps = {
   period: Period
@@ -24,7 +24,7 @@ export const DashboardApplicationsUsageCard = ({
   return (
     <Root>
       <Head>
-        <Title>{t('dashboard.applicationsUsage.title')}</Title>
+        <SectionTitle>{t('dashboard.applicationsUsage.title')}</SectionTitle>
         <PeriodSelect>
           <Select
             options={[
@@ -71,14 +71,6 @@ const Head = styled.div`
   margin-bottom: 25px;
 `
 
-const Title = styled.h2`
-  font-weight: 500;
-  font-size: 24px;
-  line-height: 125%;
-  letter-spacing: 0em;
-  color: var(--ds-neutral-12);
-`
-
 const PeriodSelect = styled.div`
   width: 120px;
 
@@ -107,6 +99,6 @@ const Status = styled.div`
   align-items: center;
   justify-content: center;
   height: 306px;
-  font-size: 14px;
+  font-size: var(--font-size-2);
   color: var(--c-rgba-0-7-20-0_62);
 `

@@ -1,5 +1,7 @@
 import styled from 'styled-components'
 
+export { SectionTitle } from './section-title'
+
 export const TopRight = styled.div`
   margin-left: auto;
 `
@@ -50,19 +52,6 @@ export const Section = styled.section`
   }
 `
 
-export const SectionTitle = styled.h2`
-  font-weight: 500;
-  font-size: 24px;
-  line-height: 125%;
-  letter-spacing: 0;
-  color: var(--ds-neutral-12);
-  margin: 0;
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    font-size: 18px;
-  }
-`
-
 export const SectionTitleRow = styled.div`
   display: flex;
   align-items: center;
@@ -82,7 +71,7 @@ export const Field = styled.div<{ $basis?: number }>`
 `
 
 export const Label = styled.div`
-  font-size: 14px;
+  font-size: var(--font-size-2);
   line-height: 14px;
   color: var(--ds-neutral-12);
   font-weight: 500;

@@ -384,7 +384,7 @@ const Root = styled.table`
 const HeaderTd = styled.td<{ $width?: number }>`
   background: var(--ds-neutral-2);
   padding: 12px var(--space-3);
-  font-size: 14px;
+  font-size: var(--font-size-2);
   font-weight: 500;
   position: sticky;
   top: 0;

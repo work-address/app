@@ -23,6 +23,7 @@ import {
   Text,
   TextArea,
   useBreakpoint,
+  DIALOG_WIDTH_STANDARD,
 } from '@/shared'
 
 type ProjectsCreatePayload = {
@@ -135,7 +136,7 @@ export const ProjectsCreateModal = ({
   return (
     <AdaptiveDialog
       desktopPadding={'var(--space-5)'}
-      desktopWidth={'600px'}
+      desktopWidth={DIALOG_WIDTH_STANDARD}
       onOpenChange={onOpenChange}
       open={open}
       title={<>{t('project.createModal.title')}</>}

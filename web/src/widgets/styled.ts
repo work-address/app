@@ -1,6 +1,6 @@
 import { motion } from 'motion/react'
 import { Link } from 'react-router-dom'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 
 export const IconImg = styled.img`
   width: 18px;
@@ -12,7 +12,7 @@ export const NavLink = styled(Link)`
   display: flex;
   align-items: center;
   gap: 6px;
-  font-size: 16px;
+  font-size: var(--font-size-3);
   line-height: 20px;
   font-weight: 400;
   position: relative;
@@ -45,7 +45,7 @@ export const NavLink = styled(Link)`
   }
 
   ${(p) => p.theme.breakpoints.down('lg')} {
-    font-size: 14px;
+    font-size: var(--font-size-2);
   }
 
   &:hover {
@@ -67,4 +67,27 @@ export const MobileMenuNav = styled(motion.nav)`
   display: flex;
   flex-direction: column;
   gap: 6px;
+`
+
+// Shared by header.tsx's logout button and mobile-menu.tsx's nav items —
+// same row shape, each adding its own element-specific rules.
+export const mobileMenuRowStyles = css`
+  padding: 10px 10px;
+  border-radius: 10px;
+  color: var(--ds-neutral-12);
+  font-size: var(--font-size-3);
+  line-height: 22px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  background: transparent;
+
+  &:hover {
+    background: var(--c-rgba-28-32-36-0_06);
+  }
+
+  img {
+    width: 18px;
+    height: 18px;
+  }
 `

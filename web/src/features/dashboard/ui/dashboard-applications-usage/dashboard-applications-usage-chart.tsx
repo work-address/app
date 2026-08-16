@@ -119,6 +119,6 @@ const ChartWrap = styled.div`
 
   .recharts-text {
     fill: var(--c-rgba-0-7-20-0_62);
-    font-size: 12px;
+    font-size: var(--font-size-1);
   }
 `

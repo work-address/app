@@ -79,7 +79,7 @@ export const ToastStyle = createGlobalStyle`
       padding: 16px;
       justify-items: start;
       align-items: start;
-      font-size: 16px;
+      font-size: var(--font-size-3);
       /*
       Тень из макета работает некорректно.
       box-shadow: 0 2px 3px -2px var(--ds-neutral-alpha-3)
