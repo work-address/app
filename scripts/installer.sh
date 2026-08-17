@@ -123,15 +123,15 @@ log_info "Configuring production environment (Postgres database and secrets)..."
 # Use env vars if already set (non-interactive), otherwise prompt
 if [ -n "${APP_DB_PASSWORD}" ] && [ -n "${APP_JWT_SECRET}" ]; then
   log_info "Using APP_DB_* and APP_JWT_SECRET from environment"
-  APP_DB_HOST=${APP_DB_HOST:-localhost}
+  APP_DB_HOST=${APP_DB_HOST:-host.docker.internal}
   APP_DB_PORT=${APP_DB_PORT:-5432}
   APP_DB_USERNAME=${APP_DB_USERNAME:-postgres}
   APP_DB_NAME=${APP_DB_NAME:-address_work}
   APP_SENTRY=${APP_SENTRY:-}
 else
-  printf 'APP_DB_HOST (Postgres host) [localhost]: ' >&2
+  printf 'APP_DB_HOST (Postgres host) [host.docker.internal]: ' >&2
   read -r APP_DB_HOST
-  APP_DB_HOST=${APP_DB_HOST:-localhost}
+  APP_DB_HOST=${APP_DB_HOST:-host.docker.internal}
 
   printf 'APP_DB_PORT [5432]: ' >&2
   read -r APP_DB_PORT

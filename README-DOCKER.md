@@ -6,7 +6,7 @@ All commands assume you are in the project root (the directory that contains `do
 
 Nginx reverse proxy listens on port 8000 and routes by path: `/api` → Node.js API, `/` → web (React). SSL is handled by the server provider.
 
-Requires `.env` in project root with Postgres and JWT config.
+Requires Postgres config: copy `.env.example` to `.env` in the project root (or use existing `api/.env` — compose loads both). Use `host.docker.internal` for `APP_DB_HOST` when Postgres runs on the host, not `localhost`.
 ```sh
 docker compose -f docker-compose.yml up --watch
 ```

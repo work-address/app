@@ -37,19 +37,20 @@ services:
     pull_policy: build
     # ports:
     #   - "4000:4000"
+    env_file:
+      - path: ./api/.env
+        required: false
+      - path: ./.env
+        required: false
     environment:
       APP_HOST: "0.0.0.0"
       APP_PORT: "4000"
       NODE_ENV: "production"
-      APP_DB_HOST: "${APP_DB_HOST}"
-      APP_DB_PORT: "${APP_DB_PORT:-5432}"
-      APP_DB_USERNAME: "${APP_DB_USERNAME}"
-      APP_DB_PASSWORD: "${APP_DB_PASSWORD}"
-      APP_DB_NAME: "${APP_DB_NAME}"
-      APP_JWT_SECRET: "${APP_JWT_SECRET}"
-      APP_SENTRY: "${APP_SENTRY}"
-      APP_LOGGLY: "${APP_LOGGLY}"
+      # localhost inside the container is not the host machine; extra_hosts below enables the default.
+      APP_DB_HOST: "${APP_DB_HOST:-host.docker.internal}"
       APP_REDIS: "redis://redis:6379"
+    extra_hosts:
+      - "host.docker.internal:host-gateway"
     depends_on:
       redis:
         condition: service_healthy

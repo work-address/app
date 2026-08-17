@@ -51,6 +51,8 @@ services:
       APP_PORT: "4000"
       NODE_ENV: "development"
       APP_REDIS: "redis://redis:6379"
+      # localhost inside the container is not the host machine; extra_hosts below enables this.
+      APP_DB_HOST: "host.docker.internal"
     extra_hosts:
       - "host.docker.internal:host-gateway"
     depends_on:
