@@ -105,6 +105,8 @@
   "dashboard.projectsTable.confirmDelete.description": "この操作は取り消せません。記録された時間と関連データはすべて完全に削除されます。",
   "dashboard.projectsTable.confirmDelete.title": "このプロジェクトを削除しますか？",
   "dashboard.projectsTable.deletedMessage": "プロジェクトが削除されました",
+  "dashboard.projectsTable.editError": "プロジェクトの更新に失敗しました",
+  "dashboard.projectsTable.editSuccess": "プロジェクトを更新しました",
   "dashboard.projectsTable.drawer.close": "閉じる",
   "dashboard.projectsTable.drawer.delete": "削除",
   "dashboard.projectsTable.drawer.download": "ダウンロード",

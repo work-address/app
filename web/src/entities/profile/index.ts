@@ -6,7 +6,6 @@
 
 import { combine, sample, split } from 'effector'
 
-import { getAuthErrorMessage } from './auth-errors'
 import {
   ethConnectedPub,
   loginEthFx,
@@ -48,7 +47,7 @@ import {
 
 import type { SolanaNonceParams } from './types'
 
-import { showToast } from '@/shared'
+import { getErrorMessage, showToast } from '@/shared'
 
 /**
  * Route login event to the appropriate wallet flow based on selected provider.
@@ -258,7 +257,7 @@ loginTonFx.done.watch(() => {
 })
 
 openTonModalFx.fail.watch(({ error }) => {
-  const message = getAuthErrorMessage(error, 'Ton login error')
+  const message = getErrorMessage(error, 'Ton login error')
 
   if (!message) {
     return
@@ -271,7 +270,7 @@ openTonModalFx.fail.watch(({ error }) => {
 })
 
 loginTonFx.fail.watch(({ error }) => {
-  const message = getAuthErrorMessage(error, 'Ton login error')
+  const message = getErrorMessage(error, 'Ton login error')
 
   if (!message) {
     return

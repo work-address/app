@@ -9,7 +9,6 @@ import { ProjectFixture } from '@/test/fixture/project-fixture'
 import { ProjectRepository } from '@/repository/project-repository'
 import { Project } from '@/entity/project'
 import { EProjectState } from '@/model/project'
-import RejectedExecutionException from '@/exception/rejected-execution-exception'
 
 @suite()
 export class ProjectManagerTest extends AbstractDatabaseIntegration {
@@ -106,7 +105,7 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
   }
 
   @test()
-  async createAndSave_rejectsUnknownAccessAddresses() {
+  async createAndSave_allowsAccessAddressesWithNoAccountYet() {
     const owner = await this.userFixture.createUser()
     const project = new Project()
 
@@ -114,18 +113,36 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     project.text = 'access test'
     project.state = EProjectState.ACTIVE
     project.user = owner
-    project.workerAddresses = ['not-a-real-wallet-address']
+    // A collaborator may be granted access before their wallet has ever
+    // signed in — the address is stored as-is, no matching user required.
+    project.workerAddresses = ['0x000000000000000000000000000000deadbeef']
     project.viewerAddresses = []
 
-    let error: unknown
+    const saved = await this.projectManager.createAndSave(project)
 
-    try {
-      await this.projectManager.createAndSave(project)
-    } catch (e: unknown) {
-      error = e
-    }
+    expect(saved.workerAddresses).to.deep.equal([
+      '0x000000000000000000000000000000deadbeef',
+    ])
+  }
 
-    expect(error).to.be.instanceOf(RejectedExecutionException)
+  @test()
+  async createAndSave_matchesAccessAddressesCaseInsensitively() {
+    const owner = await this.userFixture.createUser()
+    const worker = await this.userFixture.createUser()
+    const project = new Project()
+
+    project.title = 'access test'
+    project.text = 'access test'
+    project.state = EProjectState.ACTIVE
+    project.user = owner
+    // A collaborator's address as stored (e.g. EIP-55 checksummed) may not
+    // match the casing a project owner types/pastes into the form.
+    project.workerAddresses = [worker.address.toLowerCase()]
+    project.viewerAddresses = []
+
+    const saved = await this.projectManager.createAndSave(project)
+
+    expect(saved.workerAddresses).to.deep.equal([worker.address.toLowerCase()])
   }
 
   @test()

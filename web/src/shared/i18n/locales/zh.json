@@ -105,6 +105,8 @@
   "dashboard.projectsTable.confirmDelete.description": "此操作无法撤销。所有已记录时间及相关数据将被永久删除。",
   "dashboard.projectsTable.confirmDelete.title": "删除此项目？",
   "dashboard.projectsTable.deletedMessage": "项目已删除",
+  "dashboard.projectsTable.editError": "项目更新失败",
+  "dashboard.projectsTable.editSuccess": "项目更新成功",
   "dashboard.projectsTable.drawer.close": "关闭",
   "dashboard.projectsTable.drawer.delete": "删除",
   "dashboard.projectsTable.drawer.download": "下载",

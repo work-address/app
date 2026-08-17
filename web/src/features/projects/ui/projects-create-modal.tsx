@@ -125,11 +125,6 @@ export const ProjectsCreateModal = ({
         message: t('project.createModal.createSuccess'),
         position: 'top-center',
       })
-    } else if (status === 'fail') {
-      showToast('error', {
-        message: t('project.createModal.createError'),
-        position: 'top-center',
-      })
     }
   }, [status, onOpenChange, t, resetMutation, open, resetForm])
 

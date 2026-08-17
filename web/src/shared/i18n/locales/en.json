@@ -105,6 +105,8 @@
   "dashboard.projectsTable.confirmDelete.description": "This action cannot be undone. All tracked time and associated data will be permanently removed.",
   "dashboard.projectsTable.confirmDelete.title": "Delete this project?",
   "dashboard.projectsTable.deletedMessage": "Project has been deleted",
+  "dashboard.projectsTable.editError": "Project update error",
+  "dashboard.projectsTable.editSuccess": "Project updated successfully",
   "dashboard.projectsTable.drawer.close": "Close",
   "dashboard.projectsTable.drawer.delete": "Delete",
   "dashboard.projectsTable.drawer.download": "Download",

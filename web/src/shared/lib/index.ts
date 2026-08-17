@@ -1,4 +1,5 @@
 export * from './theme'
+export * from './get-error-message'
 export * from './sonner'
 export * from './formatters'
 export * from './wallet-provders'

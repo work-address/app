@@ -105,6 +105,8 @@
   "dashboard.projectsTable.confirmDelete.description": "Esta acción no se puede deshacer. Todo el tiempo registrado y los datos asociados se eliminarán de forma permanente.",
   "dashboard.projectsTable.confirmDelete.title": "¿Eliminar este proyecto?",
   "dashboard.projectsTable.deletedMessage": "El proyecto ha sido eliminado",
+  "dashboard.projectsTable.editError": "Error al actualizar el proyecto",
+  "dashboard.projectsTable.editSuccess": "Proyecto actualizado correctamente",
   "dashboard.projectsTable.drawer.close": "Cerrar",
   "dashboard.projectsTable.drawer.delete": "Eliminar",
   "dashboard.projectsTable.drawer.download": "Descargar",

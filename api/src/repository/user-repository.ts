@@ -81,7 +81,9 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
 
     return this.getRepo()
       .createQueryBuilder('user')
-      .andWhere('user.address IN (:...addresses)', { addresses })
+      .andWhere('lower(user.address) IN (:...addresses)', {
+        addresses: addresses.map((address) => address.toLowerCase()),
+      })
       .getCount()
   }
 
@@ -92,7 +94,9 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
 
     return this.getRepo()
       .createQueryBuilder('user')
-      .where('user.address IN (:...addresses)', { addresses })
+      .where('lower(user.address) IN (:...addresses)', {
+        addresses: addresses.map((address) => address.toLowerCase()),
+      })
       .getMany()
   }
 }

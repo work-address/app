@@ -192,17 +192,19 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
     }
 
     const users = await this.userRepository.findByAddresses(addresses)
-    const usersByAddress = new Map(users.map((u) => [u.address, u]))
+    const usersByAddress = new Map(
+      users.map((u) => [u.address.toLowerCase(), u]),
+    )
 
     for (const project of projects) {
       const workerAddresses = project.workerAddresses ?? []
       const viewerAddresses = project.viewerAddresses ?? []
 
       project.workers = workerAddresses
-        .map((address) => usersByAddress.get(address))
+        .map((address) => usersByAddress.get(address.toLowerCase()))
         .filter((u): u is User => u !== undefined)
       project.viewers = viewerAddresses
-        .map((address) => usersByAddress.get(address))
+        .map((address) => usersByAddress.get(address.toLowerCase()))
         .filter((u): u is User => u !== undefined)
     }
   }
@@ -219,11 +221,11 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
         subQb
           .where(`${ownerAlias}.id = :accessUserId`, { accessUserId })
           .orWhere(
-            ":userAddress = ANY(COALESCE(project.workerAddresses, '{}'))",
+            `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`,
             { userAddress },
           )
           .orWhere(
-            ":userAddress = ANY(COALESCE(project.viewerAddresses, '{}'))",
+            `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.viewerAddresses, '{}')) AS address)`,
             { userAddress },
           )
       }),
@@ -242,7 +244,7 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
         subQb
           .where(`${ownerAlias}.id = :accessUserId`, { accessUserId })
           .orWhere(
-            ":userAddress = ANY(COALESCE(project.workerAddresses, '{}'))",
+            `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`,
             { userAddress },
           )
       }),

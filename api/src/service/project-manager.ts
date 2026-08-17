@@ -2,13 +2,11 @@ import { inject, injectable } from 'inversify'
 
 import { Project } from '@/entity/project'
 import { ProjectRepository } from '@/repository/project-repository'
-import { UserRepository } from '@/repository/user-repository'
 import { EProjectState } from '@/model/project'
 import { User } from '@/entity/user'
 import moment from 'moment'
 import { Time } from '@/entity/time'
 import { TimeRepository } from '@/repository/time-repository'
-import RejectedExecutionException from '@/exception/rejected-execution-exception'
 import { ProjectAccessAddresses } from '@/model/dto/project'
 
 @injectable()
@@ -17,8 +15,6 @@ export class ProjectManager {
   protected projectRepository: ProjectRepository
   @inject('TimeRepository')
   protected timeRepository: TimeRepository
-  @inject('UserRepository')
-  protected userRepository: UserRepository
 
   public async findProjectCheckAccess(
     project: Project,
@@ -38,7 +34,7 @@ export class ProjectManager {
       data.workerAddresses !== undefined ||
       data.viewerAddresses !== undefined
     ) {
-      await this.setAccessAddresses(data, {
+      this.setAccessAddresses(data, {
         workerAddresses: data.workerAddresses ?? [],
         viewerAddresses: data.viewerAddresses ?? [],
       })
@@ -52,7 +48,7 @@ export class ProjectManager {
       data.workerAddresses !== undefined ||
       data.viewerAddresses !== undefined
     ) {
-      await this.setAccessAddresses(project, {
+      this.setAccessAddresses(project, {
         workerAddresses: data.workerAddresses ?? project.workerAddresses ?? [],
         viewerAddresses: data.viewerAddresses ?? project.viewerAddresses ?? [],
       })
@@ -76,29 +72,23 @@ export class ProjectManager {
     await this.save(project)
   }
 
-  private async setAccessAddresses(
+  /**
+   * Addresses need not belong to an existing user yet — a project owner can
+   * grant access to a wallet before it has ever signed in. Access is granted
+   * purely by address membership (see ProjectRepository's access filters),
+   * so the not-yet-onboarded wallet gets access the moment it does sign in.
+   */
+  private setAccessAddresses(
     project: Project,
     data: ProjectAccessAddresses,
-  ): Promise<void> {
-    const ownerAddress = project.user.address
+  ): void {
+    const ownerAddress = project.user.address.toLowerCase()
     const workerAddresses = [...new Set(data.workerAddresses)].filter(
-      (address) => address !== ownerAddress,
+      (address) => address.toLowerCase() !== ownerAddress,
     )
     const viewerAddresses = [...new Set(data.viewerAddresses)].filter(
-      (address) => address !== ownerAddress,
+      (address) => address.toLowerCase() !== ownerAddress,
     )
-    const addresses = [...new Set([...workerAddresses, ...viewerAddresses])]
-
-    if (addresses.length) {
-      const existingUsers =
-        await this.userRepository.countByAddresses(addresses)
-
-      if (existingUsers !== addresses.length) {
-        throw new RejectedExecutionException(
-          'One or more users in workerAddresses or viewerAddresses do not exist',
-        )
-      }
-    }
 
     project.workerAddresses = workerAddresses
     project.viewerAddresses = viewerAddresses

@@ -105,6 +105,8 @@
   "dashboard.projectsTable.confirmDelete.description": "Это действие нельзя отменить. Весь учёт времени и связанные данные будут безвозвратно удалены.",
   "dashboard.projectsTable.confirmDelete.title": "Удалить этот проект?",
   "dashboard.projectsTable.deletedMessage": "Проект удалён",
+  "dashboard.projectsTable.editError": "Ошибка обновления проекта",
+  "dashboard.projectsTable.editSuccess": "Проект успешно обновлён",
   "dashboard.projectsTable.drawer.close": "Закрыть",
   "dashboard.projectsTable.drawer.delete": "Удалить",
   "dashboard.projectsTable.drawer.download": "Скачать",

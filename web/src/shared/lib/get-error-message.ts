@@ -2,8 +2,7 @@ import { AxiosError } from 'axios'
 
 const WALLET_USER_CANCEL_MESSAGE = 'Wallet was not connected'
 
-// TODO: finalize implementation, move elsewhere
-export function getAuthErrorMessage(
+export function getErrorMessage(
   error: unknown,
   fallback = 'Something went wrong',
 ): string | null {

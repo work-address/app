@@ -347,11 +347,11 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         subQb
           .where(`${ownerAlias}.id = :accessUserId`, { accessUserId })
           .orWhere(
-            ":userAddress = ANY(COALESCE(project.workerAddresses, '{}'))",
+            `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`,
             { userAddress },
           )
           .orWhere(
-            ":userAddress = ANY(COALESCE(project.viewerAddresses, '{}'))",
+            `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.viewerAddresses, '{}')) AS address)`,
             { userAddress },
           )
       }),

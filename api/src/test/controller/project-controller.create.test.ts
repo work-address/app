@@ -89,35 +89,36 @@ export class ProjectControllerCreateTest extends BaseControllerTest {
   }
 
   @test()
-  async create_rejectsUnknownWorkerOrViewerAddresses() {
+  async create_allowsWorkerOrViewerAddressesWithNoAccountYet() {
     const owner = await this.userFixture.createUser()
+    // A collaborator may be granted access before their wallet has ever
+    // signed in — no matching user account is required at add-time.
+    const pendingAddress = faker.datatype.uuid()
 
-    let error: unknown
+    const res = await projectControllerCreate({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(owner).accessToken,
+      },
+      body: {
+        trackScreenshots: false,
+        trackProcesses: false,
+        title: faker.datatype.uuid(),
+        text: faker.datatype.uuid(),
+        state: EProjectState.ACTIVE,
+        workerAddresses: [pendingAddress],
+        viewerAddresses: [],
+      },
+      throwOnError: true,
+    })
 
-    try {
-      await projectControllerCreate({
-        client: this.apiClient(),
-        headers: {
-          Authorization: this.authenticator.getTokens(owner).accessToken,
-        },
-        body: {
-          trackScreenshots: false,
-          trackProcesses: false,
-          title: faker.datatype.uuid(),
-          text: faker.datatype.uuid(),
-          state: EProjectState.ACTIVE,
-          workerAddresses: [faker.datatype.uuid()],
-          viewerAddresses: [],
-        },
-        throwOnError: true,
-      })
-    } catch (e: unknown) {
-      error = e
-    }
+    const locationHeader =
+      res.headers['location'] ?? res.headers['Location'] ?? ''
+    const id = String(locationHeader).split('/')[3]
+    const project = await this.projectRepository.findOneByIdOrFail(id)
 
-    if (!axios.isAxiosError(error)) throw error
-    expect(error.response?.status).to.be.equal(500)
-    expect(error.response?.data.name).to.be.equal('RejectedExecutionException')
+    expect(res.status).to.be.equal(201)
+    expect(project.workerAddresses).to.deep.equal([pendingAddress])
   }
 
   @test()

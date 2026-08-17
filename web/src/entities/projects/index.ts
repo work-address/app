@@ -14,7 +14,7 @@ import {
 } from './projects.queries'
 import { $projectsWithProcessTracking } from './projects.stores'
 
-import { showToast } from '@/shared'
+import { getErrorMessage, showToast } from '@/shared'
 
 sample({
   clock: fetchProjects,
@@ -64,6 +64,39 @@ sample({
     editProjectMutation.finished.success.map(() => void 0),
   ],
   target: projectsQuery.start,
+})
+
+createProjectMutation.finished.failure.watch(({ error }) => {
+  const message = getErrorMessage(
+    error,
+    i18n.t('project.createModal.createError'),
+  )
+
+  if (!message) {
+    return
+  }
+
+  showToast('error', { message, position: 'top-center' })
+})
+
+editProjectMutation.finished.failure.watch(({ error }) => {
+  const message = getErrorMessage(
+    error,
+    i18n.t('dashboard.projectsTable.editError'),
+  )
+
+  if (!message) {
+    return
+  }
+
+  showToast('error', { message, position: 'top-center' })
+})
+
+editProjectMutation.finished.success.watch(() => {
+  showToast('success', {
+    message: i18n.t('dashboard.projectsTable.editSuccess'),
+    position: 'top-center',
+  })
 })
 
 export {

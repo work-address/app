@@ -124,7 +124,7 @@ export class Project extends AbstractBaseEntity implements IProject {
   public static accessParams(user: User) {
     return {
       accessUserId: user.id,
-      userAddress: user.address,
+      userAddress: user.address.toLowerCase(),
     }
   }
 }

@@ -211,27 +211,27 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
   }
 
   @test
-  async edit_rejectsUnknownAccessAddresses() {
+  async edit_allowsAccessAddressesWithNoAccountYet() {
     const owner = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
     )
+    // A collaborator may be granted access before their wallet has ever
+    // signed in — no matching user account is required at add-time.
+    const pendingAddress = faker.datatype.uuid()
 
-    let error: unknown
+    const res = await this.editProject(project, owner, {
+      workerAddresses: [pendingAddress],
+      viewerAddresses: [],
+    })
 
-    try {
-      await this.editProject(project, owner, {
-        workerAddresses: [faker.datatype.uuid()],
-        viewerAddresses: [],
-      })
-    } catch (e: unknown) {
-      error = e
-    }
+    const projectUpdated = await this.projectRepository.findOneByIdOrFail(
+      project.id,
+    )
 
-    if (!axios.isAxiosError(error)) throw error
-    expect(error.response?.status).to.be.equal(500)
-    expect(error.response?.data.name).to.be.equal('RejectedExecutionException')
+    expect(res.status).to.be.equal(200)
+    expect(projectUpdated.workerAddresses).to.deep.equal([pendingAddress])
   }
 
   @test
