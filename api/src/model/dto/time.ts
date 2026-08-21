@@ -52,6 +52,22 @@ class TimeSearchSortDto {
   @IsIn(SORT_DIRECTIONS)
   @IsOptional()
   mouseDistance?: SortDirection
+
+  @IsIn(SORT_DIRECTIONS)
+  @IsOptional()
+  note?: SortDirection
+
+  @IsIn(SORT_DIRECTIONS)
+  @IsOptional()
+  projectName?: SortDirection
+
+  @IsIn(SORT_DIRECTIONS)
+  @IsOptional()
+  paidStatus?: SortDirection
+
+  @IsIn(SORT_DIRECTIONS)
+  @IsOptional()
+  screenshot?: SortDirection
 }
 
 class TimeSearchFilterDto {

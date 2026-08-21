@@ -161,13 +161,13 @@ export const TimeTable = () => {
         getValue: (row: Time) => row.project?.title ?? '',
         headerText: t('dashboard.worklogsTable.head.projectName'),
         width: 120,
-        // TODO: support sorting
+        sortable: true,
       },
       {
         customKey: 'paidStatus',
         headerText: t('dashboard.worklogsTable.head.paymentStatus'),
         width: 120,
-        // TODO: support sorting
+        sortable: true,
       },
       {
         dataKey: 'note',
@@ -204,6 +204,7 @@ export const TimeTable = () => {
         dataKey: 'screenshot',
         headerText: t('dashboard.worklogsTable.head.screenshot'),
         width: 120,
+        sortable: true,
       },
     ],
     [t],

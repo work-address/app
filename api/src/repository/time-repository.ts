@@ -7,12 +7,19 @@ import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
 import { EProjectState } from '@/model/project'
-import { Brackets, SelectQueryBuilder } from 'typeorm'
+import { Brackets, OrderByCondition, SelectQueryBuilder } from 'typeorm'
 
 import { ITimeTotals } from '@/model/time'
 import { Calc } from '@/service/calc'
 import AccessException from '@/exception/access-exception'
 import { TimeSearchDto } from '@/model/dto/time'
+
+// Sort keys that don't map 1:1 onto a `time` column - they live on a
+// joined table instead (projectName -> project.title).
+const TIME_SORT_COLUMN_BY_KEY: Record<string, string> = {
+  projectName: 'project.title',
+  paidStatus: 'time.isPaid',
+}
 
 @injectable()
 export class TimeRepository extends AbstractRepositoryTemplate<Time> {
@@ -86,6 +93,18 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     })
   }
 
+  private buildTimeOrderByCondition(search: TimeSearchDto): OrderByCondition {
+    const [key, direction] = Object.entries(search.sort)[0] ?? []
+
+    if (!key || !direction) {
+      return {}
+    }
+
+    const column = TIME_SORT_COLUMN_BY_KEY[key] ?? `time.${key}`
+
+    return { [column]: direction }
+  }
+
   public findAndCount(
     search: TimeSearchDto,
     user: User,
@@ -101,7 +120,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       search,
     )
 
-    const sort = this.filter.buildOrderByCondition('time', s)
+    const sort = this.buildTimeOrderByCondition(s)
     const limit = this.filter.buildLimit(search)
 
     const qb = this.getRepo()

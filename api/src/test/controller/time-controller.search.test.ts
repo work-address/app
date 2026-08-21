@@ -8,15 +8,18 @@ import { timeControllerSearch } from '@app/api-client'
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { TimeRepository } from '@/repository/time-repository'
+import { ProjectRepository } from '@/repository/project-repository'
 
 @suite
 export class TimeControllerSearchTest extends BaseControllerTest {
   protected timeRepository: TimeRepository
+  protected projectRepository: ProjectRepository
 
   constructor() {
     super()
 
     this.timeRepository = this.container.get('TimeRepository')
+    this.projectRepository = this.container.get('ProjectRepository')
   }
 
   @test
@@ -250,6 +253,171 @@ export class TimeControllerSearchTest extends BaseControllerTest {
     expect(rows.length).to.be.eq(2)
     expect(rows[0].id).to.be.eq(newer.id)
     expect(rows[1].id).to.be.eq(older.id)
+  }
+
+  @test
+  async search_sortByNote_asc_ordersByNoteText() {
+    const user = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(user)
+    const now = moment.utc()
+
+    const zEntry = await this.timeFixture.create(
+      project,
+      now.clone().subtract(120, 'minutes').toDate(),
+      now.clone().subtract(110, 'minutes').toDate(),
+    )
+    zEntry.note = 'Z note'
+    await this.timeRepository.saveSingle(zEntry)
+
+    const aEntry = await this.timeFixture.create(
+      project,
+      now.clone().subtract(60, 'minutes').toDate(),
+      now.clone().subtract(50, 'minutes').toDate(),
+    )
+    aEntry.note = 'A note'
+    await this.timeRepository.saveSingle(aEntry)
+
+    const res = await timeControllerSearch({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
+      body: {
+        filter: { projectId: project.id },
+        sort: { note: 'ASC' },
+        page: 0,
+      },
+      throwOnError: true,
+    })
+
+    const rows = res.data[0] as Array<{ id: string }>
+    expect(rows.length).to.be.eq(2)
+    expect(rows[0].id).to.be.eq(aEntry.id)
+    expect(rows[1].id).to.be.eq(zEntry.id)
+  }
+
+  @test
+  async search_sortByProjectName_asc_ordersByProjectTitle() {
+    const user = await this.userFixture.createUser()
+    const zProject = await this.projectFixture.createPersonal(user)
+    zProject.title = 'Z project'
+    await this.projectRepository.saveSingle(zProject)
+
+    const aProject = await this.projectFixture.createPersonal(user)
+    aProject.title = 'A project'
+    await this.projectRepository.saveSingle(aProject)
+
+    const now = moment.utc()
+    const zEntry = await this.timeFixture.create(
+      zProject,
+      now.clone().subtract(120, 'minutes').toDate(),
+      now.clone().subtract(110, 'minutes').toDate(),
+    )
+    const aEntry = await this.timeFixture.create(
+      aProject,
+      now.clone().subtract(60, 'minutes').toDate(),
+      now.clone().subtract(50, 'minutes').toDate(),
+    )
+
+    const res = await timeControllerSearch({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
+      body: {
+        filter: {},
+        sort: { projectName: 'ASC' },
+        page: 0,
+      },
+      throwOnError: true,
+    })
+
+    const rows = res.data[0] as Array<{ id: string }>
+    expect(rows.length).to.be.eq(2)
+    expect(rows[0].id).to.be.eq(aEntry.id)
+    expect(rows[1].id).to.be.eq(zEntry.id)
+  }
+
+  @test
+  async search_sortByPaidStatus_asc_ordersUnpaidFirst() {
+    const user = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(user)
+    const now = moment.utc()
+
+    const paidEntry = await this.timeFixture.create(
+      project,
+      now.clone().subtract(120, 'minutes').toDate(),
+      now.clone().subtract(110, 'minutes').toDate(),
+    )
+    paidEntry.isPaid = true
+    await this.timeRepository.saveSingle(paidEntry)
+
+    const unpaidEntry = await this.timeFixture.create(
+      project,
+      now.clone().subtract(60, 'minutes').toDate(),
+      now.clone().subtract(50, 'minutes').toDate(),
+    )
+    unpaidEntry.isPaid = false
+    await this.timeRepository.saveSingle(unpaidEntry)
+
+    const res = await timeControllerSearch({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
+      body: {
+        filter: { projectId: project.id },
+        sort: { paidStatus: 'ASC' },
+        page: 0,
+      },
+      throwOnError: true,
+    })
+
+    const rows = res.data[0] as Array<{ id: string }>
+    expect(rows.length).to.be.eq(2)
+    expect(rows[0].id).to.be.eq(unpaidEntry.id)
+    expect(rows[1].id).to.be.eq(paidEntry.id)
+  }
+
+  @test
+  async search_sortByScreenshot_asc_ordersWithScreenshotFirst() {
+    const user = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(user)
+    const now = moment.utc()
+
+    // Postgres' default NULL ordering places NULLs last for ASC, so the
+    // (non-null) screenshot value sorts before the row with none.
+    const withScreenshot = await this.timeFixture.create(
+      project,
+      now.clone().subtract(120, 'minutes').toDate(),
+      now.clone().subtract(110, 'minutes').toDate(),
+    )
+    withScreenshot.screenshot = faker.datatype.uuid()
+    await this.timeRepository.saveSingle(withScreenshot)
+
+    const withoutScreenshot = await this.timeFixture.create(
+      project,
+      now.clone().subtract(60, 'minutes').toDate(),
+      now.clone().subtract(50, 'minutes').toDate(),
+    )
+
+    const res = await timeControllerSearch({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
+      body: {
+        filter: { projectId: project.id },
+        sort: { screenshot: 'ASC' },
+        page: 0,
+      },
+      throwOnError: true,
+    })
+
+    const rows = res.data[0] as Array<{ id: string }>
+    expect(rows.length).to.be.eq(2)
+    expect(rows[0].id).to.be.eq(withScreenshot.id)
+    expect(rows[1].id).to.be.eq(withoutScreenshot.id)
   }
 
   @test

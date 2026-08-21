@@ -83,6 +83,7 @@ export type User = {
     city?: string;
     country?: string;
     roles?: Array<'ROLE_USER'>;
+    premium?: boolean;
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
@@ -195,6 +196,10 @@ export type TimeSearchSortDto = {
     minutesActive?: 'ASC' | 'DESC';
     mouseKeys?: 'ASC' | 'DESC';
     mouseDistance?: 'ASC' | 'DESC';
+    note?: 'ASC' | 'DESC';
+    projectName?: 'ASC' | 'DESC';
+    paidStatus?: 'ASC' | 'DESC';
+    screenshot?: 'ASC' | 'DESC';
 };
 
 export type TimeSearchFilterDto = {
@@ -314,6 +319,7 @@ export type UserSearch = {
     city?: string;
     country?: string;
     roles?: Array<'ROLE_USER'>;
+    premium?: boolean;
 };
 
 /**

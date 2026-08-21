@@ -107,7 +107,7 @@
           "state"
         ],
         "example": {
-          "id": "020b9cd2-91f1-4406-8736-e32221c0b2b9"
+          "id": "4c0ba421-3fc6-482f-9516-3ebbf2612125"
         }
       },
       "ProjectStatistics": {
@@ -168,7 +168,7 @@
           "period"
         ],
         "example": {
-          "id": "2eb64036-c01b-4195-853f-c5320f8228e8"
+          "id": "06adad55-47d6-4ea3-94e9-9d2e2315d414"
         }
       },
       "Time": {
@@ -262,7 +262,7 @@
           "toAt"
         ],
         "example": {
-          "id": "298d89ca-8aba-4ea5-b335-977c785f528f"
+          "id": "fa58ea4f-3913-476a-9c90-53519f069e74"
         }
       },
       "Project": {
@@ -345,7 +345,7 @@
           "state"
         ],
         "example": {
-          "id": "b49f28e1-6844-4828-a415-c57990b77f36"
+          "id": "29ba31d5-b9e5-4208-af80-53737aea91b0"
         }
       },
       "User": {
@@ -419,6 +419,9 @@
             },
             "type": "array"
           },
+          "premium": {
+            "type": "boolean"
+          },
           "id": {
             "minLength": 1,
             "type": "string",
@@ -454,7 +457,7 @@
           "emailOrPhone"
         ],
         "example": {
-          "id": "19719e3d-426a-4c0f-b466-9c7f1650da96"
+          "id": "3468513f-068c-4b72-aeba-d850fb0d02d8"
         }
       },
       "AuthForgotPasswordDto": {
@@ -836,6 +839,34 @@
             ]
           },
           "mouseDistance": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          "note": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          "projectName": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          "paidStatus": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          "screenshot": {
             "type": "string",
             "enum": [
               "ASC",
@@ -1273,6 +1304,9 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "premium": {
+            "type": "boolean"
           }
         }
       },
@@ -3167,7 +3201,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "f73615ef-47b7-4450-95e0-91064a26162b"
+                  "projectId": "2d0e61dc-93ba-49a0-85b4-16258e903e18"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -3235,8 +3269,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1785925034436,
-                "toUnix": 1786011434436
+                "fromUnix": 1787225189588,
+                "toUnix": 1787311589588
               }
             }
           },
@@ -3413,7 +3447,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "38d4694d-1d68-44e9-a96a-245ce3febab6"
+                "nonce": "f276f6bf-8f65-408b-8769-b32efbc63d29"
               },
               "schema": {
                 "properties": {
@@ -3458,7 +3492,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "5a5fbd94-ca89-4923-a5b9-66c0e00fd1e7"
+                "nonce": "893d52a7-1474-4429-b552-9d8ce063077d"
               },
               "schema": {
                 "properties": {
@@ -3499,21 +3533,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "ed04024e-06f7-4c0c-947d-8c24ddf12dfc",
+                      "nonce": "51f494cc-8c94-4e91-8997-f4a6c89e7d5c",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "153024c9-bfab-4482-9c20-92d4413b5b9b",
+                      "nonce": "ca076ac3-0bea-4087-9239-3df5865eba3e",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "3a1d4027-2ace-42a2-b936-65d09c61b0bc",
+                      "nonce": "79b9c304-938a-4e99-8b6b-6ea9d6005082",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {
