@@ -4,7 +4,7 @@ import { normalizeProcessName } from './utils'
 
 import type { ProjectProcessStats, StatsPeriod, TimeTotalsRow } from './types'
 
-import { baseApi } from '@/shared'
+import { baseApi, suppressGlobalErrorToast } from '@/shared'
 
 export const projectsQuery = createQuery({
   handler: async ({
@@ -78,6 +78,9 @@ const fetchProjectProcesses = async (id: string, period: StatsPeriod) => {
   })
 
   if (response.error) {
+    // The failure is aggregated into this project's `failed` flag and
+    // surfaced once via showProcessStatsError, not per-project.
+    suppressGlobalErrorToast(response.error)
     throw response.error
   }
 

@@ -17,7 +17,7 @@ import { $hasMoreTime, $timeFilters, $timePage, $timeSort } from './time.stores'
 
 import type { TimeFilters, TimeSort } from './types'
 
-import { $breakpoints, showToast } from '@/shared'
+import { $breakpoints, showToast, suppressGlobalErrorToast } from '@/shared'
 
 const toTimeQueryParams = (
   filters: TimeFilters,
@@ -72,10 +72,13 @@ sample({
   target: setTimeLoading.prepend(() => true),
 })
 
-timeQuery.finished.failure.watch(({ params }) => {
+timeQuery.finished.failure.watch(({ params, error }) => {
   if ((params.page ?? 0) === 0) {
+    // Initial-load failures fall through to the global error toast instead.
     return
   }
+
+  suppressGlobalErrorToast(error)
 
   showToast('error', {
     message: i18n.t('dashboard.worklogsTable.loadMoreError'),

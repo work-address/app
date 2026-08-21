@@ -14,7 +14,7 @@ import {
 } from './projects.queries'
 import { $projectsWithProcessTracking } from './projects.stores'
 
-import { getErrorMessage, showToast } from '@/shared'
+import { getErrorMessage, showToast, suppressGlobalErrorToast } from '@/shared'
 
 sample({
   clock: fetchProjects,
@@ -49,7 +49,10 @@ const showProcessStatsError = () => {
   })
 }
 
-projectsProcessStatsQuery.finished.failure.watch(showProcessStatsError)
+projectsProcessStatsQuery.finished.failure.watch(({ error }) => {
+  suppressGlobalErrorToast(error)
+  showProcessStatsError()
+})
 
 projectsProcessStatsQuery.finished.success.watch(({ result }) => {
   if (result.some((stats) => stats.failed)) {
@@ -67,6 +70,8 @@ sample({
 })
 
 createProjectMutation.finished.failure.watch(({ error }) => {
+  suppressGlobalErrorToast(error)
+
   const message = getErrorMessage(
     error,
     i18n.t('project.createModal.createError'),
@@ -80,6 +85,8 @@ createProjectMutation.finished.failure.watch(({ error }) => {
 })
 
 editProjectMutation.finished.failure.watch(({ error }) => {
+  suppressGlobalErrorToast(error)
+
   const message = getErrorMessage(
     error,
     i18n.t('dashboard.projectsTable.editError'),

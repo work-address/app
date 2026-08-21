@@ -3,9 +3,13 @@ import {
   type AxiosResponse,
   type InternalAxiosRequestConfig,
 } from 'axios'
+import i18n from 'i18next'
 
 import { authControllerRefresh } from './generated'
 import { client } from './generated/client.gen'
+
+import { getErrorMessage } from '@/shared/lib/get-error-message'
+import { showToast } from '@/shared/lib/sonner'
 
 const ACCESS_TOKEN_KEY = 'access_token'
 const REFRESH_TOKEN_KEY = 'refresh_token'
@@ -93,6 +97,53 @@ client.instance.interceptors.response.use(
         localStorage.removeItem(REFRESH_TOKEN_KEY)
         throw refreshError
       }
+    }
+
+    return Promise.reject(error)
+  },
+)
+
+// Errors that a caller already surfaced with its own, more specific message
+// (see suppressGlobalErrorToast below) so the generic handler doesn't also
+// show a second, redundant toast for the same failure.
+const suppressedErrors = new WeakSet<object>()
+
+export function suppressGlobalErrorToast(error: unknown): void {
+  if (error !== null && typeof error === 'object') {
+    suppressedErrors.add(error)
+  }
+}
+
+const isGloballyHandledStatus = (status: number) =>
+  status === 400 || status >= 500
+
+// Global exceptions interceptor - any 400/500 response not already handled by
+// a caller (via suppressGlobalErrorToast) gets a generic error toast, so a
+// backend failure is never silent by default. Registered as a separate
+// interceptor (rather than folded into the 401 handler above) so it only
+// sees errors the 401 refresh flow didn't already resolve, and runs on a
+// macrotask delay so a same-tick `.finished.failure` watcher has a chance to
+// call suppressGlobalErrorToast() first.
+client.instance.interceptors.response.use(
+  (response: AxiosResponse) => response,
+  (error: AxiosError) => {
+    const status = error.response?.status
+
+    if (status !== undefined && isGloballyHandledStatus(status)) {
+      setTimeout(() => {
+        if (suppressedErrors.has(error)) {
+          return
+        }
+
+        const message = getErrorMessage(
+          error,
+          i18n.t('common.errors.unexpected'),
+        )
+
+        if (message) {
+          showToast('error', { message, position: 'top-center' })
+        }
+      }, 0)
     }
 
     return Promise.reject(error)

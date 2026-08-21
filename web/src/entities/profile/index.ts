@@ -47,7 +47,7 @@ import {
 
 import type { SolanaNonceParams } from './types'
 
-import { getErrorMessage, showToast } from '@/shared'
+import { getErrorMessage, showToast, suppressGlobalErrorToast } from '@/shared'
 
 /**
  * Route login event to the appropriate wallet flow based on selected provider.
@@ -242,6 +242,11 @@ sample({
 sample({
   clock: saveProfileMutation.finished.success,
   target: fetchStatusFx,
+})
+
+// profile-edit.tsx already shows its own toast on save failure.
+saveProfileMutation.finished.failure.watch(({ error }) => {
+  suppressGlobalErrorToast(error)
 })
 
 /**

@@ -36,6 +36,7 @@
   "common.duration.hoursOnly": "{{hours}} hr",
   "common.duration.minutesOnly": "{{minutes}} min",
   "common.edit": "Edit",
+  "common.errors.unexpected": "Something went wrong. Please try again.",
   "common.save": "Save",
   "common.share": "Share",
   "common.toastErrorAlt": "Error",
