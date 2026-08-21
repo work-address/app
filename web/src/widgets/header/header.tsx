@@ -255,7 +255,7 @@ const Right = styled.div`
   display: flex;
   align-items: center;
   justify-content: flex-end;
-  gap: 44px;
+  gap: 12px;
 
   ${(p) => p.theme.breakpoints.down('md')} {
     display: none;

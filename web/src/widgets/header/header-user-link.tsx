@@ -1,10 +1,9 @@
+import { QRCodeSVG } from 'qrcode.react'
 import { NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { IconImg } from '../styled'
-
 import { routes } from '@/routes'
-import { Button, PersonIcon, formatWalletAddress } from '@/shared'
+import { Button, formatWalletAddress } from '@/shared'
 
 type Props = {
   user: {
@@ -23,10 +22,17 @@ export const HeaderUserLink = ({ user, userAlt, stretch }: Props) => (
     })}
     data-stretch={stretch || undefined}
   >
-    <Button variant="ghost" color="neutral" stretch={stretch}>
+    <ProfileButton variant="ghost" color="neutral" stretch={stretch}>
       <UserBox>
-        <UserAvatar>
-          <IconImg src={PersonIcon} alt={userAlt} />
+        <UserAvatar role="img" aria-label={userAlt}>
+          <QRCodeSVG
+            value={user?.friendlyWalletAddress || ''}
+            size={28}
+            level="M"
+            fgColor="var(--ds-accent-11)"
+            bgColor="transparent"
+            marginSize={0}
+          />
         </UserAvatar>
         <UserText>
           <UserName>{user?.name || user?.title || ''}</UserName>
@@ -35,7 +41,7 @@ export const HeaderUserLink = ({ user, userAlt, stretch }: Props) => (
           </UserSub>
         </UserText>
       </UserBox>
-    </Button>
+    </ProfileButton>
   </Root>
 )
 
@@ -43,6 +49,10 @@ const Root = styled(NavLink)`
   &[data-stretch] {
     width: 100%;
   }
+`
+
+const ProfileButton = styled(Button)`
+  padding-inline-start: 1px;
 `
 
 const UserBox = styled.div`
