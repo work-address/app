@@ -10,7 +10,6 @@ import type { Time } from '@/entities/time'
 import { setTimePaidStatusMutation } from '@/entities/time'
 import {
   type DesktopBodyCellRenderProps,
-  ExampleScreenshot,
   formatDurationFromMinutes,
   getTimeActiveColor,
   Text,
@@ -40,10 +39,9 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
       return screenshotSrc ? (
         <Screenshot src={screenshotSrc} alt={props.data.project?.title || ''} />
       ) : (
-        <Screenshot
-          src={ExampleScreenshot}
-          alt={t('dashboard.worklogsTable.screenshotNoData')}
-        />
+        <Text size="2" color="gray">
+          {t('dashboard.worklogsTable.screenshotNoData')}
+        </Text>
       )
     }
 
