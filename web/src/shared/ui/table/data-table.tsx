@@ -299,7 +299,7 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
         </Root>
         {isLoadingMore && (
           <LoadingMoreRow>
-            <Spinner />
+            <Spinner size={32} />
           </LoadingMoreRow>
         )}
         {hasReachEndHandler && <ReachEndSentinel ref={sentinelRef} />}
@@ -470,7 +470,7 @@ const LoadingMoreRow = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: var(--space-3);
+  padding: var(--space-6) var(--space-3);
 `
 
 const ReachEndSentinel = styled.div`
