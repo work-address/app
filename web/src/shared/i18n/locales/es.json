@@ -37,6 +37,7 @@
   "common.duration.minutesOnly": "{{minutes}} min",
   "common.edit": "Editar",
   "common.errors.unexpected": "Algo salió mal. Inténtalo de nuevo.",
+  "common.premium": "Cuenta premium",
   "common.save": "Guardar",
   "common.share": "Compartir",
   "common.toastErrorAlt": "Error",

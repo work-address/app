@@ -83,6 +83,7 @@ export type User = {
     city?: string;
     country?: string;
     roles?: Array<'ROLE_USER'>;
+    premium?: boolean;
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
@@ -314,6 +315,7 @@ export type UserSearch = {
     city?: string;
     country?: string;
     roles?: Array<'ROLE_USER'>;
+    premium?: boolean;
 };
 
 /**
@@ -708,7 +710,7 @@ export type ProjectControllerGetStatsData = {
     body?: never;
     path: {
         id: Project;
-        period: unknown;
+        period: string;
     };
     query?: never;
     url: '/api/project/{id}/stats/{period}';

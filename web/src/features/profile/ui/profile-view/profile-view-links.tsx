@@ -24,6 +24,7 @@ import {
   InstagramIcon,
   LinkedinIcon,
   PersonIcon,
+  PremiumBadge,
   TelegramIcon,
   Text,
   TwitterIcon,
@@ -141,6 +142,7 @@ export const ProfileViewLinks = ({
                     </Skeleton>
                     <CopyIcon />
                   </Button>
+                  {user?.premium && <PremiumBadge />}
                 </Flex>
               </Flex>
               <Flex gap={'2'} align={'center'}>

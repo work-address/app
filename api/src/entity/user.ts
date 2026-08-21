@@ -5,6 +5,7 @@ import { Exclude, Expose } from 'class-transformer'
 
 import {
   IsArray,
+  IsBoolean,
   IsEnum,
   IsOptional,
   IsString,
@@ -153,4 +154,12 @@ export class User extends AbstractBaseEntity implements IUser {
   @IsEnum(EUserRole, { each: true })
   @IsOptional()
   roles: EUserRole[] = []
+
+  // Not exposed to the 'edit' group - premium is granted by billing, not
+  // self-editable via PUT /user.
+  @Expose({ groups: ['search'] })
+  @Column('bool', { nullable: true, default: false })
+  @IsBoolean()
+  @IsOptional()
+  premium?: boolean | null
 }

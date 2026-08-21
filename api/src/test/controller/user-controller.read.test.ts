@@ -7,6 +7,7 @@ import { suite, test } from '@testdeck/mocha'
 import { userControllerEdit, userControllerRead } from '@app/api-client'
 import type { UserEdit } from '@app/api-client'
 
+import { UserRepository } from '@/repository/user-repository'
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 
 @suite()
@@ -145,5 +146,68 @@ export class UserControllerReadTest extends BaseControllerTest {
     expect(profile.city).to.be.eq(data.city)
     expect(profile.country).to.be.eq(data.country)
     expect(readRes.data).to.not.have.property('whatsapp')
+  }
+
+  @test()
+  async read_exposesPremiumFlag() {
+    const user = await this.userFixture.createUser()
+    const userRepository = this.container.get<UserRepository>(
+      'UserRepository',
+    )
+
+    user.premium = true
+    await userRepository.saveSingle(user)
+
+    const client = this.apiClient()
+    const res = await userControllerRead({
+      client,
+      path: { address: user.address as never },
+      throwOnError: true,
+    })
+
+    expect((res.data as unknown as { premium: boolean }).premium).to.be.eq(
+      true,
+    )
+  }
+
+  @test()
+  async read_premiumDefaultsFalse() {
+    const user = await this.userFixture.createUser()
+    const client = this.apiClient()
+
+    const res = await userControllerRead({
+      client,
+      path: { address: user.address as never },
+      throwOnError: true,
+    })
+
+    expect((res.data as unknown as { premium: boolean }).premium).to.be.eq(
+      false,
+    )
+  }
+
+  @test()
+  async edit_cannotSelfGrantPremium() {
+    const user = await this.userFixture.createUser()
+    const client = this.apiClient()
+
+    await userControllerEdit({
+      client,
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
+      body: { premium: true } as unknown as UserEdit,
+      throwOnError: true,
+    })
+
+    const readRes = await userControllerRead({
+      client,
+      path: { address: user.address as never },
+      throwOnError: true,
+    })
+
+    expect((readRes.data as unknown as { premium: boolean }).premium).to.be.eq(
+      false,
+    )
   }
 }

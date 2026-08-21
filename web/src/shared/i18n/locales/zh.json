@@ -37,6 +37,7 @@
   "common.duration.minutesOnly": "{{minutes}} 分钟",
   "common.edit": "编辑",
   "common.errors.unexpected": "出现问题，请重试。",
+  "common.premium": "高级账户",
   "common.save": "保存",
   "common.share": "分享",
   "common.toastErrorAlt": "错误",

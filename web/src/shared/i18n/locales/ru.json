@@ -37,6 +37,7 @@
   "common.duration.minutesOnly": "{{minutes}} мин",
   "common.edit": "Изменить",
   "common.errors.unexpected": "Что-то пошло не так. Попробуйте еще раз.",
+  "common.premium": "Премиум аккаунт",
   "common.save": "Сохранить",
   "common.share": "Поделиться",
   "common.toastErrorAlt": "Ошибка",

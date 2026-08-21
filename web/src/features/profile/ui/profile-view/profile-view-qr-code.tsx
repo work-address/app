@@ -18,6 +18,7 @@ import {
   useBreakpoint,
   Button,
   Modal,
+  PremiumBadge,
   formatWalletAddress,
 } from '@/shared'
 
@@ -82,6 +83,7 @@ export const ProfileViewQrCode = ({
                     <CopyIcon />
                   </Button>
                 </Skeleton>
+                {user?.premium && <PremiumBadge />}
               </Flex>
             </Flex>
           )}

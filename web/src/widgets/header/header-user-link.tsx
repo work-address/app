@@ -3,13 +3,14 @@ import { NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { routes } from '@/routes'
-import { Button, formatWalletAddress } from '@/shared'
+import { Button, PremiumBadge, formatWalletAddress } from '@/shared'
 
 type Props = {
   user: {
     name?: string | null
     title?: string | null
     friendlyWalletAddress?: string | null
+    premium?: boolean | null
   } | null
   userAlt: string
   stretch?: boolean
@@ -36,9 +37,12 @@ export const HeaderUserLink = ({ user, userAlt, stretch }: Props) => (
         </UserAvatar>
         <UserText>
           <UserName>{user?.name || user?.title || ''}</UserName>
-          <UserSub>
-            {formatWalletAddress(user?.friendlyWalletAddress || '')}
-          </UserSub>
+          <UserSubRow>
+            <UserSub>
+              {formatWalletAddress(user?.friendlyWalletAddress || '')}
+            </UserSub>
+            {user?.premium && <PremiumBadge />}
+          </UserSubRow>
         </UserText>
       </UserBox>
     </ProfileButton>
@@ -84,6 +88,12 @@ const UserName = styled.span`
   line-height: 16px;
   font-weight: 500;
   color: var(--ds-neutral-12);
+`
+
+const UserSubRow = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 4px;
 `
 
 const UserSub = styled.span`
