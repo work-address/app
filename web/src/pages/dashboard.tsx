@@ -14,6 +14,7 @@ import {
 import { fetchTime, $timeLoading } from '@/entities/time'
 import {
   DashboardApplicationsUsage,
+  DashboardPremiumBanner,
   DashboardProjectsSearchInput,
 } from '@/features/dashboard'
 import { ProjectsCreateModal, ProjectsTable } from '@/features/projects'
@@ -68,6 +69,7 @@ export default function DashboardPage() {
         title={t('dashboard.page.title')}
       />
       <Wrapper>
+        <DashboardPremiumBanner />
         <S.Content>
           <S.Main>
             <Flex
