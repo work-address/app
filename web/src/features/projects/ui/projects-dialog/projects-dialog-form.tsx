@@ -11,6 +11,7 @@ import { ProjectsFormTrackingOptions } from '../projects-form-tracking-options'
 
 import type { ProjectFormValues } from '../../model'
 
+import { $user } from '@/entities/profile'
 import { $rawProjects, editProjectMutation } from '@/entities/projects'
 import { Input, TextArea, type InputProps, BASE_CURRENCY } from '@/shared'
 
@@ -37,9 +38,10 @@ export const ProjectsDialogForm = ({
     values: defaultValues,
   })
 
-  const { editProject, editingStatus } = useUnit({
+  const { editProject, editingStatus, user } = useUnit({
     editProject: editProjectMutation.start,
     editingStatus: editProjectMutation.$status,
+    user: $user,
   })
 
   const editingProject = useStoreMap({
@@ -151,6 +153,7 @@ export const ProjectsDialogForm = ({
           register={register}
           errors={errors}
           disabled={isPending}
+          premiumLocked={!user?.premium}
           inputProps={inputProps}
         />
       </Flex>

@@ -12,6 +12,7 @@ import { ProjectsFormTrackingOptions } from './projects-form-tracking-options'
 
 import type { ProjectFormValues } from '../model'
 
+import { $user } from '@/entities/profile'
 import { createProjectMutation } from '@/entities/projects'
 import {
   AdaptiveDialog,
@@ -45,11 +46,12 @@ export const ProjectsCreateModal = ({
   const { t } = useTranslation()
   const isMobile = useBreakpoint('isMobile')
 
-  const { createProject, status, resetMutation, pending } = useUnit({
+  const { createProject, status, resetMutation, pending, user } = useUnit({
     createProject: createProjectMutation.start,
     status: createProjectMutation.$status,
     resetMutation: createProjectMutation.reset,
     pending: createProjectMutation.$pending,
+    user: $user,
   })
 
   const {
@@ -228,6 +230,7 @@ export const ProjectsCreateModal = ({
               register={register}
               errors={errors}
               disabled={pending}
+              premiumLocked={!user?.premium}
               inputProps={inputProps}
             />
           </Flex>

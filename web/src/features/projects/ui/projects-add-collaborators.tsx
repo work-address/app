@@ -1,4 +1,4 @@
-import { PlusIcon, TrashIcon } from '@radix-ui/react-icons'
+import { LockClosedIcon, PlusIcon, TrashIcon } from '@radix-ui/react-icons'
 import { Flex, IconButton } from '@radix-ui/themes'
 import { useMemo } from 'react'
 import {
@@ -17,7 +17,7 @@ import { ProjectsFormSelect } from './projects-form-select'
 
 import type { CollaboratorRole, ProjectFormValues } from '../model'
 
-import { Button, Input, Text, type InputProps } from '@/shared'
+import { Button, Input, Text, Tooltip, type InputProps } from '@/shared'
 
 const ID_PREFIX = 'add-collaborators-'
 
@@ -28,6 +28,8 @@ type Props = {
   disabled?: boolean
   /** View mode: hide add/remove and render fields read-only. */
   readOnly?: boolean
+  /** Collaborators are a premium-only feature - lock the whole section. */
+  premiumLocked?: boolean
   inputProps?: InputProps
 }
 
@@ -37,10 +39,11 @@ export const ProjectsAddCollaborators = ({
   errors,
   disabled,
   readOnly,
+  premiumLocked,
   inputProps,
 }: Props) => {
   const { t } = useTranslation()
-  const fieldsDisabled = Boolean(disabled || readOnly)
+  const fieldsDisabled = Boolean(disabled || readOnly || premiumLocked)
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -91,13 +94,24 @@ export const ProjectsAddCollaborators = ({
 
   return (
     <Flex direction={'column'} gap={'4'}>
-      <Text size={'3'} weight={'medium'}>
-        {t(
-          readOnly
-            ? 'project.createModal.collaborators.viewTitle'
-            : 'project.createModal.collaborators.title',
+      <Flex align={'center'} gap={'2'}>
+        <Text size={'3'} weight={'medium'}>
+          {t(
+            readOnly
+              ? 'project.createModal.collaborators.viewTitle'
+              : 'project.createModal.collaborators.title',
+          )}
+        </Text>
+        {premiumLocked && (
+          <Tooltip
+            content={t('project.createModal.collaborators.premiumRequired')}
+          >
+            <LockIconWrap>
+              <LockClosedIcon width={14} height={14} />
+            </LockIconWrap>
+          </Tooltip>
         )}
-      </Text>
+      </Flex>
       {fields.map((field, index) => {
         const addressError = errors.collaborators?.[index]?.address
 
@@ -166,20 +180,42 @@ export const ProjectsAddCollaborators = ({
           </Flex>
         )
       })}
-      {!readOnly && (
-        <AddMoreButton
-          variant="ghost"
-          color="neutral"
-          iconLeft={<PlusIcon />}
-          disabled={fieldsDisabled}
-          onClick={() => append({ address: '', role: 'Viewer' })}
-        >
-          {t('project.createModal.collaborators.addMore')}
-        </AddMoreButton>
-      )}
+      {!readOnly &&
+        (premiumLocked ? (
+          <Tooltip
+            content={t('project.createModal.collaborators.premiumRequired')}
+          >
+            <span>
+              <AddMoreButton
+                variant="ghost"
+                color="neutral"
+                iconLeft={<PlusIcon />}
+                disabled
+              >
+                {t('project.createModal.collaborators.addMore')}
+              </AddMoreButton>
+            </span>
+          </Tooltip>
+        ) : (
+          <AddMoreButton
+            variant="ghost"
+            color="neutral"
+            iconLeft={<PlusIcon />}
+            disabled={fieldsDisabled}
+            onClick={() => append({ address: '', role: 'Viewer' })}
+          >
+            {t('project.createModal.collaborators.addMore')}
+          </AddMoreButton>
+        ))}
     </Flex>
   )
 }
+
+const LockIconWrap = styled.span`
+  display: inline-flex;
+  align-items: center;
+  color: var(--gray-9);
+`
 
 const AddressField = styled.div`
   flex: 1;

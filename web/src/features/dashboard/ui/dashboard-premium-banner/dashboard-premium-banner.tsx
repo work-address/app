@@ -5,19 +5,26 @@ import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { $user } from '@/entities/profile'
-import { Button, IconButton, Text, showToast, useBreakpoint } from '@/shared'
+import {
+  Button,
+  IconButton,
+  Text,
+  Tooltip,
+  showToast,
+  useBreakpoint,
+} from '@/shared'
 
-const DISMISSED_KEY = 'dashboard_premium_banner_dismissed'
+const COLLAPSED_KEY = 'dashboard_premium_banner_collapsed'
 
 export const DashboardPremiumBanner = () => {
   const { t } = useTranslation()
   const isDesktop = useBreakpoint('isDesktop')
   const user = useUnit($user)
-  const [dismissed, setDismissed] = useState(
-    () => localStorage.getItem(DISMISSED_KEY) === '1',
+  const [collapsed, setCollapsed] = useState(
+    () => localStorage.getItem(COLLAPSED_KEY) === '1',
   )
 
-  if (user?.premium || dismissed) {
+  if (user?.premium) {
     return null
   }
 
@@ -28,9 +35,25 @@ export const DashboardPremiumBanner = () => {
     })
   }
 
-  const handleDismiss = () => {
-    localStorage.setItem(DISMISSED_KEY, '1')
-    setDismissed(true)
+  const toggleCollapsed = () => {
+    const next = !collapsed
+
+    localStorage.setItem(COLLAPSED_KEY, next ? '1' : '0')
+    setCollapsed(next)
+  }
+
+  if (collapsed) {
+    return (
+      <Tooltip content={t('dashboard.premiumBanner.expandAlt')}>
+        <CollapsedButton
+          type="button"
+          aria-label={t('dashboard.premiumBanner.expandAlt')}
+          onClick={toggleCollapsed}
+        >
+          <StarFilledIcon width={14} height={14} />
+        </CollapsedButton>
+      </Tooltip>
+    )
   }
 
   return (
@@ -55,7 +78,7 @@ export const DashboardPremiumBanner = () => {
         radius="full"
         size="1"
         aria-label={t('dashboard.premiumBanner.dismissAlt')}
-        onClick={handleDismiss}
+        onClick={toggleCollapsed}
       >
         <Cross1Icon />
       </DismissButton>
@@ -109,4 +132,22 @@ const DismissButton = styled(IconButton)`
   position: absolute;
   top: 10px;
   right: 10px;
+`
+
+const CollapsedButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 32px;
+  height: 32px;
+  margin-bottom: 20px;
+  border: 1px solid var(--ds-accent-alpha-6);
+  border-radius: 50%;
+  background: var(--ds-accent-3);
+  color: var(--ds-accent-9);
+  cursor: pointer;
+
+  &:hover {
+    background: var(--ds-accent-4);
+  }
 `
