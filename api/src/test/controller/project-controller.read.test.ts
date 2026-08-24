@@ -49,7 +49,7 @@ export class ProjectControllerReadTest extends BaseControllerTest {
 
   @test
   async readAsWorker() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -87,7 +87,7 @@ export class ProjectControllerReadTest extends BaseControllerTest {
 
   @test
   async readAsViewer() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -125,7 +125,7 @@ export class ProjectControllerReadTest extends BaseControllerTest {
 
   @test
   async readAsNonOwner() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const other = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
       owner,
@@ -154,7 +154,7 @@ export class ProjectControllerReadTest extends BaseControllerTest {
 
   @test
   async readAsOwner() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -184,7 +184,7 @@ export class ProjectControllerReadTest extends BaseControllerTest {
 
   @test
   async readAsOwner_exposesWorkerAndViewerAddresses() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -219,7 +219,7 @@ export class ProjectControllerReadTest extends BaseControllerTest {
 
   @test
   async readAsOwner_exposesEmptyAddressLists() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -243,7 +243,7 @@ export class ProjectControllerReadTest extends BaseControllerTest {
 
   @test()
   async readAsOwner_preservesWorkerAndViewerOrder() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const workerA = await this.userFixture.createUser()
     const workerB = await this.userFixture.createUser()
     const viewerA = await this.userFixture.createUser()
@@ -287,7 +287,7 @@ export class ProjectControllerReadTest extends BaseControllerTest {
 
   @test()
   async read_withoutAuthorization_unauthorized() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -312,7 +312,7 @@ export class ProjectControllerReadTest extends BaseControllerTest {
 
   @test()
   async read_unknownProject_notFound() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
 
     let error: unknown
 

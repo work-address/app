@@ -30,7 +30,7 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
 
   @test
   async getStatsAsOwner_aggregatesProcessTime() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -77,7 +77,7 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
 
   @test
   async getStats_returnsEmptyWhenNoProcessData() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -101,7 +101,7 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
 
   @test
   async getStats_returnsCachedStatsOnSecondCall() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -143,7 +143,7 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
 
   @test
   async getStatsAsWorker() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -179,7 +179,7 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
 
   @test
   async getStatsAsViewer() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -215,7 +215,7 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
 
   @test
   async getStatsAsNonOwner() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const other = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
       owner,
@@ -247,7 +247,7 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
 
   @test
   async getStats_unknownProject_notFound() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
 
     let error: unknown
 
@@ -273,7 +273,7 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
 
   @test
   async getStats_requiresAuthorization() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -300,7 +300,7 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
 
   @test
   async getStats_invalidPeriod() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,

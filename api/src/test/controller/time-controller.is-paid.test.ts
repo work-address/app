@@ -72,7 +72,7 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
 
   @test()
   async markPaid_setsIsPaidForOwnerEntries() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -112,7 +112,7 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
 
   @test()
   async markUnpaid_clearsIsPaid() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -145,7 +145,7 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
 
   @test()
   async markPaid_deniedForOwnerOnWorkersEntry() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -206,7 +206,7 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
 
   @test()
   async markPaid_workerCanUpdateOwnEntries() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -259,7 +259,7 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
 
   @test()
   async markPaid_deniedForViewer() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -301,7 +301,7 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
 
   @test()
   async markPaid_deniedForWorkerOnAnotherUsersEntry() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -343,7 +343,7 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
 
   @test()
   async markPaid_unknownIdDenied() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
 
     let error: unknown
 
@@ -366,7 +366,7 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
 
   @test()
   async markPaid_validationRejectsEmptyIds() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
 
     let error: unknown
 

@@ -60,7 +60,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
 
   @test
   async workerCanTrackTimeOnSharedProject() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -100,7 +100,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
 
   @test
   async workerCannotEditTimeEntry() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -137,7 +137,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
 
   @test
   async workerCanEditOwnTimeEntry() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -194,7 +194,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
 
   @test
   async viewerCanReadTimeSearchAndReport() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner, 60)
@@ -243,7 +243,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
 
   @test
   async ownerCanReadReport() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner, 60)
@@ -268,7 +268,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
 
   @test
   async workerCanReadReport() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner, 60)
@@ -293,7 +293,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
 
   @test
   async viewerCanReadTotalsWithProjectIdFilter() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner, 60)
@@ -322,7 +322,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
 
   @test
   async viewerCanReadProjectStats() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(
@@ -351,7 +351,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
 
   @test
   async unrelatedUserStillDeniedForProjectRead() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const other = await this.userFixture.createUser()
@@ -382,7 +382,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
 
   @test
   async unrelatedUserDeniedForTimeSearch() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const other = await this.userFixture.createUser()

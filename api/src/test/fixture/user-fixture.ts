@@ -63,6 +63,16 @@ export class UserFixture {
     return this.userManager.saveSingle(user)
   }
 
+  /** Collaborator access (workers/viewers) is premium-only - use this for a
+   *  project owner in tests that grant worker/viewer access. */
+  public async createPremiumUser(): Promise<User> {
+    const user = await this.createUser()
+
+    user.premium = true
+
+    return this.userManager.saveSingle(user)
+  }
+
   public createUserFromKeypair(
     keypair: web3.Web3BaseWalletAccount,
   ): Promise<User> {

@@ -21,7 +21,7 @@ export class ProjectControllerEditTest extends BaseControllerTest {
 
   @test
   async edit() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.INACTIVE,
@@ -62,7 +62,7 @@ export class ProjectControllerEditTest extends BaseControllerTest {
 
   @test()
   async edit_updatesWorkerAndViewerAddresses() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -96,7 +96,7 @@ export class ProjectControllerEditTest extends BaseControllerTest {
 
   @test()
   async edit_deniedForNonOwner() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const other = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
       owner,

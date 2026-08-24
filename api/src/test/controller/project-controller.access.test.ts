@@ -44,7 +44,7 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
 
   @test
   async edit_setsWorkerAndViewerAddressesAsOwner() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -69,7 +69,7 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
 
   @test
   async edit_replacesExistingAccessLists() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const workerA = await this.userFixture.createUser()
     const workerB = await this.userFixture.createUser()
     const viewerA = await this.userFixture.createUser()
@@ -99,7 +99,7 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
 
   @test
   async edit_clearsAccessListsWithEmptyArrays() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -127,7 +127,7 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
 
   @test
   async edit_excludesOwnerAddressFromAccessLists() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
       owner,
@@ -149,7 +149,7 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
 
   @test
   async edit_deduplicatesAccessAddresses() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
       owner,
@@ -171,7 +171,7 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
 
   @test
   async edit_accessDeniedForNonOwner() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const other = await this.userFixture.createUser()
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -212,7 +212,7 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
 
   @test
   async edit_allowsAccessAddressesWithNoAccountYet() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -236,7 +236,7 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
 
   @test
   async edit_unknownProject_notFound() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
 
     let error: unknown
 
@@ -266,7 +266,7 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
 
   @test
   async edit_requiresAuthorization() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -297,7 +297,7 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
 
   @test()
   async edit_updatesOnlyWorkerAddresses_preservesViewerAddresses() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const workerA = await this.userFixture.createUser()
     const workerB = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
@@ -322,7 +322,7 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
 
   @test()
   async edit_updatesOnlyViewerAddresses_preservesWorkerAddresses() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewerA = await this.userFixture.createUser()
     const viewerB = await this.userFixture.createUser()
@@ -347,7 +347,7 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
 
   @test()
   async edit_omittingAccessFields_leavesListsUnchanged() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(

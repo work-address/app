@@ -27,6 +27,10 @@ export class TimeManager {
 
   public static reportExpiresIn: number = 1000 * 60 * 10 // 10 minutes
 
+  // Non-premium accounts only keep the trailing N days of their own time
+  // logs - older entries are dropped whenever a new one comes in.
+  public static freeTimeLogRetentionDays: number = 7
+
   public async createOrUpdateMany(
     data: TimeCreateDto[],
     user: User,
@@ -86,6 +90,15 @@ export class TimeManager {
           processes: undefined,
         })
       }
+    }
+
+    if (!user.premium) {
+      const cutoff = moment
+        .utc()
+        .subtract(TimeManager.freeTimeLogRetentionDays, 'days')
+        .toDate()
+
+      await this.timeRepository.deleteOwnEntriesOlderThan(user, cutoff)
     }
 
     return insertionResults

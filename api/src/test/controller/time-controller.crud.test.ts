@@ -457,7 +457,9 @@ export class TimeControllerCrudTest extends BaseControllerTest {
 
   @test
   async updatePersonal() {
-    const user = await this.userFixture.createUser()
+    // Uses a fixed historical timestamp well outside the free-tier 7-day
+    // retention window, so must be premium or the entries get purged.
+    const user = await this.userFixture.createPremiumUser()
     const projectA = await this.projectFixture.createPersonal(user)
     const projectB = await this.projectFixture.createPersonal(user)
 
@@ -534,7 +536,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
 
   @test()
   async delete_asOwner() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -574,7 +576,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
 
   @test()
   async delete_deniedForNonOwner() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const other = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
       owner,
@@ -613,7 +615,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
 
   @test()
   async delete_deniedForOwnerWhenNotAuthor() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
       owner,

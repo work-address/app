@@ -21,7 +21,7 @@ export class ProjectControllerCreateTest extends BaseControllerTest {
 
   @test
   async create() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const data = {
       trackScreenshots: false,
       trackProcesses: true,
@@ -56,7 +56,7 @@ export class ProjectControllerCreateTest extends BaseControllerTest {
 
   @test()
   async create_withWorkerAndViewerAddresses() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const data = {
@@ -90,7 +90,7 @@ export class ProjectControllerCreateTest extends BaseControllerTest {
 
   @test()
   async create_allowsWorkerOrViewerAddressesWithNoAccountYet() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     // A collaborator may be granted access before their wallet has ever
     // signed in — no matching user account is required at add-time.
     const pendingAddress = faker.datatype.uuid()
@@ -123,7 +123,7 @@ export class ProjectControllerCreateTest extends BaseControllerTest {
 
   @test()
   async create_excludesOwnerAddressFromAccessLists() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
 
     const res = await projectControllerCreate({

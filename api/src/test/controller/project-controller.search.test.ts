@@ -48,7 +48,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_returnsSharedProjectsForWorkerAndViewer() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const owned = await this.projectFixture.createPersonal(owner)
@@ -94,7 +94,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_asOwner_includesAllOwnedProjects() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const first = await this.projectFixture.createPersonal(owner)
@@ -122,7 +122,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_excludesProjectsWithoutAccess() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const outsider = await this.userFixture.createUser()
@@ -149,7 +149,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_filterProjectId_asWorkerAndViewer() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(owner, EProjectState.ACTIVE)
@@ -233,7 +233,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_exposesWorkerAndViewerAddresses() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -277,7 +277,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_exposesEmptyAddressLists() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -312,7 +312,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_asWorker_exposesWorkersAndViewers() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const shared = await this.projectFixture.create(owner, EProjectState.ACTIVE)
@@ -347,7 +347,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_asViewer_exposesWorkersAndViewers() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const shared = await this.projectFixture.create(owner, EProjectState.ACTIVE)
@@ -382,7 +382,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_multipleProjects_attachWorkersAndViewersPerProject() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const workerA = await this.userFixture.createUser()
     const workerB = await this.userFixture.createUser()
     const viewerA = await this.userFixture.createUser()
@@ -433,7 +433,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
 
   @test()
   async search_preservesWorkerAndViewerOrder() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const workerA = await this.userFixture.createUser()
     const workerB = await this.userFixture.createUser()
     const viewerA = await this.userFixture.createUser()

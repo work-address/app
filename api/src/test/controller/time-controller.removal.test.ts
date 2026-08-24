@@ -25,7 +25,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
   }
 
   private async createTimeWithMedia() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -198,7 +198,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
 
   @test()
   async removeScreenshots_deniedForWorker() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -256,7 +256,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
 
   @test()
   async removeScreenshots_byWorker() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
       owner,
@@ -338,7 +338,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
 
   @test()
   async removeProcesses_deniedForWorker() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -402,7 +402,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
 
   @test()
   async removeProcesses_byWorker() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
       owner,
@@ -459,7 +459,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
 
   @test()
   async removeScreenshots_unknownIdDenied() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
 
     let error: unknown
 
@@ -484,7 +484,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
 
   @test()
   async removeScreenshots_validationRejectsEmptyIds() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
 
     let error: unknown
 
@@ -508,7 +508,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
 
   @test()
   async removeProcesses_unknownIdDenied() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
 
     let error: unknown
 
@@ -533,7 +533,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
 
   @test()
   async removeProcesses_validationRejectsEmptyIds() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
 
     let error: unknown
 

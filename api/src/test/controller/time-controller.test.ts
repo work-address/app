@@ -30,7 +30,7 @@ export class TimeControllerTest extends BaseControllerTest {
 
   @test
   async getTimePublishedAsOwner() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -86,7 +86,7 @@ export class TimeControllerTest extends BaseControllerTest {
 
   @test
   async read_returnsIsPaidWhenSet() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -114,7 +114,7 @@ export class TimeControllerTest extends BaseControllerTest {
 
   @test
   async getTimeAsNonProjectOwnerDenied() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const other = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
       owner,
@@ -212,7 +212,7 @@ export class TimeControllerTest extends BaseControllerTest {
 
   @test
   async getTotalsAsWorker() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner, 60)
@@ -362,7 +362,7 @@ export class TimeControllerTest extends BaseControllerTest {
 
   @test
   async getTotals_deniedForUnrelatedUserWithProjectId() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const other = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner, 60)
 
@@ -516,7 +516,7 @@ export class TimeControllerTest extends BaseControllerTest {
 
   @test
   async read_unknownTime_notFound() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
 
     let error: unknown
 
@@ -540,7 +540,7 @@ export class TimeControllerTest extends BaseControllerTest {
 
   @test
   async getReport_deniedForUnrelatedUser() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const other = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner)
 

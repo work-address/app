@@ -74,7 +74,7 @@ export class ProjectControllerLifecycleTest extends BaseControllerTest {
 
   @test()
   async read_returns404AfterWorkerRemovedFromAccessLists() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -105,7 +105,7 @@ export class ProjectControllerLifecycleTest extends BaseControllerTest {
 
   @test()
   async search_excludesProjectAfterWorkerRemovedFromAccessLists() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -135,7 +135,7 @@ export class ProjectControllerLifecycleTest extends BaseControllerTest {
 
   @test()
   async read_search_deniedForSoftDeletedProject() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -190,7 +190,7 @@ export class ProjectControllerLifecycleTest extends BaseControllerTest {
 
   @test()
   async viewerCannotTrackTimeOnSharedProject() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -230,7 +230,7 @@ export class ProjectControllerLifecycleTest extends BaseControllerTest {
 
   @test()
   async trackTime_deniedWhenProjectInactive() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(

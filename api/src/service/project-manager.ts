@@ -1,4 +1,5 @@
 import { inject, injectable } from 'inversify'
+import { BadRequestError } from 'routing-controllers'
 
 import { Project } from '@/entity/project'
 import { ProjectRepository } from '@/repository/project-repository'
@@ -89,6 +90,15 @@ export class ProjectManager {
     const viewerAddresses = [...new Set(data.viewerAddresses)].filter(
       (address) => address.toLowerCase() !== ownerAddress,
     )
+
+    if (
+      !project.user.premium &&
+      (workerAddresses.length > 0 || viewerAddresses.length > 0)
+    ) {
+      throw new BadRequestError(
+        'Collaborators (workers and viewers) require a premium subscription',
+      )
+    }
 
     project.workerAddresses = workerAddresses
     project.viewerAddresses = viewerAddresses

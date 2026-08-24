@@ -41,7 +41,7 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
 
   @test()
   async findProjectCheckAccess_asWorker() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner)
     project.workerAddresses = [worker.address]
@@ -57,7 +57,7 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
 
   @test()
   async findProjectCheckAccess_asViewer() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner)
     project.viewerAddresses = [viewer.address]
@@ -73,7 +73,7 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
 
   @test()
   async findProjectCheckAccess_deniedForUnrelatedUser() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const outsider = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner)
 
@@ -87,7 +87,7 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
 
   @test()
   async createAndSave_excludesOwnerFromAccessLists() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const project = new Project()
 
@@ -106,7 +106,7 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
 
   @test()
   async createAndSave_allowsAccessAddressesWithNoAccountYet() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = new Project()
 
     project.title = 'access test'
@@ -127,7 +127,7 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
 
   @test()
   async createAndSave_matchesAccessAddressesCaseInsensitively() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const project = new Project()
 
@@ -147,7 +147,7 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
 
   @test()
   async editAndSave_updatesOnlyWorkerAddresses_preservesViewerAddresses() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const workerA = await this.userFixture.createUser()
     const workerB = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
@@ -168,7 +168,7 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
 
   @test()
   async editAndSave_deduplicatesAccessAddresses() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner)
 
@@ -181,5 +181,74 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     const updated = await this.projectRepository.findOneByIdOrFail(project.id)
     expect(updated.workerAddresses).to.deep.equal([worker.address])
     expect(updated.viewerAddresses).to.deep.equal([worker.address])
+  }
+
+  @test()
+  async createAndSave_rejectsAccessAddressesForNonPremiumOwner() {
+    const owner = await this.userFixture.createUser()
+    const worker = await this.userFixture.createUser()
+    const project = new Project()
+
+    project.title = 'access test'
+    project.text = 'access test'
+    project.state = EProjectState.ACTIVE
+    project.user = owner
+    project.workerAddresses = [worker.address]
+    project.viewerAddresses = []
+
+    let error: unknown
+
+    try {
+      await this.projectManager.createAndSave(project)
+    } catch (e: unknown) {
+      error = e
+    }
+
+    expect(error).to.exist
+    expect((error as { httpCode?: number }).httpCode).to.be.equal(400)
+  }
+
+  @test()
+  async createAndSave_allowsEmptyAccessAddressesForNonPremiumOwner() {
+    const owner = await this.userFixture.createUser()
+    const project = new Project()
+
+    project.title = 'access test'
+    project.text = 'access test'
+    project.state = EProjectState.ACTIVE
+    project.user = owner
+    project.workerAddresses = []
+    project.viewerAddresses = []
+
+    const saved = await this.projectManager.createAndSave(project)
+
+    expect(saved.workerAddresses).to.deep.equal([])
+    expect(saved.viewerAddresses).to.deep.equal([])
+  }
+
+  @test()
+  async editAndSave_rejectsAccessAddressesForNonPremiumOwner() {
+    const owner = await this.userFixture.createUser()
+    const worker = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner)
+
+    const patch = new Project()
+    patch.workerAddresses = [worker.address]
+
+    let error: unknown
+
+    try {
+      await this.projectManager.editAndSave(project, patch)
+    } catch (e: unknown) {
+      error = e
+    }
+
+    expect(error).to.exist
+    expect((error as { httpCode?: number }).httpCode).to.be.equal(400)
+
+    const unchanged = await this.projectRepository.findOneByIdOrFail(
+      project.id,
+    )
+    expect(unchanged.workerAddresses ?? []).to.deep.equal([])
   }
 }

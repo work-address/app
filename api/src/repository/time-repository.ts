@@ -282,6 +282,25 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     return times
   }
 
+  /**
+   * Free-tier retention: non-premium accounts only keep the trailing N days
+   * of their own time logs. Hard-deletes (matches removeMany's semantics for
+   * user-initiated entry removal) rather than soft-deletes, since these rows
+   * are meant to be gone, not just hidden.
+   */
+  public async deleteOwnEntriesOlderThan(
+    user: User,
+    cutoff: Date,
+  ): Promise<void> {
+    await this.getRepo()
+      .createQueryBuilder()
+      .delete()
+      .from(Time)
+      .where('"userId" = :userId', { userId: user.id })
+      .andWhere('"fromAt" < :cutoff', { cutoff })
+      .execute()
+  }
+
   public findTimeAsAuthorOrFail(time: Time, user: User): Promise<Time> {
     return this.getRepo()
       .createQueryBuilder('time')
