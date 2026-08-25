@@ -132,7 +132,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
     }
 
     if (!axios.isAxiosError(error)) throw error
-    expect(error.response?.status).to.be.equal(401)
+    expect(error.response?.status).to.be.equal(403)
   }
 
   @test

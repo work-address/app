@@ -33,14 +33,16 @@ export const writeAuthenticatedToLsFx = createEffect((value: boolean) => {
   }
 })
 
-export const getNonceFx = createEffect(async (params: GetNonceParams) => {
-  if (params.mode === 'ton') {
-    return baseApi
-      .authControllerTonNonce()
-      .then((response) => response.data as string)
-  }
-
-  return baseApi
-    .authControllerNonce({ body: { address: params.address } })
-    .then((response) => response.data as string)
-})
+/**
+ * Failures here must reject. Reading `.data` off the client's failure arm
+ * yields undefined, which the old `as string` cast hid - the effect then
+ * resolved and the wallet was asked to sign "undefined" instead of the login
+ * being reported as failed.
+ */
+export const getNonceFx = createEffect((params: GetNonceParams) =>
+  params.mode === 'ton'
+    ? runApiData(() => baseApi.authControllerTonNonce())
+    : runApiData(() =>
+        baseApi.authControllerNonce({ body: { address: params.address } }),
+      ),
+)

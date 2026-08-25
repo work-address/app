@@ -72,7 +72,7 @@ export class ProjectControllerTest extends BaseControllerTest {
 
     if (!axios.isAxiosError(error)) throw error
     expect(error).to.be.ok
-    expect(error.response?.status).to.be.equal(401)
+    expect(error.response?.status).to.be.equal(403)
 
     const unchanged = await this.projectRepository.findOneByIdOrFail(project.id)
     expect(unchanged.state).to.be.eq(EProjectState.ACTIVE)

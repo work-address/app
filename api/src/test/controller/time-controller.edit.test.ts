@@ -219,7 +219,7 @@ export class TimeControllerEditTest extends BaseControllerTest {
 
     if (!axios.isAxiosError(error)) throw error
     expect(error).to.be.ok
-    expect(error.response?.status).to.be.equal(401)
+    expect(error.response?.status).to.be.equal(403)
     expect(error.response?.data.name).to.be.equal('UserAccessException')
     expect(error.response?.data.message).to.be.equal(
       "Access error: The data can't be accessed by your user",

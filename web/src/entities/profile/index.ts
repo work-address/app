@@ -207,6 +207,9 @@ sample({
 
 sample({
   clock: [
+    // A nonce that cannot be fetched is a failed login, not a silent stall:
+    // getNonceFx used to swallow HTTP errors and resolve with undefined.
+    getNonceFx.fail,
     signEthFx.fail,
     loginEthFx.fail,
     tonAuthError,

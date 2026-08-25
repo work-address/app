@@ -114,10 +114,17 @@ export function suppressGlobalErrorToast(error: unknown): void {
   }
 }
 
+/**
+ * Every failing status gets a generic toast except 401, which belongs to the
+ * refresh/logout flow above: a 401 only reaches this interceptor once the
+ * refresh has already given up, and that path signs the user out and reports
+ * itself. Previously only 400 and 5xx were covered, so 403/404/409/422/429
+ * failed completely silently for any caller without its own handler.
+ */
 const isGloballyHandledStatus = (status: number) =>
-  status === 400 || status >= 500
+  status >= 400 && status !== 401
 
-// Global exceptions interceptor - any 400/500 response not already handled by
+// Global exceptions interceptor - any failing response not already handled by
 // a caller (via suppressGlobalErrorToast) gets a generic error toast, so a
 // backend failure is never silent by default. Registered as a separate
 // interceptor (rather than folded into the 401 handler above) so it only

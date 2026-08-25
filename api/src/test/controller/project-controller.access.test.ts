@@ -202,7 +202,7 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
     }
 
     if (!axios.isAxiosError(error)) throw error
-    expect(error.response?.status).to.be.equal(401)
+    expect(error.response?.status).to.be.equal(403)
     expect(error.response?.data.name).to.be.equal('UserAccessException')
 
     const unchanged = await this.projectRepository.findOneByIdOrFail(project.id)

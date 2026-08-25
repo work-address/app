@@ -196,7 +196,7 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
     }
 
     if (!axios.isAxiosError(error)) throw error
-    expect(error.response?.status).to.be.equal(401)
+    expect(error.response?.status).to.be.equal(403)
 
     const unchanged = await this.timeRepository.findOneBy({
       where: { id: timeId },
@@ -291,7 +291,7 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
     }
 
     if (!axios.isAxiosError(error)) throw error
-    expect(error.response?.status).to.be.equal(401)
+    expect(error.response?.status).to.be.equal(403)
 
     const unchanged = await this.timeRepository.findOneBy({
       where: { id: time.id },
@@ -333,7 +333,7 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
     }
 
     if (!axios.isAxiosError(error)) throw error
-    expect(error.response?.status).to.be.equal(401)
+    expect(error.response?.status).to.be.equal(403)
 
     const unchanged = await this.timeRepository.findOneBy({
       where: { id: time.id },
@@ -361,7 +361,7 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
     }
 
     if (!axios.isAxiosError(error)) throw error
-    expect(error.response?.status).to.be.equal(401)
+    expect(error.response?.status).to.be.equal(403)
   }
 
   @test()

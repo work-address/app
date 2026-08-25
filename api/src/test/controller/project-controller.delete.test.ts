@@ -72,7 +72,7 @@ export class ProjectControllerDeleteTest extends BaseControllerTest {
     }
 
     if (!axios.isAxiosError(error)) throw error
-    expect(error.response?.status).to.be.equal(401)
+    expect(error.response?.status).to.be.equal(403)
 
     const stillThere = await this.projectRepository.findOneBy({
       where: { id: project.id },
