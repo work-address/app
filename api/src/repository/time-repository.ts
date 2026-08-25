@@ -6,6 +6,7 @@ import { AbstractRepositoryTemplate } from '@/repository/abstract-repository-tem
 import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
+import { Invoice } from '@/entity/invoice'
 import { EProjectState } from '@/model/project'
 import { Brackets, OrderByCondition, SelectQueryBuilder } from 'typeorm'
 
@@ -283,21 +284,55 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
   }
 
   /**
-   * Free-tier retention: non-premium accounts only keep the trailing N days
-   * of their own time logs. Hard-deletes (matches removeMany's semantics for
-   * user-initiated entry removal) rather than soft-deletes, since these rows
-   * are meant to be gone, not just hidden.
+   * Free-tier retention: a project owned by a non-premium account keeps only
+   * the trailing N days of time logs.
+   *
+   * Retention follows the *project owner's* tier rather than the author's,
+   * because a project's log is the owner's record - entries a free-tier
+   * worker recorded on a premium owner's project are part of the history that
+   * owner is paying to keep, and must not be swept up by the worker's own
+   * tier. Callers pass the projects they touched, so the purge stays scoped
+   * to projects that were actually written to.
+   *
+   * Soft-deletes rather than hard-deletes: this runs automatically, without
+   * the user asking for it, so it stays reversible on upgrade. (User-initiated
+   * removal via removeMany still hard-deletes - that one is intentional.)
+   * Entries backing an issued invoice are never purged, so a financial record
+   * always keeps its supporting detail.
    */
-  public async deleteOwnEntriesOlderThan(
-    user: User,
+  public async softDeleteExpiredEntriesForProjects(
+    projectIds: string[],
     cutoff: Date,
   ): Promise<void> {
+    const uniqueIds = [...new Set(projectIds)]
+
+    if (uniqueIds.length === 0) {
+      return
+    }
+
+    // Identifiers come from entity metadata, never from request data.
+    const timeTable = this.getRepo().metadata.tableName
+    const invoiceTable =
+      this.getRepo().manager.connection.getMetadata(Invoice).tableName
+
     await this.getRepo()
       .createQueryBuilder()
-      .delete()
+      .softDelete()
       .from(Time)
-      .where('"userId" = :userId', { userId: user.id })
-      .andWhere('"fromAt" < :cutoff', { cutoff })
+      .where(`"${timeTable}"."projectId" IN (:...projectIds)`, {
+        projectIds: uniqueIds,
+      })
+      .andWhere(`"${timeTable}"."fromAt" < :cutoff`, { cutoff })
+      .andWhere(`"${timeTable}"."deletedAt" IS NULL`)
+      .andWhere(
+        `NOT EXISTS (
+          SELECT 1 FROM "${invoiceTable}" invoice
+          WHERE invoice."projectId" = "${timeTable}"."projectId"
+            AND invoice."deletedAt" IS NULL
+            AND "${timeTable}"."fromAt" < invoice."toAt"
+            AND "${timeTable}"."toAt" > invoice."fromAt"
+        )`,
+      )
       .execute()
   }
 

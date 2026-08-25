@@ -12,6 +12,7 @@ import { Project } from '@/entity/project'
 import { RedisClient } from '@/service/redis-client'
 import { ITimeTotals } from '@/model/time'
 import AccessException from '@/exception/access-exception'
+import RetentionExceededException from '@/exception/retention-exceeded-exception'
 import { ImageResizer } from '@/service/image-resizer'
 
 @injectable()
@@ -27,15 +28,27 @@ export class TimeManager {
 
   public static reportExpiresIn: number = 1000 * 60 * 10 // 10 minutes
 
-  // Non-premium accounts only keep the trailing N days of their own time
-  // logs - older entries are dropped whenever a new one comes in.
+  // Projects owned by a non-premium account keep only the trailing N days of
+  // time logs. Entitlement is the project owner's, not the author's - see
+  // TimeRepository.softDeleteExpiredEntriesForProjects.
   public static freeTimeLogRetentionDays: number = 7
+
+  public static retentionCutoff(): Date {
+    return moment
+      .utc()
+      .subtract(TimeManager.freeTimeLogRetentionDays, 'days')
+      .toDate()
+  }
 
   public async createOrUpdateMany(
     data: TimeCreateDto[],
     user: User,
   ): Promise<ITimeInsertionResult[]> {
     const insertionResults: ITimeInsertionResult[] = []
+    // Fixed for the whole request so every entry is judged against the same
+    // window, and so the purge below cannot move past what was just accepted.
+    const retentionCutoff = TimeManager.retentionCutoff()
+    const projectIdsUnderRetention = new Set<string>()
 
     for (let a = 0; a < data.length; a++) {
       const item = data[a]
@@ -47,6 +60,19 @@ export class TimeManager {
           item.projectId,
           user,
         )
+
+        if (!project.user?.premium) {
+          projectIdsUnderRetention.add(project.id)
+
+          // Refuse rather than accept-and-purge: saving this row and deleting
+          // it moments later would hand the client an id for a row that no
+          // longer exists, and a syncing tracker would drop its local copy.
+          if (fromAt < retentionCutoff) {
+            throw new RetentionExceededException(
+              `Entry starts before the ${TimeManager.freeTimeLogRetentionDays}-day retention window of this project's plan and was not stored`,
+            )
+          }
+        }
 
         let time = await this.timeRepository.findTimeSingleForProject(
           project,
@@ -92,13 +118,11 @@ export class TimeManager {
       }
     }
 
-    if (!user.premium) {
-      const cutoff = moment
-        .utc()
-        .subtract(TimeManager.freeTimeLogRetentionDays, 'days')
-        .toDate()
-
-      await this.timeRepository.deleteOwnEntriesOlderThan(user, cutoff)
+    if (projectIdsUnderRetention.size > 0) {
+      await this.timeRepository.softDeleteExpiredEntriesForProjects(
+        [...projectIdsUnderRetention],
+        retentionCutoff,
+      )
     }
 
     return insertionResults

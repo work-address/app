@@ -35,10 +35,16 @@ export class ProjectManager {
       data.workerAddresses !== undefined ||
       data.viewerAddresses !== undefined
     ) {
-      this.setAccessAddresses(data, {
-        workerAddresses: data.workerAddresses ?? [],
-        viewerAddresses: data.viewerAddresses ?? [],
-      })
+      // A brand new project grants from nothing, so every address in the
+      // payload counts as a grant.
+      this.setAccessAddresses(
+        data,
+        {
+          workerAddresses: data.workerAddresses ?? [],
+          viewerAddresses: data.viewerAddresses ?? [],
+        },
+        { workerAddresses: [], viewerAddresses: [] },
+      )
     }
 
     return this.save(data)
@@ -49,10 +55,19 @@ export class ProjectManager {
       data.workerAddresses !== undefined ||
       data.viewerAddresses !== undefined
     ) {
-      this.setAccessAddresses(project, {
-        workerAddresses: data.workerAddresses ?? project.workerAddresses ?? [],
-        viewerAddresses: data.viewerAddresses ?? project.viewerAddresses ?? [],
-      })
+      this.setAccessAddresses(
+        project,
+        {
+          workerAddresses:
+            data.workerAddresses ?? project.workerAddresses ?? [],
+          viewerAddresses:
+            data.viewerAddresses ?? project.viewerAddresses ?? [],
+        },
+        {
+          workerAddresses: project.workerAddresses ?? [],
+          viewerAddresses: project.viewerAddresses ?? [],
+        },
+      )
     }
 
     const editable: Partial<Project> = { ...data }
@@ -82,6 +97,7 @@ export class ProjectManager {
   private setAccessAddresses(
     project: Project,
     data: ProjectAccessAddresses,
+    current: ProjectAccessAddresses,
   ): void {
     const ownerAddress = project.user.address.toLowerCase()
     const workerAddresses = [...new Set(data.workerAddresses)].filter(
@@ -91,17 +107,29 @@ export class ProjectManager {
       (address) => address.toLowerCase() !== ownerAddress,
     )
 
-    if (
-      !project.user.premium &&
-      (workerAddresses.length > 0 || viewerAddresses.length > 0)
-    ) {
-      throw new BadRequestError(
-        'Collaborators (workers and viewers) require a premium subscription',
-      )
+    if (!project.user.premium) {
+      // Gate *granting*, never revoking. An owner whose subscription lapsed
+      // still has to be able to take access away one collaborator at a time -
+      // otherwise their only way out is to wipe the whole list.
+      const grantsAccess =
+        ProjectManager.addsAddress(workerAddresses, current.workerAddresses) ||
+        ProjectManager.addsAddress(viewerAddresses, current.viewerAddresses)
+
+      if (grantsAccess) {
+        throw new BadRequestError(
+          'Collaborators (workers and viewers) require a premium subscription',
+        )
+      }
     }
 
     project.workerAddresses = workerAddresses
     project.viewerAddresses = viewerAddresses
+  }
+
+  private static addsAddress(next: string[], current: string[]): boolean {
+    const existing = new Set(current.map((address) => address.toLowerCase()))
+
+    return next.some((address) => !existing.has(address.toLowerCase()))
   }
 
   public save(project: Project) {

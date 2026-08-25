@@ -273,15 +273,19 @@
           },
           "workerAddresses": {
             "items": {
+              "maxLength": 128,
               "type": "string"
             },
-            "type": "array"
+            "type": "array",
+            "maxItems": 100
           },
           "viewerAddresses": {
             "items": {
+              "maxLength": 128,
               "type": "string"
             },
-            "type": "array"
+            "type": "array",
+            "maxItems": 100
           },
           "workers": {
             "items": {},
@@ -1418,15 +1422,19 @@
           },
           "workerAddresses": {
             "items": {
+              "maxLength": 128,
               "type": "string"
             },
-            "type": "array"
+            "type": "array",
+            "maxItems": 100
           },
           "viewerAddresses": {
             "items": {
+              "maxLength": 128,
               "type": "string"
             },
-            "type": "array"
+            "type": "array",
+            "maxItems": 100
           },
           "workers": {
             "type": "array",
@@ -1483,15 +1491,19 @@
           },
           "workerAddresses": {
             "items": {
+              "maxLength": 128,
               "type": "string"
             },
-            "type": "array"
+            "type": "array",
+            "maxItems": 100
           },
           "viewerAddresses": {
             "items": {
+              "maxLength": 128,
               "type": "string"
             },
-            "type": "array"
+            "type": "array",
+            "maxItems": 100
           },
           "trackScreenshots": {
             "type": "boolean"
@@ -1576,15 +1588,19 @@
           },
           "workerAddresses": {
             "items": {
+              "maxLength": 128,
               "type": "string"
             },
-            "type": "array"
+            "type": "array",
+            "maxItems": 100
           },
           "viewerAddresses": {
             "items": {
+              "maxLength": 128,
               "type": "string"
             },
-            "type": "array"
+            "type": "array",
+            "maxItems": 100
           },
           "trackScreenshots": {
             "type": "boolean"

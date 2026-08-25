@@ -21,7 +21,7 @@ export class ProjectRepositoryIntegrationTest extends AbstractDatabaseIntegratio
 
   @test()
   async findProjectWithAccess_asOwnerWorkerAndViewer() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -79,7 +79,7 @@ export class ProjectRepositoryIntegrationTest extends AbstractDatabaseIntegratio
 
   @test()
   async findAndCountAccessibleBy_asOwnerWorkerAndViewer() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const outsider = await this.userFixture.createUser()
@@ -186,7 +186,7 @@ export class ProjectRepositoryIntegrationTest extends AbstractDatabaseIntegratio
 
   @test()
   async findAndCountAccessibleBy_attachesWorkerCaseInsensitively() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.create(owner, EProjectState.ACTIVE)
     // Stored casing (e.g. EIP-55 checksummed) may differ from what the
@@ -206,7 +206,7 @@ export class ProjectRepositoryIntegrationTest extends AbstractDatabaseIntegratio
 
   @test()
   async findAndCountAccessibleBy_grantsAccessAfterLateOnboarding() {
-    const owner = await this.userFixture.createUser()
+    const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(owner, EProjectState.ACTIVE)
     const pendingKeypair = web3.eth.accounts.create()
     project.workerAddresses = [pendingKeypair.address]

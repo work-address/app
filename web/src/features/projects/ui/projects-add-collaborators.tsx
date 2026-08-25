@@ -44,6 +44,10 @@ export const ProjectsAddCollaborators = ({
 }: Props) => {
   const { t } = useTranslation()
   const fieldsDisabled = Boolean(disabled || readOnly || premiumLocked)
+  // A lapsed subscription blocks *granting* access, never revoking it - an
+  // owner must always be able to remove a collaborator they already added.
+  // Mirrors the same rule in ProjectManager.setAccessAddresses on the API.
+  const removeDisabled = Boolean(disabled || readOnly)
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -164,7 +168,7 @@ export const ProjectsAddCollaborators = ({
                   color={'red'}
                   radius={'full'}
                   mb={'1'}
-                  disabled={fieldsDisabled}
+                  disabled={removeDisabled}
                   aria-label={t('project.createModal.collaborators.remove')}
                   onClick={() => remove(index)}
                 >

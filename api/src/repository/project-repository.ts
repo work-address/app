@@ -221,12 +221,21 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
         subQb
           .where(`${ownerAlias}.id = :accessUserId`, { accessUserId })
           .orWhere(
-            `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`,
-            { userAddress },
-          )
-          .orWhere(
-            `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.viewerAddresses, '{}')) AS address)`,
-            { userAddress },
+            new Brackets((collaboratorQb) => {
+              collaboratorQb.where(`${ownerAlias}.premium = true`).andWhere(
+                new Brackets((addressQb) => {
+                  addressQb
+                    .where(
+                      `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`,
+                      { userAddress },
+                    )
+                    .orWhere(
+                      `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.viewerAddresses, '{}')) AS address)`,
+                      { userAddress },
+                    )
+                }),
+              )
+            }),
           )
       }),
     )
@@ -244,8 +253,14 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
         subQb
           .where(`${ownerAlias}.id = :accessUserId`, { accessUserId })
           .orWhere(
-            `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`,
-            { userAddress },
+            new Brackets((collaboratorQb) => {
+              collaboratorQb
+                .where(`${ownerAlias}.premium = true`)
+                .andWhere(
+                  `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`,
+                  { userAddress },
+                )
+            }),
           )
       }),
     )

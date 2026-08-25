@@ -5,6 +5,7 @@ import { UserFixture } from '@/test/fixture/user-fixture'
 import { AbstractDatabaseIntegration } from '@/test/abstract-database.integration'
 
 import { ProjectManager } from '@/service/project-manager'
+import { UserManager } from '@/service/user-manager'
 import { ProjectFixture } from '@/test/fixture/project-fixture'
 import { ProjectRepository } from '@/repository/project-repository'
 import { Project } from '@/entity/project'
@@ -16,6 +17,7 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
   protected projectFixture: ProjectFixture
   protected projectManager: ProjectManager
   protected projectRepository: ProjectRepository
+  protected userManager: UserManager
 
   constructor() {
     super()
@@ -24,6 +26,7 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     this.userFixture = this.container.get('UserFixture')
     this.projectFixture = this.container.get('ProjectFixture')
     this.projectRepository = this.container.get('ProjectRepository')
+    this.userManager = this.container.get('UserManager')
   }
 
   @test()
@@ -246,9 +249,103 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     expect(error).to.exist
     expect((error as { httpCode?: number }).httpCode).to.be.equal(400)
 
-    const unchanged = await this.projectRepository.findOneByIdOrFail(
+    const unchanged = await this.projectRepository.findOneByIdOrFail(project.id)
+    expect(unchanged.workerAddresses ?? []).to.deep.equal([])
+  }
+
+  /**
+   * Gating collaborators at write time is not enough on its own: without a
+   * check on the read path, anyone added during a paid month keeps access for
+   * good once the owner cancels.
+   */
+  @test()
+  async findProjectCheckAccess_revokedWhenOwnerLosesPremium() {
+    const owner = await this.userFixture.createPremiumUser()
+    const worker = await this.userFixture.createUser()
+    const viewer = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner)
+    project.workerAddresses = [worker.address]
+    project.viewerAddresses = [viewer.address]
+    await this.projectRepository.saveSingle(project)
+
+    expect(await this.projectManager.findProjectCheckAccess(project, worker)).to
+      .exist
+    expect(await this.projectManager.findProjectCheckAccess(project, viewer)).to
+      .exist
+
+    owner.premium = false
+    await this.userManager.saveSingle(owner)
+
+    expect(await this.projectManager.findProjectCheckAccess(project, worker)).to
+      .be.undefined
+    expect(await this.projectManager.findProjectCheckAccess(project, viewer)).to
+      .be.undefined
+    // The owner never loses access to their own project.
+    expect(await this.projectManager.findProjectCheckAccess(project, owner)).to
+      .exist
+  }
+
+  @test()
+  async isWorkerAndIsViewer_matchTheSqlAccessFilters() {
+    const owner = await this.userFixture.createPremiumUser()
+    const worker = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner)
+    project.user = owner
+    project.workerAddresses = [worker.address.toUpperCase()]
+    project.viewerAddresses = []
+
+    // Address casing must not decide access.
+    expect(project.isWorker(worker)).to.be.true
+    expect(project.isViewer(worker)).to.be.true
+
+    owner.premium = false
+    expect(project.isWorker(worker)).to.be.false
+    expect(project.isViewer(worker)).to.be.false
+    expect(project.isOwner(owner)).to.be.true
+  }
+
+  /**
+   * A lapsed owner must still be able to take access away - the gate is on
+   * granting, not on revoking.
+   */
+  @test()
+  async editAndSave_allowsNonPremiumOwnerToRemoveExistingCollaborators() {
+    const owner = await this.userFixture.createPremiumUser()
+    const workerA = await this.userFixture.createUser()
+    const workerB = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner)
+
+    const granted = new Project()
+    granted.workerAddresses = [workerA.address, workerB.address]
+    await this.projectManager.editAndSave(project, granted)
+
+    owner.premium = false
+    await this.userManager.saveSingle(owner)
+
+    const reloaded = await this.projectRepository.findOneByIdOrFail(project.id)
+
+    // Dropping one of the two is allowed...
+    const revoke = new Project()
+    revoke.workerAddresses = [workerA.address]
+    await this.projectManager.editAndSave(reloaded, revoke)
+
+    const afterRevoke = await this.projectRepository.findOneByIdOrFail(
       project.id,
     )
-    expect(unchanged.workerAddresses ?? []).to.deep.equal([])
+    expect(afterRevoke.workerAddresses).to.deep.equal([workerA.address])
+
+    // ...but swapping in someone new is still a grant, and still refused.
+    const regrant = new Project()
+    regrant.workerAddresses = [workerA.address, workerB.address]
+
+    let error: unknown
+    try {
+      await this.projectManager.editAndSave(afterRevoke, regrant)
+    } catch (e: unknown) {
+      error = e
+    }
+
+    expect(error).to.exist
+    expect((error as { httpCode?: number }).httpCode).to.be.equal(400)
   }
 }

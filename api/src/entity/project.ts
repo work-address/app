@@ -6,17 +6,26 @@ import { JSONSchema } from 'class-validator-jsonschema'
 import { User } from '@/entity/user'
 import { AbstractBaseEntity } from '@/entity/abstract-base-entity'
 import {
+  ArrayMaxSize,
   IsArray,
   IsBoolean,
   IsNotEmpty,
   IsOptional,
   IsString,
+  MaxLength,
 } from 'class-validator'
 import { EProjectState } from '@/model/project'
 import { Invoice } from '@/entity/invoice'
 import { ProjectStatistics } from '@/entity/project-statistics'
 import { Time } from '@/entity/time'
 import { IProject } from '@/model/project'
+
+// Access lists are unnested on every access check, so they stay bounded.
+// Addresses are free-form strings (a wallet may not have an account yet),
+// which is exactly why they need a ceiling. Module scope, not static fields:
+// decorator arguments are evaluated before static initializers run.
+export const MAX_COLLABORATORS = 100
+export const MAX_ADDRESS_LENGTH = 128
 
 @JSONSchema({
   example: {
@@ -35,13 +44,17 @@ export class Project extends AbstractBaseEntity implements IProject {
   @Expose({ groups: ['search', 'create', 'edit'] })
   @Column('text', { array: true, nullable: true })
   @IsArray()
+  @ArrayMaxSize(MAX_COLLABORATORS)
   @IsString({ each: true })
+  @MaxLength(MAX_ADDRESS_LENGTH, { each: true })
   @IsOptional()
   workerAddresses: string[]
   @Expose({ groups: ['search', 'create', 'edit'] })
   @Column('text', { array: true, nullable: true })
   @IsArray()
+  @ArrayMaxSize(MAX_COLLABORATORS)
   @IsString({ each: true })
+  @MaxLength(MAX_ADDRESS_LENGTH, { each: true })
   @IsOptional()
   viewerAddresses: string[]
 
@@ -111,14 +124,33 @@ export class Project extends AbstractBaseEntity implements IProject {
 
   public isWorker(user: User): boolean {
     return (
-      this.isOwner(user) || (this.workerAddresses ?? []).includes(user.address)
+      this.isOwner(user) || this.hasCollaborator(this.workerAddresses, user)
     )
   }
 
   public isViewer(user: User): boolean {
     return (
-      this.isWorker(user) || (this.viewerAddresses ?? []).includes(user.address)
+      this.isWorker(user) || this.hasCollaborator(this.viewerAddresses, user)
     )
+  }
+
+  /**
+   * Mirrors the SQL access filters in ProjectRepository: addresses match
+   * case-insensitively, and collaborator access only counts while the owner
+   * holds a premium plan. Kept in step with those filters deliberately - two
+   * different answers to "who may see this project" is how access bugs start.
+   */
+  private hasCollaborator(
+    addresses: string[] | undefined,
+    user: User,
+  ): boolean {
+    if (!this.user?.premium) {
+      return false
+    }
+
+    const target = user.address?.toLowerCase()
+
+    return (addresses ?? []).some((address) => address.toLowerCase() === target)
   }
 
   public static accessParams(user: User) {
