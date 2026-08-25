@@ -1,5 +1,4 @@
 import { createQuery } from '@farfetched/core'
-import { AxiosError } from 'axios'
 import { sample, combine } from 'effector'
 import { createGate } from 'effector-react'
 
@@ -14,6 +13,7 @@ import {
   getFriendlyWalletAddress,
   decodeFriendWalletAddress,
   navigateFx,
+  runApiData,
   showToastFx,
 } from '@/shared'
 
@@ -23,17 +23,13 @@ const ProfileGate = createGate<{ friendlyWalletAddress: string | null }>({
 
 const profileQuery = createQuery({
   handler: async (walletAddress: string) => {
-    const result = await baseApi.userControllerRead({
-      path: {
-        address: walletAddress as never,
-      },
-    })
-
-    if (result instanceof AxiosError) {
-      throw result
-    }
-
-    return result.data
+    return runApiData(() =>
+      baseApi.userControllerRead({
+        path: {
+          address: walletAddress as never,
+        },
+      }),
+    )
   },
 })
 

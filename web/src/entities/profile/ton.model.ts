@@ -1,9 +1,8 @@
-import { AxiosError } from 'axios'
 import { createEffect, createEvent } from 'effector'
 
 import type { AuthorizationHeaders, TonAuthSuccessPayload } from './types'
 
-import { baseApi, getTonProvider } from '@/shared'
+import { baseApi, getTonProvider, runApi } from '@/shared'
 
 export const tonAuthSuccess = createEvent<TonAuthSuccessPayload>()
 
@@ -28,13 +27,11 @@ export const openTonModalFx = createEffect(
 
 export const loginTonFx = createEffect(
   async (params: TonAuthSuccessPayload): Promise<AuthorizationHeaders> => {
-    const result = await baseApi.authControllerCheckProofHandler({
-      body: params,
-    })
-
-    if (result instanceof AxiosError) {
-      throw result
-    }
+    const result = await runApi(() =>
+      baseApi.authControllerCheckProofHandler({
+        body: params,
+      }),
+    )
 
     return {
       authorization: result.headers['authorization'],

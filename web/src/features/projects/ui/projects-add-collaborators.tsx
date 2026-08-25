@@ -11,13 +11,19 @@ import {
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { isValidWalletAddress, normalizeAddress } from '../model'
-
 import { ProjectsFormSelect } from './projects-form-select'
 
 import type { CollaboratorRole, ProjectFormValues } from '../model'
 
-import { Button, Input, Text, Tooltip, type InputProps } from '@/shared'
+import {
+  Button,
+  Input,
+  isValidWalletAddress,
+  normalizeAddress,
+  Text,
+  Tooltip,
+  type InputProps,
+} from '@/shared'
 
 const ID_PREFIX = 'add-collaborators-'
 

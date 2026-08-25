@@ -1,9 +1,8 @@
-import { AxiosError } from 'axios'
 import { createEffect, createEvent, createStore, sample } from 'effector'
 
 import type { AuthorizationHeaders, EthModalResult } from './types'
 
-import { baseApi, getReownProvider, getBrowserProvider } from '@/shared'
+import { baseApi, getBrowserProvider, getReownProvider, runApi } from '@/shared'
 
 export const ethConnected = createEvent<EthModalResult>()
 
@@ -56,16 +55,14 @@ export const loginEthFx = createEffect(
     signature: string
     address: string
   }): Promise<AuthorizationHeaders> => {
-    const result = await baseApi.authControllerLoginEth({
-      body: {
-        signature: params.signature,
-        address: params.address,
-      },
-    })
-
-    if (result instanceof AxiosError) {
-      throw result
-    }
+    const result = await runApi(() =>
+      baseApi.authControllerLoginEth({
+        body: {
+          signature: params.signature,
+          address: params.address,
+        },
+      }),
+    )
 
     return {
       authorization: result.headers['authorization'],

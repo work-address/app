@@ -1,19 +1,14 @@
 import { createMutation } from '@farfetched/core'
-import { AxiosError } from 'axios'
 
-import { baseApi } from '@/shared'
+import { baseApi, runApi } from '@/shared'
 
 export const deleteTimeMutation = createMutation({
   handler: async (ids: string[]) => {
-    const result = await baseApi.timeControllerDelete({
-      body: { ids },
-    })
-
-    if (result instanceof AxiosError) {
-      throw result
-    }
-
-    return result
+    return runApi(() =>
+      baseApi.timeControllerDelete({
+        body: { ids },
+      }),
+    )
   },
 })
 
@@ -27,57 +22,41 @@ export const editTimeMutation = createMutation({
     note: string
     isPaid: boolean
   }) => {
-    const result = await baseApi.timeControllerEdit({
-      path: { id: id as never },
-      body: { note, isPaid },
-    })
-
-    if (result instanceof AxiosError) {
-      throw result
-    }
-
-    return result
+    return runApi(() =>
+      baseApi.timeControllerEdit({
+        path: { id: id as never },
+        body: { note, isPaid },
+      }),
+    )
   },
 })
 
 export const removeTimeScreenshotMutation = createMutation({
   handler: async (ids: string[]) => {
-    const result = await baseApi.timeControllerRemoveScreenshots({
-      body: { ids },
-    })
-
-    if (result instanceof AxiosError) {
-      throw result
-    }
-
-    return result
+    return runApi(() =>
+      baseApi.timeControllerRemoveScreenshots({
+        body: { ids },
+      }),
+    )
   },
 })
 
 export const setTimePaidStatusMutation = createMutation({
   handler: async ({ ids, isPaid }: { ids: string[]; isPaid: boolean }) => {
-    const result = isPaid
-      ? await baseApi.timeControllerMarkPaid({ body: { ids } })
-      : await baseApi.timeControllerMarkUnpaid({ body: { ids } })
-
-    if (result instanceof AxiosError) {
-      throw result
-    }
-
-    return result
+    return runApi(() =>
+      isPaid
+        ? baseApi.timeControllerMarkPaid({ body: { ids } })
+        : baseApi.timeControllerMarkUnpaid({ body: { ids } }),
+    )
   },
 })
 
 export const removeTimeProcessesMutation = createMutation({
   handler: async (ids: string[]) => {
-    const result = await baseApi.timeControllerRemoveProcesses({
-      body: { ids },
-    })
-
-    if (result instanceof AxiosError) {
-      throw result
-    }
-
-    return result
+    return runApi(() =>
+      baseApi.timeControllerRemoveProcesses({
+        body: { ids },
+      }),
+    )
   },
 })

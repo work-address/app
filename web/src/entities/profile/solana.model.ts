@@ -1,4 +1,3 @@
-import { AxiosError } from 'axios'
 import {
   attach,
   createEffect,
@@ -14,7 +13,7 @@ import type {
   SolanaModalResult,
 } from './types'
 
-import { baseApi } from '@/shared'
+import { baseApi, runApi } from '@/shared'
 
 export const SolanaWalletGate =
   createGate<SolanaWalletState>('SolanaWalletGate')
@@ -120,16 +119,14 @@ export const loginSolanaFx = createEffect(
     signature: string
     address: string
   }): Promise<AuthorizationHeaders> => {
-    const result = await baseApi.authControllerLoginSolana({
-      body: {
-        signature: params.signature,
-        address: params.address,
-      },
-    })
-
-    if (result instanceof AxiosError) {
-      throw result
-    }
+    const result = await runApi(() =>
+      baseApi.authControllerLoginSolana({
+        body: {
+          signature: params.signature,
+          address: params.address,
+        },
+      }),
+    )
 
     return {
       authorization: result.headers['authorization'],

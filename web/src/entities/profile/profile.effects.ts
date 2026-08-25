@@ -1,23 +1,16 @@
-import { AxiosError } from 'axios'
 import { createEffect } from 'effector'
 
 import type { GetNonceParams } from './types'
 
-import { baseApi } from '@/shared'
+import { baseApi, runApiData } from '@/shared'
 
 export const LOCAL_STORAGE_AUTH_KEY = 'authenticated'
 export const LOCAL_STORAGE_ACCESS_TOKEN = 'access_token'
 export const LOCAL_STORAGE_REFRESH_TOKEN = 'refresh_token'
 
-export const fetchStatusFx = createEffect(async () => {
-  const result = await baseApi.authControllerStatus()
-
-  if (result instanceof AxiosError) {
-    throw result
-  }
-
-  return result.data
-})
+export const fetchStatusFx = createEffect(() =>
+  runApiData(() => baseApi.authControllerStatus()),
+)
 
 export const saveTokensFx = createEffect(
   (headers: { authorization: string; refreshToken: string }) => {
@@ -50,11 +43,4 @@ export const getNonceFx = createEffect(async (params: GetNonceParams) => {
   return baseApi
     .authControllerNonce({ body: { address: params.address } })
     .then((response) => response.data as string)
-})
-
-export const connectTimeTrackerFx = createEffect(async (nonce: string) => {
-  await baseApi.authTimeTrackerControllerTimeTrackerConnect({
-    body: { nonce },
-    path: { nonce },
-  })
 })

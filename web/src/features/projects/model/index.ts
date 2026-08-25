@@ -1,8 +1,6 @@
 export {
-  isValidWalletAddress,
   mapAddressesToCollaborators,
   mapCollaboratorsToAddresses,
-  normalizeAddress,
 } from './collaborators'
 export { getProjectStatusTranslationKey } from './get-project-status-translation-key'
 export {
