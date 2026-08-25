@@ -11,7 +11,7 @@ import {
 } from '@/entities/profile'
 import * as Layouts from '@/layouts'
 import { routes } from '@/routes'
-import { ErrorBoundary } from '@/shared'
+import { bindNavigate, ErrorBoundary } from '@/shared'
 
 const DashboardPage = lazy(() => import('@/pages/dashboard'))
 const ProfilePage = lazy(() => import('@/pages/profile'))
@@ -58,6 +58,10 @@ const router = createBrowserRouter([
     ],
   },
 ])
+
+// The router is a module singleton, so navigation does not need the React
+// tree - models can route through navigateFx as the target of a sample.
+bindNavigate(({ to, options }) => router.navigate(to, options))
 
 export const App = () => {
   const initAuthEvent = useUnit(initAuth)

@@ -1,4 +1,5 @@
 import { createStore, createEvent, sample, createEffect } from 'effector'
+import { nanoid } from 'nanoid'
 
 export const DEFAULT_PROPS: ConfirmProps = {
   title: 'Are you sure?',
@@ -108,7 +109,25 @@ sample({
   ),
 })
 
-export { $confirmStack, addConfirm, confirmed, cancelled }
+/**
+ * Effector-native entry point to the confirm dialog: resolves when the user
+ * confirms and rejects when they cancel, so a model can gate an action on
+ * `confirmFx.done` instead of threading an onConfirm callback through a
+ * component. useConfirm is a thin React wrapper over this.
+ */
+const confirmFx = createEffect(
+  (props?: ConfirmProps): Promise<ConfirmProps> =>
+    new Promise((resolve, reject) => {
+      addConfirm({
+        id: nanoid(),
+        props: { ...DEFAULT_PROPS, ...props },
+        resolve,
+        reject,
+      })
+    }),
+)
+
+export { $confirmStack, addConfirm, confirmed, cancelled, confirmFx }
 
 export type ConfirmProps = {
   title?: string

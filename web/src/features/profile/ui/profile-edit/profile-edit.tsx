@@ -1,9 +1,7 @@
 import { Grid } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { type SubmitHandler, useForm } from 'react-hook-form'
-import { useTranslation } from 'react-i18next'
-import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { $profile, $profileLoading } from '../../model'
@@ -13,8 +11,7 @@ import { type ProfileEditFormState } from './profile-edit-field'
 import { ProfileEditLinks } from './profile-edit-links'
 
 import { saveProfileMutation } from '@/entities/profile'
-import { routes } from '@/routes'
-import { useLeaveConfirm, useConfirm, showToast, useBreakpoint } from '@/shared'
+import { useLeaveConfirm, useConfirm, useBreakpoint } from '@/shared'
 
 const EMPTY_FORM_VALUES: ProfileEditFormState = {
   name: '',
@@ -34,25 +31,16 @@ const EMPTY_FORM_VALUES: ProfileEditFormState = {
 }
 
 export const ProfileEdit = () => {
-  const { t } = useTranslation()
-  const navigate = useNavigate()
-
   const isDesktop = useBreakpoint('isDesktop')
   const { confirm } = useConfirm()
 
-  const [isFormSubmittedSuccessfully, setIsFormSubmittedSuccessfully] =
-    useState(false)
-
   const user = useUnit($profile)
 
-  const { profileSaving, profileLoading, saveProfile, status, resetMutation } =
-    useUnit({
-      profileSaving: saveProfileMutation.$pending,
-      profileLoading: $profileLoading,
-      saveProfile: saveProfileMutation.start,
-      status: saveProfileMutation.$status,
-      resetMutation: saveProfileMutation.reset,
-    })
+  const { profileSaving, profileLoading, saveProfile } = useUnit({
+    profileSaving: saveProfileMutation.$pending,
+    profileLoading: $profileLoading,
+    saveProfile: saveProfileMutation.start,
+  })
 
   const {
     register,
@@ -80,41 +68,8 @@ export const ProfileEdit = () => {
 
   useLeaveConfirm({ when: isDirty })
 
-  useEffect(() => {
-    if (isFormSubmittedSuccessfully) {
-      setIsFormSubmittedSuccessfully(false)
-
-      navigate(
-        routes.profile.build({
-          walletAddress: user?.friendlyWalletAddress || '',
-        }),
-        { viewTransition: true },
-      )
-    }
-  }, [isFormSubmittedSuccessfully, navigate, user?.friendlyWalletAddress])
-
-  useEffect(() => {
-    if (status === 'done') {
-      showToast('info', {
-        message: t('profile.form.edit.success'),
-        position: 'top-center',
-        closeButton: true,
-      })
-
-      setIsFormSubmittedSuccessfully(true)
-      resetForm()
-      resetMutation()
-    } else if (status === 'fail') {
-      showToast('error', {
-        message: t('profile.form.edit.error'),
-        position: 'top-center',
-        closeButton: true,
-      })
-
-      resetMutation()
-    }
-  }, [status, resetMutation, navigate, resetForm, t])
-
+  // react-hook-form owns the draft, so seeding it from the loaded profile
+  // stays a React concern.
   useEffect(() => {
     if (user) {
       resetForm({

@@ -1,10 +1,28 @@
 import { TrashIcon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { useBulkDeleteTime, useTimeDialogNavigation } from '../../model'
+import {
+  $isTimeBulkPending,
+  $isTimeDialogOpen,
+  $selectedTimeCount,
+  $selectedTimeEntry,
+  $selectedTimeIds,
+  $timeDialogNavigation,
+  $timeFiltersOpen,
+  $timeSelection,
+  timeBulkDeleteRequested,
+  timeBulkPaidStatusRequested,
+  timeDialogNextRequested,
+  timeDialogOpenChanged,
+  timeDialogPrevRequested,
+  timeFiltersOpenChanged,
+  timeRowClicked,
+  timeSelectionChanged,
+  timeSelectionCleared,
+} from '../../model'
 import { TimeDialog } from '../time-dialog/time-dialog'
 import { TimeFilters } from '../time-filters/time-filters'
 import { TimeMobileFilters } from '../time-filters/time-mobile-filters'
@@ -15,13 +33,11 @@ import { TimeTableCell } from './time-table-cell'
 
 import {
   $allTime,
-  $hasMoreTime,
   $isLoadingMoreTime,
   $isTimeFiltering,
   $timeSort,
   $timeLoading,
   loadMoreTime,
-  setTimePaidStatusMutation,
   type Time,
   resetTimeSort,
   TimeEmptyState,
@@ -30,7 +46,6 @@ import {
   Button,
   type DataTableConfig,
   DataTable,
-  showToast,
   useBreakpoint,
   ListPageLayout as S,
 } from '@/shared'
@@ -42,111 +57,58 @@ export const TimeTable = () => {
   const isDesktop = useBreakpoint('isDesktop')
 
   const {
-    allTime: timeRows,
+    timeRows,
     timeLoading,
     isTimeFiltering,
     timeSort,
     resetTimeSortEvent,
-    setPaidStatus,
-    setPaidStatusStatus,
-    resetSetPaidStatus,
     loadMore,
     isLoadingMoreTime,
-    hasMoreTime,
+    filtersOpen,
+    setFiltersOpen,
+    selection,
+    changeSelection,
+    clearSelection,
+    selectedTimeIds,
+    selectedTimeCount,
+    selectedTimeEntry,
+    isTimeDialogOpen,
+    setDialogOpen,
+    rowClicked,
+    isBulkPending,
+    requestBulkDelete,
+    requestBulkPaidStatus,
+    navigation,
+    goToPrev,
+    goToNext,
   } = useUnit({
-    allTime: $allTime,
+    timeRows: $allTime,
     timeLoading: $timeLoading,
     isTimeFiltering: $isTimeFiltering,
     timeSort: $timeSort,
     resetTimeSortEvent: resetTimeSort,
-    setPaidStatus: setTimePaidStatusMutation.start,
-    setPaidStatusStatus: setTimePaidStatusMutation.$status,
-    resetSetPaidStatus: setTimePaidStatusMutation.reset,
     loadMore: loadMoreTime,
     isLoadingMoreTime: $isLoadingMoreTime,
-    hasMoreTime: $hasMoreTime,
+    filtersOpen: $timeFiltersOpen,
+    setFiltersOpen: timeFiltersOpenChanged,
+    selection: $timeSelection,
+    changeSelection: timeSelectionChanged,
+    clearSelection: timeSelectionCleared,
+    selectedTimeIds: $selectedTimeIds,
+    selectedTimeCount: $selectedTimeCount,
+    selectedTimeEntry: $selectedTimeEntry,
+    isTimeDialogOpen: $isTimeDialogOpen,
+    setDialogOpen: timeDialogOpenChanged,
+    rowClicked: timeRowClicked,
+    isBulkPending: $isTimeBulkPending,
+    requestBulkDelete: timeBulkDeleteRequested,
+    requestBulkPaidStatus: timeBulkPaidStatusRequested,
+    navigation: $timeDialogNavigation,
+    goToPrev: timeDialogPrevRequested,
+    goToNext: timeDialogNextRequested,
   })
-
-  const [filtersOpen, setFiltersOpen] = useState(false)
 
   const hasTimeEntries = timeLoading || timeRows.length > 0
-
-  const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
-  const [selectedTimeId, setSelectedTimeId] = useState<string | null>(null)
-  const [isTimeDialogOpen, setIsTimeDialogOpen] = useState(false)
-
-  const selectedTimeIds = useMemo(
-    () =>
-      Object.entries(selectedIds)
-        .filter(([, isSelected]) => Boolean(isSelected))
-        .map(([id]) => id),
-    [selectedIds],
-  )
-  const selectedTimeCount = selectedTimeIds.length
-
-  const handleClearSelection = useCallback(() => {
-    setSelectedIds({})
-  }, [])
-
-  const handleCloseDialog = useCallback(() => {
-    setIsTimeDialogOpen(false)
-    setSelectedTimeId(null)
-  }, [])
-
-  const { requestBulkDelete, isDeleting } = useBulkDeleteTime({
-    selectedIds,
-    selectedTimeId,
-    isBlocked: setPaidStatusStatus === 'pending',
-    onClearSelection: handleClearSelection,
-    onCloseDialog: handleCloseDialog,
-  })
-
-  const isBulkPending = setPaidStatusStatus === 'pending' || isDeleting
-
-  // Берём строку из стора по id, чтобы модалка видела актуальные данные после рефетча
-  const selectedTimeEntry = useMemo(
-    () => timeRows.find((row) => row.id === selectedTimeId) ?? null,
-    [timeRows, selectedTimeId],
-  )
-
-  const handleOnSortChange = (sort: Record<string, 'ASC' | 'DESC'>) => {
-    resetTimeSortEvent(sort)
-  }
-
-  const handleRowClick = useCallback((row: Time): void => {
-    setSelectedTimeId(row.id ?? null)
-    setIsTimeDialogOpen(true)
-  }, [])
-
-  const { hasPrev, hasNext, onPrev, onNext } = useTimeDialogNavigation({
-    timeEntries: timeRows,
-    selectedTimeId,
-    isOpen: isTimeDialogOpen,
-    hasMore: hasMoreTime,
-    isLoadingMore: isLoadingMoreTime,
-    onLoadMore: loadMore,
-    onSelect: setSelectedTimeId,
-  })
-
-  useEffect(() => {
-    if (setPaidStatusStatus === 'done') {
-      resetSetPaidStatus()
-      setSelectedIds({})
-
-      showToast('success', {
-        message: t('dashboard.worklogsTable.paymentStatus.changed'),
-        position: 'top-center',
-      })
-    }
-  }, [t, setPaidStatusStatus, resetSetPaidStatus])
-
-  const handleBulkSetPaidStatus = (isPaid: boolean) => {
-    if (isBulkPending || selectedTimeCount === 0) {
-      return
-    }
-
-    setPaidStatus({ ids: selectedTimeIds, isPaid })
-  }
 
   const config = useMemo(
     (): DataTableConfig<Time> => [
@@ -250,7 +212,7 @@ export const TimeTable = () => {
                 size="l"
                 type="button"
                 disabled={isBulkPending}
-                onClick={() => handleBulkSetPaidStatus(true)}
+                onClick={() => requestBulkPaidStatus(true)}
               >
                 {t('dashboard.worklogsTable.paymentStatus.paid')}
               </Button>
@@ -260,7 +222,7 @@ export const TimeTable = () => {
                 size="l"
                 type="button"
                 disabled={isBulkPending}
-                onClick={() => handleBulkSetPaidStatus(false)}
+                onClick={() => requestBulkPaidStatus(false)}
               >
                 {t('dashboard.worklogsTable.paymentStatus.unpaid')}
               </Button>
@@ -281,7 +243,7 @@ export const TimeTable = () => {
                 size="l"
                 type="button"
                 disabled={isBulkPending}
-                onClick={handleClearSelection}
+                onClick={() => clearSelection()}
               >
                 {t('dashboard.worklogsTable.bulk.clearSelection')}
               </Button>
@@ -292,7 +254,7 @@ export const TimeTable = () => {
               selectedIds={selectedTimeIds}
               isPending={isBulkPending}
               onDelete={requestBulkDelete}
-              onClearSelection={handleClearSelection}
+              onClearSelection={clearSelection}
             />
           )}
           <DataTable<Time>
@@ -302,14 +264,14 @@ export const TimeTable = () => {
             getRowId={(row) => row.id ?? ''}
             BodyComponent={TimeTableCell}
             allowSelection
-            selectedIds={selectedIds}
-            onSelectedIdsChange={setSelectedIds}
+            selectedIds={selection}
+            onSelectedIdsChange={changeSelection}
             height={'70vh'}
             loading={timeLoading}
             isFiltering={isTimeFiltering}
             sort={timeSort}
-            onSortChange={handleOnSortChange}
-            onRowClick={handleRowClick}
+            onSortChange={resetTimeSortEvent}
+            onRowClick={rowClicked}
             onReachEnd={loadMore}
             isLoadingMore={isLoadingMoreTime}
             skeletonHeight="40px"
@@ -317,11 +279,11 @@ export const TimeTable = () => {
           <TimeDialog
             open={isTimeDialogOpen}
             row={selectedTimeEntry}
-            onOpenChange={setIsTimeDialogOpen}
-            hasPrev={hasPrev}
-            hasNext={hasNext}
-            onPrev={onPrev}
-            onNext={onNext}
+            onOpenChange={setDialogOpen}
+            hasPrev={navigation.hasPrev}
+            hasNext={navigation.hasNext}
+            onPrev={goToPrev}
+            onNext={goToNext}
           />
         </TimeContext.Provider>
       ) : (

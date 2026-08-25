@@ -1,9 +1,15 @@
 import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { useEffect, useState } from 'react'
+import { useEffect } from 'react'
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
+
+import {
+  timeEntryDeleteRequested,
+  timeProcessesRemoveRequested,
+  timeScreenshotRemoveRequested,
+} from '../../model'
 
 import { TimeDialogFooter } from './time-dialog-footer'
 import { TimeDialogMetrics } from './time-dialog-metrics'
@@ -24,7 +30,6 @@ import {
   Text,
   TextArea,
   toImageDataUrl,
-  useConfirm,
 } from '@/shared'
 
 type PaymentStatusValue = 'paid' | 'unpaid'
@@ -82,38 +87,26 @@ export const TimeDialog = ({
   onNext,
 }: TimeDialogProps) => {
   const { t, i18n } = useTranslation()
-  const { confirm } = useConfirm()
 
   const {
-    deleteTimeEntry,
+    requestDelete,
     editTimeEntry,
-    removeScreenshot,
-    removeProcesses,
-    deleteStatus,
-    editStatus,
-    removeScreenshotStatus,
-    removeProcessesStatus,
-    resetDelete,
-    resetEdit,
-    resetRemoveScreenshot,
-    resetRemoveProcesses,
+    requestRemoveScreenshot,
+    requestRemoveProcesses,
+    isDeleting,
+    isEditing,
+    isRemovingScreenshot,
+    isRemovingProcesses,
   } = useUnit({
-    deleteTimeEntry: deleteTimeMutation.start,
+    requestDelete: timeEntryDeleteRequested,
     editTimeEntry: editTimeMutation.start,
-    removeScreenshot: removeTimeScreenshotMutation.start,
-    removeProcesses: removeTimeProcessesMutation.start,
-    deleteStatus: deleteTimeMutation.$status,
-    editStatus: editTimeMutation.$status,
-    removeScreenshotStatus: removeTimeScreenshotMutation.$status,
-    removeProcessesStatus: removeTimeProcessesMutation.$status,
-    resetDelete: deleteTimeMutation.reset,
-    resetEdit: editTimeMutation.reset,
-    resetRemoveScreenshot: removeTimeScreenshotMutation.reset,
-    resetRemoveProcesses: removeTimeProcessesMutation.reset,
+    requestRemoveScreenshot: timeScreenshotRemoveRequested,
+    requestRemoveProcesses: timeProcessesRemoveRequested,
+    isDeleting: deleteTimeMutation.$pending,
+    isEditing: editTimeMutation.$pending,
+    isRemovingScreenshot: removeTimeScreenshotMutation.$pending,
+    isRemovingProcesses: removeTimeProcessesMutation.$pending,
   })
-
-  const [screenshotRemoved, setScreenshotRemoved] = useState(false)
-  const [processesRemoved, setProcessesRemoved] = useState(false)
 
   const {
     control,
@@ -135,55 +128,14 @@ export const TimeDialog = ({
     },
   ]
 
+  // react-hook-form owns the draft, so seeding it stays a React concern.
   useEffect(() => {
     if (!open || !row) {
       return
     }
 
     reset(getFormValues(row))
-    setScreenshotRemoved(false)
-    setProcessesRemoved(false)
   }, [open, row, reset])
-
-  useEffect(() => {
-    if (!open) {
-      return
-    }
-
-    if (editStatus === 'done') {
-      resetEdit()
-      reset(getFormValues(row))
-      onOpenChange(false)
-    }
-  }, [open, editStatus, resetEdit, reset, row, onOpenChange])
-
-  useEffect(() => {
-    if (!open) {
-      return
-    }
-
-    if (deleteStatus === 'done') {
-      resetDelete()
-    }
-
-    if (removeScreenshotStatus === 'done') {
-      setScreenshotRemoved(true)
-      resetRemoveScreenshot()
-    }
-
-    if (removeProcessesStatus === 'done') {
-      setProcessesRemoved(true)
-      resetRemoveProcesses()
-    }
-  }, [
-    open,
-    deleteStatus,
-    removeScreenshotStatus,
-    removeProcessesStatus,
-    resetDelete,
-    resetRemoveScreenshot,
-    resetRemoveProcesses,
-  ])
 
   useEffect(() => {
     if (!open) {
@@ -234,70 +186,32 @@ export const TimeDialog = ({
     hour12: false,
   })
 
-  const hasScreenshot = Boolean(row?.screenshot) && !screenshotRemoved
-  const hasProcesses =
-    Boolean(row?.processes && row.processes.length > 0) && !processesRemoved
+  // Derived straight from the row: the feed clears screenshot/processes when
+  // the mutation lands, so there is no local copy to keep in step.
+  const hasScreenshot = Boolean(row?.screenshot)
+  const hasProcesses = Boolean(row?.processes && row.processes.length > 0)
   const isPending =
-    deleteStatus === 'pending' ||
-    editStatus === 'pending' ||
-    removeScreenshotStatus === 'pending' ||
-    removeProcessesStatus === 'pending'
+    isDeleting || isEditing || isRemovingScreenshot || isRemovingProcesses
   const screenshotSrc = hasScreenshot
     ? toImageDataUrl(row?.screenshot)
     : undefined
 
   const handleDelete = () => {
-    if (!row?.id) {
-      return
+    if (row?.id) {
+      requestDelete(row.id)
     }
-
-    void confirm({
-      title: t('dashboard.worklogsTable.confirmDelete.title'),
-      description: t('dashboard.worklogsTable.confirmDelete.description'),
-      confirmLabel: t('dashboard.worklogsTable.confirmDelete.confirm'),
-      cancelLabel: t('common.cancel'),
-      onConfirm: () => {
-        deleteTimeEntry([row.id!])
-      },
-    })
   }
 
   const handleRemoveScreenshot = () => {
-    if (!row?.id) {
-      return
+    if (row?.id) {
+      requestRemoveScreenshot(row.id)
     }
-
-    void confirm({
-      title: t('dashboard.worklogsTable.confirmRemoveScreenshot.title'),
-      description: t(
-        'dashboard.worklogsTable.confirmRemoveScreenshot.description',
-      ),
-      confirmLabel: t(
-        'dashboard.worklogsTable.confirmRemoveScreenshot.confirm',
-      ),
-      cancelLabel: t('common.cancel'),
-      onConfirm: () => {
-        removeScreenshot([row.id!])
-      },
-    })
   }
 
   const handleRemoveProcesses = () => {
-    if (!row?.id) {
-      return
+    if (row?.id) {
+      requestRemoveProcesses(row.id)
     }
-
-    void confirm({
-      title: t('dashboard.worklogsTable.confirmRemoveProcesses.title'),
-      description: t(
-        'dashboard.worklogsTable.confirmRemoveProcesses.description',
-      ),
-      confirmLabel: t('dashboard.worklogsTable.confirmRemoveProcesses.confirm'),
-      cancelLabel: t('common.cancel'),
-      onConfirm: () => {
-        removeProcesses([row.id!])
-      },
-    })
   }
 
   const handleDiscard = () => {
@@ -345,7 +259,7 @@ export const TimeDialog = ({
         row ? (
           <TimeDialogFooter
             isPending={isPending}
-            isSaving={editStatus === 'pending'}
+            isSaving={isEditing}
             canSave={isDirty}
             hasScreenshot={hasScreenshot}
             hasProcesses={hasProcesses}

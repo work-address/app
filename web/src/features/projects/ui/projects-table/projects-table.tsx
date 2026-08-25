@@ -2,10 +2,23 @@ import { TrashIcon, PlusIcon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useCallback, useEffect, useMemo, useState } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
+import {
+  $canDeleteAllProjects,
+  $isProjectCreateDialogOpen,
+  $isProjectDialogOpen,
+  $projectSelection,
+  $selectedProject,
+  projectCreateDialogOpenChanged,
+  projectDeleteRequested,
+  projectDialogOpenChanged,
+  projectEditRequested,
+  projectSelectionChanged,
+  projectStateTabChanged,
+} from '../../model'
 import { ProjectsCreateModal } from '../projects-create-modal'
 import { ProjectsDialog } from '../projects-dialog/projects-dialog'
 import {
@@ -25,7 +38,6 @@ import {
   $projectsLoading,
   $projectStateFilter,
   $isProjectsFiltering,
-  changeProjectStateFilter,
   type ProjectsFilter,
   type ProjectWithStats,
   deleteProjectMutation,
@@ -45,9 +57,7 @@ import {
   Button,
   IconButton,
   useBreakpoint,
-  useConfirm,
   useDateFormatter,
-  showToast,
   ProjectsEmptyState,
 } from '@/shared'
 
@@ -62,40 +72,43 @@ export const ProjectsTable = () => {
     isProjectsFiltering,
     filter,
     isProjectDeleting,
-    deleteStatus,
-    changeProjectStateFilterEvent,
-    deleteProjectEvent,
-    resetDeleteMutationEvent,
+    changeStateTab,
+    selection,
+    changeSelection,
+    selectedRow,
+    requestEdit,
+    requestDelete,
+    isProjectDialogOpen,
+    setProjectDialogOpen,
+    isCreateDialogOpen,
+    setCreateDialogOpen,
+    allowDeleteAll,
   } = useUnit({
     projects: $filteredProjects,
     isProjectsLoading: $projectsLoading,
     isProjectsFiltering: $isProjectsFiltering,
     filter: $projectStateFilter,
-    changeProjectStateFilterEvent: changeProjectStateFilter,
     isProjectDeleting: deleteProjectMutation.$pending,
-    deleteProjectEvent: deleteProjectMutation.start,
-    deleteStatus: deleteProjectMutation.$status,
-    resetDeleteMutationEvent: deleteProjectMutation.reset,
+    changeStateTab: projectStateTabChanged,
+    selection: $projectSelection,
+    changeSelection: projectSelectionChanged,
+    selectedRow: $selectedProject,
+    requestEdit: projectEditRequested,
+    requestDelete: projectDeleteRequested,
+    isProjectDialogOpen: $isProjectDialogOpen,
+    setProjectDialogOpen: projectDialogOpenChanged,
+    isCreateDialogOpen: $isProjectCreateDialogOpen,
+    setCreateDialogOpen: projectCreateDialogOpenChanged,
+    allowDeleteAll: $canDeleteAllProjects,
   })
 
   const renderingData = isProjectsLoading ? [] : projects
 
-  const { confirm } = useConfirm()
-
   const { t } = useTranslation()
   const dateFormatter = useDateFormatter()
 
-  const [selectedRow, setSelectedRow] = useState<ProjectWithStats | null>(null)
-  const [selectedIds, setSelectedIds] = useState<Record<string, boolean>>({})
-  const [isProjectDialogOpen, setIsProjectDialogOpen] = useState(false)
-  const [isCreateDialogOpen, setIsCreateDialogOpen] = useState(false)
-
   const handleTabClick = (tab: string) => {
-    changeProjectStateFilterEvent({
-      projectState: tab as ProjectsFilter['projectState'],
-      containsText: '',
-    })
-    setSelectedIds({})
+    changeStateTab(tab as ProjectsFilter['projectState'])
   }
 
   const handleActionClick: ProjectsTableContextValues['handleActionClick'] =
@@ -103,29 +116,17 @@ export const ProjectsTable = () => {
       (row, action) => {
         switch (action) {
           case 'Edit': {
-            setSelectedRow(row)
-            setIsProjectDialogOpen(true)
+            requestEdit(row)
             break
           }
 
           case 'Delete': {
-            void confirm({
-              title: t('dashboard.projectsTable.confirmDelete.title'),
-              description: t(
-                'dashboard.projectsTable.confirmDelete.description',
-              ),
-              confirmLabel: t('dashboard.projectsTable.confirmDelete.confirm'),
-              onConfirm: () => {
-                if (row.id) {
-                  deleteProjectEvent(row.id)
-                }
-              },
-            })
+            requestDelete(row)
             break
           }
         }
       },
-      [confirm, t, deleteProjectEvent],
+      [requestEdit, requestDelete],
     )
 
   const desktopConfig = useMemo(
@@ -222,28 +223,6 @@ export const ProjectsTable = () => {
     [handleActionClick, t],
   )
 
-  const allowDeleteAll = useMemo(() => {
-    const selected = Object.values(selectedIds)
-
-    return (
-      selected.length > 0 &&
-      projects.length === selected.length &&
-      selected.every(Boolean)
-    )
-  }, [selectedIds, projects])
-
-  useEffect(() => {
-    if (deleteStatus === 'done') {
-      resetDeleteMutationEvent()
-      setIsProjectDialogOpen(false)
-
-      showToast('error', {
-        message: t('dashboard.projectsTable.deletedMessage'),
-        position: 'top-center',
-      })
-    }
-  }, [t, deleteStatus, resetDeleteMutationEvent])
-
   return (
     <Flex direction={'column'} height={'100%'}>
       <Flex direction={'row'} justify={'between'} pb={'3'} align={'center'}>
@@ -281,14 +260,14 @@ export const ProjectsTable = () => {
           {isMobile ? (
             <IconButton
               themeVariant={'primary'}
-              onClick={() => setIsCreateDialogOpen(true)}
+              onClick={() => setCreateDialogOpen(true)}
             >
               <PlusIcon />
             </IconButton>
           ) : (
             <Button
               iconLeft={<PlusIcon />}
-              onClick={() => setIsCreateDialogOpen(true)}
+              onClick={() => setCreateDialogOpen(true)}
             >
               {t('dashboard.page.createProject')}
             </Button>
@@ -307,7 +286,7 @@ export const ProjectsTable = () => {
           >
             {projects.length === 0 && !isProjectsLoading ? (
               <ProjectsEmptyState
-                onCreateClick={() => setIsCreateDialogOpen(true)}
+                onCreateClick={() => setCreateDialogOpen(true)}
               />
             ) : (
               <ProjectsTableContext value={projectsContextValues}>
@@ -321,8 +300,8 @@ export const ProjectsTable = () => {
                     HeaderComponent={ProjectsMobileHeader}
                     expandedId={projects[0]?.id}
                     // allowSelection
-                    selectedIds={selectedIds}
-                    onSelectedIdsChange={setSelectedIds}
+                    selectedIds={selection}
+                    onSelectedIdsChange={changeSelection}
                     loading={isProjectsLoading}
                   />
                 ) : (
@@ -333,8 +312,8 @@ export const ProjectsTable = () => {
                     // allowSelection
                     BodyComponent={ProjectsDesktopCell}
                     height={'100%'}
-                    selectedIds={selectedIds}
-                    onSelectedIdsChange={setSelectedIds}
+                    selectedIds={selection}
+                    onSelectedIdsChange={changeSelection}
                     verticalAlign={'middle'}
                     nowrap
                     loading={isProjectsLoading}
@@ -351,13 +330,13 @@ export const ProjectsTable = () => {
       </Root>
       <ProjectsDialog
         open={isProjectDialogOpen}
-        setOpen={setIsProjectDialogOpen}
+        setOpen={setProjectDialogOpen}
         row={selectedRow}
         onDeleteClick={(row) => row && handleActionClick(row, 'Delete')}
       />
       <ProjectsCreateModal
         open={isCreateDialogOpen}
-        onOpenChange={setIsCreateDialogOpen}
+        onOpenChange={setCreateDialogOpen}
       />
     </Flex>
   )

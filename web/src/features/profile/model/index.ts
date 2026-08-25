@@ -3,11 +3,18 @@ import { AxiosError } from 'axios'
 import { sample, combine } from 'effector'
 import { createGate } from 'effector-react'
 
-import { $user, $pending as $profilePending } from '@/entities/profile'
+import {
+  $user,
+  $pending as $profilePending,
+  saveProfileMutation,
+} from '@/entities/profile'
+import { routes } from '@/routes'
 import {
   baseApi,
   getFriendlyWalletAddress,
   decodeFriendWalletAddress,
+  navigateFx,
+  showToastFx,
 } from '@/shared'
 
 const ProfileGate = createGate<{ friendlyWalletAddress: string | null }>({
@@ -90,6 +97,48 @@ const $profile = combine(
 const $pending = combine(profileQuery.$pending, $profilePending, (...args) =>
   args.some((arg) => arg),
 )
+
+/**
+ * What happens after a profile save is a consequence of the mutation
+ * finishing, not of a render: the component no longer mirrors mutation status
+ * into local state to decide when to toast and when to route away.
+ */
+sample({
+  clock: saveProfileMutation.finished.success,
+  fn: () => ({
+    type: 'info' as const,
+    messageKey: 'profile.form.edit.success',
+    closeButton: true,
+  }),
+  target: showToastFx,
+})
+
+sample({
+  clock: saveProfileMutation.finished.failure,
+  fn: () => ({
+    type: 'error' as const,
+    messageKey: 'profile.form.edit.error',
+    closeButton: true,
+  }),
+  target: showToastFx,
+})
+
+sample({
+  clock: saveProfileMutation.finished.finally,
+  target: saveProfileMutation.reset,
+})
+
+sample({
+  clock: saveProfileMutation.finished.success,
+  source: $profile,
+  fn: (profile) => ({
+    to: routes.profile.build({
+      walletAddress: profile?.friendlyWalletAddress ?? '',
+    }),
+    options: { viewTransition: true },
+  }),
+  target: navigateFx,
+})
 
 export {
   containsHost,
