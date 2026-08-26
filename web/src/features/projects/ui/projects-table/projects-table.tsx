@@ -45,8 +45,7 @@ import {
 import {
   type MobileDataTableConfig,
   type DataTableConfig,
-  BASE_CURRENCY,
-  formatAmount,
+  formatCurrency,
 } from '@/shared'
 import {
   DataTable,
@@ -147,8 +146,7 @@ export const ProjectsTable = () => {
         dataKey: 'earnings',
         width: 120,
         headerText: t('dashboard.projectsTable.head.earnings'),
-        getValue: (data) =>
-          `${formatAmount(data.earnings)} ${BASE_CURRENCY.code}`,
+        getValue: (data) => formatCurrency(data.earnings),
       },
       {
         dataKey: 'state',

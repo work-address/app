@@ -9,7 +9,7 @@ import styled from 'styled-components'
 import { useInvoiceInfoFields } from '../lib'
 import { $invoice, $invoiceLoading } from '../model'
 
-import { BASE_CURRENCY, formatAmount, Text } from '@/shared'
+import { BASE_CURRENCY, formatCurrency, Text } from '@/shared'
 
 export const InvoiceTotalAmountMobile = () => {
   const { t } = useTranslation()
@@ -31,7 +31,7 @@ export const InvoiceTotalAmountMobile = () => {
           <Skeleton height="40px" width="80px" />
         ) : (
           <Text size={'8'} weight={'medium'} $themeVariant={'primary'}>
-            {formatAmount(invoice?.totalAmount)} {BASE_CURRENCY.code}
+            {formatCurrency(invoice?.totalAmount)}
           </Text>
         )}
       </Flex>

@@ -9,7 +9,7 @@ import { $profile } from '../../model'
 import { ProfileViewCard } from './profile-view-styles'
 
 import { $pending } from '@/entities/profile'
-import { BASE_CURRENCY, formatAmount, Text, useBreakpoint } from '@/shared'
+import { formatCurrency, Text, useBreakpoint } from '@/shared'
 
 type ProfileViewDescriptionAndSkillsProps = {
   gridArea?: string
@@ -69,7 +69,7 @@ export const ProfileViewDescriptionAndSkills = ({
               <Flex gap={'1'} align={'end'}>
                 <Skeleton loading={profileLoading}>
                   <Text size={isMobile ? '4' : '8'} weight={'medium'}>
-                    {formatAmount(user?.rate)} {BASE_CURRENCY.code}
+                    {formatCurrency(user?.rate)}
                   </Text>
                 </Skeleton>
                 <Text size={isMobile ? '2' : '5'}>

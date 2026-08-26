@@ -7,8 +7,7 @@ import { getProjectStatusTranslationKey } from '../../model'
 import type { ProjectWithStats } from '@/entities/projects'
 
 import {
-  BASE_CURRENCY,
-  formatAmount,
+  formatCurrency,
   formatDurationFromMinutes,
   Text,
   useBreakpoint,
@@ -35,7 +34,7 @@ export const ProjectsDialogMetrics = ({ data }: ProjectsDialogMetricsProps) => {
       width="100%"
     >
       <Metric label={t('dashboard.projectsTable.head.earnings')}>
-        {formatAmount(data.earnings)} {BASE_CURRENCY.code}
+        {formatCurrency(data.earnings)}
       </Metric>
       <Metric label={t('dashboard.projectsTable.head.status')}>
         <Badge color={data.state === 'Active' ? 'green' : 'gray'}>

@@ -16,9 +16,8 @@ import {
   TextArea,
   useBreakpoint,
   useDateFormatter,
-  formatAmount,
+  formatCurrency,
   type InputProps,
-  BASE_CURRENCY,
 } from '@/shared'
 
 type ProjectsDialogViewProps = {
@@ -69,7 +68,7 @@ export const ProjectsDialogView = ({ data }: ProjectsDialogViewProps) => {
           {t(`dashboard.projectsTable.drawer.meta.rateHour`)}
         </Text>
         <Text size="2" weight="medium">
-          {formatAmount(data.rateHour)} {BASE_CURRENCY.code}
+          {formatCurrency(data.rateHour)}
         </Text>
       </Grid>
       <Separator size="4" />

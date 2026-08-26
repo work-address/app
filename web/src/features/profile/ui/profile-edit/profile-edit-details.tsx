@@ -221,7 +221,7 @@ export const ProfileEditDetails = ({
           inputMode="decimal"
           addonLeft={
             <Text size={'2'} color={'gray'}>
-              {BASE_CURRENCY.code}
+              {BASE_CURRENCY.symbol}
             </Text>
           }
         />

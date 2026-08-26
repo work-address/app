@@ -12,7 +12,7 @@ import {
   Text,
   Button,
   copyToClipboard,
-  formatAmount,
+  formatCurrency,
   showToast,
 } from '@/shared'
 
@@ -83,7 +83,7 @@ export const InvoiceTotalAmountDesktop = () => {
               <Skeleton width="50px" height="18px" loading={loading} />
             ) : (
               <Text $themeVariant={'primary'} weight={'medium'} size={'4'}>
-                {formatAmount(invoice?.totalAmount)} {BASE_CURRENCY.code}
+                {formatCurrency(invoice?.totalAmount)}
               </Text>
             )}
           </Flex>

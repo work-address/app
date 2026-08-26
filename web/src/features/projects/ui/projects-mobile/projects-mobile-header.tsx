@@ -9,8 +9,7 @@ import type { ProjectWithStats } from '@/entities/projects'
 
 import { routes } from '@/routes'
 import {
-  BASE_CURRENCY,
-  formatAmount,
+  formatCurrency,
   type MobileHeaderRenderProps,
   PrintIcon,
   Text,
@@ -54,7 +53,7 @@ export const ProjectsMobileHeader = React.memo(
           </Badge>
         </Flex>
         <Text color={'gray'} size={'2'}>
-          {formatAmount(props.data.earnings)} {BASE_CURRENCY.code}
+          {formatCurrency(props.data.earnings)}
         </Text>
       </Flex>
     )

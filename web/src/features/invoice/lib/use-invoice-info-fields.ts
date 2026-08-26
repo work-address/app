@@ -4,9 +4,8 @@ import { useTranslation } from 'react-i18next'
 import { $invoice } from '../model'
 
 import {
-  BASE_CURRENCY,
   dateFormatter,
-  formatAmount,
+  formatCurrency,
   numberFormatter,
   formatDurationFromMinutes,
 } from '@/shared'
@@ -41,7 +40,7 @@ export const useInvoiceInfoFields = (): InvoiceInfoFieldRow[] => {
     },
     {
       id: 'rateHour',
-      value: `${formatAmount(report?.rateHour)} ${BASE_CURRENCY.code}`,
+      value: formatCurrency(report?.rateHour),
     },
     {
       id: 'timeTotal',
