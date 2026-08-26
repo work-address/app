@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import axios from 'axios'
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { suite, test } from '@testdeck/mocha'
 
 import {
@@ -157,7 +157,7 @@ export class AuthTimeTrackerControllerTest extends BaseControllerTest {
   @test()
   async timeTrackerLogin_unknownNonce() {
     const client = this.apiClient()
-    const unknownNonce = faker.datatype.uuid()
+    const unknownNonce = faker.string.uuid()
 
     let error: unknown
 
@@ -186,7 +186,7 @@ export class AuthTimeTrackerControllerTest extends BaseControllerTest {
     try {
       await authTimeTrackerControllerTimeTrackerNonceGet({
         client,
-        path: { nonce: faker.datatype.uuid() },
+        path: { nonce: faker.string.uuid() },
         throwOnError: true,
       })
     } catch (e: unknown) {

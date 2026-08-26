@@ -1,5 +1,5 @@
 import { Column, Entity, JoinColumn, ManyToOne, Unique } from 'typeorm'
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { Exclude, Expose, Type } from 'class-transformer'
 import { JSONSchema } from 'class-validator-jsonschema'
 
@@ -18,7 +18,7 @@ import {
 
 @JSONSchema({
   example: {
-    id: faker.datatype.uuid(),
+    id: faker.string.uuid(),
   },
 })
 @Entity()

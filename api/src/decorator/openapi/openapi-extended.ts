@@ -172,8 +172,9 @@ function resolveEntityPropertyType(
       relation.target === sourceEntity &&
       relation.propertyName === propertyName,
   )
-  if (typeof relationMeta?.type === 'function') {
-    const type = relationMeta.type()
+  const relationType = relationMeta?.type
+  if (typeof relationType === 'function') {
+    const type = (relationType as (type?: unknown) => Function)()
     if (typeof type === 'function' && isEntityLikeReflectedType(type)) {
       return type
     }

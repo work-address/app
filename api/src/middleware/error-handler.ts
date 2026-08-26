@@ -35,9 +35,9 @@ export class ErrorHandler implements ExpressErrorMiddlewareInterface {
     const isWarning = httpCode === 400 || httpCode === 401
 
     if (isWarning) {
-      Sentry.captureException(error, { level: Sentry.Severity.Warning })
+      Sentry.captureException(error, { level: 'warning' })
     } else {
-      Sentry.captureException(error, { level: Sentry.Severity.Error })
+      Sentry.captureException(error, { level: 'error' })
     }
   }
 }

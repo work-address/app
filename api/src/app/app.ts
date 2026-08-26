@@ -1,11 +1,10 @@
 import 'reflect-metadata'
 import * as http from 'http'
 import * as Sentry from '@sentry/node'
-import * as Tracing from '@sentry/tracing'
 import express from 'express'
 import bodyParser from 'body-parser'
 import { Container } from 'inversify'
-import { Connection } from 'typeorm'
+import { DataSource } from 'typeorm'
 import { useExpressServer } from 'routing-controllers'
 
 import { AppContainer } from '@/app/app-container'
@@ -27,7 +26,7 @@ const swaggerUiExpress = require('swagger-ui-express')
 
 export class App {
   public static server: http.Server
-  public static conn: Connection
+  public static conn: DataSource
   public static container: Container
 
   private readonly env: string
@@ -53,32 +52,6 @@ export class App {
     // (which is the proxy container's docker network address, e.g. 172.19.0.2).
     this.express.set('trust proxy', true)
 
-    if (this.parameters.sentry) {
-      Sentry.init({
-        dsn: this.parameters.sentry,
-        integrations: [
-          new Sentry.Integrations.Http({ tracing: true }),
-          new Tracing.Integrations.Express({ app: this.express }),
-        ],
-        environment: this.env,
-        tracesSampleRate: 1.0,
-      })
-      this.express.use(
-        Sentry.Handlers.requestHandler() as express.RequestHandler,
-      )
-      this.express.use(Sentry.Handlers.tracingHandler())
-      this.express.use(
-        Sentry.Handlers.errorHandler({
-          shouldHandleError() {
-            // Capture All
-            // console.log('-----> error', error.message);
-
-            return true
-          },
-        }) as express.ErrorRequestHandler,
-      )
-    }
-
     this.express.use(
       bodyParser.json({
         verify: (
@@ -93,6 +66,12 @@ export class App {
     )
 
     this.initControllers()
+
+    // Must come after the routes so it sees errors they raise. Sentry.init()
+    // itself runs in src/instrument.ts, before any instrumented module loads.
+    if (this.parameters.sentry) {
+      Sentry.setupExpressErrorHandler(this.express)
+    }
 
     const swaggerNoStore: express.RequestHandler = (_req, res, next) => {
       res.setHeader(
@@ -127,8 +106,8 @@ export class App {
   }
 
   public async stop() {
-    if (App.conn?.isConnected) {
-      await App.conn.close()
+    if (App.conn?.isInitialized) {
+      await App.conn.destroy()
     }
 
     if (!App.server) {

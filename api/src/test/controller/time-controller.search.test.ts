@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import axios from 'axios'
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { suite, test } from '@testdeck/mocha'
 import moment from 'moment'
 
@@ -392,7 +392,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
       now.clone().subtract(120, 'minutes').toDate(),
       now.clone().subtract(110, 'minutes').toDate(),
     )
-    withScreenshot.screenshot = faker.datatype.uuid()
+    withScreenshot.screenshot = faker.string.uuid()
     await this.timeRepository.saveSingle(withScreenshot)
 
     const withoutScreenshot = await this.timeFixture.create(
@@ -908,7 +908,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
   async search_sortByUpdatedAt_desc() {
     const user = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(user)
-    const marker = faker.datatype.uuid()
+    const marker = faker.string.uuid()
     const older = await this.timeFixture.create(
       project,
       moment.utc().subtract(100, 'minutes').toDate(),

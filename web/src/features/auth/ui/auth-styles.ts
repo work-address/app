@@ -1,6 +1,8 @@
-import { Flex } from '@radix-ui/themes'
+import { Flex, type FlexProps } from '@radix-ui/themes'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
+
+import type { FC } from 'react'
 
 import { Card } from '@/shared'
 
@@ -123,7 +125,9 @@ export const ButtonRow = styled.div`
   display: none;
 `
 
-export const Overlay = styled(Flex)`
+// Annotated so declaration emit never has to name radix's non-exported
+// CommonFlexProps, which `composite: true` would otherwise reject (TS4023).
+export const Overlay: FC<FlexProps> = styled(Flex)`
   position: absolute;
   background: var(--c-rgba-255-255-255-0_5);
   top: 0;

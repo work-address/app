@@ -4,11 +4,8 @@ import { WinstonClient } from '@/service/winston-client'
 
 @injectable()
 export class Logger implements ILogger {
+  @inject('WinstonClient')
   private logger: WinstonClient
-
-  constructor(@inject('WinstonClient') winstonClient: WinstonClient) {
-    this.logger = winstonClient
-  }
 
   public error(message: string, object?: unknown): void {
     this.write('error', message, object)

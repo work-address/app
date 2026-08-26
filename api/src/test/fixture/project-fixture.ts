@@ -1,4 +1,4 @@
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { inject, injectable } from 'inversify'
 import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
@@ -14,8 +14,8 @@ export class ProjectFixture {
   public create(user: User, state: EProjectState): Promise<Project> {
     const project = new Project()
 
-    project.title = faker.datatype.uuid()
-    project.text = faker.datatype.uuid()
+    project.title = faker.string.uuid()
+    project.text = faker.string.uuid()
     project.user = user
     project.state = state
     project.trackScreenshots = false
@@ -32,8 +32,8 @@ export class ProjectFixture {
   ): Promise<Project> {
     const project = new Project()
 
-    project.title = faker.datatype.uuid()
-    project.text = faker.datatype.uuid()
+    project.title = faker.string.uuid()
+    project.text = faker.string.uuid()
     project.user = user
     project.rateHour = rateHour
     project.state = EProjectState.ACTIVE

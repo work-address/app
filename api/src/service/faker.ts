@@ -1,4 +1,4 @@
-import faker from 'faker'
+import { faker, type Faker as FakerJs } from '@faker-js/faker'
 import { injectable } from 'inversify'
 
 @injectable()
@@ -8,22 +8,26 @@ export class Faker {
   }
 
   public phone(): string {
-    return faker.phone.phoneNumber('+1234353#######')
+    return `+1234353${faker.string.numeric(7)}`
   }
 
   public userStoreName(): string {
-    return `${faker.lorem.word(8)}${faker.datatype.number()}${faker.datatype.number()}`
+    return `${faker.lorem.word({
+      length: 8,
+    })}${faker.number.int()}${faker.number.int()}`
   }
 
   public userHostName(): string {
-    return `${faker.lorem.word(8)}${faker.datatype.number()}${faker.datatype.number()}`
+    return `${faker.lorem.word({
+      length: 8,
+    })}${faker.number.int()}${faker.number.int()}`
   }
 
   private uuid() {
-    return faker.datatype.uuid().replace('-', '')
+    return faker.string.uuid().replace('-', '')
   }
 
-  public getFaker(): Faker.FakerStatic {
+  public getFaker(): FakerJs {
     return faker
   }
 }

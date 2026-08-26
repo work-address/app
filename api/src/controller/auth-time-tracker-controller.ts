@@ -10,7 +10,7 @@ import {
 } from 'routing-controllers'
 
 import express from 'express'
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { OpenAPI } from 'routing-controllers-openapi'
 
 import { CurrentUser } from '@/decorator/current-user'
@@ -73,7 +73,7 @@ export class AuthTimeTrackerController {
       content: {
         'application/json': {
           example: {
-            nonce: faker.datatype.uuid(),
+            nonce: faker.string.uuid(),
           },
           schema: {
             properties: {
@@ -111,7 +111,7 @@ export class AuthTimeTrackerController {
       content: {
         'application/json': {
           example: {
-            nonce: faker.datatype.uuid(),
+            nonce: faker.string.uuid(),
           },
           schema: {
             properties: {
@@ -158,21 +158,21 @@ export class AuthTimeTrackerController {
             examples: {
               init: {
                 value: {
-                  nonce: faker.datatype.uuid(),
+                  nonce: faker.string.uuid(),
                   ip: '127.0.0.1',
                   state: EAuthTimeTrackerState.INIT,
                 },
               },
               login: {
                 value: {
-                  nonce: faker.datatype.uuid(),
+                  nonce: faker.string.uuid(),
                   ip: '127.0.0.1',
                   state: EAuthTimeTrackerState.LOGIN,
                 },
               },
               connected: {
                 value: {
-                  nonce: faker.datatype.uuid(),
+                  nonce: faker.string.uuid(),
                   ip: '127.0.0.1',
                   state: EAuthTimeTrackerState.CONNECTED,
                   jwt: {

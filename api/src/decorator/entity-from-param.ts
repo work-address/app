@@ -1,7 +1,8 @@
 import { getMetadataArgsStorage, NotFoundError } from 'routing-controllers'
-import { getConnectionManager, EntityTarget } from 'typeorm'
+import { EntityTarget, FindOptionsWhere } from 'typeorm'
 import 'reflect-metadata'
 
+import { getDataSource } from '@/connector/data-source'
 import {
   AbstractRepositoryTemplate,
   TRelations,
@@ -92,8 +93,7 @@ async function entityTransform(
 ) {
   if (value === null || value === undefined) return Promise.resolve(value)
 
-  const connection = getConnectionManager().get(undefined)
-  const repository = connection.getRepository(target)
+  const repository = getDataSource().getRepository(target)
 
   let res
 
@@ -105,7 +105,9 @@ async function entityTransform(
       },
     )({ [lookupField]: value }, selectOptions, relations)
   } else {
-    res = await repository.findOne({ [lookupField]: value })
+    res = await repository.findOne({
+      where: { [lookupField]: value } as FindOptionsWhere<object>,
+    })
   }
 
   if (!res) {

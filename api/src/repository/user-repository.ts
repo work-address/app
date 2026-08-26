@@ -56,14 +56,17 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
       })
       .orWhere('u.phone = :phone', { phone: emailOrPhone })
       .getOne()
+      .then((result) => result ?? undefined)
   }
 
-  public findByAddressPublic(address: string): Promise<User | undefined> {
-    return this.getRepo().findOne({
-      where: {
-        address,
-      },
-    })
+  public async findByAddressPublic(address: string): Promise<User | undefined> {
+    return (
+      (await this.getRepo().findOne({
+        where: {
+          address,
+        },
+      })) ?? undefined
+    )
   }
 
   public findByAddressPublicOrFail(address: string): Promise<User> {

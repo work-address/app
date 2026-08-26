@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import axios from 'axios'
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { suite, test } from '@testdeck/mocha'
 
 import { userControllerSearch } from '@app/api-client'
@@ -92,7 +92,7 @@ export class UserControllerSearchTest extends BaseControllerTest {
       client: this.apiClient(),
       headers: this.authHeaders(user),
       body: {
-        filter: { id: faker.datatype.uuid() },
+        filter: { id: faker.string.uuid() },
         sort: { createdAt: 'DESC' },
         page: 0,
       },

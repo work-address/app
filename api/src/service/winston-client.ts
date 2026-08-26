@@ -1,18 +1,13 @@
 import winston from 'winston'
 import fs from 'fs'
-import { inject, injectable } from 'inversify'
 
 import { IConfigParameters } from '@/model/config'
 import { LogglyTransport } from '@/service/loggly-transport'
 
-@injectable()
 export class WinstonClient {
   public client: winston.Logger
 
-  constructor(
-    @inject('env') env: string,
-    @inject('parameters') parameters: IConfigParameters,
-  ) {
+  constructor(env: string, parameters: IConfigParameters) {
     this.client = winston.createLogger({
       level: 'debug',
       format: winston.format.combine(

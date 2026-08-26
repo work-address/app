@@ -1,4 +1,4 @@
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { expect } from 'chai'
 import axios from 'axios'
 import jwt from 'jsonwebtoken'
@@ -71,7 +71,7 @@ export class AuthControllerTest extends BaseControllerTest {
     )
     const project = await this.projectRepository.findOneByOrFail({
       where: {
-        user,
+        user: { id: user.id },
       },
     })
     const times = await this.timeRepository.findAllTimeForProject(project, user)
@@ -224,7 +224,7 @@ export class AuthControllerTest extends BaseControllerTest {
 
     const user = await this.userRepository.findByAddressPublicOrFail(address)
     const project = await this.projectRepository.findOneByOrFail({
-      where: { user },
+      where: { user: { id: user.id } },
     })
     const times = await this.timeRepository.findAllTimeForProject(project, user)
 
@@ -395,7 +395,7 @@ export class AuthControllerTest extends BaseControllerTest {
       payload.address,
     )
     const project = await this.projectRepository.findOneByOrFail({
-      where: { user },
+      where: { user: { id: user.id } },
     })
     const times = await this.timeRepository.findAllTimeForProject(project, user)
 
@@ -438,7 +438,10 @@ export class AuthControllerTest extends BaseControllerTest {
     const client = this.apiClient()
     const domain = getTestTonDomain(this.parameters)
     const nonce = await this.authenticator.getTonNonce()
-    const payload = await buildTonAuthPayloadWithInvalidSignature({ nonce, domain })
+    const payload = await buildTonAuthPayloadWithInvalidSignature({
+      nonce,
+      domain,
+    })
 
     let error: unknown
 
@@ -543,7 +546,7 @@ export class AuthControllerTest extends BaseControllerTest {
     try {
       await authControllerRefresh({
         client,
-        body: { refreshToken: faker.datatype.uuid() },
+        body: { refreshToken: faker.string.uuid() },
         headers: { Authorization: '' },
         throwOnError: true,
       })
@@ -585,7 +588,7 @@ export class AuthControllerTest extends BaseControllerTest {
     const client = this.apiClient()
     const parameters = this.container.get<IConfigParameters>('parameters')
     const refreshToken = jwt.sign(
-      { id: faker.datatype.uuid() },
+      { id: faker.string.uuid() },
       parameters.jwtSecret,
       { expiresIn: '1d' },
     )
@@ -652,7 +655,7 @@ export class AuthControllerTest extends BaseControllerTest {
   @test()
   async status_invalidDoNotThrowException() {
     const client = this.apiClient()
-    const token = faker.datatype.uuid()
+    const token = faker.string.uuid()
 
     const res = await authControllerStatus({
       client,

@@ -1,7 +1,7 @@
 import { suite, test } from '@testdeck/mocha'
 import * as httpMocks from 'node-mocks-http'
 import { expect } from 'chai'
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { Action } from 'routing-controllers'
 
 import { ErrorHandler } from '@/middleware/error-handler'
@@ -37,9 +37,9 @@ export class ErrorHandlerTest {
     }
     const error = {
       message: faker.lorem.sentence(),
-      name: faker.name.firstName(),
-      errors: [faker.name.firstName(), faker.name.firstName()],
-      [faker.name.firstName()]: faker.name.firstName(),
+      name: faker.person.firstName(),
+      errors: [faker.person.firstName(), faker.person.firstName()],
+      [faker.person.firstName()]: faker.person.firstName(),
       httpCode: 400,
     }
 

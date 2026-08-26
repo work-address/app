@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import axios from 'axios'
 import { suite, test } from '@testdeck/mocha'
 import moment from 'moment'
@@ -36,12 +36,12 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
       moment.utc().toDate(),
     )
 
-    time.screenshot = faker.datatype.uuid()
+    time.screenshot = faker.string.uuid()
     time.processes = [
       {
-        name: faker.datatype.uuid(),
-        description: faker.datatype.uuid(),
-        timeMin: faker.datatype.number(9),
+        name: faker.string.uuid(),
+        description: faker.string.uuid(),
+        timeMin: faker.number.int(9),
       },
     ]
     await this.timeRepository.saveSingle(time)
@@ -57,7 +57,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
       moment.utc().subtract(120, 'minutes').toDate(),
       moment.utc().subtract(90, 'minutes').toDate(),
     )
-    second.screenshot = faker.datatype.uuid()
+    second.screenshot = faker.string.uuid()
     await this.timeRepository.saveSingle(second)
 
     const client = this.apiClient()
@@ -94,9 +94,9 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     )
     second.processes = [
       {
-        name: faker.datatype.uuid(),
-        description: faker.datatype.uuid(),
-        timeMin: faker.datatype.number(9),
+        name: faker.string.uuid(),
+        description: faker.string.uuid(),
+        timeMin: faker.number.int(9),
       },
     ]
     await this.timeRepository.saveSingle(second)
@@ -132,7 +132,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     try {
       await timeControllerRemoveScreenshots({
         client: this.apiClient(),
-        body: { ids: [faker.datatype.uuid()] },
+        body: { ids: [faker.string.uuid()] },
         throwOnError: true,
       })
     } catch (e: unknown) {
@@ -152,7 +152,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     try {
       await timeControllerRemoveProcesses({
         client: this.apiClient(),
-        body: { ids: [faker.datatype.uuid()] },
+        body: { ids: [faker.string.uuid()] },
         throwOnError: true,
       })
     } catch (e: unknown) {
@@ -227,7 +227,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
       moment.utc().subtract(60, 'minutes').toDate(),
       moment.utc().toDate(),
     )
-    time.screenshot = faker.datatype.uuid()
+    time.screenshot = faker.string.uuid()
     await this.timeRepository.saveSingle(time)
 
     let error: unknown
@@ -285,7 +285,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
       moment.utc().toDate(),
       worker,
     )
-    time.screenshot = faker.datatype.uuid()
+    time.screenshot = faker.string.uuid()
     await this.timeRepository.saveSingle(time)
 
     const res = await timeControllerRemoveScreenshots({
@@ -369,9 +369,9 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     )
     time.processes = [
       {
-        name: faker.datatype.uuid(),
-        description: faker.datatype.uuid(),
-        timeMin: faker.datatype.number(9),
+        name: faker.string.uuid(),
+        description: faker.string.uuid(),
+        timeMin: faker.number.int(9),
       },
     ]
     await this.timeRepository.saveSingle(time)
@@ -433,9 +433,9 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     )
     time.processes = [
       {
-        name: faker.datatype.uuid(),
-        description: faker.datatype.uuid(),
-        timeMin: faker.datatype.number(9),
+        name: faker.string.uuid(),
+        description: faker.string.uuid(),
+        timeMin: faker.number.int(9),
       },
     ]
     await this.timeRepository.saveSingle(time)
@@ -466,7 +466,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     try {
       await timeControllerRemoveScreenshots({
         client: this.apiClient(),
-        body: { ids: [faker.datatype.uuid()] },
+        body: { ids: [faker.string.uuid()] },
         headers: {
           Authorization: this.authenticator.getTokens(owner).accessToken,
         },
@@ -515,7 +515,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     try {
       await timeControllerRemoveProcesses({
         client: this.apiClient(),
-        body: { ids: [faker.datatype.uuid()] },
+        body: { ids: [faker.string.uuid()] },
         headers: {
           Authorization: this.authenticator.getTokens(owner).accessToken,
         },

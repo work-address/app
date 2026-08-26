@@ -1,10 +1,13 @@
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import moment from 'moment'
 import { expect } from 'chai'
 import axios from 'axios'
 import { suite, test } from '@testdeck/mocha'
 
-import { projectControllerEdit, projectControllerGetStats } from '@app/api-client'
+import {
+  projectControllerEdit,
+  projectControllerGetStats,
+} from '@app/api-client'
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { ProjectStatisticsRepository } from '@/repository/project-statistics-repository'
@@ -255,7 +258,7 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
       await projectControllerGetStats({
         client: this.apiClient(),
         path: {
-          id: faker.datatype.uuid() as never,
+          id: faker.string.uuid() as never,
           period: EProjectStatisticsPeriod.ONE_DAY as never,
         },
         headers: {

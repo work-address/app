@@ -1,6 +1,6 @@
 import { expect } from 'chai'
 import axios from 'axios'
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { suite, test } from '@testdeck/mocha'
 
 import { invoiceControllerSearch } from '@app/api-client'
@@ -27,7 +27,7 @@ export class InvoiceControllerSearchTest extends BaseControllerTest {
       await invoiceControllerSearch({
         client: this.apiClient(),
         body: {
-          filter: { projectId: faker.datatype.uuid() },
+          filter: { projectId: faker.string.uuid() },
           sort: { fromAt: 'DESC' },
           page: 0,
         },

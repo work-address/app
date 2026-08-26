@@ -1,5 +1,5 @@
 import { Entity, Column, Index, OneToMany } from 'typeorm'
-import * as faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { JSONSchema } from 'class-validator-jsonschema'
 import { Exclude, Expose } from 'class-transformer'
 
@@ -22,7 +22,7 @@ import { Project } from '@/entity/project'
 // TODO: add profile visibility flag, so user can hide their profile from the public
 @JSONSchema({
   example: {
-    id: faker.datatype.uuid(),
+    id: faker.string.uuid(),
   },
 })
 @Entity()

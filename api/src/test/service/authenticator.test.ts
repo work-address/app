@@ -1,5 +1,5 @@
 import { suite, test } from '@testdeck/mocha'
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { expect } from 'chai'
 import * as jwt from 'jsonwebtoken'
 import * as web3 from 'web3'
@@ -80,7 +80,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
   @test()
   generateRefreshJwtToken() {
     const user = new User()
-    user.id = faker.datatype.uuid()
+    user.id = faker.string.uuid()
     user.email = faker.internet.email()
 
     const refreshToken = this.authenticator.generateRefreshToken(user)
@@ -130,7 +130,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
         .valueOf() / 1000,
     )
     const refreshToken = jwt.sign(
-      { id: faker.random.word(), iat },
+      { id: faker.word.sample(), iat },
       this.parameters.jwtSecret,
       {
         expiresIn: 60 * 60 * 24,
@@ -147,7 +147,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
   @test()
   async getUserFromRefreshToken_failUserDoesNotExist() {
     const refreshToken = jwt.sign(
-      { id: faker.datatype.number() },
+      { id: faker.number.int() },
       this.parameters.jwtSecret,
       {
         expiresIn: 60 * 60 * 24,
@@ -178,7 +178,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
   @test()
   getEmailFromJwtOrThrowError_errorMalformed() {
     let error: Error | undefined
-    const token = faker.datatype.uuid()
+    const token = faker.string.uuid()
 
     try {
       this.authenticator.getEmailOrPhoneOrThrowError(token)
@@ -422,7 +422,10 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
   async loginTon_failsWhenSignatureIsInvalid() {
     const domain = getTestTonDomain(this.parameters)
     const nonce = await this.authenticator.getTonNonce()
-    const payload = await buildTonAuthPayloadWithInvalidSignature({ nonce, domain })
+    const payload = await buildTonAuthPayloadWithInvalidSignature({
+      nonce,
+      domain,
+    })
 
     let err: Error | null = null
 

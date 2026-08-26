@@ -8,7 +8,12 @@ import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
 import { Invoice } from '@/entity/invoice'
 import { EProjectState } from '@/model/project'
-import { Brackets, OrderByCondition, SelectQueryBuilder } from 'typeorm'
+import {
+  Brackets,
+  ObjectLiteral,
+  OrderByCondition,
+  SelectQueryBuilder,
+} from 'typeorm'
 
 import { ITimeTotals } from '@/model/time'
 import { Calc } from '@/service/calc'
@@ -387,6 +392,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       .andWhere('time.fromAt = :from', { from })
       .andWhere('time.toAt = :to', { to })
       .getOne()
+      .then((result) => result ?? undefined)
   }
 
   public findTimeBetweenForProject(
@@ -409,7 +415,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
   }
 
   private applyViewAccessFilter(
-    qb: SelectQueryBuilder<unknown>,
+    qb: SelectQueryBuilder<ObjectLiteral>,
     ownerAlias: string,
     user: User,
   ): void {

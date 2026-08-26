@@ -1,12 +1,9 @@
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { expect } from 'chai'
 import axios from 'axios'
 import { suite, test } from '@testdeck/mocha'
 
-import {
-  projectControllerEdit,
-  projectControllerRead,
-} from '@app/api-client'
+import { projectControllerEdit, projectControllerRead } from '@app/api-client'
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { ProjectRepository } from '@/repository/project-repository'
@@ -208,13 +205,13 @@ export class ProjectControllerReadTest extends BaseControllerTest {
     expect(res.data.workerAddresses).to.deep.equal([worker.address])
     expect(res.data.viewerAddresses).to.deep.equal([viewer.address])
     expect(res.data.workers).to.have.length(1)
-    expect(
-      (res.data.workers?.[0] as { id?: string } | undefined)?.id,
-    ).to.equal(worker.id)
+    expect((res.data.workers?.[0] as { id?: string } | undefined)?.id).to.equal(
+      worker.id,
+    )
     expect(res.data.viewers).to.have.length(1)
-    expect(
-      (res.data.viewers?.[0] as { id?: string } | undefined)?.id,
-    ).to.equal(viewer.id)
+    expect((res.data.viewers?.[0] as { id?: string } | undefined)?.id).to.equal(
+      viewer.id,
+    )
   }
 
   @test
@@ -319,7 +316,7 @@ export class ProjectControllerReadTest extends BaseControllerTest {
     try {
       await projectControllerRead({
         client: this.apiClient(),
-        path: { id: faker.datatype.uuid() as never },
+        path: { id: faker.string.uuid() as never },
         headers: {
           Authorization: this.authenticator.getTokens(owner).accessToken,
         },

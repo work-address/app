@@ -43,7 +43,7 @@ export class AppContainer {
       return AppContainer.getContainer()
     }
 
-    const container = new Container({ skipBaseClassChecks: true })
+    const container = new Container()
 
     container.bind<string>('env').toConstantValue(env)
     container.bind<IConfigParameters>('parameters').toConstantValue(parameters)
@@ -62,7 +62,7 @@ export class AppContainer {
     // Services
     container
       .bind<WinstonClient>('WinstonClient')
-      .to(WinstonClient)
+      .toDynamicValue(() => new WinstonClient(env, parameters))
       .inSingletonScope()
     container.bind<ILogger>('ILogger').to(Logger).inSingletonScope()
     container.bind<Signer>('Signer').to(Signer)

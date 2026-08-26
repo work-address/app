@@ -1,4 +1,4 @@
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { expect } from 'chai'
 import axios from 'axios'
 import { suite, test } from '@testdeck/mocha'
@@ -219,7 +219,7 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
     )
     // A collaborator may be granted access before their wallet has ever
     // signed in — no matching user account is required at add-time.
-    const pendingAddress = faker.datatype.uuid()
+    const pendingAddress = faker.string.uuid()
 
     const res = await this.editProject(project, owner, {
       workerAddresses: [pendingAddress],
@@ -243,7 +243,7 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
     try {
       await projectControllerEdit({
         client: this.apiClient(),
-        path: { id: faker.datatype.uuid() as never },
+        path: { id: faker.string.uuid() as never },
         headers: {
           Authorization: this.authenticator.getTokens(owner).accessToken,
         },
@@ -360,7 +360,7 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
       viewerAddresses: [viewer.address],
     })
 
-    const newTitle = faker.datatype.uuid()
+    const newTitle = faker.string.uuid()
     await this.editProject(project, owner, {
       title: newTitle,
     })

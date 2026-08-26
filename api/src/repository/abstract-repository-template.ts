@@ -1,17 +1,16 @@
 import {
   DeepPartial,
   EntityTarget,
-  FindConditions,
+  FindOptionsWhere,
   FindManyOptions,
   FindOneOptions,
   ObjectLiteral,
-  getRepository,
   SaveOptions,
   SelectQueryBuilder,
-  getConnection,
 } from 'typeorm'
 
 import { Repository } from 'typeorm/repository/Repository'
+import { getDataSource } from '@/connector/data-source'
 import { ISearch } from '@/model/dto/search'
 import { Filter } from '@/service/filter'
 import ConstraintsValidationException from '@/exception/constraints-validation-exception'
@@ -40,7 +39,7 @@ export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
   }
 
   public async findOneBy(options: FindOneOptions<T>): Promise<T | undefined> {
-    return this.getRepo().findOne(options)
+    return (await this.getRepo().findOne(options)) ?? undefined
   }
 
   public async findOneByOrFail(options: FindOneOptions<T>): Promise<T> {
@@ -51,7 +50,10 @@ export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
     id: string | string,
     options?: FindOneOptions<T>,
   ): Promise<T> {
-    return this.getRepo().findOneOrFail(id, options)
+    return this.getRepo().findOneOrFail({
+      ...options,
+      where: { id } as unknown as FindOptionsWhere<T>,
+    })
   }
 
   public saveSingle(entity: T, options?: SaveOptions): Promise<T> {
@@ -70,15 +72,15 @@ export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
     return await this.getRepo().remove(entities)
   }
 
-  public async softDelete(conditions: FindConditions<T>) {
+  public async softDelete(conditions: FindOptionsWhere<T>) {
     return await this.getRepo().softDelete(conditions)
   }
 
   public getRepo(): Repository<T> {
-    return getRepository(this.target)
+    return getDataSource().getRepository(this.target)
   }
 
-  public findOneByQueryBuilder<Entity>(
+  public findOneByQueryBuilder<Entity extends ObjectLiteral>(
     findOptions: TFindOptions,
     selectOptions: null | TSelectOptions = null,
     relations: null | TRelations = null,
@@ -126,7 +128,7 @@ export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
     return query.getOne()
   }
 
-  static buildRelations<E>(
+  static buildRelations<E extends ObjectLiteral>(
     relations: TRelations,
     parentKey: string,
     query: SelectQueryBuilder<E>,
@@ -148,7 +150,7 @@ export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
     })
   }
 
-  static buildFindOptions<E>(
+  static buildFindOptions<E extends ObjectLiteral>(
     findOptions: TFindOptions,
     parentKey: string,
     query: SelectQueryBuilder<E>,
@@ -249,10 +251,10 @@ export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
     const validPropertyName = propertyName.toLowerCase()
 
     try {
-      metadata = getConnection().getMetadata(validPropertyName)
+      metadata = getDataSource().getMetadata(validPropertyName)
     } catch {
       // remove 's' symbol from the end
-      metadata = getConnection().getMetadata(validPropertyName.slice(0, -1))
+      metadata = getDataSource().getMetadata(validPropertyName.slice(0, -1))
     }
 
     return metadata

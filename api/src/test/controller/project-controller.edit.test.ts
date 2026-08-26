@@ -1,4 +1,4 @@
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { expect } from 'chai'
 import axios from 'axios'
 import { suite, test } from '@testdeck/mocha'
@@ -28,8 +28,8 @@ export class ProjectControllerEditTest extends BaseControllerTest {
     )
 
     const data = {
-      title: faker.datatype.uuid(),
-      text: faker.datatype.uuid(),
+      title: faker.string.uuid(),
+      text: faker.string.uuid(),
       state: EProjectState.ACTIVE,
       trackScreenshots: true,
       trackProcesses: true,
@@ -103,8 +103,8 @@ export class ProjectControllerEditTest extends BaseControllerTest {
       EProjectState.INACTIVE,
     )
     const data = {
-      title: faker.datatype.uuid(),
-      text: faker.datatype.uuid(),
+      title: faker.string.uuid(),
+      text: faker.string.uuid(),
       state: EProjectState.ACTIVE,
       trackScreenshots: true,
       trackProcesses: true,

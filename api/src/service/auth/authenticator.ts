@@ -21,8 +21,8 @@ import { IAuthTonPayload } from '@/model/auth'
 
 @injectable()
 export class Authenticator {
-  protected accessTokenExpiresIn: string = '20d'
-  protected refreshTokenExpiresIn: string = '180d'
+  protected accessTokenExpiresIn: jwt.SignOptions['expiresIn'] = '20d'
+  protected refreshTokenExpiresIn: jwt.SignOptions['expiresIn'] = '180d'
 
   public static nonceExpiresIn: number = 1000 * 60 * 10 // 10 minutes
 

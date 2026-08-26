@@ -1,4 +1,4 @@
-import { Connection } from 'typeorm'
+import { DataSource } from 'typeorm'
 import { Container } from 'inversify'
 import { timeout } from '@testdeck/mocha'
 import { AppConfig } from '@/app/app-config'
@@ -10,7 +10,7 @@ import { IConfigParameters } from '@/model/config'
 import { Faker } from '@/service/faker'
 
 export class AbstractDatabaseIntegration {
-  public conn: Connection
+  public conn: DataSource
   public container: Container
   protected parameters: IConfigParameters
   protected env: string
@@ -36,6 +36,6 @@ export class AbstractDatabaseIntegration {
   }
 
   async after() {
-    await this.conn.close()
+    await this.conn.destroy()
   }
 }

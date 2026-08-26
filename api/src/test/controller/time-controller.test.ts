@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import axios from 'axios'
 import { suite, test } from '@testdeck/mocha'
 import moment from 'moment'
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 
 import {
   projectControllerEdit,
@@ -440,7 +440,7 @@ export class TimeControllerTest extends BaseControllerTest {
     try {
       await timeControllerRead({
         client: this.apiClient(),
-        path: { id: faker.datatype.uuid() as never },
+        path: { id: faker.string.uuid() as never },
         throwOnError: true,
       })
     } catch (e: unknown) {
@@ -459,7 +459,7 @@ export class TimeControllerTest extends BaseControllerTest {
     try {
       await timeControllerGetTotals({
         client: this.apiClient(),
-        path: { id: faker.datatype.uuid() as never },
+        path: { id: faker.string.uuid() as never },
         throwOnError: true,
       })
     } catch (e: unknown) {
@@ -478,7 +478,7 @@ export class TimeControllerTest extends BaseControllerTest {
     try {
       await timeControllerGetReport({
         client: this.apiClient(),
-        path: { id: faker.datatype.uuid() as never },
+        path: { id: faker.string.uuid() as never },
         throwOnError: true,
       })
     } catch (e: unknown) {
@@ -499,7 +499,7 @@ export class TimeControllerTest extends BaseControllerTest {
     try {
       await timeControllerGetReport({
         client: this.apiClient(),
-        path: { id: faker.datatype.uuid() as never },
+        path: { id: faker.string.uuid() as never },
         headers: {
           Authorization: this.authenticator.getTokens(user).accessToken,
         },
@@ -523,7 +523,7 @@ export class TimeControllerTest extends BaseControllerTest {
     try {
       await timeControllerRead({
         client: this.apiClient(),
-        path: { id: faker.datatype.uuid() as never },
+        path: { id: faker.string.uuid() as never },
         headers: {
           Authorization: this.authenticator.getTokens(owner).accessToken,
         },

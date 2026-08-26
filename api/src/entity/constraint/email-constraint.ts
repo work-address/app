@@ -4,8 +4,8 @@ import {
   ValidatorConstraintInterface,
   isEmail,
 } from 'class-validator'
-import { getRepository, Not } from 'typeorm'
-
+import { Not } from 'typeorm'
+import { getDataSource } from '@/connector/data-source'
 import { User } from '@/entity/user'
 
 @ValidatorConstraint({ name: 'EmailConstraint', async: true })
@@ -22,7 +22,8 @@ export class EmailConstraint implements ValidatorConstraintInterface {
         return false
       }
 
-      return getRepository(User)
+      return getDataSource()
+        .getRepository(User)
         .find({
           where: this.buildWhere(value, args),
         })

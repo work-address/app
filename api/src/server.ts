@@ -1,4 +1,5 @@
 import './register-path-alias'
+import './instrument'
 
 import { createApp } from '@/app/app-bootstrap'
 ;(async () => {

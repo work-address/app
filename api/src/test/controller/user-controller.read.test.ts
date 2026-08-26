@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import axios from 'axios'
 import * as web3 from 'web3'
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { suite, test } from '@testdeck/mocha'
 
 import { userControllerEdit, userControllerRead } from '@app/api-client'
@@ -85,20 +85,20 @@ export class UserControllerReadTest extends BaseControllerTest {
     const client = this.apiClient()
 
     const data = {
-      title: faker.name.jobTitle(),
-      company: faker.company.companyName(),
+      title: faker.person.jobTitle(),
+      company: faker.company.name(),
       bio: faker.lorem.sentence(),
       skills: faker.lorem.words(3),
       facebook: faker.internet.url(),
       linkedIn: faker.internet.url(),
-      twitter: `@${faker.internet.userName().toLowerCase()}`,
-      instagram: `@${faker.internet.userName().toLowerCase()}`,
+      twitter: `@${faker.internet.username().toLowerCase()}`,
+      instagram: `@${faker.internet.username().toLowerCase()}`,
       youtube: faker.internet.url(),
-      telegram: `@${faker.internet.userName().toLowerCase()}`,
+      telegram: `@${faker.internet.username().toLowerCase()}`,
       whatsapp: this.faker.phone(),
       tz: 'Europe/Kyiv',
-      city: faker.address.city(),
-      country: faker.address.country(),
+      city: faker.location.city(),
+      country: faker.location.country(),
     }
 
     await userControllerEdit({
@@ -151,9 +151,7 @@ export class UserControllerReadTest extends BaseControllerTest {
   @test()
   async read_exposesPremiumFlag() {
     const user = await this.userFixture.createUser()
-    const userRepository = this.container.get<UserRepository>(
-      'UserRepository',
-    )
+    const userRepository = this.container.get<UserRepository>('UserRepository')
 
     user.premium = true
     await userRepository.saveSingle(user)
@@ -165,9 +163,7 @@ export class UserControllerReadTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    expect((res.data as unknown as { premium: boolean }).premium).to.be.eq(
-      true,
-    )
+    expect((res.data as unknown as { premium: boolean }).premium).to.be.eq(true)
   }
 
   @test()

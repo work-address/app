@@ -4,7 +4,7 @@ import * as crypto from 'crypto'
 import bs58 from 'bs58'
 import { sign } from 'tweetnacl'
 
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 
 import { IConfigParameters } from '@/model/config'
 
@@ -14,7 +14,7 @@ export class Signer {
   protected parameters: IConfigParameters
 
   public generateNonce(): string {
-    const nonce = `${faker.datatype.uuid()}-${this.parameters.jwtSecret}`
+    const nonce = `${faker.string.uuid()}-${this.parameters.jwtSecret}`
 
     return crypto.createHash('md5').update(nonce).digest('hex')
   }

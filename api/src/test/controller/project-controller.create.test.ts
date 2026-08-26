@@ -1,4 +1,4 @@
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { expect } from 'chai'
 import axios from 'axios'
 import { suite, test } from '@testdeck/mocha'
@@ -25,8 +25,8 @@ export class ProjectControllerCreateTest extends BaseControllerTest {
     const data = {
       trackScreenshots: false,
       trackProcesses: true,
-      title: faker.datatype.uuid(),
-      text: faker.datatype.uuid(),
+      title: faker.string.uuid(),
+      text: faker.string.uuid(),
       state: EProjectState.INACTIVE,
     }
 
@@ -62,8 +62,8 @@ export class ProjectControllerCreateTest extends BaseControllerTest {
     const data = {
       trackScreenshots: false,
       trackProcesses: true,
-      title: faker.datatype.uuid(),
-      text: faker.datatype.uuid(),
+      title: faker.string.uuid(),
+      text: faker.string.uuid(),
       state: EProjectState.ACTIVE,
       workerAddresses: [worker.address],
       viewerAddresses: [viewer.address],
@@ -93,7 +93,7 @@ export class ProjectControllerCreateTest extends BaseControllerTest {
     const owner = await this.userFixture.createPremiumUser()
     // A collaborator may be granted access before their wallet has ever
     // signed in — no matching user account is required at add-time.
-    const pendingAddress = faker.datatype.uuid()
+    const pendingAddress = faker.string.uuid()
 
     const res = await projectControllerCreate({
       client: this.apiClient(),
@@ -103,8 +103,8 @@ export class ProjectControllerCreateTest extends BaseControllerTest {
       body: {
         trackScreenshots: false,
         trackProcesses: false,
-        title: faker.datatype.uuid(),
-        text: faker.datatype.uuid(),
+        title: faker.string.uuid(),
+        text: faker.string.uuid(),
         state: EProjectState.ACTIVE,
         workerAddresses: [pendingAddress],
         viewerAddresses: [],
@@ -134,8 +134,8 @@ export class ProjectControllerCreateTest extends BaseControllerTest {
       body: {
         trackScreenshots: false,
         trackProcesses: false,
-        title: faker.datatype.uuid(),
-        text: faker.datatype.uuid(),
+        title: faker.string.uuid(),
+        text: faker.string.uuid(),
         state: EProjectState.ACTIVE,
         workerAddresses: [owner.address, worker.address],
         viewerAddresses: [owner.address],
@@ -160,8 +160,8 @@ export class ProjectControllerCreateTest extends BaseControllerTest {
       await projectControllerCreate({
         client: this.apiClient(),
         body: {
-          title: faker.datatype.uuid(),
-          text: faker.datatype.uuid(),
+          title: faker.string.uuid(),
+          text: faker.string.uuid(),
           state: EProjectState.INACTIVE,
           trackScreenshots: false,
           trackProcesses: false,

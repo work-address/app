@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import axios from 'axios'
 import { suite, test } from '@testdeck/mocha'
 import moment from 'moment'
@@ -58,7 +58,7 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
     try {
       await timeControllerMarkPaid({
         client: this.apiClient(),
-        body: { ids: [faker.datatype.uuid()] },
+        body: { ids: [faker.string.uuid()] },
         throwOnError: true,
       })
     } catch (e: unknown) {
@@ -353,7 +353,7 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
         headers: {
           Authorization: this.authenticator.getTokens(owner).accessToken,
         },
-        body: { ids: [faker.datatype.uuid()] },
+        body: { ids: [faker.string.uuid()] },
         throwOnError: true,
       })
     } catch (e: unknown) {

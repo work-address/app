@@ -1,6 +1,6 @@
 import * as _ from 'lodash'
 import { inject, injectable } from 'inversify'
-import { Brackets, SelectQueryBuilder } from 'typeorm'
+import { Brackets, ObjectLiteral, SelectQueryBuilder } from 'typeorm'
 
 import { Filter } from '@/service/filter'
 import { AbstractRepositoryTemplate } from '@/repository/abstract-repository-template'
@@ -29,6 +29,7 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
       .andWhere('user.id = :userId', { userId: user.id })
       .select()
       .getOne()
+      .then((result) => result ?? undefined)
   }
 
   public async findProjectWithAccess(
@@ -72,6 +73,7 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
       .andWhere('project.id = :id', { id: project.id })
       .andWhere('owner.id = :userId', { userId: user.id })
       .getOne()
+      .then((result) => result ?? undefined)
   }
 
   public async findAndCountAccessibleBy(
@@ -210,7 +212,7 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
   }
 
   private applyViewAccessFilter(
-    qb: SelectQueryBuilder<unknown>,
+    qb: SelectQueryBuilder<ObjectLiteral>,
     ownerAlias: string,
     user: User,
   ): void {
@@ -242,7 +244,7 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
   }
 
   private applyWorkerAccessFilter(
-    qb: SelectQueryBuilder<unknown>,
+    qb: SelectQueryBuilder<ObjectLiteral>,
     ownerAlias: string,
     user: User,
   ): void {

@@ -1,4 +1,4 @@
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { inject, injectable } from 'inversify'
 import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
@@ -21,11 +21,11 @@ export class TimeFixture {
 
     time.project = project
     time.user = user ?? project.user
-    time.note = faker.datatype.uuid()
-    time.mouseKeys = faker.datatype.number(9)
-    time.keyboardKeys = faker.datatype.number(9)
-    time.minutesActive = faker.datatype.number(9)
-    time.mouseDistance = faker.datatype.number(9)
+    time.note = faker.string.uuid()
+    time.mouseKeys = faker.number.int(9)
+    time.keyboardKeys = faker.number.int(9)
+    time.minutesActive = faker.number.int(9)
+    time.mouseDistance = faker.number.int(9)
     time.fromAt = from
     time.toAt = to
 

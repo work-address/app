@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import axios from 'axios'
 import { suite, test } from '@testdeck/mocha'
 import moment from 'moment'
@@ -28,9 +28,9 @@ export class TimeControllerEditTest extends BaseControllerTest {
     try {
       await timeControllerEdit({
         client: this.apiClient(),
-        path: { id: faker.datatype.uuid() as never },
+        path: { id: faker.string.uuid() as never },
         body: {
-          note: faker.datatype.uuid(),
+          note: faker.string.uuid(),
           isPaid: true,
         },
         throwOnError: true,
@@ -59,7 +59,7 @@ export class TimeControllerEditTest extends BaseControllerTest {
     )
 
     const data = {
-      note: faker.datatype.uuid(),
+      note: faker.string.uuid(),
       isPaid: true,
     }
 
@@ -142,7 +142,7 @@ export class TimeControllerEditTest extends BaseControllerTest {
     time.isPaid = true
     await this.timeRepository.saveSingle(time)
 
-    const note = faker.datatype.uuid()
+    const note = faker.string.uuid()
 
     await timeControllerEdit({
       client: this.apiClient(),
@@ -197,7 +197,7 @@ export class TimeControllerEditTest extends BaseControllerTest {
     )
 
     const data = {
-      note: faker.datatype.uuid(),
+      note: faker.string.uuid(),
       isPaid: true,
     }
 
@@ -241,12 +241,12 @@ export class TimeControllerEditTest extends BaseControllerTest {
     try {
       await timeControllerEdit({
         client: this.apiClient(),
-        path: { id: faker.datatype.uuid() as never },
+        path: { id: faker.string.uuid() as never },
         headers: {
           Authorization: this.authenticator.getTokens(owner).accessToken,
         },
         body: {
-          note: faker.datatype.uuid(),
+          note: faker.string.uuid(),
           isPaid: true,
         },
         throwOnError: true,

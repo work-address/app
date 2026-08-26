@@ -386,7 +386,9 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
     expect(result.error?.name).to.be.equal('RetentionExceededException')
 
     // Nothing was written at all - not written-then-removed.
-    const stored = await this.timeRepository.findBy({ where: { project } })
+    const stored = await this.timeRepository.findBy({
+      where: { project: { id: project.id } },
+    })
     expect(stored).to.deep.equal([])
   }
 

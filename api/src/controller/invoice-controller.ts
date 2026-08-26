@@ -5,7 +5,7 @@ import {
   JsonController,
   Post,
 } from 'routing-controllers'
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { OpenAPIExtended } from '@/decorator/openapi/openapi-extended'
 import { App } from '@/app/app'
 import { CurrentUser } from '@/decorator/current-user'
@@ -33,7 +33,7 @@ export class InvoiceController {
     summary: 'Search invoices accessible by the current user',
     searchRequestBody: {
       example: {
-        filter: { projectId: faker.datatype.uuid() },
+        filter: { projectId: faker.string.uuid() },
         sort: { fromAt: 'DESC' },
         page: 0,
       },

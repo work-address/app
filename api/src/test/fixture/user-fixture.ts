@@ -1,5 +1,5 @@
 import { inject, injectable } from 'inversify'
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import * as web3 from 'web3'
 
 import { User } from '@/entity/user'
@@ -103,8 +103,10 @@ export class UserFixture {
   }
 
   public validatedPassword(): string {
-    return `${faker.internet.password(10).toLowerCase()}${faker.random
-      .alpha({ count: 2 })
-      .toUpperCase()}_!${faker.datatype.number(9)}`
+    return `${faker.internet
+      .password({ length: 10 })
+      .toLowerCase()}${faker.string
+      .alpha({ length: 2 })
+      .toUpperCase()}_!${faker.number.int(9)}`
   }
 }

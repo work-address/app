@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import axios from 'axios'
 import { suite, test } from '@testdeck/mocha'
 
@@ -51,22 +51,22 @@ export class UserControllerEditTest extends BaseControllerTest {
     const user = await this.userFixture.createUser()
 
     const data = {
-      bio: faker.datatype.number(),
-      title: faker.name.jobTitle(),
-      company: faker.company.companyName(),
+      bio: faker.number.int(),
+      title: faker.person.jobTitle(),
+      company: faker.company.name(),
       roles: [EUserRole.ROLE_USER],
       tz: 'America/Los_Angeles',
       phone: this.faker.phone(),
-      skills: faker.datatype.uuid(),
-      rate: faker.datatype.number(50),
+      skills: faker.string.uuid(),
+      rate: faker.number.int(50),
       facebook: faker.internet.url(),
       linkedIn: faker.internet.url(),
-      twitter: `@${faker.internet.userName().toLowerCase()}`,
-      instagram: `@${faker.internet.userName().toLowerCase()}`,
+      twitter: `@${faker.internet.username().toLowerCase()}`,
+      instagram: `@${faker.internet.username().toLowerCase()}`,
       youtube: faker.internet.url(),
-      telegram: `@${faker.internet.userName().toLowerCase()}`,
-      city: faker.address.city(),
-      country: faker.address.country(),
+      telegram: `@${faker.internet.username().toLowerCase()}`,
+      city: faker.location.city(),
+      country: faker.location.country(),
     }
 
     const client = this.apiClient()

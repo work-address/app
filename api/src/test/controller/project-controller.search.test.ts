@@ -1,12 +1,9 @@
 import { expect } from 'chai'
 import axios from 'axios'
-import faker from 'faker'
+import { faker } from '@faker-js/faker'
 import { suite, test } from '@testdeck/mocha'
 
-import {
-  projectControllerEdit,
-  projectControllerSearch,
-} from '@app/api-client'
+import { projectControllerEdit, projectControllerSearch } from '@app/api-client'
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { ProjectRepository } from '@/repository/project-repository'
@@ -152,7 +149,10 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
     const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
-    const project = await this.projectFixture.create(owner, EProjectState.ACTIVE)
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
     await this.grantAccess(project, owner, worker, viewer)
 
     const searchBody = {
@@ -438,7 +438,10 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
     const workerB = await this.userFixture.createUser()
     const viewerA = await this.userFixture.createUser()
     const viewerB = await this.userFixture.createUser()
-    const project = await this.projectFixture.create(owner, EProjectState.ACTIVE)
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
     project.workerAddresses = [workerB.address, workerA.address]
     project.viewerAddresses = [viewerB.address, viewerA.address]
     await this.projectRepository.saveSingle(project)
@@ -608,7 +611,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
           Authorization: this.authenticator.getTokens(user).accessToken,
         },
         body: {
-          filter: { projectId: faker.datatype.number() as never },
+          filter: { projectId: faker.number.int() as never },
           sort: { createdAt: 'ASC' },
           page: 0,
         },
@@ -803,7 +806,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
   @test()
   async search_sortByUpdatedAt_desc() {
     const user = await this.userFixture.createUser()
-    const marker = faker.datatype.uuid()
+    const marker = faker.string.uuid()
     const older = await this.projectFixture.createPersonal(user)
     await new Promise((resolve) => setTimeout(resolve, 30))
     const newer = await this.projectFixture.createPersonal(user)
