@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
+import { DashboardApplicationsUsageSkeleton } from './dashboard-applications-usage-skeleton'
+
 import type { Period } from '../../model'
 import type { ReactNode } from 'react'
 
@@ -48,11 +50,7 @@ export const DashboardApplicationsUsageCard = ({
       </Head>
       <Body>
         <Plot>
-          {isLoading ? (
-            <Status>{t('dashboard.applicationsUsage.loading')}</Status>
-          ) : (
-            children
-          )}
+          {isLoading ? <DashboardApplicationsUsageSkeleton /> : children}
         </Plot>
       </Body>
     </Root>
@@ -92,13 +90,4 @@ const Plot = styled.div`
   .recharts-surface {
     outline: none;
   }
-`
-
-const Status = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 306px;
-  font-size: var(--font-size-2);
-  color: var(--c-rgba-0-7-20-0_62);
 `

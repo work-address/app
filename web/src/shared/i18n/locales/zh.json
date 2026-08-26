@@ -28,7 +28,6 @@
   "connect.title": "连接 TimeTracker",
   "connect.toast.success": "TimeTracker 已连接到您的钱包",
   "dashboard.applicationsUsage.loadError": "无法加载应用使用情况",
-  "dashboard.applicationsUsage.loading": "加载中…",
   "dashboard.applicationsUsage.period.month": "月",
   "dashboard.applicationsUsage.period.week": "周",
   "dashboard.applicationsUsage.period.year": "年",

@@ -28,7 +28,6 @@
   "connect.title": "Connect TimeTracker",
   "connect.toast.success": "TimeTracker is now connected to your wallet",
   "dashboard.applicationsUsage.loadError": "Couldn’t load app usage",
-  "dashboard.applicationsUsage.loading": "Loading…",
   "dashboard.applicationsUsage.period.month": "Month",
   "dashboard.applicationsUsage.period.week": "Week",
   "dashboard.applicationsUsage.period.year": "Year",

@@ -28,7 +28,6 @@
   "connect.title": "Подключение TimeTracker",
   "connect.toast.success": "TimeTracker подключён к вашему кошельку",
   "dashboard.applicationsUsage.loadError": "Не удалось загрузить использование приложений",
-  "dashboard.applicationsUsage.loading": "Загрузка…",
   "dashboard.applicationsUsage.period.month": "Месяц",
   "dashboard.applicationsUsage.period.week": "Неделя",
   "dashboard.applicationsUsage.period.year": "Год",

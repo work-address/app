@@ -28,7 +28,6 @@
   "connect.title": "TimeTracker を接続",
   "connect.toast.success": "TimeTracker をウォレットに接続しました",
   "dashboard.applicationsUsage.loadError": "アプリの使用状況を読み込めませんでした",
-  "dashboard.applicationsUsage.loading": "読み込み中…",
   "dashboard.applicationsUsage.period.month": "月",
   "dashboard.applicationsUsage.period.week": "週",
   "dashboard.applicationsUsage.period.year": "年",
