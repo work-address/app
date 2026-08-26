@@ -149,6 +149,19 @@ export const ProfileEditDetails = ({
             disabled={profileSaving}
           />
         ))}
+        <ProfileEditField
+          name="email"
+          label={t('profile.form.email')}
+          placeholder={t('profile.form.emailPlaceholder')}
+          register={register}
+          rules={{
+            pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+          }}
+          error={Boolean(errors.email)}
+          loading={profileLoading}
+          disabled={profileSaving}
+          inputMode="email"
+        />
         <Controller
           control={control}
           name="country"

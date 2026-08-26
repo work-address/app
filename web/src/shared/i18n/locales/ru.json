@@ -239,6 +239,8 @@
   "profile.form.countryPlaceholder": "Выберите страну",
   "profile.form.edit.error": "Что-то пошло не так. Проверьте подключение и попробуйте снова.",
   "profile.form.edit.success": "Профиль обновлён",
+  "profile.form.email": "Email",
+  "profile.form.emailPlaceholder": "Введите email",
   "profile.form.name": "Имя",
   "profile.form.namePlaceholder": "Введите имя",
   "profile.form.rate": "Ставка",

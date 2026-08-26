@@ -12,7 +12,6 @@ import {
   Validate,
 } from 'class-validator'
 import { AbstractBaseEntity } from '@/entity/abstract-base-entity'
-import { EmailOrPhoneConstraint } from '@/entity/constraint/email-or-phone-constraint'
 import { PhoneConstraint } from '@/entity/constraint/phone-constraint'
 import { EmailConstraint } from '@/entity/constraint/email-constraint'
 import { EUserRole } from '@/model/user'
@@ -33,10 +32,6 @@ export class User extends AbstractBaseEntity implements IUser {
   @IsString()
   @IsOptional()
   address: string
-
-  @Expose({ groups: ['search', 'edit', 'register'] })
-  @Validate(EmailOrPhoneConstraint, [], { groups: ['register'] })
-  emailOrPhone: string
 
   @Expose({ groups: ['search', 'edit'] })
   @Index({ unique: true })

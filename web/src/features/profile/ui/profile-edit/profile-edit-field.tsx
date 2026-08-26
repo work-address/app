@@ -13,6 +13,7 @@ export const INPUT_LABEL_WIDTH = '106px'
 export type ProfileEditFormState = Pick<
   baseApi.User,
   | 'name'
+  | 'email'
   | 'title'
   | 'company'
   | 'rate'

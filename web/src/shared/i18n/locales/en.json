@@ -235,6 +235,8 @@
   "profile.form.countryPlaceholder": "Select country",
   "profile.form.edit.error": "Something went wrong. Please check your connection and try again.",
   "profile.form.edit.success": "Profile updated",
+  "profile.form.email": "Email",
+  "profile.form.emailPlaceholder": "Enter your email",
   "profile.form.name": "Name",
   "profile.form.namePlaceholder": "Enter your name",
   "profile.form.rate": "Rate",

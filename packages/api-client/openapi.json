@@ -357,9 +357,6 @@
           "address": {
             "type": "string"
           },
-          "emailOrPhone": {
-            "type": "string"
-          },
           "email": {
             "type": "string"
           },
@@ -457,9 +454,6 @@
           }
         },
         "type": "object",
-        "required": [
-          "emailOrPhone"
-        ],
         "example": {
           "id": "3468513f-068c-4b72-aeba-d850fb0d02d8"
         }
@@ -1246,9 +1240,6 @@
           "address": {
             "type": "string"
           },
-          "emailOrPhone": {
-            "type": "string"
-          },
           "email": {
             "type": "string"
           },
@@ -1318,9 +1309,6 @@
         "type": "object",
         "description": "Subset of User serialized with class-transformer group \"edit\".",
         "properties": {
-          "emailOrPhone": {
-            "type": "string"
-          },
           "email": {
             "type": "string"
           },

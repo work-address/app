@@ -233,6 +233,8 @@
   "profile.form.countryPlaceholder": "国を選択",
   "profile.form.edit.error": "問題が発生しました。接続を確認して再試行してください。",
   "profile.form.edit.success": "プロフィールを更新しました",
+  "profile.form.email": "メール",
+  "profile.form.emailPlaceholder": "メールアドレスを入力",
   "profile.form.name": "名前",
   "profile.form.namePlaceholder": "名前を入力",
   "profile.form.rate": "レート",

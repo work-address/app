@@ -27,7 +27,6 @@ export class UserFixture {
 
     user.address = account.address
     user.email = email
-    user.emailOrPhone = email
     user.roles = [EUserRole.ROLE_USER]
     user.tz = 'UTC'
 
@@ -57,7 +56,6 @@ export class UserFixture {
     user.tz = 'UTC'
     user.rate = 0
     user.email = email
-    user.emailOrPhone = email
     user.roles = [EUserRole.ROLE_USER]
 
     return this.userManager.saveSingle(user)
@@ -83,7 +81,6 @@ export class UserFixture {
     user.address = keypair.address
     user.tz = 'UTC'
     user.email = email
-    user.emailOrPhone = email
     user.roles = [EUserRole.ROLE_USER]
 
     return this.userManager.saveSingle(user)
@@ -95,7 +92,6 @@ export class UserFixture {
 
     user.address = account.address
     user.tz = 'UTC'
-    user.emailOrPhone = phone
     user.phone = phone
     user.roles = [EUserRole.ROLE_USER]
 

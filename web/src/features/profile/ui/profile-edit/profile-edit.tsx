@@ -15,6 +15,7 @@ import { useLeaveConfirm, useConfirm, useBreakpoint } from '@/shared'
 
 const EMPTY_FORM_VALUES: ProfileEditFormState = {
   name: '',
+  email: '',
   title: '',
   company: '',
   skills: [],
@@ -54,11 +55,16 @@ export const ProfileEdit = () => {
   })
 
   const onSubmit: SubmitHandler<ProfileEditFormState> = async (values) => {
+    const { email, ...rest } = values
+    const trimmedEmail = email?.trim()
+
     saveProfile({
-      ...values,
+      ...rest,
       skills: values.skills.join(',') || '',
-      // TODO: remove this when backend will be ready
-      emailOrPhone: user?.emailOrPhone || '',
+      // An empty email is dropped rather than sent as '': the column carries a
+      // unique index, and the backend rejects a blank email for an account
+      // that has no phone. Omitting the key leaves the stored value untouched.
+      ...(trimmedEmail ? { email: trimmedEmail } : {}),
     })
   }
 
@@ -74,6 +80,7 @@ export const ProfileEdit = () => {
     if (user) {
       resetForm({
         name: user.name ?? user.title ?? '',
+        email: user.email || '',
         title: user.name ? (user.title ?? '') : '',
         company: user.company || '',
         skills: user.skills ? user.skills?.split(',') : [],

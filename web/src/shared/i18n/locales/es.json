@@ -237,6 +237,8 @@
   "profile.form.countryPlaceholder": "Selecciona el país",
   "profile.form.edit.error": "Algo salió mal. Comprueba tu conexión e inténtalo de nuevo.",
   "profile.form.edit.success": "Perfil actualizado",
+  "profile.form.email": "Correo electrónico",
+  "profile.form.emailPlaceholder": "Introduce tu correo electrónico",
   "profile.form.name": "Nombre",
   "profile.form.namePlaceholder": "Introduce tu nombre",
   "profile.form.rate": "Tarifa",

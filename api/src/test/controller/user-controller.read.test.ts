@@ -52,7 +52,6 @@ export class UserControllerReadTest extends BaseControllerTest {
       user.updatedAt.toISOString(),
     )
     expect(res.data).to.not.have.property('password')
-    expect(res.data).to.not.have.property('emailOrPhone')
     expect(res.data).to.not.have.property('whatsapp')
     expect(res.data).to.not.have.property('deletedAt')
   }

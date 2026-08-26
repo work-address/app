@@ -233,6 +233,8 @@
   "profile.form.countryPlaceholder": "选择国家",
   "profile.form.edit.error": "出现问题。请检查网络连接后重试。",
   "profile.form.edit.success": "个人资料已更新",
+  "profile.form.email": "邮箱",
+  "profile.form.emailPlaceholder": "输入邮箱",
   "profile.form.name": "姓名",
   "profile.form.namePlaceholder": "输入姓名",
   "profile.form.rate": "费率",
