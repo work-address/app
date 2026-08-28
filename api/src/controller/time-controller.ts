@@ -30,6 +30,7 @@ import { ITimeInsertionResult } from '@/model/time'
 import { Project } from '@/entity/project'
 import AccessException from '@/exception/access-exception'
 import express from 'express'
+import { Effect } from 'effect'
 import { runPromise } from '@/service/effect-bridge'
 
 @Authorized([EUserRole.ROLE_USER])
@@ -200,19 +201,19 @@ export class TimeController {
     },
   })
   @Get('/totals/:id/project')
-  public async getTotals(
+  public getTotals(
     @CurrentUser() currentUser: User,
     @EntityFromParam({ paramName: 'id' }) project: Project,
   ) {
-    const accessible = await runPromise(
-      this.projectRepository.findProjectWithAccess(project, currentUser),
+    return runPromise(
+      this.projectRepository
+        .findProjectWithAccessOrFail(project, currentUser)
+        .pipe(
+          Effect.flatMap(() =>
+            this.timeRepository.getTotals(currentUser, project.id),
+          ),
+        ),
     )
-
-    if (!accessible) {
-      throw new AccessException()
-    }
-
-    return runPromise(this.timeRepository.getTotals(currentUser, project.id))
   }
 
   @OpenAPIExtended({
@@ -224,20 +225,18 @@ export class TimeController {
     },
   })
   @Get('/report/:id')
-  public async getReport(
+  public getReport(
     @CurrentUser() currentUser: User,
     @EntityFromParam({ paramName: 'id' }) project: Project,
   ) {
-    const accessible = await runPromise(
-      this.projectRepository.findProjectWithAccess(project, currentUser),
-    )
-
-    if (!accessible) {
-      throw new AccessException()
-    }
-
-    return await runPromise(
-      this.timeManager.buildAndCacheReport(accessible, currentUser),
+    return runPromise(
+      this.projectRepository
+        .findProjectWithAccessOrFail(project, currentUser)
+        .pipe(
+          Effect.flatMap((accessible) =>
+            this.timeManager.buildAndCacheReport(accessible, currentUser),
+          ),
+        ),
     )
   }
 

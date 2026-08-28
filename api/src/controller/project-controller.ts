@@ -25,6 +25,7 @@ import { ProjectManager } from '@/service/project-manager'
 import { ProjectStatisticsManager } from '@/service/project-statistics-manager'
 import { EProjectStatisticsPeriod } from '@/model/project-statistics'
 import AccessException from '@/exception/access-exception'
+import { Effect } from 'effect'
 import { runPromise } from '@/service/effect-bridge'
 
 @Authorized([EUserRole.ROLE_USER])
@@ -137,21 +138,22 @@ export class ProjectController {
   })
   @Get('/:id/stats/:period')
   @HttpCode(200)
-  public async getStats(
+  public getStats(
     @CurrentUser() currentUser: User,
     @EntityFromParam({ paramName: 'id' }) project: Project,
     @Param('period') period: EProjectStatisticsPeriod,
   ): Promise<ProjectStatistics[]> {
-    const accessible = await runPromise(
-      this.projectRepository.findProjectWithAccess(project, currentUser),
-    )
-
-    if (!accessible) {
-      throw new AccessException()
-    }
-
     return runPromise(
-      this.projectStatisticsManager.getStatsForProject(accessible, period),
+      this.projectRepository
+        .findProjectWithAccessOrFail(project, currentUser)
+        .pipe(
+          Effect.flatMap((accessible) =>
+            this.projectStatisticsManager.getStatsForProject(
+              accessible,
+              period,
+            ),
+          ),
+        ),
     )
   }
 

@@ -11,6 +11,7 @@ import {
 import { fromPromise } from '@/service/effect-bridge'
 import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
+import AccessException from '@/exception/access-exception'
 import { EProjectState } from '@/model/project'
 import { ProjectSearchDto } from '@/model/dto/project'
 import { UserRepository } from '@/repository/user-repository'
@@ -62,6 +63,23 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
 
       return yield* this.attachAccessUsers(found)
     })
+  }
+
+  /**
+   * `findProjectWithAccess` with the guard its callers were all repeating:
+   * no visible project means 403, stated once in the type instead of as an
+   * `if (!accessible) throw` after every call.
+   */
+  public findProjectWithAccessOrFail(
+    project: Project,
+    user: User,
+  ): RepoEffect<Project> {
+    return this.findProjectWithAccess(project, user).pipe(
+      Effect.filterOrFail(
+        (accessible): accessible is Project => accessible !== undefined,
+        () => new AccessException(),
+      ),
+    )
   }
 
   public findProjectForTimeTracking(

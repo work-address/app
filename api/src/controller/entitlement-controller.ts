@@ -7,6 +7,7 @@ import { EntitlementSignature } from '@/service/entitlement-signature'
 import { UserManager } from '@/service/user-manager'
 import { UserRepository } from '@/repository/user-repository'
 import AuthenticationException from '@/exception/authentication-exception'
+import { Effect } from 'effect'
 import { runPromise } from '@/service/effect-bridge'
 
 /**
@@ -53,24 +54,27 @@ export class EntitlementController {
       throw new AuthenticationException('Entitlement push nonce already used')
     }
 
-    const user = await runPromise(
-      this.userRepository.findOneBy({
-        where: { id: data.userId },
+    return runPromise(
+      Effect.gen(this, function* () {
+        const user = yield* this.userRepository.findOneBy({
+          where: { id: data.userId },
+        })
+
+        // A push for an account this instance has never seen is not an error
+        // the caller can act on - the sweep re-asserts everything
+        // periodically, and failing here would make one stale row poison a
+        // whole reconciliation run.
+        if (!user) {
+          return { applied: false }
+        }
+
+        // Idempotent by construction: the push carries absolute state, so
+        // re-applying it costs one write and changes nothing.
+        user.premium = data.premium
+        yield* this.userManager.saveSingle(user)
+
+        return { applied: true }
       }),
     )
-
-    // A push for an account this instance has never seen is not an error the
-    // caller can act on - the sweep re-asserts everything periodically, and
-    // failing here would make one stale row poison a whole reconciliation run.
-    if (!user) {
-      return { applied: false }
-    }
-
-    // Idempotent by construction: the push carries absolute state, so
-    // re-applying it costs one write and changes nothing.
-    user.premium = data.premium
-    await runPromise(this.userManager.saveSingle(user))
-
-    return { applied: true }
   }
 }
