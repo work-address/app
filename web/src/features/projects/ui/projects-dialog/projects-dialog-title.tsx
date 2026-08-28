@@ -1,12 +1,10 @@
 import { TrashIcon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
-import { NavLink } from 'react-router-dom'
-import styled from 'styled-components'
 
 import type { ProjectsDialogMode } from '../../model'
 
-import { routes } from '@/routes'
+import { OpenInvoiceLink } from '@/features/invoice'
 import { IconButton, PrintIcon, Text, useBreakpoint } from '@/shared'
 
 type ProjectsDialogTitleProps = {
@@ -25,18 +23,14 @@ export const ProjectsDialogTitle = ({
   const { t } = useTranslation()
   const isDesktop = useBreakpoint('isDesktop')
 
+  // TODO: move invoice link next to hte other buttons
   const invoiceLink = projectId ? (
-    <InvoiceLink
-      to={routes.invoice.build({ id: projectId })}
-      viewTransition
-      aria-label={t('dashboard.projectsTable.actions.invoice')}
-      onClick={(event) => event.stopPropagation()}
-    >
+    <OpenInvoiceLink projectId={projectId} variant={'button'}>
       <Text size="2" as="span">
         {t('dashboard.projectsTable.drawer.invoice')}
       </Text>
       <img src={PrintIcon} alt="" width={28} height={28} />
-    </InvoiceLink>
+    </OpenInvoiceLink>
   ) : null
 
   const heading =
@@ -74,12 +68,3 @@ export const ProjectsDialogTitle = ({
     </Flex>
   )
 }
-
-const InvoiceLink = styled(NavLink)`
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  gap: var(--space-2);
-  text-decoration: none;
-  color: inherit;
-`

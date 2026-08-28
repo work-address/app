@@ -42,10 +42,12 @@ import {
   type ProjectWithStats,
   deleteProjectMutation,
 } from '@/entities/projects'
+import { routes } from '@/routes'
 import {
   type MobileDataTableConfig,
   type DataTableConfig,
   formatCurrency,
+  navigateFx,
 } from '@/shared'
 import {
   DataTable,
@@ -55,6 +57,7 @@ import {
   TabsTrigger,
   Button,
   IconButton,
+  PrintIcon,
   useBreakpoint,
   useDateFormatter,
   ProjectsEmptyState,
@@ -143,10 +146,10 @@ export const ProjectsTable = () => {
         headerText: t('dashboard.projectsTable.head.projectName'),
       },
       {
-        dataKey: 'earnings',
+        dataKey: 'paid',
         width: 120,
-        headerText: t('dashboard.projectsTable.head.earnings'),
-        getValue: (data) => formatCurrency(data.earnings),
+        headerText: t('dashboard.projectsTable.head.paid'),
+        getValue: (data) => formatCurrency(data.paid),
       },
       {
         dataKey: 'state',
@@ -255,6 +258,14 @@ export const ProjectsTable = () => {
               )}
             </>
           )}
+          <Button
+            variant={'outline'}
+            color={'neutral'}
+            iconRight={<img src={PrintIcon} alt="" width={20} height={20} />}
+            onClick={() => void navigateFx({ to: routes.invoices.build() })}
+          >
+            {t('dashboard.page.invoices')}
+          </Button>
           {isMobile ? (
             <IconButton
               themeVariant={'primary'}

@@ -19,6 +19,7 @@ export const Modal = ({
   description,
 }: CommonDialogProps & ModalProps) => {
   const hasHeaderActions = Boolean(headerActions) || showClose
+  const hasSeparator = Boolean(title) && showTitleSeparator
 
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
@@ -26,7 +27,7 @@ export const Modal = ({
       <Root $width={width} $padding={padding}>
         {(title || hasHeaderActions) && (
           <>
-            <Header>
+            <Header $spaceBelow={!hasSeparator}>
               {title && <Title>{title}</Title>}
               {hasHeaderActions && (
                 <Actions>
@@ -39,7 +40,7 @@ export const Modal = ({
                 </Actions>
               )}
             </Header>
-            {title && showTitleSeparator && <Separator size={'4'} mt={'4'} />}
+            {hasSeparator && <Separator size={'4'} mt={'4'} mb={'4'} />}
           </>
         )}
         {children}
@@ -72,14 +73,20 @@ const Root = styled(Dialog.Content)<{ $width?: string; $padding?: string }>`
     `}
 `
 
-const Header = styled.div`
+const Header = styled.div<{ $spaceBelow: boolean }>`
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
   gap: var(--space-3);
+
+  /* Without a separator the header has to space itself off the content. */
+  ${(p) => p.$spaceBelow && `margin-bottom: var(--space-3);`}
 `
 
-const Title = styled(Dialog.Title)`
+// Radix's Dialog.Title defaults to mb="3", which stacked on top of the
+// separator's own margin. The header's bottom spacing is owned by the
+// separator (or by Header when there is none) instead.
+const Title = styled(Dialog.Title).attrs({ mb: '0' as const })`
   font-size: var(--font-size-6);
   font-weight: var(--font-weight-medium);
   flex: 1;
