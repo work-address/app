@@ -38,6 +38,7 @@ export class AppConfig {
       sentry: process.env.APP_SENTRY as string,
       redis: process.env.APP_REDIS as string,
       jwtSecret: process.env.APP_JWT_SECRET as string,
+      entitlementSecret: (process.env.APP_ENTITLEMENT_SECRET ?? '').trim(),
       loggly: (process.env.APP_LOGGLY ?? '').trim(),
       tonAllowedDomains: (process.env.APP_TON_ALLOWED_DOMAINS ?? '')
         .split(',')

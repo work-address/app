@@ -9,6 +9,7 @@ import moment from 'moment'
 import { Time } from '@/entity/time'
 import { TimeRepository } from '@/repository/time-repository'
 import { ProjectAccessAddresses } from '@/model/dto/project'
+import { Entitlement } from '@/service/entitlement'
 
 @injectable()
 export class ProjectManager {
@@ -16,6 +17,8 @@ export class ProjectManager {
   protected projectRepository: ProjectRepository
   @inject('TimeRepository')
   protected timeRepository: TimeRepository
+  @inject('Entitlement')
+  protected entitlement: Entitlement
 
   public async findProjectCheckAccess(
     project: Project,
@@ -107,7 +110,7 @@ export class ProjectManager {
       (address) => address.toLowerCase() !== ownerAddress,
     )
 
-    if (!project.user.premium) {
+    if (!this.entitlement.isPremium(project.user)) {
       // Gate *granting*, never revoking. An owner whose subscription lapsed
       // still has to be able to take access away one collaborator at a time -
       // otherwise their only way out is to wipe the whole list.
@@ -155,7 +158,7 @@ export class ProjectManager {
       const time = new Time()
       time.project = project
       time.user = user
-      time.note = `Timesheet demo ${i}`
+      time.note = `Demo entry ${i}`
       time.mouseKeys = 0
       time.mouseDistance = 0
       time.keyboardKeys = 0

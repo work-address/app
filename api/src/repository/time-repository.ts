@@ -66,6 +66,9 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     qb.select([
       'project.id as projectId',
       'project.rateHour as rateHour',
+      // Entry count, converted to minutes by the `* 10` below: the tracker
+      // samples on a ten-minute interval, so this is wall-clock time covered,
+      // as distinct from `minutesActive` which is time actually worked.
       'COUNT(time.id) as minutes',
       'SUM(time.minutesActive) as minutesActive',
       'SUM(CASE WHEN COALESCE(time.isPaid, false) = true THEN time.minutesActive ELSE 0 END) as minutesPaid',
@@ -98,6 +101,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       }
     })
   }
+
 
   private buildTimeOrderByCondition(search: TimeSearchDto): OrderByCondition {
     const [key, direction] = Object.entries(search.sort)[0] ?? []
@@ -330,10 +334,18 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       .andWhere(`"${timeTable}"."fromAt" < :cutoff`, { cutoff })
       .andWhere(`"${timeTable}"."deletedAt" IS NULL`)
       .andWhere(
+        // Scoped by issuer as well as project: an invoice covers only its
+        // own author's hours, so one contributor's invoice must not pin a
+        // colleague's entries in the same window. Legacy rows have no issuer
+        // and still protect the whole project - the safe direction.
         `NOT EXISTS (
           SELECT 1 FROM "${invoiceTable}" invoice
           WHERE invoice."projectId" = "${timeTable}"."projectId"
             AND invoice."deletedAt" IS NULL
+            AND (
+              invoice."userId" IS NULL
+              OR invoice."userId" = "${timeTable}"."userId"
+            )
             AND "${timeTable}"."fromAt" < invoice."toAt"
             AND "${timeTable}"."toAt" > invoice."fromAt"
         )`,
@@ -395,6 +407,93 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       .then((result) => result ?? undefined)
   }
 
+  /**
+   * A single contributor's unpaid time on one project within a range - the
+   * entries an invoice is built from.
+   *
+   * Scoped by author rather than by project owner: a worker invoices for the
+   * hours *they* logged, and an owner for theirs. `findTimeBetweenForProject`
+   * scopes by owner instead, which sums every contributor's hours together.
+   */
+  public findUnpaidTimeForAuthorBetween(
+    from: Date,
+    to: Date,
+    project: Project,
+    author: User,
+  ): Promise<Time[]> {
+    return this.getRepo()
+      .createQueryBuilder('time')
+      .innerJoinAndSelect('time.project', 'project')
+      .innerJoin('time.user', 'author')
+      .andWhere('time.fromAt >= :from', { from })
+      .andWhere('time.toAt <= :to', { to })
+      .andWhere('author.id = :authorId', { authorId: author.id })
+      .andWhere('project.id = :projectId', { projectId: project.id })
+      .andWhere('project.deletedAt IS NULL')
+      .andWhere('COALESCE(time.isPaid, false) = false')
+      .getMany()
+  }
+
+  /**
+   * Every entry an invoice covers, paid or not, so reverting a payment can put
+   * back exactly what marking it paid took.
+   */
+  public findTimeForAuthorBetween(
+    from: Date,
+    to: Date,
+    project: Project,
+    author: User,
+  ): Promise<Time[]> {
+    return this.getRepo()
+      .createQueryBuilder('time')
+      .innerJoinAndSelect('time.project', 'project')
+      .innerJoin('time.user', 'author')
+      .andWhere('time.fromAt >= :from', { from })
+      .andWhere('time.toAt <= :to', { to })
+      .andWhere('author.id = :authorId', { authorId: author.id })
+      .andWhere('project.id = :projectId', { projectId: project.id })
+      .andWhere('project.deletedAt IS NULL')
+      .getMany()
+  }
+
+  /**
+   * The caller's unpaid time on a project that no invoice of theirs already
+   * covers.
+   *
+   * "Unpaid" alone is not enough: creating an invoice does not mark its hours
+   * paid - only settling it does - so a second click would raise a second
+   * invoice for the same hours and bill them twice. Overlap against the
+   * author's own existing invoices is what makes the operation idempotent.
+   */
+  public findUninvoicedUnpaidTimeForAuthor(
+    project: Project,
+    author: User,
+  ): Promise<Time[]> {
+    const invoiceTable = this.getRepo().manager.connection.getMetadata(Invoice)
+      .tableName
+
+    return this.getRepo()
+      .createQueryBuilder('time')
+      .innerJoinAndSelect('time.project', 'project')
+      .innerJoin('time.user', 'author')
+      .andWhere('author.id = :authorId', { authorId: author.id })
+      .andWhere('project.id = :projectId', { projectId: project.id })
+      .andWhere('project.deletedAt IS NULL')
+      .andWhere('COALESCE(time.isPaid, false) = false')
+      .andWhere(
+        `NOT EXISTS (
+          SELECT 1 FROM "${invoiceTable}" invoice
+          WHERE invoice."projectId" = project.id
+            AND invoice."userId" = :authorId
+            AND invoice."deletedAt" IS NULL
+            AND time."fromAt" < invoice."toAt"
+            AND time."toAt" > invoice."fromAt"
+        )`,
+      )
+      .orderBy('time.fromAt', 'ASC')
+      .getMany()
+  }
+
   public findTimeBetweenForProject(
     from: number,
     to: number,
@@ -437,3 +536,4 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     )
   }
 }
+

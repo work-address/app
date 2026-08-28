@@ -10,6 +10,7 @@ import { ErrorFormatter } from '@/service/error-formatter'
 import { TimeCreateDto } from '@/model/dto/time'
 import { Project } from '@/entity/project'
 import { RedisClient } from '@/service/redis-client'
+import { Entitlement } from '@/service/entitlement'
 import { ITimeTotals } from '@/model/time'
 import AccessException from '@/exception/access-exception'
 import RetentionExceededException from '@/exception/retention-exceeded-exception'
@@ -25,13 +26,17 @@ export class TimeManager {
   protected redisClient: RedisClient
   @inject('ImageResizer')
   protected imageResizer: ImageResizer
+  @inject('Entitlement')
+  protected entitlement: Entitlement
 
   public static reportExpiresIn: number = 1000 * 60 * 10 // 10 minutes
 
   // Projects owned by a non-premium account keep only the trailing N days of
   // time logs. Entitlement is the project owner's, not the author's - see
   // TimeRepository.softDeleteExpiredEntriesForProjects.
-  public static freeTimeLogRetentionDays: number = 7
+  // Kept at 14 to match what the pricing page advertises - the two must not
+  // drift, or the free tier silently under-delivers what was sold.
+  public static freeTimeLogRetentionDays: number = 14
 
   public static retentionCutoff(): Date {
     return moment
@@ -61,7 +66,7 @@ export class TimeManager {
           user,
         )
 
-        if (!project.user?.premium) {
+        if (!this.entitlement.isPremium(project.user)) {
           projectIdsUnderRetention.add(project.id)
 
           // Refuse rather than accept-and-purge: saving this row and deleting

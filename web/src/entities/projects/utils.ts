@@ -39,6 +39,8 @@ export const mapProjectsAndStats = (
             minutes: 0,
             keyboardKeys: 0,
             minutesActive: 0,
+            minutesPaid: 0,
+            minutesUnpaid: 0,
             mouseDistance: 0,
             mouseKeys: 0,
           }
@@ -54,7 +56,7 @@ export const mapProjectsAndStats = (
       minutesTotal,
       minutesActiveTotal,
       hoursActiveTotal,
-      earnings: Number(((stats.minutes * stats.rateHour) / 60).toFixed(2)),
+      paid: Number(((stats.minutesPaid * stats.rateHour) / 60).toFixed(2)),
     }
 
     return {

@@ -33,8 +33,8 @@ export const ProjectsDialogMetrics = ({ data }: ProjectsDialogMetricsProps) => {
       gap={isDesktop ? '4' : '3'}
       width="100%"
     >
-      <Metric label={t('dashboard.projectsTable.head.earnings')}>
-        {formatCurrency(data.earnings)}
+      <Metric label={t('dashboard.projectsTable.head.paid')}>
+        {formatCurrency(data.paid)}
       </Metric>
       <Metric label={t('dashboard.projectsTable.head.status')}>
         <Badge color={data.state === 'Active' ? 'green' : 'gray'}>

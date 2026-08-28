@@ -248,7 +248,7 @@ export class InvoiceControllerSearchTest extends BaseControllerTest {
       },
       body: {
         filter: { projectId: project.id },
-        sort: { amount: 'ASC' },
+        sort: { amountCents: 'ASC' },
         page: 0,
         limit: 2,
       },
@@ -263,7 +263,7 @@ export class InvoiceControllerSearchTest extends BaseControllerTest {
       },
       body: {
         filter: { projectId: project.id },
-        sort: { amount: 'ASC' },
+        sort: { amountCents: 'ASC' },
         page: 1,
         limit: 2,
       },
@@ -273,11 +273,11 @@ export class InvoiceControllerSearchTest extends BaseControllerTest {
 
     const slice0 = first.data[0] as unknown as Array<{
       id: string
-      amount: string | number
+      amountCents: string | number
     }>
     const slice1 = second.data[0] as unknown as Array<{
       id: string
-      amount: string | number
+      amountCents: string | number
     }>
     expect(first.data[1]).to.be.eq(3)
     expect(second.data[1]).to.be.eq(3)
@@ -302,7 +302,7 @@ export class InvoiceControllerSearchTest extends BaseControllerTest {
       },
       body: {
         filter: { projectId: project.id },
-        sort: { amount: 'DESC' },
+        sort: { amountCents: 'DESC' },
         page: 0,
       },
       throwOnError: true,
@@ -311,7 +311,7 @@ export class InvoiceControllerSearchTest extends BaseControllerTest {
     expect(res.status).to.be.equal(200)
     const rows = res.data[0] as unknown as Array<{
       id: string
-      amount: string | number
+      amountCents: string | number
     }>
     expect(rows.length).to.be.eq(2)
     expect(rows[0].id).to.be.eq(b.id)
@@ -342,7 +342,7 @@ export class InvoiceControllerSearchTest extends BaseControllerTest {
           projectId: project.id,
           state: EInvoiceState.REQUESTED,
         },
-        sort: { amount: 'ASC' },
+        sort: { amountCents: 'ASC' },
         page: 0,
       },
       throwOnError: true,
@@ -378,7 +378,7 @@ export class InvoiceControllerSearchTest extends BaseControllerTest {
           projectId: project.id,
           amountFrom: 50,
         },
-        sort: { amount: 'ASC' },
+        sort: { amountCents: 'ASC' },
         page: 0,
       },
       throwOnError: true,
@@ -454,7 +454,7 @@ export class InvoiceControllerSearchTest extends BaseControllerTest {
       },
       body: {
         filter: { projectId: project.id, amountTo: 60 },
-        sort: { amount: 'ASC' },
+        sort: { amountCents: 'ASC' },
         page: 0,
       },
       throwOnError: true,
@@ -539,7 +539,7 @@ export class InvoiceControllerSearchTest extends BaseControllerTest {
           amountTo: 100,
           state: EInvoiceState.REQUESTED,
         },
-        sort: { amount: 'ASC' },
+        sort: { amountCents: 'ASC' },
         page: 0,
       },
       throwOnError: true,

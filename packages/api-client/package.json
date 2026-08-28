@@ -6,7 +6,9 @@
   "types": "./src/public-api.ts",
   "scripts": {
     "precodegen": "pnpm --dir ../../api run export-openapi",
-    "codegen": "tsx ./generate-client.ts"
+    "codegen": "tsx ./generate-client.ts",
+    "precodegen:web": "pnpm --dir ../../api run export-openapi",
+    "codegen:web": "tsx ./generate-web-client.ts"
   },
   "dependencies": {
     "@hey-api/client-axios": "^0.9.1",

@@ -61,13 +61,25 @@
               }
             ]
           },
-          "amount": {
-            "minLength": 1,
-            "type": "string"
+          "amountCents": {
+            "type": "string",
+            "minLength": 1
           },
           "state": {
             "minLength": 1,
             "type": "string"
+          },
+          "paidAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
           },
           "id": {
             "minLength": 1,
@@ -103,11 +115,11 @@
         "required": [
           "fromAt",
           "toAt",
-          "amount",
+          "amountCents",
           "state"
         ],
         "example": {
-          "id": "4c0ba421-3fc6-482f-9516-3ebbf2612125"
+          "id": "55206876-ddab-4a8e-960a-d4cf05fe1065"
         }
       },
       "ProjectStatistics": {
@@ -168,7 +180,7 @@
           "period"
         ],
         "example": {
-          "id": "06adad55-47d6-4ea3-94e9-9d2e2315d414"
+          "id": "1d71eeff-6bdd-4715-81f3-9c2db6cfc57c"
         }
       },
       "Time": {
@@ -262,7 +274,7 @@
           "toAt"
         ],
         "example": {
-          "id": "fa58ea4f-3913-476a-9c90-53519f069e74"
+          "id": "f6138430-353e-485f-b8e6-c9c814c4b246"
         }
       },
       "Project": {
@@ -349,7 +361,7 @@
           "state"
         ],
         "example": {
-          "id": "29ba31d5-b9e5-4208-af80-53737aea91b0"
+          "id": "741a3b23-1c8b-452a-b2ff-5f8431b66a57"
         }
       },
       "User": {
@@ -455,7 +467,7 @@
         },
         "type": "object",
         "example": {
-          "id": "3468513f-068c-4b72-aeba-d850fb0d02d8"
+          "id": "d626c06c-d0c5-4517-b997-cd6f55ae0906"
         }
       },
       "AuthForgotPasswordDto": {
@@ -1198,10 +1210,33 @@
             "type": "number"
           }
         },
+        "type": "object"
+      },
+      "EntitlementPushDto": {
+        "properties": {
+          "userId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "premium": {
+            "type": "boolean"
+          },
+          "issuedAt": {
+            "type": "integer"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string"
+          }
+        },
         "type": "object",
         "required": [
-          "fromUnix",
-          "toUnix"
+          "userId",
+          "premium",
+          "issuedAt",
+          "nonce"
         ]
       },
       "User_search": {
@@ -1747,6 +1782,9 @@
           "project": {
             "$ref": "#/components/schemas/Project_search"
           },
+          "user": {
+            "$ref": "#/components/schemas/User_search"
+          },
           "fromAt": {
             "oneOf": [
               {
@@ -1771,13 +1809,25 @@
               }
             ]
           },
-          "amount": {
-            "minLength": 1,
-            "type": "string"
+          "amountCents": {
+            "type": "string",
+            "minLength": 1
           },
           "state": {
             "minLength": 1,
             "type": "string"
+          },
+          "paidAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
           }
         }
       }
@@ -3205,7 +3255,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "2d0e61dc-93ba-49a0-85b4-16258e903e18"
+                  "projectId": "910afdfe-a542-468a-817a-7f175114e993"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -3273,8 +3323,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1787225189588,
-                "toUnix": 1787311589588
+                "fromUnix": 1787807613875,
+                "toUnix": 1787894013875
               }
             }
           },
@@ -3380,6 +3430,146 @@
         ]
       }
     },
+    "/api/invoice/{id}/paid": {
+      "post": {
+        "operationId": "InvoiceController.markPaid",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Invoice"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invoice_search"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "Invoice does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "NotFoundError"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Invoice does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Mark an invoice paid (issuer only); marks its time paid too",
+        "tags": [
+          "Invoice"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/invoice/{id}/unpaid": {
+      "post": {
+        "operationId": "InvoiceController.markUnpaid",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Invoice"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invoice_search"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "Invoice does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "NotFoundError"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Invoice does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Revert an invoice to unpaid; releases its time back to unpaid",
+        "tags": [
+          "Invoice"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/internal/entitlement": {
+      "post": {
+        "operationId": "EntitlementController.push",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/EntitlementPushDto"
+              }
+            }
+          },
+          "description": "EntitlementPushDto",
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Push",
+        "tags": [
+          "Entitlement"
+        ]
+      }
+    },
     "/api/auth/timeTracker/nonce": {
       "post": {
         "operationId": "AuthTimeTrackerController.timeTrackerNonceGenerate",
@@ -3451,7 +3641,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "f276f6bf-8f65-408b-8769-b32efbc63d29"
+                "nonce": "77f525ff-6f2d-4fe9-ac56-ed99982c541a"
               },
               "schema": {
                 "properties": {
@@ -3496,7 +3686,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "893d52a7-1474-4429-b552-9d8ce063077d"
+                "nonce": "35cb29cf-b55a-4fa0-b40d-cdaf46e0e170"
               },
               "schema": {
                 "properties": {
@@ -3537,21 +3727,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "51f494cc-8c94-4e91-8997-f4a6c89e7d5c",
+                      "nonce": "47de0c6b-6a95-474e-9a9f-4ea8df674f47",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "ca076ac3-0bea-4087-9239-3df5865eba3e",
+                      "nonce": "a2879506-b504-4c2e-b541-ac84a1ccf7da",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "79b9c304-938a-4e99-8b6b-6ea9d6005082",
+                      "nonce": "c894c717-a730-43be-8a25-6bae7ba80b61",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

@@ -38,6 +38,14 @@ export class Time extends AbstractBaseEntity implements ITime {
   user: User
 
   @Expose({ groups: ['search', 'create', 'edit'] })
+  /**
+   * Whether this hour has been paid for.
+   *
+   * Owned by the invoice that covers it - `InvoiceManager.markPaid` sets it and
+   * `markUnpaid` clears it - so the work record and the money record cannot
+   * disagree. An invoice covering a period is what makes its entries paid;
+   * nothing else should write this except a user correcting an entry directly.
+   */
   @Column('bool', { nullable: true, default: false })
   @IsBoolean()
   @IsOptional()

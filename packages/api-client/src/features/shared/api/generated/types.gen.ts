@@ -13,8 +13,9 @@ export type AbstractBaseEntity = {
 export type Invoice = {
     fromAt: string | string;
     toAt: string | string;
-    amount: string;
+    amountCents: string;
     state: string;
+    paidAt?: string | string;
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
@@ -287,8 +288,16 @@ export type InvoiceSearchDto = {
 };
 
 export type InvoiceCreateDto = {
-    fromUnix: number;
-    toUnix: number;
+    fromUnix?: number;
+    toUnix?: number;
+};
+
+export type EntitlementPushDto = {
+    userId: string;
+    premium: boolean;
+    issuedAt: number;
+    nonce: string;
+    expiresAt?: string;
 };
 
 /**
@@ -444,10 +453,12 @@ export type InvoiceSearch = {
     createdAt?: string | string;
     updatedAt?: string | string;
     project?: ProjectSearch;
+    user?: UserSearch;
     fromAt?: string | string;
     toAt?: string | string;
-    amount?: string;
+    amountCents?: string;
     state?: string;
+    paidAt?: string | string;
 };
 
 export type HelpControllerSwaggerData = {
@@ -1017,6 +1028,77 @@ export type InvoiceControllerReadResponses = {
 };
 
 export type InvoiceControllerReadResponse = InvoiceControllerReadResponses[keyof InvoiceControllerReadResponses];
+
+export type InvoiceControllerMarkPaidData = {
+    body?: never;
+    path: {
+        id: Invoice;
+    };
+    query?: never;
+    url: '/api/invoice/{id}/paid';
+};
+
+export type InvoiceControllerMarkPaidErrors = {
+    /**
+     * Invoice does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type InvoiceControllerMarkPaidError = InvoiceControllerMarkPaidErrors[keyof InvoiceControllerMarkPaidErrors];
+
+export type InvoiceControllerMarkPaidResponses = {
+    200: InvoiceSearch;
+};
+
+export type InvoiceControllerMarkPaidResponse = InvoiceControllerMarkPaidResponses[keyof InvoiceControllerMarkPaidResponses];
+
+export type InvoiceControllerMarkUnpaidData = {
+    body?: never;
+    path: {
+        id: Invoice;
+    };
+    query?: never;
+    url: '/api/invoice/{id}/unpaid';
+};
+
+export type InvoiceControllerMarkUnpaidErrors = {
+    /**
+     * Invoice does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type InvoiceControllerMarkUnpaidError = InvoiceControllerMarkUnpaidErrors[keyof InvoiceControllerMarkUnpaidErrors];
+
+export type InvoiceControllerMarkUnpaidResponses = {
+    200: InvoiceSearch;
+};
+
+export type InvoiceControllerMarkUnpaidResponse = InvoiceControllerMarkUnpaidResponses[keyof InvoiceControllerMarkUnpaidResponses];
+
+export type EntitlementControllerPushData = {
+    /**
+     * EntitlementPushDto
+     */
+    body?: EntitlementPushDto;
+    path?: never;
+    query?: never;
+    url: '/api/internal/entitlement';
+};
+
+export type EntitlementControllerPushResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
 
 export type AuthTimeTrackerControllerTimeTrackerNonceGenerateData = {
     body?: never;

@@ -10,7 +10,8 @@
     "prettier:check": "prettier --check \"**/*.{ts,js,md}\"",
     "typeorm:cli": "TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
     "schema:sync": "TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js schema:sync -d src/ormconfig.ts",
-    "schema:drop": "TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js schema:drop -d src/ormconfig.ts"
+    "schema:drop": "TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js schema:drop -d src/ormconfig.ts",
+    "seed:demo": "NODE_ENV=development TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register src/scripts/seed-demo-data.ts"
   },
   "dependencies": {
     "@sentry/node": "^10.71.0",

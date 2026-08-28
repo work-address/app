@@ -9,6 +9,7 @@ import { User } from '@/entity/user'
 import { EProjectState } from '@/model/project'
 import { ProjectSearchDto } from '@/model/dto/project'
 import { UserRepository } from '@/repository/user-repository'
+import { Entitlement } from '@/service/entitlement'
 
 @injectable()
 export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
@@ -16,6 +17,8 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
   protected filter: Filter
   @inject('UserRepository')
   protected userRepository: UserRepository
+  @inject('Entitlement')
+  protected entitlement: Entitlement
   protected target = Project
 
   public findProjectAsOwner(
@@ -224,19 +227,27 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
           .where(`${ownerAlias}.id = :accessUserId`, { accessUserId })
           .orWhere(
             new Brackets((collaboratorQb) => {
-              collaboratorQb.where(`${ownerAlias}.premium = true`).andWhere(
-                new Brackets((addressQb) => {
-                  addressQb
-                    .where(
-                      `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`,
-                      { userAddress },
-                    )
-                    .orWhere(
-                      `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.viewerAddresses, '{}')) AS address)`,
-                      { userAddress },
-                    )
-                }),
-              )
+              const addresses = new Brackets((addressQb) => {
+                addressQb
+                  .where(
+                    `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`,
+                    { userAddress },
+                  )
+                  .orWhere(
+                    `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.viewerAddresses, '{}')) AS address)`,
+                    { userAddress },
+                  )
+              })
+
+              // Self-hosted instances omit the predicate rather than relying on
+              // column data - see Entitlement.shouldFilterByPremium.
+              if (this.entitlement.shouldFilterByPremium()) {
+                collaboratorQb
+                  .where(`${ownerAlias}.premium = true`)
+                  .andWhere(addresses)
+              } else {
+                collaboratorQb.where(addresses)
+              }
             }),
           )
       }),
@@ -256,12 +267,15 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
           .where(`${ownerAlias}.id = :accessUserId`, { accessUserId })
           .orWhere(
             new Brackets((collaboratorQb) => {
-              collaboratorQb
-                .where(`${ownerAlias}.premium = true`)
-                .andWhere(
-                  `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`,
-                  { userAddress },
-                )
+              const isWorkerAddress = `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`
+
+              if (this.entitlement.shouldFilterByPremium()) {
+                collaboratorQb
+                  .where(`${ownerAlias}.premium = true`)
+                  .andWhere(isWorkerAddress, { userAddress })
+              } else {
+                collaboratorQb.where(isWorkerAddress, { userAddress })
+              }
             }),
           )
       }),

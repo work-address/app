@@ -26,9 +26,11 @@ class InvoiceSearchFilterDto {
   toAt?: Date
   @IsNumber()
   @IsOptional()
+  /** Cents, matching Invoice.amountCents. */
   amountFrom?: number
   @IsNumber()
   @IsOptional()
+  /** Cents, matching Invoice.amountCents. */
   amountTo?: number
   @IsEnum(EInvoiceState)
   @IsOptional()
@@ -41,10 +43,19 @@ export class InvoiceSearchDto extends SearchDto {
   filter: InvoiceSearchFilterDto
 }
 
+/**
+ * The period to bill for.
+ *
+ * Both bounds are optional, and omitting them means "everything I have not
+ * invoiced yet on this project" - the common case, and the only one the UI
+ * uses. An explicit range stays available for billing a specific week.
+ */
 export class InvoiceCreateDto {
   @IsNumber()
-  fromUnix: number
+  @IsOptional()
+  fromUnix?: number
 
   @IsNumber()
-  toUnix: number
+  @IsOptional()
+  toUnix?: number
 }

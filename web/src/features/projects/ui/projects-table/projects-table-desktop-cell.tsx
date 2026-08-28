@@ -1,6 +1,5 @@
 import { Badge, Flex } from '@radix-ui/themes'
 import React, { type ReactNode, useContext } from 'react'
-import { NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { getProjectStatusTranslationKey } from '../../model'
@@ -9,7 +8,7 @@ import { ProjectsTableContext } from './projects-table-context'
 
 import type { ProjectWithStats } from '@/entities/projects'
 
-import { routes } from '@/routes'
+import { OpenInvoiceLink } from '@/features/invoice'
 import {
   type DesktopBodyCellRenderProps,
   PrintIcon,
@@ -28,10 +27,8 @@ export const ProjectsDesktopCell = React.memo(
           <TitleCell align="center" gap="2">
             <Text $themeVariant={'primary'}>{props.data.title}</Text>
             <InvoiceLink
-              to={routes.invoice.build({ id: props.data.id ?? '' })}
-              viewTransition
+              projectId={props.data.id ?? ''}
               onClick={(event) => event.stopPropagation()}
-              aria-label={t('dashboard.projectsTable.actions.invoice')}
             >
               <Text color={'gray'} size={'2'} as="span">
                 |
@@ -93,7 +90,7 @@ const TitleCell = styled(Flex)`
   min-width: 0;
 `
 
-const InvoiceLink = styled(NavLink)`
+const InvoiceLink = styled(OpenInvoiceLink)`
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;

@@ -36,5 +36,13 @@ export interface ITimeTotals {
   mouseDistance: number
 }
 
+/** One contractor's contribution to one project, for the employer report. */
+/**
+ * A contractor rolled up across every project an employer owns.
+ *
+ * Cost is summed per project rather than from a single rate: `rateHour` lives
+ * on the project, so one contractor on three projects can bill at three rates
+ * and a single multiply would be wrong.
+ */
 /** Batch create/update row outcome; aligned with {@link TimeInsertionResultDto} for OpenAPI. */
 export type ITimeInsertionResult = TimeInsertionResultDto

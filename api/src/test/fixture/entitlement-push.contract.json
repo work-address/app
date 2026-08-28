@@ -1,0 +1,12 @@
+{
+  "note": "Cross-repo contract for the entitlement push. This file is duplicated byte-for-byte in work-address/app and work-address/web; they are separate repositories, so each owns a copy. web asserts it PRODUCES these bytes and this signature; app asserts it ACCEPTS them. Changing one without the other breaks entitlement in production in a way neither suite would otherwise catch, so change both in the same pull request or not at all.",
+  "secret": "shared-contract-fixture-secret",
+  "body": {
+    "userId": "3f2504e0-4f89-11d3-9a0c-0305e82c3301",
+    "premium": true,
+    "issuedAt": 1756166400,
+    "nonce": "9c5b94b1-35ad-49bb-b118-8e8fc24abf80"
+  },
+  "serialised": "{\"userId\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"premium\":true,\"issuedAt\":1756166400,\"nonce\":\"9c5b94b1-35ad-49bb-b118-8e8fc24abf80\"}",
+  "signature": "5594c5d2f3dbc9aef22edcdf52dbe84b51778862d2c31635748a24370edf6816"
+}

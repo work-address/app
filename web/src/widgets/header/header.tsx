@@ -12,6 +12,7 @@ import { HeaderUserLink } from './header-user-link'
 import { MobileMenu, itemVariants } from './mobile-menu'
 
 import { $authenticated, $user, logout } from '@/entities/profile'
+import { PremiumCollapsedButton } from '@/features/dashboard'
 import { routes } from '@/routes'
 import {
   CrossIcon,
@@ -95,6 +96,7 @@ export const Header = () => {
         <Right>
           {authenticated ? (
             <>
+              <PremiumCollapsedButton />
               <HeaderUserLink user={user} userAlt={t('header.userAlt')} />
               <ExitButton
                 aria-label={t('header.exit')}
@@ -110,6 +112,10 @@ export const Header = () => {
           )}
         </Right>
         <MobileRight>
+          {/* Mobile puts the profile link inside the burger menu, so the chip
+              sits beside the burger - still the top-right corner, still one
+              tap from anywhere. */}
+          {authenticated ? <PremiumCollapsedButton /> : null}
           <BurgerButton
             type="button"
             aria-label={

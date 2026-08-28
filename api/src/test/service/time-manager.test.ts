@@ -18,6 +18,16 @@ import { EInvoiceState } from '@/model/invoice'
 
 @suite()
 export class TimeManagerTest extends AbstractDatabaseIntegration {
+  /**
+   * Days ago that is comfortably outside the free-tier retention window,
+   * derived from the constant rather than hardcoded. These tests previously
+   * pinned literals chosen against a 7-day window and silently stopped
+   * exercising the purge when the window widened to 14.
+   */
+  private static staleDays(offset: number = 1): number {
+    return TimeManager.freeTimeLogRetentionDays + offset
+  }
+
   protected timeManager: TimeManager
   protected projectFixture: ProjectFixture
   protected projectRepository: ProjectRepository
@@ -207,8 +217,12 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
 
     const staleEntry = await this.timeFixture.create(
       project,
-      moment.utc().subtract(8, 'days').subtract(10, 'minutes').toDate(),
-      moment.utc().subtract(8, 'days').toDate(),
+      moment
+        .utc()
+        .subtract(TimeManagerTest.staleDays(), 'days')
+        .subtract(10, 'minutes')
+        .toDate(),
+      moment.utc().subtract(TimeManagerTest.staleDays(), 'days').toDate(),
       owner,
     )
     const freshEntry = await this.timeFixture.create(
@@ -289,14 +303,22 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
 
     const ownerStaleEntry = await this.timeFixture.create(
       project,
-      moment.utc().subtract(10, 'days').subtract(10, 'minutes').toDate(),
-      moment.utc().subtract(10, 'days').toDate(),
+      moment
+        .utc()
+        .subtract(TimeManagerTest.staleDays(), 'days')
+        .subtract(10, 'minutes')
+        .toDate(),
+      moment.utc().subtract(TimeManagerTest.staleDays(), 'days').toDate(),
       owner,
     )
     const workerStaleEntry = await this.timeFixture.create(
       project,
-      moment.utc().subtract(20, 'days').subtract(10, 'minutes').toDate(),
-      moment.utc().subtract(20, 'days').toDate(),
+      moment
+        .utc()
+        .subtract(TimeManagerTest.staleDays(6), 'days')
+        .subtract(10, 'minutes')
+        .toDate(),
+      moment.utc().subtract(TimeManagerTest.staleDays(6), 'days').toDate(),
       worker,
     )
 
@@ -336,8 +358,12 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
 
     const staleEntry = await this.timeFixture.create(
       project,
-      moment.utc().subtract(9, 'days').subtract(10, 'minutes').toDate(),
-      moment.utc().subtract(9, 'days').toDate(),
+      moment
+        .utc()
+        .subtract(TimeManagerTest.staleDays(), 'days')
+        .subtract(10, 'minutes')
+        .toDate(),
+      moment.utc().subtract(TimeManagerTest.staleDays(), 'days').toDate(),
       worker,
     )
 
@@ -372,10 +398,13 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
     )
 
     const backlog = this.buildTimePayload(project.id, 9)
-    backlog.fromAt = moment.utc().subtract(10, 'days').toISOString()
+    backlog.fromAt = moment
+      .utc()
+      .subtract(TimeManagerTest.staleDays(), 'days')
+      .toISOString()
     backlog.toAt = moment
       .utc()
-      .subtract(10, 'days')
+      .subtract(TimeManagerTest.staleDays(), 'days')
       .add(10, 'minutes')
       .toISOString()
 
@@ -403,8 +432,12 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
       EProjectState.ACTIVE,
     )
 
-    const invoicedFrom = moment.utc().subtract(20, 'days')
-    const invoicedTo = moment.utc().subtract(15, 'days')
+    const invoicedFrom = moment
+      .utc()
+      .subtract(TimeManagerTest.staleDays(10), 'days')
+    const invoicedTo = moment
+      .utc()
+      .subtract(TimeManagerTest.staleDays(5), 'days')
 
     const invoicedEntry = await this.timeFixture.create(
       project,
@@ -414,8 +447,12 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
     )
     const uninvoicedEntry = await this.timeFixture.create(
       project,
-      moment.utc().subtract(9, 'days').toDate(),
-      moment.utc().subtract(9, 'days').add(10, 'minutes').toDate(),
+      moment.utc().subtract(TimeManagerTest.staleDays(), 'days').toDate(),
+      moment
+        .utc()
+        .subtract(TimeManagerTest.staleDays(), 'days')
+        .add(10, 'minutes')
+        .toDate(),
       owner,
     )
 
@@ -423,7 +460,7 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
     invoice.project = project
     invoice.fromAt = invoicedFrom.toDate()
     invoice.toAt = invoicedTo.toDate()
-    invoice.amount = 100
+    invoice.amountCents = 10_000
     invoice.state = EInvoiceState.REQUESTED
     await this.invoiceRepository.saveSingle(invoice)
 

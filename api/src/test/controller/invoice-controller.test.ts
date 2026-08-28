@@ -37,14 +37,14 @@ export class InvoiceControllerTest extends BaseControllerTest {
     expect(res.status).to.be.equal(200)
     const responseInvoice = res.data as {
       id?: string
-      amount?: number
+      amountCents?: number
       state?: EInvoiceState
       fromAt?: string
       toAt?: string
       project?: { id?: string; title?: string; state?: EProjectState }
     }
     expect(responseInvoice.id).to.be.equal(invoice.id)
-    expect(responseInvoice.amount).to.be.equal(invoice.amount)
+    expect(responseInvoice.amountCents).to.be.equal(invoice.amountCents)
     expect(responseInvoice.state).to.be.equal(invoice.state)
     expect(
       new Date(responseInvoice.fromAt as string).toISOString(),

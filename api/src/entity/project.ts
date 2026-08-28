@@ -122,15 +122,17 @@ export class Project extends AbstractBaseEntity implements IProject {
     return this.user?.id === user.id
   }
 
-  public isWorker(user: User): boolean {
+  public isWorker(user: User, ownerIsPremium?: boolean): boolean {
     return (
-      this.isOwner(user) || this.hasCollaborator(this.workerAddresses, user)
+      this.isOwner(user) ||
+      this.hasCollaborator(this.workerAddresses, user, ownerIsPremium)
     )
   }
 
-  public isViewer(user: User): boolean {
+  public isViewer(user: User, ownerIsPremium?: boolean): boolean {
     return (
-      this.isWorker(user) || this.hasCollaborator(this.viewerAddresses, user)
+      this.isWorker(user, ownerIsPremium) ||
+      this.hasCollaborator(this.viewerAddresses, user, ownerIsPremium)
     )
   }
 
@@ -143,8 +145,14 @@ export class Project extends AbstractBaseEntity implements IProject {
   private hasCollaborator(
     addresses: string[] | undefined,
     user: User,
+    ownerIsPremium?: boolean,
   ): boolean {
-    if (!this.user?.premium) {
+    // Defaults to the owner's stored flag so existing callers are unchanged.
+    // A self-hosted instance has no billing service to set it, so Entitlement
+    // passes `true` explicitly - see Entitlement.isPremium.
+    const entitled = ownerIsPremium ?? Boolean(this.user?.premium)
+
+    if (!entitled) {
       return false
     }
 

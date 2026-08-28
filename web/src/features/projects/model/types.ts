@@ -3,7 +3,7 @@ export type ProjectStatus = 'Active' | 'Paused' | 'Finished'
 export type ProjectRow = {
   key: string
   name: string
-  earnings: string
+  paid: string
   status: ProjectStatus
   timeTotal: number
   timeActive: number

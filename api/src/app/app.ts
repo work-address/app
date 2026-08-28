@@ -20,6 +20,7 @@ import { UserController } from '@/controller/user-controller'
 import { ProjectController } from '@/controller/project-controller'
 import { TimeController } from '@/controller/time-controller'
 import { InvoiceController } from '@/controller/invoice-controller'
+import { EntitlementController } from '@/controller/entitlement-controller'
 import { AuthTimeTrackerController } from '@/controller/auth-time-tracker-controller'
 
 const swaggerUiExpress = require('swagger-ui-express')
@@ -154,6 +155,7 @@ export class App {
         UserController,
         TimeController,
         InvoiceController,
+        EntitlementController,
       ],
     })
   }

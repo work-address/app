@@ -2,6 +2,7 @@ import {
   Authorized,
   Body,
   Get,
+  HttpCode,
   JsonController,
   Post,
 } from 'routing-controllers'
@@ -72,7 +73,14 @@ export class InvoiceController {
     @CurrentUser() currentUser: User,
     @EntityFromParam({ paramName: 'projectId' }) project: Project,
     @Body() data: InvoiceCreateDto,
-  ) {
+  ): Promise<Invoice | null> {
+    // No range means "whatever is outstanding" - the operation the UI actually
+    // performs, and idempotent, so opening a project's invoice twice does not
+    // bill the same hours twice.
+    if (data?.fromUnix === undefined || data?.toUnix === undefined) {
+      return this.invoiceManager.ensureForProject(project, currentUser)
+    }
+
     return this.invoiceManager.create(data, project, currentUser)
   }
 
@@ -90,5 +98,45 @@ export class InvoiceController {
     invoice: Invoice,
   ) {
     return this.invoiceRepository.findOneConfirmUser(invoice, currentUser)
+  }
+
+  @OpenAPIExtended({
+    summary: 'Mark an invoice paid (issuer only); marks its time paid too',
+    response: {
+      schema: Invoice,
+      options: { serializationGroup: 'search' },
+    },
+  })
+  @Post('/:id/paid')
+  @HttpCode(200)
+  public async markPaid(
+    @CurrentUser() currentUser: User,
+    @EntityFromParam({
+      paramName: 'id',
+      relations: { project: true, user: true },
+    })
+    invoice: Invoice,
+  ): Promise<Invoice> {
+    return this.invoiceManager.markPaid(invoice, currentUser)
+  }
+
+  @OpenAPIExtended({
+    summary: 'Revert an invoice to unpaid; releases its time back to unpaid',
+    response: {
+      schema: Invoice,
+      options: { serializationGroup: 'search' },
+    },
+  })
+  @Post('/:id/unpaid')
+  @HttpCode(200)
+  public async markUnpaid(
+    @CurrentUser() currentUser: User,
+    @EntityFromParam({
+      paramName: 'id',
+      relations: { project: true, user: true },
+    })
+    invoice: Invoice,
+  ): Promise<Invoice> {
+    return this.invoiceManager.markUnpaid(invoice, currentUser)
   }
 }

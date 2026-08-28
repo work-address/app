@@ -8,7 +8,7 @@ export const projectsMock: ProjectRow[] = [
   {
     key: '1',
     name: 'Project 1',
-    earnings: `${BASE_CURRENCY.symbol}80.5`,
+    paid: `${BASE_CURRENCY.symbol}80.5`,
     status: 'Active',
     timeTotal: 4 * 60 + 10,
     timeActive: 2 * 60 + 10,
@@ -23,7 +23,7 @@ export const projectsMock: ProjectRow[] = [
   {
     key: '2',
     name: 'Project 2',
-    earnings: `${BASE_CURRENCY.symbol}63.1`,
+    paid: `${BASE_CURRENCY.symbol}63.1`,
     status: 'Active',
     timeTotal: 2 * 60 + 56,
     timeActive: 1 * 60 + 24,
@@ -38,7 +38,7 @@ export const projectsMock: ProjectRow[] = [
   {
     key: '3',
     name: 'Project 3',
-    earnings: `${BASE_CURRENCY.symbol}839.5`,
+    paid: `${BASE_CURRENCY.symbol}839.5`,
     status: 'Active',
     timeTotal: 12 * 60 + 36,
     timeActive: 10 * 60 + 59,
@@ -53,7 +53,7 @@ export const projectsMock: ProjectRow[] = [
   {
     key: '4',
     name: 'Project 4',
-    earnings: `${BASE_CURRENCY.symbol}65`,
+    paid: `${BASE_CURRENCY.symbol}65`,
     status: 'Paused',
     timeTotal: 4 * 60 + 12,
     timeActive: 1 * 60 + 44,

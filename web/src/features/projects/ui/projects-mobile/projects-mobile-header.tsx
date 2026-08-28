@@ -1,13 +1,12 @@
 import { Badge, Flex } from '@radix-ui/themes'
 import React, { useContext } from 'react'
-import { NavLink } from 'react-router-dom'
 
 import { getProjectStatusTranslationKey } from '../../model'
 import { ProjectsTableContext } from '../projects-table/projects-table-context'
 
 import type { ProjectWithStats } from '@/entities/projects'
 
-import { routes } from '@/routes'
+import { OpenInvoiceLink } from '@/features/invoice'
 import {
   formatCurrency,
   type MobileHeaderRenderProps,
@@ -26,11 +25,9 @@ export const ProjectsMobileHeader = React.memo(
           <Text size={'4'} $themeVariant={'primary'} weight={'medium'}>
             {props.data.title}
           </Text>
-          <NavLink
-            to={routes.invoice.build({ id: props.data.id ?? '' })}
-            onClick={(e) => e.stopPropagation()}
-            viewTransition
-            aria-label={t('dashboard.projectsTable.actions.invoice')}
+          <OpenInvoiceLink
+            projectId={props.data.id ?? ''}
+            onClick={(event) => event.stopPropagation()}
             style={{
               display: 'inline-flex',
               alignItems: 'center',
@@ -47,13 +44,13 @@ export const ProjectsMobileHeader = React.memo(
               {t('dashboard.projectsTable.actions.invoice')}
             </Text>
             <img src={PrintIcon} alt="" width={24} height={24} />
-          </NavLink>
+          </OpenInvoiceLink>
           <Badge color={props.data.state === 'Active' ? 'green' : 'gray'}>
             {statusKey === null ? props.data.state : t(statusKey)}
           </Badge>
         </Flex>
         <Text color={'gray'} size={'2'}>
-          {formatCurrency(props.data.earnings)}
+          {formatCurrency(props.data.paid)}
         </Text>
       </Flex>
     )

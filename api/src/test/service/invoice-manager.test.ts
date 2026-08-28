@@ -29,8 +29,16 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
   }
 
   @test()
-  async create_aggregatesWorkerAndOwnerTimeInRange() {
-    const owner = await this.userFixture.createUser()
+  /**
+   * Each person invoices their own hours. Previously one invoice summed every
+   * contributor's time on the project, which meant an owner billed for a
+   * worker's hours in a record that named nobody - and the worker had no way
+   * to raise their own.
+   */
+  async create_scopesToTheIssuersOwnTimeOnly() {
+    // Premium: collaborator access is gated on the owner's plan, so a worker
+    // on a free project has no access to invoice against in the first place.
+    const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner, 60)
     project.workerAddresses = [worker.address]
@@ -57,16 +65,25 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
     workerTime.minutesActive = 30
     await this.timeRepository.saveSingle(workerTime)
 
-    const invoice = await this.invoiceManager.create(
-      {
-        fromUnix: fromAt.valueOf(),
-        toUnix: toAt.valueOf(),
-      },
+    const ownerInvoice = await this.invoiceManager.create(
+      { fromUnix: fromAt.valueOf(), toUnix: toAt.valueOf() },
       project,
       owner,
     )
 
-    expect(invoice.amount).to.equal(90)
+    // 60 minutes at $60/hour = 6000 cents. The worker's 30 minutes are not
+    // the owner's to bill for.
+    expect(ownerInvoice.amountCents).to.equal(6000)
+    expect(ownerInvoice.user?.id).to.equal(owner.id)
+
+    const workerInvoice = await this.invoiceManager.create(
+      { fromUnix: fromAt.valueOf(), toUnix: toAt.valueOf() },
+      project,
+      worker,
+    )
+
+    expect(workerInvoice.amountCents).to.equal(3000)
+    expect(workerInvoice.user?.id).to.equal(worker.id)
   }
 
   @test()
@@ -105,11 +122,16 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
       owner,
     )
 
-    expect(invoice.amount).to.equal(60)
+    expect(invoice.amountCents).to.equal(6000)
   }
 
   @test()
-  async create_throwsAccessExceptionForWorkerWithProjectAccess() {
+  /**
+   * The gate is the owner's plan, not the caller's role. A worker on a premium
+   * owner's project invoices their own hours; a worker on a free one has no
+   * collaborator access at all, so there is nothing for them to bill against.
+   */
+  async create_throwsAccessExceptionForWorkerOnAFreeOwnersProject() {
     const owner = await this.userFixture.createUser()
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.create(

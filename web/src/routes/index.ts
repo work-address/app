@@ -17,6 +17,7 @@ type MainRoutes =
   & Route<'/time-tracker', 'timeTracker'>
   & Route<'/download', 'download'>
   & Route<'/invoice/:id', 'invoice', NoChildRoutes, IdRouteParams>
+  & Route<'/invoices', 'invoices'>
   & Route<'https://facebook.com/:userId', 'facebook', NoChildRoutes, { userId: string }>
   & Route<'https://t.me/:userId', 'telegram', NoChildRoutes, { userId: string }>
   & Route<'https://linkedin.com/in/:userId', 'linkedin', NoChildRoutes, { userId: string }>
@@ -63,6 +64,11 @@ export const routes: MainRoutes = {
         build: ({ walletAddress }) => `/profile/${walletAddress}/edit`,
       },
     },
+  },
+
+  invoices: {
+    schema: '/invoices',
+    build: () => '/invoices',
   },
 
   docs: {

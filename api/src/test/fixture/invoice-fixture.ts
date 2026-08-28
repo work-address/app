@@ -10,15 +10,16 @@ export class InvoiceFixture {
   @inject('InvoiceRepository')
   protected invoiceRepository: InvoiceRepository
 
+  /** `amountCents` - whole cents, matching the entity. */
   public create(
     project: Project,
-    amount: number,
+    amountCents: number,
     state: EInvoiceState,
   ): Promise<Invoice> {
     const invoice = new Invoice()
 
     invoice.project = project
-    invoice.amount = amount
+    invoice.amountCents = amountCents
     invoice.state = state
     invoice.fromAt = new Date(Date.now() - 86400000)
     invoice.toAt = new Date()

@@ -14,6 +14,5 @@ export default new DataSource({
   password: params.database.password,
   database: params.database.database,
   entities: ['src/entity/*.ts'],
-  migrations: ['src/migrations/**/*.ts'],
   subscribers: ['src/subscriber/**/*.ts'],
 })

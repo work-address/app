@@ -9,6 +9,9 @@ import { RedisClient } from '@/service/redis-client'
 import { UserFixture } from '@/test/fixture/user-fixture'
 import { UserRepository } from '@/repository/user-repository'
 import { Filter } from '@/service/filter'
+import { Entitlement } from '@/service/entitlement'
+import { InvoiceRecord } from '@/service/invoice-record'
+import { EntitlementSignature } from '@/service/entitlement-signature'
 import { UserManager } from '@/service/user-manager'
 import { Mailer } from '@/service/mailer'
 import { Faker } from '@/service/faker'
@@ -56,6 +59,7 @@ export class AppContainer {
     container
       .bind<ProjectStatisticsRepository>('ProjectStatisticsRepository')
       .to(ProjectStatisticsRepository)
+    container
     container.bind<TimeRepository>('TimeRepository').to(TimeRepository)
     container.bind<InvoiceRepository>('InvoiceRepository').to(InvoiceRepository)
 
@@ -72,12 +76,20 @@ export class AppContainer {
       .to(AuthenticatorTimeTracker)
     container.bind<RedisClient>('RedisClient').to(RedisClient)
     container.bind<Filter>('Filter').to(Filter)
+    container.bind<Entitlement>('Entitlement').to(Entitlement)
+    container
+      .bind<EntitlementSignature>('EntitlementSignature')
+      .to(EntitlementSignature)
     container.bind<UserManager>('UserManager').to(UserManager)
     container.bind<TimeManager>('TimeManager').to(TimeManager)
     container.bind<InvoiceManager>('InvoiceManager').to(InvoiceManager)
     container.bind<Mailer>('Mailer').to(Mailer)
     container.bind<ImageResizer>('ImageResizer').to(ImageResizer)
     container.bind<ProjectManager>('ProjectManager').to(ProjectManager)
+    container
+    container
+    container.bind<InvoiceRecord>('InvoiceRecord').to(InvoiceRecord)
+    container
     container
       .bind<ProjectStatisticsManager>('ProjectStatisticsManager')
       .to(ProjectStatisticsManager)
