@@ -66,7 +66,7 @@ const Head = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: 25px;
+  margin-bottom: var(--spacing-5);
 `
 
 const PeriodSelect = styled.div`

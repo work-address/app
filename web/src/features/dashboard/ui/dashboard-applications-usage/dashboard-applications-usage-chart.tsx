@@ -21,7 +21,17 @@ import { DashboardApplicationsUsageTooltip } from './dashboard-applications-usag
 // Projects visible in the chart area before horizontal scroll kicks in.
 const VISIBLE_PROJECTS_COUNT = 4
 
-const MAX_LABEL_LENGTH = 12
+// Chosen so four labels fit the aside's plot width without touching; the full
+// name is always available in the tooltip.
+const MAX_LABEL_LENGTH = 8
+
+const CHART_HEIGHT = 306
+// Vertical bounds of the plot box; the hour gutter outside the scroller must
+// use the same numbers to line up with the grid. Keep in sync with the chart
+// margin below, the XAxis height, and the skeleton.
+const PLOT_TOP = 6
+const LABEL_AREA_HEIGHT = 30
+const Y_AXIS_WIDTH = 40
 
 const truncateLabel = (label: string) =>
   label.length > MAX_LABEL_LENGTH
@@ -37,81 +47,112 @@ export const DashboardApplicationsUsageChart = ({
 
   return (
     <Root>
-      <ChartWrap
-        style={
-          isScrollable
-            ? {
-                width: `${(data.length / VISIBLE_PROJECTS_COUNT) * 100}%`,
-              }
-            : undefined
-        }
-      >
-        <ResponsiveContainer width="100%" height="100%">
-          <BarChart
-            data={data}
-            margin={{ top: 6, right: 8, left: 0, bottom: 0 }}
+      {/* Rendered outside the scroller so the hour scale stays put while the
+          bars scroll; the in-chart axis is hidden but still owns the domain. */}
+      <YAxisGutter aria-hidden>
+        {yAxis.ticks.map((tick) => (
+          <YAxisLabel
+            key={tick}
+            style={{ top: `${100 - (tick / yAxis.max) * 100}%` }}
           >
-            <CartesianGrid vertical={false} strokeDasharray="3 6" />
-            <XAxis
-              dataKey="label"
-              axisLine={false}
-              tickLine={false}
-              tickMargin={10}
-              interval={0}
-              tickFormatter={truncateLabel}
-            />
-            <YAxis
-              domain={[0, yAxis.max]}
-              ticks={yAxis.ticks}
-              axisLine={false}
-              tickLine={false}
-              tickFormatter={(v) => (v === 0 ? '0' : `${v}H`)}
-              width={34}
-            />
-            <Tooltip
-              content={<DashboardApplicationsUsageTooltip />}
-              cursor={{ fill: 'var(--c-rgba-0-52-130-0_06)' }}
-              wrapperStyle={{ pointerEvents: 'auto' }}
-            />
-            {processNames.length > 0 ? (
-              processNames.map((processName, index) => (
-                <Bar
-                  key={processName}
-                  dataKey={toProcessKey(processName)}
-                  stackId="x"
-                  fill={getBarColor(processName, index)}
-                  maxBarSize={80}
-                  background={index === 0 ? { fill: 'transparent' } : false}
-                  radius={
-                    index === processNames.length - 1
-                      ? [8, 8, 0, 0]
-                      : [0, 0, 0, 0]
-                  }
-                />
-              ))
-            ) : (
-              <Bar
-                dataKey={HIT_AREA_KEY}
-                fill="transparent"
-                maxBarSize={80}
-                background={{ fill: 'transparent' }}
-                isAnimationActive={false}
-                legendType="none"
+            {tick === 0 ? '0' : `${tick}H`}
+          </YAxisLabel>
+        ))}
+      </YAxisGutter>
+      <Scroller>
+        <ChartWrap
+          style={
+            isScrollable
+              ? {
+                  width: `${(data.length / VISIBLE_PROJECTS_COUNT) * 100}%`,
+                }
+              : undefined
+          }
+        >
+          <ResponsiveContainer width="100%" height="100%">
+            <BarChart
+              data={data}
+              margin={{ top: PLOT_TOP, right: 8, left: 0, bottom: 0 }}
+            >
+              <CartesianGrid vertical={false} strokeDasharray="3 6" />
+              <XAxis
+                dataKey="label"
+                axisLine={false}
+                tickLine={false}
+                tickMargin={10}
+                interval={0}
+                height={LABEL_AREA_HEIGHT}
+                tickFormatter={truncateLabel}
               />
-            )}
-          </BarChart>
-        </ResponsiveContainer>
-      </ChartWrap>
+              <YAxis domain={[0, yAxis.max]} ticks={yAxis.ticks} hide />
+              <Tooltip
+                content={<DashboardApplicationsUsageTooltip />}
+                cursor={{ fill: 'var(--c-rgba-0-52-130-0_06)' }}
+                wrapperStyle={{ pointerEvents: 'auto' }}
+              />
+              {processNames.length > 0 ? (
+                processNames.map((processName, index) => (
+                  <Bar
+                    key={processName}
+                    dataKey={toProcessKey(processName)}
+                    stackId="x"
+                    fill={getBarColor(processName, index)}
+                    maxBarSize={80}
+                    background={index === 0 ? { fill: 'transparent' } : false}
+                    radius={
+                      index === processNames.length - 1
+                        ? [8, 8, 0, 0]
+                        : [0, 0, 0, 0]
+                    }
+                  />
+                ))
+              ) : (
+                <Bar
+                  dataKey={HIT_AREA_KEY}
+                  fill="transparent"
+                  maxBarSize={80}
+                  background={{ fill: 'transparent' }}
+                  isAnimationActive={false}
+                  legendType="none"
+                />
+              )}
+            </BarChart>
+          </ResponsiveContainer>
+        </ChartWrap>
+      </Scroller>
     </Root>
   )
 }
 
 const Root = styled.div`
+  display: flex;
+  height: ${CHART_HEIGHT}px;
+`
+
+const YAxisGutter = styled.div`
+  position: relative;
+  flex: none;
+  width: ${Y_AXIS_WIDTH}px;
+  margin: ${PLOT_TOP}px 0 ${LABEL_AREA_HEIGHT}px;
+`
+
+const YAxisLabel = styled.span`
+  position: absolute;
+  right: 8px;
+  transform: translateY(-50%);
+  color: var(--c-rgba-0-7-20-0_62);
+  font-size: var(--font-size-1);
+  line-height: 1;
+`
+
+const Scroller = styled.div`
+  flex: 1;
+  min-width: 0;
   overflow-x: auto;
 `
 
 const ChartWrap = styled.div`
-  height: 306px;
+  height: 100%;
 
   .recharts-cartesian-grid-horizontal line {
     stroke: var(--c-rgba-0-0-51-0_12);

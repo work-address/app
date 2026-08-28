@@ -172,9 +172,10 @@ const Swatch = styled.span<{ $c: string }>`
 
 const Value = styled.div`
   font-weight: 600;
-  font-size: var(--font-size-3);
+  font-size: var(--font-size-2);
   line-height: 20px;
   color: var(--c-rgba-0-7-20-0_88);
+  font-variant-numeric: tabular-nums;
 `
 
 const Divider = styled.div`

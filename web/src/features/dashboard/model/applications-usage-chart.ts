@@ -62,8 +62,14 @@ export const getBarColor = (processName: string, index: number) =>
 const Y_AXIS_TICK_COUNT = 6
 
 // Integer hour ticks on the axis; fractional labels like "2.5H" clash with the tooltip format.
+// Steps snap to 1/2/3/4/5 per decade so the axis reads 0-20-40-…-100, not 0-19-38-…-95.
 const getYAxis = (maxHours: number) => {
-  const step = Math.max(1, Math.ceil(maxHours / (Y_AXIS_TICK_COUNT - 1)))
+  const rawStep = Math.max(1, maxHours / (Y_AXIS_TICK_COUNT - 1))
+  const magnitude = 10 ** Math.floor(Math.log10(rawStep))
+  const step =
+    [1, 2, 3, 4, 5, 10]
+      .map((unit) => unit * magnitude)
+      .find((candidate) => candidate >= rawStep) ?? Math.ceil(rawStep)
 
   return {
     max: step * (Y_AXIS_TICK_COUNT - 1),

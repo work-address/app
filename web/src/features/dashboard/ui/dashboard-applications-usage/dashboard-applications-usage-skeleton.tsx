@@ -5,7 +5,7 @@ import styled from 'styled-components'
 // data arrives: same height, same y-axis gutter, same bar cap.
 const CHART_HEIGHT = 306
 const LABEL_AREA_HEIGHT = 30
-const Y_AXIS_WIDTH = 34
+const Y_AXIS_WIDTH = 40
 // Matches Y_AXIS_TICK_COUNT in the chart model, so the grid lands on the same rows.
 const TICK_COUNT = 6
 
