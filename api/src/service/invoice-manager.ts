@@ -97,9 +97,80 @@ export class InvoiceManager {
     invoice.paidAt = null
 
     const saved = await this.invoiceRepository.validateAndSave(invoice)
+
+    await this.attachTime(saved, times)
     await this.invalidateReport(accessible)
 
     return saved
+  }
+
+  /**
+   * Bills a specific set of tracked entries.
+   *
+   * Every id must belong to the caller, to this project, and be neither paid
+   * nor already invoiced - the repository filters on all of that, so a short
+   * result means at least one id failed and the whole request is refused
+   * rather than quietly billing the subset that passed.
+   */
+  public async createFromTimeIds(
+    project: Project,
+    author: User,
+    timeIds: string[],
+  ): Promise<Invoice> {
+    const accessible = await this.assertCanInvoice(project, author)
+
+    const unique = [...new Set(timeIds)]
+
+    if (unique.length === 0) {
+      throw new BadRequestError('No time entries were selected')
+    }
+
+    const times = await this.timeRepository.findInvoiceableByIds(
+      unique,
+      accessible,
+      author,
+    )
+
+    if (times.length !== unique.length) {
+      throw new BadRequestError(
+        'Some of the selected entries are not yours, already paid, or already on an invoice',
+      )
+    }
+
+    const invoice = new Invoice()
+
+    invoice.project = accessible
+    invoice.user = author
+    // The period spans the selection. It is descriptive only - what the
+    // invoice bills is the linked entries, so a sparse selection does not
+    // claim the days between them.
+    invoice.fromAt = new Date(
+      Math.min(...times.map((time) => new Date(time.fromAt).getTime())),
+    )
+    invoice.toAt = new Date(
+      Math.max(...times.map((time) => new Date(time.toAt).getTime())),
+    )
+    invoice.amountCents = InvoiceManager.amountFor(
+      times,
+      Number(accessible.rateHour) || 0,
+    )
+    invoice.state = EInvoiceState.REQUESTED
+    invoice.paidAt = null
+
+    const saved = await this.invoiceRepository.validateAndSave(invoice)
+
+    await this.attachTime(saved, times)
+    await this.invalidateReport(accessible)
+
+    return saved
+  }
+
+  private async attachTime(invoice: Invoice, times: Time[]): Promise<void> {
+    for (const time of times) {
+      time.invoice = invoice
+    }
+
+    await this.timeRepository.saveMany(times)
   }
 
   /**
@@ -183,25 +254,17 @@ export class InvoiceManager {
   }
 
   /**
-   * Cascades the invoice's state onto the entries it covers.
+   * Cascades the invoice's state onto the entries it bills.
    *
-   * Scoped to the issuer's own entries in the period, so an invoice for one
-   * worker never marks a colleague's hours on the same project and dates.
+   * Follows the `invoice` link rather than the period: the invoice's dates are
+   * only the span of what it covers, and a sparse selection leaves entries in
+   * between that it must not touch.
    */
   private async setTimePaidFlag(
     invoice: Invoice,
     isPaid: boolean,
   ): Promise<void> {
-    if (!invoice.user) {
-      return
-    }
-
-    const times = await this.timeRepository.findTimeForAuthorBetween(
-      invoice.fromAt,
-      invoice.toAt,
-      invoice.project,
-      invoice.user,
-    )
+    const times = await this.timeRepository.findForInvoice(invoice)
 
     if (times.length === 0) {
       return
@@ -260,6 +323,8 @@ export class InvoiceManager {
     invoice.paidAt = null
 
     const saved = await this.invoiceRepository.validateAndSave(invoice)
+
+    await this.attachTime(saved, outstanding)
     await this.invalidateReport(accessible)
 
     return saved

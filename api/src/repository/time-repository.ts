@@ -462,16 +462,15 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
    *
    * "Unpaid" alone is not enough: creating an invoice does not mark its hours
    * paid - only settling it does - so a second click would raise a second
-   * invoice for the same hours and bill them twice. Overlap against the
-   * author's own existing invoices is what makes the operation idempotent.
+   * invoice for the same hours and bill them twice. The `invoiceId` link is
+   * what makes the operation idempotent, and it is exact: a period-overlap
+   * test would also claim entries between two selected days that nobody
+   * chose to bill.
    */
   public findUninvoicedUnpaidTimeForAuthor(
     project: Project,
     author: User,
   ): Promise<Time[]> {
-    const invoiceTable = this.getRepo().manager.connection.getMetadata(Invoice)
-      .tableName
-
     return this.getRepo()
       .createQueryBuilder('time')
       .innerJoinAndSelect('time.project', 'project')
@@ -480,17 +479,46 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       .andWhere('project.id = :projectId', { projectId: project.id })
       .andWhere('project.deletedAt IS NULL')
       .andWhere('COALESCE(time.isPaid, false) = false')
-      .andWhere(
-        `NOT EXISTS (
-          SELECT 1 FROM "${invoiceTable}" invoice
-          WHERE invoice."projectId" = project.id
-            AND invoice."userId" = :authorId
-            AND invoice."deletedAt" IS NULL
-            AND time."fromAt" < invoice."toAt"
-            AND time."toAt" > invoice."fromAt"
-        )`,
-      )
+      .andWhere('time.invoiceId IS NULL')
       .orderBy('time.fromAt', 'ASC')
+      .getMany()
+  }
+
+  /**
+   * Specific entries, restricted to ones the author may still invoice.
+   *
+   * Filtered rather than fetched-then-checked so an id belonging to someone
+   * else, to another project, or to already-billed work simply does not come
+   * back - the caller compares counts and refuses the whole request.
+   */
+  public findInvoiceableByIds(
+    ids: string[],
+    project: Project,
+    author: User,
+  ): Promise<Time[]> {
+    if (ids.length === 0) {
+      return Promise.resolve([])
+    }
+
+    return this.getRepo()
+      .createQueryBuilder('time')
+      .innerJoinAndSelect('time.project', 'project')
+      .innerJoin('time.user', 'author')
+      .andWhere('time.id IN (:...ids)', { ids })
+      .andWhere('author.id = :authorId', { authorId: author.id })
+      .andWhere('project.id = :projectId', { projectId: project.id })
+      .andWhere('project.deletedAt IS NULL')
+      .andWhere('COALESCE(time.isPaid, false) = false')
+      .andWhere('time.invoiceId IS NULL')
+      .orderBy('time.fromAt', 'ASC')
+      .getMany()
+  }
+
+  /** Everything an invoice bills, by link rather than by period. */
+  public findForInvoice(invoice: Invoice): Promise<Time[]> {
+    return this.getRepo()
+      .createQueryBuilder('time')
+      .andWhere('time.invoiceId = :invoiceId', { invoiceId: invoice.id })
       .getMany()
   }
 

@@ -135,6 +135,8 @@
   "dashboard.worklogsTable.bulk.confirmDelete.title": "選択したエントリを削除しますか？",
   "dashboard.worklogsTable.bulk.delete": "削除",
   "dashboard.worklogsTable.bulk.deletedMessage": "選択した作業ログを削除しました",
+  "dashboard.worklogsTable.bulk.invoice": "請求する",
+  "dashboard.worklogsTable.bulk.invoiceOneProject": "1 つのプロジェクトの記録を選択してください。請求書は 1 プロジェクト・1 レートが対象です。",
   "dashboard.worklogsTable.bulk.selectedCount": "選択中: {{count}}",
   "dashboard.worklogsTable.confirmDelete.confirm": "エントリを削除",
   "dashboard.worklogsTable.confirmDelete.description": "記録されたセッションとアクティビティデータが完全に削除されます。この操作は取り消せません。",

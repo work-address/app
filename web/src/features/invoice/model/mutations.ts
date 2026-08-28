@@ -44,3 +44,20 @@ export const ensureInvoiceMutation = createMutation({
       }),
     ) as Promise<baseApi.InvoiceSearch | null>,
 })
+
+/**
+ * Bills exactly the entries picked in the time table.
+ *
+ * The server links each entry to the invoice rather than recording a date
+ * range, so a sparse selection - Monday and Friday, say - leaves Wednesday
+ * still invoiceable instead of silently swallowing it.
+ */
+export const invoiceSelectedTimeMutation = createMutation({
+  handler: async (params: { projectId: string; timeIds: string[] }) =>
+    runApiData(() =>
+      baseApi.invoiceControllerCreate({
+        path: { projectId: params.projectId as never },
+        body: { timeIds: params.timeIds },
+      }),
+    ) as Promise<baseApi.InvoiceSearch | null>,
+})

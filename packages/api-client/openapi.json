@@ -119,7 +119,7 @@
           "state"
         ],
         "example": {
-          "id": "55206876-ddab-4a8e-960a-d4cf05fe1065"
+          "id": "d4880029-9026-4200-9f4f-ddcd254adfe1"
         }
       },
       "ProjectStatistics": {
@@ -180,7 +180,7 @@
           "period"
         ],
         "example": {
-          "id": "1d71eeff-6bdd-4715-81f3-9c2db6cfc57c"
+          "id": "1ee4edaf-22f9-4547-8e66-870e0372f514"
         }
       },
       "Time": {
@@ -274,7 +274,7 @@
           "toAt"
         ],
         "example": {
-          "id": "f6138430-353e-485f-b8e6-c9c814c4b246"
+          "id": "63261398-b4b3-4c4c-983b-70915ca4f6d8"
         }
       },
       "Project": {
@@ -361,7 +361,7 @@
           "state"
         ],
         "example": {
-          "id": "741a3b23-1c8b-452a-b2ff-5f8431b66a57"
+          "id": "b81ec43e-ae6e-4667-a495-348306eca8ab"
         }
       },
       "User": {
@@ -467,7 +467,7 @@
         },
         "type": "object",
         "example": {
-          "id": "d626c06c-d0c5-4517-b997-cd6f55ae0906"
+          "id": "8b332382-1c79-4323-8fff-2854f2a4de59"
         }
       },
       "AuthForgotPasswordDto": {
@@ -1208,6 +1208,13 @@
           },
           "toUnix": {
             "type": "number"
+          },
+          "timeIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array"
           }
         },
         "type": "object"
@@ -3255,7 +3262,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "910afdfe-a542-468a-817a-7f175114e993"
+                  "projectId": "6aca33b0-d971-462c-a2cb-65a8a34e4737"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -3323,8 +3330,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1787807613875,
-                "toUnix": 1787894013875
+                "fromUnix": 1787814501701,
+                "toUnix": 1787900901701
               }
             }
           },
@@ -3641,7 +3648,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "77f525ff-6f2d-4fe9-ac56-ed99982c541a"
+                "nonce": "4cc126f0-3e87-41ce-9104-703a5dafe32e"
               },
               "schema": {
                 "properties": {
@@ -3686,7 +3693,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "35cb29cf-b55a-4fa0-b40d-cdaf46e0e170"
+                "nonce": "300266f4-80b8-4d16-899b-79c909661f98"
               },
               "schema": {
                 "properties": {
@@ -3727,21 +3734,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "47de0c6b-6a95-474e-9a9f-4ea8df674f47",
+                      "nonce": "2a0c7139-8aa3-4d57-8c44-a5afc68eb149",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "a2879506-b504-4c2e-b541-ac84a1ccf7da",
+                      "nonce": "d19a327d-255e-47dd-ba72-c0c80da8f78e",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "c894c717-a730-43be-8a25-6bae7ba80b61",
+                      "nonce": "e6d4f607-fcba-4a16-a021-c1e260c3a20f",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

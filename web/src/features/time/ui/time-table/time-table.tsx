@@ -42,12 +42,14 @@ import {
   resetTimeSort,
   TimeEmptyState,
 } from '@/entities/time'
+import { invoiceSelectedTimeMutation } from '@/features/invoice'
 import {
   Button,
   type DataTableConfig,
   DataTable,
   useBreakpoint,
   ListPageLayout as S,
+  showToast,
 } from '@/shared'
 
 export const TimeTable = () => {
@@ -69,6 +71,8 @@ export const TimeTable = () => {
     selection,
     changeSelection,
     clearSelection,
+    invoiceSelected,
+    invoicing,
     selectedTimeIds,
     selectedTimeCount,
     selectedTimeEntry,
@@ -94,6 +98,8 @@ export const TimeTable = () => {
     selection: $timeSelection,
     changeSelection: timeSelectionChanged,
     clearSelection: timeSelectionCleared,
+    invoiceSelected: invoiceSelectedTimeMutation.start,
+    invoicing: invoiceSelectedTimeMutation.$pending,
     selectedTimeIds: $selectedTimeIds,
     selectedTimeCount: $selectedTimeCount,
     selectedTimeEntry: $selectedTimeEntry,
@@ -109,6 +115,26 @@ export const TimeTable = () => {
   })
 
   const hasTimeEntries = timeLoading || timeRows.length > 0
+
+  /**
+   * The project the current selection belongs to, or null when it spans more
+   * than one.
+   *
+   * An invoice is per-project by construction - it carries one rate and one
+   * counterparty - so a mixed selection has no single answer and the action is
+   * refused rather than silently splitting into several invoices.
+   */
+  const selectedProjectId = useMemo(() => {
+    const selected = new Set(selectedTimeIds)
+    const projectIds = new Set(
+      timeRows
+        .filter((row) => row.id && selected.has(row.id))
+        .map((row) => row.project?.id)
+        .filter((id): id is string => Boolean(id)),
+    )
+
+    return projectIds.size === 1 ? [...projectIds][0] : null
+  }, [timeRows, selectedTimeIds])
 
   const config = useMemo(
     (): DataTableConfig<Time> => [
@@ -225,6 +251,32 @@ export const TimeTable = () => {
                 onClick={() => requestBulkPaidStatus(false)}
               >
                 {t('dashboard.worklogsTable.paymentStatus.unpaid')}
+              </Button>
+              <Button
+                variant="outline"
+                size="l"
+                type="button"
+                disabled={isBulkPending || invoicing}
+                loading={invoicing}
+                onClick={() => {
+                  if (!selectedProjectId) {
+                    showToast('info', {
+                      message: t(
+                        'dashboard.worklogsTable.bulk.invoiceOneProject',
+                      ),
+                      position: 'top-center',
+                    })
+
+                    return
+                  }
+
+                  invoiceSelected({
+                    projectId: selectedProjectId,
+                    timeIds: selectedTimeIds,
+                  })
+                }}
+              >
+                {t('dashboard.worklogsTable.bulk.invoice')}
               </Button>
               <Button
                 color="danger"

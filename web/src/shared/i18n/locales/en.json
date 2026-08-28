@@ -137,6 +137,8 @@
   "dashboard.worklogsTable.bulk.confirmDelete.title": "Delete selected entries?",
   "dashboard.worklogsTable.bulk.delete": "Delete",
   "dashboard.worklogsTable.bulk.deletedMessage": "Selected worklogs deleted",
+  "dashboard.worklogsTable.bulk.invoice": "Invoice",
+  "dashboard.worklogsTable.bulk.invoiceOneProject": "Select entries from a single project — an invoice covers one project and rate.",
   "dashboard.worklogsTable.bulk.selectedCount": "Selected: {{count}}",
   "dashboard.worklogsTable.confirmDelete.confirm": "Delete entry",
   "dashboard.worklogsTable.confirmDelete.description": "This permanently removes the tracked session and its activity data. This action cannot be undone.",

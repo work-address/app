@@ -1,5 +1,6 @@
 import { Type } from 'class-transformer'
 import {
+  IsArray,
   IsDate,
   IsEnum,
   IsNumber,
@@ -58,4 +59,14 @@ export class InvoiceCreateDto {
   @IsNumber()
   @IsOptional()
   toUnix?: number
+
+  /**
+   * Bill exactly these entries, chosen in the time table. Takes precedence
+   * over a range: a selection is explicit about what it covers, where a range
+   * only describes a window.
+   */
+  @IsArray()
+  @IsUUID('4', { each: true })
+  @IsOptional()
+  timeIds?: string[]
 }

@@ -139,6 +139,8 @@
   "dashboard.worklogsTable.bulk.confirmDelete.title": "¿Eliminar entradas seleccionadas?",
   "dashboard.worklogsTable.bulk.delete": "Eliminar",
   "dashboard.worklogsTable.bulk.deletedMessage": "Registros seleccionados eliminados",
+  "dashboard.worklogsTable.bulk.invoice": "Facturar",
+  "dashboard.worklogsTable.bulk.invoiceOneProject": "Selecciona entradas de un solo proyecto: una factura cubre un proyecto y una tarifa.",
   "dashboard.worklogsTable.bulk.selectedCount": "Seleccionados: {{count}}",
   "dashboard.worklogsTable.confirmDelete.confirm": "Eliminar entrada",
   "dashboard.worklogsTable.confirmDelete.description": "Esto elimina permanentemente la sesión registrada y sus datos de actividad. Esta acción no se puede deshacer.",

@@ -33,10 +33,16 @@ process.env.VITE_GIT_COMMIT_SUFFIX = gitCommit === 'unknown' ? 'n/a' : gitCommit
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig(({ command, mode }) => {
   const isDevMode = command === 'serve' && mode === 'development'
-  const babelPlugins: string[] = []
+  const babelPlugins: (string | [string, Record<string, unknown>])[] = []
 
   if (isDevMode) {
-    babelPlugins.push('effector/babel-plugin')
+    babelPlugins.push(
+      'effector/babel-plugin',
+      // Labels styled-components so React DevTools shows `auth-layout__Root`
+      // instead of `styled.div`, and DOM classes carry the same name. The file
+      // prefix is what separates them: `Root` alone is used 35 times.
+      ['babel-plugin-styled-components', { displayName: true, fileName: true }],
+    )
   }
 
   return {

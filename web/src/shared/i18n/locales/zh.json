@@ -135,6 +135,8 @@
   "dashboard.worklogsTable.bulk.confirmDelete.title": "删除所选条目？",
   "dashboard.worklogsTable.bulk.delete": "删除",
   "dashboard.worklogsTable.bulk.deletedMessage": "所选记录已删除",
+  "dashboard.worklogsTable.bulk.invoice": "开具发票",
+  "dashboard.worklogsTable.bulk.invoiceOneProject": "请选择同一个项目的记录——一张发票只对应一个项目和一种费率。",
   "dashboard.worklogsTable.bulk.selectedCount": "已选择: {{count}}",
   "dashboard.worklogsTable.confirmDelete.confirm": "删除条目",
   "dashboard.worklogsTable.confirmDelete.description": "此操作将永久删除已记录的会话及其活动数据，且无法撤销。",

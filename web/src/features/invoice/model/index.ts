@@ -1,7 +1,7 @@
 import { sample } from 'effector'
 
 import { fetchInvoice, resetInvoice } from './events'
-import { ensureInvoiceMutation } from './mutations'
+import { ensureInvoiceMutation, invoiceSelectedTimeMutation } from './mutations'
 import {
   activityDetailQuery,
   activityReportQuery,
@@ -52,8 +52,12 @@ export * from './mutations'
  */
 type EnsuredInvoice = { id?: string } | null
 
+// Both routes to an invoice land on the same page.
 sample({
-  clock: ensureInvoiceMutation.finished.success,
+  clock: [
+    ensureInvoiceMutation.finished.success,
+    invoiceSelectedTimeMutation.finished.success,
+  ],
   filter: ({ result }: { result: EnsuredInvoice }) => Boolean(result?.id),
   fn: ({ result }: { result: EnsuredInvoice }) => ({
     to: routes.invoice.build({ id: result?.id as string }),

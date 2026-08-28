@@ -101,7 +101,7 @@ export const ProfileEdit = () => {
   return (
     <form onSubmit={handleSubmit(onSubmit)}>
       <Root>
-        <Grid rows={{ initial: 'auto auto' }}>
+        <Grid rows={{ initial: 'auto auto' }} gap={'20px'}>
           <ProfileEditDetails
             user={user}
             isDesktop={isDesktop}

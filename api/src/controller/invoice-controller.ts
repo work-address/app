@@ -74,9 +74,17 @@ export class InvoiceController {
     @EntityFromParam({ paramName: 'projectId' }) project: Project,
     @Body() data: InvoiceCreateDto,
   ): Promise<Invoice | null> {
-    // No range means "whatever is outstanding" - the operation the UI actually
-    // performs, and idempotent, so opening a project's invoice twice does not
-    // bill the same hours twice.
+    // Three shapes on one route, so there is a single place deciding who may
+    // invoice a project: an explicit selection, an explicit range, or - the
+    // one the UI uses by default - everything outstanding, idempotently.
+    if (data?.timeIds?.length) {
+      return this.invoiceManager.createFromTimeIds(
+        project,
+        currentUser,
+        data.timeIds,
+      )
+    }
+
     if (data?.fromUnix === undefined || data?.toUnix === undefined) {
       return this.invoiceManager.ensureForProject(project, currentUser)
     }

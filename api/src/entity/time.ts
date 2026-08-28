@@ -4,6 +4,7 @@ import { Exclude, Expose, Type } from 'class-transformer'
 import { JSONSchema } from 'class-validator-jsonschema'
 
 import { AbstractBaseEntity } from '@/entity/abstract-base-entity'
+import { Invoice } from '@/entity/invoice'
 import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
 import { ITime } from '@/model/time'
@@ -50,6 +51,20 @@ export class Time extends AbstractBaseEntity implements ITime {
   @IsBoolean()
   @IsOptional()
   isPaid: boolean
+
+  /**
+   * The invoice that bills this entry, if any.
+   *
+   * An explicit link rather than "an invoice whose period overlaps mine":
+   * entries can be invoiced in an arbitrary selection, so a period covering
+   * Monday and Friday must not silently claim Tuesday through Thursday.
+   *
+   * Deliberately outside every serialisation group - which invoice an entry
+   * belongs to is server-side bookkeeping, and exposing it would let a client
+   * round-trip it back on an edit and move hours between invoices.
+   */
+  @ManyToOne(() => Invoice, { nullable: true, onDelete: 'SET NULL' })
+  invoice?: Invoice | null
 
   @Expose({ groups: ['search', 'create', 'edit'] })
   @Column('text', { nullable: true })

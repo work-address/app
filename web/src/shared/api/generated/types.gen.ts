@@ -290,6 +290,7 @@ export type InvoiceSearchDto = {
 export type InvoiceCreateDto = {
     fromUnix?: number;
     toUnix?: number;
+    timeIds?: Array<string>;
 };
 
 export type EntitlementPushDto = {

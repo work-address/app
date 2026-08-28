@@ -141,6 +141,8 @@
   "dashboard.worklogsTable.bulk.confirmDelete.title": "Удалить выбранные записи?",
   "dashboard.worklogsTable.bulk.delete": "Удалить",
   "dashboard.worklogsTable.bulk.deletedMessage": "Выбранные записи удалены",
+  "dashboard.worklogsTable.bulk.invoice": "Выставить счёт",
+  "dashboard.worklogsTable.bulk.invoiceOneProject": "Выберите записи одного проекта — счёт относится к одному проекту и одной ставке.",
   "dashboard.worklogsTable.bulk.selectedCount": "Выбрано: {{count}}",
   "dashboard.worklogsTable.confirmDelete.confirm": "Удалить запись",
   "dashboard.worklogsTable.confirmDelete.description": "Отслеженная сессия и данные активности будут удалены безвозвратно. Это действие нельзя отменить.",
