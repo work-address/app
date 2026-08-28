@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker'
 import * as web3 from 'web3'
 import moment from 'moment'
+import { In } from 'typeorm'
 
 import { AppConfig } from '@/app/app-config'
 import { AppContainer } from '@/app/app-container'
@@ -12,6 +13,7 @@ import { EProjectState } from '@/model/project'
 import { EUserRole } from '@/model/user'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { ProjectRepository } from '@/repository/project-repository'
+import { ProjectStatisticsRepository } from '@/repository/project-statistics-repository'
 import { TimeRepository } from '@/repository/time-repository'
 import { UserRepository } from '@/repository/user-repository'
 import { Authenticator } from '@/service/auth/authenticator'
@@ -51,6 +53,22 @@ const DAYS_OF_HISTORY = 21
 /** Matches the tracker's sampling interval, so `entries * 10` reads as minutes. */
 const ENTRY_MINUTES = 10
 const SEED_TAG = '[seed:demo]'
+
+/**
+ * A believable desktop for the applications-usage chart. Weights skew the
+ * random picks so the chart shows a few dominant apps and a long tail instead
+ * of a uniform smear.
+ */
+const DEMO_PROCESSES: { name: string; weight: number }[] = [
+  { name: 'Visual Studio Code', weight: 5 },
+  { name: 'Google Chrome', weight: 4 },
+  { name: 'Slack', weight: 2 },
+  { name: 'Terminal', weight: 2 },
+  { name: 'Figma', weight: 1 },
+  { name: 'Notion', weight: 1 },
+  { name: 'Spotify', weight: 1 },
+  { name: 'Zoom', weight: 1 },
+]
 
 /**
  * Fixed keys so the demo accounts are the same on every run.
@@ -98,6 +116,7 @@ class DemoDataSeeder {
     private readonly projectRepository: ProjectRepository,
     private readonly timeRepository: TimeRepository,
     private readonly invoiceRepository: InvoiceRepository,
+    private readonly statisticsRepository: ProjectStatisticsRepository,
     private readonly invoiceManager: InvoiceManager,
   ) {}
 
@@ -172,8 +191,29 @@ class DemoDataSeeder {
         return
       }
 
-      // Time and invoices cascade from the project, so removing the projects
-      // is enough to leave no orphans behind.
+      // Invoice.project and Time.project don't cascade (the app only ever
+      // soft-deletes projects), so a hard reseed has to clear the dependents
+      // itself, invoices first — Time.invoice is SET NULL, the reverse order
+      // would trip the FK.
+      const projectIds = existing.map((project) => project.id)
+
+      const invoices = await this.invoiceRepository.findBy({
+        where: { project: { id: In(projectIds) } },
+      })
+      await this.invoiceRepository.removeMany(invoices)
+
+      const times = await this.timeRepository.findBy({
+        where: { project: { id: In(projectIds) } },
+      })
+      await this.timeRepository.removeMany(times)
+
+      // Cached stats rows appear as soon as a dashboard requests them, so a
+      // reseed after any app use has these to clear as well.
+      const statistics = await this.statisticsRepository.findBy({
+        where: { project: { id: In(projectIds) } },
+      })
+      await this.statisticsRepository.removeMany(statistics)
+
       await this.projectRepository.removeMany(existing)
       console.log(`${SEED_TAG} removed ${existing.length} existing projects`)
     }
@@ -281,6 +321,7 @@ class DemoDataSeeder {
         // wall-clock window, and exceeding it makes every derived percentage
         // read over 100%.
         time.minutesActive = faker.number.int({ min: 3, max: ENTRY_MINUTES })
+        time.processes = this.pickProcesses(time.minutesActive)
         time.keyboardKeys = faker.number.int({ min: 0, max: 800 })
         time.mouseKeys = faker.number.int({ min: 0, max: 300 })
         time.mouseDistance = faker.number.float({ min: 0, max: 5000 })
@@ -291,6 +332,42 @@ class DemoDataSeeder {
     }
 
     await this.timeRepository.saveMany(entries)
+  }
+
+  /**
+   * Two to four weighted apps splitting the entry's active minutes, so the
+   * dashboard's applications-usage chart has something to stack. Minutes sum
+   * to exactly `minutesActive` — the chart's totals are compared against the
+   * entry's own numbers, and drift there reads as a bug.
+   */
+  private pickProcesses(minutesActive: number): Time['processes'] {
+    const count = faker.number.int({ min: 2, max: Math.min(4, minutesActive) })
+    const names = new Set<string>()
+
+    while (names.size < count) {
+      names.add(
+        faker.helpers.weightedArrayElement(
+          DEMO_PROCESSES.map((process) => ({
+            value: process.name,
+            weight: process.weight,
+          })),
+        ),
+      )
+    }
+
+    let remaining = minutesActive
+
+    return [...names].map((name, index, all) => {
+      const others = all.length - index - 1
+      const timeMin =
+        others === 0
+          ? remaining
+          : faker.number.int({ min: 1, max: remaining - others })
+
+      remaining -= timeMin
+
+      return { name, timeMin }
+    })
   }
 
   /** Only for the summary line; the invoices themselves are made above. */
@@ -334,6 +411,7 @@ class DemoDataSeeder {
     container.get('ProjectRepository'),
     container.get('TimeRepository'),
     container.get('InvoiceRepository'),
+    container.get('ProjectStatisticsRepository'),
     container.get('InvoiceManager'),
   )
 
