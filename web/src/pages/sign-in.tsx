@@ -1,16 +1,19 @@
 import { useUnit } from 'effector-react'
+import { useState } from 'react'
 import { Trans, useTranslation } from 'react-i18next'
 import { Navigate } from 'react-router-dom'
 import { useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 
 import type { LoginMode } from '@/entities/profile'
+import type { SignInGuideMode } from '@/features/auth'
 
 import { $authenticated, $pending, login } from '@/entities/profile'
 import {
   AuthStyles as S,
   ETHEREUM_WALLETS,
   AuthProviderButton,
+  AuthSignInGuide,
   SOLANA_WALLETS,
   TON_WALLETS,
   AuthWalletList,
@@ -34,6 +37,7 @@ export default function SignInPage() {
   const authenticated = useUnit($authenticated)
   const isDesktop = useBreakpoint('isDesktop')
   const [searchParams] = useSearchParams()
+  const [guideMode, setGuideMode] = useState<SignInGuideMode>('default')
   const nonce = searchParams.get('nonce')
 
   if (nonce) {
@@ -48,76 +52,157 @@ export default function SignInPage() {
     return <Navigate to={routes.dashboard.build()} />
   }
 
+  const providers = [
+    {
+      mode: 'ton',
+      iconUrl: TonLogo,
+      iconAlt: t('signIn.alt.ton'),
+      label: t('signIn.providers.ton'),
+    },
+    {
+      mode: 'solana',
+      iconUrl: SolanaLogo,
+      iconAlt: t('signIn.alt.solana'),
+      label: t('signIn.providers.solana'),
+    },
+    {
+      mode: 'eth',
+      iconUrl: EthereumLogo,
+      iconAlt: t('signIn.alt.ethereum'),
+      label: t('signIn.providers.ethereum'),
+    },
+  ] satisfies {
+    mode: LoginMode
+    iconUrl: string
+    iconAlt: string
+    label: string
+  }[]
+
   return (
     <>
       <PageHelmet
         htmlAttributes={{ lang: i18n.language }}
         title={t('signIn.title')}
       />
-      <S.Logo src={isDesktop ? LogoLabel : Logo} alt={t('signIn.logoAlt')} />
-      <S.SignInCard>
-        {loading && (
-          <S.Overlay align={'center'} justify={'center'}>
-            <Spinner size={80} />
-          </S.Overlay>
-        )}
-        <S.Title>{t('signIn.title')}</S.Title>
-        <S.Desc>
-          <Trans
-            i18nKey="signIn.description"
-            components={{ mb: <S.MobileBreak /> }}
-          />
-        </S.Desc>
-        <S.Actions>
-          <AuthProviderButton
-            iconUrl={TonLogo}
-            iconAlt={t('signIn.alt.ton')}
-            onClick={() => onSignIn('ton')}
-          >
-            {t('signIn.providers.ton')}
-          </AuthProviderButton>
-          <AuthProviderButton
-            iconUrl={SolanaLogo}
-            iconAlt={t('signIn.alt.solana')}
-            onClick={() => onSignIn('solana')}
-          >
-            {t('signIn.providers.solana')}
-          </AuthProviderButton>
-          <AuthProviderButton
-            iconUrl={EthereumLogo}
-            iconAlt={t('signIn.alt.ethereum')}
+      <Screen>
+        <S.Logo src={isDesktop ? LogoLabel : Logo} alt={t('signIn.logoAlt')} />
+        <Shell>
+          {loading && (
+            <S.Overlay align={'center'} justify={'center'}>
+              <Spinner size={80} />
+            </S.Overlay>
+          )}
+          <MainPane>
+            <S.Title>{t('signIn.title')}</S.Title>
+            <S.Desc>
+              <Trans
+                i18nKey="signIn.description"
+                components={{ mb: <S.MobileBreak /> }}
+              />
+            </S.Desc>
+            <S.Actions onMouseLeave={() => setGuideMode('default')}>
+              {providers.map((provider) => (
+                <AuthProviderButton
+                  key={provider.mode}
+                  iconUrl={provider.iconUrl}
+                  iconAlt={provider.iconAlt}
+                  onClick={() => onSignIn(provider.mode)}
+                  onMouseEnter={() => setGuideMode(provider.mode)}
+                  onFocus={() => setGuideMode(provider.mode)}
+                >
+                  {provider.label}
+                </AuthProviderButton>
+              ))}
+            </S.Actions>
+            <S.Learn to={routes.docs.build()} target={routes.docs.target}>
+              {t('signIn.learnMore')}
+            </S.Learn>
+          </MainPane>
+          <GuidePane>
+            <AuthSignInGuide mode={guideMode} />
+          </GuidePane>
+        </Shell>
+        <Footer>
+          <S.FootLine>
+            <S.FootLabel>{t('signIn.footer.ethereumWallets')}</S.FootLabel>{' '}
+            <AuthWalletList wallets={ETHEREUM_WALLETS} />
+          </S.FootLine>
+          <S.FootLine>
+            <S.FootLabel>{t('signIn.footer.tonWallets')}</S.FootLabel>{' '}
+            <AuthWalletList wallets={TON_WALLETS} />
+          </S.FootLine>
+          <S.FootLine>
+            <S.FootLabel>{t('signIn.footer.solanaWallets')}</S.FootLabel>{' '}
+            <AuthWalletList wallets={SOLANA_WALLETS} breakAfter={3} />
+          </S.FootLine>
+          <CommitSha>
+            Version: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}
+          </CommitSha>
+        </Footer>
+        <DesktopVersion>
+          Version: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}
+        </DesktopVersion>
+        <S.ButtonRow>
+          <Button
+            color="neutral"
+            variant="soft"
             onClick={() => onSignIn('eth')}
           >
-            {t('signIn.providers.ethereum')}
-          </AuthProviderButton>
-        </S.Actions>
-        <S.Learn to={routes.docs.build()} target={routes.docs.target}>
-          {t('signIn.learnMore')}
-        </S.Learn>
-      </S.SignInCard>
-      <Footer>
-        <S.FootLine>
-          <S.FootLabel>{t('signIn.footer.ethereumWallets')}</S.FootLabel>{' '}
-          <AuthWalletList wallets={ETHEREUM_WALLETS} />
-        </S.FootLine>
-        <S.FootLine>
-          <S.FootLabel>{t('signIn.footer.tonWallets')}</S.FootLabel>{' '}
-          <AuthWalletList wallets={TON_WALLETS} />
-        </S.FootLine>
-        <S.FootLine>
-          <S.FootLabel>{t('signIn.footer.solanaWallets')}</S.FootLabel>{' '}
-          <AuthWalletList wallets={SOLANA_WALLETS} breakAfter={3} />
-        </S.FootLine>
-        <CommitSha>Version: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}</CommitSha>
-      </Footer>
-      <S.ButtonRow>
-        <Button color="neutral" variant="soft" onClick={() => onSignIn('eth')}>
-          {t('signIn.continue')}
-        </Button>
-      </S.ButtonRow>
+            {t('signIn.continue')}
+          </Button>
+        </S.ButtonRow>
+      </Screen>
     </>
   )
 }
+
+const Screen = styled.div`
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    width: 100%;
+    height: 100dvh;
+    justify-content: center;
+    overflow: hidden;
+  }
+`
+
+// Below `lg` the shell is exactly the old sign-in card; on large screens it
+// splits into the sign-in pane on the left and the how-to guide on the right.
+const Shell = styled(S.SignInCard)`
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    width: min(1040px, calc(100vw - 96px));
+    display: grid;
+    grid-template-columns: minmax(0, 1.04fr) minmax(0, 1fr);
+    padding: 0;
+    overflow: hidden;
+  }
+`
+
+const MainPane = styled.div`
+  display: contents;
+
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    min-width: 0;
+    padding: 44px 48px 34px;
+  }
+`
+
+const GuidePane = styled.aside`
+  display: none;
+
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    display: block;
+    min-width: 0;
+    background: var(--ds-accent-3);
+    border-left: 1px solid var(--c-rgba-0-0-51-0_12);
+  }
+`
 
 const Footer = styled.footer`
   text-align: center;
@@ -135,6 +220,10 @@ const Footer = styled.footer`
     margin-top: 20px;
     line-height: 20px;
   }
+
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    display: none;
+  }
 `
 
 const CommitSha = styled.div`
@@ -148,5 +237,14 @@ const CommitSha = styled.div`
   ${({ theme }) => theme.breakpoints.up('md')} {
     margin-top: 21px;
     font-size: var(--font-size-1);
+  }
+`
+
+const DesktopVersion = styled(CommitSha)`
+  display: none;
+
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    display: block;
+    margin-top: 18px;
   }
 `

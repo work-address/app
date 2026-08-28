@@ -1,5 +1,6 @@
 export * as AuthStyles from './auth-styles'
 export * from './auth-provider-button'
+export * from './auth-sign-in-guide'
 export * from './auth-wallet-list'
 export * from './auth-solana-wallet-shell'
 export * from './auth-solana-mount'

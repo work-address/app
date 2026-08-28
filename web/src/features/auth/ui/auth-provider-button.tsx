@@ -5,6 +5,8 @@ type Props = {
   iconAlt: string
   children: string
   onClick?: () => void
+  onMouseEnter?: () => void
+  onFocus?: () => void
 }
 
 export const AuthProviderButton = ({
@@ -12,9 +14,16 @@ export const AuthProviderButton = ({
   iconAlt,
   iconUrl,
   onClick,
+  onMouseEnter,
+  onFocus,
 }: Props) => {
   return (
-    <Button onClick={onClick} type={'button'}>
+    <Button
+      onClick={onClick}
+      onMouseEnter={onMouseEnter}
+      onFocus={onFocus}
+      type={'button'}
+    >
       <Icon src={iconUrl} alt={iconAlt} />
       <Text>{children}</Text>
     </Button>
