@@ -5,7 +5,7 @@ import { playwright } from '@vitest/browser-playwright'
 import { execSync } from 'node:child_process'
 import * as path from 'node:path'
 import { fileURLToPath } from 'node:url'
-import { defineConfig } from 'vite'
+import { defineConfig, loadEnv } from 'vite'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import svgr from 'vite-plugin-svgr'
 
@@ -33,6 +33,9 @@ process.env.VITE_GIT_COMMIT_SUFFIX = gitCommit === 'unknown' ? 'n/a' : gitCommit
 // More info at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon
 export default defineConfig(({ command, mode }) => {
   const isDevMode = command === 'serve' && mode === 'development'
+  // Pull VITE_* vars from .env/.env.local into process.env so the dev proxy
+  // target below can be overridden per machine, not only via the shell.
+  Object.assign(process.env, loadEnv(mode, dirname, 'VITE_'))
   const babelPlugins: (string | [string, Record<string, unknown>])[] = []
 
   if (isDevMode) {
