@@ -9,6 +9,7 @@ import { Signer } from '@/service/auth/signer'
 import { Authenticator } from '@/service/auth/authenticator'
 import { EAuthTimeTrackerState, IAuthTokens } from '@/model/auth'
 import { UserRepository } from '@/repository/user-repository'
+import { runPromise } from '@/service/effect-bridge'
 
 export type TimeTrackerNonceCache = {
   ip: string
@@ -107,7 +108,7 @@ export class AuthenticatorTimeTracker {
 
     await this.redis.setWithExpiry(key, data, Authenticator.nonceExpiresIn)
 
-    await this.userRepository.saveSingle(user)
+    await runPromise(this.userRepository.saveSingle(user))
   }
 
   public async timeTrackerNonceGet(nonce: string, ip: string) {

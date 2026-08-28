@@ -1,3 +1,4 @@
+import { Effect } from 'effect'
 import { inject, injectable } from 'inversify'
 import moment from 'moment'
 
@@ -10,6 +11,7 @@ import {
 } from '@/model/project-statistics'
 import { ProjectStatisticsRepository } from '@/repository/project-statistics-repository'
 import { TimeRepository } from '@/repository/time-repository'
+import { RepoEffect } from '@/repository/abstract-repository-template'
 import { BadRequestError } from 'routing-controllers'
 
 @injectable()
@@ -19,25 +21,29 @@ export class ProjectStatisticsManager {
   @inject('TimeRepository')
   protected timeRepository: TimeRepository
 
-  public async getStatsForProject(
+  public getStatsForProject(
     project: Project,
     period: EProjectStatisticsPeriod,
-  ): Promise<ProjectStatistics[]> {
-    if (!Object.values(EProjectStatisticsPeriod).includes(period)) {
-      throw new BadRequestError(`Invalid statistics period: ${period}`)
-    }
+  ): RepoEffect<ProjectStatistics[]> {
+    return Effect.gen(this, function* () {
+      if (!Object.values(EProjectStatisticsPeriod).includes(period)) {
+        return yield* Effect.fail(
+          new BadRequestError(`Invalid statistics period: ${period}`),
+        )
+      }
 
-    let rows =
-      await this.projectStatisticsRepository.findAllForProjectAndPeriod(
-        project,
-        period,
-      )
+      const rows =
+        yield* this.projectStatisticsRepository.findAllForProjectAndPeriod(
+          project,
+          period,
+        )
 
-    if (!rows.length || this.isPeriodStale(rows, period)) {
-      rows = await this.aggregateAndSave(project, period)
-    }
+      if (!rows.length || this.isPeriodStale(rows, period)) {
+        return yield* this.aggregateAndSave(project, period)
+      }
 
-    return rows
+      return rows
+    })
   }
 
   protected isPeriodStale(
@@ -81,42 +87,46 @@ export class ProjectStatisticsManager {
       .sort((a, b) => b.timeMin - a.timeMin)
   }
 
-  private async aggregateAndSave(
+  private aggregateAndSave(
     project: Project,
     period: EProjectStatisticsPeriod,
-  ): Promise<ProjectStatistics[]> {
+  ): RepoEffect<ProjectStatistics[]> {
     const config = this.periodConfig[period]
 
-    const fromAt = moment()
-      .subtract(config.windowAmount, config.windowUnit)
-      .toDate()
+    return Effect.gen(this, function* () {
+      // Inside the generator so the window is measured from when the
+      // aggregation runs, not from when the effect was described.
+      const fromAt = moment()
+        .subtract(config.windowAmount, config.windowUnit)
+        .toDate()
 
-    const times = await this.timeRepository.findWithProcessesForProjectSince(
-      project,
-      fromAt,
-    )
-    const processes = this.aggregateProcessesFromTimes(times)
+      const times = yield* this.timeRepository.findWithProcessesForProjectSince(
+        project,
+        fromAt,
+      )
+      const processes = this.aggregateProcessesFromTimes(times)
 
-    await this.projectStatisticsRepository.deleteForProjectAndPeriod(
-      project,
-      period,
-    )
+      yield* this.projectStatisticsRepository.deleteForProjectAndPeriod(
+        project,
+        period,
+      )
 
-    if (!processes.length) {
-      return []
-    }
+      if (!processes.length) {
+        return []
+      }
 
-    const rows = processes.map((process) => {
-      const statistics = new ProjectStatistics()
-      statistics.project = project
-      statistics.period = period
-      statistics.processName = process.processName
-      statistics.timeMin = process.timeMin
+      const rows = processes.map((process) => {
+        const statistics = new ProjectStatistics()
+        statistics.project = project
+        statistics.period = period
+        statistics.processName = process.processName
+        statistics.timeMin = process.timeMin
 
-      return statistics
+        return statistics
+      })
+
+      return yield* this.projectStatisticsRepository.saveMany(rows)
     })
-
-    return this.projectStatisticsRepository.saveMany(rows)
   }
 
   private periodConfig: Record<

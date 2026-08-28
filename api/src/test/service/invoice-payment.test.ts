@@ -11,6 +11,7 @@ import { ProjectRepository } from '@/repository/project-repository'
 import { TimeFixture } from '@/test/fixture/time-fixture'
 import { TimeRepository } from '@/repository/time-repository'
 import { UserFixture } from '@/test/fixture/user-fixture'
+import { runPromise } from '@/service/effect-bridge'
 
 /**
  * Invoices own `Time.isPaid`. These assert the two records cannot drift: an
@@ -46,7 +47,7 @@ export class InvoicePaymentTest extends AbstractDatabaseIntegration {
     )
     project.workerAddresses = [worker.address]
     project.rateHour = 60
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const fromAt = moment.utc().subtract(3, 'hours')
     const toAt = moment.utc().subtract(1, 'hour')
@@ -58,7 +59,7 @@ export class InvoicePaymentTest extends AbstractDatabaseIntegration {
       worker,
     )
     workerTime.minutesActive = 60
-    await this.timeRepository.saveSingle(workerTime)
+    await runPromise(this.timeRepository.saveSingle(workerTime))
 
     const ownerTime = await this.timeFixture.create(
       project,
@@ -67,12 +68,14 @@ export class InvoicePaymentTest extends AbstractDatabaseIntegration {
       owner,
     )
     ownerTime.minutesActive = 30
-    await this.timeRepository.saveSingle(ownerTime)
+    await runPromise(this.timeRepository.saveSingle(ownerTime))
 
-    const invoice = await this.invoiceManager.create(
-      { fromUnix: fromAt.valueOf(), toUnix: toAt.valueOf() },
-      project,
-      worker,
+    const invoice = await runPromise(
+      this.invoiceManager.create(
+        { fromUnix: fromAt.valueOf(), toUnix: toAt.valueOf() },
+        project,
+        worker,
+      ),
     )
 
     return { owner, worker, project, invoice, workerTime, ownerTime }
@@ -82,12 +85,14 @@ export class InvoicePaymentTest extends AbstractDatabaseIntegration {
   async markPaid_marksTheCoveredTimePaid() {
     const { worker, invoice, workerTime } = await this.scenario()
 
-    const paid = await this.invoiceManager.markPaid(invoice, worker)
+    const paid = await runPromise(this.invoiceManager.markPaid(invoice, worker))
 
     expect(paid.state).to.be.equal(EInvoiceState.PAID)
     expect(paid.paidAt).to.not.be.null
 
-    const reloaded = await this.timeRepository.findOneByIdOrFail(workerTime.id)
+    const reloaded = await runPromise(
+      this.timeRepository.findOneByIdOrFail(workerTime.id),
+    )
     expect(reloaded.isPaid).to.be.true
   }
 
@@ -96,9 +101,11 @@ export class InvoicePaymentTest extends AbstractDatabaseIntegration {
   async markPaid_leavesAnotherContributorsTimeAlone() {
     const { worker, invoice, ownerTime } = await this.scenario()
 
-    await this.invoiceManager.markPaid(invoice, worker)
+    await runPromise(this.invoiceManager.markPaid(invoice, worker))
 
-    const reloaded = await this.timeRepository.findOneByIdOrFail(ownerTime.id)
+    const reloaded = await runPromise(
+      this.timeRepository.findOneByIdOrFail(ownerTime.id),
+    )
     expect(reloaded.isPaid).to.not.be.true
   }
 
@@ -106,13 +113,17 @@ export class InvoicePaymentTest extends AbstractDatabaseIntegration {
   async markUnpaid_releasesTheTimeBack() {
     const { worker, invoice, workerTime } = await this.scenario()
 
-    await this.invoiceManager.markPaid(invoice, worker)
-    const reverted = await this.invoiceManager.markUnpaid(invoice, worker)
+    await runPromise(this.invoiceManager.markPaid(invoice, worker))
+    const reverted = await runPromise(
+      this.invoiceManager.markUnpaid(invoice, worker),
+    )
 
     expect(reverted.state).to.be.equal(EInvoiceState.REQUESTED)
     expect(reverted.paidAt ?? null).to.be.null
 
-    const reloaded = await this.timeRepository.findOneByIdOrFail(workerTime.id)
+    const reloaded = await runPromise(
+      this.timeRepository.findOneByIdOrFail(workerTime.id),
+    )
     expect(reloaded.isPaid).to.be.false
   }
 
@@ -128,7 +139,7 @@ export class InvoicePaymentTest extends AbstractDatabaseIntegration {
     let error: Error | undefined
 
     try {
-      await this.invoiceManager.markPaid(invoice, owner)
+      await runPromise(this.invoiceManager.markPaid(invoice, owner))
     } catch (e: unknown) {
       error = e as Error
     }
@@ -143,15 +154,17 @@ export class InvoicePaymentTest extends AbstractDatabaseIntegration {
     const fromAt = moment.utc().subtract(3, 'hours')
     const toAt = moment.utc().subtract(1, 'hour')
 
-    await this.invoiceManager.markPaid(invoice, worker)
+    await runPromise(this.invoiceManager.markPaid(invoice, worker))
 
     let error: Error | undefined
 
     try {
-      await this.invoiceManager.create(
-        { fromUnix: fromAt.valueOf(), toUnix: toAt.valueOf() },
-        project,
-        worker,
+      await runPromise(
+        this.invoiceManager.create(
+          { fromUnix: fromAt.valueOf(), toUnix: toAt.valueOf() },
+          project,
+          worker,
+        ),
       )
     } catch (e: unknown) {
       error = e as Error

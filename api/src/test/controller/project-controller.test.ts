@@ -8,6 +8,7 @@ import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { ProjectManager } from '@/service/project-manager'
 import { ProjectRepository } from '@/repository/project-repository'
 import { EProjectState } from '@/model/project'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite
 export class ProjectControllerTest extends BaseControllerTest {
@@ -39,7 +40,9 @@ export class ProjectControllerTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const updated = await this.projectRepository.findOneByIdOrFail(project.id)
+    const updated = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
+    )
 
     expect(res.status).to.be.equal(200)
     this.expectEmptyResponseBody(res.data)
@@ -74,8 +77,9 @@ export class ProjectControllerTest extends BaseControllerTest {
     expect(error).to.be.ok
     expect(error.response?.status).to.be.equal(403)
 
-    const unchanged = await this.projectRepository.findOneByIdOrFail(project.id)
+    const unchanged = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
+    )
     expect(unchanged.state).to.be.eq(EProjectState.ACTIVE)
   }
-
 }

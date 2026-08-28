@@ -16,6 +16,7 @@ import { EProjectState } from '@/model/project'
 import { EProjectStatisticsPeriod } from '@/model/project-statistics'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite
 export class ProjectControllerStatsTest extends BaseControllerTest {
@@ -66,11 +67,12 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
     expect(chrome?.timeMin).to.be.equal(5)
     expect(chrome?.period).to.be.equal(EProjectStatisticsPeriod.ONE_DAY)
 
-    const stored =
-      await this.projectStatisticsRepository.findAllForProjectAndPeriod(
+    const stored = await runPromise(
+      this.projectStatisticsRepository.findAllForProjectAndPeriod(
         project,
         EProjectStatisticsPeriod.ONE_DAY,
-      )
+      ),
+    )
 
     expect(stored).to.have.length(2)
     expect(
@@ -119,11 +121,12 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
       owner,
       EProjectStatisticsPeriod.ONE_DAY,
     )
-    const storedAfterFirst =
-      await this.projectStatisticsRepository.findAllForProjectAndPeriod(
+    const storedAfterFirst = await runPromise(
+      this.projectStatisticsRepository.findAllForProjectAndPeriod(
         project,
         EProjectStatisticsPeriod.ONE_DAY,
-      )
+      ),
+    )
     const updatedAtAfterFirst = storedAfterFirst[0].updatedAt
 
     const second = await this.getStats(
@@ -134,11 +137,12 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
 
     expect(first.data).to.deep.equal(second.data)
 
-    const storedAfterSecond =
-      await this.projectStatisticsRepository.findAllForProjectAndPeriod(
+    const storedAfterSecond = await runPromise(
+      this.projectStatisticsRepository.findAllForProjectAndPeriod(
         project,
         EProjectStatisticsPeriod.ONE_DAY,
-      )
+      ),
+    )
 
     expect(storedAfterSecond).to.have.length(1)
     expect(storedAfterSecond[0].updatedAt).to.deep.equal(updatedAtAfterFirst)
@@ -363,6 +367,6 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
 
     time.processes = processes
 
-    return this.timeRepository.saveSingle(time)
+    return runPromise(this.timeRepository.saveSingle(time))
   }
 }

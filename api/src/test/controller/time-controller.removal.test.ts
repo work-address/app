@@ -13,6 +13,7 @@ import {
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { TimeRepository } from '@/repository/time-repository'
 import { EProjectState } from '@/model/project'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite()
 export class TimeControllerRemovalTest extends BaseControllerTest {
@@ -44,7 +45,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
         timeMin: faker.number.int(9),
       },
     ]
-    await this.timeRepository.saveSingle(time)
+    await runPromise(this.timeRepository.saveSingle(time))
 
     return { owner, project, time }
   }
@@ -58,7 +59,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
       moment.utc().subtract(90, 'minutes').toDate(),
     )
     second.screenshot = faker.string.uuid()
-    await this.timeRepository.saveSingle(second)
+    await runPromise(this.timeRepository.saveSingle(second))
 
     const client = this.apiClient()
     const res = await timeControllerRemoveScreenshots({
@@ -70,12 +71,16 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const updated = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
-    const updatedSecond = await this.timeRepository.findOneBy({
-      where: { id: second.id },
-    })
+    const updated = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
+    const updatedSecond = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: second.id },
+      }),
+    )
 
     expect(res.status).to.be.equal(200)
     this.expectEmptyResponseBody(res.data)
@@ -99,7 +104,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
         timeMin: faker.number.int(9),
       },
     ]
-    await this.timeRepository.saveSingle(second)
+    await runPromise(this.timeRepository.saveSingle(second))
 
     const client = this.apiClient()
     const res = await timeControllerRemoveProcesses({
@@ -111,12 +116,16 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const updated = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
-    const updatedSecond = await this.timeRepository.findOneBy({
-      where: { id: second.id },
-    })
+    const updated = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
+    const updatedSecond = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: second.id },
+      }),
+    )
 
     expect(res.status).to.be.equal(200)
     this.expectEmptyResponseBody(res.data)
@@ -190,9 +199,11 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     expect(error.response?.status).to.be.equal(403)
     expect(error.response?.data.name).to.be.equal('UserAccessException')
 
-    const unchanged = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
+    const unchanged = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
     expect(unchanged!.screenshot).to.be.eq(time.screenshot)
   }
 
@@ -228,7 +239,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
       moment.utc().toDate(),
     )
     time.screenshot = faker.string.uuid()
-    await this.timeRepository.saveSingle(time)
+    await runPromise(this.timeRepository.saveSingle(time))
 
     let error: unknown
 
@@ -248,9 +259,11 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     if (!axios.isAxiosError(error)) throw error
     expect(error.response?.status).to.be.equal(403)
 
-    const unchanged = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
+    const unchanged = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
     expect(unchanged!.screenshot).to.be.eq(time.screenshot)
   }
 
@@ -286,7 +299,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
       worker,
     )
     time.screenshot = faker.string.uuid()
-    await this.timeRepository.saveSingle(time)
+    await runPromise(this.timeRepository.saveSingle(time))
 
     const res = await timeControllerRemoveScreenshots({
       client: this.apiClient(),
@@ -297,9 +310,11 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const updated = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
+    const updated = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
 
     expect(res.status).to.be.equal(200)
     expect(updated!.screenshot).to.be.null
@@ -330,9 +345,11 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     expect(error.response?.status).to.be.equal(403)
     expect(error.response?.data.name).to.be.equal('UserAccessException')
 
-    const unchanged = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
+    const unchanged = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
     expect(unchanged!.processes).to.be.deep.eq(time.processes)
   }
 
@@ -374,7 +391,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
         timeMin: faker.number.int(9),
       },
     ]
-    await this.timeRepository.saveSingle(time)
+    await runPromise(this.timeRepository.saveSingle(time))
 
     let error: unknown
 
@@ -394,9 +411,11 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
     if (!axios.isAxiosError(error)) throw error
     expect(error.response?.status).to.be.equal(403)
 
-    const unchanged = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
+    const unchanged = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
     expect(unchanged!.processes).to.be.deep.eq(time.processes)
   }
 
@@ -438,7 +457,7 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
         timeMin: faker.number.int(9),
       },
     ]
-    await this.timeRepository.saveSingle(time)
+    await runPromise(this.timeRepository.saveSingle(time))
 
     const res = await timeControllerRemoveProcesses({
       client: this.apiClient(),
@@ -449,9 +468,11 @@ export class TimeControllerRemovalTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const updated = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
+    const updated = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
 
     expect(res.status).to.be.equal(200)
     expect(updated!.processes).to.be.null

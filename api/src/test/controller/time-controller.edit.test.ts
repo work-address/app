@@ -10,6 +10,7 @@ import type { TimeEdit } from '@app/api-client'
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { TimeRepository } from '@/repository/time-repository'
 import { EProjectState } from '@/model/project'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite()
 export class TimeControllerEditTest extends BaseControllerTest {
@@ -74,9 +75,11 @@ export class TimeControllerEditTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const updated = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
+    const updated = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
 
     expect(res.status).to.be.equal(200)
     this.expectEmptyResponseBody(res.data)
@@ -105,7 +108,7 @@ export class TimeControllerEditTest extends BaseControllerTest {
       moment.utc().toDate(),
     )
     time.isPaid = true
-    await this.timeRepository.saveSingle(time)
+    await runPromise(this.timeRepository.saveSingle(time))
 
     await timeControllerEdit({
       client: this.apiClient(),
@@ -120,9 +123,11 @@ export class TimeControllerEditTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const updated = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
+    const updated = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
 
     expect(updated!.isPaid).to.be.false
   }
@@ -140,7 +145,7 @@ export class TimeControllerEditTest extends BaseControllerTest {
       moment.utc().toDate(),
     )
     time.isPaid = true
-    await this.timeRepository.saveSingle(time)
+    await runPromise(this.timeRepository.saveSingle(time))
 
     const note = faker.string.uuid()
 
@@ -154,9 +159,11 @@ export class TimeControllerEditTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const updated = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
+    const updated = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
 
     expect(updated!.note).to.be.eq(note)
     expect(updated!.isPaid).to.be.true
@@ -175,9 +182,11 @@ export class TimeControllerEditTest extends BaseControllerTest {
       moment.utc().toDate(),
     )
 
-    const saved = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
+    const saved = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
 
     expect(saved!.isPaid).to.be.false
   }
@@ -225,9 +234,11 @@ export class TimeControllerEditTest extends BaseControllerTest {
       "Access error: The data can't be accessed by your user",
     )
 
-    const unchanged = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
+    const unchanged = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
     expect(unchanged!.note).to.not.eq(data.note)
     expect(unchanged!.isPaid).to.not.eq(data.isPaid)
   }
@@ -299,9 +310,11 @@ export class TimeControllerEditTest extends BaseControllerTest {
     expect(error.response?.data.errors).to.have.length(1)
     expect(error.response?.data.errors[0].property).to.be.equal('isPaid')
 
-    const unchanged = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
+    const unchanged = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
     expect(unchanged!.note).to.be.eq(time.note)
     expect(unchanged!.isPaid).to.be.eq(time.isPaid)
   }

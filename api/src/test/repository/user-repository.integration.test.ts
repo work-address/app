@@ -7,6 +7,7 @@ import { AbstractDatabaseIntegration } from '@/test/abstract-database.integratio
 import { User } from '@/entity/user'
 import { EUserRole } from '@/model/user'
 import { Signer } from '@/service/auth/signer'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite()
 export class UserRepositoryIntegrationTest extends AbstractDatabaseIntegration {
@@ -28,7 +29,7 @@ export class UserRepositoryIntegrationTest extends AbstractDatabaseIntegration {
     user.address = account.address
     user.email = this.faker.email()
 
-    const newUser = await this.userRepository.saveSingle(user)
+    const newUser = await runPromise(this.userRepository.saveSingle(user))
 
     expect(newUser).to.have.property('id')
     expect(newUser.email).to.be.equal(user.email)
@@ -44,9 +45,9 @@ export class UserRepositoryIntegrationTest extends AbstractDatabaseIntegration {
     user.address = account.address
     user.email = this.faker.email()
 
-    const newUser = await this.userRepository.saveSingle(user)
-    const foundUser = await this.userRepository.findByEmailPhoneOrFail(
-      user.email,
+    const newUser = await runPromise(this.userRepository.saveSingle(user))
+    const foundUser = await runPromise(
+      this.userRepository.findByEmailPhoneOrFail(user.email),
     )
 
     expect(newUser.id).to.be.eq(foundUser.id)
@@ -60,11 +61,11 @@ export class UserRepositoryIntegrationTest extends AbstractDatabaseIntegration {
     user.address = account.address
     user.email = this.faker.email()
 
-    const newUser = await this.userRepository.saveSingle(user)
-    const removedUser = await this.userRepository.remove(newUser)
+    const newUser = await runPromise(this.userRepository.saveSingle(user))
+    const removedUser = await runPromise(this.userRepository.remove(newUser))
 
     try {
-      await this.userRepository.findByEmailPhoneOrFail(user.email)
+      await runPromise(this.userRepository.findByEmailPhoneOrFail(user.email))
       expect.fail('expected rejection')
     } catch (e: unknown) {
       expect((e as Error).name).to.be.equal('EntityNotFoundError')
@@ -79,21 +80,25 @@ export class UserRepositoryIntegrationTest extends AbstractDatabaseIntegration {
   async findAndCount() {
     const user = await this.userFixture.createUser()
 
-    const positiveA = await this.userRepository.findAndCount({
-      filter: {
-        id: user.id,
-      },
-      sort: { createdAt: 'ASC' },
-      page: 0,
-    })
-    const positiveB = await this.userRepository.findAndCount({
-      filter: {
-        id: user.id,
-        role: EUserRole.ROLE_USER,
-      },
-      sort: { createdAt: 'ASC' },
-      page: 0,
-    })
+    const positiveA = await runPromise(
+      this.userRepository.findAndCount({
+        filter: {
+          id: user.id,
+        },
+        sort: { createdAt: 'ASC' },
+        page: 0,
+      }),
+    )
+    const positiveB = await runPromise(
+      this.userRepository.findAndCount({
+        filter: {
+          id: user.id,
+          role: EUserRole.ROLE_USER,
+        },
+        sort: { createdAt: 'ASC' },
+        page: 0,
+      }),
+    )
 
     expect(positiveA[1]).to.be.eq(1)
     expect(positiveB[1]).to.be.eq(1)

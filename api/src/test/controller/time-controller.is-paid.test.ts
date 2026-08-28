@@ -17,6 +17,7 @@ import { TimeRepository } from '@/repository/time-repository'
 import { EProjectState } from '@/model/project'
 import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite()
 export class TimeControllerIsPaidTest extends BaseControllerTest {
@@ -97,12 +98,16 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const updatedFirst = await this.timeRepository.findOneBy({
-      where: { id: first.id },
-    })
-    const updatedSecond = await this.timeRepository.findOneBy({
-      where: { id: second.id },
-    })
+    const updatedFirst = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: first.id },
+      }),
+    )
+    const updatedSecond = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: second.id },
+      }),
+    )
 
     expect(res.status).to.be.equal(200)
     this.expectEmptyResponseBody(res.data)
@@ -123,7 +128,7 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
       moment.utc().toDate(),
     )
     time.isPaid = true
-    await this.timeRepository.saveSingle(time)
+    await runPromise(this.timeRepository.saveSingle(time))
 
     const res = await timeControllerMarkUnpaid({
       client: this.apiClient(),
@@ -134,9 +139,11 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const updated = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
+    const updated = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
 
     expect(res.status).to.be.equal(200)
     this.expectEmptyResponseBody(res.data)
@@ -198,9 +205,11 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
     if (!axios.isAxiosError(error)) throw error
     expect(error.response?.status).to.be.equal(403)
 
-    const unchanged = await this.timeRepository.findOneBy({
-      where: { id: timeId },
-    })
+    const unchanged = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: timeId },
+      }),
+    )
     expect(unchanged!.isPaid).to.be.false
   }
 
@@ -250,9 +259,11 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const updated = await this.timeRepository.findOneBy({
-      where: { id: timeId },
-    })
+    const updated = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: timeId },
+      }),
+    )
 
     expect(updated!.isPaid).to.be.true
   }
@@ -293,9 +304,11 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
     if (!axios.isAxiosError(error)) throw error
     expect(error.response?.status).to.be.equal(403)
 
-    const unchanged = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
+    const unchanged = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
     expect(unchanged!.isPaid).to.be.false
   }
 
@@ -335,9 +348,11 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
     if (!axios.isAxiosError(error)) throw error
     expect(error.response?.status).to.be.equal(403)
 
-    const unchanged = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
+    const unchanged = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
     expect(unchanged!.isPaid).to.be.false
   }
 

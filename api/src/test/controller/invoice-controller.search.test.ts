@@ -9,6 +9,7 @@ import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { EProjectState } from '@/model/project'
 import { EInvoiceState } from '@/model/invoice'
 import { InvoiceRepository } from '@/repository/invoice-repository'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite()
 export class InvoiceControllerSearchTest extends BaseControllerTest {
@@ -131,7 +132,7 @@ export class InvoiceControllerSearchTest extends BaseControllerTest {
     mismatch.fromAt = new Date(Date.now() - 20 * 86400000)
     mismatch.toAt = new Date(Date.now() - 18 * 86400000)
 
-    await this.invoiceRepository.saveMany([match, mismatch])
+    await runPromise(this.invoiceRepository.saveMany([match, mismatch]))
 
     const res = await invoiceControllerSearch({
       client: this.apiClient(),
@@ -412,7 +413,7 @@ export class InvoiceControllerSearchTest extends BaseControllerTest {
     older.toAt = new Date(Date.now() - 19 * 86400000)
     newer.fromAt = new Date(Date.now() - 2 * 86400000)
     newer.toAt = new Date(Date.now() - 1 * 86400000)
-    await this.invoiceRepository.saveMany([older, newer])
+    await runPromise(this.invoiceRepository.saveMany([older, newer]))
 
     const res = await invoiceControllerSearch({
       client: this.apiClient(),
@@ -488,7 +489,7 @@ export class InvoiceControllerSearchTest extends BaseControllerTest {
     outside.toAt = new Date(Date.now() - 89 * 86400000)
     inside.fromAt = new Date(Date.now() - 10 * 86400000)
     inside.toAt = new Date(Date.now() - 9 * 86400000)
-    await this.invoiceRepository.saveMany([outside, inside])
+    await runPromise(this.invoiceRepository.saveMany([outside, inside]))
 
     const res = await invoiceControllerSearch({
       client: this.apiClient(),

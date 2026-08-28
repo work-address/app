@@ -25,6 +25,7 @@ import { EProjectState } from '@/model/project'
 import { EProjectStatisticsPeriod } from '@/model/project-statistics'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite
 export class ProjectControllerSharedAccessTest extends BaseControllerTest {
@@ -182,11 +183,11 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const updated = await this.container
-      .get<TimeRepository>('TimeRepository')
-      .findOneBy({
+    const updated = await runPromise(
+      this.container.get<TimeRepository>('TimeRepository').findOneBy({
         where: { id: timeId },
-      })
+      }),
+    )
 
     expect(res.status).to.be.equal(200)
     expect(updated!.isPaid).to.be.true

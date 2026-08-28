@@ -25,6 +25,7 @@ import { ProjectManager } from '@/service/project-manager'
 import { ProjectStatisticsManager } from '@/service/project-statistics-manager'
 import { EProjectStatisticsPeriod } from '@/model/project-statistics'
 import AccessException from '@/exception/access-exception'
+import { runPromise } from '@/service/effect-bridge'
 
 @Authorized([EUserRole.ROLE_USER])
 @JsonController('/project')
@@ -62,7 +63,9 @@ export class ProjectController {
     @CurrentUser() currentUser: User,
     @Body() search: ProjectSearchDto,
   ) {
-    return this.projectRepository.findAndCountAccessibleBy(search, currentUser)
+    return runPromise(
+      this.projectRepository.findAndCountAccessibleBy(search, currentUser),
+    )
   }
 
   @OpenAPIExtended({
@@ -98,7 +101,7 @@ export class ProjectController {
   ): Promise<express.Response> {
     data.user = currentUser
 
-    const project = await this.projectManager.createAndSave(data)
+    const project = await runPromise(this.projectManager.createAndSave(data))
 
     res.status(201)
     res.location(`/api/project/${project.id}`)
@@ -120,7 +123,9 @@ export class ProjectController {
     @EntityFromParam({ paramName: 'id' }) project: Project,
     @CurrentUser() currentUser: User,
   ): Promise<Project | undefined> {
-    return this.projectRepository.findProjectWithAccess(project, currentUser)
+    return runPromise(
+      this.projectRepository.findProjectWithAccess(project, currentUser),
+    )
   }
 
   @OpenAPIExtended({
@@ -137,16 +142,17 @@ export class ProjectController {
     @EntityFromParam({ paramName: 'id' }) project: Project,
     @Param('period') period: EProjectStatisticsPeriod,
   ): Promise<ProjectStatistics[]> {
-    const accessible = await this.projectRepository.findProjectWithAccess(
-      project,
-      currentUser,
+    const accessible = await runPromise(
+      this.projectRepository.findProjectWithAccess(project, currentUser),
     )
 
     if (!accessible) {
       throw new AccessException()
     }
 
-    return this.projectStatisticsManager.getStatsForProject(accessible, period)
+    return runPromise(
+      this.projectStatisticsManager.getStatsForProject(accessible, period),
+    )
   }
 
   @OpenAPIExtended({
@@ -174,7 +180,7 @@ export class ProjectController {
       throw new AccessException()
     }
 
-    await this.projectManager.editAndSave(project, data)
+    await runPromise(this.projectManager.editAndSave(project, data))
 
     res.end()
     return res
@@ -199,7 +205,7 @@ export class ProjectController {
       throw new AccessException()
     }
 
-    await this.projectManager.close(project)
+    await runPromise(this.projectManager.close(project))
 
     res.end()
     return res
@@ -224,10 +230,12 @@ export class ProjectController {
       throw new AccessException()
     }
 
-    await this.projectRepository.softDelete({
-      id: project.id,
-      user: currentUser,
-    })
+    await runPromise(
+      this.projectRepository.softDelete({
+        id: project.id,
+        user: currentUser,
+      }),
+    )
 
     res.end()
     return res

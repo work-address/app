@@ -9,6 +9,7 @@ import { timeControllerSearch } from '@app/api-client'
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { TimeRepository } from '@/repository/time-repository'
 import { ProjectRepository } from '@/repository/project-repository'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite
 export class TimeControllerSearchTest extends BaseControllerTest {
@@ -126,7 +127,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
     mismatch.mouseDistance = 1
     mismatch.processes = []
 
-    await this.timeRepository.saveMany([match, mismatch])
+    await runPromise(this.timeRepository.saveMany([match, mismatch]))
 
     const client = this.apiClient()
     const res = await timeControllerSearch({
@@ -267,7 +268,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
       now.clone().subtract(110, 'minutes').toDate(),
     )
     zEntry.note = 'Z note'
-    await this.timeRepository.saveSingle(zEntry)
+    await runPromise(this.timeRepository.saveSingle(zEntry))
 
     const aEntry = await this.timeFixture.create(
       project,
@@ -275,7 +276,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
       now.clone().subtract(50, 'minutes').toDate(),
     )
     aEntry.note = 'A note'
-    await this.timeRepository.saveSingle(aEntry)
+    await runPromise(this.timeRepository.saveSingle(aEntry))
 
     const res = await timeControllerSearch({
       client: this.apiClient(),
@@ -301,11 +302,11 @@ export class TimeControllerSearchTest extends BaseControllerTest {
     const user = await this.userFixture.createUser()
     const zProject = await this.projectFixture.createPersonal(user)
     zProject.title = 'Z project'
-    await this.projectRepository.saveSingle(zProject)
+    await runPromise(this.projectRepository.saveSingle(zProject))
 
     const aProject = await this.projectFixture.createPersonal(user)
     aProject.title = 'A project'
-    await this.projectRepository.saveSingle(aProject)
+    await runPromise(this.projectRepository.saveSingle(aProject))
 
     const now = moment.utc()
     const zEntry = await this.timeFixture.create(
@@ -350,7 +351,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
       now.clone().subtract(110, 'minutes').toDate(),
     )
     paidEntry.isPaid = true
-    await this.timeRepository.saveSingle(paidEntry)
+    await runPromise(this.timeRepository.saveSingle(paidEntry))
 
     const unpaidEntry = await this.timeFixture.create(
       project,
@@ -358,7 +359,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
       now.clone().subtract(50, 'minutes').toDate(),
     )
     unpaidEntry.isPaid = false
-    await this.timeRepository.saveSingle(unpaidEntry)
+    await runPromise(this.timeRepository.saveSingle(unpaidEntry))
 
     const res = await timeControllerSearch({
       client: this.apiClient(),
@@ -393,7 +394,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
       now.clone().subtract(110, 'minutes').toDate(),
     )
     withScreenshot.screenshot = faker.string.uuid()
-    await this.timeRepository.saveSingle(withScreenshot)
+    await runPromise(this.timeRepository.saveSingle(withScreenshot))
 
     const withoutScreenshot = await this.timeFixture.create(
       project,
@@ -559,7 +560,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
 
     withShot.screenshot = 'has-shot'
     noShot.screenshot = null
-    await this.timeRepository.saveMany([withShot, noShot])
+    await runPromise(this.timeRepository.saveMany([withShot, noShot]))
 
     const res = await timeControllerSearch({
       client: this.apiClient(),
@@ -641,7 +642,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
 
     match.screenshot = 'capture-billing-v2.png'
     miss.screenshot = 'other.png'
-    await this.timeRepository.saveMany([match, miss])
+    await runPromise(this.timeRepository.saveMany([match, miss]))
 
     const res = await timeControllerSearch({
       client: this.apiClient(),
@@ -682,7 +683,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
 
     low.keyboardKeys = 12
     high.keyboardKeys = 400
-    await this.timeRepository.saveMany([low, high])
+    await runPromise(this.timeRepository.saveMany([low, high]))
 
     const res = await timeControllerSearch({
       client: this.apiClient(),
@@ -723,7 +724,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
 
     near.mouseDistance = 120
     far.mouseDistance = 9000
-    await this.timeRepository.saveMany([near, far])
+    await runPromise(this.timeRepository.saveMany([near, far]))
 
     const res = await timeControllerSearch({
       client: this.apiClient(),
@@ -765,7 +766,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
 
     mid.minutesActive = 25
     out.minutesActive = 2
-    await this.timeRepository.saveMany([mid, out])
+    await runPromise(this.timeRepository.saveMany([mid, out]))
 
     const res = await timeControllerSearch({
       client: this.apiClient(),
@@ -807,7 +808,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
 
     emptyProc.processes = []
     withProc.processes = [{ name: 'code', ms: 10 }] as never
-    await this.timeRepository.saveMany([emptyProc, withProc])
+    await runPromise(this.timeRepository.saveMany([emptyProc, withProc]))
 
     const res = await timeControllerSearch({
       client: this.apiClient(),
@@ -923,10 +924,10 @@ export class TimeControllerSearchTest extends BaseControllerTest {
 
     newer.note = `updated-sort-newer-${marker}`
     older.note = `updated-sort-older-${marker}`
-    await this.timeRepository.saveMany([older, newer])
+    await runPromise(this.timeRepository.saveMany([older, newer]))
     await new Promise((resolve) => setTimeout(resolve, 30))
     older.keyboardKeys = older.keyboardKeys + 1
-    await this.timeRepository.saveMany([older])
+    await runPromise(this.timeRepository.saveMany([older]))
 
     const res = await timeControllerSearch({
       client: this.apiClient(),
@@ -963,7 +964,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
     )
     low.keyboardKeys = 10
     high.keyboardKeys = 200
-    await this.timeRepository.saveMany([low, high])
+    await runPromise(this.timeRepository.saveMany([low, high]))
 
     const res = await timeControllerSearch({
       client: this.apiClient(),
@@ -1000,7 +1001,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
     )
     low.minutesActive = 2
     high.minutesActive = 9
-    await this.timeRepository.saveMany([low, high])
+    await runPromise(this.timeRepository.saveMany([low, high]))
 
     const res = await timeControllerSearch({
       client: this.apiClient(),
@@ -1037,7 +1038,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
     )
     low.mouseKeys = 1
     high.mouseKeys = 15
-    await this.timeRepository.saveMany([low, high])
+    await runPromise(this.timeRepository.saveMany([low, high]))
 
     const res = await timeControllerSearch({
       client: this.apiClient(),
@@ -1074,7 +1075,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
     )
     low.mouseDistance = 100
     high.mouseDistance = 900
-    await this.timeRepository.saveMany([low, high])
+    await runPromise(this.timeRepository.saveMany([low, high]))
 
     const res = await timeControllerSearch({
       client: this.apiClient(),

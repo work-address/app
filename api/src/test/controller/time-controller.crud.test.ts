@@ -18,6 +18,7 @@ import { In } from 'typeorm'
 import { join } from 'path'
 import { EProjectState } from '@/model/project'
 import axios from 'axios'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite
 export class TimeControllerCrudTest extends BaseControllerTest {
@@ -155,21 +156,21 @@ export class TimeControllerCrudTest extends BaseControllerTest {
 
     console.log('>>>>>', res.data)
 
-    // const timeA = await this.timeRepository.findOneByOrFail({
+    // const timeA = await runPromise(this.timeRepository.findOneByOrFail({
     //   where: {
     //     project: projectA,
     //   },
-    // });
-    // const timeB = await this.timeRepository.findOneByOrFail({
+    // }));
+    // const timeB = await runPromise(this.timeRepository.findOneByOrFail({
     //   where: {
     //     project: projectB,
     //   },
-    // });
-    // const timeC = await this.timeRepository.findOneByOrFail({
+    // }));
+    // const timeC = await runPromise(this.timeRepository.findOneByOrFail({
     //   where: {
     //     project: projectC,
     //   },
-    // });
+    // }));
 
     // const fromAtA = moment(timeA.fromAt).toISOString();
     // const fromAtB = moment(timeB.fromAt).toISOString();
@@ -517,14 +518,16 @@ export class TimeControllerCrudTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const times = await this.timeRepository.findBy({
-      where: {
-        project: In([projectA.id, projectB.id]),
-      },
-      order: {
-        createdAt: 'ASC',
-      },
-    })
+    const times = await runPromise(
+      this.timeRepository.findBy({
+        where: {
+          project: In([projectA.id, projectB.id]),
+        },
+        order: {
+          createdAt: 'ASC',
+        },
+      }),
+    )
 
     expect(res.status).to.be.equal(200)
     expect(res.data).to.have.length(3)
@@ -561,12 +564,16 @@ export class TimeControllerCrudTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const removed = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
-    const removedSecond = await this.timeRepository.findOneBy({
-      where: { id: second.id },
-    })
+    const removed = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
+    const removedSecond = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: second.id },
+      }),
+    )
 
     expect(res.status).to.be.equal(200)
     this.expectEmptyResponseBody(res.data)
@@ -607,9 +614,11 @@ export class TimeControllerCrudTest extends BaseControllerTest {
     expect(error).to.be.ok
     expect(error.response?.status).to.be.equal(403)
 
-    const stillThere = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
+    const stillThere = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
     expect(stillThere).to.not.eq(undefined)
   }
 
@@ -646,9 +655,11 @@ export class TimeControllerCrudTest extends BaseControllerTest {
     if (!axios.isAxiosError(error)) throw error
     expect(error.response?.status).to.be.equal(403)
 
-    const stillThere = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
+    const stillThere = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
     expect(stillThere).to.not.eq(undefined)
   }
 }

@@ -3,12 +3,15 @@ import { Action } from 'routing-controllers'
 import { Authenticator } from '@/service/auth/authenticator'
 import { EUserRole } from '@/model/user'
 import { AppContainer } from '@/app/app-container'
+import { runPromise } from '@/service/effect-bridge'
 
 export const ValidateRoles = async (action: Action, roles: string[] = []) => {
   const authenticator: Authenticator =
     AppContainer.getContainer().get('Authenticator')
   const token = action.request.headers.authorization as string
-  const user = await authenticator.getUserFromJwtTokenOrThrowException(token)
+  const user = await runPromise(
+    authenticator.getUserFromJwtTokenOrThrowException(token),
+  )
 
   let isValid = false
 

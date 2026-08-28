@@ -10,6 +10,7 @@ import { TimeFixture } from '@/test/fixture/time-fixture'
 import { TimeRepository } from '@/repository/time-repository'
 import AccessException from '@/exception/access-exception'
 import { EProjectState } from '@/model/project'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite()
 export class InvoiceManagerTest extends AbstractDatabaseIntegration {
@@ -42,7 +43,7 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner, 60)
     project.workerAddresses = [worker.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const fromAt = moment.utc().subtract(3, 'hours')
     const toAt = moment.utc().subtract(1, 'hour')
@@ -54,7 +55,7 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
       owner,
     )
     ownerTime.minutesActive = 60
-    await this.timeRepository.saveSingle(ownerTime)
+    await runPromise(this.timeRepository.saveSingle(ownerTime))
 
     const workerTime = await this.timeFixture.create(
       project,
@@ -63,12 +64,14 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
       worker,
     )
     workerTime.minutesActive = 30
-    await this.timeRepository.saveSingle(workerTime)
+    await runPromise(this.timeRepository.saveSingle(workerTime))
 
-    const ownerInvoice = await this.invoiceManager.create(
-      { fromUnix: fromAt.valueOf(), toUnix: toAt.valueOf() },
-      project,
-      owner,
+    const ownerInvoice = await runPromise(
+      this.invoiceManager.create(
+        { fromUnix: fromAt.valueOf(), toUnix: toAt.valueOf() },
+        project,
+        owner,
+      ),
     )
 
     // 60 minutes at $60/hour = 6000 cents. The worker's 30 minutes are not
@@ -76,10 +79,12 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
     expect(ownerInvoice.amountCents).to.equal(6000)
     expect(ownerInvoice.user?.id).to.equal(owner.id)
 
-    const workerInvoice = await this.invoiceManager.create(
-      { fromUnix: fromAt.valueOf(), toUnix: toAt.valueOf() },
-      project,
-      worker,
+    const workerInvoice = await runPromise(
+      this.invoiceManager.create(
+        { fromUnix: fromAt.valueOf(), toUnix: toAt.valueOf() },
+        project,
+        worker,
+      ),
     )
 
     expect(workerInvoice.amountCents).to.equal(3000)
@@ -101,7 +106,7 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
       owner,
     )
     unpaidTime.minutesActive = 60
-    await this.timeRepository.saveSingle(unpaidTime)
+    await runPromise(this.timeRepository.saveSingle(unpaidTime))
 
     const paidTime = await this.timeFixture.create(
       project,
@@ -111,15 +116,17 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
     )
     paidTime.minutesActive = 120
     paidTime.isPaid = true
-    await this.timeRepository.saveSingle(paidTime)
+    await runPromise(this.timeRepository.saveSingle(paidTime))
 
-    const invoice = await this.invoiceManager.create(
-      {
-        fromUnix: fromAt.valueOf(),
-        toUnix: toAt.valueOf(),
-      },
-      project,
-      owner,
+    const invoice = await runPromise(
+      this.invoiceManager.create(
+        {
+          fromUnix: fromAt.valueOf(),
+          toUnix: toAt.valueOf(),
+        },
+        project,
+        owner,
+      ),
     )
 
     expect(invoice.amountCents).to.equal(6000)
@@ -139,18 +146,20 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
       EProjectState.ACTIVE,
     )
     project.workerAddresses = [worker.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     let error: unknown
 
     try {
-      await this.invoiceManager.create(
-        {
-          fromUnix: moment.utc().subtract(1, 'day').valueOf(),
-          toUnix: moment.utc().valueOf(),
-        },
-        project,
-        worker,
+      await runPromise(
+        this.invoiceManager.create(
+          {
+            fromUnix: moment.utc().subtract(1, 'day').valueOf(),
+            toUnix: moment.utc().valueOf(),
+          },
+          project,
+          worker,
+        ),
       )
     } catch (e: unknown) {
       error = e

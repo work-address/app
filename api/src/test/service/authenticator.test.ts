@@ -19,6 +19,7 @@ import {
   buildTonAuthPayloadWithInvalidSignature,
   getTestTonDomain,
 } from '@/test/fixture/ton-auth-fixture'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite()
 export class AuthenticatorTest extends AbstractDatabaseIntegration {
@@ -42,7 +43,9 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     const user = await this.userFixture.createWithEmailAndPassword(email)
 
     const token = this.authenticator.generateJwtToken(user)
-    const userFromToken = await this.authenticator.getUserFromJwtToken(token)
+    const userFromToken = await runPromise(
+      this.authenticator.getUserFromJwtToken(token),
+    )
 
     expect(userFromToken).to.not.eq(null)
     expect(userFromToken!.id).to.be.equal(user.id)
@@ -55,13 +58,15 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     const token = this.authenticator.generateJwtToken(user)
 
     // email change
-    const userUpdate = await this.userRepository.findByEmailPhoneOrFail(
-      user.email,
+    const userUpdate = await runPromise(
+      this.userRepository.findByEmailPhoneOrFail(user.email),
     )
     userUpdate.email = faker.internet.email()
-    await this.userRepository.saveSingle(userUpdate)
+    await runPromise(this.userRepository.saveSingle(userUpdate))
 
-    const userFromToken = await this.authenticator.getUserFromJwtToken(token)
+    const userFromToken = await runPromise(
+      this.authenticator.getUserFromJwtToken(token),
+    )
 
     expect(userFromToken).to.not.eq(null)
     expect(userFromToken!.id).to.be.equal(user.id)
@@ -98,8 +103,8 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
 
     const tokens = this.authenticator.getTokens(user)
 
-    const userFromToken = await this.authenticator.getUserFromRefreshToken(
-      tokens.refreshToken,
+    const userFromToken = await runPromise(
+      this.authenticator.getUserFromRefreshToken(tokens.refreshToken),
     )
 
     expect(userFromToken.id).to.be.eq(user.id)
@@ -112,7 +117,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     })
 
     try {
-      await this.authenticator.getUserFromRefreshToken(refreshToken)
+      await runPromise(this.authenticator.getUserFromRefreshToken(refreshToken))
     } catch (err: unknown) {
       expect((err as Error).name).to.be.eq('AuthenticationException')
       expect((err as Error).message).to.be.eq(
@@ -138,7 +143,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     )
 
     try {
-      await this.authenticator.getUserFromRefreshToken(refreshToken)
+      await runPromise(this.authenticator.getUserFromRefreshToken(refreshToken))
     } catch (err: unknown) {
       expect((err as Error).name).to.be.eq('TokenExpiredError')
     }
@@ -155,7 +160,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     )
 
     try {
-      await this.authenticator.getUserFromRefreshToken(refreshToken)
+      await runPromise(this.authenticator.getUserFromRefreshToken(refreshToken))
     } catch (err: unknown) {
       expect((err as Error).name).to.be.eq('AuthenticationException')
       expect((err as Error).message).to.be.eq(
@@ -212,15 +217,14 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
   async loginWeb3_register() {
     const account = web3.eth.accounts.create()
 
-    const nonce = await this.authenticator.getNonce(account.address)
+    const nonce = await runPromise(this.authenticator.getNonce(account.address))
     const signature = web3.eth.accounts.sign(nonce, account.privateKey)
-    const tokens = await this.authenticator.loginEth(
-      signature.signature,
-      account.address,
+    const tokens = await runPromise(
+      this.authenticator.loginEth(signature.signature, account.address),
     )
 
-    const userDB = await this.userRepository.findByAddressPublicOrFail(
-      account.address,
+    const userDB = await runPromise(
+      this.userRepository.findByAddressPublicOrFail(account.address),
     )
 
     expect(tokens).to.contain.keys(['accessToken', 'refreshToken'])
@@ -232,15 +236,14 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     const account = web3.eth.accounts.create()
     const user = await this.userFixture.createUserFromKeypair(account)
 
-    const nonce = await this.authenticator.getNonce(user.address)
+    const nonce = await runPromise(this.authenticator.getNonce(user.address))
     const signature = web3.eth.accounts.sign(nonce, account.privateKey)
-    const tokens = await this.authenticator.loginEth(
-      signature.signature,
-      account.address,
+    const tokens = await runPromise(
+      this.authenticator.loginEth(signature.signature, account.address),
     )
 
-    const userDB = await this.userRepository.findByAddressPublicOrFail(
-      account.address,
+    const userDB = await runPromise(
+      this.userRepository.findByAddressPublicOrFail(account.address),
     )
 
     expect(tokens).to.contain.keys(['accessToken', 'refreshToken'])
@@ -250,7 +253,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
   @test()
   async getNonce_storesNonceInRedis() {
     const account = web3.eth.accounts.create()
-    const nonce = await this.authenticator.getNonce(account.address)
+    const nonce = await runPromise(this.authenticator.getNonce(account.address))
     const stored = await this.redisClient.get(`nonce:${account.address}`)
 
     expect(nonce.length).to.be.eq(32)
@@ -269,7 +272,9 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     let err: Error | null = null
 
     try {
-      await this.authenticator.loginEth(signature.signature, account.address)
+      await runPromise(
+        this.authenticator.loginEth(signature.signature, account.address),
+      )
     } catch (e: unknown) {
       err = e as Error
     }
@@ -285,13 +290,17 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
   async loginEth_failsWhenSignatureDoesNotMatchAddress() {
     const accountA = web3.eth.accounts.create()
     const accountB = web3.eth.accounts.create()
-    const nonce = await this.authenticator.getNonce(accountA.address)
+    const nonce = await runPromise(
+      this.authenticator.getNonce(accountA.address),
+    )
     const signature = web3.eth.accounts.sign(nonce, accountB.privateKey)
 
     let err: Error | null = null
 
     try {
-      await this.authenticator.loginEth(signature.signature, accountA.address)
+      await runPromise(
+        this.authenticator.loginEth(signature.signature, accountA.address),
+      )
     } catch (e: unknown) {
       err = e as Error
     }
@@ -306,15 +315,19 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
   @test()
   async loginEth_failsWhenNonceAlreadyConsumed() {
     const account = web3.eth.accounts.create()
-    const nonce = await this.authenticator.getNonce(account.address)
+    const nonce = await runPromise(this.authenticator.getNonce(account.address))
     const signature = web3.eth.accounts.sign(nonce, account.privateKey)
 
-    await this.authenticator.loginEth(signature.signature, account.address)
+    await runPromise(
+      this.authenticator.loginEth(signature.signature, account.address),
+    )
 
     let err: Error | null = null
 
     try {
-      await this.authenticator.loginEth(signature.signature, account.address)
+      await runPromise(
+        this.authenticator.loginEth(signature.signature, account.address),
+      )
     } catch (e: unknown) {
       err = e as Error
     }
@@ -331,7 +344,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     const accountA = web3.eth.accounts.create()
     const accountB = web3.eth.accounts.create()
 
-    await this.authenticator.getNonce(accountA.address)
+    await runPromise(this.authenticator.getNonce(accountA.address))
     const signature = web3.eth.accounts.sign(
       'wrong-nonce-value',
       accountB.privateKey,
@@ -340,7 +353,9 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     let err: Error | null = null
 
     try {
-      await this.authenticator.loginEth(signature.signature, accountB.address)
+      await runPromise(
+        this.authenticator.loginEth(signature.signature, accountB.address),
+      )
     } catch (e: unknown) {
       err = e as Error
     }
@@ -354,7 +369,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
 
   @test()
   async getTonNonce_storesNonceInRedis() {
-    const nonce = await this.authenticator.getTonNonce()
+    const nonce = await runPromise(this.authenticator.getTonNonce())
     const stored = await this.redisClient.get(`nonce:ton:${nonce}`)
 
     expect(nonce.length).to.be.eq(32)
@@ -364,12 +379,12 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
   @test()
   async loginTon_registersNewUser() {
     const domain = getTestTonDomain(this.parameters)
-    const nonce = await this.authenticator.getTonNonce()
+    const nonce = await runPromise(this.authenticator.getTonNonce())
     const { payload } = await buildTonAuthPayload({ nonce, domain })
 
-    const tokens = await this.authenticator.loginTon(payload)
-    const user = await this.userRepository.findByAddressPublicOrFail(
-      payload.address,
+    const tokens = await runPromise(this.authenticator.loginTon(payload))
+    const user = await runPromise(
+      this.userRepository.findByAddressPublicOrFail(payload.address),
     )
 
     expect(tokens).to.contain.keys(['accessToken', 'refreshToken'])
@@ -379,16 +394,16 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
   @test()
   async loginTon_logsInExistingUser() {
     const domain = getTestTonDomain(this.parameters)
-    const nonce = await this.authenticator.getTonNonce()
+    const nonce = await runPromise(this.authenticator.getTonNonce())
     const { payload } = await buildTonAuthPayload({ nonce, domain })
 
     const existingUser = await this.userFixture.createUser()
     existingUser.address = payload.address
-    await this.userRepository.saveSingle(existingUser)
+    await runPromise(this.userRepository.saveSingle(existingUser))
 
-    const tokens = await this.authenticator.loginTon(payload)
-    const user = await this.userRepository.findByAddressPublicOrFail(
-      payload.address,
+    const tokens = await runPromise(this.authenticator.loginTon(payload))
+    const user = await runPromise(
+      this.userRepository.findByAddressPublicOrFail(payload.address),
     )
 
     expect(tokens).to.contain.keys(['accessToken', 'refreshToken'])
@@ -406,7 +421,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     let err: Error | null = null
 
     try {
-      await this.authenticator.loginTon(payload)
+      await runPromise(this.authenticator.loginTon(payload))
     } catch (e: unknown) {
       err = e as Error
     }
@@ -421,7 +436,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
   @test()
   async loginTon_failsWhenSignatureIsInvalid() {
     const domain = getTestTonDomain(this.parameters)
-    const nonce = await this.authenticator.getTonNonce()
+    const nonce = await runPromise(this.authenticator.getTonNonce())
     const payload = await buildTonAuthPayloadWithInvalidSignature({
       nonce,
       domain,
@@ -430,7 +445,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     let err: Error | null = null
 
     try {
-      await this.authenticator.loginTon(payload)
+      await runPromise(this.authenticator.loginTon(payload))
     } catch (e: unknown) {
       err = e as Error
     }
@@ -445,15 +460,15 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
   @test()
   async loginTon_failsWhenNonceAlreadyConsumed() {
     const domain = getTestTonDomain(this.parameters)
-    const nonce = await this.authenticator.getTonNonce()
+    const nonce = await runPromise(this.authenticator.getTonNonce())
     const { payload } = await buildTonAuthPayload({ nonce, domain })
 
-    await this.authenticator.loginTon(payload)
+    await runPromise(this.authenticator.loginTon(payload))
 
     let err: Error | null = null
 
     try {
-      await this.authenticator.loginTon(payload)
+      await runPromise(this.authenticator.loginTon(payload))
     } catch (e: unknown) {
       err = e as Error
     }
@@ -468,14 +483,18 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
   @test()
   async loginSolana_registersNewUser() {
     const setup = buildSolanaAuthPayload({ nonce: 'setup' })
-    const nonce = await this.authenticator.getNonce(setup.address)
+    const nonce = await runPromise(this.authenticator.getNonce(setup.address))
     const { address, signature } = buildSolanaAuthPayload({
       nonce,
       secretKey: setup.secretKey,
     })
 
-    const tokens = await this.authenticator.loginSolana(signature, address)
-    const user = await this.userRepository.findByAddressPublicOrFail(address)
+    const tokens = await runPromise(
+      this.authenticator.loginSolana(signature, address),
+    )
+    const user = await runPromise(
+      this.userRepository.findByAddressPublicOrFail(address),
+    )
 
     expect(tokens).to.contain.keys(['accessToken', 'refreshToken'])
     expect(user.address).to.be.eq(address)
@@ -484,7 +503,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
   @test()
   async loginSolana_logsInExistingUser() {
     const setup = buildSolanaAuthPayload({ nonce: 'setup' })
-    const nonce = await this.authenticator.getNonce(setup.address)
+    const nonce = await runPromise(this.authenticator.getNonce(setup.address))
     const { address, signature } = buildSolanaAuthPayload({
       nonce,
       secretKey: setup.secretKey,
@@ -492,10 +511,14 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
 
     const existingUser = await this.userFixture.createUser()
     existingUser.address = address
-    await this.userRepository.saveSingle(existingUser)
+    await runPromise(this.userRepository.saveSingle(existingUser))
 
-    const tokens = await this.authenticator.loginSolana(signature, address)
-    const user = await this.userRepository.findByAddressPublicOrFail(address)
+    const tokens = await runPromise(
+      this.authenticator.loginSolana(signature, address),
+    )
+    const user = await runPromise(
+      this.userRepository.findByAddressPublicOrFail(address),
+    )
 
     expect(tokens).to.contain.keys(['accessToken', 'refreshToken'])
     expect(user.id).to.be.eq(existingUser.id)
@@ -510,7 +533,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     let err: Error | null = null
 
     try {
-      await this.authenticator.loginSolana(signature, address)
+      await runPromise(this.authenticator.loginSolana(signature, address))
     } catch (e: unknown) {
       err = e as Error
     }
@@ -525,7 +548,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
   @test()
   async loginSolana_failsWhenSignatureIsInvalid() {
     const setup = buildSolanaAuthPayload({ nonce: 'setup' })
-    const nonce = await this.authenticator.getNonce(setup.address)
+    const nonce = await runPromise(this.authenticator.getNonce(setup.address))
     const { address, signature } = buildSolanaAuthPayloadWithInvalidSignature({
       nonce,
       secretKey: setup.secretKey,
@@ -534,7 +557,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     let err: Error | null = null
 
     try {
-      await this.authenticator.loginSolana(signature, address)
+      await runPromise(this.authenticator.loginSolana(signature, address))
     } catch (e: unknown) {
       err = e as Error
     }
@@ -549,18 +572,18 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
   @test()
   async loginSolana_failsWhenNonceAlreadyConsumed() {
     const setup = buildSolanaAuthPayload({ nonce: 'setup' })
-    const nonce = await this.authenticator.getNonce(setup.address)
+    const nonce = await runPromise(this.authenticator.getNonce(setup.address))
     const { address, signature } = buildSolanaAuthPayload({
       nonce,
       secretKey: setup.secretKey,
     })
 
-    await this.authenticator.loginSolana(signature, address)
+    await runPromise(this.authenticator.loginSolana(signature, address))
 
     let err: Error | null = null
 
     try {
-      await this.authenticator.loginSolana(signature, address)
+      await runPromise(this.authenticator.loginSolana(signature, address))
     } catch (e: unknown) {
       err = e as Error
     }

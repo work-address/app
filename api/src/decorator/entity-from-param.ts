@@ -3,6 +3,7 @@ import { EntityTarget, FindOptionsWhere } from 'typeorm'
 import 'reflect-metadata'
 
 import { getDataSource } from '@/connector/data-source'
+import { runPromise } from '@/service/effect-bridge'
 import {
   AbstractRepositoryTemplate,
   TRelations,
@@ -98,12 +99,12 @@ async function entityTransform(
   let res
 
   if (selectOptions || relations) {
-    res = await AbstractRepositoryTemplate.prototype.findOneByQueryBuilder.bind(
-      {
+    res = await runPromise(
+      AbstractRepositoryTemplate.prototype.findOneByQueryBuilder.bind({
         target,
         getRepo: () => repository,
-      },
-    )({ [lookupField]: value }, selectOptions, relations)
+      })({ [lookupField]: value }, selectOptions, relations),
+    )
   } else {
     res = await repository.findOne({
       where: { [lookupField]: value } as FindOptionsWhere<object>,

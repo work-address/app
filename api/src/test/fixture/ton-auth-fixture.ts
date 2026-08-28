@@ -40,7 +40,9 @@ export async function buildTonAuthPayload(options: {
 
   const stateInitCell = beginCell().store(storeStateInit(wallet.init)).endCell()
   const state_init = stateInitCell.toBoc().toString('base64')
-  const address = `${wallet.address.workChain}:${wallet.address.hash.toString('hex')}`
+  const address = `${wallet.address.workChain}:${wallet.address.hash.toString(
+    'hex',
+  )}`
   const timestamp = options.timestamp ?? Math.floor(Date.now() / 1000)
   const domain = options.domain
   const payloadNonce = options.nonce

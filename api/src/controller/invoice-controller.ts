@@ -18,6 +18,7 @@ import { EUserRole } from '@/model/user'
 import { InvoiceManager } from '@/service/invoice-manager'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { InvoiceCreateDto, InvoiceSearchDto } from '@/model/dto/invoice'
+import { runPromise } from '@/service/effect-bridge'
 
 @Authorized([EUserRole.ROLE_USER])
 @JsonController('/invoice')
@@ -49,7 +50,7 @@ export class InvoiceController {
     @CurrentUser() currentUser: User,
     @Body() search: InvoiceSearchDto,
   ) {
-    return this.invoiceRepository.findAndCount(search, currentUser)
+    return runPromise(this.invoiceRepository.findAndCount(search, currentUser))
   }
 
   @OpenAPIExtended({
@@ -78,18 +79,22 @@ export class InvoiceController {
     // invoice a project: an explicit selection, an explicit range, or - the
     // one the UI uses by default - everything outstanding, idempotently.
     if (data?.timeIds?.length) {
-      return this.invoiceManager.createFromTimeIds(
-        project,
-        currentUser,
-        data.timeIds,
+      return runPromise(
+        this.invoiceManager.createFromTimeIds(
+          project,
+          currentUser,
+          data.timeIds,
+        ),
       )
     }
 
     if (data?.fromUnix === undefined || data?.toUnix === undefined) {
-      return this.invoiceManager.ensureForProject(project, currentUser)
+      return runPromise(
+        this.invoiceManager.ensureForProject(project, currentUser),
+      )
     }
 
-    return this.invoiceManager.create(data, project, currentUser)
+    return runPromise(this.invoiceManager.create(data, project, currentUser))
   }
 
   @OpenAPIExtended({
@@ -105,7 +110,9 @@ export class InvoiceController {
     @EntityFromParam({ paramName: 'id', relations: { project: true } })
     invoice: Invoice,
   ) {
-    return this.invoiceRepository.findOneConfirmUser(invoice, currentUser)
+    return runPromise(
+      this.invoiceRepository.findOneConfirmUser(invoice, currentUser),
+    )
   }
 
   @OpenAPIExtended({
@@ -125,7 +132,7 @@ export class InvoiceController {
     })
     invoice: Invoice,
   ): Promise<Invoice> {
-    return this.invoiceManager.markPaid(invoice, currentUser)
+    return runPromise(this.invoiceManager.markPaid(invoice, currentUser))
   }
 
   @OpenAPIExtended({
@@ -145,6 +152,6 @@ export class InvoiceController {
     })
     invoice: Invoice,
   ): Promise<Invoice> {
-    return this.invoiceManager.markUnpaid(invoice, currentUser)
+    return runPromise(this.invoiceManager.markUnpaid(invoice, currentUser))
   }
 }

@@ -7,6 +7,7 @@ import { EntitlementSignature } from '@/service/entitlement-signature'
 import { UserManager } from '@/service/user-manager'
 import { UserRepository } from '@/repository/user-repository'
 import AuthenticationException from '@/exception/authentication-exception'
+import { runPromise } from '@/service/effect-bridge'
 
 /**
  * Service-to-service entitlement from the billing service.
@@ -52,9 +53,11 @@ export class EntitlementController {
       throw new AuthenticationException('Entitlement push nonce already used')
     }
 
-    const user = await this.userRepository.findOneBy({
-      where: { id: data.userId },
-    })
+    const user = await runPromise(
+      this.userRepository.findOneBy({
+        where: { id: data.userId },
+      }),
+    )
 
     // A push for an account this instance has never seen is not an error the
     // caller can act on - the sweep re-asserts everything periodically, and
@@ -66,7 +69,7 @@ export class EntitlementController {
     // Idempotent by construction: the push carries absolute state, so
     // re-applying it costs one write and changes nothing.
     user.premium = data.premium
-    await this.userManager.saveSingle(user)
+    await runPromise(this.userManager.saveSingle(user))
 
     return { applied: true }
   }

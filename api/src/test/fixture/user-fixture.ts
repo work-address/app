@@ -9,6 +9,7 @@ import { UserRepository } from '@/repository/user-repository'
 import { Signer } from '@/service/auth/signer'
 import { UserManager } from '@/service/user-manager'
 import { Faker } from '@/service/faker'
+import { runPromise } from '@/service/effect-bridge'
 
 @injectable()
 export class UserFixture {
@@ -30,7 +31,7 @@ export class UserFixture {
     user.roles = [EUserRole.ROLE_USER]
     user.tz = 'UTC'
 
-    return this.userManager.saveSingle(user)
+    return runPromise(this.userManager.saveSingle(user))
   }
 
   public async createWithPhoneAndPassword(phone: string): Promise<User> {
@@ -43,7 +44,7 @@ export class UserFixture {
     user.tz = 'UTC'
     user.roles = [EUserRole.ROLE_USER]
 
-    return this.userManager.saveSingle(user)
+    return runPromise(this.userManager.saveSingle(user))
   }
 
   public createUser(): Promise<User> {
@@ -58,7 +59,7 @@ export class UserFixture {
     user.email = email
     user.roles = [EUserRole.ROLE_USER]
 
-    return this.userManager.saveSingle(user)
+    return runPromise(this.userManager.saveSingle(user))
   }
 
   /** Collaborator access (workers/viewers) is premium-only - use this for a
@@ -68,7 +69,7 @@ export class UserFixture {
 
     user.premium = true
 
-    return this.userManager.saveSingle(user)
+    return runPromise(this.userManager.saveSingle(user))
   }
 
   public createUserFromKeypair(
@@ -83,7 +84,7 @@ export class UserFixture {
     user.email = email
     user.roles = [EUserRole.ROLE_USER]
 
-    return this.userManager.saveSingle(user)
+    return runPromise(this.userManager.saveSingle(user))
   }
 
   public createUserWithPhone(phone: string): Promise<User> {
@@ -95,7 +96,7 @@ export class UserFixture {
     user.phone = phone
     user.roles = [EUserRole.ROLE_USER]
 
-    return this.userManager.saveSingle(user)
+    return runPromise(this.userManager.saveSingle(user))
   }
 
   public validatedPassword(): string {

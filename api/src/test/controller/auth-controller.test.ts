@@ -32,6 +32,7 @@ import {
   buildTonAuthPayloadWithInvalidSignature,
   getTestTonDomain,
 } from '@/test/fixture/ton-auth-fixture'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite()
 export class AuthControllerTest extends BaseControllerTest {
@@ -54,7 +55,7 @@ export class AuthControllerTest extends BaseControllerTest {
   async loginEth() {
     const client = this.apiClient()
     const account = web3.eth.accounts.create()
-    const nonce = await this.authenticator.getNonce(account.address)
+    const nonce = await runPromise(this.authenticator.getNonce(account.address))
     const signature = web3.eth.accounts.sign(nonce, account.privateKey)
 
     const res = await authControllerLoginEth({
@@ -66,15 +67,19 @@ export class AuthControllerTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const user = await this.userRepository.findByAddressPublicOrFail(
-      account.address,
+    const user = await runPromise(
+      this.userRepository.findByAddressPublicOrFail(account.address),
     )
-    const project = await this.projectRepository.findOneByOrFail({
-      where: {
-        user: { id: user.id },
-      },
-    })
-    const times = await this.timeRepository.findAllTimeForProject(project, user)
+    const project = await runPromise(
+      this.projectRepository.findOneByOrFail({
+        where: {
+          user: { id: user.id },
+        },
+      }),
+    )
+    const times = await runPromise(
+      this.timeRepository.findAllTimeForProject(project, user),
+    )
 
     const fromAt = moment().startOf('day').add(40, 'minutes')
 
@@ -122,7 +127,9 @@ export class AuthControllerTest extends BaseControllerTest {
     const client = this.apiClient()
     const accountA = web3.eth.accounts.create()
     const accountB = web3.eth.accounts.create()
-    const nonce = await this.authenticator.getNonce(accountA.address)
+    const nonce = await runPromise(
+      this.authenticator.getNonce(accountA.address),
+    )
     const signature = web3.eth.accounts.sign(nonce, accountB.privateKey)
 
     let error: unknown
@@ -150,7 +157,7 @@ export class AuthControllerTest extends BaseControllerTest {
   async loginEth_failsWhenNonceAlreadyConsumed() {
     const client = this.apiClient()
     const account = web3.eth.accounts.create()
-    const nonce = await this.authenticator.getNonce(account.address)
+    const nonce = await runPromise(this.authenticator.getNonce(account.address))
     const signature = web3.eth.accounts.sign(nonce, account.privateKey)
     const body = {
       signature: signature.signature,
@@ -210,7 +217,7 @@ export class AuthControllerTest extends BaseControllerTest {
   async loginSolana() {
     const client = this.apiClient()
     const setup = buildSolanaAuthPayload({ nonce: 'setup' })
-    const nonce = await this.authenticator.getNonce(setup.address)
+    const nonce = await runPromise(this.authenticator.getNonce(setup.address))
     const { address, signature } = buildSolanaAuthPayload({
       nonce,
       secretKey: setup.secretKey,
@@ -222,11 +229,17 @@ export class AuthControllerTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const user = await this.userRepository.findByAddressPublicOrFail(address)
-    const project = await this.projectRepository.findOneByOrFail({
-      where: { user: { id: user.id } },
-    })
-    const times = await this.timeRepository.findAllTimeForProject(project, user)
+    const user = await runPromise(
+      this.userRepository.findByAddressPublicOrFail(address),
+    )
+    const project = await runPromise(
+      this.projectRepository.findOneByOrFail({
+        where: { user: { id: user.id } },
+      }),
+    )
+    const times = await runPromise(
+      this.timeRepository.findAllTimeForProject(project, user),
+    )
 
     expect(res.status).to.be.equal(200)
     this.expectEmptyResponseBody(res.data)
@@ -264,7 +277,7 @@ export class AuthControllerTest extends BaseControllerTest {
   async loginSolana_failsWhenSignatureIsInvalid() {
     const client = this.apiClient()
     const setup = buildSolanaAuthPayload({ nonce: 'setup' })
-    const nonce = await this.authenticator.getNonce(setup.address)
+    const nonce = await runPromise(this.authenticator.getNonce(setup.address))
     const { address, signature } = buildSolanaAuthPayloadWithInvalidSignature({
       nonce,
       secretKey: setup.secretKey,
@@ -292,7 +305,7 @@ export class AuthControllerTest extends BaseControllerTest {
   async loginSolana_failsWhenNonceAlreadyConsumed() {
     const client = this.apiClient()
     const setup = buildSolanaAuthPayload({ nonce: 'setup' })
-    const nonce = await this.authenticator.getNonce(setup.address)
+    const nonce = await runPromise(this.authenticator.getNonce(setup.address))
     const { address, signature } = buildSolanaAuthPayload({
       nonce,
       secretKey: setup.secretKey,
@@ -382,7 +395,7 @@ export class AuthControllerTest extends BaseControllerTest {
   async loginTon() {
     const client = this.apiClient()
     const domain = getTestTonDomain(this.parameters)
-    const nonce = await this.authenticator.getTonNonce()
+    const nonce = await runPromise(this.authenticator.getTonNonce())
     const { payload } = await buildTonAuthPayload({ nonce, domain })
 
     const res = await authControllerCheckProofHandler({
@@ -391,13 +404,17 @@ export class AuthControllerTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const user = await this.userRepository.findByAddressPublicOrFail(
-      payload.address,
+    const user = await runPromise(
+      this.userRepository.findByAddressPublicOrFail(payload.address),
     )
-    const project = await this.projectRepository.findOneByOrFail({
-      where: { user: { id: user.id } },
-    })
-    const times = await this.timeRepository.findAllTimeForProject(project, user)
+    const project = await runPromise(
+      this.projectRepository.findOneByOrFail({
+        where: { user: { id: user.id } },
+      }),
+    )
+    const times = await runPromise(
+      this.timeRepository.findAllTimeForProject(project, user),
+    )
 
     expect(res.status).to.be.equal(200)
     this.expectEmptyResponseBody(res.data)
@@ -437,7 +454,7 @@ export class AuthControllerTest extends BaseControllerTest {
   async loginTon_failsWhenSignatureIsInvalid() {
     const client = this.apiClient()
     const domain = getTestTonDomain(this.parameters)
-    const nonce = await this.authenticator.getTonNonce()
+    const nonce = await runPromise(this.authenticator.getTonNonce())
     const payload = await buildTonAuthPayloadWithInvalidSignature({
       nonce,
       domain,

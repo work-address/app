@@ -6,6 +6,7 @@ import { AbstractDatabaseIntegration } from '@/test/abstract-database.integratio
 import { ProjectRepository } from '@/repository/project-repository'
 import { ProjectFixture } from '@/test/fixture/project-fixture'
 import { EProjectState } from '@/model/project'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite()
 export class ProjectRepositoryIntegrationTest extends AbstractDatabaseIntegration {
@@ -30,19 +31,16 @@ export class ProjectRepositoryIntegrationTest extends AbstractDatabaseIntegratio
     )
     project.workerAddresses = [worker.address]
     project.viewerAddresses = [viewer.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
-    const asOwner = await this.projectRepository.findProjectWithAccess(
-      project,
-      owner,
+    const asOwner = await runPromise(
+      this.projectRepository.findProjectWithAccess(project, owner),
     )
-    const asWorker = await this.projectRepository.findProjectWithAccess(
-      project,
-      worker,
+    const asWorker = await runPromise(
+      this.projectRepository.findProjectWithAccess(project, worker),
     )
-    const asViewer = await this.projectRepository.findProjectWithAccess(
-      project,
-      viewer,
+    const asViewer = await runPromise(
+      this.projectRepository.findProjectWithAccess(project, viewer),
     )
 
     expect(asOwner?.id).to.equal(project.id)
@@ -69,9 +67,8 @@ export class ProjectRepositoryIntegrationTest extends AbstractDatabaseIntegratio
       EProjectState.ACTIVE,
     )
 
-    const result = await this.projectRepository.findProjectWithAccess(
-      project,
-      outsider,
+    const result = await runPromise(
+      this.projectRepository.findProjectWithAccess(project, outsider),
     )
 
     expect(result).to.be.undefined
@@ -87,29 +84,36 @@ export class ProjectRepositoryIntegrationTest extends AbstractDatabaseIntegratio
     const shared = await this.projectFixture.create(owner, EProjectState.ACTIVE)
     shared.workerAddresses = [worker.address]
     shared.viewerAddresses = [viewer.address]
-    await this.projectRepository.saveSingle(shared)
+    await runPromise(this.projectRepository.saveSingle(shared))
 
-    const [ownerRows] = await this.projectRepository.findAndCountAccessibleBy(
-      { filter: {}, sort: { createdAt: 'ASC' }, page: 0 },
-      owner,
+    const [ownerRows] = await runPromise(
+      this.projectRepository.findAndCountAccessibleBy(
+        { filter: {}, sort: { createdAt: 'ASC' }, page: 0 },
+        owner,
+      ),
     )
-    const [workerRows] = await this.projectRepository.findAndCountAccessibleBy(
-      { filter: {}, sort: { createdAt: 'ASC' }, page: 0 },
-      worker,
+    const [workerRows] = await runPromise(
+      this.projectRepository.findAndCountAccessibleBy(
+        { filter: {}, sort: { createdAt: 'ASC' }, page: 0 },
+        worker,
+      ),
     )
-    const [viewerRows] = await this.projectRepository.findAndCountAccessibleBy(
-      { filter: {}, sort: { createdAt: 'ASC' }, page: 0 },
-      viewer,
+    const [viewerRows] = await runPromise(
+      this.projectRepository.findAndCountAccessibleBy(
+        { filter: {}, sort: { createdAt: 'ASC' }, page: 0 },
+        viewer,
+      ),
     )
-    const [outsiderRows, outsiderCount] =
-      await this.projectRepository.findAndCountAccessibleBy(
+    const [outsiderRows, outsiderCount] = await runPromise(
+      this.projectRepository.findAndCountAccessibleBy(
         {
           filter: { projectId: shared.id },
           sort: { createdAt: 'ASC' },
           page: 0,
         },
         outsider,
-      )
+      ),
+    )
 
     const ownerIds = ownerRows.map((row) => row.id)
     const workerIds = workerRows.map((row) => row.id)
@@ -156,15 +160,17 @@ export class ProjectRepositoryIntegrationTest extends AbstractDatabaseIntegratio
     const first = await this.projectFixture.create(owner, EProjectState.ACTIVE)
     first.workerAddresses = [workerA.address]
     first.viewerAddresses = [viewerA.address]
-    await this.projectRepository.saveSingle(first)
+    await runPromise(this.projectRepository.saveSingle(first))
     const second = await this.projectFixture.create(owner, EProjectState.ACTIVE)
     second.workerAddresses = [workerB.address]
     second.viewerAddresses = [viewerB.address]
-    await this.projectRepository.saveSingle(second)
+    await runPromise(this.projectRepository.saveSingle(second))
 
-    const [rows] = await this.projectRepository.findAndCountAccessibleBy(
-      { filter: {}, sort: { createdAt: 'ASC' }, page: 0 },
-      owner,
+    const [rows] = await runPromise(
+      this.projectRepository.findAndCountAccessibleBy(
+        { filter: {}, sort: { createdAt: 'ASC' }, page: 0 },
+        owner,
+      ),
     )
 
     const firstRow = rows.find((row) => row.id === first.id)
@@ -188,15 +194,20 @@ export class ProjectRepositoryIntegrationTest extends AbstractDatabaseIntegratio
   async findAndCountAccessibleBy_attachesWorkerCaseInsensitively() {
     const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
-    const project = await this.projectFixture.create(owner, EProjectState.ACTIVE)
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
     // Stored casing (e.g. EIP-55 checksummed) may differ from what the
     // project owner typed when adding this collaborator.
     project.workerAddresses = [worker.address.toLowerCase()]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
-    const [rows] = await this.projectRepository.findAndCountAccessibleBy(
-      { filter: {}, sort: { createdAt: 'ASC' }, page: 0 },
-      owner,
+    const [rows] = await runPromise(
+      this.projectRepository.findAndCountAccessibleBy(
+        { filter: {}, sort: { createdAt: 'ASC' }, page: 0 },
+        owner,
+      ),
     )
 
     const row = rows.find((r) => r.id === project.id)
@@ -207,35 +218,45 @@ export class ProjectRepositoryIntegrationTest extends AbstractDatabaseIntegratio
   @test()
   async findAndCountAccessibleBy_grantsAccessAfterLateOnboarding() {
     const owner = await this.userFixture.createPremiumUser()
-    const project = await this.projectFixture.create(owner, EProjectState.ACTIVE)
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
     const pendingKeypair = web3.eth.accounts.create()
     project.workerAddresses = [pendingKeypair.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     // Before the invited wallet has ever signed in, it has no access yet —
     // there's no user account to check access for.
     const notYetOnboarded = await this.userFixture.createUser()
-    const [beforeOnboardingRows] =
-      await this.projectRepository.findAndCountAccessibleBy(
-        { filter: { projectId: project.id }, sort: { createdAt: 'ASC' }, page: 0 },
+    const [beforeOnboardingRows] = await runPromise(
+      this.projectRepository.findAndCountAccessibleBy(
+        {
+          filter: { projectId: project.id },
+          sort: { createdAt: 'ASC' },
+          page: 0,
+        },
         notYetOnboarded,
-      )
+      ),
+    )
     expect(beforeOnboardingRows).to.deep.equal([])
 
     // Once that same wallet actually signs in (creating its user account),
     // it immediately gets access — no separate re-invite step required.
-    const nowOnboarded = await this.userFixture.createUserFromKeypair(
-      pendingKeypair,
-    )
-    const [afterOnboardingRows] =
-      await this.projectRepository.findAndCountAccessibleBy(
-        { filter: { projectId: project.id }, sort: { createdAt: 'ASC' }, page: 0 },
+    const nowOnboarded =
+      await this.userFixture.createUserFromKeypair(pendingKeypair)
+    const [afterOnboardingRows] = await runPromise(
+      this.projectRepository.findAndCountAccessibleBy(
+        {
+          filter: { projectId: project.id },
+          sort: { createdAt: 'ASC' },
+          page: 0,
+        },
         nowOnboarded,
-      )
+      ),
+    )
 
-    expect(afterOnboardingRows.map((row) => row.id)).to.deep.equal([
-      project.id,
-    ])
+    expect(afterOnboardingRows.map((row) => row.id)).to.deep.equal([project.id])
     expect(afterOnboardingRows[0]?.workers?.map((u) => u.id)).to.deep.equal([
       nowOnboarded.id,
     ])

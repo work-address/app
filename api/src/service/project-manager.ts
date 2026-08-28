@@ -1,3 +1,4 @@
+import { Effect } from 'effect'
 import { inject, injectable } from 'inversify'
 import { BadRequestError } from 'routing-controllers'
 
@@ -9,6 +10,7 @@ import moment from 'moment'
 import { Time } from '@/entity/time'
 import { TimeRepository } from '@/repository/time-repository'
 import { ProjectAccessAddresses } from '@/model/dto/project'
+import { RepoEffect } from '@/repository/abstract-repository-template'
 import { Entitlement } from '@/service/entitlement'
 
 @injectable()
@@ -20,20 +22,20 @@ export class ProjectManager {
   @inject('Entitlement')
   protected entitlement: Entitlement
 
-  public async findProjectCheckAccess(
+  public findProjectCheckAccess(
     project: Project,
     user: User,
-  ): Promise<Project | undefined> {
+  ): RepoEffect<Project | undefined> {
     return this.projectRepository.findProjectWithAccess(project, user)
   }
 
-  public async close(project: Project): Promise<void> {
+  public close(project: Project): RepoEffect<void> {
     project.state = EProjectState.INACTIVE
 
-    await this.save(project)
+    return this.save(project).pipe(Effect.asVoid)
   }
 
-  public async createAndSave(data: Project): Promise<Project> {
+  public createAndSave(data: Project): RepoEffect<Project> {
     if (
       data.workerAddresses !== undefined ||
       data.viewerAddresses !== undefined
@@ -53,7 +55,7 @@ export class ProjectManager {
     return this.save(data)
   }
 
-  public async editAndSave(project: Project, data: Project): Promise<void> {
+  public editAndSave(project: Project, data: Project): RepoEffect<void> {
     if (
       data.workerAddresses !== undefined ||
       data.viewerAddresses !== undefined
@@ -88,7 +90,7 @@ export class ProjectManager {
 
     Object.assign(project, editable)
 
-    await this.save(project)
+    return this.save(project).pipe(Effect.asVoid)
   }
 
   /**
@@ -140,38 +142,44 @@ export class ProjectManager {
   }
 
   // @deprecated remove demo data
-  public async createDemoData(user: User): Promise<void> {
-    const project = new Project()
-    project.title = 'Your first project'
-    project.text = 'Demo'
-    project.rateHour = 0
-    project.user = user
-    project.state = EProjectState.ACTIVE
+  public createDemoData(user: User): RepoEffect<void> {
+    // Effect.suspend so the demo entities are built per run rather than when
+    // the effect is described - otherwise a second run would re-save the very
+    // same instances, updating the rows the first run inserted.
+    return Effect.suspend(() => {
+      const project = new Project()
+      project.title = 'Your first project'
+      project.text = 'Demo'
+      project.rateHour = 0
+      project.user = user
+      project.state = EProjectState.ACTIVE
 
-    await this.save(project)
+      const times: Time[] = []
+      const fromAt = moment().startOf('day')
+      const toAt = moment().startOf('day').add(10, 'minutes')
 
-    const times = []
-    const fromAt = moment().startOf('day')
-    const toAt = moment().startOf('day').add(10, 'minutes')
+      for (let i = 1; i < 6; i++) {
+        const time = new Time()
+        time.project = project
+        time.user = user
+        time.note = `Demo entry ${i}`
+        time.mouseKeys = 0
+        time.mouseDistance = 0
+        time.keyboardKeys = 0
+        time.minutesActive = i
+        time.fromAt = fromAt.toDate()
+        time.toAt = toAt.toDate()
 
-    for (let i = 1; i < 6; i++) {
-      const time = new Time()
-      time.project = project
-      time.user = user
-      time.note = `Demo entry ${i}`
-      time.mouseKeys = 0
-      time.mouseDistance = 0
-      time.keyboardKeys = 0
-      time.minutesActive = i
-      time.fromAt = fromAt.toDate()
-      time.toAt = toAt.toDate()
+        times.push(time)
 
-      times.push(time)
+        fromAt.add(1 * 10, 'minutes')
+        toAt.add(1 * 10, 'minutes')
+      }
 
-      fromAt.add(1 * 10, 'minutes')
-      toAt.add(1 * 10, 'minutes')
-    }
-
-    await this.timeRepository.saveMany(times)
+      return Effect.gen(this, function* () {
+        yield* this.save(project)
+        yield* this.timeRepository.saveMany(times)
+      })
+    })
   }
 }

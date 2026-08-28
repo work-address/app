@@ -10,6 +10,7 @@ import { ProjectRepository } from '@/repository/project-repository'
 import { EProjectState } from '@/model/project'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite
 export class ProjectControllerSearchTest extends BaseControllerTest {
@@ -200,7 +201,9 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
     projectB.title = 'BBB'
     projectC.title = 'CCC'
 
-    await this.projectRepository.saveMany([projectA, projectB, projectC])
+    await runPromise(
+      this.projectRepository.saveMany([projectA, projectB, projectC]),
+    )
 
     const res = await projectControllerSearch({
       client: this.apiClient(),
@@ -242,7 +245,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
     )
     project.workerAddresses = [worker.address]
     project.viewerAddresses = [viewer.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const res = await projectControllerSearch({
       client: this.apiClient(),
@@ -390,11 +393,11 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
     const first = await this.projectFixture.create(owner, EProjectState.ACTIVE)
     first.workerAddresses = [workerA.address]
     first.viewerAddresses = [viewerA.address]
-    await this.projectRepository.saveSingle(first)
+    await runPromise(this.projectRepository.saveSingle(first))
     const second = await this.projectFixture.create(owner, EProjectState.ACTIVE)
     second.workerAddresses = [workerB.address]
     second.viewerAddresses = [viewerB.address]
-    await this.projectRepository.saveSingle(second)
+    await runPromise(this.projectRepository.saveSingle(second))
 
     const res = await projectControllerSearch({
       client: this.apiClient(),
@@ -444,7 +447,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
     )
     project.workerAddresses = [workerB.address, workerA.address]
     project.viewerAddresses = [viewerB.address, viewerA.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const res = await projectControllerSearch({
       client: this.apiClient(),
@@ -542,7 +545,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
     mismatch.title = 'support desk'
     mismatch.text = 'tickets and chats'
 
-    await this.projectRepository.saveMany([match, mismatch])
+    await runPromise(this.projectRepository.saveMany([match, mismatch]))
 
     const res = await projectControllerSearch({
       client: this.apiClient(),
@@ -636,7 +639,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
     mid.title = 'mike'
     high.title = 'zebra'
 
-    await this.projectRepository.saveMany([low, mid, high])
+    await runPromise(this.projectRepository.saveMany([low, mid, high]))
 
     const res = await projectControllerSearch({
       client: this.apiClient(),
@@ -666,7 +669,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
     titles.forEach((title, i) => {
       projects[i].title = title
     })
-    await this.projectRepository.saveMany(projects)
+    await runPromise(this.projectRepository.saveMany(projects))
 
     const first = await projectControllerSearch({
       client: this.apiClient(),
@@ -717,7 +720,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
     projects[0].title = 'p1'
     projects[1].title = 'p2'
     projects[2].title = 'p3'
-    await this.projectRepository.saveMany(projects)
+    await runPromise(this.projectRepository.saveMany(projects))
 
     const res = await projectControllerSearch({
       client: this.apiClient(),
@@ -750,7 +753,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
     mid.title = 'r-mid'
     hi.title = 'r-hi'
 
-    await this.projectRepository.saveMany([hi, lo, mid])
+    await runPromise(this.projectRepository.saveMany([hi, lo, mid]))
 
     const res = await projectControllerSearch({
       client: this.apiClient(),
@@ -813,10 +816,10 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
 
     older.title = `upd-sort-older-${marker}`
     newer.title = `upd-sort-newer-${marker}`
-    await this.projectRepository.saveMany([older, newer])
+    await runPromise(this.projectRepository.saveMany([older, newer]))
     await new Promise((resolve) => setTimeout(resolve, 30))
     older.text = `upd-sort-touch-${marker}`
-    await this.projectRepository.saveMany([older])
+    await runPromise(this.projectRepository.saveMany([older]))
 
     const res = await projectControllerSearch({
       client: this.apiClient(),
@@ -919,7 +922,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
 
     activeA.title = 'early'
     activeB.title = 'late'
-    await this.projectRepository.saveMany([activeA, activeB])
+    await runPromise(this.projectRepository.saveMany([activeA, activeB]))
 
     const res = await projectControllerSearch({
       client: this.apiClient(),
@@ -973,7 +976,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
 
     match.title = 'My INVOICE Project'
     miss.title = 'other'
-    await this.projectRepository.saveMany([match, miss])
+    await runPromise(this.projectRepository.saveMany([match, miss]))
 
     const res = await projectControllerSearch({
       client: this.apiClient(),
@@ -1002,7 +1005,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
 
     match.text = 'quarterly RETAINER agreement'
     miss.text = 'one-off gig'
-    await this.projectRepository.saveMany([match, miss])
+    await runPromise(this.projectRepository.saveMany([match, miss]))
 
     const res = await projectControllerSearch({
       client: this.apiClient(),
@@ -1031,7 +1034,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
 
     low.title = 'low-rate'
     high.title = 'high-rate'
-    await this.projectRepository.saveMany([low, high])
+    await runPromise(this.projectRepository.saveMany([low, high]))
 
     const res = await projectControllerSearch({
       client: this.apiClient(),
@@ -1058,7 +1061,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
     const low = await this.projectFixture.createPersonal(user, 80)
     const high = await this.projectFixture.createPersonal(user, 200)
 
-    await this.projectRepository.saveMany([low, high])
+    await runPromise(this.projectRepository.saveMany([low, high]))
 
     const res = await projectControllerSearch({
       client: this.apiClient(),
@@ -1094,7 +1097,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
       false,
       false,
     )
-    await this.projectRepository.saveMany([withProc, without])
+    await runPromise(this.projectRepository.saveMany([withProc, without]))
 
     const res = await projectControllerSearch({
       client: this.apiClient(),

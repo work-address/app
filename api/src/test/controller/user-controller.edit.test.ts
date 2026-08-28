@@ -9,6 +9,7 @@ import type { UserEdit } from '@app/api-client'
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { UserRepository } from '@/repository/user-repository'
 import { EUserRole } from '@/model/user'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite()
 export class UserControllerEditTest extends BaseControllerTest {
@@ -78,7 +79,9 @@ export class UserControllerEditTest extends BaseControllerTest {
       body: data as unknown as UserEdit,
       throwOnError: true,
     })
-    const updated = await this.userRepository.findByEmailPhoneOrFail(data.phone)
+    const updated = await runPromise(
+      this.userRepository.findByEmailPhoneOrFail(data.phone),
+    )
 
     expect(res.status).to.be.equal(204)
     this.expectEmptyResponseBody(res.data)

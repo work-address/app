@@ -11,6 +11,7 @@ import { ProjectRepository } from '@/repository/project-repository'
 import { TimeFixture } from '@/test/fixture/time-fixture'
 import { TimeRepository } from '@/repository/time-repository'
 import { UserFixture } from '@/test/fixture/user-fixture'
+import { runPromise } from '@/service/effect-bridge'
 
 /**
  * "Open the invoice for this project" - raise one for whatever is outstanding,
@@ -45,12 +46,17 @@ export class InvoiceEnsureTest extends AbstractDatabaseIntegration {
       EProjectState.ACTIVE,
     )
     project.rateHour = rateHour
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     return { owner, project }
   }
 
-  private async track(project: never, user: never, hoursAgo: number, minutes: number) {
+  private async track(
+    project: never,
+    user: never,
+    hoursAgo: number,
+    minutes: number,
+  ) {
     const from = moment.utc().subtract(hoursAgo, 'hours')
     const entry = await this.timeFixture.create(
       project,
@@ -59,7 +65,7 @@ export class InvoiceEnsureTest extends AbstractDatabaseIntegration {
       user,
     )
     entry.minutesActive = minutes
-    await this.timeRepository.saveSingle(entry)
+    await runPromise(this.timeRepository.saveSingle(entry))
 
     return entry
   }
@@ -69,9 +75,8 @@ export class InvoiceEnsureTest extends AbstractDatabaseIntegration {
     const { owner, project } = await this.projectWithOwner()
     await this.track(project as never, owner as never, 3, 60)
 
-    const invoice = await this.invoiceManager.ensureForProject(
-      project,
-      owner,
+    const invoice = await runPromise(
+      this.invoiceManager.ensureForProject(project, owner),
     )
 
     expect(invoice?.amountCents).to.be.equal(6000)
@@ -88,14 +93,20 @@ export class InvoiceEnsureTest extends AbstractDatabaseIntegration {
     const { owner, project } = await this.projectWithOwner()
     await this.track(project as never, owner as never, 3, 60)
 
-    const first = await this.invoiceManager.ensureForProject(project, owner)
-    const second = await this.invoiceManager.ensureForProject(project, owner)
+    const first = await runPromise(
+      this.invoiceManager.ensureForProject(project, owner),
+    )
+    const second = await runPromise(
+      this.invoiceManager.ensureForProject(project, owner),
+    )
 
     expect(second?.id).to.be.equal(first?.id)
 
-    const [rows, count] = await this.invoiceRepository.findAndCount(
-      { filter: {}, sort: { createdAt: 'ASC' }, page: 0 },
-      owner,
+    const [rows, count] = await runPromise(
+      this.invoiceRepository.findAndCount(
+        { filter: {}, sort: { createdAt: 'ASC' }, page: 0 },
+        owner,
+      ),
     )
     expect(count).to.be.equal(1)
     expect(rows).to.have.length(1)
@@ -107,17 +118,21 @@ export class InvoiceEnsureTest extends AbstractDatabaseIntegration {
     const { owner, project } = await this.projectWithOwner()
     await this.track(project as never, owner as never, 10, 60)
 
-    const first = await this.invoiceManager.ensureForProject(project, owner)
+    const first = await runPromise(
+      this.invoiceManager.ensureForProject(project, owner),
+    )
 
     await this.track(project as never, owner as never, 2, 30)
 
-    const second = await this.invoiceManager.ensureForProject(project, owner)
+    const second = await runPromise(
+      this.invoiceManager.ensureForProject(project, owner),
+    )
 
     expect(second?.id).to.not.be.equal(first?.id)
     expect(second?.amountCents).to.be.equal(3000)
 
-    const reloadedFirst = await this.invoiceRepository.findOneByIdOrFail(
-      first?.id as string,
+    const reloadedFirst = await runPromise(
+      this.invoiceRepository.findOneByIdOrFail(first?.id as string),
     )
     expect(reloadedFirst.amountCents).to.be.equal(6000)
   }
@@ -126,7 +141,9 @@ export class InvoiceEnsureTest extends AbstractDatabaseIntegration {
   async ensure_withNothingTracked_returnsNull() {
     const { owner, project } = await this.projectWithOwner()
 
-    const invoice = await this.invoiceManager.ensureForProject(project, owner)
+    const invoice = await runPromise(
+      this.invoiceManager.ensureForProject(project, owner),
+    )
 
     expect(invoice).to.be.null
   }
@@ -137,18 +154,16 @@ export class InvoiceEnsureTest extends AbstractDatabaseIntegration {
     const { owner, project } = await this.projectWithOwner()
     const worker = await this.userFixture.createUser()
     project.workerAddresses = [worker.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     await this.track(project as never, owner as never, 5, 60)
     await this.track(project as never, worker as never, 4, 30)
 
-    const ownerInvoice = await this.invoiceManager.ensureForProject(
-      project,
-      owner,
+    const ownerInvoice = await runPromise(
+      this.invoiceManager.ensureForProject(project, owner),
     )
-    const workerInvoice = await this.invoiceManager.ensureForProject(
-      project,
-      worker,
+    const workerInvoice = await runPromise(
+      this.invoiceManager.ensureForProject(project, worker),
     )
 
     expect(ownerInvoice?.amountCents).to.be.equal(6000)
@@ -161,10 +176,14 @@ export class InvoiceEnsureTest extends AbstractDatabaseIntegration {
     const { owner, project } = await this.projectWithOwner()
     await this.track(project as never, owner as never, 3, 60)
 
-    const first = await this.invoiceManager.ensureForProject(project, owner)
-    await this.invoiceManager.markPaid(first as never, owner)
+    const first = await runPromise(
+      this.invoiceManager.ensureForProject(project, owner),
+    )
+    await runPromise(this.invoiceManager.markPaid(first as never, owner))
 
-    const second = await this.invoiceManager.ensureForProject(project, owner)
+    const second = await runPromise(
+      this.invoiceManager.ensureForProject(project, owner),
+    )
 
     expect(second?.id).to.be.equal(first?.id)
   }

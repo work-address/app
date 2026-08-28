@@ -10,6 +10,7 @@ import { ProjectRepository } from '@/repository/project-repository'
 import { EProjectState } from '@/model/project'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite
 export class ProjectControllerAccessTest extends BaseControllerTest {
@@ -57,8 +58,8 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
       viewerAddresses: [viewer.address],
     })
 
-    const projectUpdated = await this.projectRepository.findOneByIdOrFail(
-      project.id,
+    const projectUpdated = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
     )
 
     expect(res.status).to.be.equal(200)
@@ -89,8 +90,8 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
       viewerAddresses: [viewerB.address],
     })
 
-    const projectUpdated = await this.projectRepository.findOneByIdOrFail(
-      project.id,
+    const projectUpdated = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
     )
 
     expect(projectUpdated.workerAddresses).to.deep.equal([workerB.address])
@@ -117,8 +118,8 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
       viewerAddresses: [],
     })
 
-    const projectUpdated = await this.projectRepository.findOneByIdOrFail(
-      project.id,
+    const projectUpdated = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
     )
 
     expect(projectUpdated.workerAddresses).to.deep.equal([])
@@ -139,8 +140,8 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
       viewerAddresses: [owner.address],
     })
 
-    const projectUpdated = await this.projectRepository.findOneByIdOrFail(
-      project.id,
+    const projectUpdated = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
     )
 
     expect(projectUpdated.workerAddresses).to.deep.equal([worker.address])
@@ -161,8 +162,8 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
       viewerAddresses: [worker.address, worker.address],
     })
 
-    const projectUpdated = await this.projectRepository.findOneByIdOrFail(
-      project.id,
+    const projectUpdated = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
     )
 
     expect(projectUpdated.workerAddresses).to.deep.equal([worker.address])
@@ -205,7 +206,9 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
     expect(error.response?.status).to.be.equal(403)
     expect(error.response?.data.name).to.be.equal('UserAccessException')
 
-    const unchanged = await this.projectRepository.findOneByIdOrFail(project.id)
+    const unchanged = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
+    )
     expect(unchanged.workerAddresses ?? []).to.deep.equal([])
     expect(unchanged.viewerAddresses ?? []).to.deep.equal([])
   }
@@ -226,8 +229,8 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
       viewerAddresses: [],
     })
 
-    const projectUpdated = await this.projectRepository.findOneByIdOrFail(
-      project.id,
+    const projectUpdated = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
     )
 
     expect(res.status).to.be.equal(200)
@@ -315,7 +318,9 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
       workerAddresses: [workerB.address],
     })
 
-    const updated = await this.projectRepository.findOneByIdOrFail(project.id)
+    const updated = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
+    )
     expect(updated.workerAddresses).to.deep.equal([workerB.address])
     expect(updated.viewerAddresses).to.deep.equal([viewer.address])
   }
@@ -340,7 +345,9 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
       viewerAddresses: [viewerB.address],
     })
 
-    const updated = await this.projectRepository.findOneByIdOrFail(project.id)
+    const updated = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
+    )
     expect(updated.workerAddresses).to.deep.equal([worker.address])
     expect(updated.viewerAddresses).to.deep.equal([viewerB.address])
   }
@@ -365,7 +372,9 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
       title: newTitle,
     })
 
-    const updated = await this.projectRepository.findOneByIdOrFail(project.id)
+    const updated = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
+    )
     expect(updated.title).to.equal(newTitle)
     expect(updated.workerAddresses).to.deep.equal([worker.address])
     expect(updated.viewerAddresses).to.deep.equal([viewer.address])

@@ -7,7 +7,11 @@ import { Brackets } from 'typeorm'
 
 import type { ObjectLiteral, SelectQueryBuilder } from 'typeorm'
 import { Project } from '@/entity/project'
-import { AbstractRepositoryTemplate } from '@/repository/abstract-repository-template'
+import {
+  AbstractRepositoryTemplate,
+  RepoEffect,
+} from '@/repository/abstract-repository-template'
+import { fromPromise } from '@/service/effect-bridge'
 import { Invoice } from '@/entity/invoice'
 
 import { User } from '@/entity/user'
@@ -62,10 +66,7 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
     )
   }
 
-  public async findOneConfirmUser(
-    invoice: Invoice,
-    user: User,
-  ): Promise<Invoice> {
+  public findOneConfirmUser(invoice: Invoice, user: User): RepoEffect<Invoice> {
     const qb = this.getRepo()
       .createQueryBuilder('invoice')
       .innerJoinAndSelect('invoice.project', 'project')
@@ -75,15 +76,15 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
 
     this.applyInvoiceAccessFilter(qb, user)
 
-    const invoiceUser = await qb.select().getOne()
+    return fromPromise(async () => {
+      const invoiceUser = await qb.select().getOne()
 
-    const p = invoiceUser
+      if (!invoiceUser) {
+        throw new AccessException()
+      }
 
-    if (!p) {
-      throw new AccessException()
-    }
-
-    return p
+      return invoiceUser
+    })
   }
 
   /**
@@ -93,24 +94,26 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
    * this project" and there is nothing new to raise, so they get the last one
    * rather than an error or a duplicate.
    */
-  public async findLatestForAuthor(
+  public findLatestForAuthor(
     project: Project,
     author: User,
-  ): Promise<Invoice | null> {
-    return this.getRepo()
-      .createQueryBuilder('invoice')
-      .innerJoinAndSelect('invoice.project', 'project')
-      .leftJoinAndSelect('invoice.user', 'issuer')
-      .andWhere('project.id = :projectId', { projectId: project.id })
-      .andWhere('issuer.id = :authorId', { authorId: author.id })
-      .orderBy('invoice.createdAt', 'DESC')
-      .getOne()
+  ): RepoEffect<Invoice | null> {
+    return fromPromise(() =>
+      this.getRepo()
+        .createQueryBuilder('invoice')
+        .innerJoinAndSelect('invoice.project', 'project')
+        .leftJoinAndSelect('invoice.user', 'issuer')
+        .andWhere('project.id = :projectId', { projectId: project.id })
+        .andWhere('issuer.id = :authorId', { authorId: author.id })
+        .orderBy('invoice.createdAt', 'DESC')
+        .getOne(),
+    )
   }
 
-  public async findAndCount(
+  public findAndCount(
     search: InvoiceSearchDto,
     user: User,
-  ): Promise<[Invoice[], number]> {
+  ): RepoEffect<[Invoice[], number]> {
     const s = _.assign(
       {
         filter: {},
@@ -124,52 +127,54 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
     const sort = this.filter.buildOrderByCondition('invoice', s)
     const limit = this.filter.buildLimit(search)
 
-    return this.getRepo()
-      .createQueryBuilder('invoice')
-      .innerJoinAndSelect('invoice.project', 'project')
-      .innerJoin('project.user', 'owner')
-      .leftJoinAndSelect('invoice.user', 'issuer')
-      .select()
-      // `.where()` REPLACES every condition set before it, so the access
-      // filter has to be applied after the filter block opens it - applying it
-      // first silently drops it and returns every invoice in the table.
-      .where((qb) => {
-        this.applyInvoiceAccessFilter(qb, user)
+    return fromPromise(() =>
+      this.getRepo()
+        .createQueryBuilder('invoice')
+        .innerJoinAndSelect('invoice.project', 'project')
+        .innerJoin('project.user', 'owner')
+        .leftJoinAndSelect('invoice.user', 'issuer')
+        .select()
+        // `.where()` REPLACES every condition set before it, so the access
+        // filter has to be applied after the filter block opens it - applying it
+        // first silently drops it and returns every invoice in the table.
+        .where((qb) => {
+          this.applyInvoiceAccessFilter(qb, user)
 
-        if ('projectId' in s.filter) {
-          qb.andWhere('project.id = :projectId', {
-            projectId: s.filter.projectId,
-          })
-        }
-        if ('fromAt' in s.filter) {
-          qb.andWhere('invoice.fromAt >= :fromAt', {
-            fromAt: s.filter.fromAt,
-          })
-        }
-        if ('toAt' in s.filter) {
-          qb.andWhere('invoice.toAt <= :toAt', {
-            toAt: s.filter.toAt,
-          })
-        }
-        if ('amountFrom' in s.filter) {
-          qb.andWhere('invoice.amountCents >= :amountFrom', {
-            amountFrom: s.filter.amountFrom,
-          })
-        }
-        if ('amountTo' in s.filter) {
-          qb.andWhere('invoice.amountCents <= :amountTo', {
-            amountTo: s.filter.amountTo,
-          })
-        }
-        if ('state' in s.filter) {
-          qb.andWhere('invoice.state = :state', {
-            state: s.filter.state,
-          })
-        }
-      })
-      .orderBy(sort)
-      .skip(limit * s.page)
-      .take(limit)
-      .getManyAndCount()
+          if ('projectId' in s.filter) {
+            qb.andWhere('project.id = :projectId', {
+              projectId: s.filter.projectId,
+            })
+          }
+          if ('fromAt' in s.filter) {
+            qb.andWhere('invoice.fromAt >= :fromAt', {
+              fromAt: s.filter.fromAt,
+            })
+          }
+          if ('toAt' in s.filter) {
+            qb.andWhere('invoice.toAt <= :toAt', {
+              toAt: s.filter.toAt,
+            })
+          }
+          if ('amountFrom' in s.filter) {
+            qb.andWhere('invoice.amountCents >= :amountFrom', {
+              amountFrom: s.filter.amountFrom,
+            })
+          }
+          if ('amountTo' in s.filter) {
+            qb.andWhere('invoice.amountCents <= :amountTo', {
+              amountTo: s.filter.amountTo,
+            })
+          }
+          if ('state' in s.filter) {
+            qb.andWhere('invoice.state = :state', {
+              state: s.filter.state,
+            })
+          }
+        })
+        .orderBy(sort)
+        .skip(limit * s.page)
+        .take(limit)
+        .getManyAndCount(),
+    )
   }
 }

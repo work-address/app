@@ -1,9 +1,12 @@
+import { Effect } from 'effect'
 import { inject, injectable } from 'inversify'
 import { BadRequestError } from 'routing-controllers'
 import moment from 'moment'
 
 import { Invoice } from '@/entity/invoice'
 import { InvoiceRepository } from '@/repository/invoice-repository'
+import { RepoEffect } from '@/repository/abstract-repository-template'
+import { fromPromise } from '@/service/effect-bridge'
 import { Project } from '@/entity/project'
 import { ProjectRepository } from '@/repository/project-repository'
 import { Time } from '@/entity/time'
@@ -54,54 +57,58 @@ export class InvoiceManager {
    * hours is the primary case, and requiring the owner to raise it on their
    * behalf would make the owner author both sides of the transaction.
    */
-  public async create(
+  public create(
     data: InvoiceCreateDto,
     project: Project,
     author: User,
-  ): Promise<Invoice> {
-    const accessible = await this.assertCanInvoice(project, author)
+  ): RepoEffect<Invoice> {
+    return Effect.gen(this, function* () {
+      const accessible = yield* this.assertCanInvoice(project, author)
 
-    // The controller routes a missing range to ensureForProject, so both
-    // bounds are present by the time this runs.
-    const fromAt = moment.utc(data.fromUnix).toDate()
-    const toAt = moment.utc(data.toUnix).toDate()
+      // The controller routes a missing range to ensureForProject, so both
+      // bounds are present by the time this runs.
+      const fromAt = moment.utc(data.fromUnix).toDate()
+      const toAt = moment.utc(data.toUnix).toDate()
 
-    if (fromAt >= toAt) {
-      throw new BadRequestError('The invoice period ends before it starts')
-    }
+      if (fromAt >= toAt) {
+        return yield* Effect.fail(
+          new BadRequestError('The invoice period ends before it starts'),
+        )
+      }
 
-    const times = await this.timeRepository.findUnpaidTimeForAuthorBetween(
-      fromAt,
-      toAt,
-      accessible,
-      author,
-    )
-
-    if (times.length === 0) {
-      throw new BadRequestError(
-        'There is no unpaid tracked time in that period',
+      const times = yield* this.timeRepository.findUnpaidTimeForAuthorBetween(
+        fromAt,
+        toAt,
+        accessible,
+        author,
       )
-    }
 
-    const invoice = new Invoice()
+      if (times.length === 0) {
+        return yield* Effect.fail(
+          new BadRequestError('There is no unpaid tracked time in that period'),
+        )
+      }
 
-    invoice.project = accessible
-    invoice.user = author
-    invoice.fromAt = fromAt
-    invoice.toAt = toAt
-    invoice.amountCents = InvoiceManager.amountFor(
-      times,
-      Number(accessible.rateHour) || 0,
-    )
-    invoice.state = EInvoiceState.REQUESTED
-    invoice.paidAt = null
+      const invoice = new Invoice()
 
-    const saved = await this.invoiceRepository.validateAndSave(invoice)
+      invoice.project = accessible
+      invoice.user = author
+      invoice.fromAt = fromAt
+      invoice.toAt = toAt
+      invoice.amountCents = InvoiceManager.amountFor(
+        times,
+        Number(accessible.rateHour) || 0,
+      )
+      invoice.state = EInvoiceState.REQUESTED
+      invoice.paidAt = null
 
-    await this.attachTime(saved, times)
-    await this.invalidateReport(accessible)
+      const saved = yield* this.invoiceRepository.validateAndSave(invoice)
 
-    return saved
+      yield* this.attachTime(saved, times)
+      yield* this.invalidateReport(accessible)
+
+      return saved
+    })
   }
 
   /**
@@ -112,65 +119,71 @@ export class InvoiceManager {
    * result means at least one id failed and the whole request is refused
    * rather than quietly billing the subset that passed.
    */
-  public async createFromTimeIds(
+  public createFromTimeIds(
     project: Project,
     author: User,
     timeIds: string[],
-  ): Promise<Invoice> {
-    const accessible = await this.assertCanInvoice(project, author)
+  ): RepoEffect<Invoice> {
+    return Effect.gen(this, function* () {
+      const accessible = yield* this.assertCanInvoice(project, author)
 
-    const unique = [...new Set(timeIds)]
+      const unique = [...new Set(timeIds)]
 
-    if (unique.length === 0) {
-      throw new BadRequestError('No time entries were selected')
-    }
+      if (unique.length === 0) {
+        return yield* Effect.fail(
+          new BadRequestError('No time entries were selected'),
+        )
+      }
 
-    const times = await this.timeRepository.findInvoiceableByIds(
-      unique,
-      accessible,
-      author,
-    )
-
-    if (times.length !== unique.length) {
-      throw new BadRequestError(
-        'Some of the selected entries are not yours, already paid, or already on an invoice',
+      const times = yield* this.timeRepository.findInvoiceableByIds(
+        unique,
+        accessible,
+        author,
       )
-    }
 
-    const invoice = new Invoice()
+      if (times.length !== unique.length) {
+        return yield* Effect.fail(
+          new BadRequestError(
+            'Some of the selected entries are not yours, already paid, or already on an invoice',
+          ),
+        )
+      }
 
-    invoice.project = accessible
-    invoice.user = author
-    // The period spans the selection. It is descriptive only - what the
-    // invoice bills is the linked entries, so a sparse selection does not
-    // claim the days between them.
-    invoice.fromAt = new Date(
-      Math.min(...times.map((time) => new Date(time.fromAt).getTime())),
-    )
-    invoice.toAt = new Date(
-      Math.max(...times.map((time) => new Date(time.toAt).getTime())),
-    )
-    invoice.amountCents = InvoiceManager.amountFor(
-      times,
-      Number(accessible.rateHour) || 0,
-    )
-    invoice.state = EInvoiceState.REQUESTED
-    invoice.paidAt = null
+      const invoice = new Invoice()
 
-    const saved = await this.invoiceRepository.validateAndSave(invoice)
+      invoice.project = accessible
+      invoice.user = author
+      // The period spans the selection. It is descriptive only - what the
+      // invoice bills is the linked entries, so a sparse selection does not
+      // claim the days between them.
+      invoice.fromAt = new Date(
+        Math.min(...times.map((time) => new Date(time.fromAt).getTime())),
+      )
+      invoice.toAt = new Date(
+        Math.max(...times.map((time) => new Date(time.toAt).getTime())),
+      )
+      invoice.amountCents = InvoiceManager.amountFor(
+        times,
+        Number(accessible.rateHour) || 0,
+      )
+      invoice.state = EInvoiceState.REQUESTED
+      invoice.paidAt = null
 
-    await this.attachTime(saved, times)
-    await this.invalidateReport(accessible)
+      const saved = yield* this.invoiceRepository.validateAndSave(invoice)
 
-    return saved
+      yield* this.attachTime(saved, times)
+      yield* this.invalidateReport(accessible)
+
+      return saved
+    })
   }
 
-  private async attachTime(invoice: Invoice, times: Time[]): Promise<void> {
+  private attachTime(invoice: Invoice, times: Time[]): RepoEffect<void> {
     for (const time of times) {
       time.invoice = invoice
     }
 
-    await this.timeRepository.saveMany(times)
+    return this.timeRepository.saveMany(times).pipe(Effect.asVoid)
   }
 
   /**
@@ -179,26 +192,32 @@ export class InvoiceManager {
    * Shared by `create` and `ensureForProject` so there is one rule rather than
    * two that can drift - the second would inevitably be the lenient one.
    */
-  private async assertCanInvoice(
+  private assertCanInvoice(
     project: Project,
     author: User,
-  ): Promise<Project> {
-    const accessible = await this.projectRepository.findProjectWithAccess(
-      project,
-      author,
-    )
-
-    if (!accessible) {
-      throw new AccessException('The project is not one you own or work on')
-    }
-
-    if (!accessible.isWorker(author)) {
-      throw new AccessException(
-        'Only a worker or the owner of a project can invoice for its time',
+  ): RepoEffect<Project> {
+    return Effect.gen(this, function* () {
+      const accessible = yield* this.projectRepository.findProjectWithAccess(
+        project,
+        author,
       )
-    }
 
-    return accessible
+      if (!accessible) {
+        return yield* Effect.fail(
+          new AccessException('The project is not one you own or work on'),
+        )
+      }
+
+      if (!accessible.isWorker(author)) {
+        return yield* Effect.fail(
+          new AccessException(
+            'Only a worker or the owner of a project can invoice for its time',
+          ),
+        )
+      }
+
+      return accessible
+    })
   }
 
   /**
@@ -208,41 +227,45 @@ export class InvoiceManager {
    * knows whether it arrived, and letting the payer self-certify would make
    * the record worth less than the wallet history it is meant to summarise.
    */
-  public async markPaid(invoice: Invoice, actor: User): Promise<Invoice> {
-    this.assertIssuer(invoice, actor)
+  public markPaid(invoice: Invoice, actor: User): RepoEffect<Invoice> {
+    return Effect.gen(this, function* () {
+      this.assertIssuer(invoice, actor)
 
-    if (invoice.state === EInvoiceState.PAID) {
-      return invoice
-    }
+      if (invoice.state === EInvoiceState.PAID) {
+        return invoice
+      }
 
-    await this.setTimePaidFlag(invoice, true)
+      yield* this.setTimePaidFlag(invoice, true)
 
-    invoice.state = EInvoiceState.PAID
-    invoice.paidAt = new Date()
+      invoice.state = EInvoiceState.PAID
+      invoice.paidAt = new Date()
 
-    const saved = await this.invoiceRepository.saveSingle(invoice)
-    await this.invalidateReport(invoice.project)
+      const saved = yield* this.invoiceRepository.saveSingle(invoice)
+      yield* this.invalidateReport(invoice.project)
 
-    return saved
+      return saved
+    })
   }
 
   /** Reverts a mistaken mark, releasing the entries back to unpaid. */
-  public async markUnpaid(invoice: Invoice, actor: User): Promise<Invoice> {
-    this.assertIssuer(invoice, actor)
+  public markUnpaid(invoice: Invoice, actor: User): RepoEffect<Invoice> {
+    return Effect.gen(this, function* () {
+      this.assertIssuer(invoice, actor)
 
-    if (invoice.state !== EInvoiceState.PAID) {
-      return invoice
-    }
+      if (invoice.state !== EInvoiceState.PAID) {
+        return invoice
+      }
 
-    await this.setTimePaidFlag(invoice, false)
+      yield* this.setTimePaidFlag(invoice, false)
 
-    invoice.state = EInvoiceState.REQUESTED
-    invoice.paidAt = null
+      invoice.state = EInvoiceState.REQUESTED
+      invoice.paidAt = null
 
-    const saved = await this.invoiceRepository.saveSingle(invoice)
-    await this.invalidateReport(invoice.project)
+      const saved = yield* this.invoiceRepository.saveSingle(invoice)
+      yield* this.invalidateReport(invoice.project)
 
-    return saved
+      return saved
+    })
   }
 
   private assertIssuer(invoice: Invoice, actor: User): void {
@@ -260,21 +283,20 @@ export class InvoiceManager {
    * only the span of what it covers, and a sparse selection leaves entries in
    * between that it must not touch.
    */
-  private async setTimePaidFlag(
-    invoice: Invoice,
-    isPaid: boolean,
-  ): Promise<void> {
-    const times = await this.timeRepository.findForInvoice(invoice)
+  private setTimePaidFlag(invoice: Invoice, isPaid: boolean): RepoEffect<void> {
+    return Effect.gen(this, function* () {
+      const times = yield* this.timeRepository.findForInvoice(invoice)
 
-    if (times.length === 0) {
-      return
-    }
+      if (times.length === 0) {
+        return
+      }
 
-    for (const time of times) {
-      time.isPaid = isPaid
-    }
+      for (const time of times) {
+        time.isPaid = isPaid
+      }
 
-    await this.timeRepository.saveMany(times)
+      yield* this.timeRepository.saveMany(times)
+    })
   }
 
   /**
@@ -290,44 +312,49 @@ export class InvoiceManager {
    * a month", so an invoice covers exactly what it bills for and the overlap
    * check above stays exact.
    */
-  public async ensureForProject(
+  public ensureForProject(
     project: Project,
     author: User,
-  ): Promise<Invoice | null> {
-    const accessible = await this.assertCanInvoice(project, author)
+  ): RepoEffect<Invoice | null> {
+    return Effect.gen(this, function* () {
+      const accessible = yield* this.assertCanInvoice(project, author)
 
-    const outstanding =
-      await this.timeRepository.findUninvoicedUnpaidTimeForAuthor(
-        accessible,
-        author,
+      const outstanding =
+        yield* this.timeRepository.findUninvoicedUnpaidTimeForAuthor(
+          accessible,
+          author,
+        )
+
+      if (outstanding.length === 0) {
+        return yield* this.invoiceRepository.findLatestForAuthor(
+          accessible,
+          author,
+        )
+      }
+
+      const starts = outstanding.map((time) => new Date(time.fromAt).getTime())
+      const ends = outstanding.map((time) => new Date(time.toAt).getTime())
+
+      const invoice = new Invoice()
+
+      invoice.project = accessible
+      invoice.user = author
+      invoice.fromAt = new Date(Math.min(...starts))
+      invoice.toAt = new Date(Math.max(...ends))
+      invoice.amountCents = InvoiceManager.amountFor(
+        outstanding,
+        Number(accessible.rateHour) || 0,
       )
+      invoice.state = EInvoiceState.REQUESTED
+      invoice.paidAt = null
 
-    if (outstanding.length === 0) {
-      return this.invoiceRepository.findLatestForAuthor(accessible, author)
-    }
+      const saved = yield* this.invoiceRepository.validateAndSave(invoice)
 
-    const starts = outstanding.map((time) => new Date(time.fromAt).getTime())
-    const ends = outstanding.map((time) => new Date(time.toAt).getTime())
+      yield* this.attachTime(saved, outstanding)
+      yield* this.invalidateReport(accessible)
 
-    const invoice = new Invoice()
-
-    invoice.project = accessible
-    invoice.user = author
-    invoice.fromAt = new Date(Math.min(...starts))
-    invoice.toAt = new Date(Math.max(...ends))
-    invoice.amountCents = InvoiceManager.amountFor(
-      outstanding,
-      Number(accessible.rateHour) || 0,
-    )
-    invoice.state = EInvoiceState.REQUESTED
-    invoice.paidAt = null
-
-    const saved = await this.invoiceRepository.validateAndSave(invoice)
-
-    await this.attachTime(saved, outstanding)
-    await this.invalidateReport(accessible)
-
-    return saved
+      return saved
+    })
   }
 
   /**
@@ -335,16 +362,19 @@ export class InvoiceManager {
    * and nothing else clears it. Without this, settling an invoice leaves the
    * project still showing those hours as owed until the cache expires.
    */
-  private async invalidateReport(project: Project): Promise<void> {
-    try {
-      await this.redisClient.del(project.id)
-    } catch (error) {
+  private invalidateReport(project: Project): RepoEffect<void> {
+    return fromPromise(() => this.redisClient.del(project.id)).pipe(
       // A stale report is a display problem for a few minutes; a failed cache
-      // delete must not roll back a payment that already happened.
-      console.error(
-        `InvoiceManager: failed to invalidate report cache for project ${project.id}`,
-        error,
-      )
-    }
+      // delete must not roll back a payment that already happened. Recovering
+      // to void here is what keeps that failure out of the caller's channel.
+      Effect.catchAll((error) =>
+        Effect.sync(() =>
+          console.error(
+            `InvoiceManager: failed to invalidate report cache for project ${project.id}`,
+            error,
+          ),
+        ),
+      ),
+    )
   }
 }

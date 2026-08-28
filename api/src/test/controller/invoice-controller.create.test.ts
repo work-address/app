@@ -10,6 +10,7 @@ import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { EProjectState } from '@/model/project'
 import { ProjectRepository } from '@/repository/project-repository'
 import { TimeRepository } from '@/repository/time-repository'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite
 export class InvoiceControllerCreateTest extends BaseControllerTest {
@@ -134,7 +135,7 @@ export class InvoiceControllerCreateTest extends BaseControllerTest {
       EProjectState.ACTIVE,
     )
     project.workerAddresses = [worker.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     let error: unknown
 
@@ -171,7 +172,7 @@ export class InvoiceControllerCreateTest extends BaseControllerTest {
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner, 60)
     project.workerAddresses = [worker.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const fromAt = moment.utc().subtract(3, 'hours')
     const toAt = moment.utc().subtract(1, 'hour')
@@ -183,7 +184,7 @@ export class InvoiceControllerCreateTest extends BaseControllerTest {
       owner,
     )
     ownerTime.minutesActive = 60
-    await this.timeRepository.saveSingle(ownerTime)
+    await runPromise(this.timeRepository.saveSingle(ownerTime))
 
     const workerTime = await this.timeFixture.create(
       project,
@@ -192,7 +193,7 @@ export class InvoiceControllerCreateTest extends BaseControllerTest {
       worker,
     )
     workerTime.minutesActive = 30
-    await this.timeRepository.saveSingle(workerTime)
+    await runPromise(this.timeRepository.saveSingle(workerTime))
 
     const res = await invoiceControllerCreate({
       client: this.apiClient(),
@@ -286,7 +287,7 @@ export class InvoiceControllerCreateTest extends BaseControllerTest {
       owner,
     )
     time.minutesActive = 60
-    await this.timeRepository.saveSingle(time)
+    await runPromise(this.timeRepository.saveSingle(time))
 
     const res = await invoiceControllerCreate({
       client: this.apiClient(),
@@ -316,7 +317,7 @@ export class InvoiceControllerCreateTest extends BaseControllerTest {
       owner,
     )
     time.minutesActive = 60
-    await this.timeRepository.saveSingle(time)
+    await runPromise(this.timeRepository.saveSingle(time))
 
     const call = () =>
       invoiceControllerCreate({

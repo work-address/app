@@ -7,6 +7,7 @@ import axios from 'axios'
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { ProjectRepository } from '@/repository/project-repository'
 import { EProjectState } from '@/model/project'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite
 export class ProjectControllerDeleteTest extends BaseControllerTest {
@@ -36,11 +37,13 @@ export class ProjectControllerDeleteTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const updated = await this.projectRepository.findOneBy({
-      where: {
-        id: project.id,
-      },
-    })
+    const updated = await runPromise(
+      this.projectRepository.findOneBy({
+        where: {
+          id: project.id,
+        },
+      }),
+    )
 
     expect(res.status).to.be.equal(200)
     this.expectEmptyResponseBody(res.data)
@@ -74,9 +77,11 @@ export class ProjectControllerDeleteTest extends BaseControllerTest {
     if (!axios.isAxiosError(error)) throw error
     expect(error.response?.status).to.be.equal(403)
 
-    const stillThere = await this.projectRepository.findOneBy({
-      where: { id: project.id },
-    })
+    const stillThere = await runPromise(
+      this.projectRepository.findOneBy({
+        where: { id: project.id },
+      }),
+    )
     expect(stillThere).to.not.eq(undefined)
     expect(stillThere!.id).to.be.eq(project.id)
   }

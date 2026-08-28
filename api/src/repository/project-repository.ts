@@ -1,9 +1,14 @@
+import { Effect } from 'effect'
 import * as _ from 'lodash'
 import { inject, injectable } from 'inversify'
 import { Brackets, ObjectLiteral, SelectQueryBuilder } from 'typeorm'
 
 import { Filter } from '@/service/filter'
-import { AbstractRepositoryTemplate } from '@/repository/abstract-repository-template'
+import {
+  AbstractRepositoryTemplate,
+  RepoEffect,
+} from '@/repository/abstract-repository-template'
+import { fromPromise } from '@/service/effect-bridge'
 import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
 import { EProjectState } from '@/model/project'
@@ -24,21 +29,23 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
   public findProjectAsOwner(
     project: Project,
     user: User,
-  ): Promise<Project | undefined> {
-    return this.getRepo()
-      .createQueryBuilder('project')
-      .innerJoinAndSelect('project.user', 'user')
-      .andWhere('project.id = :projectId', { projectId: project.id })
-      .andWhere('user.id = :userId', { userId: user.id })
-      .select()
-      .getOne()
-      .then((result) => result ?? undefined)
+  ): RepoEffect<Project | undefined> {
+    return fromPromise(
+      async () =>
+        (await this.getRepo()
+          .createQueryBuilder('project')
+          .innerJoinAndSelect('project.user', 'user')
+          .andWhere('project.id = :projectId', { projectId: project.id })
+          .andWhere('user.id = :userId', { userId: user.id })
+          .select()
+          .getOne()) ?? undefined,
+    )
   }
 
-  public async findProjectWithAccess(
+  public findProjectWithAccess(
     project: Project,
     user: User,
-  ): Promise<Project | undefined> {
+  ): RepoEffect<Project | undefined> {
     const qb = this.getRepo()
       .createQueryBuilder('project')
       .innerJoinAndSelect('project.user', 'owner')
@@ -46,15 +53,21 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
 
     this.applyViewAccessFilter(qb, 'owner', user)
 
-    const found = await qb.getOne()
-    if (!found) {
-      return undefined
-    }
+    return Effect.gen(this, function* () {
+      const found = yield* fromPromise(() => qb.getOne())
 
-    return this.attachAccessUsers(found)
+      if (!found) {
+        return undefined
+      }
+
+      return yield* this.attachAccessUsers(found)
+    })
   }
 
-  public findProjectForTimeTracking(id: string, user: User): Promise<Project> {
+  public findProjectForTimeTracking(
+    id: string,
+    user: User,
+  ): RepoEffect<Project> {
     const qb = this.getRepo()
       .createQueryBuilder('project')
       .innerJoinAndSelect('project.user', 'owner')
@@ -63,26 +76,28 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
 
     this.applyWorkerAccessFilter(qb, 'owner', user)
 
-    return qb.getOneOrFail()
+    return fromPromise(() => qb.getOneOrFail())
   }
 
   public findProjectOwnedBy(
     project: Project,
     user: User,
-  ): Promise<Project | undefined> {
-    return this.getRepo()
-      .createQueryBuilder('project')
-      .innerJoinAndSelect('project.user', 'owner')
-      .andWhere('project.id = :id', { id: project.id })
-      .andWhere('owner.id = :userId', { userId: user.id })
-      .getOne()
-      .then((result) => result ?? undefined)
+  ): RepoEffect<Project | undefined> {
+    return fromPromise(
+      async () =>
+        (await this.getRepo()
+          .createQueryBuilder('project')
+          .innerJoinAndSelect('project.user', 'owner')
+          .andWhere('project.id = :id', { id: project.id })
+          .andWhere('owner.id = :userId', { userId: user.id })
+          .getOne()) ?? undefined,
+    )
   }
 
-  public async findAndCountAccessibleBy(
+  public findAndCountAccessibleBy(
     search: ProjectSearchDto,
     user: User,
-  ): Promise<[Project[], number]> {
+  ): RepoEffect<[Project[], number]> {
     const s = _.assign(
       {
         filter: {},
@@ -96,7 +111,7 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
     const sort = this.filter.buildOrderByCondition('project', s)
     const limit = this.filter.buildLimit(search)
 
-    const [projects, count] = await this.getRepo()
+    const query = this.getRepo()
       .createQueryBuilder('project')
       .leftJoinAndSelect('project.user', 'user')
       .select()
@@ -160,58 +175,62 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
       .orderBy(sort)
       .skip(limit * s.page)
       .take(limit)
-      .getManyAndCount()
 
-    await this.attachAccessUsersToProjects(projects)
+    return Effect.gen(this, function* () {
+      const [projects, count] = yield* fromPromise(() =>
+        query.getManyAndCount(),
+      )
 
-    return [projects, count]
+      yield* this.attachAccessUsersToProjects(projects)
+
+      return [projects, count] as [Project[], number]
+    })
   }
 
-  private async attachAccessUsers(project: Project): Promise<Project> {
-    await this.attachAccessUsersToProjects([project])
-    return project
+  private attachAccessUsers(project: Project): RepoEffect<Project> {
+    return this.attachAccessUsersToProjects([project]).pipe(Effect.as(project))
   }
 
-  private async attachAccessUsersToProjects(
-    projects: Project[],
-  ): Promise<void> {
-    if (!projects.length) {
-      return
-    }
-
-    const addresses = [
-      ...new Set(
-        projects.flatMap((project) => [
-          ...(project.workerAddresses ?? []),
-          ...(project.viewerAddresses ?? []),
-        ]),
-      ),
-    ]
-
-    if (!addresses.length) {
-      for (const project of projects) {
-        project.workers = []
-        project.viewers = []
+  private attachAccessUsersToProjects(projects: Project[]): RepoEffect<void> {
+    return Effect.gen(this, function* () {
+      if (!projects.length) {
+        return
       }
-      return
-    }
 
-    const users = await this.userRepository.findByAddresses(addresses)
-    const usersByAddress = new Map(
-      users.map((u) => [u.address.toLowerCase(), u]),
-    )
+      const addresses = [
+        ...new Set(
+          projects.flatMap((project) => [
+            ...(project.workerAddresses ?? []),
+            ...(project.viewerAddresses ?? []),
+          ]),
+        ),
+      ]
 
-    for (const project of projects) {
-      const workerAddresses = project.workerAddresses ?? []
-      const viewerAddresses = project.viewerAddresses ?? []
+      if (!addresses.length) {
+        for (const project of projects) {
+          project.workers = []
+          project.viewers = []
+        }
+        return
+      }
 
-      project.workers = workerAddresses
-        .map((address) => usersByAddress.get(address.toLowerCase()))
-        .filter((u): u is User => u !== undefined)
-      project.viewers = viewerAddresses
-        .map((address) => usersByAddress.get(address.toLowerCase()))
-        .filter((u): u is User => u !== undefined)
-    }
+      const users = yield* this.userRepository.findByAddresses(addresses)
+      const usersByAddress = new Map(
+        users.map((u) => [u.address.toLowerCase(), u]),
+      )
+
+      for (const project of projects) {
+        const workerAddresses = project.workerAddresses ?? []
+        const viewerAddresses = project.viewerAddresses ?? []
+
+        project.workers = workerAddresses
+          .map((address) => usersByAddress.get(address.toLowerCase()))
+          .filter((u): u is User => u !== undefined)
+        project.viewers = viewerAddresses
+          .map((address) => usersByAddress.get(address.toLowerCase()))
+          .filter((u): u is User => u !== undefined)
+      }
+    })
   }
 
   private applyViewAccessFilter(

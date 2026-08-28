@@ -18,6 +18,7 @@ import { TimeRepository } from '@/repository/time-repository'
 import { UserRepository } from '@/repository/user-repository'
 import { Authenticator } from '@/service/auth/authenticator'
 import { InvoiceManager } from '@/service/invoice-manager'
+import { runPromise } from '@/service/effect-bridge'
 
 /**
  * Populates the dev database with a plausible workspace so the dashboard has
@@ -130,12 +131,14 @@ class DemoDataSeeder {
   ): Promise<User> {
     const address = web3.eth.accounts.privateKeyToAccount(privateKey).address
 
-    const existing = await this.userRepository.findOneBy({ where: { address } })
+    const existing = await runPromise(
+      this.userRepository.findOneBy({ where: { address } }),
+    )
 
     if (existing) {
       existing.premium = premium || Boolean(existing.premium)
 
-      return this.userRepository.saveSingle(existing)
+      return runPromise(this.userRepository.saveSingle(existing))
     }
 
     const user = new User()
@@ -148,14 +151,16 @@ class DemoDataSeeder {
     user.roles = [EUserRole.ROLE_USER]
     user.premium = premium
 
-    return this.userRepository.saveSingle(user)
+    return runPromise(this.userRepository.saveSingle(user))
   }
 
   private async resolveOwner(address?: string): Promise<User> {
     if (address) {
-      const existing = await this.userRepository.findOneBy({
-        where: { address },
-      })
+      const existing = await runPromise(
+        this.userRepository.findOneBy({
+          where: { address },
+        }),
+      )
 
       if (!existing) {
         throw new Error(`No account with address ${address}`)
@@ -165,7 +170,7 @@ class DemoDataSeeder {
       // would be refused and the demo would show solo projects only.
       existing.premium = true
 
-      return this.userRepository.saveSingle(existing)
+      return runPromise(this.userRepository.saveSingle(existing))
     }
 
     return this.findOrCreateUser(DEMO_KEYS.owner, true)
@@ -178,9 +183,11 @@ class DemoDataSeeder {
   ): Promise<void> {
     const owner = await this.resolveOwner(address)
 
-    const existing = await this.projectRepository.findBy({
-      where: { user: { id: owner.id } },
-    })
+    const existing = await runPromise(
+      this.projectRepository.findBy({
+        where: { user: { id: owner.id } },
+      }),
+    )
 
     if (existing.length > 0) {
       if (!force) {
@@ -197,31 +204,37 @@ class DemoDataSeeder {
       // would trip the FK.
       const projectIds = existing.map((project) => project.id)
 
-      const invoices = await this.invoiceRepository.findBy({
-        where: { project: { id: In(projectIds) } },
-      })
-      await this.invoiceRepository.removeMany(invoices)
+      const invoices = await runPromise(
+        this.invoiceRepository.findBy({
+          where: { project: { id: In(projectIds) } },
+        }),
+      )
+      await runPromise(this.invoiceRepository.removeMany(invoices))
 
-      const times = await this.timeRepository.findBy({
-        where: { project: { id: In(projectIds) } },
-      })
-      await this.timeRepository.removeMany(times)
+      const times = await runPromise(
+        this.timeRepository.findBy({
+          where: { project: { id: In(projectIds) } },
+        }),
+      )
+      await runPromise(this.timeRepository.removeMany(times))
 
       // Cached stats rows appear as soon as a dashboard requests them, so a
       // reseed after any app use has these to clear as well.
-      const statistics = await this.statisticsRepository.findBy({
-        where: { project: { id: In(projectIds) } },
-      })
-      await this.statisticsRepository.removeMany(statistics)
+      const statistics = await runPromise(
+        this.statisticsRepository.findBy({
+          where: { project: { id: In(projectIds) } },
+        }),
+      )
+      await runPromise(this.statisticsRepository.removeMany(statistics))
 
-      await this.projectRepository.removeMany(existing)
+      await runPromise(this.projectRepository.removeMany(existing))
       console.log(`${SEED_TAG} removed ${existing.length} existing projects`)
     }
 
     const workers = await Promise.all(
-      DEMO_KEYS.workers.slice(0, WORKERS_PER_PROJECT).map((key) =>
-        this.findOrCreateUser(key),
-      ),
+      DEMO_KEYS.workers
+        .slice(0, WORKERS_PER_PROJECT)
+        .map((key) => this.findOrCreateUser(key)),
     )
 
     console.log(
@@ -257,7 +270,7 @@ class DemoDataSeeder {
       index === 0 ? [] : workers.map((worker) => worker.address)
     project.viewerAddresses = []
 
-    const saved = await this.projectRepository.saveSingle(project)
+    const saved = await runPromise(this.projectRepository.saveSingle(project))
 
     const contributors = index === 0 ? [owner] : [owner, ...workers]
 
@@ -269,13 +282,12 @@ class DemoDataSeeder {
     // of them settled - so the dashboard shows both paid and unpaid money, and
     // `Time.isPaid` is exercised through the path that actually sets it.
     for (const [position, contributor] of contributors.entries()) {
-      const invoice = await this.invoiceManager.ensureForProject(
-        saved,
-        contributor,
+      const invoice = await runPromise(
+        this.invoiceManager.ensureForProject(saved, contributor),
       )
 
       if (invoice && position % 2 === 0) {
-        await this.invoiceManager.markPaid(invoice, contributor)
+        await runPromise(this.invoiceManager.markPaid(invoice, contributor))
       }
     }
   }
@@ -331,7 +343,7 @@ class DemoDataSeeder {
       }
     }
 
-    await this.timeRepository.saveMany(entries)
+    await runPromise(this.timeRepository.saveMany(entries))
   }
 
   /**
@@ -372,9 +384,11 @@ class DemoDataSeeder {
 
   /** Only for the summary line; the invoices themselves are made above. */
   async countInvoices(owner: User): Promise<number> {
-    const [, count] = await this.invoiceRepository.findAndCount(
-      { filter: {}, sort: { createdAt: 'ASC' }, page: 0 },
-      owner,
+    const [, count] = await runPromise(
+      this.invoiceRepository.findAndCount(
+        { filter: {}, sort: { createdAt: 'ASC' }, page: 0 },
+        owner,
+      ),
     )
 
     return count
@@ -400,7 +414,9 @@ class DemoDataSeeder {
 
   if (token) {
     const authenticator = container.get<Authenticator>('Authenticator')
-    const user = await authenticator.getUserFromJwtTokenOrThrowException(token)
+    const user = await runPromise(
+      authenticator.getUserFromJwtTokenOrThrowException(token),
+    )
 
     console.log(`${SEED_TAG} resolved --token to ${user.address}`)
     resolvedAddress = user.address

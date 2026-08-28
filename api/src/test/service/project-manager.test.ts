@@ -10,6 +10,7 @@ import { ProjectFixture } from '@/test/fixture/project-fixture'
 import { ProjectRepository } from '@/repository/project-repository'
 import { Project } from '@/entity/project'
 import { EProjectState } from '@/model/project'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite()
 export class ProjectManagerTest extends AbstractDatabaseIntegration {
@@ -34,9 +35,8 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     const user = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(user)
 
-    const result = await this.projectManager.findProjectCheckAccess(
-      project,
-      user,
+    const result = await runPromise(
+      this.projectManager.findProjectCheckAccess(project, user),
     )
 
     expect(result?.id).to.be.equal(project.id)
@@ -48,11 +48,10 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner)
     project.workerAddresses = [worker.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
-    const result = await this.projectManager.findProjectCheckAccess(
-      project,
-      worker,
+    const result = await runPromise(
+      this.projectManager.findProjectCheckAccess(project, worker),
     )
 
     expect(result?.id).to.be.equal(project.id)
@@ -64,11 +63,10 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner)
     project.viewerAddresses = [viewer.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
-    const result = await this.projectManager.findProjectCheckAccess(
-      project,
-      viewer,
+    const result = await runPromise(
+      this.projectManager.findProjectCheckAccess(project, viewer),
     )
 
     expect(result?.id).to.be.equal(project.id)
@@ -80,9 +78,8 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     const outsider = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner)
 
-    const result = await this.projectManager.findProjectCheckAccess(
-      project,
-      outsider,
+    const result = await runPromise(
+      this.projectManager.findProjectCheckAccess(project, outsider),
     )
 
     expect(result).to.be.undefined
@@ -101,7 +98,7 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     project.workerAddresses = [owner.address, worker.address]
     project.viewerAddresses = [owner.address]
 
-    const saved = await this.projectManager.createAndSave(project)
+    const saved = await runPromise(this.projectManager.createAndSave(project))
 
     expect(saved.workerAddresses).to.deep.equal([worker.address])
     expect(saved.viewerAddresses).to.deep.equal([])
@@ -121,7 +118,7 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     project.workerAddresses = ['0x000000000000000000000000000000deadbeef']
     project.viewerAddresses = []
 
-    const saved = await this.projectManager.createAndSave(project)
+    const saved = await runPromise(this.projectManager.createAndSave(project))
 
     expect(saved.workerAddresses).to.deep.equal([
       '0x000000000000000000000000000000deadbeef',
@@ -143,7 +140,7 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     project.workerAddresses = [worker.address.toLowerCase()]
     project.viewerAddresses = []
 
-    const saved = await this.projectManager.createAndSave(project)
+    const saved = await runPromise(this.projectManager.createAndSave(project))
 
     expect(saved.workerAddresses).to.deep.equal([worker.address.toLowerCase()])
   }
@@ -157,14 +154,16 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     const project = await this.projectFixture.createPersonal(owner)
     project.workerAddresses = [workerA.address]
     project.viewerAddresses = [viewer.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const patch = new Project()
     patch.workerAddresses = [workerB.address]
 
-    await this.projectManager.editAndSave(project, patch)
+    await runPromise(this.projectManager.editAndSave(project, patch))
 
-    const updated = await this.projectRepository.findOneByIdOrFail(project.id)
+    const updated = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
+    )
     expect(updated.workerAddresses).to.deep.equal([workerB.address])
     expect(updated.viewerAddresses).to.deep.equal([viewer.address])
   }
@@ -179,9 +178,11 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     patch.workerAddresses = [worker.address, worker.address]
     patch.viewerAddresses = [worker.address, worker.address]
 
-    await this.projectManager.editAndSave(project, patch)
+    await runPromise(this.projectManager.editAndSave(project, patch))
 
-    const updated = await this.projectRepository.findOneByIdOrFail(project.id)
+    const updated = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
+    )
     expect(updated.workerAddresses).to.deep.equal([worker.address])
     expect(updated.viewerAddresses).to.deep.equal([worker.address])
   }
@@ -202,7 +203,7 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     let error: unknown
 
     try {
-      await this.projectManager.createAndSave(project)
+      await runPromise(this.projectManager.createAndSave(project))
     } catch (e: unknown) {
       error = e
     }
@@ -223,7 +224,7 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     project.workerAddresses = []
     project.viewerAddresses = []
 
-    const saved = await this.projectManager.createAndSave(project)
+    const saved = await runPromise(this.projectManager.createAndSave(project))
 
     expect(saved.workerAddresses).to.deep.equal([])
     expect(saved.viewerAddresses).to.deep.equal([])
@@ -241,7 +242,7 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     let error: unknown
 
     try {
-      await this.projectManager.editAndSave(project, patch)
+      await runPromise(this.projectManager.editAndSave(project, patch))
     } catch (e: unknown) {
       error = e
     }
@@ -249,7 +250,9 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     expect(error).to.exist
     expect((error as { httpCode?: number }).httpCode).to.be.equal(400)
 
-    const unchanged = await this.projectRepository.findOneByIdOrFail(project.id)
+    const unchanged = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
+    )
     expect(unchanged.workerAddresses ?? []).to.deep.equal([])
   }
 
@@ -266,23 +269,38 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     const project = await this.projectFixture.createPersonal(owner)
     project.workerAddresses = [worker.address]
     project.viewerAddresses = [viewer.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
-    expect(await this.projectManager.findProjectCheckAccess(project, worker)).to
-      .exist
-    expect(await this.projectManager.findProjectCheckAccess(project, viewer)).to
-      .exist
+    expect(
+      await runPromise(
+        this.projectManager.findProjectCheckAccess(project, worker),
+      ),
+    ).to.exist
+    expect(
+      await runPromise(
+        this.projectManager.findProjectCheckAccess(project, viewer),
+      ),
+    ).to.exist
 
     owner.premium = false
-    await this.userManager.saveSingle(owner)
+    await runPromise(this.userManager.saveSingle(owner))
 
-    expect(await this.projectManager.findProjectCheckAccess(project, worker)).to
-      .be.undefined
-    expect(await this.projectManager.findProjectCheckAccess(project, viewer)).to
-      .be.undefined
+    expect(
+      await runPromise(
+        this.projectManager.findProjectCheckAccess(project, worker),
+      ),
+    ).to.be.undefined
+    expect(
+      await runPromise(
+        this.projectManager.findProjectCheckAccess(project, viewer),
+      ),
+    ).to.be.undefined
     // The owner never loses access to their own project.
-    expect(await this.projectManager.findProjectCheckAccess(project, owner)).to
-      .exist
+    expect(
+      await runPromise(
+        this.projectManager.findProjectCheckAccess(project, owner),
+      ),
+    ).to.exist
   }
 
   @test()
@@ -317,20 +335,22 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
 
     const granted = new Project()
     granted.workerAddresses = [workerA.address, workerB.address]
-    await this.projectManager.editAndSave(project, granted)
+    await runPromise(this.projectManager.editAndSave(project, granted))
 
     owner.premium = false
-    await this.userManager.saveSingle(owner)
+    await runPromise(this.userManager.saveSingle(owner))
 
-    const reloaded = await this.projectRepository.findOneByIdOrFail(project.id)
+    const reloaded = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
+    )
 
     // Dropping one of the two is allowed...
     const revoke = new Project()
     revoke.workerAddresses = [workerA.address]
-    await this.projectManager.editAndSave(reloaded, revoke)
+    await runPromise(this.projectManager.editAndSave(reloaded, revoke))
 
-    const afterRevoke = await this.projectRepository.findOneByIdOrFail(
-      project.id,
+    const afterRevoke = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
     )
     expect(afterRevoke.workerAddresses).to.deep.equal([workerA.address])
 
@@ -340,7 +360,7 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
 
     let error: unknown
     try {
-      await this.projectManager.editAndSave(afterRevoke, regrant)
+      await runPromise(this.projectManager.editAndSave(afterRevoke, regrant))
     } catch (e: unknown) {
       error = e
     }

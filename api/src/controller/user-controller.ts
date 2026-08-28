@@ -18,6 +18,7 @@ import { UserRepository } from '@/repository/user-repository'
 import { UserSearchDto } from '@/model/dto/user'
 import { EntityFromParam } from '@/decorator/entity-from-param'
 import express from 'express'
+import { runPromise } from '@/service/effect-bridge'
 
 @JsonController('/user')
 export class UserController {
@@ -46,7 +47,7 @@ export class UserController {
   @Authorized([EUserRole.ROLE_USER])
   @Post('/search')
   public search(@Body() search: UserSearchDto) {
-    return this.userRepository.findAndCount(search)
+    return runPromise(this.userRepository.findAndCount(search))
   }
 
   @OpenAPIExtended({
@@ -84,7 +85,7 @@ export class UserController {
     data: User,
     @Res() res: express.Response,
   ): Promise<express.Response> {
-    await this.userManager.editValidateAndSave(currentUser, data)
+    await runPromise(this.userManager.editValidateAndSave(currentUser, data))
 
     res.status(204).end()
     return res

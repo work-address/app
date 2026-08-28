@@ -8,6 +8,7 @@ import { projectControllerEdit } from '@app/api-client'
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { ProjectRepository } from '@/repository/project-repository'
 import { EProjectState } from '@/model/project'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite
 export class ProjectControllerEditTest extends BaseControllerTest {
@@ -46,8 +47,8 @@ export class ProjectControllerEditTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const projectUpdated = await this.projectRepository.findOneByIdOrFail(
-      project.id,
+    const projectUpdated = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
     )
 
     expect(res.status).to.be.equal(200)
@@ -86,8 +87,8 @@ export class ProjectControllerEditTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const projectUpdated = await this.projectRepository.findOneByIdOrFail(
-      project.id,
+    const projectUpdated = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
     )
 
     expect(projectUpdated.workerAddresses).to.deep.equal([worker.address])
@@ -130,7 +131,9 @@ export class ProjectControllerEditTest extends BaseControllerTest {
     expect(error).to.be.ok
     expect(error.response?.status).to.be.equal(403)
 
-    const unchanged = await this.projectRepository.findOneByIdOrFail(project.id)
+    const unchanged = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
+    )
     expect(unchanged.title).to.not.eq(data.title)
   }
 }

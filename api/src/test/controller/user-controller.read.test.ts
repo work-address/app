@@ -9,6 +9,7 @@ import type { UserEdit } from '@app/api-client'
 
 import { UserRepository } from '@/repository/user-repository'
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite()
 export class UserControllerReadTest extends BaseControllerTest {
@@ -153,7 +154,7 @@ export class UserControllerReadTest extends BaseControllerTest {
     const userRepository = this.container.get<UserRepository>('UserRepository')
 
     user.premium = true
-    await userRepository.saveSingle(user)
+    await runPromise(userRepository.saveSingle(user))
 
     const client = this.apiClient()
     const res = await userControllerRead({

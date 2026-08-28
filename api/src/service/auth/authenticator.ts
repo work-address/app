@@ -1,5 +1,6 @@
 import * as bcrypt from 'bcrypt'
 import * as jwt from 'jsonwebtoken'
+import { Effect } from 'effect'
 import { inject, injectable } from 'inversify'
 
 import { User } from '@/entity/user'
@@ -18,6 +19,14 @@ import { ProjectManager } from '@/service/project-manager'
 import { TimeRepository } from '@/repository/time-repository'
 import { TonProofService } from '@/service/auth/ton-proof-service'
 import { IAuthTonPayload } from '@/model/auth'
+import { fromPromise } from '@/service/effect-bridge'
+
+/**
+ * Authentication fails in exactly one way the caller cares about, but the
+ * repository underneath can fail in many, so the channel stays `unknown` and
+ * the original exception reaches ErrorHandler untouched.
+ */
+export type AuthEffect<A> = Effect.Effect<A, unknown>
 
 @injectable()
 export class Authenticator {
@@ -45,167 +54,173 @@ export class Authenticator {
   @inject('TonProofService')
   protected tonProofService: TonProofService
 
-  public async getNonce(address: string): Promise<string> {
-    const nonce = this.signer.generateNonce()
-    const key = `nonce:${address}`
+  public getNonce(address: string): AuthEffect<string> {
+    // Effect.suspend: generating a nonce is a side effect, so it belongs to the
+    // run rather than to building the effect. Without it, merely constructing
+    // this effect would mint a nonce, and running it twice would store the same
+    // one twice instead of issuing two.
+    return Effect.suspend(() => {
+      const nonce = this.signer.generateNonce()
+      const key = `nonce:${address}`
 
-    await this.redis.setWithExpiry(key, nonce, Authenticator.nonceExpiresIn)
-
-    return nonce
+      return fromPromise(() =>
+        this.redis.setWithExpiry(key, nonce, Authenticator.nonceExpiresIn),
+      ).pipe(Effect.as(nonce))
+    })
   }
 
-  public async getTonNonce(): Promise<string> {
-    const nonce = this.signer.generateNonce()
-    const key = `nonce:ton:${nonce}`
+  public getTonNonce(): AuthEffect<string> {
+    return Effect.suspend(() => {
+      const nonce = this.signer.generateNonce()
+      const key = `nonce:ton:${nonce}`
 
-    await this.redis.setWithExpiry(key, nonce, Authenticator.nonceExpiresIn)
-
-    return nonce
+      return fromPromise(() =>
+        this.redis.setWithExpiry(key, nonce, Authenticator.nonceExpiresIn),
+      ).pipe(Effect.as(nonce))
+    })
   }
 
-  public async loginEth(
+  /**
+   * The three wallet logins differ only in where the nonce is keyed and how the
+   * signature is checked; everything after that - consume the nonce, find or
+   * create the user, issue tokens - is identical, and used to be copied three
+   * times. Expressing it once as an Effect keeps the two failure modes
+   * (`AuthenticationException`) in the type instead of relying on each copy
+   * remembering to throw them.
+   *
+   * `verify` is an Effect rather than a boolean so a verifier can be async
+   * (TON reads the chain) without the shared pipeline caring which one it got.
+   */
+  private authenticateWithNonce(
+    address: string,
+    key: string,
+    verify: (nonce: string) => Effect.Effect<boolean, unknown>,
+  ): AuthEffect<IAuthTokens> {
+    return Effect.gen(this, function* () {
+      const nonce = yield* fromPromise(() => this.redis.get(key))
+
+      if (typeof nonce !== 'string' || !nonce) {
+        return yield* Effect.fail(
+          new AuthenticationException('Nonce is not available or expired'),
+        )
+      }
+
+      const isValid = yield* verify(nonce)
+
+      if (!isValid) {
+        return yield* Effect.fail(
+          new AuthenticationException('Signature is not valid'),
+        )
+      }
+
+      yield* fromPromise(() => this.redis.del(key))
+
+      const existing = yield* this.userRepository.findByAddressPublic(address)
+      const user = existing ?? (yield* this.createUserWithDemoData(address))
+
+      return yield* Effect.sync(() => this.getTokens(user))
+    })
+  }
+
+  public loginEth(signature: string, address: string): AuthEffect<IAuthTokens> {
+    return this.authenticateWithNonce(address, `nonce:${address}`, (nonce) =>
+      Effect.sync(() => this.signer.verify(nonce, signature, address)),
+    )
+  }
+
+  public loginTon(payload: IAuthTonPayload): AuthEffect<IAuthTokens> {
+    return this.authenticateWithNonce(
+      payload.address,
+      `nonce:ton:${payload.proof.payload}`,
+      () => fromPromise(() => this.tonProofService.checkProof(payload)),
+    )
+  }
+
+  public loginSolana(
     signature: string,
     address: string,
-  ): Promise<IAuthTokens> {
-    const key = `nonce:${address}`
-    const nonceRaw = await this.redis.get(key)
-    if (typeof nonceRaw !== 'string' || !nonceRaw) {
-      throw new AuthenticationException('Nonce is not available or expired')
-    }
-    const nonce = nonceRaw
-
-    const isValid = this.signer.verify(nonce, signature, address)
-
-    if (!isValid) {
-      throw new AuthenticationException('Signature is not valid')
-    }
-
-    await this.redis.del(key)
-
-    let user = await this.userRepository.findByAddressPublic(address)
-
-    if (!user) {
-      user = await this.createUserWithDemoData(address)
-    }
-
-    return this.getTokens(user)
+  ): AuthEffect<IAuthTokens> {
+    return this.authenticateWithNonce(address, `nonce:${address}`, (nonce) =>
+      Effect.sync(() => this.signer.verifySolana(nonce, signature, address)),
+    )
   }
 
-  public async loginTon(payload: IAuthTonPayload): Promise<IAuthTokens> {
-    const address = payload.address
-    const key = `nonce:ton:${payload.proof.payload}`
-    const nonce = await this.redis.get(key)
+  public getUserFromRefreshToken(token: string): AuthEffect<User> {
+    return Effect.gen(this, function* () {
+      let payload: jwt.JwtPayload & Partial<IAuthTokenData>
+      try {
+        payload = this.decodeJwtToken(token)
+      } catch (e) {
+        if (e instanceof AuthenticationException) return yield* Effect.fail(e)
+        if (e instanceof Error && e.name === 'TokenExpiredError') {
+          return yield* Effect.fail(e)
+        }
+        return yield* Effect.fail(
+          new AuthenticationException('Refresh token is not valid'),
+        )
+      }
+      const userId = payload.id
 
-    if (!nonce) {
-      throw new AuthenticationException('Nonce is not available or expired')
-    }
+      if (!userId) {
+        return yield* Effect.fail(
+          new AuthenticationException('Refresh token is not valid'),
+        )
+      }
 
-    const isValid = await this.tonProofService.checkProof(payload)
-
-    if (!isValid) {
-      throw new AuthenticationException('Signature is not valid')
-    }
-
-    await this.redis.del(key)
-
-    let user = await this.userRepository.findByAddressPublic(address)
-
-    if (!user) {
-      user = await this.createUserWithDemoData(address)
-    }
-
-    return this.getTokens(user)
+      return yield* this.userRepository.findOneByIdOrFail(userId).pipe(
+        // Any lookup failure here means the token names a user that is gone;
+        // the caller only ever surfaced it as an auth error.
+        Effect.catchAll(() =>
+          Effect.fail(new AuthenticationException('User does not exist')),
+        ),
+      )
+    })
   }
 
-  public async loginSolana(
-    signature: string,
-    address: string,
-  ): Promise<IAuthTokens> {
-    const key = `nonce:${address}`
-    const nonceRaw = await this.redis.get(key)
-    if (typeof nonceRaw !== 'string' || !nonceRaw) {
-      throw new AuthenticationException('Nonce is not available or expired')
-    }
-    const nonce = nonceRaw
+  public getUserFromJwtTokenOrThrowException(token: string): AuthEffect<User> {
+    return Effect.gen(this, function* () {
+      const user = yield* this.getUserFromJwtToken(token)
 
-    const isValid = this.signer.verifySolana(nonce, signature, address)
+      if (!user) {
+        return yield* Effect.fail(
+          new AuthenticationException('invalid auth token'),
+        )
+      }
 
-    if (!isValid) {
-      throw new AuthenticationException('Signature is not valid')
-    }
-
-    await this.redis.del(key)
-
-    let user = await this.userRepository.findByAddressPublic(address)
-
-    if (!user) {
-      user = await this.createUserWithDemoData(address)
-    }
-
-    return this.getTokens(user)
+      return user
+    })
   }
 
-  public async getUserFromRefreshToken(token: string): Promise<User> {
-    let payload: jwt.JwtPayload & Partial<IAuthTokenData>
-    try {
-      payload = this.decodeJwtToken(token)
-    } catch (e) {
-      if (e instanceof AuthenticationException) throw e
-      if (e instanceof Error && e.name === 'TokenExpiredError') throw e
-      throw new AuthenticationException('Refresh token is not valid')
-    }
-    const userId = payload.id
-
-    if (!userId) {
-      throw new AuthenticationException('Refresh token is not valid')
-    }
-
-    try {
-      return await this.userRepository.findOneByIdOrFail(userId)
-    } catch {
-      throw new AuthenticationException('User does not exist')
-    }
-  }
-
-  public async getUserFromJwtTokenOrThrowException(
-    token: string,
-  ): Promise<User> {
-    const user = await this.getUserFromJwtToken(token)
-
-    if (!user) {
-      throw new AuthenticationException('invalid auth token')
-    }
-
-    return user
-  }
-
-  public async getUserFromJwtToken(token: string): Promise<User | null> {
-    try {
+  public getUserFromJwtToken(token: string): AuthEffect<User | null> {
+    return Effect.gen(this, function* () {
       const tokenData = this.decodeJwtToken(token)
 
       if (tokenData.emailOrPhone) {
-        const user = await this.userRepository.findByEmailPhone(
+        const user = yield* this.userRepository.findByEmailPhone(
           tokenData.emailOrPhone,
         )
 
         if (user) {
-          return Promise.resolve(user)
+          return user
         }
       }
       if (tokenData.address) {
-        const user = await this.userRepository.findByAddressPublic(
+        const user = yield* this.userRepository.findByAddressPublic(
           tokenData.address,
         )
 
         if (user) {
-          return Promise.resolve(user)
+          return user
         }
       }
 
-      return Promise.resolve(null)
-    } catch {
-      return Promise.resolve(null)
-    }
+      return null
+    }).pipe(
+      // A malformed or expired token is not an error to this caller - it just
+      // does not identify anyone. Defects are caught too because decodeJwtToken
+      // throws rather than failing.
+      Effect.catchAllCause(() => Effect.succeed(null)),
+    )
   }
 
   public getEmailOrPhoneOrThrowError(token: string): string {
@@ -259,14 +274,18 @@ export class Authenticator {
     return bcrypt.hashSync(plainPassword, 8)
   }
 
-  private async createUserWithDemoData(address: string): Promise<User> {
-    const user = new User()
-    user.address = address
-    user.roles = [EUserRole.ROLE_USER]
+  private createUserWithDemoData(address: string): AuthEffect<User> {
+    // Built inside the generator so each run creates its own User; hoisting it
+    // would make a second run re-save the instance the first run persisted.
+    return Effect.gen(this, function* () {
+      const user = new User()
+      user.address = address
+      user.roles = [EUserRole.ROLE_USER]
 
-    await this.userManager.saveSingle(user)
-    await this.projectManager.createDemoData(user)
+      yield* this.userManager.saveSingle(user)
+      yield* this.projectManager.createDemoData(user)
 
-    return user
+      return user
+    })
   }
 }

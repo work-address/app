@@ -1,3 +1,4 @@
+import { Cause, Effect } from 'effect'
 import { inject, injectable } from 'inversify'
 import moment from 'moment'
 
@@ -15,6 +16,8 @@ import { ITimeTotals } from '@/model/time'
 import AccessException from '@/exception/access-exception'
 import RetentionExceededException from '@/exception/retention-exceeded-exception'
 import { ImageResizer } from '@/service/image-resizer'
+import { RepoEffect } from '@/repository/abstract-repository-template'
+import { fromPromise } from '@/service/effect-bridge'
 
 @injectable()
 export class TimeManager {
@@ -45,181 +48,232 @@ export class TimeManager {
       .toDate()
   }
 
-  public async createOrUpdateMany(
+  /**
+   * A tracker syncs a batch and each entry succeeds or fails on its own, so one
+   * bad row must not sink the rest. That partial success used to be a `catch`
+   * inside a loop pushing into a shared array; as an Effect the per-entry
+   * failure is in the type, and the "one bad entry is a result, not an
+   * exception" rule lives in one place instead of being re-stated per branch.
+   */
+  public createOrUpdateMany(
     data: TimeCreateDto[],
     user: User,
-  ): Promise<ITimeInsertionResult[]> {
-    const insertionResults: ITimeInsertionResult[] = []
-    // Fixed for the whole request so every entry is judged against the same
-    // window, and so the purge below cannot move past what was just accepted.
-    const retentionCutoff = TimeManager.retentionCutoff()
-    const projectIdsUnderRetention = new Set<string>()
+  ): RepoEffect<ITimeInsertionResult[]> {
+    // Effect.suspend so the cutoff and the retention set belong to each run
+    // rather than to the moment the effect was built. An effect is a
+    // description that may be run more than once - a retry, say - and a Set
+    // shared across runs would let a later attempt purge projects that only an
+    // earlier one touched, deleting time entries the current batch never saw.
+    return Effect.suspend(() => {
+      // Fixed for the whole request so every entry is judged against the same
+      // window, and so the purge below cannot move past what was just accepted.
+      const retentionCutoff = TimeManager.retentionCutoff()
+      const projectIdsUnderRetention = new Set<string>()
 
-    for (let a = 0; a < data.length; a++) {
-      const item = data[a]
-      const fromAt = moment(item.fromAt).toDate()
-      const toAt = moment(item.toAt).toDate()
+      const storeEntry = (
+        item: TimeCreateDto,
+      ): Effect.Effect<ITimeInsertionResult, unknown> =>
+        Effect.gen(this, function* () {
+          const fromAt = moment(item.fromAt).toDate()
+          const toAt = moment(item.toAt).toDate()
 
-      try {
-        const project = await this.projectRepository.findProjectForTimeTracking(
-          item.projectId,
-          user,
-        )
+          const project =
+            yield* this.projectRepository.findProjectForTimeTracking(
+              item.projectId,
+              user,
+            )
 
-        if (!this.entitlement.isPremium(project.user)) {
-          projectIdsUnderRetention.add(project.id)
+          if (!this.entitlement.isPremium(project.user)) {
+            projectIdsUnderRetention.add(project.id)
 
-          // Refuse rather than accept-and-purge: saving this row and deleting
-          // it moments later would hand the client an id for a row that no
-          // longer exists, and a syncing tracker would drop its local copy.
-          if (fromAt < retentionCutoff) {
-            throw new RetentionExceededException(
-              `Entry starts before the ${TimeManager.freeTimeLogRetentionDays}-day retention window of this project's plan and was not stored`,
+            // Refuse rather than accept-and-purge: saving this row and deleting
+            // it moments later would hand the client an id for a row that no
+            // longer exists, and a syncing tracker would drop its local copy.
+            if (fromAt < retentionCutoff) {
+              return yield* Effect.fail(
+                new RetentionExceededException(
+                  `Entry starts before the ${TimeManager.freeTimeLogRetentionDays}-day retention window of this project's plan and was not stored`,
+                ),
+              )
+            }
+          }
+
+          const existing = yield* this.timeRepository.findTimeSingleForProject(
+            project,
+            fromAt,
+            toAt,
+          )
+
+          if (existing && existing.user?.id !== user.id) {
+            return yield* Effect.fail(
+              new AccessException(
+                `Wrong user: the given time belongs to someone else`,
+              ),
             )
           }
-        }
 
-        let time = await this.timeRepository.findTimeSingleForProject(
-          project,
-          fromAt,
-          toAt,
+          const time = existing ?? new Time()
+
+          if (!existing) {
+            time.user = user
+          }
+
+          time.fromAt = fromAt
+          time.toAt = toAt
+          time.note = item.note
+          time.minutesActive = item.minutesActive
+          time.keyboardKeys = item.keyboardKeys
+          time.mouseKeys = item.mouseKeys
+          time.mouseDistance = item.mouseDistance
+          time.project = project
+          time.screenshot = yield* fromPromise(() =>
+            this.resize(item.screenshot),
+          )
+          time.processes = item.processes
+
+          const savedTime = yield* this.timeRepository.validateAndSave(time)
+
+          return {
+            ...item,
+            id: savedTime.id,
+            screenshot: undefined,
+            processes: undefined,
+          }
+        })
+
+      const program = Effect.gen(this, function* () {
+        // Sequential on purpose: Effect.forEach runs without concurrency unless
+        // asked, and both the result order the tracker reconciles against and the
+        // retention set built along the way depend on that.
+        const insertionResults = yield* Effect.forEach(data, (item) =>
+          storeEntry(item).pipe(
+            // catchAllCause, not catchAll: the loop this replaced caught every
+            // throw, so a defect must land in the result row too rather than
+            // failing the whole batch.
+            Effect.catchAllCause((cause) =>
+              Effect.succeed({
+                ...item,
+                error: ErrorFormatter.format(Cause.squash(cause)),
+                screenshot: undefined,
+                processes: undefined,
+              }),
+            ),
+          ),
         )
 
-        if (!time) {
-          time = new Time()
-          time.user = user
-        } else if (time.user?.id !== user.id) {
-          throw new AccessException(
-            `Wrong user: the given time belongs to someone else`,
+        if (projectIdsUnderRetention.size > 0) {
+          yield* this.timeRepository.softDeleteExpiredEntriesForProjects(
+            [...projectIdsUnderRetention],
+            retentionCutoff,
           )
         }
 
-        time.fromAt = fromAt
-        time.toAt = toAt
-        time.note = item.note
-        time.minutesActive = item.minutesActive
-        time.keyboardKeys = item.keyboardKeys
-        time.mouseKeys = item.mouseKeys
-        time.mouseDistance = item.mouseDistance
-        time.project = project
-        time.screenshot = await this.resize(item.screenshot)
-        time.processes = item.processes
+        return insertionResults
+      })
 
-        const savedTime = await this.timeRepository.validateAndSave(time)
-
-        insertionResults.push({
-          ...item,
-          id: savedTime.id,
-          screenshot: undefined,
-          processes: undefined,
-        })
-      } catch (error: unknown) {
-        insertionResults.push({
-          ...item,
-          error: ErrorFormatter.format(error),
-          screenshot: undefined,
-          processes: undefined,
-        })
-      }
-    }
-
-    if (projectIdsUnderRetention.size > 0) {
-      await this.timeRepository.softDeleteExpiredEntriesForProjects(
-        [...projectIdsUnderRetention],
-        retentionCutoff,
-      )
-    }
-
-    return insertionResults
+      return program
+    })
   }
 
-  public async save(time: Time): Promise<Time> {
+  public save(time: Time): RepoEffect<Time> {
     return this.timeRepository.validateAndSave(time)
   }
 
-  public async setIsPaidMany(
+  public setIsPaidMany(
     ids: string[],
     isPaid: boolean,
     user: User,
-  ): Promise<void> {
-    const times = await this.timeRepository.findByIdsAsAuthor(ids, user)
+  ): RepoEffect<void> {
+    return Effect.gen(this, function* () {
+      const times = yield* this.timeRepository.findByIdsAsAuthor(ids, user)
 
-    for (const time of times) {
-      time.isPaid = isPaid
-    }
+      for (const time of times) {
+        time.isPaid = isPaid
+      }
 
-    await this.timeRepository.saveMany(times)
+      yield* this.timeRepository.saveMany(times)
+    })
   }
 
-  public async editAndSave(time: Time, data: Time): Promise<void> {
+  public editAndSave(time: Time, data: Time): RepoEffect<void> {
     time.note = data.note
 
     if (data.isPaid !== undefined) {
       time.isPaid = data.isPaid
     }
 
-    await this.timeRepository.validateAndSave(time)
+    return this.timeRepository.validateAndSave(time).pipe(Effect.asVoid)
   }
 
-  public async removeScreenshots(ids: string[], user: User): Promise<void> {
-    const times = await this.timeRepository.findByIdsAsAuthor(ids, user)
+  public removeScreenshots(ids: string[], user: User): RepoEffect<void> {
+    return Effect.gen(this, function* () {
+      const times = yield* this.timeRepository.findByIdsAsAuthor(ids, user)
 
-    for (const time of times) {
-      time.screenshot = null
-    }
+      for (const time of times) {
+        time.screenshot = null
+      }
 
-    await this.timeRepository.saveMany(times)
+      yield* this.timeRepository.saveMany(times)
+    })
   }
 
-  public async removeProcesses(ids: string[], user: User): Promise<void> {
-    const times = await this.timeRepository.findByIdsAsAuthor(ids, user)
+  public removeProcesses(ids: string[], user: User): RepoEffect<void> {
+    return Effect.gen(this, function* () {
+      const times = yield* this.timeRepository.findByIdsAsAuthor(ids, user)
 
-    for (const time of times) {
-      time.processes = null
-    }
+      for (const time of times) {
+        time.processes = null
+      }
 
-    await this.timeRepository.saveMany(times)
+      yield* this.timeRepository.saveMany(times)
+    })
   }
 
-  public async removeMany(ids: string[], user: User): Promise<void> {
-    const times = await this.timeRepository.findByIdsAsAuthor(ids, user)
+  public removeMany(ids: string[], user: User): RepoEffect<void> {
+    return Effect.gen(this, function* () {
+      const times = yield* this.timeRepository.findByIdsAsAuthor(ids, user)
 
-    await this.timeRepository.removeMany(times)
+      yield* this.timeRepository.removeMany(times)
+    })
   }
 
-  public async buildAndCacheReport(
+  public buildAndCacheReport(
     project: Project,
     user: User,
-  ): Promise<{
+  ): RepoEffect<{
     totals: ITimeTotals[]
     time: Time[]
   }> {
-    const cache = await this.redisClient.get(project.id)
+    return Effect.gen(this, function* () {
+      const cache = yield* fromPromise(() => this.redisClient.get(project.id))
 
-    if (
-      cache &&
-      typeof cache === 'object' &&
-      'totals' in cache &&
-      'time' in cache
-    ) {
-      return cache as {
-        totals: ITimeTotals[]
-        time: Time[]
+      if (
+        cache &&
+        typeof cache === 'object' &&
+        'totals' in cache &&
+        'time' in cache
+      ) {
+        return cache as {
+          totals: ITimeTotals[]
+          time: Time[]
+        }
       }
-    }
 
-    const data = {
-      totals: await this.timeRepository.getTotals(user, project.id),
-      time: await this.timeRepository.findAllTimeForProject(project, user),
-    }
+      const data = {
+        totals: yield* this.timeRepository.getTotals(user, project.id),
+        time: yield* this.timeRepository.findAllTimeForProject(project, user),
+      }
 
-    await this.redisClient.setWithExpiry(
-      project.id,
-      data,
-      TimeManager.reportExpiresIn,
-    )
+      yield* fromPromise(() =>
+        this.redisClient.setWithExpiry(
+          project.id,
+          data,
+          TimeManager.reportExpiresIn,
+        ),
+      )
 
-    return data
+      return data
+    })
   }
 
   public async resize(screenshot?: string): Promise<string | null> {

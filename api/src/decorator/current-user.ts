@@ -1,6 +1,7 @@
 import { createParamDecorator } from 'routing-controllers'
 import { AppContainer } from '@/app/app-container'
 import { Authenticator } from '@/service/auth/authenticator'
+import { runPromise } from '@/service/effect-bridge'
 
 export function CurrentUser() {
   return createParamDecorator({
@@ -13,7 +14,11 @@ export function CurrentUser() {
         AppContainer.getContainer().get('Authenticator')
       const token = action.request.headers['authorization']
 
-      return authenticator.getUserFromJwtTokenOrThrowException(token)
+      // routing-controllers awaits a promise here, not an Effect, so this is
+      // one of the boundaries where the effect has to be run.
+      return runPromise(
+        authenticator.getUserFromJwtTokenOrThrowException(token),
+      )
     },
   })
 }

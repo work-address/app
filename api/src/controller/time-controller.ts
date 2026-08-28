@@ -30,6 +30,7 @@ import { ITimeInsertionResult } from '@/model/time'
 import { Project } from '@/entity/project'
 import AccessException from '@/exception/access-exception'
 import express from 'express'
+import { runPromise } from '@/service/effect-bridge'
 
 @Authorized([EUserRole.ROLE_USER])
 @JsonController('/time')
@@ -67,7 +68,7 @@ export class TimeController {
     @Body() search: TimeSearchDto,
     @CurrentUser() currentUser: User,
   ) {
-    return this.timeRepository.findAndCount(search, currentUser)
+    return runPromise(this.timeRepository.findAndCount(search, currentUser))
   }
 
   @OpenAPIExtended({
@@ -92,7 +93,9 @@ export class TimeController {
     @Body() body: TimeIdsDto,
     @Res() res: express.Response,
   ): Promise<express.Response> {
-    await this.timeManager.setIsPaidMany(body.ids, true, currentUser)
+    await runPromise(
+      this.timeManager.setIsPaidMany(body.ids, true, currentUser),
+    )
 
     res.end()
     return res
@@ -120,7 +123,9 @@ export class TimeController {
     @Body() body: TimeIdsDto,
     @Res() res: express.Response,
   ): Promise<express.Response> {
-    await this.timeManager.setIsPaidMany(body.ids, false, currentUser)
+    await runPromise(
+      this.timeManager.setIsPaidMany(body.ids, false, currentUser),
+    )
 
     res.end()
     return res
@@ -148,7 +153,7 @@ export class TimeController {
     @Body() body: TimeIdsDto,
     @Res() res: express.Response,
   ): Promise<express.Response> {
-    await this.timeManager.removeScreenshots(body.ids, currentUser)
+    await runPromise(this.timeManager.removeScreenshots(body.ids, currentUser))
 
     res.end()
     return res
@@ -176,7 +181,7 @@ export class TimeController {
     @Body() body: TimeIdsDto,
     @Res() res: express.Response,
   ): Promise<express.Response> {
-    await this.timeManager.removeProcesses(body.ids, currentUser)
+    await runPromise(this.timeManager.removeProcesses(body.ids, currentUser))
 
     res.end()
     return res
@@ -199,16 +204,15 @@ export class TimeController {
     @CurrentUser() currentUser: User,
     @EntityFromParam({ paramName: 'id' }) project: Project,
   ) {
-    const accessible = await this.projectRepository.findProjectWithAccess(
-      project,
-      currentUser,
+    const accessible = await runPromise(
+      this.projectRepository.findProjectWithAccess(project, currentUser),
     )
 
     if (!accessible) {
       throw new AccessException()
     }
 
-    return this.timeRepository.getTotals(currentUser, project.id)
+    return runPromise(this.timeRepository.getTotals(currentUser, project.id))
   }
 
   @OpenAPIExtended({
@@ -224,16 +228,17 @@ export class TimeController {
     @CurrentUser() currentUser: User,
     @EntityFromParam({ paramName: 'id' }) project: Project,
   ) {
-    const accessible = await this.projectRepository.findProjectWithAccess(
-      project,
-      currentUser,
+    const accessible = await runPromise(
+      this.projectRepository.findProjectWithAccess(project, currentUser),
     )
 
     if (!accessible) {
       throw new AccessException()
     }
 
-    return await this.timeManager.buildAndCacheReport(accessible, currentUser)
+    return await runPromise(
+      this.timeManager.buildAndCacheReport(accessible, currentUser),
+    )
   }
 
   @OpenAPIExtended({
@@ -275,7 +280,7 @@ export class TimeController {
     })
     data: TimeCreateDto[],
   ): Promise<ITimeInsertionResult[]> {
-    return this.timeManager.createOrUpdateMany(data, currentUser)
+    return runPromise(this.timeManager.createOrUpdateMany(data, currentUser))
   }
 
   @OpenAPIExtended({
@@ -306,7 +311,7 @@ export class TimeController {
       throw new AccessException()
     }
 
-    await this.timeManager.editAndSave(time, data)
+    await runPromise(this.timeManager.editAndSave(time, data))
 
     res.end()
     return res
@@ -328,7 +333,7 @@ export class TimeController {
     })
     time: Time,
   ) {
-    return this.timeRepository.findOneConfirmUser(time, currentUser)
+    return runPromise(this.timeRepository.findOneConfirmUser(time, currentUser))
   }
 
   @OpenAPIExtended({
@@ -353,7 +358,7 @@ export class TimeController {
     @Body() body: TimeIdsDto,
     @Res() res: express.Response,
   ): Promise<express.Response> {
-    await this.timeManager.removeMany(body.ids, currentUser)
+    await runPromise(this.timeManager.removeMany(body.ids, currentUser))
 
     res.end()
     return res

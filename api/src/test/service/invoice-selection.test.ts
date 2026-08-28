@@ -14,6 +14,7 @@ import { UserFixture } from '@/test/fixture/user-fixture'
 import type { Project } from '@/entity/project'
 import type { Time } from '@/entity/time'
 import type { User } from '@/entity/user'
+import { runPromise } from '@/service/effect-bridge'
 
 /**
  * Invoicing a hand-picked set of entries from the time table.
@@ -56,7 +57,7 @@ export class InvoiceSelectionTest extends AbstractDatabaseIntegration {
     )
 
     time.minutesActive = minutes
-    await this.timeRepository.saveSingle(time)
+    await runPromise(this.timeRepository.saveSingle(time))
 
     return time
   }
@@ -68,7 +69,7 @@ export class InvoiceSelectionTest extends AbstractDatabaseIntegration {
       EProjectState.ACTIVE,
     )
     project.rateHour = 60
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const monday = await this.entry(project, owner, 5)
     const wednesday = await this.entry(project, owner, 3)
@@ -81,10 +82,11 @@ export class InvoiceSelectionTest extends AbstractDatabaseIntegration {
   async createFromTimeIds_billsOnlyTheSelectedEntries() {
     const { owner, project, monday, friday } = await this.scenario()
 
-    const invoice = await this.invoiceManager.createFromTimeIds(
-      project,
-      owner,
-      [monday.id, friday.id],
+    const invoice = await runPromise(
+      this.invoiceManager.createFromTimeIds(project, owner, [
+        monday.id,
+        friday.id,
+      ]),
     )
 
     // Two hours at $60, not three - Wednesday was not selected.
@@ -99,16 +101,16 @@ export class InvoiceSelectionTest extends AbstractDatabaseIntegration {
   async createFromTimeIds_leavesUnselectedEntriesInBetweenInvoiceable() {
     const { owner, project, monday, wednesday, friday } = await this.scenario()
 
-    await this.invoiceManager.createFromTimeIds(project, owner, [
-      monday.id,
-      friday.id,
-    ])
+    await runPromise(
+      this.invoiceManager.createFromTimeIds(project, owner, [
+        monday.id,
+        friday.id,
+      ]),
+    )
 
-    const outstanding =
-      await this.timeRepository.findUninvoicedUnpaidTimeForAuthor(
-        project,
-        owner,
-      )
+    const outstanding = await runPromise(
+      this.timeRepository.findUninvoicedUnpaidTimeForAuthor(project, owner),
+    )
 
     expect(outstanding.map((time) => time.id)).to.deep.equal([wednesday.id])
   }
@@ -117,18 +119,19 @@ export class InvoiceSelectionTest extends AbstractDatabaseIntegration {
   async markPaid_marksOnlyTheLinkedEntries() {
     const { owner, project, monday, wednesday, friday } = await this.scenario()
 
-    const invoice = await this.invoiceManager.createFromTimeIds(
-      project,
-      owner,
-      [monday.id, friday.id],
+    const invoice = await runPromise(
+      this.invoiceManager.createFromTimeIds(project, owner, [
+        monday.id,
+        friday.id,
+      ]),
     )
-    await this.invoiceManager.markPaid(invoice, owner)
+    await runPromise(this.invoiceManager.markPaid(invoice, owner))
 
-    const reloadedWednesday = await this.timeRepository.findOneByIdOrFail(
-      wednesday.id,
+    const reloadedWednesday = await runPromise(
+      this.timeRepository.findOneByIdOrFail(wednesday.id),
     )
-    const reloadedMonday = await this.timeRepository.findOneByIdOrFail(
-      monday.id,
+    const reloadedMonday = await runPromise(
+      this.timeRepository.findOneByIdOrFail(monday.id),
     )
 
     expect(reloadedMonday.isPaid).to.be.true
@@ -140,15 +143,19 @@ export class InvoiceSelectionTest extends AbstractDatabaseIntegration {
   async createFromTimeIds_refusesAlreadyInvoicedEntries() {
     const { owner, project, monday, friday } = await this.scenario()
 
-    await this.invoiceManager.createFromTimeIds(project, owner, [monday.id])
+    await runPromise(
+      this.invoiceManager.createFromTimeIds(project, owner, [monday.id]),
+    )
 
     let error: Error | undefined
 
     try {
-      await this.invoiceManager.createFromTimeIds(project, owner, [
-        monday.id,
-        friday.id,
-      ])
+      await runPromise(
+        this.invoiceManager.createFromTimeIds(project, owner, [
+          monday.id,
+          friday.id,
+        ]),
+      )
     } catch (e: unknown) {
       error = e as Error
     }
@@ -167,16 +174,16 @@ export class InvoiceSelectionTest extends AbstractDatabaseIntegration {
     )
     project.workerAddresses = [worker.address]
     project.rateHour = 60
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const ownerEntry = await this.entry(project, owner, 2)
 
     let error: Error | undefined
 
     try {
-      await this.invoiceManager.createFromTimeIds(project, worker, [
-        ownerEntry.id,
-      ])
+      await runPromise(
+        this.invoiceManager.createFromTimeIds(project, worker, [ownerEntry.id]),
+      )
     } catch (e: unknown) {
       error = e as Error
     }

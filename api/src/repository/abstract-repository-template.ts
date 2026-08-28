@@ -1,3 +1,4 @@
+import { Effect } from 'effect'
 import {
   DeepPartial,
   EntityTarget,
@@ -7,6 +8,7 @@ import {
   ObjectLiteral,
   SaveOptions,
   SelectQueryBuilder,
+  UpdateResult,
 } from 'typeorm'
 
 import { Repository } from 'typeorm/repository/Repository'
@@ -14,66 +16,87 @@ import { getDataSource } from '@/connector/data-source'
 import { ISearch } from '@/model/dto/search'
 import { Filter } from '@/service/filter'
 import ConstraintsValidationException from '@/exception/constraints-validation-exception'
+import { fromPromise } from '@/service/effect-bridge'
 import { validate } from 'class-validator'
 
 export type TRelations = Record<string, unknown>
 export type TFindOptions = TRelations
 export type TSelectOptions = TRelations
 
+/**
+ * Every repository call can fail the same way - a dropped connection, a
+ * constraint violation, a validation error - and none of those are worth
+ * enumerating per method. The error channel stays `unknown` so the original
+ * exception (which ErrorHandler reads `httpCode` off) travels untouched; what
+ * the type buys here is that a query is a description until someone runs it,
+ * so services can compose them instead of firing each one on creation.
+ */
+export type RepoEffect<A> = Effect.Effect<A, unknown>
+
 export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
   protected filter: Filter
   protected target: EntityTarget<T> & { name: string }
 
-  async validateAndSave(entity: T): Promise<T> {
-    const errors = await validate(entity)
+  public validateAndSave(entity: T): RepoEffect<T> {
+    return Effect.gen(this, function* () {
+      const errors = yield* fromPromise(() => validate(entity))
 
-    if (errors.length) {
-      throw new ConstraintsValidationException(errors)
-    }
+      if (errors.length) {
+        return yield* Effect.fail(new ConstraintsValidationException(errors))
+      }
 
-    return this.saveSingle(entity)
+      return yield* this.saveSingle(entity)
+    })
   }
 
-  public async findBy(options: FindManyOptions<T>): Promise<T[]> {
-    return this.getRepo().find(options)
+  public findBy(options: FindManyOptions<T>): RepoEffect<T[]> {
+    return fromPromise(() => this.getRepo().find(options))
   }
 
-  public async findOneBy(options: FindOneOptions<T>): Promise<T | undefined> {
-    return (await this.getRepo().findOne(options)) ?? undefined
+  public findOneBy(options: FindOneOptions<T>): RepoEffect<T | undefined> {
+    return fromPromise(
+      async () => (await this.getRepo().findOne(options)) ?? undefined,
+    )
   }
 
-  public async findOneByOrFail(options: FindOneOptions<T>): Promise<T> {
-    return this.getRepo().findOneOrFail(options)
+  public findOneByOrFail(options: FindOneOptions<T>): RepoEffect<T> {
+    return fromPromise(() => this.getRepo().findOneOrFail(options))
   }
 
   public findOneByIdOrFail(
     id: string | string,
     options?: FindOneOptions<T>,
-  ): Promise<T> {
-    return this.getRepo().findOneOrFail({
-      ...options,
-      where: { id } as unknown as FindOptionsWhere<T>,
-    })
+  ): RepoEffect<T> {
+    return fromPromise(() =>
+      this.getRepo().findOneOrFail({
+        ...options,
+        where: { id } as unknown as FindOptionsWhere<T>,
+      }),
+    )
   }
 
-  public saveSingle(entity: T, options?: SaveOptions): Promise<T> {
-    return this.getRepo().save(entity as DeepPartial<T>, options)
+  public saveSingle(entity: T, options?: SaveOptions): RepoEffect<T> {
+    return fromPromise(() =>
+      this.getRepo().save(entity as DeepPartial<T>, options),
+    )
   }
 
-  public saveMany(entities: T[], options?: SaveOptions): Promise<T[]> {
-    return this.getRepo().save(entities as DeepPartial<T>[], options)
+  public saveMany(entities: T[], options?: SaveOptions): RepoEffect<T[]> {
+    return fromPromise(() =>
+      this.getRepo().save(entities as DeepPartial<T>[], options),
+    )
   }
 
-  public async remove(entity: T): Promise<T> {
-    return await this.getRepo().remove(entity)
+  public remove(entity: T): RepoEffect<T> {
+    return fromPromise(() => this.getRepo().remove(entity))
   }
 
-  public async removeMany(entities: T[]): Promise<T[]> {
-    return await this.getRepo().remove(entities)
+  public removeMany(entities: T[]): RepoEffect<T[]> {
+    return fromPromise(() => this.getRepo().remove(entities))
   }
 
-  public async softDelete(conditions: FindOptionsWhere<T>) {
-    return await this.getRepo().softDelete(conditions)
+  public softDelete(conditions: FindOptionsWhere<T>): RepoEffect<UpdateResult> {
+    return fromPromise(() => this.getRepo().softDelete(conditions))
   }
 
   public getRepo(): Repository<T> {
@@ -125,7 +148,7 @@ export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
       }
     }
 
-    return query.getOne()
+    return fromPromise(() => query.getOne())
   }
 
   static buildRelations<E extends ObjectLiteral>(

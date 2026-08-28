@@ -15,6 +15,7 @@ import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { EProjectState } from '@/model/project'
 import { RedisClient } from '@/service/redis-client'
 import { TimeRepository } from '@/repository/time-repository'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite
 export class TimeControllerTest extends BaseControllerTest {
@@ -97,7 +98,9 @@ export class TimeControllerTest extends BaseControllerTest {
       moment.utc().toDate(),
     )
     time.isPaid = true
-    await this.container.get<TimeRepository>('TimeRepository').saveSingle(time)
+    await runPromise(
+      this.container.get<TimeRepository>('TimeRepository').saveSingle(time),
+    )
 
     const res = await timeControllerRead({
       client: this.apiClient(),
@@ -269,7 +272,7 @@ export class TimeControllerTest extends BaseControllerTest {
       user,
     )
     unpaidTime.minutesActive = 45
-    await this.timeRepository.saveSingle(unpaidTime)
+    await runPromise(this.timeRepository.saveSingle(unpaidTime))
 
     const res = await timeControllerGetTotals({
       client: this.apiClient(),
@@ -301,7 +304,7 @@ export class TimeControllerTest extends BaseControllerTest {
     )
     paidTime.minutesActive = 30
     paidTime.isPaid = true
-    await this.timeRepository.saveSingle(paidTime)
+    await runPromise(this.timeRepository.saveSingle(paidTime))
 
     const res = await timeControllerGetTotals({
       client: this.apiClient(),
@@ -333,7 +336,7 @@ export class TimeControllerTest extends BaseControllerTest {
       user,
     )
     unpaidTime.minutesActive = 40
-    await this.timeRepository.saveSingle(unpaidTime)
+    await runPromise(this.timeRepository.saveSingle(unpaidTime))
 
     const paidTime = await this.timeFixture.create(
       project,
@@ -343,7 +346,7 @@ export class TimeControllerTest extends BaseControllerTest {
     )
     paidTime.minutesActive = 25
     paidTime.isPaid = true
-    await this.timeRepository.saveSingle(paidTime)
+    await runPromise(this.timeRepository.saveSingle(paidTime))
 
     const res = await timeControllerGetTotals({
       client: this.apiClient(),

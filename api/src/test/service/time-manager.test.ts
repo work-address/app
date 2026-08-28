@@ -15,6 +15,7 @@ import { Invoice } from '@/entity/invoice'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { UserManager } from '@/service/user-manager'
 import { EInvoiceState } from '@/model/invoice'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite()
 export class TimeManagerTest extends AbstractDatabaseIntegration {
@@ -77,11 +78,13 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
       EProjectState.ACTIVE,
     )
     project.workerAddresses = [worker.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
-    const [result] = await this.timeManager.createOrUpdateMany(
-      [this.buildTimePayload(project.id, 1)],
-      worker,
+    const [result] = await runPromise(
+      this.timeManager.createOrUpdateMany(
+        [this.buildTimePayload(project.id, 1)],
+        worker,
+      ),
     )
 
     expect(result.error).to.be.undefined
@@ -99,11 +102,13 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
     )
     project.workerAddresses = [worker.address]
     project.viewerAddresses = [viewer.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
-    const [result] = await this.timeManager.createOrUpdateMany(
-      [this.buildTimePayload(project.id, 2)],
-      viewer,
+    const [result] = await runPromise(
+      this.timeManager.createOrUpdateMany(
+        [this.buildTimePayload(project.id, 2)],
+        viewer,
+      ),
     )
 
     expect(result.error).to.exist
@@ -120,15 +125,137 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
       EProjectState.INACTIVE,
     )
     project.workerAddresses = [worker.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
-    const [result] = await this.timeManager.createOrUpdateMany(
-      [this.buildTimePayload(project.id, 3)],
-      worker,
+    const [result] = await runPromise(
+      this.timeManager.createOrUpdateMany(
+        [this.buildTimePayload(project.id, 3)],
+        worker,
+      ),
     )
 
     expect(result.error).to.exist
     expect(result.error?.name).to.be.equal('EntityNotFoundError')
+  }
+
+  /**
+   * Every other case here sends a one-entry batch, which never exercised the
+   * reason this method handles entries individually: a tracker syncs several at
+   * once, and one bad entry has to come back as an error in its own slot while
+   * its neighbours are still stored.
+   */
+  @test()
+  async createOrUpdateMany_keepsGoodEntriesWhenOneInTheBatchFails() {
+    const owner = await this.userFixture.createPremiumUser()
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
+
+    // Distinct windows so the entries cannot collide with each other on
+    // (project, fromAt, toAt) and update in place instead of inserting.
+    const shift = (payload: TimeCreateDto, minutes: number): TimeCreateDto => ({
+      ...payload,
+      fromAt: moment.utc(payload.fromAt).subtract(minutes, 'm').toISOString(),
+      toAt: moment.utc(payload.toAt).subtract(minutes, 'm').toISOString(),
+    })
+
+    const batch = [
+      shift(this.buildTimePayload(project.id, 60), 0),
+      // Unknown project: findProjectForTimeTracking raises EntityNotFoundError.
+      shift(
+        this.buildTimePayload('d650ad83-eab3-4200-9bf2-479a47c59892', 61),
+        30,
+      ),
+      shift(this.buildTimePayload(project.id, 62), 60),
+    ]
+
+    const results = await runPromise(
+      this.timeManager.createOrUpdateMany(batch, owner),
+    )
+
+    expect(results.length).to.be.equal(3)
+
+    // Results stay aligned with the submitted order - the tracker reconciles
+    // its local rows positionally, so a dropped or reordered slot corrupts it.
+    expect(results.map((result) => result.note)).to.deep.equal(
+      batch.map((payload) => payload.note),
+    )
+
+    expect(results[0].error).to.be.undefined
+    expect(results[0].id).to.be.a('string')
+
+    expect(results[1].error).to.exist
+    expect(results[1].error?.name).to.be.equal('EntityNotFoundError')
+    expect(results[1].id).to.be.undefined
+
+    expect(results[2].error).to.be.undefined
+    expect(results[2].id).to.be.a('string')
+
+    // The two good entries are actually persisted, not just reported as such.
+    const stored = await runPromise(
+      this.timeRepository.findBy({
+        where: { project: { id: project.id } },
+      }),
+    )
+    expect(stored.length).to.be.equal(2)
+  }
+
+  /**
+   * The method returns an Effect - a description, not work already in flight -
+   * so running one twice must behave like running two.
+   *
+   * It used to capture the retention cutoff and the set of projects to purge
+   * when the effect was *built*. A second run of the same effect therefore
+   * inherited the first run's bookkeeping and would purge a project the second
+   * run never touched. This drives that difference: the project is deactivated
+   * between the runs, so the second run registers nothing of its own, and a
+   * leaked set is the only thing that could delete the entry added in between.
+   */
+  @test()
+  async createOrUpdateMany_effectCarriesNoRetentionStateBetweenRuns() {
+    const owner = await this.userFixture.createUser() // free tier
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
+
+    // Built once, run twice - the point of the test.
+    const effect = this.timeManager.createOrUpdateMany(
+      [this.buildTimePayload(project.id, 70)],
+      owner,
+    )
+
+    const [firstResult] = await runPromise(effect)
+    expect(firstResult.error, 'first run should store the entry').to.be
+      .undefined
+
+    // Added after the first run, so only a purge triggered by the *second* run
+    // could remove it.
+    const staleFrom = moment
+      .utc()
+      .subtract(TimeManagerTest.staleDays(), 'days')
+      .toDate()
+    const stale = await this.timeFixture.create(
+      project,
+      staleFrom,
+      moment.utc(staleFrom).add(10, 'minutes').toDate(),
+    )
+
+    // Deactivating the project makes the second run fail its project lookup, so
+    // it registers nothing for retention on its own.
+    project.state = EProjectState.INACTIVE
+    await runPromise(this.projectRepository.saveSingle(project))
+
+    const [secondResult] = await runPromise(effect)
+    expect(secondResult.error?.name).to.be.equal('EntityNotFoundError')
+
+    // The backlogged entry survives: the second run had no project of its own
+    // under retention, so it must not have purged anything.
+    const survivor = await runPromise(
+      this.timeRepository.findOneBy({ where: { id: stale.id } }),
+    )
+    expect(survivor, 'second run purged a project it never touched').to.exist
   }
 
   @test()
@@ -141,15 +268,19 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
       EProjectState.ACTIVE,
     )
     project.workerAddresses = [worker.address, otherWorker.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const payload = this.buildTimePayload(project.id, 4)
-    const [saved] = await this.timeManager.createOrUpdateMany([payload], worker)
+    const [saved] = await runPromise(
+      this.timeManager.createOrUpdateMany([payload], worker),
+    )
     expect(saved.id).to.be.a('string')
 
-    const [result] = await this.timeManager.createOrUpdateMany(
-      [{ ...payload, note: 'stolen update' }],
-      otherWorker,
+    const [result] = await runPromise(
+      this.timeManager.createOrUpdateMany(
+        [{ ...payload, note: 'stolen update' }],
+        otherWorker,
+      ),
     )
 
     expect(result.error).to.exist
@@ -170,11 +301,13 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
       owner,
     )
 
-    await this.timeManager.setIsPaidMany([time.id], true, owner)
+    await runPromise(this.timeManager.setIsPaidMany([time.id], true, owner))
 
-    const updated = await this.timeRepository.findOneBy({
-      where: { id: time.id },
-    })
+    const updated = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: time.id },
+      }),
+    )
     expect(updated!.isPaid).to.be.true
   }
 
@@ -187,7 +320,7 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
       EProjectState.ACTIVE,
     )
     project.workerAddresses = [worker.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const time = await this.timeFixture.create(
       project,
@@ -199,7 +332,7 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
     let error: unknown
 
     try {
-      await this.timeManager.setIsPaidMany([time.id], true, owner)
+      await runPromise(this.timeManager.setIsPaidMany([time.id], true, owner))
     } catch (e: unknown) {
       error = e
     }
@@ -232,26 +365,34 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
       owner,
     )
 
-    await this.timeManager.createOrUpdateMany(
-      [this.buildTimePayload(project.id, 5)],
-      owner,
+    await runPromise(
+      this.timeManager.createOrUpdateMany(
+        [this.buildTimePayload(project.id, 5)],
+        owner,
+      ),
     )
 
-    const stale = await this.timeRepository.findOneBy({
-      where: { id: staleEntry.id },
-    })
-    const fresh = await this.timeRepository.findOneBy({
-      where: { id: freshEntry.id },
-    })
+    const stale = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: staleEntry.id },
+      }),
+    )
+    const fresh = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: freshEntry.id },
+      }),
+    )
 
     expect(stale).to.be.undefined
     expect(fresh).to.exist
 
     // ...and the purged entry is gone from the real read path too, not just
     // from a direct id lookup.
-    const [rows] = await this.timeRepository.findAndCount(
-      { filter: {}, sort: { createdAt: 'ASC' }, page: 0 },
-      owner,
+    const [rows] = await runPromise(
+      this.timeRepository.findAndCount(
+        { filter: {}, sort: { createdAt: 'ASC' }, page: 0 },
+        owner,
+      ),
     )
     const visibleIds = rows.map((row) => row.id)
     expect(visibleIds).to.not.include(staleEntry.id)
@@ -273,14 +414,18 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
       owner,
     )
 
-    await this.timeManager.createOrUpdateMany(
-      [this.buildTimePayload(project.id, 6)],
-      owner,
+    await runPromise(
+      this.timeManager.createOrUpdateMany(
+        [this.buildTimePayload(project.id, 6)],
+        owner,
+      ),
     )
 
-    const stale = await this.timeRepository.findOneBy({
-      where: { id: staleEntry.id },
-    })
+    const stale = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: staleEntry.id },
+      }),
+    )
 
     expect(stale).to.exist
   }
@@ -299,7 +444,7 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
       EProjectState.ACTIVE,
     )
     project.workerAddresses = [worker.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const ownerStaleEntry = await this.timeFixture.create(
       project,
@@ -322,19 +467,25 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
       worker,
     )
 
-    const [result] = await this.timeManager.createOrUpdateMany(
-      [this.buildTimePayload(project.id, 7)],
-      worker,
+    const [result] = await runPromise(
+      this.timeManager.createOrUpdateMany(
+        [this.buildTimePayload(project.id, 7)],
+        worker,
+      ),
     )
 
     expect(result.error).to.be.undefined
 
-    const ownerStale = await this.timeRepository.findOneBy({
-      where: { id: ownerStaleEntry.id },
-    })
-    const workerStale = await this.timeRepository.findOneBy({
-      where: { id: workerStaleEntry.id },
-    })
+    const ownerStale = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: ownerStaleEntry.id },
+      }),
+    )
+    const workerStale = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: workerStaleEntry.id },
+      }),
+    )
 
     expect(ownerStale).to.exist
     expect(workerStale).to.exist
@@ -354,7 +505,7 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
       EProjectState.ACTIVE,
     )
     project.workerAddresses = [worker.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const staleEntry = await this.timeFixture.create(
       project,
@@ -370,16 +521,20 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
     // The owner downgrades after the fact; the project falls under free-tier
     // retention from the next sync onwards.
     owner.premium = false
-    await this.userManager.saveSingle(owner)
+    await runPromise(this.userManager.saveSingle(owner))
 
-    await this.timeManager.createOrUpdateMany(
-      [this.buildTimePayload(project.id, 8)],
-      owner,
+    await runPromise(
+      this.timeManager.createOrUpdateMany(
+        [this.buildTimePayload(project.id, 8)],
+        owner,
+      ),
     )
 
-    const stale = await this.timeRepository.findOneBy({
-      where: { id: staleEntry.id },
-    })
+    const stale = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: staleEntry.id },
+      }),
+    )
 
     expect(stale).to.be.undefined
   }
@@ -408,16 +563,20 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
       .add(10, 'minutes')
       .toISOString()
 
-    const [result] = await this.timeManager.createOrUpdateMany([backlog], owner)
+    const [result] = await runPromise(
+      this.timeManager.createOrUpdateMany([backlog], owner),
+    )
 
     expect(result.id).to.be.undefined
     expect(result.error).to.exist
     expect(result.error?.name).to.be.equal('RetentionExceededException')
 
     // Nothing was written at all - not written-then-removed.
-    const stored = await this.timeRepository.findBy({
-      where: { project: { id: project.id } },
-    })
+    const stored = await runPromise(
+      this.timeRepository.findBy({
+        where: { project: { id: project.id } },
+      }),
+    )
     expect(stored).to.deep.equal([])
   }
 
@@ -462,19 +621,25 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
     invoice.toAt = invoicedTo.toDate()
     invoice.amountCents = 10_000
     invoice.state = EInvoiceState.REQUESTED
-    await this.invoiceRepository.saveSingle(invoice)
+    await runPromise(this.invoiceRepository.saveSingle(invoice))
 
-    await this.timeManager.createOrUpdateMany(
-      [this.buildTimePayload(project.id, 10)],
-      owner,
+    await runPromise(
+      this.timeManager.createOrUpdateMany(
+        [this.buildTimePayload(project.id, 10)],
+        owner,
+      ),
     )
 
-    const invoiced = await this.timeRepository.findOneBy({
-      where: { id: invoicedEntry.id },
-    })
-    const uninvoiced = await this.timeRepository.findOneBy({
-      where: { id: uninvoicedEntry.id },
-    })
+    const invoiced = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: invoicedEntry.id },
+      }),
+    )
+    const uninvoiced = await runPromise(
+      this.timeRepository.findOneBy({
+        where: { id: uninvoicedEntry.id },
+      }),
+    )
 
     expect(invoiced).to.exist
     expect(uninvoiced).to.be.undefined

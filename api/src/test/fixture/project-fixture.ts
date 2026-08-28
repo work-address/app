@@ -5,6 +5,7 @@ import { User } from '@/entity/user'
 
 import { ProjectRepository } from '@/repository/project-repository'
 import { EProjectState } from '@/model/project'
+import { runPromise } from '@/service/effect-bridge'
 
 @injectable()
 export class ProjectFixture {
@@ -21,7 +22,7 @@ export class ProjectFixture {
     project.trackScreenshots = false
     project.trackProcesses = false
 
-    return this.projectRepository.saveSingle(project)
+    return runPromise(this.projectRepository.saveSingle(project))
   }
 
   public createPersonal(
@@ -40,6 +41,6 @@ export class ProjectFixture {
     project.trackScreenshots = trackScreenshots
     project.trackProcesses = trackProcesses
 
-    return this.projectRepository.saveSingle(project)
+    return runPromise(this.projectRepository.saveSingle(project))
   }
 }

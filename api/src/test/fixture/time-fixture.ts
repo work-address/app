@@ -5,6 +5,7 @@ import { User } from '@/entity/user'
 
 import { TimeRepository } from '@/repository/time-repository'
 import { Time } from '@/entity/time'
+import { runPromise } from '@/service/effect-bridge'
 
 @injectable()
 export class TimeFixture {
@@ -29,6 +30,6 @@ export class TimeFixture {
     time.fromAt = from
     time.toAt = to
 
-    return this.timeRepository.saveSingle(time)
+    return runPromise(this.timeRepository.saveSingle(time))
   }
 }

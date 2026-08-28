@@ -26,6 +26,7 @@ import { Authenticator } from '@/service/auth/authenticator'
 import { UserManager } from '@/service/user-manager'
 import { UserRepository } from '@/repository/user-repository'
 import { IConfigParameters } from '@/model/config'
+import { runPromise } from '@/service/effect-bridge'
 
 const authSessionJsonHeadersResponse: OpenAPIExtendedResponsePart<
   Record<string, never>
@@ -71,9 +72,8 @@ export class AuthController {
     @Body() payload: AuthEthLoginDto,
     @Res() res: express.Response,
   ): Promise<express.Response> {
-    const tokens = await this.authenticator.loginEth(
-      payload.signature,
-      payload.address,
+    const tokens = await runPromise(
+      this.authenticator.loginEth(payload.signature, payload.address),
     )
 
     res.setHeader('Authorization', tokens.accessToken)
@@ -94,9 +94,8 @@ export class AuthController {
     @Body() payload: AuthSolanaLoginDto,
     @Res() res: express.Response,
   ): Promise<express.Response> {
-    const tokens = await this.authenticator.loginSolana(
-      payload.signature,
-      payload.address,
+    const tokens = await runPromise(
+      this.authenticator.loginSolana(payload.signature, payload.address),
     )
 
     res.setHeader('Authorization', tokens.accessToken)
@@ -117,7 +116,7 @@ export class AuthController {
     @Body() payload: AuthTonLoginDto,
     @Res() res: express.Response,
   ): Promise<express.Response> {
-    const tokens = await this.authenticator.loginTon(payload)
+    const tokens = await runPromise(this.authenticator.loginTon(payload))
 
     res.setHeader('Authorization', tokens.accessToken)
     res.setHeader('Refresh-Token', tokens.refreshToken)
@@ -138,7 +137,7 @@ export class AuthController {
   @HttpCode(200)
   @Post('/nonce')
   public nonce(@Body() payload: AuthNonceRequestDto): Promise<string> {
-    return this.authenticator.getNonce(payload.address)
+    return runPromise(this.authenticator.getNonce(payload.address))
   }
 
   @OpenAPIExtended({
@@ -152,7 +151,7 @@ export class AuthController {
   @HttpCode(200)
   @Post('/ton/nonce')
   public tonNonce(): Promise<string> {
-    return this.authenticator.getTonNonce()
+    return runPromise(this.authenticator.getTonNonce())
   }
 
   @OpenAPIExtended({
@@ -175,8 +174,8 @@ export class AuthController {
     @Body() body: AuthRefreshTokenDto,
     @Res() res: express.Response,
   ): Promise<express.Response> {
-    const user = await this.authenticator.getUserFromRefreshToken(
-      body.refreshToken,
+    const user = await runPromise(
+      this.authenticator.getUserFromRefreshToken(body.refreshToken),
     )
     const tokens = this.authenticator.getTokens(user)
 
@@ -195,7 +194,7 @@ export class AuthController {
   @Get('/status')
   public async status(@Req() req: express.Request): Promise<User | null> {
     const token = req.headers.authorization as string
-    const user = await this.authenticator.getUserFromJwtToken(token)
+    const user = await runPromise(this.authenticator.getUserFromJwtToken(token))
 
     return user
   }

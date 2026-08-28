@@ -44,7 +44,9 @@ export class LogglyTransport extends TransportStream {
         res.resume()
         if (res.statusCode && res.statusCode >= 400) {
           console.error(
-            `LogglyTransport HTTP ${res.statusCode} for ${String(info.message ?? '')}`,
+            `LogglyTransport HTTP ${res.statusCode} for ${String(
+              info.message ?? '',
+            )}`,
           )
         }
       },

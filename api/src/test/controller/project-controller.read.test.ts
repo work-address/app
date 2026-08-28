@@ -10,6 +10,7 @@ import { ProjectRepository } from '@/repository/project-repository'
 import { EProjectState } from '@/model/project'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite
 export class ProjectControllerReadTest extends BaseControllerTest {
@@ -156,7 +157,7 @@ export class ProjectControllerReadTest extends BaseControllerTest {
       owner,
       EProjectState.ACTIVE,
     )
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const client = this.apiClient()
     const res = await projectControllerRead({
@@ -190,7 +191,7 @@ export class ProjectControllerReadTest extends BaseControllerTest {
     )
     project.workerAddresses = [worker.address]
     project.viewerAddresses = [viewer.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const res = await projectControllerRead({
       client: this.apiClient(),
@@ -251,7 +252,7 @@ export class ProjectControllerReadTest extends BaseControllerTest {
     )
     project.workerAddresses = [workerB.address, workerA.address]
     project.viewerAddresses = [viewerB.address, viewerA.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const res = await projectControllerRead({
       client: this.apiClient(),

@@ -1,8 +1,13 @@
+import { Effect } from 'effect'
 import _ from 'lodash'
 import { inject, injectable } from 'inversify'
 
 import { Filter } from '@/service/filter'
-import { AbstractRepositoryTemplate } from '@/repository/abstract-repository-template'
+import {
+  AbstractRepositoryTemplate,
+  RepoEffect,
+} from '@/repository/abstract-repository-template'
+import { fromPromise } from '@/service/effect-bridge'
 import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
@@ -33,7 +38,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
   protected filter: Filter
   protected target = Time
 
-  public async findOneConfirmUser(time: Time, user: User): Promise<Time> {
+  public findOneConfirmUser(time: Time, user: User): RepoEffect<Time> {
     const qb = this.getRepo()
       .createQueryBuilder('time')
       .innerJoinAndSelect('time.project', 'project')
@@ -42,19 +47,21 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
 
     this.applyViewAccessFilter(qb, 'owner', user)
 
-    const timeEntry = await qb.select().getOne()
+    return fromPromise(async () => {
+      const timeEntry = await qb.select().getOne()
 
-    if (!timeEntry) {
-      throw new AccessException()
-    }
+      if (!timeEntry) {
+        throw new AccessException()
+      }
 
-    return timeEntry
+      return timeEntry
+    })
   }
 
-  public async getTotals(
+  public getTotals(
     user: User,
     projectId: string | undefined,
-  ): Promise<ITimeTotals[]> {
+  ): RepoEffect<ITimeTotals[]> {
     const qb = this.getRepo()
       .createQueryBuilder('time')
       .innerJoin('time.project', 'project')
@@ -84,24 +91,25 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       qb.andWhere('project.id = :projectId', { projectId })
     }
 
-    const result = await qb.getRawMany()
+    return fromPromise(async () => {
+      const result = await qb.getRawMany()
 
-    return result.map((r) => {
-      return {
-        projectId: r.projectid,
-        rateHour: r.ratehour,
-        rateTotal: Calc.rateTotal(r.minutes * 10, r.ratehour),
-        minutes: Number(r.minutes * 10),
-        minutesActive: Number(r.minutesactive),
-        minutesPaid: Number(r.minutespaid),
-        minutesUnpaid: Number(r.minutesunpaid),
-        keyboardKeys: Number(r.keyboardkeys),
-        mouseKeys: Number(r.mousekeys),
-        mouseDistance: Number(r.mousedistance),
-      }
+      return result.map((r) => {
+        return {
+          projectId: r.projectid,
+          rateHour: r.ratehour,
+          rateTotal: Calc.rateTotal(r.minutes * 10, r.ratehour),
+          minutes: Number(r.minutes * 10),
+          minutesActive: Number(r.minutesactive),
+          minutesPaid: Number(r.minutespaid),
+          minutesUnpaid: Number(r.minutesunpaid),
+          keyboardKeys: Number(r.keyboardkeys),
+          mouseKeys: Number(r.mousekeys),
+          mouseDistance: Number(r.mousedistance),
+        }
+      })
     })
   }
-
 
   private buildTimeOrderByCondition(search: TimeSearchDto): OrderByCondition {
     const [key, direction] = Object.entries(search.sort)[0] ?? []
@@ -118,7 +126,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
   public findAndCount(
     search: TimeSearchDto,
     user: User,
-  ): Promise<[Time[], number]> {
+  ): RepoEffect<[Time[], number]> {
     const s = _.assign(
       {
         filter: {},
@@ -233,18 +241,17 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       }),
     )
 
-    return qb
-      .select()
-      .orderBy(sort)
-      .skip(limit * s.page)
-      .take(limit)
-      .getManyAndCount()
+    return fromPromise(() =>
+      qb
+        .select()
+        .orderBy(sort)
+        .skip(limit * s.page)
+        .take(limit)
+        .getManyAndCount(),
+    )
   }
 
-  public async findByIdsConfirmAccess(
-    ids: string[],
-    user: User,
-  ): Promise<Time[]> {
+  public findByIdsConfirmAccess(ids: string[], user: User): RepoEffect<Time[]> {
     const uniqueIds = [...new Set(ids)]
 
     const qb = this.getRepo()
@@ -256,40 +263,44 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
 
     this.applyViewAccessFilter(qb, 'owner', user)
 
-    const times = await qb.getMany()
+    return fromPromise(async () => {
+      const times = await qb.getMany()
 
-    if (times.length !== uniqueIds.length) {
-      throw new AccessException()
-    }
-
-    for (const time of times) {
-      if (!time.isAuthor(user) && !time.project.isOwner(user)) {
+      if (times.length !== uniqueIds.length) {
         throw new AccessException()
       }
-    }
 
-    return times
+      for (const time of times) {
+        if (!time.isAuthor(user) && !time.project.isOwner(user)) {
+          throw new AccessException()
+        }
+      }
+
+      return times
+    })
   }
 
-  public async findByIdsAsAuthor(ids: string[], user: User): Promise<Time[]> {
+  public findByIdsAsAuthor(ids: string[], user: User): RepoEffect<Time[]> {
     const uniqueIds = [...new Set(ids)]
 
     if (uniqueIds.length === 0) {
-      return []
+      return Effect.succeed([])
     }
 
-    const times = await this.getRepo()
-      .createQueryBuilder('time')
-      .innerJoinAndSelect('time.user', 'author')
-      .where('time.id IN (:...ids)', { ids: uniqueIds })
-      .andWhere('author.id = :userId', { userId: user.id })
-      .getMany()
+    return fromPromise(async () => {
+      const times = await this.getRepo()
+        .createQueryBuilder('time')
+        .innerJoinAndSelect('time.user', 'author')
+        .where('time.id IN (:...ids)', { ids: uniqueIds })
+        .andWhere('author.id = :userId', { userId: user.id })
+        .getMany()
 
-    if (times.length !== uniqueIds.length) {
-      throw new AccessException()
-    }
+      if (times.length !== uniqueIds.length) {
+        throw new AccessException()
+      }
 
-    return times
+      return times
+    })
   }
 
   /**
@@ -309,14 +320,14 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
    * Entries backing an issued invoice are never purged, so a financial record
    * always keeps its supporting detail.
    */
-  public async softDeleteExpiredEntriesForProjects(
+  public softDeleteExpiredEntriesForProjects(
     projectIds: string[],
     cutoff: Date,
-  ): Promise<void> {
+  ): RepoEffect<void> {
     const uniqueIds = [...new Set(projectIds)]
 
     if (uniqueIds.length === 0) {
-      return
+      return Effect.void
     }
 
     // Identifiers come from entity metadata, never from request data.
@@ -324,21 +335,22 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     const invoiceTable =
       this.getRepo().manager.connection.getMetadata(Invoice).tableName
 
-    await this.getRepo()
-      .createQueryBuilder()
-      .softDelete()
-      .from(Time)
-      .where(`"${timeTable}"."projectId" IN (:...projectIds)`, {
-        projectIds: uniqueIds,
-      })
-      .andWhere(`"${timeTable}"."fromAt" < :cutoff`, { cutoff })
-      .andWhere(`"${timeTable}"."deletedAt" IS NULL`)
-      .andWhere(
-        // Scoped by issuer as well as project: an invoice covers only its
-        // own author's hours, so one contributor's invoice must not pin a
-        // colleague's entries in the same window. Legacy rows have no issuer
-        // and still protect the whole project - the safe direction.
-        `NOT EXISTS (
+    return fromPromise(async () => {
+      await this.getRepo()
+        .createQueryBuilder()
+        .softDelete()
+        .from(Time)
+        .where(`"${timeTable}"."projectId" IN (:...projectIds)`, {
+          projectIds: uniqueIds,
+        })
+        .andWhere(`"${timeTable}"."fromAt" < :cutoff`, { cutoff })
+        .andWhere(`"${timeTable}"."deletedAt" IS NULL`)
+        .andWhere(
+          // Scoped by issuer as well as project: an invoice covers only its
+          // own author's hours, so one contributor's invoice must not pin a
+          // colleague's entries in the same window. Legacy rows have no issuer
+          // and still protect the whole project - the safe direction.
+          `NOT EXISTS (
           SELECT 1 FROM "${invoiceTable}" invoice
           WHERE invoice."projectId" = "${timeTable}"."projectId"
             AND invoice."deletedAt" IS NULL
@@ -349,37 +361,45 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
             AND "${timeTable}"."fromAt" < invoice."toAt"
             AND "${timeTable}"."toAt" > invoice."fromAt"
         )`,
-      )
-      .execute()
+        )
+        .execute()
+    })
   }
 
-  public findTimeAsAuthorOrFail(time: Time, user: User): Promise<Time> {
-    return this.getRepo()
-      .createQueryBuilder('time')
-      .innerJoinAndSelect('time.project', 'project')
-      .innerJoinAndSelect('time.user', 'author')
-      .andWhere('time.id = :timeId', { timeId: time.id })
-      .andWhere('author.id = :userId', { userId: user.id })
-      .select()
-      .getOneOrFail()
+  public findTimeAsAuthorOrFail(time: Time, user: User): RepoEffect<Time> {
+    return fromPromise(() =>
+      this.getRepo()
+        .createQueryBuilder('time')
+        .innerJoinAndSelect('time.project', 'project')
+        .innerJoinAndSelect('time.user', 'author')
+        .andWhere('time.id = :timeId', { timeId: time.id })
+        .andWhere('author.id = :userId', { userId: user.id })
+        .select()
+        .getOneOrFail(),
+    )
   }
 
   public findWithProcessesForProjectSince(
     project: Project,
     fromAt: Date,
-  ): Promise<Time[]> {
-    return this.getRepo()
-      .createQueryBuilder('time')
-      .innerJoin('time.project', 'project')
-      .andWhere('project.id = :projectId', { projectId: project.id })
-      .andWhere('time.fromAt >= :fromAt', { fromAt })
-      .andWhere('time.processes IS NOT NULL')
-      .andWhere("time.processes::text != '[]'")
-      .orderBy('time.fromAt', 'ASC')
-      .getMany()
+  ): RepoEffect<Time[]> {
+    return fromPromise(() =>
+      this.getRepo()
+        .createQueryBuilder('time')
+        .innerJoin('time.project', 'project')
+        .andWhere('project.id = :projectId', { projectId: project.id })
+        .andWhere('time.fromAt >= :fromAt', { fromAt })
+        .andWhere('time.processes IS NOT NULL')
+        .andWhere("time.processes::text != '[]'")
+        .orderBy('time.fromAt', 'ASC')
+        .getMany(),
+    )
   }
 
-  public findAllTimeForProject(project: Project, user: User): Promise<Time[]> {
+  public findAllTimeForProject(
+    project: Project,
+    user: User,
+  ): RepoEffect<Time[]> {
     const qb = this.getRepo()
       .createQueryBuilder('time')
       .innerJoinAndSelect('time.project', 'project')
@@ -388,23 +408,27 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
 
     this.applyViewAccessFilter(qb, 'owner', user)
 
-    return qb.select('time').orderBy('time.fromAt', 'DESC').getMany()
+    return fromPromise(() =>
+      qb.select('time').orderBy('time.fromAt', 'DESC').getMany(),
+    )
   }
 
   public findTimeSingleForProject(
     project: Project,
     from: Date,
     to: Date,
-  ): Promise<Time | undefined> {
-    return this.getRepo()
-      .createQueryBuilder('time')
-      .innerJoinAndSelect('time.project', 'project')
-      .innerJoinAndSelect('time.user', 'user')
-      .andWhere('project.id = :projectId', { projectId: project.id })
-      .andWhere('time.fromAt = :from', { from })
-      .andWhere('time.toAt = :to', { to })
-      .getOne()
-      .then((result) => result ?? undefined)
+  ): RepoEffect<Time | undefined> {
+    return fromPromise(() =>
+      this.getRepo()
+        .createQueryBuilder('time')
+        .innerJoinAndSelect('time.project', 'project')
+        .innerJoinAndSelect('time.user', 'user')
+        .andWhere('project.id = :projectId', { projectId: project.id })
+        .andWhere('time.fromAt = :from', { from })
+        .andWhere('time.toAt = :to', { to })
+        .getOne()
+        .then((result) => result ?? undefined),
+    )
   }
 
   /**
@@ -420,18 +444,20 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     to: Date,
     project: Project,
     author: User,
-  ): Promise<Time[]> {
-    return this.getRepo()
-      .createQueryBuilder('time')
-      .innerJoinAndSelect('time.project', 'project')
-      .innerJoin('time.user', 'author')
-      .andWhere('time.fromAt >= :from', { from })
-      .andWhere('time.toAt <= :to', { to })
-      .andWhere('author.id = :authorId', { authorId: author.id })
-      .andWhere('project.id = :projectId', { projectId: project.id })
-      .andWhere('project.deletedAt IS NULL')
-      .andWhere('COALESCE(time.isPaid, false) = false')
-      .getMany()
+  ): RepoEffect<Time[]> {
+    return fromPromise(() =>
+      this.getRepo()
+        .createQueryBuilder('time')
+        .innerJoinAndSelect('time.project', 'project')
+        .innerJoin('time.user', 'author')
+        .andWhere('time.fromAt >= :from', { from })
+        .andWhere('time.toAt <= :to', { to })
+        .andWhere('author.id = :authorId', { authorId: author.id })
+        .andWhere('project.id = :projectId', { projectId: project.id })
+        .andWhere('project.deletedAt IS NULL')
+        .andWhere('COALESCE(time.isPaid, false) = false')
+        .getMany(),
+    )
   }
 
   /**
@@ -443,17 +469,19 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     to: Date,
     project: Project,
     author: User,
-  ): Promise<Time[]> {
-    return this.getRepo()
-      .createQueryBuilder('time')
-      .innerJoinAndSelect('time.project', 'project')
-      .innerJoin('time.user', 'author')
-      .andWhere('time.fromAt >= :from', { from })
-      .andWhere('time.toAt <= :to', { to })
-      .andWhere('author.id = :authorId', { authorId: author.id })
-      .andWhere('project.id = :projectId', { projectId: project.id })
-      .andWhere('project.deletedAt IS NULL')
-      .getMany()
+  ): RepoEffect<Time[]> {
+    return fromPromise(() =>
+      this.getRepo()
+        .createQueryBuilder('time')
+        .innerJoinAndSelect('time.project', 'project')
+        .innerJoin('time.user', 'author')
+        .andWhere('time.fromAt >= :from', { from })
+        .andWhere('time.toAt <= :to', { to })
+        .andWhere('author.id = :authorId', { authorId: author.id })
+        .andWhere('project.id = :projectId', { projectId: project.id })
+        .andWhere('project.deletedAt IS NULL')
+        .getMany(),
+    )
   }
 
   /**
@@ -470,18 +498,20 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
   public findUninvoicedUnpaidTimeForAuthor(
     project: Project,
     author: User,
-  ): Promise<Time[]> {
-    return this.getRepo()
-      .createQueryBuilder('time')
-      .innerJoinAndSelect('time.project', 'project')
-      .innerJoin('time.user', 'author')
-      .andWhere('author.id = :authorId', { authorId: author.id })
-      .andWhere('project.id = :projectId', { projectId: project.id })
-      .andWhere('project.deletedAt IS NULL')
-      .andWhere('COALESCE(time.isPaid, false) = false')
-      .andWhere('time.invoiceId IS NULL')
-      .orderBy('time.fromAt', 'ASC')
-      .getMany()
+  ): RepoEffect<Time[]> {
+    return fromPromise(() =>
+      this.getRepo()
+        .createQueryBuilder('time')
+        .innerJoinAndSelect('time.project', 'project')
+        .innerJoin('time.user', 'author')
+        .andWhere('author.id = :authorId', { authorId: author.id })
+        .andWhere('project.id = :projectId', { projectId: project.id })
+        .andWhere('project.deletedAt IS NULL')
+        .andWhere('COALESCE(time.isPaid, false) = false')
+        .andWhere('time.invoiceId IS NULL')
+        .orderBy('time.fromAt', 'ASC')
+        .getMany(),
+    )
   }
 
   /**
@@ -495,31 +525,35 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     ids: string[],
     project: Project,
     author: User,
-  ): Promise<Time[]> {
+  ): RepoEffect<Time[]> {
     if (ids.length === 0) {
-      return Promise.resolve([])
+      return Effect.succeed([])
     }
 
-    return this.getRepo()
-      .createQueryBuilder('time')
-      .innerJoinAndSelect('time.project', 'project')
-      .innerJoin('time.user', 'author')
-      .andWhere('time.id IN (:...ids)', { ids })
-      .andWhere('author.id = :authorId', { authorId: author.id })
-      .andWhere('project.id = :projectId', { projectId: project.id })
-      .andWhere('project.deletedAt IS NULL')
-      .andWhere('COALESCE(time.isPaid, false) = false')
-      .andWhere('time.invoiceId IS NULL')
-      .orderBy('time.fromAt', 'ASC')
-      .getMany()
+    return fromPromise(() =>
+      this.getRepo()
+        .createQueryBuilder('time')
+        .innerJoinAndSelect('time.project', 'project')
+        .innerJoin('time.user', 'author')
+        .andWhere('time.id IN (:...ids)', { ids })
+        .andWhere('author.id = :authorId', { authorId: author.id })
+        .andWhere('project.id = :projectId', { projectId: project.id })
+        .andWhere('project.deletedAt IS NULL')
+        .andWhere('COALESCE(time.isPaid, false) = false')
+        .andWhere('time.invoiceId IS NULL')
+        .orderBy('time.fromAt', 'ASC')
+        .getMany(),
+    )
   }
 
   /** Everything an invoice bills, by link rather than by period. */
-  public findForInvoice(invoice: Invoice): Promise<Time[]> {
-    return this.getRepo()
-      .createQueryBuilder('time')
-      .andWhere('time.invoiceId = :invoiceId', { invoiceId: invoice.id })
-      .getMany()
+  public findForInvoice(invoice: Invoice): RepoEffect<Time[]> {
+    return fromPromise(() =>
+      this.getRepo()
+        .createQueryBuilder('time')
+        .andWhere('time.invoiceId = :invoiceId', { invoiceId: invoice.id })
+        .getMany(),
+    )
   }
 
   public findTimeBetweenForProject(
@@ -527,18 +561,20 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     to: number,
     project: Project,
     freelancer: User,
-  ): Promise<Time[]> {
-    return this.getRepo()
-      .createQueryBuilder('time')
-      .innerJoinAndSelect('time.project', 'project')
-      .innerJoin('project.user', 'owner')
-      .andWhere('time.fromAt >= :from', { from: new Date(from) })
-      .andWhere('time.toAt <= :to', { to: new Date(to) })
-      .andWhere('owner.id = :ownerId', { ownerId: freelancer.id })
-      .andWhere('project.id = :projectId', { projectId: project.id })
-      .andWhere('project.deletedAt IS NULL')
-      .andWhere('COALESCE(time.isPaid, false) = false')
-      .getMany()
+  ): RepoEffect<Time[]> {
+    return fromPromise(() =>
+      this.getRepo()
+        .createQueryBuilder('time')
+        .innerJoinAndSelect('time.project', 'project')
+        .innerJoin('project.user', 'owner')
+        .andWhere('time.fromAt >= :from', { from: new Date(from) })
+        .andWhere('time.toAt <= :to', { to: new Date(to) })
+        .andWhere('owner.id = :ownerId', { ownerId: freelancer.id })
+        .andWhere('project.id = :projectId', { projectId: project.id })
+        .andWhere('project.deletedAt IS NULL')
+        .andWhere('COALESCE(time.isPaid, false) = false')
+        .getMany(),
+    )
   }
 
   private applyViewAccessFilter(
@@ -564,4 +600,3 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     )
   }
 }
-

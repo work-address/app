@@ -8,6 +8,7 @@ import { projectControllerCreate } from '@app/api-client'
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { ProjectRepository } from '@/repository/project-repository'
 import { EProjectState } from '@/model/project'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite
 export class ProjectControllerCreateTest extends BaseControllerTest {
@@ -43,7 +44,9 @@ export class ProjectControllerCreateTest extends BaseControllerTest {
     const locationHeader =
       res.headers['location'] ?? res.headers['Location'] ?? ''
     const id = String(locationHeader).split('/')[3]
-    const project = await this.projectRepository.findOneByIdOrFail(id)
+    const project = await runPromise(
+      this.projectRepository.findOneByIdOrFail(id),
+    )
 
     expect(res.status).to.be.equal(201)
     this.expectEmptyResponseBody(res.data)
@@ -81,7 +84,9 @@ export class ProjectControllerCreateTest extends BaseControllerTest {
     const locationHeader =
       res.headers['location'] ?? res.headers['Location'] ?? ''
     const id = String(locationHeader).split('/')[3]
-    const project = await this.projectRepository.findOneByIdOrFail(id)
+    const project = await runPromise(
+      this.projectRepository.findOneByIdOrFail(id),
+    )
 
     expect(res.status).to.be.equal(201)
     expect(project.workerAddresses).to.deep.equal([worker.address])
@@ -115,7 +120,9 @@ export class ProjectControllerCreateTest extends BaseControllerTest {
     const locationHeader =
       res.headers['location'] ?? res.headers['Location'] ?? ''
     const id = String(locationHeader).split('/')[3]
-    const project = await this.projectRepository.findOneByIdOrFail(id)
+    const project = await runPromise(
+      this.projectRepository.findOneByIdOrFail(id),
+    )
 
     expect(res.status).to.be.equal(201)
     expect(project.workerAddresses).to.deep.equal([pendingAddress])
@@ -146,7 +153,9 @@ export class ProjectControllerCreateTest extends BaseControllerTest {
     const locationHeader =
       res.headers['location'] ?? res.headers['Location'] ?? ''
     const id = String(locationHeader).split('/')[3]
-    const project = await this.projectRepository.findOneByIdOrFail(id)
+    const project = await runPromise(
+      this.projectRepository.findOneByIdOrFail(id),
+    )
 
     expect(project.workerAddresses).to.deep.equal([worker.address])
     expect(project.viewerAddresses).to.deep.equal([])

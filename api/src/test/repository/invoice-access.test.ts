@@ -9,6 +9,7 @@ import { InvoiceRepository } from '@/repository/invoice-repository'
 import { ProjectFixture } from '@/test/fixture/project-fixture'
 import { ProjectRepository } from '@/repository/project-repository'
 import { UserFixture } from '@/test/fixture/user-fixture'
+import { runPromise } from '@/service/effect-bridge'
 
 const search = { filter: {}, sort: { createdAt: 'ASC' as const }, page: 0 }
 
@@ -51,7 +52,9 @@ export class InvoiceAccessTest extends AbstractDatabaseIntegration {
       EInvoiceState.REQUESTED,
     )
 
-    const [rows] = await this.invoiceRepository.findAndCount(search, owner)
+    const [rows] = await runPromise(
+      this.invoiceRepository.findAndCount(search, owner),
+    )
 
     expect(rows.map((row) => row.id)).to.include(invoice.id)
   }
@@ -65,7 +68,7 @@ export class InvoiceAccessTest extends AbstractDatabaseIntegration {
       EProjectState.ACTIVE,
     )
     project.workerAddresses = [worker.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const invoice = await this.invoiceFixture.create(
       project,
@@ -73,9 +76,11 @@ export class InvoiceAccessTest extends AbstractDatabaseIntegration {
       EInvoiceState.REQUESTED,
     )
     invoice.user = worker
-    await this.invoiceRepository.saveSingle(invoice)
+    await runPromise(this.invoiceRepository.saveSingle(invoice))
 
-    const [rows] = await this.invoiceRepository.findAndCount(search, worker)
+    const [rows] = await runPromise(
+      this.invoiceRepository.findAndCount(search, worker),
+    )
 
     expect(rows.map((row) => row.id)).to.include(invoice.id)
   }
@@ -89,7 +94,7 @@ export class InvoiceAccessTest extends AbstractDatabaseIntegration {
       EProjectState.ACTIVE,
     )
     project.workerAddresses = [worker.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const invoice = await this.invoiceFixture.create(
       project,
@@ -97,9 +102,11 @@ export class InvoiceAccessTest extends AbstractDatabaseIntegration {
       EInvoiceState.REQUESTED,
     )
     invoice.user = worker
-    await this.invoiceRepository.saveSingle(invoice)
+    await runPromise(this.invoiceRepository.saveSingle(invoice))
 
-    const [rows] = await this.invoiceRepository.findAndCount(search, owner)
+    const [rows] = await runPromise(
+      this.invoiceRepository.findAndCount(search, owner),
+    )
 
     expect(rows.map((row) => row.id)).to.include(invoice.id)
   }
@@ -113,7 +120,7 @@ export class InvoiceAccessTest extends AbstractDatabaseIntegration {
       EProjectState.ACTIVE,
     )
     project.viewerAddresses = [viewer.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const invoice = await this.invoiceFixture.create(
       project,
@@ -121,7 +128,9 @@ export class InvoiceAccessTest extends AbstractDatabaseIntegration {
       EInvoiceState.REQUESTED,
     )
 
-    const [rows] = await this.invoiceRepository.findAndCount(search, viewer)
+    const [rows] = await runPromise(
+      this.invoiceRepository.findAndCount(search, viewer),
+    )
 
     expect(rows.map((row) => row.id)).to.include(invoice.id)
   }
@@ -137,7 +146,7 @@ export class InvoiceAccessTest extends AbstractDatabaseIntegration {
       EProjectState.ACTIVE,
     )
     project.workerAddresses = [workerA.address, workerB.address]
-    await this.projectRepository.saveSingle(project)
+    await runPromise(this.projectRepository.saveSingle(project))
 
     const invoice = await this.invoiceFixture.create(
       project,
@@ -145,9 +154,11 @@ export class InvoiceAccessTest extends AbstractDatabaseIntegration {
       EInvoiceState.REQUESTED,
     )
     invoice.user = workerA
-    await this.invoiceRepository.saveSingle(invoice)
+    await runPromise(this.invoiceRepository.saveSingle(invoice))
 
-    const [rows] = await this.invoiceRepository.findAndCount(search, workerB)
+    const [rows] = await runPromise(
+      this.invoiceRepository.findAndCount(search, workerB),
+    )
 
     expect(rows.map((row) => row.id)).to.not.include(invoice.id)
   }
