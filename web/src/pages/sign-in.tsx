@@ -14,6 +14,7 @@ import {
   ETHEREUM_WALLETS,
   AuthProviderButton,
   AuthSignInGuide,
+  AuthSignInGuideMobile,
   SOLANA_WALLETS,
   TON_WALLETS,
   AuthWalletList,
@@ -30,6 +31,16 @@ import {
   TonLogo,
   useBreakpoint,
 } from '@/shared'
+
+const WALLET_LINES = [
+  { labelKey: 'signIn.footer.ethereumWallets', wallets: ETHEREUM_WALLETS },
+  { labelKey: 'signIn.footer.tonWallets', wallets: TON_WALLETS },
+  {
+    labelKey: 'signIn.footer.solanaWallets',
+    wallets: SOLANA_WALLETS,
+    mobileBreakAfter: 3,
+  },
+]
 
 export default function SignInPage() {
   const { t, i18n } = useTranslation()
@@ -114,6 +125,7 @@ export default function SignInPage() {
                 </AuthProviderButton>
               ))}
             </S.Actions>
+            <AuthSignInGuideMobile />
             <S.Learn to={routes.docs.build()} target={routes.docs.target}>
               {t('signIn.learnMore')}
             </S.Learn>
@@ -123,22 +135,27 @@ export default function SignInPage() {
           </GuidePane>
         </Shell>
         <Footer>
-          <S.FootLine>
-            <S.FootLabel>{t('signIn.footer.ethereumWallets')}</S.FootLabel>{' '}
-            <AuthWalletList wallets={ETHEREUM_WALLETS} />
-          </S.FootLine>
-          <S.FootLine>
-            <S.FootLabel>{t('signIn.footer.tonWallets')}</S.FootLabel>{' '}
-            <AuthWalletList wallets={TON_WALLETS} />
-          </S.FootLine>
-          <S.FootLine>
-            <S.FootLabel>{t('signIn.footer.solanaWallets')}</S.FootLabel>{' '}
-            <AuthWalletList wallets={SOLANA_WALLETS} breakAfter={3} />
-          </S.FootLine>
+          {WALLET_LINES.map((line) => (
+            <S.FootLine key={line.labelKey}>
+              <S.FootLabel>{t(line.labelKey)}</S.FootLabel>{' '}
+              <AuthWalletList
+                wallets={line.wallets}
+                breakAfter={line.mobileBreakAfter ?? 4}
+              />
+            </S.FootLine>
+          ))}
           <CommitSha>
             Version: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}
           </CommitSha>
         </Footer>
+        <DesktopFooter>
+          {WALLET_LINES.map((line) => (
+            <DesktopFootLine key={line.labelKey}>
+              <S.FootLabel>{t(line.labelKey)}</S.FootLabel>{' '}
+              <AuthWalletList wallets={line.wallets} breakAfter={Infinity} />
+            </DesktopFootLine>
+          ))}
+        </DesktopFooter>
         <DesktopVersion>
           Version: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}
         </DesktopVersion>
@@ -212,7 +229,7 @@ const Footer = styled.footer`
   font-weight: 500;
   margin-left: -2px;
   margin-top: 20px;
-  line-height: 16px;
+  line-height: 22px;
   padding-bottom: 40px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
@@ -223,6 +240,34 @@ const Footer = styled.footer`
 
   ${({ theme }) => theme.breakpoints.up('lg')} {
     display: none;
+  }
+`
+
+// Compact desktop counterpart of the wallet-list footer. Hidden on short
+// viewports so the full-screen page never scrolls; the hover guide still
+// lists each network's wallets there.
+const DesktopFooter = styled.footer`
+  display: none;
+
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    @media (min-height: 780px) {
+      display: block;
+      margin-top: 18px;
+      text-align: center;
+      font-size: var(--font-size-1);
+      color: var(--c-rgba-0-7-20-0_52);
+      letter-spacing: 0.45px;
+      font-weight: 500;
+      line-height: 18px;
+    }
+  }
+`
+
+const DesktopFootLine = styled.div`
+  margin-top: 5px;
+
+  &:first-child {
+    margin-top: 0;
   }
 `
 

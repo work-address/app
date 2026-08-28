@@ -1,3 +1,5 @@
+import { ChevronDownIcon } from '@radix-ui/react-icons'
+import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -67,10 +69,94 @@ export const AuthSignInGuide = ({ mode }: Props) => {
   )
 }
 
+const MOBILE_STEP_COUNT = 3
+
+// Touch screens have no hover, so below `lg` the guide becomes this
+// tap-to-expand primer inside the sign-in card. The steps skip the QR code:
+// on a phone the wallet opens directly instead of being scanned.
+export const AuthSignInGuideMobile = () => {
+  const { t } = useTranslation()
+  const [open, setOpen] = useState(false)
+  const contentId = useId()
+
+  return (
+    <MobileRoot>
+      <MobileToggle
+        type="button"
+        aria-expanded={open}
+        aria-controls={contentId}
+        onClick={() => setOpen((value) => !value)}
+      >
+        {t('signIn.guide.default.title')}
+        <MobileChevron $open={open} aria-hidden />
+      </MobileToggle>
+      <MobileCollapse id={contentId} $open={open}>
+        <MobileCollapseInner>
+          <Steps>
+            {Array.from({ length: MOBILE_STEP_COUNT }, (_, index) => (
+              <Step key={index}>
+                <StepBadge>{index + 1}</StepBadge>
+                <StepText>{t(`signIn.guide.mobile.step${index + 1}`)}</StepText>
+              </Step>
+            ))}
+          </Steps>
+          <Note>{t('signIn.guide.free')}</Note>
+        </MobileCollapseInner>
+      </MobileCollapse>
+    </MobileRoot>
+  )
+}
+
 const Root = styled.div`
   position: relative;
   height: 100%;
   min-height: 460px;
+`
+
+const MobileRoot = styled.div`
+  margin-bottom: 12px;
+
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    display: none;
+  }
+`
+
+const MobileToggle = styled.button`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  width: 100%;
+  min-height: 44px;
+  padding: 6px 12px;
+  font-size: var(--font-size-2);
+  font-weight: 500;
+  letter-spacing: 0.4px;
+  color: var(--ds-accent-11);
+`
+
+const MobileChevron = styled(ChevronDownIcon)<{ $open: boolean }>`
+  width: 16px;
+  height: 16px;
+  flex-shrink: 0;
+  transition: transform 0.2s ease;
+  transform: rotate(${({ $open }) => ($open ? 180 : 0)}deg);
+`
+
+const MobileCollapse = styled.div<{ $open: boolean }>`
+  display: grid;
+  grid-template-rows: ${({ $open }) => ($open ? '1fr' : '0fr')};
+  visibility: ${({ $open }) => ($open ? 'visible' : 'hidden')};
+  transition:
+    grid-template-rows 0.25s ease,
+    visibility 0.25s;
+`
+
+const MobileCollapseInner = styled.div`
+  overflow: hidden;
+  min-height: 0;
+  text-align: left;
+  padding: 0 4px;
 `
 
 const Panel = styled.div<{ $active: boolean }>`
