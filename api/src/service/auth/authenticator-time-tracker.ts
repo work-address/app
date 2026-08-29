@@ -7,6 +7,7 @@ import TimeTrackerException from '@/exception/time-tracker-exception'
 import { RedisClient } from '@/service/redis-client'
 import { Signer } from '@/service/auth/signer'
 import { Authenticator } from '@/service/auth/authenticator'
+import { ClientIp } from '@/service/auth/client-ip'
 import { EAuthTimeTrackerState, IAuthTokens } from '@/model/auth'
 import { UserRepository } from '@/repository/user-repository'
 import { runPromise } from '@/service/effect-bridge'
@@ -35,7 +36,7 @@ export class AuthenticatorTimeTracker {
     state: EAuthTimeTrackerState
     ip: string
   }> {
-    ip = this.normalizeIp(ip)
+    ip = ClientIp.normalize(ip)
     const nonce = this.signer.generateNonce()
     const key = `timetracker:nonce:${nonce}`
     const dataExisting = await this.redis.get(key)
@@ -59,7 +60,7 @@ export class AuthenticatorTimeTracker {
   }
 
   public async timeTrackerLogin(nonce: string, ip: string) {
-    ip = this.normalizeIp(ip)
+    ip = ClientIp.normalize(ip)
     const nonceParsed = this.timeTrackerDataFromRedis(
       await this.redis.get(`timetracker:nonce:${nonce}`),
     )
@@ -70,7 +71,7 @@ export class AuthenticatorTimeTracker {
 
     // console.log('timeTrackerLogin', nonceParsed, nonce, ip)
 
-    if (nonceParsed.ip !== ip) {
+    if (!ClientIp.sameClient(nonceParsed.ip, ip)) {
       throw new TimeTrackerException('IP address mismatch')
     }
 
@@ -84,7 +85,7 @@ export class AuthenticatorTimeTracker {
   }
 
   public async timeTrackerConnect(nonce: string, user: User, ip: string) {
-    ip = this.normalizeIp(ip)
+    ip = ClientIp.normalize(ip)
     const loginParsed = this.timeTrackerDataFromRedis(
       await this.redis.get(`timetracker:nonce:${nonce}`),
     )
@@ -94,7 +95,7 @@ export class AuthenticatorTimeTracker {
 
     // console.log('timeTrackerConnect', loginParsed, nonce, ip)
 
-    if (loginParsed.ip !== ip) {
+    if (!ClientIp.sameClient(loginParsed.ip, ip)) {
       throw new TimeTrackerException('IP address mismatch')
     }
 
@@ -112,7 +113,7 @@ export class AuthenticatorTimeTracker {
   }
 
   public async timeTrackerNonceGet(nonce: string, ip: string) {
-    ip = this.normalizeIp(ip)
+    ip = ClientIp.normalize(ip)
     const key = `timetracker:nonce:${nonce}`
     const data = this.timeTrackerDataFromRedis(await this.redis.get(key))
 
@@ -125,18 +126,11 @@ export class AuthenticatorTimeTracker {
     // console.log('timeTrackerNonceGet', data, nonce, ip)
     // console.log('>>>>>>', data.ip, 'ip', ip)
 
-    if (data.ip !== ip) {
+    if (!ClientIp.sameClient(data.ip, ip)) {
       throw new TimeTrackerException('IP address mismatch')
     }
 
     return data
-  }
-
-  // Node represents IPv4 peers on a dual-stack socket as IPv4-mapped IPv6
-  // addresses (e.g. "::ffff:172.19.0.1"). Strip that prefix so stored and
-  // compared IPs use a consistent IPv4 form.
-  private normalizeIp(ip: string): string {
-    return ip.startsWith('::ffff:') ? ip.slice('::ffff:'.length) : ip
   }
 
   private timeTrackerDataFromRedis(raw: unknown): TimeTrackerNonceCache | null {
