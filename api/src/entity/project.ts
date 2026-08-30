@@ -4,6 +4,7 @@ import { Exclude, Expose, Type } from 'class-transformer'
 import { JSONSchema } from 'class-validator-jsonschema'
 
 import { User } from '@/entity/user'
+import { WalletAddress } from '@/service/wallet-address'
 import { AbstractBaseEntity } from '@/entity/abstract-base-entity'
 import {
   ArrayMaxSize,
@@ -156,15 +157,19 @@ export class Project extends AbstractBaseEntity implements IProject {
       return false
     }
 
-    const target = user.address?.toLowerCase()
+    // Canonical on both sides: the two TON spellings of one account must
+    // compare equal, and lowercasing alone does not achieve that.
+    const target = WalletAddress.toCanonical(user.address ?? '')
 
-    return (addresses ?? []).some((address) => address.toLowerCase() === target)
+    return (addresses ?? []).some(
+      (address) => WalletAddress.toCanonical(address) === target,
+    )
   }
 
   public static accessParams(user: User) {
     return {
       accessUserId: user.id,
-      userAddress: user.address.toLowerCase(),
+      userAddress: WalletAddress.toCanonical(user.address),
     }
   }
 }

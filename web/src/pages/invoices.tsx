@@ -12,6 +12,7 @@ import {
   shortenAddress,
 } from '@/features/invoice'
 import { routes } from '@/routes'
+import { getFriendlyWalletAddress } from '@/shared'
 import { Button, PageHelmet, SectionTitle, Text, Wrapper } from '@/shared'
 
 /**
@@ -120,7 +121,9 @@ export default function InvoicesPage() {
                   </NavLink>
                   <Text size="2" color="gray">
                     {invoice.user?.name ||
-                      shortenAddress(invoice.user?.address ?? '')}
+                      shortenAddress(
+                        getFriendlyWalletAddress(invoice.user?.address) ?? '',
+                      )}
                   </Text>
                   <Text size="2" color="gray">
                     {new Date(invoice.fromAt as string).toLocaleDateString()} —{' '}

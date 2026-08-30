@@ -12,6 +12,7 @@ import { TimeRepository } from '@/repository/time-repository'
 import { ProjectAccessAddresses } from '@/model/dto/project'
 import { RepoEffect } from '@/repository/abstract-repository-template'
 import { Entitlement } from '@/service/entitlement'
+import { WalletAddress } from '@/service/wallet-address'
 
 @injectable()
 export class ProjectManager {
@@ -104,13 +105,34 @@ export class ProjectManager {
     data: ProjectAccessAddresses,
     current: ProjectAccessAddresses,
   ): void {
-    const ownerAddress = project.user.address.toLowerCase()
-    const workerAddresses = [...new Set(data.workerAddresses)].filter(
-      (address) => address.toLowerCase() !== ownerAddress,
-    )
-    const viewerAddresses = [...new Set(data.viewerAddresses)].filter(
-      (address) => address.toLowerCase() !== ownerAddress,
-    )
+    // Canonicalised on the way in, so an address pasted straight out of a
+    // wallet works. TON shows people the friendly form (`UQ…`) while access is
+    // granted by comparing against the raw form stored on User.address - before
+    // this, such an entry validated, saved, and then granted nothing at all.
+    const ownerAddress = WalletAddress.toCanonical(project.user.address)
+    // Stored as typed apart from TON, which collapses to raw. Deduped on the
+    // canonical form so the same account entered twice in two spellings is one
+    // entry, while the surviving string keeps an EVM address's checksum casing.
+    const forStorage = (addresses: string[]): string[] => {
+      const seen = new Set<string>()
+
+      return addresses
+        .map((address) => WalletAddress.toStorage(address))
+        .filter((address) => {
+          const key = WalletAddress.toCanonical(address)
+
+          if (seen.has(key) || key === ownerAddress) {
+            return false
+          }
+
+          seen.add(key)
+
+          return true
+        })
+    }
+
+    const workerAddresses = forStorage(data.workerAddresses)
+    const viewerAddresses = forStorage(data.viewerAddresses)
 
     if (!this.entitlement.isPremium(project.user)) {
       // Gate *granting*, never revoking. An owner whose subscription lapsed
@@ -132,9 +154,13 @@ export class ProjectManager {
   }
 
   private static addsAddress(next: string[], current: string[]): boolean {
-    const existing = new Set(current.map((address) => address.toLowerCase()))
+    const existing = new Set(
+      current.map((address) => WalletAddress.toCanonical(address)),
+    )
 
-    return next.some((address) => !existing.has(address.toLowerCase()))
+    return next.some(
+      (address) => !existing.has(WalletAddress.toCanonical(address)),
+    )
   }
 
   public save(project: Project) {
