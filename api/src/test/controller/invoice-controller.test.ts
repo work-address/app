@@ -1,9 +1,10 @@
 import { expect } from 'chai'
 import axios from 'axios'
 import { faker } from '@faker-js/faker'
+import moment from 'moment'
 import { suite, test } from '@testdeck/mocha'
 
-import { invoiceControllerRead } from '@app/api-client'
+import { invoiceControllerCreate, invoiceControllerRead } from '@app/api-client'
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { EProjectState } from '@/model/project'
@@ -144,5 +145,121 @@ export class InvoiceControllerTest extends BaseControllerTest {
     if (!axios.isAxiosError(error)) throw error
     expect(error).to.be.ok
     expect(error.response?.status).to.be.equal(404)
+  }
+
+  /**
+   * The read is the whole invoice page: the record, the entries it bills, and
+   * their roll-up. It used to take three requests, and the breakdown came from
+   * a project-wide report - so an invoice listed hours it did not charge for.
+   */
+  @test()
+  async read_carriesTheTimeItBills() {
+    const owner = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner, 60)
+    const billed = await this.timeFixture.create(
+      project,
+      moment.utc().subtract(2, 'hours').toDate(),
+      moment.utc().subtract(110, 'minutes').toDate(),
+    )
+
+    const created = await invoiceControllerCreate({
+      client: this.apiClient(),
+      path: { projectId: project.id as never },
+      headers: {
+        Authorization: this.authenticator.getTokens(owner).accessToken,
+      },
+      body: {},
+      throwOnError: true,
+    })
+
+    const res = await invoiceControllerRead({
+      client: this.apiClient(),
+      path: { id: created.data.id as never },
+      headers: {
+        Authorization: this.authenticator.getTokens(owner).accessToken,
+      },
+      throwOnError: true,
+    })
+
+    expect(res.status).to.be.equal(200)
+    expect(res.data.time).to.have.length(1)
+    expect(res.data.time?.[0]?.id).to.be.equal(billed.id)
+    expect(res.data.report?.rateHour).to.be.equal(60)
+    expect(res.data.report?.minutes).to.be.equal(10)
+    expect(res.data.report?.minutesActive).to.be.equal(billed.minutesActive)
+    expect(res.data.report?.minutesUnpaid).to.be.equal(billed.minutesActive)
+    expect(res.data.report?.minutesPaid).to.be.equal(0)
+  }
+
+  /**
+   * Hours tracked after the invoice was raised belong to the next one. The
+   * project-wide report this replaced pulled them in, so the line items grew
+   * every time anyone kept working while the total stayed frozen.
+   */
+  @test()
+  async read_excludesTimeOnNoInvoiceOfItsOwn() {
+    const owner = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner, 60)
+    const billed = await this.timeFixture.create(
+      project,
+      moment.utc().subtract(2, 'hours').toDate(),
+      moment.utc().subtract(110, 'minutes').toDate(),
+    )
+
+    const created = await invoiceControllerCreate({
+      client: this.apiClient(),
+      path: { projectId: project.id as never },
+      headers: {
+        Authorization: this.authenticator.getTokens(owner).accessToken,
+      },
+      body: {},
+      throwOnError: true,
+    })
+
+    await this.timeFixture.create(
+      project,
+      moment.utc().subtract(30, 'minutes').toDate(),
+      moment.utc().subtract(20, 'minutes').toDate(),
+    )
+
+    const res = await invoiceControllerRead({
+      client: this.apiClient(),
+      path: { id: created.data.id as never },
+      headers: {
+        Authorization: this.authenticator.getTokens(owner).accessToken,
+      },
+      throwOnError: true,
+    })
+
+    expect(res.data.time).to.have.length(1)
+    expect(res.data.time?.[0]?.id).to.be.equal(billed.id)
+  }
+
+  /** An invoice with nothing linked reports zeroes, not a missing report. */
+  @test()
+  async read_withoutLinkedTime_reportsZero() {
+    const owner = await this.userFixture.createUser()
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
+    const invoice = await this.invoiceFixture.create(
+      project,
+      50,
+      EInvoiceState.REQUESTED,
+    )
+
+    const res = await invoiceControllerRead({
+      client: this.apiClient(),
+      path: { id: invoice.id as never },
+      headers: {
+        Authorization: this.authenticator.getTokens(owner).accessToken,
+      },
+      throwOnError: true,
+    })
+
+    expect(res.data.time).to.have.length(0)
+    expect(res.data.report?.minutes).to.be.equal(0)
+    expect(res.data.report?.minutesActive).to.be.equal(0)
   }
 }

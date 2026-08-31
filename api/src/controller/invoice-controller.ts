@@ -98,10 +98,45 @@ export class InvoiceController {
   }
 
   @OpenAPIExtended({
-    summary: 'Get invoice by id',
+    summary: 'Get invoice by id, with the time it bills and a roll-up',
     response: {
-      schema: Invoice,
-      options: { serializationGroup: 'search' },
+      schema: null,
+      options: {
+        // Everything the invoice page needs in one response: the invoice as
+        // the list serializes it, plus the entries it bills. Composed by hand
+        // because `serializationGroup` registers a single group's component,
+        // and this response is two - `Invoice_search` for the record itself,
+        // `invoiceRead` for the fields that only a single read populates.
+        inlineSchema: {
+          allOf: [
+            { $ref: '#/components/schemas/Invoice_search' },
+            {
+              type: 'object',
+              properties: {
+                time: {
+                  type: 'array',
+                  items: { $ref: '#/components/schemas/Time_search' },
+                },
+                report: {
+                  type: 'object',
+                  properties: {
+                    rateHour: { type: 'number' },
+                    rateTotal: { type: 'number' },
+                    minutes: { type: 'number' },
+                    minutesActive: { type: 'number' },
+                    minutesPaid: { type: 'number' },
+                    minutesUnpaid: { type: 'number' },
+                    keyboardKeys: { type: 'number' },
+                    mouseKeys: { type: 'number' },
+                    mouseDistance: { type: 'number' },
+                  },
+                },
+              },
+            },
+          ],
+        },
+      },
+      transformGroups: ['search', 'invoiceRead'],
     },
   })
   @Get('/:id')
@@ -110,9 +145,7 @@ export class InvoiceController {
     @EntityFromParam({ paramName: 'id', relations: { project: true } })
     invoice: Invoice,
   ) {
-    return runPromise(
-      this.invoiceRepository.findOneConfirmUser(invoice, currentUser),
-    )
+    return runPromise(this.invoiceManager.read(invoice, currentUser))
   }
 
   @OpenAPIExtended({

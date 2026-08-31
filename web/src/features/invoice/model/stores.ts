@@ -1,27 +1,23 @@
 import { combine } from 'effector'
 
-import {
-  activityDetailQuery,
-  activityReportQuery,
-  invoiceQuery,
-} from './queries'
+import { invoiceQuery } from './queries'
 
-import type { ProjectInvoice } from './types'
-import type { ITimeTotalDetail } from '@/entities/time'
+import type { InvoiceRead, ProjectInvoice } from './types'
 
 export const $invoice = combine(
   invoiceQuery.$data,
-  activityDetailQuery.$data,
-  activityReportQuery.$data,
-  (record, detail, report): ProjectInvoice | null => {
-    if (!record || !detail) {
+  (record): ProjectInvoice | null => {
+    if (!record) {
       return null
     }
 
     return {
-      ...detail,
-      report: report?.totals[0] ?? undefined,
-      record,
+      ...record,
+      // The project supplies only the heading. `id` and `createdAt` stay the
+      // invoice's own - spreading the project over them, as this store used
+      // to, put the project's id in the QR code and the project's creation
+      // date on the "issued" line.
+      title: record.project?.title,
       // Read from the stored invoice, never recomputed. The old code derived
       // this from the project's *current* total active minutes, so it summed
       // every contributor's hours - including already-paid ones - and moved
@@ -32,13 +28,8 @@ export const $invoice = combine(
 )
 
 export const $invoiceTime = combine(
-  activityReportQuery.$data,
-  (report): ITimeTotalDetail[] => report?.time ?? [],
+  invoiceQuery.$data,
+  (record): NonNullable<InvoiceRead['time']> => record?.time ?? [],
 )
 
-export const $invoiceLoading = combine(
-  invoiceQuery.$pending,
-  activityDetailQuery.$pending,
-  activityReportQuery.$pending,
-  (...flags) => flags.some((flag) => flag),
-)
+export const $invoiceLoading = invoiceQuery.$pending

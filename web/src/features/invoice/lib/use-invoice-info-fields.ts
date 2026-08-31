@@ -36,7 +36,9 @@ export const useInvoiceInfoFields = (): InvoiceInfoFieldRow[] => {
   return [
     {
       id: 'issueDate',
-      value: dateFormatter.format(new Date(invoice?.createdAt ?? Date.now())),
+      value: invoice?.createdAt
+        ? dateFormatter.format(new Date(invoice.createdAt))
+        : '',
     },
     {
       id: 'rateHour',

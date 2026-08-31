@@ -217,30 +217,6 @@ export class TimeController {
   }
 
   @OpenAPIExtended({
-    summary: 'Cached time report for a project',
-    response: {
-      schema: null,
-      options: { inlineSchema: { type: 'object' } },
-      transformGroups: ['search'],
-    },
-  })
-  @Get('/report/:id')
-  public getReport(
-    @CurrentUser() currentUser: User,
-    @EntityFromParam({ paramName: 'id' }) project: Project,
-  ) {
-    return runPromise(
-      this.projectRepository
-        .findProjectWithAccessOrFail(project, currentUser)
-        .pipe(
-          Effect.flatMap((accessible) =>
-            this.timeManager.buildAndCacheReport(accessible, currentUser),
-          ),
-        ),
-    )
-  }
-
-  @OpenAPIExtended({
     summary: 'Create or update many time rows (batch)',
     body: {
       schema: TimeCreateDto,

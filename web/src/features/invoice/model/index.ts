@@ -2,18 +2,14 @@ import { sample } from 'effector'
 
 import { fetchInvoice, resetInvoice } from './events'
 import { ensureInvoiceMutation, invoiceSelectedTimeMutation } from './mutations'
-import {
-  activityDetailQuery,
-  activityReportQuery,
-  invoiceQuery,
-} from './queries'
+import { invoiceQuery } from './queries'
 
 import { routes } from '@/routes'
 import { navigateFx, showToastFx } from '@/shared'
 
-// `fetchInvoice` carries an INVOICE id. The invoice is authoritative for the
-// amount, period and state; the project and time report are fetched afterwards,
-// from the project the invoice names, purely for the breakdown beneath it.
+// `fetchInvoice` carries an INVOICE id. One request serves the whole page: the
+// invoice is authoritative for the amount, period and state, and carries the
+// time it bills along with the roll-up of that time.
 sample({
   clock: fetchInvoice,
   fn: ({ id }) => id,
@@ -21,24 +17,13 @@ sample({
 })
 
 sample({
-  clock: invoiceQuery.$data,
-  filter: (invoice) => Boolean(invoice?.project?.id),
-  fn: (invoice) => invoice?.project?.id as string,
-  target: [activityDetailQuery.start, activityReportQuery.start],
-})
-
-sample({
   clock: resetInvoice,
-  target: [
-    invoiceQuery.reset,
-    activityDetailQuery.reset,
-    activityReportQuery.reset,
-  ],
+  target: invoiceQuery.reset,
 })
 
 export { fetchInvoice, resetInvoice } from './events'
 export { $invoice, $invoiceTime, $invoiceLoading } from './stores'
-export type { ProjectInvoice } from './types'
+export type { InvoiceRead, InvoiceReport, ProjectInvoice } from './types'
 export { invoiceListQuery, invoiceQuery } from './queries'
 export * from './format'
 export * from './mutations'

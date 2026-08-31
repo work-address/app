@@ -6,26 +6,22 @@ import { faker } from '@faker-js/faker'
 
 import {
   projectControllerEdit,
-  timeControllerGetReport,
   timeControllerGetTotals,
   timeControllerRead,
 } from '@app/api-client'
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { EProjectState } from '@/model/project'
-import { RedisClient } from '@/service/redis-client'
 import { TimeRepository } from '@/repository/time-repository'
 import { runPromise } from '@/service/effect-bridge'
 
 @suite
 export class TimeControllerTest extends BaseControllerTest {
-  protected redisClient: RedisClient
   protected timeRepository: TimeRepository
 
   constructor() {
     super()
 
-    this.redisClient = this.container.get('RedisClient')
     this.timeRepository = this.container.get('TimeRepository')
   }
 
@@ -389,54 +385,6 @@ export class TimeControllerTest extends BaseControllerTest {
   }
 
   @test
-  async getReport() {
-    const user = await this.userFixture.createUser()
-    const project = await this.projectFixture.createPersonal(user)
-    const timeA = await this.timeFixture.create(
-      project,
-      moment.utc().subtract(120, 'minutes').toDate(),
-      moment.utc().subtract(110, 'minutes').toDate(),
-    )
-    const timeB = await this.timeFixture.create(
-      project,
-      moment.utc().subtract(60, 'minutes').toDate(),
-      moment.utc().subtract(50, 'minutes').toDate(),
-    )
-
-    const cacheEmpty = await this.redisClient.get(project.id)
-
-    const client = this.apiClient()
-    const res = await timeControllerGetReport({
-      client,
-      path: { id: project.id as never },
-      headers: {
-        Authorization: this.authenticator.getTokens(user).accessToken,
-      },
-      throwOnError: true,
-    })
-
-    const cacheFullRaw = await this.redisClient.get(project.id)
-    const cacheFull = cacheFullRaw as {
-      totals: { projectId: string }[]
-      time: unknown[]
-    }
-
-    const report = res.data as unknown as {
-      totals: Array<{ projectId: string }>
-      time: Array<{ id: string }>
-    }
-
-    expect(res.status).to.be.equal(200)
-    expect(report.totals[0].projectId).to.be.eq(project.id)
-    expect(report.time).to.be.length(2)
-    expect(report.time[0].id).to.be.eq(timeB.id)
-    expect(report.time[1].id).to.be.eq(timeA.id)
-    expect(cacheEmpty).to.be.length(0)
-    expect(cacheFull.totals[0].projectId).to.be.eq(project.id)
-    expect(cacheFull.time).to.be.length(2)
-  }
-
-  @test
   async read_requiresAuthorization() {
     let error: unknown
 
@@ -475,49 +423,6 @@ export class TimeControllerTest extends BaseControllerTest {
   }
 
   @test
-  async getReport_requiresAuthorization() {
-    let error: unknown
-
-    try {
-      await timeControllerGetReport({
-        client: this.apiClient(),
-        path: { id: faker.string.uuid() as never },
-        throwOnError: true,
-      })
-    } catch (e: unknown) {
-      error = e
-    }
-
-    if (!axios.isAxiosError(error)) throw error
-    expect(error).to.be.ok
-    expect(error.response?.status).to.be.equal(401)
-  }
-
-  @test
-  async getReport_unknownProject_notFound() {
-    const user = await this.userFixture.createUser()
-
-    let error: unknown
-
-    try {
-      await timeControllerGetReport({
-        client: this.apiClient(),
-        path: { id: faker.string.uuid() as never },
-        headers: {
-          Authorization: this.authenticator.getTokens(user).accessToken,
-        },
-        throwOnError: true,
-      })
-    } catch (e: unknown) {
-      error = e
-    }
-
-    if (!axios.isAxiosError(error)) throw error
-    expect(error).to.be.ok
-    expect(error.response?.status).to.be.equal(404)
-  }
-
-  @test
   async read_unknownTime_notFound() {
     const owner = await this.userFixture.createPremiumUser()
 
@@ -539,55 +444,5 @@ export class TimeControllerTest extends BaseControllerTest {
     if (!axios.isAxiosError(error)) throw error
     expect(error).to.be.ok
     expect(error.response?.status).to.be.equal(404)
-  }
-
-  @test
-  async getReport_deniedForUnrelatedUser() {
-    const owner = await this.userFixture.createPremiumUser()
-    const other = await this.userFixture.createUser()
-    const project = await this.projectFixture.createPersonal(owner)
-
-    let error: unknown
-
-    try {
-      await timeControllerGetReport({
-        client: this.apiClient(),
-        path: { id: project.id as never },
-        headers: {
-          Authorization: this.authenticator.getTokens(other).accessToken,
-        },
-        throwOnError: true,
-      })
-    } catch (e: unknown) {
-      error = e
-    }
-
-    if (!axios.isAxiosError(error)) throw error
-    expect(error.response?.status).to.be.equal(403)
-  }
-
-  @test
-  async getReportEmpty() {
-    const user = await this.userFixture.createUser()
-    const project = await this.projectFixture.createPersonal(user)
-
-    const cacheEmpty = await this.redisClient.get(project.id)
-
-    const client = this.apiClient()
-    const res = await timeControllerGetReport({
-      client,
-      path: { id: project.id as never },
-      headers: {
-        Authorization: this.authenticator.getTokens(user).accessToken,
-      },
-      throwOnError: true,
-    })
-
-    const cacheFull = await this.redisClient.get(project.id)
-
-    expect(res.status).to.be.equal(200)
-    expect(res.data).to.be.deep.eq({ totals: [], time: [] })
-    expect(cacheEmpty).to.be.length(0)
-    expect(cacheFull).to.be.deep.eq({ totals: [], time: [] })
   }
 }

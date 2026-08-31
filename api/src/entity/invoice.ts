@@ -7,7 +7,11 @@ import { AbstractBaseEntity } from '@/entity/abstract-base-entity'
 import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
 import { IsDate, IsInt, IsNotEmpty, IsOptional } from 'class-validator'
-import { EInvoiceState } from '@/model/invoice'
+import { EInvoiceState, IInvoiceReport } from '@/model/invoice'
+
+// Type-only: `Time` imports `Invoice` for its own relation, and a value import
+// here would close that cycle at runtime.
+import type { Time } from '@/entity/time'
 
 @JSONSchema({
   example: {
@@ -72,4 +76,18 @@ export class Invoice extends AbstractBaseEntity {
   @IsDate()
   @IsOptional()
   paidAt?: Date | null
+
+  /**
+   * The entries this invoice bills, and their roll-up.
+   *
+   * Not columns - `InvoiceManager.read` fills them in from the `Time.invoice`
+   * link so that opening an invoice is one request. They sit in their own
+   * serialisation group rather than in `search`, so the invoice *list* is not
+   * forced to carry every line item of every invoice on it.
+   */
+  @Expose({ groups: ['invoiceRead'] })
+  time?: Time[]
+
+  @Expose({ groups: ['invoiceRead'] })
+  report?: IInvoiceReport
 }

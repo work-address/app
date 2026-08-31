@@ -119,7 +119,7 @@
           "state"
         ],
         "example": {
-          "id": "d4880029-9026-4200-9f4f-ddcd254adfe1"
+          "id": "baf71337-8c84-4e9d-a68a-15782936a1e0"
         }
       },
       "ProjectStatistics": {
@@ -180,7 +180,7 @@
           "period"
         ],
         "example": {
-          "id": "1ee4edaf-22f9-4547-8e66-870e0372f514"
+          "id": "2cdb6f11-ae3c-4d1e-a145-9630a0440f43"
         }
       },
       "Time": {
@@ -274,7 +274,7 @@
           "toAt"
         ],
         "example": {
-          "id": "63261398-b4b3-4c4c-983b-70915ca4f6d8"
+          "id": "485a0a4d-53e0-4d53-9d9a-5120e9e24c72"
         }
       },
       "Project": {
@@ -361,7 +361,7 @@
           "state"
         ],
         "example": {
-          "id": "b81ec43e-ae6e-4667-a495-348306eca8ab"
+          "id": "3013e1c7-4d97-45c9-91a8-2315511e3f56"
         }
       },
       "User": {
@@ -467,7 +467,7 @@
         },
         "type": "object",
         "example": {
-          "id": "8b332382-1c79-4323-8fff-2854f2a4de59"
+          "id": "3b70c900-7ca8-453c-b1ce-e32c44e6f0bc"
         }
       },
       "AuthForgotPasswordDto": {
@@ -2971,62 +2971,6 @@
         ]
       }
     },
-    "/api/time/report/{id}": {
-      "get": {
-        "operationId": "TimeController.getReport",
-        "parameters": [
-          {
-            "in": "path",
-            "name": "id",
-            "required": true,
-            "schema": {
-              "$ref": "#/components/schemas/Project"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object"
-                }
-              }
-            },
-            "description": ""
-          },
-          "404": {
-            "description": "Project does not exist",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "name": {
-                      "type": "string",
-                      "example": "NotFoundError"
-                    },
-                    "message": {
-                      "type": "string",
-                      "example": "Project does not exist"
-                    }
-                  }
-                }
-              }
-            }
-          }
-        },
-        "summary": "Cached time report for a project",
-        "tags": [
-          "Time"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
     "/api/time": {
       "post": {
         "operationId": "TimeController.createOrUpdateMany",
@@ -3262,7 +3206,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "6aca33b0-d971-462c-a2cb-65a8a34e4737"
+                  "projectId": "d46a58c2-2a27-4bca-bd8c-31681ad17b13"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -3330,8 +3274,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1787814501701,
-                "toUnix": 1787900901701
+                "fromUnix": 1788091680622,
+                "toUnix": 1788178080622
               }
             }
           },
@@ -3399,7 +3343,54 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/Invoice_search"
+                  "allOf": [
+                    {
+                      "$ref": "#/components/schemas/Invoice_search"
+                    },
+                    {
+                      "type": "object",
+                      "properties": {
+                        "time": {
+                          "type": "array",
+                          "items": {
+                            "$ref": "#/components/schemas/Time_search"
+                          }
+                        },
+                        "report": {
+                          "type": "object",
+                          "properties": {
+                            "rateHour": {
+                              "type": "number"
+                            },
+                            "rateTotal": {
+                              "type": "number"
+                            },
+                            "minutes": {
+                              "type": "number"
+                            },
+                            "minutesActive": {
+                              "type": "number"
+                            },
+                            "minutesPaid": {
+                              "type": "number"
+                            },
+                            "minutesUnpaid": {
+                              "type": "number"
+                            },
+                            "keyboardKeys": {
+                              "type": "number"
+                            },
+                            "mouseKeys": {
+                              "type": "number"
+                            },
+                            "mouseDistance": {
+                              "type": "number"
+                            }
+                          }
+                        }
+                      }
+                    }
+                  ]
                 }
               }
             },
@@ -3426,7 +3417,7 @@
             }
           }
         },
-        "summary": "Get invoice by id",
+        "summary": "Get invoice by id, with the time it bills and a roll-up",
         "tags": [
           "Invoice"
         ],
@@ -3648,7 +3639,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "4cc126f0-3e87-41ce-9104-703a5dafe32e"
+                "nonce": "aeb38ddb-9805-427e-91dc-0f478a046cad"
               },
               "schema": {
                 "properties": {
@@ -3693,7 +3684,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "300266f4-80b8-4d16-899b-79c909661f98"
+                "nonce": "de9758eb-17f4-4139-8d7f-f192ed91a710"
               },
               "schema": {
                 "properties": {
@@ -3734,21 +3725,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "2a0c7139-8aa3-4d57-8c44-a5afc68eb149",
+                      "nonce": "d5e14fa8-24ae-48a0-a9e1-8cee7c649f2e",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "d19a327d-255e-47dd-ba72-c0c80da8f78e",
+                      "nonce": "772f0e98-a1e8-470d-b579-d3c60b5b5c66",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "e6d4f607-fcba-4a16-a021-c1e260c3a20f",
+                      "nonce": "ce85e2d9-15c6-4010-ab83-c2d91d25dbaa",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

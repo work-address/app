@@ -9,9 +9,9 @@ import { $invoiceTime, $invoiceLoading } from '../model'
 import { InvoiceTimeContext } from './invoice-time-context'
 
 import type { InvoiceTimeContextProps } from './invoice-time-context'
+import type { InvoiceRead } from '../model'
 import type { DesktopBodyCellRenderProps, DataTableConfig } from '@/shared'
 
-import { type ITimeTotalDetail } from '@/entities/time'
 import {
   DataTable,
   formatDurationFromMinutes,
@@ -43,7 +43,7 @@ export const InvoiceTime = () => {
   )
 
   const tableConfig = useMemo(
-    (): DataTableConfig<ITimeTotalDetail> => [
+    (): DataTableConfig<InvoiceTimeRow> => [
       {
         dataKey: 'createdAt',
         width: 200,
@@ -93,9 +93,12 @@ export const InvoiceTime = () => {
   )
 }
 
-const rowIdGetter = (detail: ITimeTotalDetail) => detail.id
+/** One billed entry, exactly as the invoice read endpoint serializes it. */
+type InvoiceTimeRow = NonNullable<InvoiceRead['time']>[number]
 
-const Cell = memo((props: DesktopBodyCellRenderProps<ITimeTotalDetail>) => {
+const rowIdGetter = (detail: InvoiceTimeRow) => detail.id ?? ''
+
+const Cell = memo((props: DesktopBodyCellRenderProps<InvoiceTimeRow>) => {
   const { t } = useTranslation()
 
   if (props.dataKey === 'createdAt') {
@@ -105,7 +108,7 @@ const Cell = memo((props: DesktopBodyCellRenderProps<ITimeTotalDetail>) => {
   if (props.customKey === 'timeActive') {
     return (
       <Badge color={getTimeActiveColor(props.data.minutesActive ?? 0)}>
-        {formatDurationFromMinutes(props.data.minutesActive, t)}
+        {formatDurationFromMinutes(props.data.minutesActive ?? 0, t)}
       </Badge>
     )
   }
@@ -117,18 +120,24 @@ const Cell = memo((props: DesktopBodyCellRenderProps<ITimeTotalDetail>) => {
   )
 })
 
+/** Blank beats "Invalid Date" on a printed invoice. */
+const formatDate = (
+  formatter: Intl.DateTimeFormat,
+  value: string | undefined,
+): string => (value ? formatter.format(new Date(value)) : '')
+
 const CreatedAtCell = memo(
-  (props: DesktopBodyCellRenderProps<ITimeTotalDetail>) => {
+  (props: DesktopBodyCellRenderProps<InvoiceTimeRow>) => {
     const { dateFormatter, timeFormatter } = useContext(InvoiceTimeContext)
 
     return (
       <Flex gap={'2'}>
         <Text size="2">
-          {timeFormatter.format(new Date(props.data.fromAt))} -{' '}
-          {timeFormatter.format(new Date(props.data.toAt))}
+          {formatDate(timeFormatter, props.data.fromAt)} -{' '}
+          {formatDate(timeFormatter, props.data.toAt)}
         </Text>
         <Text size="2" color={'gray'}>
-          {dateFormatter.format(new Date(props.data.createdAt))}
+          {formatDate(dateFormatter, props.data.createdAt)}
         </Text>
       </Flex>
     )
@@ -150,7 +159,7 @@ const printColumnWidths = css`
   )}
 `
 
-const InvoiceTimeTable = styled(DataTable<ITimeTotalDetail>)`
+const InvoiceTimeTable = styled(DataTable<InvoiceTimeRow>)`
   /* DataTable's shared Tr (src/shared/ui/table/data-table.tsx) applies a 0.25s
      transition and an rgb(242, 242, 242) hover background to every row; this
      printable summary table isn't interactive, so neutralize both. */

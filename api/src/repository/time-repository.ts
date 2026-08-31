@@ -556,6 +556,37 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     )
   }
 
+  /**
+   * The same entries as {@link findForInvoice}, for display only.
+   *
+   * Omits `screenshot` and `processes`: an invoice can bill hundreds of
+   * entries and a screenshot runs to hundreds of kilobytes, none of which the
+   * invoice renders. Rows from here are partial and must never be saved back -
+   * that is what {@link findForInvoice} is for.
+   */
+  public findForInvoiceSummary(invoice: Invoice): RepoEffect<Time[]> {
+    return fromPromise(() =>
+      this.getRepo()
+        .createQueryBuilder('time')
+        .select([
+          'time.id',
+          'time.createdAt',
+          'time.updatedAt',
+          'time.isPaid',
+          'time.note',
+          'time.minutesActive',
+          'time.keyboardKeys',
+          'time.mouseKeys',
+          'time.mouseDistance',
+          'time.fromAt',
+          'time.toAt',
+        ])
+        .andWhere('time.invoiceId = :invoiceId', { invoiceId: invoice.id })
+        .orderBy('time.fromAt', 'DESC')
+        .getMany(),
+    )
+  }
+
   public findTimeBetweenForProject(
     from: number,
     to: number,

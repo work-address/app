@@ -11,7 +11,6 @@ import {
 import {
   timeControllerCreateOrUpdateMany,
   timeControllerEdit,
-  timeControllerGetReport,
   timeControllerGetTotals,
   timeControllerRead as timeControllerReadEntry,
   timeControllerSearch,
@@ -194,7 +193,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
   }
 
   @test
-  async viewerCanReadTimeSearchAndReport() {
+  async viewerCanReadTimeSearchAndTotals() {
     const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
@@ -227,7 +226,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const reportRes = await timeControllerGetReport({
+    const totalsRes = await timeControllerGetTotals({
       client: this.apiClient(),
       path: { id: project.id as never },
       headers: {
@@ -238,12 +237,11 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
 
     expect((searchRes.data[0] as Array<{ id: string }>).length).to.be.eq(1)
     expect(readRes.data.id).to.be.equal(time.id)
-    expect(reportRes.data.time).to.have.length(1)
-    expect(reportRes.data.totals).to.have.length(1)
+    expect(totalsRes.data).to.have.length(1)
   }
 
   @test
-  async ownerCanReadReport() {
+  async ownerCanReadTotals() {
     const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
@@ -254,7 +252,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
     const toAt = moment.utc().toDate()
     await this.timeFixture.create(project, fromAt, toAt)
 
-    const reportRes = await timeControllerGetReport({
+    const totalsRes = await timeControllerGetTotals({
       client: this.apiClient(),
       path: { id: project.id as never },
       headers: {
@@ -263,12 +261,11 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    expect(reportRes.data.time).to.have.length(1)
-    expect(reportRes.data.totals).to.have.length(1)
+    expect(totalsRes.data).to.have.length(1)
   }
 
   @test
-  async workerCanReadReport() {
+  async workerCanReadTotals() {
     const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
@@ -279,7 +276,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
     const toAt = moment.utc().toDate()
     await this.timeFixture.create(project, fromAt, toAt)
 
-    const reportRes = await timeControllerGetReport({
+    const totalsRes = await timeControllerGetTotals({
       client: this.apiClient(),
       path: { id: project.id as never },
       headers: {
@@ -288,8 +285,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    expect(reportRes.data.time).to.have.length(1)
-    expect(reportRes.data.totals).to.have.length(1)
+    expect(totalsRes.data).to.have.length(1)
   }
 
   @test

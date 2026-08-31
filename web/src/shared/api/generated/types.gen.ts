@@ -858,35 +858,6 @@ export type TimeControllerGetTotalsResponses = {
 
 export type TimeControllerGetTotalsResponse = TimeControllerGetTotalsResponses[keyof TimeControllerGetTotalsResponses];
 
-export type TimeControllerGetReportData = {
-    body?: never;
-    path: {
-        id: Project;
-    };
-    query?: never;
-    url: '/api/time/report/{id}';
-};
-
-export type TimeControllerGetReportErrors = {
-    /**
-     * Project does not exist
-     */
-    404: {
-        name?: string;
-        message?: string;
-    };
-};
-
-export type TimeControllerGetReportError = TimeControllerGetReportErrors[keyof TimeControllerGetReportErrors];
-
-export type TimeControllerGetReportResponses = {
-    200: {
-        [key: string]: unknown;
-    };
-};
-
-export type TimeControllerGetReportResponse = TimeControllerGetReportResponses[keyof TimeControllerGetReportResponses];
-
 export type TimeControllerDeleteData = {
     body: TimeIdsDto;
     path?: never;
@@ -1025,7 +996,20 @@ export type InvoiceControllerReadErrors = {
 export type InvoiceControllerReadError = InvoiceControllerReadErrors[keyof InvoiceControllerReadErrors];
 
 export type InvoiceControllerReadResponses = {
-    200: InvoiceSearch;
+    200: InvoiceSearch & {
+        time?: Array<TimeSearch>;
+        report?: {
+            rateHour?: number;
+            rateTotal?: number;
+            minutes?: number;
+            minutesActive?: number;
+            minutesPaid?: number;
+            minutesUnpaid?: number;
+            keyboardKeys?: number;
+            mouseKeys?: number;
+            mouseDistance?: number;
+        };
+    };
 };
 
 export type InvoiceControllerReadResponse = InvoiceControllerReadResponses[keyof InvoiceControllerReadResponses];

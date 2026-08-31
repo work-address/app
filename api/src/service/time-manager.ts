@@ -9,10 +9,7 @@ import { ProjectRepository } from '@/repository/project-repository'
 import { ITimeInsertionResult } from '@/model/time'
 import { ErrorFormatter } from '@/service/error-formatter'
 import { TimeCreateDto } from '@/model/dto/time'
-import { Project } from '@/entity/project'
-import { RedisClient } from '@/service/redis-client'
 import { Entitlement } from '@/service/entitlement'
-import { ITimeTotals } from '@/model/time'
 import AccessException from '@/exception/access-exception'
 import RetentionExceededException from '@/exception/retention-exceeded-exception'
 import { ImageResizer } from '@/service/image-resizer'
@@ -25,14 +22,10 @@ export class TimeManager {
   protected timeRepository: TimeRepository
   @inject('ProjectRepository')
   protected projectRepository: ProjectRepository
-  @inject('RedisClient')
-  protected redisClient: RedisClient
   @inject('ImageResizer')
   protected imageResizer: ImageResizer
   @inject('Entitlement')
   protected entitlement: Entitlement
-
-  public static reportExpiresIn: number = 1000 * 60 * 10 // 10 minutes
 
   // Projects owned by a non-premium account keep only the trailing N days of
   // time logs. Entitlement is the project owner's, not the author's - see
@@ -234,45 +227,6 @@ export class TimeManager {
       const times = yield* this.timeRepository.findByIdsAsAuthor(ids, user)
 
       yield* this.timeRepository.removeMany(times)
-    })
-  }
-
-  public buildAndCacheReport(
-    project: Project,
-    user: User,
-  ): RepoEffect<{
-    totals: ITimeTotals[]
-    time: Time[]
-  }> {
-    return Effect.gen(this, function* () {
-      const cache = yield* fromPromise(() => this.redisClient.get(project.id))
-
-      if (
-        cache &&
-        typeof cache === 'object' &&
-        'totals' in cache &&
-        'time' in cache
-      ) {
-        return cache as {
-          totals: ITimeTotals[]
-          time: Time[]
-        }
-      }
-
-      const data = {
-        totals: yield* this.timeRepository.getTotals(user, project.id),
-        time: yield* this.timeRepository.findAllTimeForProject(project, user),
-      }
-
-      yield* fromPromise(() =>
-        this.redisClient.setWithExpiry(
-          project.id,
-          data,
-          TimeManager.reportExpiresIn,
-        ),
-      )
-
-      return data
     })
   }
 

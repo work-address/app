@@ -6,15 +6,14 @@ import moment from 'moment'
 import { Invoice } from '@/entity/invoice'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { RepoEffect } from '@/repository/abstract-repository-template'
-import { fromPromise } from '@/service/effect-bridge'
 import { Project } from '@/entity/project'
 import { ProjectRepository } from '@/repository/project-repository'
 import { Time } from '@/entity/time'
 import { TimeRepository } from '@/repository/time-repository'
-import { RedisClient } from '@/service/redis-client'
 import { User } from '@/entity/user'
-import { EInvoiceState } from '@/model/invoice'
+import { EInvoiceState, IInvoiceReport } from '@/model/invoice'
 import { InvoiceCreateDto } from '@/model/dto/invoice'
+import { Calc } from '@/service/calc'
 import AccessException from '@/exception/access-exception'
 
 /**
@@ -35,8 +34,63 @@ export class InvoiceManager {
   protected projectRepository: ProjectRepository
   @inject('TimeRepository')
   protected timeRepository: TimeRepository
-  @inject('RedisClient')
-  protected redisClient: RedisClient
+
+  /**
+   * Everything the invoice page needs, in one read: the invoice, the entries
+   * it bills, and their roll-up.
+   *
+   * The breakdown follows the `Time.invoice` link rather than the project, so
+   * the line items are exactly what this invoice charges for. Reading the
+   * project's time instead - which is what the separate report endpoint used
+   * to serve here - listed hours from other invoices and uninvoiced hours
+   * under a total that covered neither.
+   */
+  public read(invoice: Invoice, user: User): RepoEffect<Invoice> {
+    return Effect.gen(this, function* () {
+      const found = yield* this.invoiceRepository.findOneConfirmUser(
+        invoice,
+        user,
+      )
+
+      const times = yield* this.timeRepository.findForInvoiceSummary(found)
+
+      found.time = times
+      found.report = InvoiceManager.reportFor(
+        times,
+        Number(found.project?.rateHour) || 0,
+      )
+
+      return found
+    })
+  }
+
+  /**
+   * Rolls a set of entries up for display.
+   *
+   * Summed in memory from the same rows that are returned as line items, so
+   * the two cannot drift. `minutes` is the wall-clock span the tracker covered
+   * - it samples on a ten-minute interval, so each entry stands for ten
+   * minutes - as distinct from `minutesActive`, which is time actually worked.
+   */
+  public static reportFor(times: Time[], rateHour: number): IInvoiceReport {
+    const sum = (pick: (time: Time) => number | null | undefined): number =>
+      times.reduce((total, time) => total + (Number(pick(time)) || 0), 0)
+
+    const minutes = times.length * 10
+    const minutesActive = sum((time) => time.minutesActive)
+
+    return {
+      rateHour,
+      rateTotal: Calc.rateTotal(minutes, rateHour),
+      minutes,
+      minutesActive,
+      minutesPaid: sum((time) => (time.isPaid ? time.minutesActive : 0)),
+      minutesUnpaid: sum((time) => (time.isPaid ? 0 : time.minutesActive)),
+      keyboardKeys: sum((time) => time.keyboardKeys),
+      mouseKeys: sum((time) => time.mouseKeys),
+      mouseDistance: sum((time) => time.mouseDistance),
+    }
+  }
 
   /** Hourly cost of a set of entries, in whole cents. */
   public static amountFor(times: Time[], rateHour: number): number {
@@ -105,7 +159,6 @@ export class InvoiceManager {
       const saved = yield* this.invoiceRepository.validateAndSave(invoice)
 
       yield* this.attachTime(saved, times)
-      yield* this.invalidateReport(accessible)
 
       return saved
     })
@@ -172,7 +225,6 @@ export class InvoiceManager {
       const saved = yield* this.invoiceRepository.validateAndSave(invoice)
 
       yield* this.attachTime(saved, times)
-      yield* this.invalidateReport(accessible)
 
       return saved
     })
@@ -241,7 +293,6 @@ export class InvoiceManager {
       invoice.paidAt = new Date()
 
       const saved = yield* this.invoiceRepository.saveSingle(invoice)
-      yield* this.invalidateReport(invoice.project)
 
       return saved
     })
@@ -262,7 +313,6 @@ export class InvoiceManager {
       invoice.paidAt = null
 
       const saved = yield* this.invoiceRepository.saveSingle(invoice)
-      yield* this.invalidateReport(invoice.project)
 
       return saved
     })
@@ -351,30 +401,8 @@ export class InvoiceManager {
       const saved = yield* this.invoiceRepository.validateAndSave(invoice)
 
       yield* this.attachTime(saved, outstanding)
-      yield* this.invalidateReport(accessible)
 
       return saved
     })
-  }
-
-  /**
-   * The cached time report is keyed on the project and lives for ten minutes,
-   * and nothing else clears it. Without this, settling an invoice leaves the
-   * project still showing those hours as owed until the cache expires.
-   */
-  private invalidateReport(project: Project): RepoEffect<void> {
-    return fromPromise(() => this.redisClient.del(project.id)).pipe(
-      // A stale report is a display problem for a few minutes; a failed cache
-      // delete must not roll back a payment that already happened. Recovering
-      // to void here is what keeps that failure out of the caller's channel.
-      Effect.catchAll((error) =>
-        Effect.sync(() =>
-          console.error(
-            `InvoiceManager: failed to invalidate report cache for project ${project.id}`,
-            error,
-          ),
-        ),
-      ),
-    )
   }
 }
