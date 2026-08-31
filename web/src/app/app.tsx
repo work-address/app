@@ -2,7 +2,7 @@ import './app.css'
 import '@radix-ui/themes/styles.css'
 import { useUnit } from 'effector-react'
 import { lazy, Suspense, useEffect } from 'react'
-import { createBrowserRouter, RouterProvider } from 'react-router-dom'
+import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 
 import {
   initAuth,
@@ -53,12 +53,17 @@ const router = createBrowserRouter([
         element: <ProfileEditPage />,
       },
       {
+        path: routes.invoices.schema,
+        element: <InvoicesPage />,
+      },
+      {
         path: routes.invoice.schema,
         element: <InvoicePage />,
       },
       {
-        path: routes.invoices.schema,
-        element: <InvoicesPage />,
+        // The list moved from /invoices to /invoice; keep old links working.
+        path: '/invoices',
+        element: <Navigate to={routes.invoices.build()} replace />,
       },
     ],
   },

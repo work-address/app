@@ -17,7 +17,7 @@ type MainRoutes =
   & Route<'/time-tracker', 'timeTracker'>
   & Route<'/download', 'download'>
   & Route<'/invoice/:id', 'invoice', NoChildRoutes, IdRouteParams>
-  & Route<'/invoices', 'invoices'>
+  & Route<'/invoice', 'invoices'>
   & Route<'https://facebook.com/:userId', 'facebook', NoChildRoutes, { userId: string }>
   & Route<'https://t.me/:userId', 'telegram', NoChildRoutes, { userId: string }>
   & Route<'https://linkedin.com/in/:userId', 'linkedin', NoChildRoutes, { userId: string }>
@@ -66,9 +66,12 @@ export const routes: MainRoutes = {
     },
   },
 
+  // Singular, matching `/invoice/:id` and the API it reads from: `/invoice`
+  // is every invoice, `/invoice/:id` is one of them. `/invoices` still
+  // resolves here - see the redirect in app.tsx.
   invoices: {
-    schema: '/invoices',
-    build: () => '/invoices',
+    schema: '/invoice',
+    build: () => '/invoice',
   },
 
   docs: {
