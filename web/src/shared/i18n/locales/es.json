@@ -11,6 +11,8 @@
   "common.duration.minutesOnly": "{{minutes}} min",
   "common.edit": "Editar",
   "common.errors.unexpected": "Algo salió mal. Inténtalo de nuevo.",
+  "common.noPremium": "Sin Premium",
+  "common.noPremiumAction": "Ver qué incluye Premium",
   "common.premium": "Cuenta premium",
   "common.save": "Guardar",
   "common.share": "Compartir",

@@ -16,17 +16,25 @@ const readCollapsed = (): boolean => {
 export const togglePremiumBanner = createEvent()
 
 /**
- * Whether the premium banner is collapsed to its header chip.
+ * Bring the banner back, regardless of current state.
+ *
+ * Distinct from the toggle because the header badge is a one-way door: it is
+ * shown only while the banner is dismissed, so a toggle there would collapse
+ * something the user cannot see.
+ */
+export const showPremiumBanner = createEvent()
+
+/**
+ * Whether the premium banner is dismissed.
  *
  * A store rather than component state because two places render from it - the
- * banner on the dashboard and the chip beside the profile button - and local
- * state would let them disagree: collapsing the banner would leave the header
- * showing nothing until a reload.
+ * banner on the dashboard and the "No premium" badge in the header - and local
+ * state would let them disagree: dismissing the banner would leave the badge
+ * unable to bring it back until a reload.
  */
-export const $premiumBannerCollapsed = createStore<boolean>(readCollapsed()).on(
-  togglePremiumBanner,
-  (collapsed) => !collapsed,
-)
+export const $premiumBannerCollapsed = createStore<boolean>(readCollapsed())
+  .on(togglePremiumBanner, (collapsed) => !collapsed)
+  .on(showPremiumBanner, () => false)
 
 sample({
   clock: $premiumBannerCollapsed,

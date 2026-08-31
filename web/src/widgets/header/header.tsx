@@ -12,7 +12,7 @@ import { HeaderUserLink } from './header-user-link'
 import { MobileMenu, itemVariants } from './mobile-menu'
 
 import { $authenticated, $user, logout } from '@/entities/profile'
-import { PremiumCollapsedButton } from '@/features/dashboard'
+import { showPremiumBanner } from '@/features/dashboard'
 import { routes } from '@/routes'
 import {
   CrossIcon,
@@ -21,6 +21,7 @@ import {
   Logo,
   useBreakpoint,
   Button,
+  navigateFx,
 } from '@/shared'
 
 const menuVariants = {
@@ -38,6 +39,18 @@ const menuVariants = {
 export const Header = () => {
   const { t } = useTranslation()
   const logoutEvent = useUnit(logout)
+  const showBanner = useUnit(showPremiumBanner)
+
+  /**
+   * The banner lives on the dashboard while the badge is in the header, so
+   * revealing it from another screen would expand something out of sight -
+   * hence the navigation alongside it.
+   */
+  const revealPremiumBanner = () => {
+    showBanner()
+    void navigateFx({ to: routes.dashboard.build() })
+  }
+
   const { user, authenticated } = useUnit({
     user: $user,
     authenticated: $authenticated,
@@ -96,8 +109,11 @@ export const Header = () => {
         <Right>
           {authenticated ? (
             <>
-              <PremiumCollapsedButton />
-              <HeaderUserLink user={user} userAlt={t('header.userAlt')} />
+              <HeaderUserLink
+                user={user}
+                userAlt={t('header.userAlt')}
+                onNoPremiumClick={revealPremiumBanner}
+              />
               <ExitButton
                 aria-label={t('header.exit')}
                 onClick={() => logoutEvent()}
@@ -112,10 +128,6 @@ export const Header = () => {
           )}
         </Right>
         <MobileRight>
-          {/* Mobile puts the profile link inside the burger menu, so the chip
-              sits beside the burger - still the top-right corner, still one
-              tap from anywhere. */}
-          {authenticated ? <PremiumCollapsedButton /> : null}
           <BurgerButton
             type="button"
             aria-label={
@@ -161,6 +173,7 @@ export const Header = () => {
                         user={user}
                         userAlt={t('header.userAlt')}
                         stretch
+                        onNoPremiumClick={revealPremiumBanner}
                       />
                     </MobileMenuTop>
                     <Divider />
@@ -346,14 +359,26 @@ const MobileMenuButton = styled(motion.button)`
 const ExitButton = styled.button`
   width: 40px;
   height: 40px;
-  border-radius: 6px;
   display: flex;
   align-items: center;
   justify-content: center;
-  border: 1px solid var(--c-rgba-0-8-48-0_27);
+  /*
+   * Same surface, radius and timing as the profile card beside it - the two
+   * read as one pair of controls. It previously carried a border and drew from
+   * ad-hoc --c-rgba-* values unrelated to the rest of the header.
+   */
+  border: 0;
+  border-radius: 8px;
+  background: var(--ds-neutral-2);
+  cursor: pointer;
+  transition: background 0.15s ease;
 
   &:hover {
-    background: var(--c-rgba-28-32-36-0_06);
+    background: var(--ds-neutral-alpha-3);
+  }
+
+  &:active {
+    background: var(--ds-neutral-alpha-6);
   }
 `
 

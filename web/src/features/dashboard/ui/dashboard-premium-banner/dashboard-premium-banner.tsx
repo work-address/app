@@ -31,22 +31,24 @@ export const DashboardPremiumBanner = () => {
     return null
   }
 
-  // Collapsed, the banner lives in the header as PremiumCollapsedButton so it
-  // stays reachable from every screen rather than only this one.
+  // Dismissing hides the promo for good; the header carries a NoPremiumBadge
+  // as the persistent status indicator, so nothing is lost by collapsing it.
   if (collapsed) {
     return null
   }
 
   return (
     <Root align={isDesktop ? 'center' : 'flex-start'}>
-      <IconWrap>
-        <StarFilledIcon width={18} height={18} />
-      </IconWrap>
       <Body>
-        <Text weight={'medium'} size={'3'}>
-          {t('dashboard.premiumBanner.title')}
-        </Text>
-        <Text size={'2'} color={'gray'}>
+        <TitleRow>
+          <IconWrap>
+            <StarFilledIcon width={14} height={14} />
+          </IconWrap>
+          <Text weight={'medium'} size={'2'}>
+            {t('dashboard.premiumBanner.title')}
+          </Text>
+        </TitleRow>
+        <Text size={'1'} color={'gray'}>
           {t('dashboard.premiumBanner.description', {
             days: FREE_RETENTION_DAYS,
           })}
@@ -60,7 +62,7 @@ export const DashboardPremiumBanner = () => {
         target="_blank"
         rel="noopener noreferrer"
       >
-        <Button size={isDesktop ? 'l' : 'm'}>
+        <Button size={isDesktop ? 'm' : 's'}>
           {t('dashboard.premiumBanner.cta')}
         </Button>
       </UpgradeLink>
@@ -82,9 +84,9 @@ const Root = styled.div<{ align: 'center' | 'flex-start' }>`
   position: relative;
   display: flex;
   align-items: ${(p) => p.align};
-  gap: 16px;
-  padding: 16px 44px 16px 20px;
-  margin-bottom: 20px;
+  gap: 12px;
+  padding: 8px 34px 8px 12px;
+  margin-bottom: 12px;
   border-radius: var(--radius-4);
   border: 1px solid var(--ds-accent-alpha-6);
   background: var(--ds-accent-3);
@@ -95,29 +97,37 @@ const Root = styled.div<{ align: 'center' | 'flex-start' }>`
   }
 `
 
-const IconWrap = styled.div`
+const IconWrap = styled.span`
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  justify-content: center;
-  width: 36px;
-  height: 36px;
-  border-radius: 50%;
-  background: var(--white);
   color: var(--ds-accent-9);
+`
 
-  ${(p) => p.theme.breakpoints.down('md')} {
-    display: none;
-  }
+const TitleRow = styled.span`
+  display: flex;
+  align-items: center;
+  gap: 6px;
 `
 
 const Body = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-start;
-  gap: 2px;
+  gap: 1px;
   flex: 1;
   text-align: left;
+
+  /*
+   * Radix sets line-height on .rt-Text itself at (0,1,0), which a single
+   * styled-components class only ties - the winner would then come down to
+   * injection order. && doubles the class to (0,2,0) so this reliably wins.
+   * Unitless on purpose: --line-height-N is calc(Npx * var(--scaling)), so a
+   * hardcoded px value would silently stop responding to --scaling.
+   */
+  && * {
+    line-height: 1.3;
+  }
 `
 
 const UpgradeLink = styled.a`
@@ -126,6 +136,6 @@ const UpgradeLink = styled.a`
 
 const DismissButton = styled(IconButton)`
   position: absolute;
-  top: 10px;
-  right: 10px;
+  top: 5px;
+  right: 5px;
 `

@@ -11,6 +11,8 @@
   "common.duration.minutesOnly": "{{minutes}}分",
   "common.edit": "編集",
   "common.errors.unexpected": "問題が発生しました。もう一度お試しください。",
+  "common.noPremium": "Premium なし",
+  "common.noPremiumAction": "Premium の内容を見る",
   "common.premium": "プレミアムアカウント",
   "common.save": "保存",
   "common.share": "共有",
