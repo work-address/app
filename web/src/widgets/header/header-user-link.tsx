@@ -28,56 +28,63 @@ export const HeaderUserLink = ({
   userAlt,
   stretch,
   onNoPremiumClick,
-}: Props) => (
+}: Props) => {
+  const displayName = user?.name || user?.title || ''
+  const badge = user?.premium ? (
+    <PremiumBadge />
+  ) : (
+    <NoPremiumBadge onClick={onNoPremiumClick} />
+  )
+
   /**
    * A stretched link rather than an anchor wrapping the card: the "No premium"
    * badge is a button, and a button inside an anchor is invalid HTML with
    * broken keyboard navigation. The link covers the card through a pseudo
    * element instead, and the badge sits above it.
    */
-  <Root data-stretch={stretch || undefined}>
-    <ProfileButton
-      data-profile-card
-      variant="ghost"
-      color="neutral"
-      stretch={stretch}
-    >
-      <UserBox>
-        <UserAvatar role="img" aria-label={userAlt}>
-          <QRCodeSVG
-            value={user?.friendlyWalletAddress || ''}
-            size={32}
-            level="M"
-            fgColor="var(--ds-accent-11)"
-            bgColor="transparent"
-            marginSize={0}
-          />
-        </UserAvatar>
-        <UserText>
-          <UserSubRow>
-            <UserSub>
-              {formatWalletAddress(user?.friendlyWalletAddress || '')}
-            </UserSub>
-            {user?.premium ? (
-              <PremiumBadge />
-            ) : (
-              <NoPremiumBadge onClick={onNoPremiumClick} />
-            )}
-          </UserSubRow>
-          <UserNameRow>
-            <UserName>{user?.name || user?.title || ''}</UserName>
-          </UserNameRow>
-        </UserText>
-      </UserBox>
-    </ProfileButton>
-    <StretchedLink
-      to={routes.profile.build({
-        walletAddress: user?.friendlyWalletAddress ?? '',
-      })}
-      aria-label={userAlt}
-    />
-  </Root>
-)
+  return (
+    <Root data-stretch={stretch || undefined}>
+      <ProfileButton
+        data-profile-card
+        variant="ghost"
+        color="neutral"
+        stretch={stretch}
+      >
+        <UserBox>
+          <UserAvatar role="img" aria-label={userAlt}>
+            <QRCodeSVG
+              value={user?.friendlyWalletAddress || ''}
+              size={32}
+              level="M"
+              fgColor="var(--ds-accent-11)"
+              bgColor="transparent"
+              marginSize={0}
+            />
+          </UserAvatar>
+          <UserText>
+            <UserSubRow>
+              <UserSub>
+                {formatWalletAddress(user?.friendlyWalletAddress || '')}
+              </UserSub>
+              {/* With no name below it the second row would sit empty, so the
+                badge drops into it rather than crowding the address. */}
+              {displayName ? badge : null}
+            </UserSubRow>
+            <UserNameRow>
+              {displayName ? <UserName>{displayName}</UserName> : badge}
+            </UserNameRow>
+          </UserText>
+        </UserBox>
+      </ProfileButton>
+      <StretchedLink
+        to={routes.profile.build({
+          walletAddress: user?.friendlyWalletAddress ?? '',
+        })}
+        aria-label={userAlt}
+      />
+    </Root>
+  )
+}
 
 const Root = styled.div`
   position: relative;
