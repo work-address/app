@@ -1,11 +1,11 @@
-import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
 import { markInvoicePaidMutation, markInvoiceUnpaidMutation } from '../model'
 
-import { Button, Text, showToast } from '@/shared'
+import { Button, Tooltip, showToast } from '@/shared'
 
 /**
  * Whether this invoice has been settled, and the control to say so.
@@ -60,25 +60,46 @@ export const InvoicePaymentActions = ({
   }
 
   return (
-    <Flex align="center" justify="end" gap="3" wrap="wrap">
-      {/* Beside the button rather than beneath it: an issuer who does not
-          realise the hours move too will wonder why they stop appearing on
-          the next invoice, so the copy stays - it just costs no extra line. */}
-      <Text size="1" color="gray" align="right">
-        {t(
-          isPaid
-            ? 'invoice.payment.revertNotice'
-            : 'invoice.payment.markPaidNotice',
-        )}
-      </Text>
-      <Button
-        size="m"
+    /* The notice rides on the button rather than sitting beside it. An issuer
+       who does not realise the hours move too will wonder why they stop
+       appearing on the next invoice, so the copy stays - but as a full
+       sentence in the row it was the longest thing on the card. */
+    <Tooltip
+      content={t(
+        isPaid
+          ? 'invoice.payment.revertNotice'
+          : 'invoice.payment.markPaidNotice',
+      )}
+    >
+      <SettleButton
+        size="l"
         variant={isPaid ? 'outline' : 'solid'}
         loading={pending}
         onClick={() => (isPaid ? markUnpaid(invoiceId) : markPaid(invoiceId))}
       >
         {t(isPaid ? 'invoice.payment.revert' : 'invoice.payment.markPaid')}
-      </Button>
-    </Flex>
+      </SettleButton>
+    </Tooltip>
   )
 }
+
+/**
+ * Sized outside the `s`/`m`/`l` scale.
+ *
+ * The list row is dense and this sits beside the figures rather than under
+ * them, so it is shorter than `s` (24px tall, but with roomier padding than
+ * the preset gives) while keeping body-sized text.
+ */
+const SettleButton = styled(Button)`
+  /* Stays above a card-wide link overlay, so pressing it settles the invoice
+     rather than navigating to it (see the invoices list). */
+  position: relative;
+  z-index: 1;
+
+  && {
+    height: 26px;
+    padding: 0 14px;
+    font-size: 14px;
+    border-radius: 5px;
+  }
+`

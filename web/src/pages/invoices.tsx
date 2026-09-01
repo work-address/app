@@ -175,19 +175,19 @@ export default function InvoicesPage() {
               return (
                 <Row key={invoice.id}>
                   <Header>
-                    <Flex align="center" gap="2" style={{ minWidth: 0 }}>
-                      <Text size="1" color="gray">
-                        {t('invoices.item.project')}
-                      </Text>
+                    <Title style={{ minWidth: 0 }}>
+                      {/* No "Project" label: the title is the heading of the
+                          card, and labelling it read as "Project Ergonomic
+                          Gold Pizza" rather than as a name. */}
                       <ProjectLink
                         to={routes.invoice.build({ id: invoice.id as string })}
                       >
-                        <Text size="3" weight="medium">
+                        <Text size="4" weight="medium" truncate>
                           {invoice.project?.title ?? '—'}
                         </Text>
                       </ProjectLink>
                       <Badge
-                        size="1"
+                        size="2"
                         variant="soft"
                         color={isPaid ? 'green' : 'amber'}
                       >
@@ -197,28 +197,36 @@ export default function InvoicesPage() {
                             : 'invoice.state.requested',
                         )}
                       </Badge>
-                    </Flex>
-                    <Flex align="baseline" gap="4">
+                    </Title>
+                    <Money>
                       {/* The project's rate as it stands today. The amount
                           beside it was frozen when the invoice was raised, so
                           editing the project rate afterwards leaves the two
                           describing different moments. */}
-                      <Field
+                      <Amount
                         label={t('invoice.fields.rateHour')}
                         value={formatCurrency(invoice.project?.rateHour)}
-                        strong
                       />
-                      <Field
+                      <Amount
                         label={t('invoices.item.amount')}
                         value={formatCents(Number(invoice.amountCents ?? 0))}
-                        strong
                       />
-                    </Flex>
+                      <InvoicePaymentActions
+                        invoiceId={invoice.id as string}
+                        isPaid={isPaid}
+                        // Only the issuer may settle: the person owed the
+                        // money is the one who knows whether it arrived.
+                        canSettle={canSettle}
+                      />
+                    </Money>
                   </Header>
                   {/* Several invoices can share a project and a period - one
                       per contributor - so the issuer, the dates and the
-                      reference are what tell them apart in this list. */}
-                  <FieldGrid>
+                      reference are what tell them apart in this list. A
+                      wrapping run rather than fixed columns: the period is
+                      three times the width of "Paid", and forcing them into
+                      equal columns truncated it mid-date. */}
+                  <Meta>
                     <Field label={t('invoices.item.issuedBy')} value={issuer} />
                     <Field
                       label={t('invoices.item.period')}
@@ -241,18 +249,7 @@ export default function InvoicesPage() {
                       label={t('invoices.item.reference')}
                       value={shortenAddress(invoice.id ?? '')}
                     />
-                  </FieldGrid>
-                  {/* No footer at all unless there is something to press, so a
-                      viewer's rows stay at their shortest. */}
-                  {canSettle ? (
-                    <Footer>
-                      <InvoicePaymentActions
-                        invoiceId={invoice.id as string}
-                        isPaid={isPaid}
-                        canSettle={canSettle}
-                      />
-                    </Footer>
-                  ) : null}
+                  </Meta>
                 </Row>
               )
             })}
@@ -296,38 +293,45 @@ export default function InvoicesPage() {
 const SkeletonRow = () => (
   <Row>
     <Header>
-      <Flex align="center" gap="2" style={{ minWidth: 0 }}>
+      <Title>
         <Skeleton>
-          <Text size="1">Project</Text>
-        </Skeleton>
-        <Skeleton>
-          <Text size="3" weight="medium">
+          <Text size="4" weight="medium">
             Project name
           </Text>
         </Skeleton>
-      </Flex>
-      <Flex align="baseline" gap="4">
-        <Skeleton>
-          <Text size="3" weight="bold">
-            Rate $00.00
-          </Text>
-        </Skeleton>
-        <Skeleton>
-          <Text size="3" weight="bold">
-            Amount $0000.00
-          </Text>
-        </Skeleton>
-      </Flex>
+      </Title>
+      <Money>
+        <Flex direction="column" gap="1" align="end">
+          <Skeleton>
+            <Text size="1">Rate</Text>
+          </Skeleton>
+          <Skeleton>
+            <Text size="5" weight="bold">
+              $00.00
+            </Text>
+          </Skeleton>
+        </Flex>
+        <Flex direction="column" gap="1" align="end">
+          <Skeleton>
+            <Text size="1">Amount</Text>
+          </Skeleton>
+          <Skeleton>
+            <Text size="5" weight="bold">
+              $0000.00
+            </Text>
+          </Skeleton>
+        </Flex>
+      </Money>
     </Header>
-    <FieldGrid>
+    <Meta>
       {SKELETON_FIELDS.map((label) => (
         <Skeleton key={label}>
-          <FieldValue size="2" weight="medium">
+          <Text size="2" weight="medium">
             {label} 00th Aug 0000
-          </FieldValue>
+          </Text>
         </Skeleton>
       ))}
-    </FieldGrid>
+    </Meta>
   </Row>
 )
 
@@ -335,48 +339,29 @@ const SkeletonRow = () => (
    land where the real ones will. */
 const SKELETON_FIELDS = ['Issued by', 'Period', 'Issued', 'Paid', 'Reference']
 
-/**
- * Label beside the value rather than above it: stacking them doubled every
- * field's height, and with nine fields per row that was most of the card.
- */
-const Field = ({
-  label,
-  value,
-  strong,
-}: {
-  label: string
-  value: string
-  strong?: boolean
-}) => (
-  <Flex align="baseline" gap="1" style={{ minWidth: 0 }}>
+/** Label beside its value, as one unbreakable unit in the meta run. */
+const Field = ({ label, value }: { label: string; value: string }) => (
+  <FieldRoot>
     <Text size="1" color="gray">
       {label}
     </Text>
-    <FieldValue size={strong ? '3' : '2'} weight={strong ? 'bold' : 'medium'}>
+    <Text size="2" weight="medium">
       {value}
-    </FieldValue>
-  </Flex>
+    </Text>
+  </FieldRoot>
 )
 
-/* Title left, filter right; the filter drops under the title once the row
-   runs out of width rather than squeezing the heading. */
-const PageHead = styled.div`
-  gap: var(--space-3);
-
-  display: flex;
-  align-items: flex-end;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  align-content: flex-end;
-`
-
-const FilterBar = styled.div`
-  display: flex;
-  gap: var(--space-2);
-  flex: 0 0 auto;
-  width: 260px;
-  max-width: 100%;
-`
+/** The two money figures: label above value, right-aligned and matching. */
+const Amount = ({ label, value }: { label: string; value: string }) => (
+  <Flex direction="column" align="end">
+    <Text size="1" color="gray">
+      {label}
+    </Text>
+    <Text size="5" weight="medium">
+      {value}
+    </Text>
+  </Flex>
+)
 
 const List = styled.ul`
   display: flex;
@@ -387,13 +372,40 @@ const List = styled.ul`
   padding: 0;
 `
 
+/* Title left, filter right; the filter drops under the title once the row
+   runs out of width rather than squeezing the heading. */
+const PageHead = styled.div`
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-3);
+`
+
+const FilterBar = styled.div`
+  display: flex;
+  gap: var(--space-2);
+  flex: 0 0 auto;
+  width: 260px;
+  max-width: 100%;
+`
+
+/* Positioned so ProjectLink's overlay can stretch across the whole card: the
+   entire row opens the invoice, not just the title. */
 const Row = styled.li`
+  position: relative;
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
   border: 1px solid var(--gray-a5);
   border-radius: var(--radius-3);
-  padding: var(--space-3);
+  padding: var(--space-3) var(--space-4);
+  background: var(--color-panel-solid);
+  transition: border-color 0.15s ease;
+
+  &:hover {
+    border-color: var(--gray-a8);
+  }
 `
 
 const Header = styled.div`
@@ -401,38 +413,67 @@ const Header = styled.div`
   align-items: center;
   justify-content: space-between;
   flex-wrap: wrap;
-  gap: var(--space-2) var(--space-3);
+  gap: var(--space-2) var(--space-4);
   min-width: 0;
 `
 
-/* Even columns that reflow rather than a wrapped run of text, so the labels
-   stay aligned down the list instead of shifting row to row. */
-const FieldGrid = styled.div`
-  display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
-  gap: var(--space-1) var(--space-3);
+/* Name and status read as one unit, so they stay on the same line and the
+   title takes the squeeze rather than pushing the badge onto its own row. */
+const Title = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-width: 0;
+  flex: 1 1 auto;
+`
+
+/* Hugs the right edge even once the header wraps, so the figures stay in one
+   column down the list instead of drifting under the title on a phone. */
+const Money = styled.div`
+  display: flex;
+  align-items: flex-end;
+  gap: var(--space-4);
+  flex: 0 0 auto;
+  margin-left: auto;
+`
+
+/* One wrapping run. Fixed columns left "Paid —" holding the same width as a
+   full date range, which is what made the card look half-empty. */
+const Meta = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: var(--space-1) var(--space-4);
   padding-top: var(--space-2);
   border-top: 1px solid var(--gray-a4);
   min-width: 0;
 `
 
-const FieldValue = styled(Text)`
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-`
-
-const Footer = styled.div`
+const FieldRoot = styled.div`
   display: flex;
-  justify-content: flex-end;
+  align-items: baseline;
+  gap: var(--space-1);
+  min-width: 0;
 `
 
+/* One real link for the card. The overlay gives it the row's whole hit area
+   while the anchor itself keeps the title as its accessible name, so the
+   keyboard tab stop, the focus ring and open-in-new-tab all still work.
+   Anything else clickable in the row has to sit above it - see SettleButton.
+   The cost is that text inside the card can no longer be selected. */
 const ProjectLink = styled(NavLink)`
   text-decoration: none;
   color: inherit;
   min-width: 0;
 
-  &:hover {
+  &::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    border-radius: inherit;
+  }
+
+  ${Row}:hover & {
     text-decoration: underline;
   }
 `
