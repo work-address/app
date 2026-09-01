@@ -11,7 +11,11 @@ import { ProjectsDialogView } from './projects-dialog-view'
 import type { ProjectsDialogMode } from '../../model'
 
 import { editProjectMutation, type ProjectWithStats } from '@/entities/projects'
-import { AdaptiveDialog, DIALOG_WIDTH_STANDARD } from '@/shared'
+import {
+  AdaptiveDialog,
+  DIALOG_WIDTH_STANDARD,
+  DIALOG_WIDTH_WIDE,
+} from '@/shared'
 
 type ProjectsDialogProps = {
   open: boolean
@@ -62,7 +66,9 @@ export const ProjectsDialog = ({
       }
       open={open}
       onOpenChange={setOpen}
-      desktopWidth={DIALOG_WIDTH_STANDARD}
+      desktopWidth={
+        modalMode === 'view' ? DIALOG_WIDTH_WIDE : DIALOG_WIDTH_STANDARD
+      }
       footer={
         <ProjectsDialogFooter
           mode={modalMode}

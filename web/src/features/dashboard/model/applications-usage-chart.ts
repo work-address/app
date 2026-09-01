@@ -4,6 +4,7 @@ import {
   type ProjectWithStats,
   type StatsPeriod,
 } from '@/entities/projects'
+import { getHourAxis } from '@/shared'
 
 export type Period = 'Week' | 'Month' | 'Year'
 
@@ -58,27 +59,6 @@ const MAX_VISIBLE_PROCESSES = BAR_COLORS.length
 
 export const getBarColor = (processName: string, index: number) =>
   processName === OTHER_PROCESS_NAME ? OTHER_BAR_COLOR : BAR_COLORS[index]
-
-const Y_AXIS_TICK_COUNT = 6
-
-// Integer hour ticks on the axis; fractional labels like "2.5H" clash with the tooltip format.
-// Steps snap to 1/2/3/4/5 per decade so the axis reads 0-20-40-…-100, not 0-19-38-…-95.
-const getYAxis = (maxHours: number) => {
-  const rawStep = Math.max(1, maxHours / (Y_AXIS_TICK_COUNT - 1))
-  const magnitude = 10 ** Math.floor(Math.log10(rawStep))
-  const step =
-    [1, 2, 3, 4, 5, 10]
-      .map((unit) => unit * magnitude)
-      .find((candidate) => candidate >= rawStep) ?? Math.ceil(rawStep)
-
-  return {
-    max: step * (Y_AXIS_TICK_COUNT - 1),
-    ticks: Array.from(
-      { length: Y_AXIS_TICK_COUNT },
-      (_, index) => index * step,
-    ),
-  }
-}
 
 export const buildApplicationsUsageChart = (
   projects: ProjectWithStats[],
@@ -158,5 +138,5 @@ export const buildApplicationsUsageChart = (
     return row
   })
 
-  return { data, processNames, yAxis: getYAxis(maxProjectHours) }
+  return { data, processNames, yAxis: getHourAxis(maxProjectHours) }
 }

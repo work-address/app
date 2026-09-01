@@ -5,6 +5,7 @@ import {
   setProjectsStateFiltering,
 } from './projects.events'
 import {
+  projectProcessStatsQuery,
   projectsProcessStatsQuery,
   projectsQuery,
   projectsStatsQuery,
@@ -97,3 +98,7 @@ export const $projectsProcessStats = projectsProcessStatsQuery.$data.map(
 )
 
 export const $projectsProcessStatsLoading = projectsProcessStatsQuery.$pending
+
+export const $projectProcessStats = projectProcessStatsQuery.$data
+
+export const $projectProcessStatsLoading = projectProcessStatsQuery.$pending

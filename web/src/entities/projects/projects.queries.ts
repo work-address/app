@@ -72,6 +72,28 @@ export const projectsProcessStatsQuery = createQuery({
   },
 })
 
+// Kept separate from projectsProcessStatsQuery so the project dialog can load
+// one project's apps without overwriting the dashboard chart's data.
+export const projectProcessStatsQuery = createQuery({
+  handler: async ({
+    projectId,
+    period,
+  }: {
+    projectId: string
+    period: StatsPeriod
+  }): Promise<ProjectProcessStats> => {
+    try {
+      return {
+        projectId,
+        processes: await fetchProjectProcesses(projectId, period),
+        failed: false,
+      }
+    } catch {
+      return { projectId, processes: [], failed: true }
+    }
+  },
+})
+
 const fetchProjectProcesses = async (id: string, period: StatsPeriod) => {
   const response = await baseApi.projectControllerGetStats({
     path: { id: id as never, period },

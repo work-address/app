@@ -7,6 +7,11 @@ export const fetchProjects = createEvent()
 
 export const fetchProjectsProcessStats = createEvent<StatsPeriod>()
 
+export const fetchProjectProcessStats = createEvent<{
+  projectId: string
+  period: StatsPeriod
+}>()
+
 export const changeProjectStateFilter = createEvent<Partial<ProjectsFilter>>()
 
 const PROJECT_STATE_FILTER_DEBOUNCE = 2000

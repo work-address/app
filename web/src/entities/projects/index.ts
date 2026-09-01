@@ -1,13 +1,18 @@
 import { sample } from 'effector'
 import i18n from 'i18next'
 
-import { fetchProjects, fetchProjectsProcessStats } from './projects.events'
+import {
+  fetchProjectProcessStats,
+  fetchProjects,
+  fetchProjectsProcessStats,
+} from './projects.events'
 import {
   createProjectMutation,
   deleteProjectMutation,
   editProjectMutation,
 } from './projects.mutations'
 import {
+  projectProcessStatsQuery,
   projectsProcessStatsQuery,
   projectsQuery,
   projectsStatsQuery,
@@ -40,6 +45,11 @@ sample({
     period,
   }),
   target: projectsProcessStatsQuery.start,
+})
+
+sample({
+  clock: fetchProjectProcessStats,
+  target: projectProcessStatsQuery.start,
 })
 
 const showProcessStatsError = () => {
@@ -118,6 +128,7 @@ export { OTHER_PROCESS_NAME } from './utils'
 export {
   fetchProjects,
   fetchProjectsProcessStats,
+  fetchProjectProcessStats,
   changeProjectStateFilter,
   setProjectsStateFiltering,
 } from './projects.events'
@@ -139,4 +150,6 @@ export {
   $projectsWithProcessTracking,
   $projectsProcessStats,
   $projectsProcessStatsLoading,
+  $projectProcessStats,
+  $projectProcessStatsLoading,
 } from './projects.stores'

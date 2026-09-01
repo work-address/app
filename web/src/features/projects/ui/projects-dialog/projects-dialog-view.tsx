@@ -7,6 +7,7 @@ import { mapAddressesToCollaborators } from '../../model'
 import { ProjectsAddCollaborators } from '../projects-add-collaborators'
 
 import { ProjectsDialogMetrics } from './projects-dialog-metrics'
+import { ProjectsDialogUsage } from './projects-dialog-usage'
 
 import type { ProjectFormValues } from '../../model'
 import type { ProjectWithStats } from '@/entities/projects'
@@ -56,43 +57,48 @@ export const ProjectsDialogView = ({ data }: ProjectsDialogViewProps) => {
   }
 
   return (
-    <Flex direction="column" gap={gap}>
-      <Grid columns={{ initial: '125px 1fr' }} gap={gap}>
-        <Text color="gray" size="2">
-          {t(`dashboard.projectsTable.drawer.meta.createdAt`)}
-        </Text>
-        <Text size="2" weight="medium">
-          {dateFormatter.format(new Date(data.createdAt ?? new Date()))}
-        </Text>
-        <Text color="gray" size="2">
-          {t(`dashboard.projectsTable.drawer.meta.rateHour`)}
-        </Text>
-        <Text size="2" weight="medium">
-          {formatCurrency(data.rateHour)}
-        </Text>
-      </Grid>
-      <Separator size="4" />
-      <ProjectsDialogMetrics data={data} />
-      <Separator size="4" />
-      <TextArea
-        label={t('dashboard.projectsTable.drawer.section.description')}
-        disabled
-        value={data.text}
-        rows={3}
-        size="3"
-      />
-      {collaborators.length > 0 && (
-        <>
-          <Separator size="4" />
-          <ProjectsAddCollaborators
-            control={control}
-            register={register}
-            errors={formState.errors}
-            readOnly
-            inputProps={collaboratorInputProps}
-          />
-        </>
-      )}
-    </Flex>
+    // The chart leads on desktop and stacks on top in the drawer, where there
+    // is no room for a second column.
+    <Grid columns={{ initial: '1', md: '340px minmax(0, 1fr)' }} gap={gap}>
+      <ProjectsDialogUsage data={data} />
+      <Flex direction="column" gap={gap} minWidth="0">
+        <Grid columns={{ initial: '125px 1fr' }} gap={gap}>
+          <Text color="gray" size="2">
+            {t(`dashboard.projectsTable.drawer.meta.createdAt`)}
+          </Text>
+          <Text size="2" weight="medium">
+            {dateFormatter.format(new Date(data.createdAt ?? new Date()))}
+          </Text>
+          <Text color="gray" size="2">
+            {t(`dashboard.projectsTable.drawer.meta.rateHour`)}
+          </Text>
+          <Text size="2" weight="medium">
+            {formatCurrency(data.rateHour)}
+          </Text>
+        </Grid>
+        <Separator size="4" />
+        <ProjectsDialogMetrics data={data} />
+        <Separator size="4" />
+        <TextArea
+          label={t('dashboard.projectsTable.drawer.section.description')}
+          disabled
+          value={data.text}
+          rows={3}
+          size="3"
+        />
+        {collaborators.length > 0 && (
+          <>
+            <Separator size="4" />
+            <ProjectsAddCollaborators
+              control={control}
+              register={register}
+              errors={formState.errors}
+              readOnly
+              inputProps={collaboratorInputProps}
+            />
+          </>
+        )}
+      </Flex>
+    </Grid>
   )
 }

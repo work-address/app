@@ -5,6 +5,9 @@ import type { ReactNode } from 'react'
 // themselves independently rather than using this.
 export const DIALOG_WIDTH_STANDARD = '600px'
 
+// For dialogs that put a chart or a second panel beside their content.
+export const DIALOG_WIDTH_WIDE = '920px'
+
 export type CommonDialogProps = {
   children: ReactNode
   trigger?: ReactNode
