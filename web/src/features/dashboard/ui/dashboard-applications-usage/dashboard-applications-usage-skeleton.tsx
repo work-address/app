@@ -5,7 +5,9 @@ import styled from 'styled-components'
 // data arrives: same height, same y-axis gutter, same bar cap.
 const CHART_HEIGHT = 306
 const LABEL_AREA_HEIGHT = 30
-const Y_AXIS_WIDTH = 56
+// Floor for the gutter; the real chart grows past it when its ticks are wider.
+const Y_AXIS_MIN_WIDTH = 28
+const Y_AXIS_GAP = 6
 // Matches Y_AXIS_TICK_COUNT in the chart model, so the grid lands on the same rows.
 const TICK_COUNT = 6
 
@@ -53,9 +55,9 @@ const YAxis = styled.div`
   flex-direction: column;
   align-items: flex-end;
   justify-content: space-between;
-  width: ${Y_AXIS_WIDTH}px;
+  width: ${Y_AXIS_MIN_WIDTH}px;
   height: calc(100% - ${LABEL_AREA_HEIGHT}px);
-  padding-right: 8px;
+  padding-right: ${Y_AXIS_GAP}px;
 `
 
 const Plot = styled.div`

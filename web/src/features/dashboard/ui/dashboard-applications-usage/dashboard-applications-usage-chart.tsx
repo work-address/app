@@ -32,10 +32,13 @@ const CHART_HEIGHT = 306
 // margin below, the XAxis height, and the skeleton.
 const PLOT_TOP = 6
 const LABEL_AREA_HEIGHT = 30
-// Wide enough for the longest localized tick ("100小时", "100時間" — ~45px at
-// 12px), not just the 30px an English "100H" needs. Shared by the skeleton and
-// the empty state so the gutter never shifts between them.
-const Y_AXIS_WIDTH = 56
+// The gutter sizes itself to its own widest tick (see YAxisSizer) instead of
+// reserving a fixed width for the longest localized tick ("100小时", "100時間"),
+// which left the aside's plot paying for space no English scale ever used.
+// This is only the floor, shared with the skeleton and the empty state.
+const Y_AXIS_MIN_WIDTH = 28
+// Gap between a tick label and the plot.
+const Y_AXIS_GAP = 6
 
 const truncateLabel = (label: string) =>
   label.length > MAX_LABEL_LENGTH
@@ -55,6 +58,11 @@ export const DashboardApplicationsUsageChart = ({
       {/* Rendered outside the scroller so the hour scale stays put while the
           bars scroll; the in-chart axis is hidden but still owns the domain. */}
       <YAxisGutter aria-hidden>
+        {/* In flow and hidden: gives the gutter the exact width of its widest
+            tick, in whatever locale, without measuring anything. */}
+        <YAxisSizer>
+          {t('dashboard.applicationsUsage.axis.hours', { value: yAxis.max })}
+        </YAxisSizer>
         {yAxis.ticks.map((tick) => (
           <YAxisLabel
             key={tick}
@@ -139,13 +147,23 @@ const Root = styled.div`
 const YAxisGutter = styled.div`
   position: relative;
   flex: none;
-  width: ${Y_AXIS_WIDTH}px;
+  min-width: ${Y_AXIS_MIN_WIDTH}px;
   margin: ${PLOT_TOP}px 0 ${LABEL_AREA_HEIGHT}px;
+`
+
+const YAxisSizer = styled.span`
+  visibility: hidden;
+  display: block;
+  padding-right: ${Y_AXIS_GAP}px;
+  font-size: var(--font-size-1);
+  line-height: 1;
+  white-space: nowrap;
 `
 
 const YAxisLabel = styled.span`
   position: absolute;
-  right: 8px;
+  right: ${Y_AXIS_GAP}px;
+  white-space: nowrap;
   transform: translateY(-50%);
   color: var(--c-rgba-0-7-20-0_62);
   font-size: var(--font-size-1);
