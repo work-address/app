@@ -22,6 +22,16 @@ export class EmailConstraint implements ValidatorConstraintInterface {
         return false
       }
 
+      // Uniqueness is only decidable against a known account. The request
+      // body is validated before it is merged onto the current user, and at
+      // that point the account's own row would read as a clash and refuse a
+      // save that changed nothing about the email. The merged entity is
+      // validated again with its id in UserManager, which is where the lookup
+      // can exclude the right row.
+      if (!(args.object as User).id) {
+        return true
+      }
+
       return getDataSource()
         .getRepository(User)
         .find({
@@ -48,17 +58,9 @@ export class EmailConstraint implements ValidatorConstraintInterface {
   }
 
   private buildWhere(value: string, args: ValidationArguments) {
-    const userId = (args.object as User).id
-
-    if (userId) {
-      return {
-        email: value,
-        id: Not(userId),
-      }
-    }
-
     return {
       email: value,
+      id: Not((args.object as User).id),
     }
   }
 }

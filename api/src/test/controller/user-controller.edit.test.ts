@@ -195,6 +195,11 @@ export class UserControllerEditTest extends BaseControllerTest {
     const userA = await this.userFixture.createWithEmailAndPassword(emailA)
     const userB = await this.userFixture.createWithEmailAndPassword(emailB)
 
+    // Minted before the email is swapped: the token carries the email, and
+    // the request resolves its user from it. A token minted afterwards would
+    // authenticate as userA, who is allowed to keep their own address.
+    const authorization = this.authenticator.getTokens(userB).accessToken
+
     userB.email = userA.email
 
     let error: unknown
@@ -202,9 +207,7 @@ export class UserControllerEditTest extends BaseControllerTest {
     try {
       await userControllerEdit({
         client: this.apiClient(),
-        headers: {
-          Authorization: this.authenticator.getTokens(userB).accessToken,
-        },
+        headers: { Authorization: authorization },
         body: userB as unknown as UserEdit,
         throwOnError: true,
       })
@@ -215,7 +218,11 @@ export class UserControllerEditTest extends BaseControllerTest {
     if (!axios.isAxiosError(error)) throw error
     expect(error).to.be.ok
     expect(error.response?.status).to.be.equal(400)
-    expect(error.response?.data.name).to.be.equal('BadRequestError')
+    // Uniqueness is decided once the body is merged onto the current user,
+    // so the refusal comes from the manager rather than from body validation.
+    expect(error.response?.data.name).to.be.equal(
+      'ConstraintsValidationException',
+    )
     expect(
       error.response?.data.errors?.[0].constraints.EmailConstraint,
     ).to.be.equal('Email address is already taken')
