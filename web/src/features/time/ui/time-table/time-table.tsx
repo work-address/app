@@ -235,7 +235,7 @@ export const TimeTable = () => {
                 })}
               </S.Label>
               <Button
-                size="l"
+                size="s"
                 type="button"
                 disabled={isBulkPending}
                 onClick={() => requestBulkPaidStatus(true)}
@@ -245,7 +245,7 @@ export const TimeTable = () => {
               <Button
                 color="neutral"
                 variant="soft"
-                size="l"
+                size="s"
                 type="button"
                 disabled={isBulkPending}
                 onClick={() => requestBulkPaidStatus(false)}
@@ -254,7 +254,7 @@ export const TimeTable = () => {
               </Button>
               <Button
                 variant="outline"
-                size="l"
+                size="s"
                 type="button"
                 disabled={isBulkPending || invoicing}
                 loading={invoicing}
@@ -281,9 +281,9 @@ export const TimeTable = () => {
               <Button
                 color="danger"
                 variant="outline"
-                size="l"
+                size="s"
                 type="button"
-                iconLeft={<TrashIcon />}
+                iconLeft={<TrashIcon width={12} height={12} />}
                 disabled={isBulkPending}
                 onClick={() => requestBulkDelete(selectedTimeIds)}
               >
@@ -292,7 +292,7 @@ export const TimeTable = () => {
               <Button
                 variant="outline"
                 color="neutral"
-                size="l"
+                size="s"
                 type="button"
                 disabled={isBulkPending}
                 onClick={() => clearSelection()}
