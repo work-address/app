@@ -20,7 +20,10 @@ services:
       dockerfile: web/dockerfile.prod
       args:
         GIT_COMMIT: ${GIT_COMMIT:-unknown}
-        VITE_API_URL: "https://app.address.work"
+        # Empty (not unset) makes the browser call /api on whatever origin served
+        # the page - which is what a self-hosted install behind this nginx needs.
+        # Bare `-` so an explicitly empty value survives; `:-` would replace it.
+        VITE_API_URL: "${VITE_API_URL-https://app.address.work}"
     image: app-web-prod
     pull_policy: build
     # ports:
