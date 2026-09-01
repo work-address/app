@@ -7,7 +7,7 @@ import { EmptyStateDescription, EmptyStateTitle } from '@/shared'
 const CHART_HEIGHT = 306
 const PLOT_TOP = 6
 const LABEL_AREA_HEIGHT = 30
-const Y_AXIS_WIDTH = 40
+const Y_AXIS_WIDTH = 56
 // Matches Y_AXIS_TICK_COUNT in the chart model, so the grid lands on the same rows.
 const TICK_COUNT = 6
 

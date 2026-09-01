@@ -1,3 +1,4 @@
+import { useTranslation } from 'react-i18next'
 import {
   Bar,
   BarChart,
@@ -31,7 +32,10 @@ const CHART_HEIGHT = 306
 // margin below, the XAxis height, and the skeleton.
 const PLOT_TOP = 6
 const LABEL_AREA_HEIGHT = 30
-const Y_AXIS_WIDTH = 40
+// Wide enough for the longest localized tick ("100小时", "100時間" — ~45px at
+// 12px), not just the 30px an English "100H" needs. Shared by the skeleton and
+// the empty state so the gutter never shifts between them.
+const Y_AXIS_WIDTH = 56
 
 const truncateLabel = (label: string) =>
   label.length > MAX_LABEL_LENGTH
@@ -43,6 +47,7 @@ export const DashboardApplicationsUsageChart = ({
   processNames,
   yAxis,
 }: ApplicationsUsageChart) => {
+  const { t } = useTranslation()
   const isScrollable = data.length > VISIBLE_PROJECTS_COUNT
 
   return (
@@ -55,7 +60,9 @@ export const DashboardApplicationsUsageChart = ({
             key={tick}
             style={{ top: `${100 - (tick / yAxis.max) * 100}%` }}
           >
-            {tick === 0 ? '0' : `${tick}H`}
+            {tick === 0
+              ? '0'
+              : t('dashboard.applicationsUsage.axis.hours', { value: tick })}
           </YAxisLabel>
         ))}
       </YAxisGutter>
