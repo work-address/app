@@ -36,6 +36,16 @@ export {
   timeSelectionChanged,
   timeSelectionCleared,
 } from './time-table.model'
+export {
+  DEFAULT_TIME_SORT_FIELD,
+  DEFAULT_TIME_SORT_ORDER,
+  getTimeSortField,
+  getTimeSortOrder,
+  TIME_SORT_FIELDS,
+  toTimeSort,
+  type TimeSortField,
+  type TimeSortOrder,
+} from './time-sort'
 export { $timeView, timeViewChanged } from './time-view.model'
 export type {
   TimeActivityTone,

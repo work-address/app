@@ -25,6 +25,7 @@ import { TimeDialog } from '../time-dialog/time-dialog'
 import { TimeFilters } from '../time-filters/time-filters'
 import { TimeMobileFilters } from '../time-filters/time-mobile-filters'
 import { TimeGrid } from '../time-grid'
+import { TimeSortSelect } from '../time-sort-select'
 import { TimeTable } from '../time-table/time-table'
 import { TimeViewToggle } from '../time-view-toggle'
 
@@ -118,6 +119,9 @@ export const TimeWorklogs = () => {
       <S.SectionTitleRow>
         <S.SectionTitle>{t('dashboard.page.worklogs.title')}</S.SectionTitle>
         <Actions>
+          {/* Beside the toggle rather than inside a view: the list can also
+              sort from its column headers, and both write the same store. */}
+          <TimeSortSelect />
           <TimeViewToggle />
           {isMobile && (
             <TimeMobileFilters

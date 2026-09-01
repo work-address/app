@@ -52,12 +52,9 @@ export const TimeGrid = () => {
   const handleSelectedChange = (id: string) =>
     changeSelection({ ...selection, [id]: !selection[id] })
 
-  if (loading && entries.length === 0) {
-    return <TimeGridSkeleton />
-  }
-
   return (
     <Root data-filtering={isFiltering || undefined}>
+      {loading && entries.length === 0 && <TimeGridSkeleton />}
       {groups.map((group) => (
         <TimeGridDay
           key={group.day}

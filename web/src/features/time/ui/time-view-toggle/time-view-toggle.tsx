@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { $timeView, timeViewChanged, type TimeView } from '../../model'
+import { ToolbarSegment, ToolbarShell } from '../common'
 
 const ICON_SIZE = 14
 
@@ -35,47 +36,13 @@ export const TimeViewToggle = ({ className }: { className?: string }) => {
           ) : (
             <GridIcon width={ICON_SIZE} height={ICON_SIZE} />
           )}
-          <Label>{t(option.labelKey)}</Label>
+          {t(option.labelKey)}
         </Option>
       ))}
     </Root>
   )
 }
 
-const Root = styled.div.attrs({ role: 'group' })`
-  display: grid;
-  grid-auto-flow: column;
-  gap: 2px;
-  padding: 2px;
-  border: 1px solid var(--ds-neutral-alpha-6);
-  border-radius: var(--radius-3);
-  background: var(--ds-neutral-2);
-`
+const Root = styled(ToolbarShell).attrs({ role: 'group' })``
 
-const Option = styled.button`
-  display: grid;
-  grid-auto-flow: column;
-  align-items: center;
-  gap: var(--space-1);
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-2);
-  font-size: var(--font-size-1);
-  color: var(--ds-neutral-11);
-  transition:
-    background 0.15s,
-    color 0.15s;
-
-  &:hover {
-    color: var(--ds-neutral-12);
-  }
-
-  &[aria-pressed='true'] {
-    background: var(--white);
-    color: var(--ds-neutral-12);
-    box-shadow: 0 0 0 1px var(--ds-neutral-alpha-6);
-  }
-`
-
-const Label = styled.span`
-  line-height: 1;
-`
+const Option = styled(ToolbarSegment)``
