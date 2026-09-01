@@ -13,7 +13,7 @@
   "dependencies": {
     "@hey-api/client-axios": "^0.9.1",
     "@hey-api/openapi-ts": "0.96.0",
-    "axios": "^1.7.9"
+    "axios": "^1.19.0"
   },
   "devDependencies": {
     "@types/node": "^22.13.5",

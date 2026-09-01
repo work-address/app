@@ -20,7 +20,7 @@
     "@ton/ton": "^16.3.0",
     "axios": "^1.19.0",
     "bcrypt": "^6.0.0",
-    "body-parser": "^1.20.4",
+    "body-parser": "^1.20.6",
     "bs58": "^6.0.0",
     "class-transformer": "^0.5.1",
     "class-validator": "^0.15.1",
