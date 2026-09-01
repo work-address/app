@@ -1,15 +1,13 @@
-import { QuestionMarkCircledIcon } from '@radix-ui/react-icons'
 import { Flex, Separator, Grid, Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Fragment } from 'react'
 import { useTranslation } from 'react-i18next'
-import styled from 'styled-components'
 
 import { useInvoiceInfoFields } from '../lib'
 import { $invoice, $invoiceLoading } from '../model'
 
-import { BASE_CURRENCY, formatCurrency, Text } from '@/shared'
+import { BASE_CURRENCY, formatCurrency, Hint, Text } from '@/shared'
 
 export const InvoiceTotalAmountMobile = () => {
   const { t } = useTranslation()
@@ -48,9 +46,7 @@ export const InvoiceTotalAmountMobile = () => {
               <Text size={'3'} color={'gray'}>
                 {t(`invoice.fields.${field.id}`)}
               </Text>
-              {field.hasDesc === true ? (
-                <HintIcon aria-label={t(`invoice.fieldDesc.${field.id}`)} />
-              ) : null}
+              {field.desc ? <Hint content={field.desc} size={16} /> : null}
             </Flex>
             {loading ? (
               <Skeleton height="20px" width="100%" />
@@ -80,8 +76,3 @@ export const InvoiceTotalAmountMobile = () => {
     </Flex>
   )
 }
-
-const HintIcon = styled(QuestionMarkCircledIcon)`
-  height: 16px;
-  width: 16px;
-`

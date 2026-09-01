@@ -16,6 +16,8 @@ type CommonProps<T> = {
 
 export type DataTableColumnConfigRecord<T extends AnyRecord> = {
   width?: number
+  /** Explains a header whose label alone does not carry its meaning. */
+  description?: string
   horizontalAlign?: 'start' | 'center' | 'end'
   sticky?: 'right' | 'left'
   sortable?: boolean

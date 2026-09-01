@@ -55,6 +55,7 @@ import {
   TabsTrigger,
   Button,
   IconButton,
+  Tooltip,
   useBreakpoint,
   useDateFormatter,
   ProjectsEmptyState,
@@ -155,12 +156,14 @@ export const ProjectsTable = () => {
         dataKey: 'rateHour',
         width: 120,
         headerText: t('dashboard.projectsTable.drawer.meta.rateHour'),
+        description: t('common.metricDesc.rateHour'),
         getValue: (data) => formatCurrency(data.rateHour),
       },
       {
         customKey: 'timeTotal',
         width: 120,
         headerText: t('dashboard.projectsTable.head.timeTotal'),
+        description: t('common.metricDesc.timeTotal'),
       },
       // {
       //   dataKey: 'keyboardKeys',
@@ -190,22 +193,27 @@ export const ProjectsTable = () => {
       {
         customKey: 'timeTotal',
         headerText: t('dashboard.projectsTable.head.timeTotal'),
+        description: t('common.metricDesc.timeTotal'),
       },
       {
         customKey: 'timeActive',
         headerText: t('dashboard.projectsTable.head.timeActive'),
+        description: t('common.metricDesc.timeActive'),
       },
       {
         dataKey: 'keyboardKeys',
         headerText: t('dashboard.projectsTable.head.keyboardKeys'),
+        description: t('common.metricDesc.keyboard'),
       },
       {
         dataKey: 'mouseKeys',
         headerText: t('dashboard.projectsTable.head.mouseKeys'),
+        description: t('common.metricDesc.mouse'),
       },
       {
         dataKey: 'mouseDistance',
         headerText: t('dashboard.projectsTable.head.mouseDistance'),
+        description: t('common.metricDesc.mouseDistance'),
       },
     ],
     [t],
@@ -239,9 +247,15 @@ export const ProjectsTable = () => {
           {allowDeleteAll && (
             <>
               {isMobile ? (
-                <IconButton variant={'outline'} color={'red'}>
-                  <TrashIcon />
-                </IconButton>
+                <Tooltip content={t('dashboard.page.deleteAll')}>
+                  <IconButton
+                    variant={'outline'}
+                    color={'red'}
+                    aria-label={t('dashboard.page.deleteAll')}
+                  >
+                    <TrashIcon />
+                  </IconButton>
+                </Tooltip>
               ) : (
                 <Button
                   color="danger"
@@ -254,12 +268,15 @@ export const ProjectsTable = () => {
             </>
           )}
           {isMobile ? (
-            <IconButton
-              themeVariant={'primary'}
-              onClick={() => setCreateDialogOpen(true)}
-            >
-              <PlusIcon />
-            </IconButton>
+            <Tooltip content={t('dashboard.page.createProject')}>
+              <IconButton
+                themeVariant={'primary'}
+                onClick={() => setCreateDialogOpen(true)}
+                aria-label={t('dashboard.page.createProject')}
+              >
+                <PlusIcon />
+              </IconButton>
+            </Tooltip>
           ) : (
             <Button
               iconLeft={<PlusIcon />}

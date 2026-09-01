@@ -1,6 +1,8 @@
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
+import { Tooltip } from './tooltip'
+
 import type { MouseEvent } from 'react'
 
 type NoPremiumBadgeProps = {
@@ -24,16 +26,17 @@ export const NoPremiumBadge = ({ className, onClick }: NoPremiumBadgeProps) => {
   }
 
   return (
-    <Root
-      as="button"
-      type="button"
-      className={className}
-      title={t('common.noPremiumAction')}
-      aria-label={t('common.noPremiumAction')}
-      onClick={onClick}
-    >
-      {label}
-    </Root>
+    <Tooltip content={t('common.noPremiumAction')}>
+      <Root
+        as="button"
+        type="button"
+        className={className}
+        aria-label={t('common.noPremiumAction')}
+        onClick={onClick}
+      >
+        {label}
+      </Root>
+    </Tooltip>
   )
 }
 

@@ -14,6 +14,7 @@ import {
   FREE_RETENTION_DAYS,
   IconButton,
   Text,
+  Tooltip,
   billingUrl,
   useBreakpoint,
 } from '@/shared'
@@ -66,16 +67,18 @@ export const DashboardPremiumBanner = () => {
           {t('dashboard.premiumBanner.cta')}
         </Button>
       </UpgradeLink>
-      <DismissButton
-        variant="ghost"
-        color="gray"
-        radius="full"
-        size="1"
-        aria-label={t('dashboard.premiumBanner.dismissAlt')}
-        onClick={toggleCollapsed}
-      >
-        <Cross1Icon />
-      </DismissButton>
+      <Tooltip content={t('dashboard.premiumBanner.dismissHint')}>
+        <DismissButton
+          variant="ghost"
+          color="gray"
+          radius="full"
+          size="1"
+          aria-label={t('dashboard.premiumBanner.dismissAlt')}
+          onClick={toggleCollapsed}
+        >
+          <Cross1Icon />
+        </DismissButton>
+      </Tooltip>
     </Root>
   )
 }

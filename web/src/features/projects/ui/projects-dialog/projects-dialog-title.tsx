@@ -5,7 +5,7 @@ import { useTranslation } from 'react-i18next'
 import type { ProjectsDialogMode } from '../../model'
 
 import { OpenInvoiceLink } from '@/features/invoice'
-import { IconButton, PrintIcon, Text, useBreakpoint } from '@/shared'
+import { IconButton, PrintIcon, Text, Tooltip, useBreakpoint } from '@/shared'
 
 type ProjectsDialogTitleProps = {
   title?: string
@@ -56,14 +56,17 @@ export const ProjectsDialogTitle = ({
       </Text>
       <Flex align="center" gap="2" style={{ flexShrink: 0 }}>
         {mode === 'view' && invoiceLink}
-        <IconButton
-          color="red"
-          variant="outline"
-          onClick={onDelete}
-          type="button"
-        >
-          <TrashIcon />
-        </IconButton>
+        <Tooltip content={t('dashboard.projectsTable.deleteHint')}>
+          <IconButton
+            color="red"
+            variant="outline"
+            onClick={onDelete}
+            type="button"
+            aria-label={t('dashboard.projectsTable.actions.delete')}
+          >
+            <TrashIcon />
+          </IconButton>
+        </Tooltip>
       </Flex>
     </Flex>
   )

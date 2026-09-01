@@ -22,6 +22,7 @@ import {
   useBreakpoint,
   Button,
   navigateFx,
+  Tooltip,
 } from '@/shared'
 
 const menuVariants = {
@@ -114,12 +115,14 @@ export const Header = () => {
                 userAlt={t('header.userAlt')}
                 onNoPremiumClick={revealPremiumBanner}
               />
-              <ExitButton
-                aria-label={t('header.exit')}
-                onClick={() => logoutEvent()}
-              >
-                <IconImg src={ExitIcon} alt={t('header.exit')} />
-              </ExitButton>
+              <Tooltip content={t('header.exitHint')}>
+                <ExitButton
+                  aria-label={t('header.exitHint')}
+                  onClick={() => logoutEvent()}
+                >
+                  <IconImg src={ExitIcon} alt="" aria-hidden="true" />
+                </ExitButton>
+              </Tooltip>
             </>
           ) : (
             <NavLink to={routes.signIn.build()} viewTransition>

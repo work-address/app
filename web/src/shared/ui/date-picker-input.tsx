@@ -26,6 +26,7 @@ import styled from 'styled-components'
 
 import { Button } from './button/ui/button'
 import { Input, type InputProps } from './input'
+import { Tooltip } from './tooltip'
 
 type DatePickerProps = {
   value?: Date | null
@@ -117,15 +118,18 @@ export const DatePickerInput = ({
             addonLeft={<CalendarIcon />}
             addonRight={
               !!value && allowClear ? (
-                <IconButton
-                  variant="ghost"
-                  size="1"
-                  color="gray"
-                  onClick={handleClear}
-                  style={{ cursor: 'pointer' }}
-                >
-                  <Cross2Icon />
-                </IconButton>
+                <Tooltip content={t('ui.datePicker.clear')}>
+                  <IconButton
+                    variant="ghost"
+                    size="1"
+                    color="gray"
+                    onClick={handleClear}
+                    style={{ cursor: 'pointer' }}
+                    aria-label={t('ui.datePicker.clear')}
+                  >
+                    <Cross2Icon />
+                  </IconButton>
+                </Tooltip>
               ) : undefined
             }
             {...inputProps}

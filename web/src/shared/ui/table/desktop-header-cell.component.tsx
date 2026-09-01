@@ -2,6 +2,7 @@ import { ArrowDownIcon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
 
 import { Button } from '../button'
+import { Hint } from '../hint'
 import { Text } from '../text'
 
 import { normalizeDataKeyToReadableString } from './utils'
@@ -25,7 +26,7 @@ export const DesktopHeaderCellComponent = <T extends AnyRecord>(
   const key = String(props.dataKey ?? props.customKey ?? '')
   const sortKey = props.sortParams?.[key]
 
-  return (
+  const label = (
     <Wrapper
       {...(Wrapper === Button
         ? {
@@ -64,5 +65,18 @@ export const DesktopHeaderCellComponent = <T extends AnyRecord>(
         )}
       </Flex>
     </Wrapper>
+  )
+
+  if (!props.columnConfig.description) {
+    return label
+  }
+
+  // Outside the sort button, not inside it: a sortable header *is* a button,
+  // and the hint is focusable in its own right.
+  return (
+    <Flex align={'center'} gap={'1'}>
+      {label}
+      <Hint content={props.columnConfig.description} />
+    </Flex>
   )
 }

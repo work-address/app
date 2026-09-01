@@ -13,6 +13,7 @@ import {
   Button,
   copyToClipboard,
   formatCurrency,
+  Hint,
   showToast,
 } from '@/shared'
 
@@ -113,9 +114,12 @@ export const InvoiceTotalAmountDesktop = () => {
               columns={'200px max-content'}
               align="center"
             >
-              <Text size={'3'} color={'gray'}>
-                {t(`invoice.fields.${field.id}`)}
-              </Text>
+              <Flex align={'center'} gap={'1'}>
+                <Text size={'3'} color={'gray'}>
+                  {t(`invoice.fields.${field.id}`)}
+                </Text>
+                {field.desc ? <Hint content={field.desc} /> : null}
+              </Flex>
               {loading ? (
                 <Skeleton />
               ) : (

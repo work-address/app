@@ -1,11 +1,11 @@
-import { Badge } from '@radix-ui/themes'
+import { Badge, Flex } from '@radix-ui/themes'
 import { type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import type { Time } from '@/entities/time'
 
-import { formatDurationFromMinutes, Text } from '@/shared'
+import { formatDurationFromMinutes, Hint, Text } from '@/shared'
 
 type TimeDialogMetricsProps = {
   row: Time
@@ -20,18 +20,30 @@ export const TimeDialogMetrics = ({ row }: TimeDialogMetricsProps) => {
         {t('dashboard.worklogsTable.head.activeMetrics')}
       </Text>
       <MetricsGrid>
-        <Metric label={t('dashboard.worklogsTable.head.timeActive')}>
+        <Metric
+          label={t('dashboard.worklogsTable.head.timeActive')}
+          description={t('common.metricDesc.timeActive')}
+        >
           <Badge color="green">
             {formatDurationFromMinutes(row.minutesActive, t)}
           </Badge>
         </Metric>
-        <Metric label={t('dashboard.worklogsTable.head.keyboard')}>
+        <Metric
+          label={t('dashboard.worklogsTable.head.keyboard')}
+          description={t('common.metricDesc.keyboard')}
+        >
           {row.keyboardKeys}
         </Metric>
-        <Metric label={t('dashboard.worklogsTable.head.mouse')}>
+        <Metric
+          label={t('dashboard.worklogsTable.head.mouse')}
+          description={t('common.metricDesc.mouse')}
+        >
           {row.mouseKeys}
         </Metric>
-        <Metric label={t('dashboard.worklogsTable.head.mouseDistance')}>
+        <Metric
+          label={t('dashboard.worklogsTable.head.mouseDistance')}
+          description={t('common.metricDesc.mouseDistance')}
+        >
           {row.mouseDistance}
         </Metric>
       </MetricsGrid>
@@ -41,14 +53,18 @@ export const TimeDialogMetrics = ({ row }: TimeDialogMetricsProps) => {
 
 type MetricProps = {
   label: string
+  description?: string
   children: ReactNode
 }
 
-const Metric = ({ label, children }: MetricProps) => (
+const Metric = ({ label, description, children }: MetricProps) => (
   <MetricItem>
-    <Text color="gray" size="2">
-      {label}
-    </Text>
+    <Flex align="center" gap="1">
+      <Text color="gray" size="2">
+        {label}
+      </Text>
+      {description && <Hint content={description} size={13} />}
+    </Flex>
     <Text size="2" weight="medium">
       {children}
     </Text>

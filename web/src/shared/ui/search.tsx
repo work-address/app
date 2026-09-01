@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { IconButton } from './button'
 import { Input, type InputProps } from './input'
+import { Tooltip } from './tooltip'
 
 type SearchProps = {
   value?: string
@@ -28,15 +29,18 @@ export const SearchInput = ({ ...props }: SearchProps) => {
       addonLeft={<MagnifyingGlassIcon width={20} height={20} />}
       addonRight={
         value ? (
-          <IconButton
-            size={'1'}
-            variant={'ghost'}
-            onClick={() => onChange?.('')}
-            color={'gray'}
-            radius={'full'}
-          >
-            <Cross1Icon width={12} height={12} />
-          </IconButton>
+          <Tooltip content={t('ui.search.clear')}>
+            <IconButton
+              size={'1'}
+              variant={'ghost'}
+              onClick={() => onChange?.('')}
+              color={'gray'}
+              radius={'full'}
+              aria-label={t('ui.search.clear')}
+            >
+              <Cross1Icon width={12} height={12} />
+            </IconButton>
+          </Tooltip>
         ) : (
           <Flex width={'15px'} />
         )

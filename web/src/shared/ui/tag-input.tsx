@@ -19,11 +19,13 @@ import {
   useMemo,
   useCallback,
 } from 'react'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { useBreakpoint } from '../hooks'
 
 import { IconButton } from './button/ui/icon-button'
+import { Tooltip } from './tooltip'
 
 import type { InputProps } from './input'
 
@@ -56,6 +58,7 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
     },
     ref,
   ) => {
+    const { t } = useTranslation()
     const isDesktop = useBreakpoint('isDesktop')
     const [inputValue, setInputValue] = useState('')
     const innerInputRef = useRef<HTMLInputElement>(null)
@@ -255,17 +258,22 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
                           <Flex align="center" gap="1">
                             {tag}
                             <Flex p="1">
-                              <IconButton
-                                size="1"
-                                variant="ghost"
-                                type="button"
-                                radius="full"
-                                data-tag={tag}
-                                onClick={handleTagClick}
-                                onMouseDown={handleBadgeMouseDown}
+                              <Tooltip
+                                content={t('ui.tagInput.remove', { tag })}
                               >
-                                <Cross2Icon width="10" height="10" />
-                              </IconButton>
+                                <IconButton
+                                  size="1"
+                                  variant="ghost"
+                                  type="button"
+                                  radius="full"
+                                  data-tag={tag}
+                                  aria-label={t('ui.tagInput.remove', { tag })}
+                                  onClick={handleTagClick}
+                                  onMouseDown={handleBadgeMouseDown}
+                                >
+                                  <Cross2Icon width="10" height="10" />
+                                </IconButton>
+                              </Tooltip>
                             </Flex>
                           </Flex>
                         </Tag>

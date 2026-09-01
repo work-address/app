@@ -19,6 +19,7 @@ import {
   Button,
   Modal,
   PremiumBadge,
+  Tooltip,
   formatWalletAddress,
 } from '@/shared'
 
@@ -66,42 +67,50 @@ export const ProfileViewQrCode = ({
               </Skeleton>
               <Flex gap={'2'} align={'center'}>
                 <Skeleton loading={profileLoading}>
-                  <Button
-                    variant="ghost"
-                    color="neutral"
-                    onClick={onWalletAddressCopy}
-                  >
-                    <Text
-                      $themeVariant={'primary'}
-                      size={'2'}
-                      weight={'medium'}
+                  <Tooltip content={t('profile.view.copyAddressHint')}>
+                    <Button
+                      variant="ghost"
+                      color="neutral"
+                      onClick={onWalletAddressCopy}
+                      aria-label={t('profile.view.copyAddressHint')}
                     >
-                      {user?.friendlyWalletAddress
-                        ? formatWalletAddress(user?.friendlyWalletAddress)
-                        : '...'}
-                    </Text>
-                    <CopyIcon />
-                  </Button>
+                      <Text
+                        $themeVariant={'primary'}
+                        size={'2'}
+                        weight={'medium'}
+                      >
+                        {user?.friendlyWalletAddress
+                          ? formatWalletAddress(user?.friendlyWalletAddress)
+                          : '...'}
+                      </Text>
+                      <CopyIcon />
+                    </Button>
+                  </Tooltip>
                 </Skeleton>
                 {user?.premium && <PremiumBadge />}
               </Flex>
             </Flex>
           )}
-          <QrCodeWrapper
-            $size={qrCodeSize}
-            onClick={() => setQrModalOpened(true)}
-          >
-            <Skeleton loading={profileLoading}>
-              <QRCodeSVG
-                value={user?.friendlyWalletAddress || ''}
-                size={qrCodeSize}
-                level="M"
-                fgColor="var(--ds-accent-11)"
-                bgColor="transparent"
-                marginSize={1}
-              />
-            </Skeleton>
-          </QrCodeWrapper>
+          <Tooltip content={t('profile.view.qrOpenHint')}>
+            <QrCodeWrapper
+              $size={qrCodeSize}
+              role="button"
+              tabIndex={0}
+              aria-label={t('profile.view.qrOpenHint')}
+              onClick={() => setQrModalOpened(true)}
+            >
+              <Skeleton loading={profileLoading}>
+                <QRCodeSVG
+                  value={user?.friendlyWalletAddress || ''}
+                  size={qrCodeSize}
+                  level="M"
+                  fgColor="var(--ds-accent-11)"
+                  bgColor="transparent"
+                  marginSize={1}
+                />
+              </Skeleton>
+            </QrCodeWrapper>
+          </Tooltip>
           {isMobile && (
             <Flex gap={'2'} direction={'column'} width={'100%'}>
               {isAuthenticatedUserProfile && (

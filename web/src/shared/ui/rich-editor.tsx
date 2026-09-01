@@ -21,6 +21,10 @@ import { useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
+import { Tooltip } from './tooltip'
+
+import type { CSSProperties, ReactNode } from 'react'
+
 type RichEditorProps = {
   value?: string
   onChange?: (value: string) => void
@@ -76,116 +80,92 @@ export const RichEditor = ({
     <Root data-disabled={disabled || undefined}>
       {showEditPanel && (
         <Toolbar gap={'1'} align={'center'}>
-          <CustomIconButton
-            variant="ghost"
+          <ToolbarButton
+            label={t('ui.editor.undo')}
             onClick={() => editor?.chain().focus().undo().run()}
-            color={'gray'}
-            type={'button'}
           >
             <ResetIcon />
-          </CustomIconButton>
-          <CustomIconButton
-            variant="ghost"
+          </ToolbarButton>
+          <ToolbarButton
+            label={t('ui.editor.redo')}
             onClick={() => editor?.chain().focus().redo().run()}
             style={{ transform: 'scaleX(-1)' }}
-            color={'gray'}
-            type={'button'}
           >
             <ResetIcon />
-          </CustomIconButton>
+          </ToolbarButton>
           <Separator orientation="vertical" />
-          <CustomIconButton
-            variant="ghost"
-            data-active={editor?.isActive('bold') || undefined}
+          <ToolbarButton
+            label={t('ui.editor.bold')}
+            active={editor?.isActive('bold')}
             onClick={() => editor?.chain().focus().toggleBold().run()}
-            color={'gray'}
-            type={'button'}
           >
             <FontBoldIcon />
-          </CustomIconButton>
-          <CustomIconButton
-            variant="ghost"
-            data-active={editor?.isActive('italic') || undefined}
+          </ToolbarButton>
+          <ToolbarButton
+            label={t('ui.editor.italic')}
+            active={editor?.isActive('italic')}
             onClick={() => editor?.chain().focus().toggleItalic().run()}
-            color={'gray'}
-            type={'button'}
           >
             <FontItalicIcon />
-          </CustomIconButton>
-          <CustomIconButton
-            variant="ghost"
-            data-active={editor?.isActive('underline') || undefined}
+          </ToolbarButton>
+          <ToolbarButton
+            label={t('ui.editor.underline')}
+            active={editor?.isActive('underline')}
             onClick={() => editor?.chain().focus().toggleUnderline().run()}
-            color={'gray'}
-            type={'button'}
           >
             <UnderlineIcon />
-          </CustomIconButton>
-          <CustomIconButton
-            variant="ghost"
-            data-active={editor?.isActive('strike') || undefined}
+          </ToolbarButton>
+          <ToolbarButton
+            label={t('ui.editor.strike')}
+            active={editor?.isActive('strike')}
             onClick={() => editor?.chain().focus().toggleStrike().run()}
-            color={'gray'}
-            type={'button'}
           >
             <StrikethroughIcon />
-          </CustomIconButton>
+          </ToolbarButton>
           <Separator orientation="vertical" />
-          <CustomIconButton
-            variant="ghost"
-            data-active={editor?.isActive({ textAlign: 'left' }) || undefined}
+          <ToolbarButton
+            label={t('ui.editor.alignLeft')}
+            active={editor?.isActive({ textAlign: 'left' })}
             onClick={() => editor?.chain().focus().setTextAlign('left').run()}
-            color={'gray'}
-            type={'button'}
           >
             <TextAlignLeftIcon />
-          </CustomIconButton>
-          <CustomIconButton
-            variant="ghost"
-            data-active={editor?.isActive({ textAlign: 'center' }) || undefined}
+          </ToolbarButton>
+          <ToolbarButton
+            label={t('ui.editor.alignCenter')}
+            active={editor?.isActive({ textAlign: 'center' })}
             onClick={() => editor?.chain().focus().setTextAlign('center').run()}
-            color={'gray'}
-            type={'button'}
           >
             <TextAlignCenterIcon />
-          </CustomIconButton>
-          <CustomIconButton
-            variant="ghost"
-            data-active={editor?.isActive({ textAlign: 'right' }) || undefined}
+          </ToolbarButton>
+          <ToolbarButton
+            label={t('ui.editor.alignRight')}
+            active={editor?.isActive({ textAlign: 'right' })}
             onClick={() => editor?.chain().focus().setTextAlign('right').run()}
-            color={'gray'}
-            type={'button'}
           >
             <TextAlignRightIcon />
-          </CustomIconButton>
-          <CustomIconButton
-            variant="ghost"
-            data-active={
-              editor?.isActive({ textAlign: 'justify' }) || undefined
-            }
+          </ToolbarButton>
+          <ToolbarButton
+            label={t('ui.editor.alignJustify')}
+            active={editor?.isActive({ textAlign: 'justify' })}
             onClick={() =>
               editor?.chain().focus().setTextAlign('justify').run()
             }
-            color={'gray'}
-            type={'button'}
           >
             <TextAlignJustifyIcon />
-          </CustomIconButton>
+          </ToolbarButton>
           <Separator orientation="vertical" />
-          <CustomIconButton
-            variant="ghost"
-            data-active={editor?.isActive('link') || undefined}
-            color={'gray'}
+          <ToolbarButton
+            label={t('ui.editor.link')}
+            active={editor?.isActive('link')}
             onClick={() => {
               const url = window.prompt(t('profile.editor.linkPrompt'))
               if (url) {
                 editor?.chain().focus().setLink({ href: url }).run()
               }
             }}
-            type={'button'}
           >
             <Link2Icon />
-          </CustomIconButton>
+          </ToolbarButton>
         </Toolbar>
       )}
       <Content>
@@ -194,6 +174,42 @@ export const RichEditor = ({
     </Root>
   )
 }
+
+type ToolbarButtonProps = {
+  label: string
+  active?: boolean
+  onClick: () => void
+  style?: CSSProperties
+  children: ReactNode
+}
+
+/**
+ * A toolbar icon plus the two things an icon alone cannot carry: a tooltip for
+ * sighted users and an accessible name for everyone else. Both come from the
+ * same string, so they cannot describe different buttons.
+ */
+const ToolbarButton = ({
+  label,
+  active,
+  onClick,
+  style,
+  children,
+}: ToolbarButtonProps) => (
+  <Tooltip content={label}>
+    <CustomIconButton
+      variant="ghost"
+      color={'gray'}
+      type={'button'}
+      aria-label={label}
+      aria-pressed={active}
+      data-active={active || undefined}
+      onClick={onClick}
+      style={style}
+    >
+      {children}
+    </CustomIconButton>
+  </Tooltip>
+)
 
 const Root = styled.div`
   border: 1px solid var(--gray-6);

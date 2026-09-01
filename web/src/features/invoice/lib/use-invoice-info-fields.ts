@@ -24,7 +24,12 @@ export type InvoiceFieldId =
 export type InvoiceInfoFieldRow = {
   id: InvoiceFieldId
   value: string
-  hasDesc?: boolean
+  /**
+   * Resolved description, not a flag: the wording is shared with the worklog
+   * and project tables via `common.metricDesc.*`, so "time active" means the
+   * same thing wherever it is shown.
+   */
+  desc?: string
 }
 
 export const useInvoiceInfoFields = (): InvoiceInfoFieldRow[] => {
@@ -43,39 +48,42 @@ export const useInvoiceInfoFields = (): InvoiceInfoFieldRow[] => {
     {
       id: 'rateHour',
       value: formatCurrency(report?.rateHour),
+      desc: t('common.metricDesc.rateHour'),
     },
     {
       id: 'timeTotal',
       value: formatDurationFromMinutes(report?.minutes ?? 0, t),
-      hasDesc: true,
+      desc: t('common.metricDesc.timeTotal'),
     },
     {
       id: 'timeActive',
       value: formatDurationFromMinutes(report?.minutesActive ?? 0, t),
-      hasDesc: true,
+      desc: t('common.metricDesc.timeActive'),
     },
     {
       id: 'timePaid',
       value: formatDurationFromMinutes(report?.minutesPaid ?? 0, t),
+      desc: t('common.metricDesc.timePaid'),
     },
     {
       id: 'timeUnpaid',
       value: formatDurationFromMinutes(report?.minutesUnpaid ?? 0, t),
+      desc: t('common.metricDesc.timeUnpaid'),
     },
     {
       id: 'keyboard',
       value: numberFormatter.format(report?.keyboardKeys ?? 0),
-      hasDesc: true,
+      desc: t('common.metricDesc.keyboard'),
     },
     {
       id: 'mouse',
       value: numberFormatter.format(report?.mouseKeys ?? 0),
-      hasDesc: true,
+      desc: t('common.metricDesc.mouse'),
     },
     {
       id: 'mouseDistance',
       value: numberFormatter.format(report?.mouseDistance ?? 0),
-      hasDesc: true,
+      desc: t('common.metricDesc.mouseDistance'),
     },
   ]
 }

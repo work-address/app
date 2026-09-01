@@ -3,7 +3,12 @@ import styled from 'styled-components'
 
 import { ensureInvoiceMutation } from '../model'
 
-import type { CSSProperties, MouseEvent, ReactNode } from 'react'
+import type {
+  ComponentPropsWithRef,
+  CSSProperties,
+  MouseEvent,
+  ReactNode,
+} from 'react'
 
 import { Button } from '@/shared'
 
@@ -29,6 +34,7 @@ export const OpenInvoiceLink = ({
   style,
   onClick,
   variant = 'inline',
+  ...rest
 }: {
   projectId: string
   children: ReactNode
@@ -45,13 +51,24 @@ export const OpenInvoiceLink = ({
    * propagation so opening the invoice does not also open the row's own dialog.
    */
   onClick?: (event: MouseEvent<HTMLButtonElement>) => void
-}) => {
+  /**
+   * Anything else lands on the rendered button - `ref` included, which is what
+   * lets a Tooltip anchor to this. Without it Radix clones the element, finds
+   * nothing to measure or listen on, and the tooltip never opens.
+   */
+  // `color` is excluded because the rendered Button types it as its own tone
+  // scale, not the HTML attribute of the same name.
+} & Omit<
+  ComponentPropsWithRef<'button'>,
+  'onClick' | 'className' | 'style' | 'children' | 'color'
+>) => {
   const { ensure, pending } = useUnit({
     ensure: ensureInvoiceMutation.start,
     pending: ensureInvoiceMutation.$pending,
   })
 
   const shared = {
+    ...rest,
     className,
     style,
     'aria-busy': pending || undefined,

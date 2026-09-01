@@ -28,6 +28,7 @@ import {
   RichEditor,
   COUNTRY_OPTIONS,
   BASE_CURRENCY,
+  Tooltip,
   type CardProps,
 } from '@/shared'
 
@@ -95,20 +96,23 @@ export const ProfileEditDetails = ({
               }
               viewTransition
             >
-              <IconButton
-                radius={'full'}
-                variant={'ghost'}
-                style={{
-                  width: 40,
-                  height: 40,
-                  boxSizing: 'border-box',
-                  cursor: 'pointer',
-                }}
-                color={'gray'}
-                type={'button'}
-              >
-                ←
-              </IconButton>
+              <Tooltip content={t('profile.aria.back')}>
+                <IconButton
+                  radius={'full'}
+                  variant={'ghost'}
+                  style={{
+                    width: 40,
+                    height: 40,
+                    boxSizing: 'border-box',
+                    cursor: 'pointer',
+                  }}
+                  color={'gray'}
+                  type={'button'}
+                  aria-label={t('profile.aria.back')}
+                >
+                  ←
+                </IconButton>
+              </Tooltip>
             </Link>
           )}
           <Text size={isDesktop ? '6' : '4'} weight={'medium'}>

@@ -167,19 +167,25 @@ export const ProjectsAddCollaborators = ({
                 )}
               </RoleField>
               {!readOnly && (
-                <IconButton
-                  style={{ cursor: 'pointer' }}
-                  type={'button'}
-                  variant={'ghost'}
-                  color={'red'}
-                  radius={'full'}
-                  mb={'1'}
-                  disabled={removeDisabled}
-                  aria-label={t('project.createModal.collaborators.remove')}
-                  onClick={() => remove(index)}
+                <Tooltip
+                  content={t('project.createModal.collaborators.remove')}
                 >
-                  <TrashIcon width={18} height={18} />
-                </IconButton>
+                  <span>
+                    <IconButton
+                      style={{ cursor: 'pointer' }}
+                      type={'button'}
+                      variant={'ghost'}
+                      color={'red'}
+                      radius={'full'}
+                      mb={'1'}
+                      disabled={removeDisabled}
+                      aria-label={t('project.createModal.collaborators.remove')}
+                      onClick={() => remove(index)}
+                    >
+                      <TrashIcon width={18} height={18} />
+                    </IconButton>
+                  </span>
+                </Tooltip>
               )}
             </Flex>
             {!readOnly && addressError?.message && (

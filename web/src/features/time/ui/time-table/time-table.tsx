@@ -50,6 +50,7 @@ import {
   useBreakpoint,
   ListPageLayout as S,
   showToast,
+  Tooltip,
 } from '@/shared'
 
 export const TimeTable = () => {
@@ -154,6 +155,7 @@ export const TimeTable = () => {
       {
         customKey: 'paidStatus',
         headerText: t('dashboard.worklogsTable.head.paymentStatus'),
+        description: t('common.metricDesc.paymentStatus'),
         width: 120,
         sortable: true,
       },
@@ -166,6 +168,7 @@ export const TimeTable = () => {
       {
         dataKey: 'minutesActive',
         headerText: t('dashboard.worklogsTable.head.timeActive'),
+        description: t('common.metricDesc.timeActive'),
         horizontalAlign: 'center',
         width: 120,
         sortable: true,
@@ -173,24 +176,28 @@ export const TimeTable = () => {
       {
         dataKey: 'keyboardKeys',
         headerText: t('dashboard.worklogsTable.head.keyboard'),
+        description: t('common.metricDesc.keyboard'),
         width: 120,
         sortable: true,
       },
       {
         dataKey: 'mouseKeys',
         headerText: t('dashboard.worklogsTable.head.mouse'),
+        description: t('common.metricDesc.mouse'),
         width: 120,
         sortable: true,
       },
       {
         dataKey: 'mouseDistance',
         headerText: t('dashboard.worklogsTable.head.mouseDistance'),
+        description: t('common.metricDesc.mouseDistance'),
         width: 120,
         sortable: true,
       },
       {
         dataKey: 'screenshot',
         headerText: t('dashboard.worklogsTable.head.screenshot'),
+        description: t('common.metricDesc.screenshot'),
         width: 120,
         sortable: true,
       },
@@ -252,32 +259,36 @@ export const TimeTable = () => {
               >
                 {t('dashboard.worklogsTable.paymentStatus.unpaid')}
               </Button>
-              <Button
-                variant="outline"
-                size="s"
-                type="button"
-                disabled={isBulkPending || invoicing}
-                loading={invoicing}
-                onClick={() => {
-                  if (!selectedProjectId) {
-                    showToast('info', {
-                      message: t(
-                        'dashboard.worklogsTable.bulk.invoiceOneProject',
-                      ),
-                      position: 'top-center',
-                    })
+              <Tooltip content={t('dashboard.worklogsTable.bulk.invoiceHint')}>
+                <span>
+                  <Button
+                    variant="outline"
+                    size="s"
+                    type="button"
+                    disabled={isBulkPending || invoicing}
+                    loading={invoicing}
+                    onClick={() => {
+                      if (!selectedProjectId) {
+                        showToast('info', {
+                          message: t(
+                            'dashboard.worklogsTable.bulk.invoiceOneProject',
+                          ),
+                          position: 'top-center',
+                        })
 
-                    return
-                  }
+                        return
+                      }
 
-                  invoiceSelected({
-                    projectId: selectedProjectId,
-                    timeIds: selectedTimeIds,
-                  })
-                }}
-              >
-                {t('dashboard.worklogsTable.bulk.invoice')}
-              </Button>
+                      invoiceSelected({
+                        projectId: selectedProjectId,
+                        timeIds: selectedTimeIds,
+                      })
+                    }}
+                  >
+                    {t('dashboard.worklogsTable.bulk.invoice')}
+                  </Button>
+                </span>
+              </Tooltip>
               <Button
                 color="danger"
                 variant="outline"

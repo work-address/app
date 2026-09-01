@@ -13,6 +13,7 @@ import {
   type DesktopBodyCellRenderProps,
   PrintIcon,
   Text,
+  Tooltip,
   formatDurationFromMinutes,
 } from '@/shared'
 
@@ -26,18 +27,20 @@ export const ProjectsDesktopCell = React.memo(
         content = (
           <TitleCell align="center" gap="2">
             <Text $themeVariant={'primary'}>{props.data.title}</Text>
-            <InvoiceLink
-              projectId={props.data.id ?? ''}
-              onClick={(event) => event.stopPropagation()}
-            >
-              <Text color={'gray'} size={'2'} as="span">
-                |
-              </Text>
-              <Text size={'2'} as="span">
-                {t('dashboard.projectsTable.actions.invoice')}
-              </Text>
-              <img src={PrintIcon} alt="" width={28} height={28} />
-            </InvoiceLink>
+            <Tooltip content={t('dashboard.projectsTable.actions.invoiceHint')}>
+              <InvoiceLink
+                projectId={props.data.id ?? ''}
+                onClick={(event) => event.stopPropagation()}
+              >
+                <Text color={'gray'} size={'2'} as="span">
+                  |
+                </Text>
+                <Text size={'2'} as="span">
+                  {t('dashboard.projectsTable.actions.invoice')}
+                </Text>
+                <img src={PrintIcon} alt="" width={28} height={28} />
+              </InvoiceLink>
+            </Tooltip>
           </TitleCell>
         )
         break

@@ -14,6 +14,7 @@ import {
   getTimeActiveColor,
   Text,
   toImageDataUrl,
+  Tooltip,
 } from '@/shared'
 
 export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
@@ -72,27 +73,29 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
         const timeId = props.data.id
 
         return (
-          <PaidStatusBadge
-            // Gray rather than red: unpaid is the ordinary state of freshly
-            // tracked time, not a fault to flag.
-            color={props.data.isPaid ? 'green' : 'gray'}
-            onClick={(event) => {
-              // Не даём клику по бейджу открыть модалку строки
-              event.stopPropagation()
+          <Tooltip content={t('common.metricDesc.paymentStatus')}>
+            <PaidStatusBadge
+              // Gray rather than red: unpaid is the ordinary state of freshly
+              // tracked time, not a fault to flag.
+              color={props.data.isPaid ? 'green' : 'gray'}
+              onClick={(event) => {
+                // Не даём клику по бейджу открыть модалку строки
+                event.stopPropagation()
 
-              if (!timeId || setPaidStatusStatus === 'pending') {
-                return
-              }
+                if (!timeId || setPaidStatusStatus === 'pending') {
+                  return
+                }
 
-              setPaidStatus({ ids: [timeId], isPaid: !props.data.isPaid })
-            }}
-          >
-            {t(
-              props.data.isPaid
-                ? 'dashboard.worklogsTable.paymentStatus.paid'
-                : 'dashboard.worklogsTable.paymentStatus.unpaid',
-            )}
-          </PaidStatusBadge>
+                setPaidStatus({ ids: [timeId], isPaid: !props.data.isPaid })
+              }}
+            >
+              {t(
+                props.data.isPaid
+                  ? 'dashboard.worklogsTable.paymentStatus.paid'
+                  : 'dashboard.worklogsTable.paymentStatus.unpaid',
+              )}
+            </PaidStatusBadge>
+          </Tooltip>
         )
       }
 
