@@ -137,7 +137,6 @@ export {
   $isProjectsFiltering,
   $rawProjects,
   $projectsWithProcessTracking,
-  $hasProjectsWithProcessTracking,
   $projectsProcessStats,
   $projectsProcessStatsLoading,
 } from './projects.stores'

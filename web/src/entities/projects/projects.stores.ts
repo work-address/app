@@ -92,10 +92,6 @@ export const $projectsWithProcessTracking = $projects.map((projects) =>
   projects.filter((project) => Boolean(project.trackProcesses)),
 )
 
-export const $hasProjectsWithProcessTracking = $projectsWithProcessTracking.map(
-  (projects) => projects.length > 0,
-)
-
 export const $projectsProcessStats = projectsProcessStatsQuery.$data.map(
   (stats): ProjectProcessStats[] => stats ?? [],
 )

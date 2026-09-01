@@ -9,7 +9,6 @@ import {
   $projectsLoading,
   $hasProjects,
   $projects,
-  $hasProjectsWithProcessTracking,
 } from '@/entities/projects'
 import { fetchTime, $timeLoading } from '@/entities/time'
 import {
@@ -41,7 +40,6 @@ export default function DashboardPage() {
     projectsLoading,
     timeLoading,
     hasProjects,
-    hasProjectsWithProcessTracking,
     projects,
   } = useUnit({
     fetchProjects,
@@ -49,13 +47,14 @@ export default function DashboardPage() {
     projectsLoading: $projectsLoading,
     timeLoading: $timeLoading,
     hasProjects: $hasProjects,
-    hasProjectsWithProcessTracking: $hasProjectsWithProcessTracking,
     projects: $projects,
   })
 
   const showSkeletons = projectsLoading || timeLoading || hasProjects
   // Reserve the chart column while projects load so the layout does not jump.
-  const showCharts = projectsLoading || hasProjectsWithProcessTracking
+  // The card stays up even when nothing tracks processes yet — its empty state
+  // is what tells people the feature exists.
+  const showCharts = projectsLoading || hasProjects
 
   useEffect(() => {
     fetchProjectsEvent()

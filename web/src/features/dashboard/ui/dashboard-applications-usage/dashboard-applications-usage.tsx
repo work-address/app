@@ -1,5 +1,6 @@
 import { useUnit } from 'effector-react'
 import { useEffect, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 
 import {
   buildApplicationsUsageChart,
@@ -9,6 +10,7 @@ import {
 
 import { DashboardApplicationsUsageCard } from './dashboard-applications-usage-card'
 import { DashboardApplicationsUsageChart } from './dashboard-applications-usage-chart'
+import { DashboardApplicationsUsageEmpty } from './dashboard-applications-usage-empty'
 
 import {
   $projectsLoading,
@@ -19,6 +21,7 @@ import {
 } from '@/entities/projects'
 
 export const DashboardApplicationsUsage = () => {
+  const { t } = useTranslation()
   const [period, setPeriod] = useState<Period>('Month')
 
   const {
@@ -56,13 +59,31 @@ export const DashboardApplicationsUsage = () => {
   const isLoading =
     projectsLoading || (processStatsLoading && processStats.length === 0)
 
+  // A failed fetch also leaves nothing to stack, but it is not an empty state:
+  // those rows keep their bars so the tooltip can say the load failed.
+  const hasFailedStats = chart.data.some((datum) => datum.failed)
+  const isEmpty = chart.processNames.length === 0 && !hasFailedStats
+
+  // `projects` is already filtered to the ones tracking processes, so an empty
+  // list means the feature is off everywhere rather than merely unused so far.
+  const emptyKey = projects.length === 0 ? 'trackingOff' : 'noActivity'
+
   return (
     <DashboardApplicationsUsageCard
       period={period}
       isLoading={isLoading}
       onPeriodChange={setPeriod}
     >
-      <DashboardApplicationsUsageChart {...chart} />
+      {isEmpty ? (
+        <DashboardApplicationsUsageEmpty
+          title={t(`dashboard.applicationsUsage.empty.${emptyKey}.title`)}
+          description={t(
+            `dashboard.applicationsUsage.empty.${emptyKey}.description`,
+          )}
+        />
+      ) : (
+        <DashboardApplicationsUsageChart {...chart} />
+      )}
     </DashboardApplicationsUsageCard>
   )
 }
