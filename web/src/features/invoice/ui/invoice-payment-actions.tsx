@@ -1,4 +1,4 @@
-import { Badge, Flex } from '@radix-ui/themes'
+import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -53,32 +53,32 @@ export const InvoicePaymentActions = ({
     }
   }, [paidStatus, unpaidStatus, onChanged, t])
 
+  // Nothing to draw for anyone but the issuer. The status itself is shown by
+  // whoever renders this, so a viewer costs no height at all.
+  if (!canSettle) {
+    return null
+  }
+
   return (
-    <Flex direction="column" gap="2" align="end">
-      <Badge size="2" variant="soft" color={isPaid ? 'green' : 'amber'}>
-        {t(isPaid ? 'invoice.state.paid' : 'invoice.state.requested')}
-      </Badge>
-      {canSettle ? (
-        <>
-          <Button
-            size="l"
-            variant={isPaid ? 'outline' : 'solid'}
-            loading={pending}
-            onClick={() =>
-              isPaid ? markUnpaid(invoiceId) : markPaid(invoiceId)
-            }
-          >
-            {t(isPaid ? 'invoice.payment.revert' : 'invoice.payment.markPaid')}
-          </Button>
-          <Text size="2" color="gray" align="right">
-            {t(
-              isPaid
-                ? 'invoice.payment.revertNotice'
-                : 'invoice.payment.markPaidNotice',
-            )}
-          </Text>
-        </>
-      ) : null}
+    <Flex align="center" justify="end" gap="3" wrap="wrap">
+      {/* Beside the button rather than beneath it: an issuer who does not
+          realise the hours move too will wonder why they stop appearing on
+          the next invoice, so the copy stays - it just costs no extra line. */}
+      <Text size="1" color="gray" align="right">
+        {t(
+          isPaid
+            ? 'invoice.payment.revertNotice'
+            : 'invoice.payment.markPaidNotice',
+        )}
+      </Text>
+      <Button
+        size="m"
+        variant={isPaid ? 'outline' : 'solid'}
+        loading={pending}
+        onClick={() => (isPaid ? markUnpaid(invoiceId) : markPaid(invoiceId))}
+      >
+        {t(isPaid ? 'invoice.payment.revert' : 'invoice.payment.markPaid')}
+      </Button>
     </Flex>
   )
 }

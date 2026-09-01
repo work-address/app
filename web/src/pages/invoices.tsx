@@ -161,6 +161,11 @@ export default function InvoicesPage() {
           <List aria-label={t('invoices.page.title')}>
             {rows.map((invoice) => {
               const isPaid = invoice.state === 'PAID'
+              // Only the issuer may settle: the person owed the money is the
+              // one who knows whether it arrived.
+              const canSettle = Boolean(
+                user?.id && invoice.user?.id === user.id,
+              )
               const issuer =
                 invoice.user?.name ||
                 shortenAddress(
@@ -170,39 +175,44 @@ export default function InvoicesPage() {
               return (
                 <Row key={invoice.id}>
                   <Header>
-                    <Flex direction="column" gap="1" style={{ minWidth: 0 }}>
+                    <Flex align="center" gap="2" style={{ minWidth: 0 }}>
                       <Text size="1" color="gray">
                         {t('invoices.item.project')}
                       </Text>
                       <ProjectLink
                         to={routes.invoice.build({ id: invoice.id as string })}
                       >
-                        <Text size="4" weight="medium">
+                        <Text size="3" weight="medium">
                           {invoice.project?.title ?? '—'}
                         </Text>
                       </ProjectLink>
+                      <Badge
+                        size="1"
+                        variant="soft"
+                        color={isPaid ? 'green' : 'amber'}
+                      >
+                        {t(
+                          isPaid
+                            ? 'invoice.state.paid'
+                            : 'invoice.state.requested',
+                        )}
+                      </Badge>
                     </Flex>
-                    <Flex align="end" gap="5">
+                    <Flex align="baseline" gap="4">
                       {/* The project's rate as it stands today. The amount
                           beside it was frozen when the invoice was raised, so
                           editing the project rate afterwards leaves the two
                           describing different moments. */}
-                      <Flex direction="column" gap="1" align="end">
-                        <Text size="1" color="gray">
-                          {t('invoice.fields.rateHour')}
-                        </Text>
-                        <Text size="5" weight="bold">
-                          {formatCurrency(invoice.project?.rateHour)}
-                        </Text>
-                      </Flex>
-                      <Flex direction="column" gap="1" align="end">
-                        <Text size="1" color="gray">
-                          {t('invoices.item.amount')}
-                        </Text>
-                        <Text size="5" weight="bold">
-                          {formatCents(Number(invoice.amountCents ?? 0))}
-                        </Text>
-                      </Flex>
+                      <Field
+                        label={t('invoice.fields.rateHour')}
+                        value={formatCurrency(invoice.project?.rateHour)}
+                        strong
+                      />
+                      <Field
+                        label={t('invoices.item.amount')}
+                        value={formatCents(Number(invoice.amountCents ?? 0))}
+                        strong
+                      />
                     </Flex>
                   </Header>
                   {/* Several invoices can share a project and a period - one
@@ -232,17 +242,17 @@ export default function InvoicesPage() {
                       value={shortenAddress(invoice.id ?? '')}
                     />
                   </FieldGrid>
-                  <Footer>
-                    <InvoicePaymentActions
-                      invoiceId={invoice.id as string}
-                      isPaid={isPaid}
-                      // Only the issuer may settle: the person owed the money
-                      // is the one who knows whether it arrived.
-                      canSettle={Boolean(
-                        user?.id && invoice.user?.id === user.id,
-                      )}
-                    />
-                  </Footer>
+                  {/* No footer at all unless there is something to press, so a
+                      viewer's rows stay at their shortest. */}
+                  {canSettle ? (
+                    <Footer>
+                      <InvoicePaymentActions
+                        invoiceId={invoice.id as string}
+                        isPaid={isPaid}
+                        canSettle={canSettle}
+                      />
+                    </Footer>
+                  ) : null}
                 </Row>
               )
             })}
@@ -286,60 +296,38 @@ export default function InvoicesPage() {
 const SkeletonRow = () => (
   <Row>
     <Header>
-      <Flex direction="column" gap="1" style={{ minWidth: 0 }}>
+      <Flex align="center" gap="2" style={{ minWidth: 0 }}>
         <Skeleton>
           <Text size="1">Project</Text>
         </Skeleton>
         <Skeleton>
-          <Text size="4" weight="medium">
+          <Text size="3" weight="medium">
             Project name
           </Text>
         </Skeleton>
       </Flex>
-      <Flex align="end" gap="5">
-        <Flex direction="column" gap="1" align="end">
-          <Skeleton>
-            <Text size="1">Rate</Text>
-          </Skeleton>
-          <Skeleton>
-            <Text size="5" weight="bold">
-              $00.00
-            </Text>
-          </Skeleton>
-        </Flex>
-        <Flex direction="column" gap="1" align="end">
-          <Skeleton>
-            <Text size="1">Amount</Text>
-          </Skeleton>
-          <Skeleton>
-            <Text size="5" weight="bold">
-              $0000.00
-            </Text>
-          </Skeleton>
-        </Flex>
+      <Flex align="baseline" gap="4">
+        <Skeleton>
+          <Text size="3" weight="bold">
+            Rate $00.00
+          </Text>
+        </Skeleton>
+        <Skeleton>
+          <Text size="3" weight="bold">
+            Amount $0000.00
+          </Text>
+        </Skeleton>
       </Flex>
     </Header>
     <FieldGrid>
       {SKELETON_FIELDS.map((label) => (
-        <Flex key={label} direction="column" gap="1" style={{ minWidth: 0 }}>
-          <Skeleton>
-            <Text size="1">{label}</Text>
-          </Skeleton>
-          <Skeleton>
-            <FieldValue size="2" weight="medium">
-              00th Aug 0000
-            </FieldValue>
-          </Skeleton>
-        </Flex>
+        <Skeleton key={label}>
+          <FieldValue size="2" weight="medium">
+            {label} 00th Aug 0000
+          </FieldValue>
+        </Skeleton>
       ))}
     </FieldGrid>
-    <Footer>
-      <Skeleton>
-        <Badge size="2" variant="soft">
-          Awaiting payment
-        </Badge>
-      </Skeleton>
-    </Footer>
   </Row>
 )
 
@@ -347,13 +335,24 @@ const SkeletonRow = () => (
    land where the real ones will. */
 const SKELETON_FIELDS = ['Issued by', 'Period', 'Issued', 'Paid', 'Reference']
 
-/** Label above value, so the columns line up whatever the value's length. */
-const Field = ({ label, value }: { label: string; value: string }) => (
-  <Flex direction="column" gap="1" style={{ minWidth: 0 }}>
+/**
+ * Label beside the value rather than above it: stacking them doubled every
+ * field's height, and with nine fields per row that was most of the card.
+ */
+const Field = ({
+  label,
+  value,
+  strong,
+}: {
+  label: string
+  value: string
+  strong?: boolean
+}) => (
+  <Flex align="baseline" gap="1" style={{ minWidth: 0 }}>
     <Text size="1" color="gray">
       {label}
     </Text>
-    <FieldValue size="2" weight="medium">
+    <FieldValue size={strong ? '3' : '2'} weight={strong ? 'bold' : 'medium'}>
       {value}
     </FieldValue>
   </Flex>
@@ -391,17 +390,18 @@ const List = styled.ul`
 const Row = styled.li`
   display: flex;
   flex-direction: column;
-  gap: var(--space-3);
+  gap: var(--space-2);
   border: 1px solid var(--gray-a5);
   border-radius: var(--radius-3);
-  padding: var(--space-4);
+  padding: var(--space-3);
 `
 
 const Header = styled.div`
   display: flex;
-  align-items: flex-start;
+  align-items: center;
   justify-content: space-between;
-  gap: var(--space-3);
+  flex-wrap: wrap;
+  gap: var(--space-2) var(--space-3);
   min-width: 0;
 `
 
@@ -409,9 +409,9 @@ const Header = styled.div`
    stay aligned down the list instead of shifting row to row. */
 const FieldGrid = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(150px, 1fr));
-  gap: var(--space-3);
-  padding-top: var(--space-3);
+  grid-template-columns: repeat(auto-fit, minmax(170px, 1fr));
+  gap: var(--space-1) var(--space-3);
+  padding-top: var(--space-2);
   border-top: 1px solid var(--gray-a4);
   min-width: 0;
 `
