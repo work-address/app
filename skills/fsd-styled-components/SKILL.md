@@ -73,6 +73,13 @@ const Root = styled.div`
 `
 ```
 
+**Layout with grid, not flexbox.** `display: grid` is the default for every container;
+`flex`/`inline-flex` layout is not used. `grid-auto-flow: column` replaces
+`flex-direction: row`, `grid-template-columns` replaces `flex-basis`/`flex-grow`
+juggling, and `gap` replaces manual gutter margins. Reach for `flex-wrap` only when
+`grid-template-columns: repeat(auto-fill, minmax(…))` genuinely cannot express the
+wrapping behaviour needed, and say why in a comment.
+
 **Name parts by role, not appearance.** Use `Header`, `Body`, `Footer`, `Content`,
 `Panel`, `Section`, `Group`, `List`, `Item`, `Row`, `Cell`, `Label`, `Value`,
 `Caption`, `Hint`, `Icon`, `Media`, `Actions`, `Trigger`, `Overlay`, `Backdrop`,
@@ -204,6 +211,7 @@ Explicit non-goals.
 
 - [ ] Paths, filenames and exports follow the naming rules.
 - [ ] Exactly one `Root` per container file; part names are role-based.
+- [ ] Container layout uses `display: grid`; no undocumented `flex`/`inline-flex`.
 - [ ] Every variant is a `data-*` attribute backed by a union in `model/`; no
       prop-driven style branching remains.
 - [ ] Boolean attributes are presence-only (`|| undefined`).

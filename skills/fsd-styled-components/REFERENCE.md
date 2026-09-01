@@ -143,7 +143,39 @@ const Root = styled.div`
 A file MUST NOT declare two `Root` elements. A component that renders a fragment of
 siblings with no container has no `Root`.
 
-### 4.2 Name by role, never by appearance or element
+### 4.2 Layout: grid, not flexbox
+
+Container layout MUST use CSS Grid (`display: grid` / `display: inline-grid`).
+`display: flex` and `display: inline-flex` MUST NOT be used to lay out a `Root` or any
+styled container — express rows, columns, wrapping and gutters with
+`grid-template-columns`/`-rows`, `grid-auto-flow`, and `gap` instead of
+`flex-direction`, `flex-basis`/`flex-grow`/`flex-shrink`, and margin hacks.
+
+```tsx
+// A one-dimensional run of items: grid-auto-flow replaces flex-direction: row.
+const Actions = styled.div`
+  display: grid;
+  grid-auto-flow: column;
+  justify-content: start;
+  gap: 8px;
+`
+
+// Fixed sidebar + fluid content: grid-template-columns replaces flex-basis juggling.
+const Root = styled.div`
+  display: grid;
+  grid-template-columns: 240px 1fr;
+  gap: 16px;
+`
+```
+
+`gap` alone covers what flexbox needed row/column gutters plus manual margins for, and
+a single `grid-template-columns` declaration replaces per-child `flex` sizing. The one
+case grid cannot express cleanly is content that must wrap onto a new line based on
+available width without a fixed track count (e.g. a tag list). Even then, try
+`grid-template-columns: repeat(auto-fill, minmax(…))` first; reach for `flex-wrap` only
+once that is confirmed insufficient, and say why in a comment next to the declaration.
+
+### 4.3 Name by role, never by appearance or element
 
 Styled-component names describe the part an element plays in the composition. They
 MUST NOT encode looks, position or the HTML tag, because those change without the
@@ -163,13 +195,13 @@ collision. Standard vocabulary worth standardising on: `Root`, `Header`, `Body`,
 `Label`, `Value`, `Caption`, `Hint`, `Icon`, `Media`, `Actions`, `Trigger`,
 `Overlay`, `Backdrop`, `Divider`, `Placeholder`, `Skeleton`.
 
-### 4.3 Do not restate the component name
+### 4.4 Do not restate the component name
 
 Inside `user-card-header.tsx` the outer element is `Root`, not `UserCardHeaderRoot`
 or `StyledUserCardHeader`. The filename already provides the namespace. The `Styled*`
 prefix MUST NOT be used.
 
-### 4.4 Extending components
+### 4.5 Extending components
 
 - Extend with `styled(Component)`, and pass fixed props with `.attrs()` rather than
   repeating them at every call site:
@@ -187,7 +219,7 @@ const Label = styled(Typography).attrs({ variant: 'caption', as: 'span' })`
   purely to create a targetable reference for §5.4, in which case a comment MUST say
   so.
 
-### 4.5 Design tokens
+### 4.6 Design tokens
 
 - Colours, spacing, radii, typography and z-indices MUST come from CSS custom
   properties (or the theme object, if the project standardises on that). Raw hex
@@ -216,7 +248,7 @@ const Value = styled.span`
 This is also the escape hatch for depth: a grandchild reads `--card-accent` instead
 of chaining ancestor selectors.
 
-### 4.6 Interpolation discipline
+### 4.7 Interpolation discipline
 
 - Static CSS MUST be static. Function interpolations are for values that genuinely
   vary at runtime and cannot be expressed as a token or a `data-*` selector.
@@ -227,7 +259,7 @@ of chaining ancestor selectors.
 - Inline `style` is reserved for values computed per render (measured sizes,
   transforms driven by pointer position). Anything static MUST be CSS.
 
-### 4.7 Nesting and specificity
+### 4.8 Nesting and specificity
 
 - Nesting SHOULD stay within two levels. Deeper nesting signals that the markup wants
   to be split into another component.
@@ -249,7 +281,7 @@ const Root = styled.button`
 - Descendant selectors that reach into another component's internals
   (`& .some-child`) MUST NOT be used; target a component reference instead (§5.4).
 
-### 4.8 Responsiveness
+### 4.9 Responsiveness
 
 Breakpoints MUST come from one shared helper or token set, never from ad-hoc
 `@media (max-width: 731px)` literals scattered across slices. Media blocks SHOULD sit
@@ -340,7 +372,7 @@ Rules:
   sibling file inside the same slice. Referencing across slices MUST NOT happen; use
   a `data-*` attribute or a token on the consumer's own `Root` instead.
 - A reference chain SHOULD be one level deep. If a grandchild needs an ancestor's
-  variant, pass a component-scoped custom property down instead (§4.5).
+  variant, pass a component-scoped custom property down instead (§4.6).
 
 ### 5.5 Naming and hygiene
 
@@ -441,6 +473,8 @@ Explicit non-goals.
 
 - [ ] Paths, filenames and exports follow §2 and §3.
 - [ ] Each container file declares exactly one `Root`; part names are role-based.
+- [ ] Container layout uses `display: grid`; no `flex`/`inline-flex` layout without a
+      documented reason (§4.2).
 - [ ] Every variant is a `data-*` attribute backed by a union type in `model/`; no
       prop-based style branching remains.
 - [ ] Boolean attributes are presence-only (`|| undefined`).
@@ -458,6 +492,7 @@ Explicit non-goals.
 
 | Anti-pattern | Correct form |
 | --- | --- |
+| `display: flex` / `inline-flex` for container layout | `display: grid` with `grid-template-columns` / `grid-auto-flow` |
 | `StyledWrapper`, `Wrapper2`, `Outer` | `Root`, then role names |
 | `BlueBox`, `SmallGrayText`, `FlexRow` | `Panel`, `Caption`, `Actions` |
 | Restating the component name in styled names | File-local `Root`, `Body`, `Header` |
