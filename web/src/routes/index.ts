@@ -3,6 +3,7 @@ import type { Route, IdRouteParams, NoChildRoutes, MappingRoute } from './types'
 import {
   DashboardIcon,
   PersonIcon,
+  PrintIcon,
   QuestionMarkCircledIcon,
   TimeTrackerIcon,
 } from '@/shared/icons'
@@ -72,6 +73,14 @@ export const routes: MainRoutes = {
   invoices: {
     schema: '/invoice',
     build: () => '/invoice',
+
+    desktopOrder: 2,
+    mobileOrder: 2,
+
+    showInMenu: true,
+    translateKeyDesktop: 'header.nav.invoices',
+    translateKeyMobile: 'header.nav.invoices',
+    mobileIcon: PrintIcon,
   },
 
   docs: {
@@ -82,8 +91,8 @@ export const routes: MainRoutes = {
     translateKeyDesktop: 'header.nav.helpCenter',
     translateKeyMobile: 'header.nav.helpCenter',
 
-    desktopOrder: 2,
-    mobileOrder: 2,
+    desktopOrder: 3,
+    mobileOrder: 3,
 
     mobileIcon: QuestionMarkCircledIcon,
   },
@@ -92,7 +101,7 @@ export const routes: MainRoutes = {
     schema: '/time-tracker',
     build: () => '/time-tracker',
 
-    mobileOrder: 3,
+    mobileOrder: 4,
 
     translateKeyMobile: 'header.nav.timeTracker',
     mobileIcon: TimeTrackerIcon,
@@ -154,6 +163,7 @@ export const routes: MainRoutes = {
 export const AUTH_REQUIRED_ROUTES = new Set<string>([
   routes.dashboard.schema,
   routes.profile.schema,
+  routes.invoices.schema,
   routes.timeTracker.schema,
 ])
 

@@ -42,12 +42,10 @@ import {
   type ProjectWithStats,
   deleteProjectMutation,
 } from '@/entities/projects'
-import { routes } from '@/routes'
 import {
   type MobileDataTableConfig,
   type DataTableConfig,
   formatCurrency,
-  navigateFx,
 } from '@/shared'
 import {
   DataTable,
@@ -57,7 +55,6 @@ import {
   TabsTrigger,
   Button,
   IconButton,
-  PrintIcon,
   useBreakpoint,
   useDateFormatter,
   ProjectsEmptyState,
@@ -146,26 +143,24 @@ export const ProjectsTable = () => {
         headerText: t('dashboard.projectsTable.head.projectName'),
       },
       {
-        dataKey: 'paid',
-        width: 120,
-        headerText: t('dashboard.projectsTable.head.paid'),
-        getValue: (data) => formatCurrency(data.paid),
-      },
-      {
         dataKey: 'state',
         width: 120,
         horizontalAlign: 'center',
         headerText: t('dashboard.projectsTable.head.status'),
       },
       {
+        // `mapProjectsAndStats` prefers the project's own rate over the totals
+        // row, so a project with nothing tracked yet still shows its rate
+        // rather than $0.00.
+        dataKey: 'rateHour',
+        width: 120,
+        headerText: t('dashboard.projectsTable.drawer.meta.rateHour'),
+        getValue: (data) => formatCurrency(data.rateHour),
+      },
+      {
         customKey: 'timeTotal',
         width: 120,
         headerText: t('dashboard.projectsTable.head.timeTotal'),
-      },
-      {
-        customKey: 'timeActive',
-        width: 120,
-        headerText: t('dashboard.projectsTable.head.timeActive'),
       },
       // {
       //   dataKey: 'keyboardKeys',
@@ -258,14 +253,6 @@ export const ProjectsTable = () => {
               )}
             </>
           )}
-          <Button
-            variant={'outline'}
-            color={'neutral'}
-            iconRight={<img src={PrintIcon} alt="" width={20} height={20} />}
-            onClick={() => void navigateFx({ to: routes.invoices.build() })}
-          >
-            {t('dashboard.page.invoices')}
-          </Button>
           {isMobile ? (
             <IconButton
               themeVariant={'primary'}

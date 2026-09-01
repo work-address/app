@@ -1,8 +1,16 @@
 import { sample } from 'effector'
 
 import { fetchInvoice, resetInvoice } from './events'
+import {
+  $hasMoreInvoices,
+  $invoicePage,
+  $invoiceProjectFilter,
+  fetchInvoiceList,
+  invoiceProjectFilterChanged,
+  loadMoreInvoices,
+} from './list.stores'
 import { ensureInvoiceMutation, invoiceSelectedTimeMutation } from './mutations'
-import { invoiceQuery } from './queries'
+import { invoiceListQuery, invoiceQuery } from './queries'
 
 import { routes } from '@/routes'
 import { navigateFx, showToastFx } from '@/shared'
@@ -21,10 +29,52 @@ sample({
   target: invoiceQuery.reset,
 })
 
+// A first load, and every change of filter, start again from page 0.
+sample({
+  clock: [fetchInvoiceList, invoiceProjectFilterChanged],
+  source: $invoiceProjectFilter,
+  fn: (projectId) => ({ projectId: projectId || undefined, page: 0 }),
+  target: invoiceListQuery.start,
+})
+
+sample({
+  clock: loadMoreInvoices,
+  source: {
+    projectId: $invoiceProjectFilter,
+    page: $invoicePage,
+    hasMore: $hasMoreInvoices,
+    pending: invoiceListQuery.$pending,
+  },
+  // Guarded rather than trusted to the button's disabled state: a double click
+  // would otherwise fire the same page twice.
+  filter: ({ hasMore, pending }) => hasMore && !pending,
+  fn: ({ projectId, page }) => ({
+    projectId: projectId || undefined,
+    page: page + 1,
+  }),
+  target: invoiceListQuery.start,
+})
+
 export { fetchInvoice, resetInvoice } from './events'
 export { $invoice, $invoiceTime, $invoiceLoading } from './stores'
 export type { InvoiceRead, InvoiceReport, ProjectInvoice } from './types'
-export { invoiceListQuery, invoiceQuery } from './queries'
+export {
+  INVOICE_PAGE_SIZE,
+  invoiceListQuery,
+  invoiceProjectsQuery,
+  invoiceQuery,
+} from './queries'
+export {
+  $hasMoreInvoices,
+  $invoicePage,
+  $invoiceProjectFilter,
+  $invoices,
+  $invoicesTotal,
+  $isLoadingMoreInvoices,
+  fetchInvoiceList,
+  invoiceProjectFilterChanged,
+  loadMoreInvoices,
+} from './list.stores'
 export * from './format'
 export * from './mutations'
 
