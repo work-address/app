@@ -1,6 +1,9 @@
 import { Cross1Icon } from '@radix-ui/react-icons'
 import { Dialog, Flex, Separator } from '@radix-ui/themes'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
+
+import { IconButton } from '../../button'
 
 import type { CommonDialogProps, ModalProps } from '../model'
 
@@ -18,6 +21,8 @@ export const Modal = ({
   showTitleSeparator = true,
   description,
 }: CommonDialogProps & ModalProps) => {
+  const { t } = useTranslation()
+
   const hasHeaderActions = Boolean(headerActions) || showClose
   const hasSeparator = Boolean(title) && showTitleSeparator
 
@@ -33,9 +38,16 @@ export const Modal = ({
                 <Actions>
                   {headerActions}
                   {showClose && (
-                    <Close>
-                      <Cross1Icon />
-                    </Close>
+                    <Dialog.Close>
+                      <IconButton
+                        variant="ghost"
+                        color="gray"
+                        radius="full"
+                        aria-label={t('common.close')}
+                      >
+                        <Cross1Icon width={20} height={20} />
+                      </IconButton>
+                    </Dialog.Close>
                   )}
                 </Actions>
               )}
@@ -93,16 +105,12 @@ const Title = styled(Dialog.Title).attrs({ mb: '0' as const })`
   min-width: 0;
 `
 
+// Radix lays a ghost icon button out with a negative margin, so its hover
+// circle bleeds 6px outside the layout box. --space-3 is the gap at which two
+// adjacent ones sit flush instead of overlapping.
 const Actions = styled.div`
   display: flex;
   align-items: center;
   gap: var(--space-3);
   flex-shrink: 0;
-`
-
-const Close = styled(Dialog.Close).attrs({ type: 'button' })`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  cursor: pointer;
 `

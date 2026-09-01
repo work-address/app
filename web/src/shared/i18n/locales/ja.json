@@ -4,6 +4,7 @@
   "app.documentTitle.profileEdit": "プロフィールを編集",
   "common.apply": "適用",
   "common.cancel": "キャンセル",
+  "common.close": "閉じる",
   "common.copy": "コピー",
   "common.delete": "削除",
   "common.duration.hoursAndMinutes": "{{hours}}時間{{minutes}}分",

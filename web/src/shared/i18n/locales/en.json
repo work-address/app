@@ -4,6 +4,7 @@
   "app.documentTitle.profileEdit": "Edit profile",
   "common.apply": "Apply",
   "common.cancel": "Cancel",
+  "common.close": "Close",
   "common.copy": "Copy",
   "common.delete": "Delete",
   "common.duration.hoursAndMinutes": "{{hours}} hr {{minutes}} min",

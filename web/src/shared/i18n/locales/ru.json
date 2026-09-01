@@ -4,6 +4,7 @@
   "app.documentTitle.profileEdit": "Редактирование профиля",
   "common.apply": "Применить",
   "common.cancel": "Отмена",
+  "common.close": "Закрыть",
   "common.copy": "Копировать",
   "common.delete": "Удалить",
   "common.duration.hoursAndMinutes": "{{hours}} ч {{minutes}} мин",
