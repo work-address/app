@@ -47,6 +47,9 @@ export const $user = createStore<baseApi.User | null>(null)
   .on(saveProfileMutation.finished.success, (state, { params: user }) => ({
     ...state,
     ...user,
+    // A cleared rate is sent as null to blank the numeric column; on the user
+    // shape "unset" is undefined, so it is folded back here.
+    rate: user.rate ?? undefined,
   }))
   .reset(logout)
 

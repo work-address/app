@@ -1,7 +1,6 @@
 import { Flex, IconButton, Separator, Skeleton, Text } from '@radix-ui/themes'
 import {
   Controller,
-  type RegisterOptions,
   type Control,
   type FieldErrors,
   type UseFormRegister,
@@ -32,14 +31,14 @@ import {
   type CardProps,
 } from '@/shared'
 
+// Every profile field is optional on the API - `PUT /user` validates only the
+// email and phone constraints - so nothing here may be marked required. A form
+// requirement the backend does not have just locks the user out of saving.
 const TEXT_FIELDS = [
   {
     name: 'name' as const,
     labelKey: 'profile.form.name',
     placeholderKey: 'profile.form.namePlaceholder',
-    rules: {
-      required: true,
-    } satisfies RegisterOptions<ProfileEditFormState, 'name'>,
   },
   {
     name: 'title' as const,
@@ -50,9 +49,6 @@ const TEXT_FIELDS = [
     name: 'company' as const,
     labelKey: 'profile.form.company',
     placeholderKey: 'profile.form.companyPlaceholder',
-    rules: {
-      required: true,
-    } satisfies RegisterOptions<ProfileEditFormState, 'company'>,
   },
 ]
 
@@ -147,7 +143,6 @@ export const ProfileEditDetails = ({
             label={t(field.labelKey)}
             placeholder={t(field.placeholderKey)}
             register={register}
-            rules={field.rules}
             error={Boolean(errors[field.name])}
             loading={profileLoading}
             disabled={profileSaving}
@@ -207,7 +202,6 @@ export const ProfileEditDetails = ({
         <Controller
           control={control}
           name="skills"
-          rules={{ required: true }}
           render={({ field }) => (
             <TagInput
               label={t('profile.form.skills')}
@@ -230,7 +224,6 @@ export const ProfileEditDetails = ({
           register={register}
           rules={{
             pattern: /^\d*([,.]\d{1,2})?$/,
-            required: true,
           }}
           error={Boolean(errors.rate)}
           loading={profileLoading}

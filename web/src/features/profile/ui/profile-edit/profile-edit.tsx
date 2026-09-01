@@ -55,12 +55,17 @@ export const ProfileEdit = () => {
   })
 
   const onSubmit: SubmitHandler<ProfileEditFormState> = async (values) => {
-    const { email, ...rest } = values
+    const { email, rate, ...rest } = values
     const trimmedEmail = email?.trim()
+    const trimmedRate = rate?.trim()
 
     saveProfile({
       ...rest,
       skills: values.skills.join(',') || '',
+      // A cleared rate goes as null, not '': the column is numeric, and
+      // Postgres rejects an empty string for it. Null is what "no rate" means
+      // on a nullable column, and it reads back as 0.00 like an unset profile.
+      rate: trimmedRate || null,
       // An empty email is dropped rather than sent as '': the column carries a
       // unique index, and the backend rejects a blank email for an account
       // that has no phone. Omitting the key leaves the stored value untouched.
@@ -78,10 +83,17 @@ export const ProfileEdit = () => {
   // stays a React concern.
   useEffect(() => {
     if (user) {
+      // A profile that never had a name shows its title in the name field, and
+      // the title field is blanked so the same string is not offered twice.
+      // That promotion keys off an unset name, not an empty one - a name the
+      // user cleared on purpose must leave the stored title visible, or the
+      // next save would silently blank it too.
+      const nameUnset = user.name === null || user.name === undefined
+
       resetForm({
         name: user.name ?? user.title ?? '',
         email: user.email || '',
-        title: user.name ? (user.title ?? '') : '',
+        title: nameUnset ? '' : (user.title ?? ''),
         company: user.company || '',
         skills: user.skills ? user.skills?.split(',') : [],
         rate: user.rate || '',
