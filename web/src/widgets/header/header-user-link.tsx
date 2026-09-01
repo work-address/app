@@ -3,12 +3,7 @@ import { NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { routes } from '@/routes'
-import {
-  Button,
-  NoPremiumBadge,
-  PremiumBadge,
-  formatWalletAddress,
-} from '@/shared'
+import { NoPremiumBadge, PremiumBadge, formatWalletAddress } from '@/shared'
 
 type Props = {
   /** Brings the dismissed premium banner back. */
@@ -37,19 +32,15 @@ export const HeaderUserLink = ({
   )
 
   /**
-   * A stretched link rather than an anchor wrapping the card: the "No premium"
-   * badge is a button, and a button inside an anchor is invalid HTML with
-   * broken keyboard navigation. The link covers the card through a pseudo
-   * element instead, and the badge sits above it.
+   * A stretched link rather than an anchor wrapping the card, and a plain
+   * shell rather than a Button: the "No premium" badge is a button, and
+   * nesting it in either one is invalid HTML with broken keyboard navigation.
+   * The link covers the card as a sibling instead, and the badge sits above
+   * it.
    */
   return (
     <Root data-stretch={stretch || undefined}>
-      <ProfileButton
-        data-profile-card
-        variant="ghost"
-        color="neutral"
-        stretch={stretch}
-      >
+      <ProfileCard data-stretch={stretch || undefined}>
         <UserBox>
           <UserAvatar role="img" aria-label={userAlt}>
             <QRCodeSVG
@@ -75,7 +66,7 @@ export const HeaderUserLink = ({
             </UserNameRow>
           </UserText>
         </UserBox>
-      </ProfileButton>
+      </ProfileCard>
       <StretchedLink
         to={routes.profile.build({
           walletAddress: user?.friendlyWalletAddress ?? '',
@@ -98,14 +89,9 @@ const Root = styled.div`
   }
 
   /*
-   * The surface lives here rather than on the button, for two reasons.
-   *
-   * The stretched link covers the button as a sibling, so the pointer never
-   * lands on the button and its own :hover cannot fire.
-   *
-   * And Button sets its background from a data-color plus data-variant
-   * selector, specificity (0,3,0), which outranks anything a styled(Button)
-   * wrapper declares at (0,1,0) - an override there is silently ignored.
+   * The surface lives here rather than on the card: the stretched link covers
+   * the card as a sibling, so the pointer never lands on the card and a
+   * :hover there cannot fire.
    */
   &:hover {
     background: var(--ds-neutral-alpha-3);
@@ -131,11 +117,29 @@ const StretchedLink = styled(NavLink)`
   }
 `
 
-const ProfileButton = styled(Button)`
-  padding-inline-start: 1px;
-  /* Stays transparent: Root paints the surface, so the two cannot disagree. */
-  border-color: transparent;
-  padding-inline-end: 6px;
+/**
+ * The card was a ghost Button purely for its metrics - nothing ever pressed
+ * it, and a <button> here wrapped the badge's own button. Those metrics are
+ * inlined instead, including the transparent border, which held 1px of the
+ * card's height and width.
+ */
+const ProfileCard = styled.div`
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  flex-shrink: 0;
+  min-height: 32px;
+  padding: 0 6px 0 1px;
+  gap: 8px;
+  border: 1px solid transparent;
+  font-size: 14px;
+  line-height: 1;
+  white-space: nowrap;
+  color: var(--ds-neutral-11);
+
+  &[data-stretch] {
+    width: 100%;
+  }
 `
 
 const UserBox = styled.div`
