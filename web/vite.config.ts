@@ -92,6 +92,17 @@ export default defineConfig(({ command, mode }) => {
       projects: [
         {
           extends: true,
+          test: {
+            name: 'unit',
+            // model/ code is framework-free by rule, so it needs no DOM and no
+            // browser - keeping it a separate project means `--project unit`
+            // runs without playwright installed.
+            environment: 'node',
+            include: ['src/**/*.test.{ts,tsx}'],
+          },
+        },
+        {
+          extends: true,
           plugins: [
             // The plugin will run tests for the stories defined in your Storybook config
             // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest

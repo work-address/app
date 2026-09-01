@@ -1,5 +1,13 @@
 export { getTimeNavigationState, getTimeSiblingId } from './get-time-sibling-id'
 export {
+  getTimeActivityPercent,
+  getTimeActivityTone,
+  getTimeDayKey,
+  getTimeSlotMinutes,
+  groupTimeByDay,
+  type TimeDayGroup,
+} from './time-grid'
+export {
   $timeDialogNavigation,
   timeDialogNextRequested,
   timeDialogPrevRequested,
@@ -28,4 +36,11 @@ export {
   timeSelectionChanged,
   timeSelectionCleared,
 } from './time-table.model'
-export type { TimeFormFilters, TimePaymentStatus, TimeRow } from './types'
+export { $timeView, timeViewChanged } from './time-view.model'
+export type {
+  TimeActivityTone,
+  TimeFormFilters,
+  TimePaymentStatus,
+  TimeRow,
+  TimeView,
+} from './types'

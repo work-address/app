@@ -1,34 +1,16 @@
-import { TrashIcon } from '@radix-ui/react-icons'
-import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { useMemo } from 'react'
+import { useCallback, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
-  $isTimeBulkPending,
-  $isTimeDialogOpen,
-  $selectedTimeCount,
-  $selectedTimeEntry,
-  $selectedTimeIds,
-  $timeDialogNavigation,
-  $timeFiltersOpen,
   $timeSelection,
-  timeBulkDeleteRequested,
-  timeBulkPaidStatusRequested,
-  timeDialogNextRequested,
-  timeDialogOpenChanged,
-  timeDialogPrevRequested,
-  timeFiltersOpenChanged,
+  getTimeDayKey,
+  groupTimeByDay,
   timeRowClicked,
   timeSelectionChanged,
-  timeSelectionCleared,
 } from '../../model'
-import { TimeDialog } from '../time-dialog/time-dialog'
-import { TimeFilters } from '../time-filters/time-filters'
-import { TimeMobileFilters } from '../time-filters/time-mobile-filters'
+import { TimeDayHeading } from '../common'
 
-import { TimeContext } from './time-context'
-import { TimeMobileBulkActions } from './time-mobile-bulk-actions'
 import { TimeTableCell } from './time-table-cell'
 
 import {
@@ -40,123 +22,84 @@ import {
   loadMoreTime,
   type Time,
   resetTimeSort,
-  TimeEmptyState,
 } from '@/entities/time'
-import { invoiceSelectedTimeMutation } from '@/features/invoice'
-import {
-  Button,
-  type DataTableConfig,
-  DataTable,
-  useBreakpoint,
-  ListPageLayout as S,
-  showToast,
-  Tooltip,
-} from '@/shared'
+import { type DataTableConfig, DataTable } from '@/shared'
 
+const DATE_COLUMN_WIDTH = 200
+const COLUMN_WIDTH = 120
+
+/** The list presentation of the worklogs feed. */
 export const TimeTable = () => {
-  const { t, i18n } = useTranslation()
-
-  const isMobile = useBreakpoint('isMobile')
-  const isDesktop = useBreakpoint('isDesktop')
+  const { t } = useTranslation()
 
   const {
-    timeRows,
-    timeLoading,
-    isTimeFiltering,
-    timeSort,
-    resetTimeSortEvent,
+    entries,
+    loading,
+    isFiltering,
+    sort,
+    resetSort,
     loadMore,
-    isLoadingMoreTime,
-    filtersOpen,
-    setFiltersOpen,
+    isLoadingMore,
     selection,
     changeSelection,
-    clearSelection,
-    invoiceSelected,
-    invoicing,
-    selectedTimeIds,
-    selectedTimeCount,
-    selectedTimeEntry,
-    isTimeDialogOpen,
-    setDialogOpen,
     rowClicked,
-    isBulkPending,
-    requestBulkDelete,
-    requestBulkPaidStatus,
-    navigation,
-    goToPrev,
-    goToNext,
   } = useUnit({
-    timeRows: $allTime,
-    timeLoading: $timeLoading,
-    isTimeFiltering: $isTimeFiltering,
-    timeSort: $timeSort,
-    resetTimeSortEvent: resetTimeSort,
+    entries: $allTime,
+    loading: $timeLoading,
+    isFiltering: $isTimeFiltering,
+    sort: $timeSort,
+    resetSort: resetTimeSort,
     loadMore: loadMoreTime,
-    isLoadingMoreTime: $isLoadingMoreTime,
-    filtersOpen: $timeFiltersOpen,
-    setFiltersOpen: timeFiltersOpenChanged,
+    isLoadingMore: $isLoadingMoreTime,
     selection: $timeSelection,
     changeSelection: timeSelectionChanged,
-    clearSelection: timeSelectionCleared,
-    invoiceSelected: invoiceSelectedTimeMutation.start,
-    invoicing: invoiceSelectedTimeMutation.$pending,
-    selectedTimeIds: $selectedTimeIds,
-    selectedTimeCount: $selectedTimeCount,
-    selectedTimeEntry: $selectedTimeEntry,
-    isTimeDialogOpen: $isTimeDialogOpen,
-    setDialogOpen: timeDialogOpenChanged,
     rowClicked: timeRowClicked,
-    isBulkPending: $isTimeBulkPending,
-    requestBulkDelete: timeBulkDeleteRequested,
-    requestBulkPaidStatus: timeBulkPaidStatusRequested,
-    navigation: $timeDialogNavigation,
-    goToPrev: timeDialogPrevRequested,
-    goToNext: timeDialogNextRequested,
   })
 
-  const hasTimeEntries = timeLoading || timeRows.length > 0
-
   /**
-   * The project the current selection belongs to, or null when it spans more
-   * than one.
-   *
-   * An invoice is per-project by construction - it carries one rate and one
-   * counterparty - so a mixed selection has no single answer and the action is
-   * refused rather than silently splitting into several invoices.
+   * Day headings only make sense while the feed is in date order - sorted by
+   * keyboard keys, say, days interleave and every row would start its own
+   * heading. The grid has no such fallback because grouping is its structure.
    */
-  const selectedProjectId = useMemo(() => {
-    const selected = new Set(selectedTimeIds)
-    const projectIds = new Set(
-      timeRows
-        .filter((row) => row.id && selected.has(row.id))
-        .map((row) => row.project?.id)
-        .filter((id): id is string => Boolean(id)),
-    )
+  const dayGroups = useMemo(
+    () => (sort.fromAt ? groupTimeByDay(entries) : []),
+    [entries, sort.fromAt],
+  )
 
-    return projectIds.size === 1 ? [...projectIds][0] : null
-  }, [timeRows, selectedTimeIds])
+  const groupsByDay = useMemo(
+    () => new Map(dayGroups.map((group) => [group.day, group])),
+    [dayGroups],
+  )
+
+  const renderGroupHeader = useCallback(
+    (day: string) => {
+      const group = groupsByDay.get(day)
+
+      return group ? <TimeDayHeading group={group} /> : null
+    },
+    [groupsByDay],
+  )
 
   const config = useMemo(
     (): DataTableConfig<Time> => [
       {
         dataKey: 'fromAt',
         headerText: t('dashboard.worklogsTable.head.date'),
-        width: 200,
+        width: DATE_COLUMN_WIDTH,
         sortable: true,
       },
       {
         customKey: 'projectName',
         getValue: (row: Time) => row.project?.title ?? '',
         headerText: t('dashboard.worklogsTable.head.projectName'),
-        width: 120,
+        width: COLUMN_WIDTH,
         sortable: true,
       },
       {
         customKey: 'paidStatus',
         headerText: t('dashboard.worklogsTable.head.paymentStatus'),
         description: t('common.metricDesc.paymentStatus'),
-        width: 120,
+        width: COLUMN_WIDTH,
         sortable: true,
       },
       {
@@ -164,13 +107,13 @@ export const TimeTable = () => {
         headerText: t('dashboard.worklogsTable.head.timeActive'),
         description: t('common.metricDesc.timeActive'),
         horizontalAlign: 'center',
-        width: 120,
+        width: COLUMN_WIDTH,
         sortable: true,
       },
       {
         dataKey: 'note',
         headerText: t('dashboard.worklogsTable.head.note'),
-        width: 120,
+        width: COLUMN_WIDTH,
         sortable: true,
         truncate: true,
       },
@@ -178,187 +121,54 @@ export const TimeTable = () => {
         dataKey: 'screenshot',
         headerText: t('dashboard.worklogsTable.head.screenshot'),
         description: t('common.metricDesc.screenshot'),
-        width: 120,
+        width: COLUMN_WIDTH,
         sortable: true,
       },
       {
         dataKey: 'keyboardKeys',
         headerText: t('dashboard.worklogsTable.head.keyboard'),
         description: t('common.metricDesc.keyboard'),
-        width: 120,
+        width: COLUMN_WIDTH,
         sortable: true,
       },
       {
         dataKey: 'mouseKeys',
         headerText: t('dashboard.worklogsTable.head.mouse'),
         description: t('common.metricDesc.mouse'),
-        width: 120,
+        width: COLUMN_WIDTH,
         sortable: true,
       },
       {
         dataKey: 'mouseDistance',
         headerText: t('dashboard.worklogsTable.head.mouseDistance'),
         description: t('common.metricDesc.mouseDistance'),
-        width: 120,
+        width: COLUMN_WIDTH,
         sortable: true,
       },
     ],
     [t],
   )
 
-  const timeContextValue = useMemo(
-    () => ({
-      dateFormatter: new Intl.DateTimeFormat(i18n.language, {
-        day: 'numeric',
-        month: 'numeric',
-        year: 'numeric',
-      }),
-      timeFormatter: new Intl.DateTimeFormat(i18n.language, {
-        hour: 'numeric',
-        minute: '2-digit',
-      }),
-      // Tracked distance arrives with full float precision, which is noise at
-      // a glance - round it off and group the digits.
-      numberFormatter: new Intl.NumberFormat(i18n.language, {
-        maximumFractionDigits: 0,
-      }),
-      t,
-    }),
-    [i18n.language, t],
-  )
   return (
-    <S.Section>
-      <S.SectionTitleRow>
-        <S.SectionTitle>{t('dashboard.page.worklogs.title')}</S.SectionTitle>
-        {isMobile && (
-          <TimeMobileFilters
-            filtersOpen={filtersOpen}
-            onFiltersOpenChange={setFiltersOpen}
-          />
-        )}
-      </S.SectionTitleRow>
-      {isDesktop && <TimeFilters />}
-      {hasTimeEntries ? (
-        <TimeContext.Provider value={timeContextValue}>
-          {isDesktop && selectedTimeCount > 0 && (
-            <Flex gap="2" align="center" mb="3">
-              <S.Label>
-                {t('dashboard.worklogsTable.bulk.selectedCount', {
-                  count: selectedTimeCount,
-                })}
-              </S.Label>
-              <Button
-                size="s"
-                type="button"
-                disabled={isBulkPending}
-                onClick={() => requestBulkPaidStatus(true)}
-              >
-                {t('dashboard.worklogsTable.paymentStatus.paid')}
-              </Button>
-              <Button
-                color="neutral"
-                variant="soft"
-                size="s"
-                type="button"
-                disabled={isBulkPending}
-                onClick={() => requestBulkPaidStatus(false)}
-              >
-                {t('dashboard.worklogsTable.paymentStatus.unpaid')}
-              </Button>
-              <Tooltip content={t('dashboard.worklogsTable.bulk.invoiceHint')}>
-                <span>
-                  <Button
-                    variant="outline"
-                    size="s"
-                    type="button"
-                    disabled={isBulkPending || invoicing}
-                    loading={invoicing}
-                    onClick={() => {
-                      if (!selectedProjectId) {
-                        showToast('info', {
-                          message: t(
-                            'dashboard.worklogsTable.bulk.invoiceOneProject',
-                          ),
-                          position: 'top-center',
-                        })
-
-                        return
-                      }
-
-                      invoiceSelected({
-                        projectId: selectedProjectId,
-                        timeIds: selectedTimeIds,
-                      })
-                    }}
-                  >
-                    {t('dashboard.worklogsTable.bulk.invoice')}
-                  </Button>
-                </span>
-              </Tooltip>
-              <Button
-                color="danger"
-                variant="outline"
-                size="s"
-                type="button"
-                iconLeft={<TrashIcon width={12} height={12} />}
-                disabled={isBulkPending}
-                onClick={() => requestBulkDelete(selectedTimeIds)}
-              >
-                {t('dashboard.worklogsTable.bulk.delete')}
-              </Button>
-              <Button
-                variant="outline"
-                color="neutral"
-                size="s"
-                type="button"
-                disabled={isBulkPending}
-                onClick={() => clearSelection()}
-              >
-                {t('dashboard.worklogsTable.bulk.clearSelection')}
-              </Button>
-            </Flex>
-          )}
-          {isMobile && selectedTimeCount > 0 && (
-            <TimeMobileBulkActions
-              selectedIds={selectedTimeIds}
-              isPending={isBulkPending}
-              onDelete={requestBulkDelete}
-              onClearSelection={clearSelection}
-            />
-          )}
-          <DataTable<Time>
-            nowrap
-            data={timeRows}
-            config={config}
-            getRowId={(row) => row.id ?? ''}
-            BodyComponent={TimeTableCell}
-            allowSelection
-            selectedIds={selection}
-            onSelectedIdsChange={changeSelection}
-            loading={timeLoading}
-            isFiltering={isTimeFiltering}
-            sort={timeSort}
-            onSortChange={resetTimeSortEvent}
-            onRowClick={rowClicked}
-            onReachEnd={loadMore}
-            isLoadingMore={isLoadingMoreTime}
-            skeletonHeight="40px"
-          />
-          <TimeDialog
-            open={isTimeDialogOpen}
-            row={selectedTimeEntry}
-            onOpenChange={setDialogOpen}
-            hasPrev={navigation.hasPrev}
-            hasNext={navigation.hasNext}
-            onPrev={goToPrev}
-            onNext={goToNext}
-          />
-        </TimeContext.Provider>
-      ) : (
-        <Flex pt="7">
-          <TimeEmptyState style={{ height: 560 }} />
-        </Flex>
-      )}
-    </S.Section>
+    <DataTable<Time>
+      nowrap
+      data={entries}
+      config={config}
+      getRowId={(row) => row.id ?? ''}
+      BodyComponent={TimeTableCell}
+      allowSelection
+      selectedIds={selection}
+      onSelectedIdsChange={changeSelection}
+      loading={loading}
+      isFiltering={isFiltering}
+      sort={sort}
+      onSortChange={resetSort}
+      onRowClick={rowClicked}
+      onReachEnd={loadMore}
+      isLoadingMore={isLoadingMore}
+      skeletonHeight="40px"
+      getGroupKey={dayGroups.length > 0 ? getTimeDayKey : undefined}
+      renderGroupHeader={renderGroupHeader}
+    />
   )
 }

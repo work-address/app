@@ -3,7 +3,7 @@ import { useUnit } from 'effector-react'
 import { memo, useContext } from 'react'
 import styled from 'styled-components'
 
-import { TimeContext } from './time-context'
+import { TimeContext } from '../time-context'
 
 import type { Time } from '@/entities/time'
 

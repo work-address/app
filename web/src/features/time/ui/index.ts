@@ -1,1 +1,1 @@
-export * from './time-table/time-table'
+export * from './time-worklogs'

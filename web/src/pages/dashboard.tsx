@@ -17,7 +17,7 @@ import {
   DashboardProjectsSearchInput,
 } from '@/features/dashboard'
 import { ProjectsCreateModal, ProjectsTable } from '@/features/projects'
-import { TimeTable } from '@/features/time'
+import { TimeWorklogs } from '@/features/time'
 import {
   PageHelmet,
   Text,
@@ -112,7 +112,7 @@ export default function DashboardPage() {
           onOpenChange={setCreateProjectOpen}
         />
         {showSkeletons ? (
-          <TimeTable />
+          <TimeWorklogs />
         ) : (
           <DashboardEmptyState
             imageSrc={DashboardEmptyStateImage}

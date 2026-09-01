@@ -24,3 +24,12 @@ export type TimeFormFilters = {
   mouseDistanceMin: string
   mouseDistanceMax: string
 }
+
+/** Which presentation the worklogs section is showing. */
+export type TimeView = 'list' | 'grid'
+
+/**
+ * How busy a tracked slot was, as a closed set so the CSS that tints the grid
+ * and the TypeScript that decides the tone cannot drift apart.
+ */
+export type TimeActivityTone = 'low' | 'medium' | 'high'

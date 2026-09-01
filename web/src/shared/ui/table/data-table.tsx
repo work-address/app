@@ -1,7 +1,8 @@
 import { Flex, Skeleton } from '@radix-ui/themes'
-import { useEffect, useMemo, useRef, type ReactNode } from 'react'
+import { Fragment, useMemo, useRef, type ReactNode } from 'react'
 import styled, { keyframes } from 'styled-components'
 
+import { useReachEnd } from '../../hooks/use-reach-end'
 import { Card } from '../card'
 import { Checkbox } from '../checkbox'
 import { Spinner } from '../spinner-ring'
@@ -20,7 +21,6 @@ import { MOCK_DATA_LENGTH } from './utils'
 import type { DataProps, DataTableConfig, AnyRecord } from './types'
 
 const DEFAULT_SKELETON_HEIGHT = '30px'
-const REACH_END_THRESHOLD_PX = 120
 
 export type DataTableProps<T extends AnyRecord> = {
   nowrap?: boolean
@@ -38,6 +38,15 @@ export type DataTableProps<T extends AnyRecord> = {
   onRowClick?: (row: T, action: 'Edit' | 'Delete') => void
   onReachEnd?: () => void
   isLoadingMore?: boolean
+  /**
+   * Draws a heading row wherever this key changes between neighbouring rows.
+   *
+   * Grouping stays inside the one table rather than becoming a table per
+   * group, so every group keeps the same column widths and the header stays
+   * sticky over all of them. Needs `renderGroupHeader` to have any effect.
+   */
+  getGroupKey?: (row: T) => string
+  renderGroupHeader?: (groupKey: string) => ReactNode
 } & DataProps<T>
 
 export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
@@ -63,15 +72,11 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
     onReachEnd,
     isLoadingMore,
     className,
+    getGroupKey,
+    renderGroupHeader,
   } = props
 
   const scrollRef = useRef<HTMLDivElement>(null)
-  const sentinelRef = useRef<HTMLDivElement>(null)
-  const onReachEndRef = useRef(onReachEnd)
-
-  useEffect(() => {
-    onReachEndRef.current = onReachEnd
-  })
 
   const hasReachEndHandler = Boolean(onReachEnd)
 
@@ -79,38 +84,16 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
    * Whether the table scrolls its own rows rather than growing with them.
    *
    * Only a height cap makes the body taller than the card, so without one the
-   * card grows with every appended page and the page is what scrolls.
+   * card grows with every appended page and the page is what scrolls - which
+   * is also the scrollport the sentinel then has to be watched against.
    */
   const isSelfScrolling = Boolean(height || maxHeight)
 
-  useEffect(() => {
-    const sentinel = sentinelRef.current
-    // A grown-to-fit table never scrolls the sentinel out of its own box, so
-    // watching it against that box would report an intersection for every
-    // appended page. The viewport is the scrollport in that case.
-    const root = isSelfScrolling ? scrollRef.current : null
-
-    if (!hasReachEndHandler || !sentinel || (isSelfScrolling && !root)) {
-      return
-    }
-
-    const observer = new IntersectionObserver(
-      (entries) => {
-        if (entries.some((entry) => entry.isIntersecting)) {
-          onReachEndRef.current?.()
-        }
-      },
-      { root, rootMargin: `0px 0px ${REACH_END_THRESHOLD_PX}px 0px` },
-    )
-
-    observer.observe(sentinel)
-
-    return () => observer.disconnect()
-    // Re-observing after each appended page re-reports the current
-    // intersection, so a page shorter than the root margin still asks for the
-    // next one. Deliberately not keyed on the loading flag: a failed request
-    // must not re-trigger by itself, the user retries by scrolling.
-  }, [hasReachEndHandler, isSelfScrolling, data.length])
+  const sentinelRef = useReachEnd({
+    onReachEnd,
+    rootRef: isSelfScrolling ? scrollRef : undefined,
+    resetKey: data.length,
+  })
 
   const selectedIds = 'selectedIds' in props ? props.selectedIds : undefined
 
@@ -212,70 +195,87 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
           </THead>
           <TBody>
             {isDataExists &&
-              data.map((row) => {
+              data.map((row, rowIndex) => {
                 const rowId = getRowId(row)
 
+                const groupKey = getGroupKey?.(row)
+                const startsGroup =
+                  groupKey != null &&
+                  Boolean(renderGroupHeader) &&
+                  (rowIndex === 0 ||
+                    getGroupKey?.(data[rowIndex - 1]) !== groupKey)
+
                 return (
-                  <Tr
-                    key={rowId}
-                    data-clickable={Boolean(onRowClick) || undefined}
-                    onClick={
-                      onRowClick ? () => onRowClick(row, 'Edit') : undefined
-                    }
-                  >
-                    {config.map((columnConfig, index) => {
-                      const selected = selectedIds?.[rowId] ?? false
+                  <Fragment key={rowId}>
+                    {startsGroup && (
+                      <GroupTr>
+                        <GroupTd colSpan={config.length}>
+                          {renderGroupHeader?.(groupKey)}
+                        </GroupTd>
+                      </GroupTr>
+                    )}
+                    <Tr
+                      data-clickable={Boolean(onRowClick) || undefined}
+                      onClick={
+                        onRowClick ? () => onRowClick(row, 'Edit') : undefined
+                      }
+                    >
+                      {config.map((columnConfig, index) => {
+                        const selected = selectedIds?.[rowId] ?? false
 
-                      const key =
-                        'dataKey' in columnConfig
-                          ? columnConfig.dataKey
-                          : columnConfig.customKey
+                        const key =
+                          'dataKey' in columnConfig
+                            ? columnConfig.dataKey
+                            : columnConfig.customKey
 
-                      return (
-                        <Td
-                          key={`${key.toString()}-${rowId}`}
-                          data-vertical-align={verticalAlign}
-                          $width={columnConfig.width}
-                          $truncate={columnConfig.truncate}
-                          data-sticky={columnConfig.sticky}
-                        >
-                          <Flex
-                            gap={'3'}
-                            align={'center'}
-                            justify={columnConfig.horizontalAlign}
+                        return (
+                          <Td
+                            key={`${key.toString()}-${rowId}`}
+                            data-vertical-align={verticalAlign}
+                            $width={columnConfig.width}
+                            $truncate={columnConfig.truncate}
+                            data-sticky={columnConfig.sticky}
                           >
-                            {allowSelection && index === 0 && (
-                              <div onClick={(event) => event.stopPropagation()}>
-                                <Checkbox
-                                  checked={selected}
-                                  onCheckedChange={() =>
-                                    rowId &&
-                                    handleSelectedChange(rowId.toString())
-                                  }
-                                />
-                              </div>
-                            )}
-                            <BodyComponent
-                              columnConfig={columnConfig}
-                              data={row}
-                              DefaultBodyComponent={DesktopBodyCellComponent}
-                              selected={selected}
-                              dataKey={
-                                'dataKey' in columnConfig
-                                  ? columnConfig.dataKey
-                                  : undefined
-                              }
-                              customKey={
-                                'customKey' in columnConfig
-                                  ? columnConfig.customKey
-                                  : undefined
-                              }
-                            />
-                          </Flex>
-                        </Td>
-                      )
-                    })}
-                  </Tr>
+                            <Flex
+                              gap={'3'}
+                              align={'center'}
+                              justify={columnConfig.horizontalAlign}
+                            >
+                              {allowSelection && index === 0 && (
+                                <div
+                                  onClick={(event) => event.stopPropagation()}
+                                >
+                                  <Checkbox
+                                    checked={selected}
+                                    onCheckedChange={() =>
+                                      rowId &&
+                                      handleSelectedChange(rowId.toString())
+                                    }
+                                  />
+                                </div>
+                              )}
+                              <BodyComponent
+                                columnConfig={columnConfig}
+                                data={row}
+                                DefaultBodyComponent={DesktopBodyCellComponent}
+                                selected={selected}
+                                dataKey={
+                                  'dataKey' in columnConfig
+                                    ? columnConfig.dataKey
+                                    : undefined
+                                }
+                                customKey={
+                                  'customKey' in columnConfig
+                                    ? columnConfig.customKey
+                                    : undefined
+                                }
+                              />
+                            </Flex>
+                          </Td>
+                        )
+                      })}
+                    </Tr>
+                  </Fragment>
                 )
               })}
             {!isDataExists &&
@@ -478,6 +478,18 @@ const Tr = styled.tr`
 
   &[data-clickable] {
     cursor: pointer;
+  }
+`
+
+const GroupTr = styled.tr``
+
+const GroupTd = styled.td`
+  padding: var(--space-5) var(--space-3) var(--space-2);
+  border-bottom: 1px solid var(--ds-neutral-alpha-6);
+  background: var(--white);
+
+  ${GroupTr}:first-child & {
+    padding-top: var(--space-3);
   }
 `
 
