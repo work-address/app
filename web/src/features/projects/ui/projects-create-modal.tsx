@@ -156,17 +156,11 @@ export const ProjectsCreateModal = ({
             <Button
               color="neutral"
               variant="soft"
-              size="l"
               onClick={() => onOpenChange(false)}
             >
               {t('dashboard.projectsTable.confirmDelete.cancel')}
             </Button>
-            <Button
-              size="l"
-              type="submit"
-              form="create-project-form"
-              loading={pending}
-            >
+            <Button type="submit" form="create-project-form" loading={pending}>
               {t('dashboard.page.createProject')}
             </Button>
           </Flex>

@@ -33,7 +33,7 @@ export const TimeDialogFooter = ({
   return (
     <Root>
       <DangerActions>
-        <Button color="danger" size="l" disabled={isPending} onClick={onDelete}>
+        <Button color="danger" disabled={isPending} onClick={onDelete}>
           {t('dashboard.worklogsTable.dialog.deleteEntry')}
         </Button>
         {hasScreenshot && (
@@ -41,12 +41,11 @@ export const TimeDialogFooter = ({
             <Button
               color="danger"
               variant="soft"
-              size="l"
               disabled={isPending}
               onClick={onRemoveScreenshot}
               aria-label={t('dashboard.worklogsTable.removeScreenshot')}
             >
-              <ScreenshotsIcon width={20} height={20} />
+              <ScreenshotsIcon width={16} height={16} />
             </Button>
           </Tooltip>
         )}
@@ -55,12 +54,11 @@ export const TimeDialogFooter = ({
             <Button
               color="danger"
               variant="soft"
-              size="l"
               disabled={isPending}
               onClick={onRemoveProcesses}
               aria-label={t('dashboard.worklogsTable.removeProcesses')}
             >
-              <ProcessesIcon width={20} height={20} />
+              <ProcessesIcon width={16} height={16} />
             </Button>
           </Tooltip>
         )}
@@ -69,14 +67,12 @@ export const TimeDialogFooter = ({
         <Button
           color="neutral"
           variant="soft"
-          size="l"
           disabled={isPending}
           onClick={onDiscard}
         >
           {t('dashboard.worklogsTable.dialog.discard')}
         </Button>
         <Button
-          size="l"
           disabled={isPending || !canSave}
           loading={isSaving}
           onClick={onSave}

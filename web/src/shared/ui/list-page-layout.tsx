@@ -16,6 +16,8 @@ export const Content = styled.div`
   grid-template-columns: 1fr;
   gap: 16px;
   align-items: start;
+  /* Keeps the worklogs section from crowding the projects card below it. */
+  margin-bottom: 32px;
 
   ${(p) => p.theme.breakpoints.up('md')} {
     &:has(> :nth-child(2)) {

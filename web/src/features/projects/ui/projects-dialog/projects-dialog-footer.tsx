@@ -37,7 +37,6 @@ export const ProjectsDialogFooter = ({
         <Button
           color="danger"
           variant="outline"
-          size="l"
           iconLeft={<TrashIcon />}
           onClick={onDelete}
         >
@@ -45,25 +44,15 @@ export const ProjectsDialogFooter = ({
         </Button>
         <Flex gap="3">
           {mode === 'view' ? (
-            <Button
-              size="l"
-              iconLeft={<Pencil1Icon />}
-              onClick={handleEditClick}
-            >
+            <Button iconLeft={<Pencil1Icon />} onClick={handleEditClick}>
               {t('dashboard.projectsTable.drawer.edit')}
             </Button>
           ) : (
             <>
-              <Button
-                color="neutral"
-                variant="soft"
-                size="l"
-                onClick={onCancel}
-              >
+              <Button color="neutral" variant="soft" onClick={onCancel}>
                 {t('common.cancel')}
               </Button>
               <Button
-                size="l"
                 form="edit-project-form"
                 type="submit"
                 loading={isPending}
