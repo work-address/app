@@ -160,16 +160,24 @@ export const TimeTable = () => {
         sortable: true,
       },
       {
-        dataKey: 'note',
-        headerText: t('dashboard.worklogsTable.head.note'),
-        width: 120,
-        sortable: true,
-      },
-      {
         dataKey: 'minutesActive',
         headerText: t('dashboard.worklogsTable.head.timeActive'),
         description: t('common.metricDesc.timeActive'),
         horizontalAlign: 'center',
+        width: 120,
+        sortable: true,
+      },
+      {
+        dataKey: 'note',
+        headerText: t('dashboard.worklogsTable.head.note'),
+        width: 120,
+        sortable: true,
+        truncate: true,
+      },
+      {
+        dataKey: 'screenshot',
+        headerText: t('dashboard.worklogsTable.head.screenshot'),
+        description: t('common.metricDesc.screenshot'),
         width: 120,
         sortable: true,
       },
@@ -194,13 +202,6 @@ export const TimeTable = () => {
         width: 120,
         sortable: true,
       },
-      {
-        dataKey: 'screenshot',
-        headerText: t('dashboard.worklogsTable.head.screenshot'),
-        description: t('common.metricDesc.screenshot'),
-        width: 120,
-        sortable: true,
-      },
     ],
     [t],
   )
@@ -215,6 +216,11 @@ export const TimeTable = () => {
       timeFormatter: new Intl.DateTimeFormat(i18n.language, {
         hour: 'numeric',
         minute: '2-digit',
+      }),
+      // Tracked distance arrives with full float precision, which is noise at
+      // a glance - round it off and group the digits.
+      numberFormatter: new Intl.NumberFormat(i18n.language, {
+        maximumFractionDigits: 0,
       }),
       t,
     }),
@@ -329,7 +335,6 @@ export const TimeTable = () => {
             allowSelection
             selectedIds={selection}
             onSelectedIdsChange={changeSelection}
-            height={'70vh'}
             loading={timeLoading}
             isFiltering={isTimeFiltering}
             sort={timeSort}

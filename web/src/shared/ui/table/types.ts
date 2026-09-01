@@ -21,6 +21,14 @@ export type DataTableColumnConfigRecord<T extends AnyRecord> = {
   horizontalAlign?: 'start' | 'center' | 'end'
   sticky?: 'right' | 'left'
   sortable?: boolean
+  /**
+   * Holds the column to its `width` instead of letting long values widen it.
+   *
+   * The table sizes itself from its content, so one long cell otherwise
+   * stretches its column - and the whole table - past everything else. The
+   * cell renderer is what clips the overflow it leaves behind.
+   */
+  truncate?: boolean
 } & CommonProps<T> &
   KeyProp<T>
 

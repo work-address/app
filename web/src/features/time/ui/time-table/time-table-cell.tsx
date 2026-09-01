@@ -18,7 +18,8 @@ import {
 } from '@/shared'
 
 export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
-  const { dateFormatter, timeFormatter, t } = useContext(TimeContext)
+  const { dateFormatter, timeFormatter, numberFormatter, t } =
+    useContext(TimeContext)
 
   const { setPaidStatus, setPaidStatusStatus } = useUnit({
     setPaidStatus: setTimePaidStatusMutation.start,
@@ -27,10 +28,23 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
 
   switch (props.dataKey) {
     case 'note': {
+      const note = props.data.note
+
+      if (!note) {
+        return null
+      }
+
       return (
-        <Text color={'gray'} size="2">
-          {props.data.note}
-        </Text>
+        <Tooltip content={note}>
+          {/* Radix needs a ref-able element to anchor the tooltip, and the
+              ellipsis has to sit on whatever directly holds the text - an
+              inner atomic inline would be clipped without the dots. */}
+          <NoteAnchor>
+            <NoteText color={'gray'} size="2">
+              {note}
+            </NoteText>
+          </NoteAnchor>
+        </Tooltip>
       )
     }
 
@@ -57,6 +71,12 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
             {dateFormatter.format(new Date(props.data.fromAt))}
           </Text>
         </Flex>
+      )
+    }
+
+    case 'mouseDistance': {
+      return (
+        <Text size="2">{numberFormatter.format(props.data.mouseDistance)}</Text>
       )
     }
 
@@ -110,6 +130,21 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
 
 const Screenshot = styled.img`
   max-width: 64px;
+`
+
+const NoteAnchor = styled.span`
+  display: block;
+  /* Flex items refuse to shrink past their content without this, which would
+     hand the note back the width the truncated column just took away. */
+  min-width: 0;
+  max-width: 100%;
+`
+
+const NoteText = styled(Text)`
+  display: block;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `
 
 const PaidStatusBadge = styled(Badge)`

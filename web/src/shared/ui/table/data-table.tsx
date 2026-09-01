@@ -75,11 +75,22 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
 
   const hasReachEndHandler = Boolean(onReachEnd)
 
-  useEffect(() => {
-    const root = scrollRef.current
-    const sentinel = sentinelRef.current
+  /**
+   * Whether the table scrolls its own rows rather than growing with them.
+   *
+   * Only a height cap makes the body taller than the card, so without one the
+   * card grows with every appended page and the page is what scrolls.
+   */
+  const isSelfScrolling = Boolean(height || maxHeight)
 
-    if (!hasReachEndHandler || !root || !sentinel) {
+  useEffect(() => {
+    const sentinel = sentinelRef.current
+    // A grown-to-fit table never scrolls the sentinel out of its own box, so
+    // watching it against that box would report an intersection for every
+    // appended page. The viewport is the scrollport in that case.
+    const root = isSelfScrolling ? scrollRef.current : null
+
+    if (!hasReachEndHandler || !sentinel || (isSelfScrolling && !root)) {
       return
     }
 
@@ -99,7 +110,7 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
     // intersection, so a page shorter than the root margin still asks for the
     // next one. Deliberately not keyed on the loading flag: a failed request
     // must not re-trigger by itself, the user retries by scrolling.
-  }, [hasReachEndHandler, data.length])
+  }, [hasReachEndHandler, isSelfScrolling, data.length])
 
   const selectedIds = 'selectedIds' in props ? props.selectedIds : undefined
 
@@ -162,6 +173,7 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                   <HeaderTd
                     key={key.toString()}
                     $width={configEntry.width}
+                    $truncate={configEntry.truncate}
                     data-sticky={configEntry.sticky}
                   >
                     <Flex
@@ -224,6 +236,7 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                           key={`${key.toString()}-${rowId}`}
                           data-vertical-align={verticalAlign}
                           $width={columnConfig.width}
+                          $truncate={columnConfig.truncate}
                           data-sticky={columnConfig.sticky}
                         >
                           <Flex
@@ -381,7 +394,7 @@ const Root = styled.table`
   }
 `
 
-const HeaderTd = styled.td<{ $width?: number }>`
+const HeaderTd = styled.td<{ $width?: number; $truncate?: boolean }>`
   background: var(--ds-neutral-2);
   padding: 12px var(--space-3);
   font-size: var(--font-size-2);
@@ -392,6 +405,7 @@ const HeaderTd = styled.td<{ $width?: number }>`
   z-index: 1;
 
   ${(p) => p.$width && `width: ${p.$width}px; min-width: ${p.$width}px;`}
+  ${(p) => p.$truncate && p.$width && `max-width: ${p.$width}px;`}
 
   &[data-sticky='left'] {
     left: 0;
@@ -416,10 +430,11 @@ const THead = styled.thead`
 
 const TBody = styled.tbody``
 
-const Td = styled.td<{ $width?: number }>`
+const Td = styled.td<{ $width?: number; $truncate?: boolean }>`
   padding: var(--space-4) var(--space-3);
 
   ${(p) => p.$width && `width: ${p.$width}px; min-width: ${p.$width}px;`}
+  ${(p) => p.$truncate && p.$width && `max-width: ${p.$width}px;`}
 
   &[data-vertical-align='top'] {
     vertical-align: top;
