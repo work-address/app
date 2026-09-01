@@ -73,7 +73,9 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
 
         return (
           <PaidStatusBadge
-            color={props.data.isPaid ? 'green' : 'red'}
+            // Gray rather than red: unpaid is the ordinary state of freshly
+            // tracked time, not a fault to flag.
+            color={props.data.isPaid ? 'green' : 'gray'}
             onClick={(event) => {
               // Не даём клику по бейджу открыть модалку строки
               event.stopPropagation()

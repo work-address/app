@@ -54,9 +54,9 @@ const Root = styled.section`
 
 const Hero = styled.div`
   width: 100%;
-  max-width: 800px;
+  max-width: 700px;
   border-radius: 12px;
-  overflow: hidden;
+  /* overflow: hidden; */
   background: var(--c-rgba-0-0-51-0_02);
 `
 

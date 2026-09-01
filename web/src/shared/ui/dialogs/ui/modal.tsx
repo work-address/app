@@ -62,7 +62,7 @@ const Root = styled(Dialog.Content)<{ $width?: string; $padding?: string }>`
   ${(p) => p.$padding && `padding: ${p.$padding};`}
 
   ${(p) => p.theme.breakpoints.up('md')} {
-    padding: 40px;
+    padding: 20px;
   }
 
   ${(p) =>
