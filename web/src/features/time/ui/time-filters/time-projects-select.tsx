@@ -41,11 +41,6 @@ export const TimeProjectsSelect = () => {
       }}
       allSelectedText={t('dashboard.page.filters.allWorklogs')}
       placeholder={'Select projects'}
-      inputProps={{
-        gap: '9px',
-        textSize: '3',
-        textWeight: 'regular',
-      }}
     />
   )
 }

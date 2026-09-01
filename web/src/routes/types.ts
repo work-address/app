@@ -1,4 +1,6 @@
 /* eslint-disable @typescript-eslint/no-explicit-any */
+import type { IconProps } from '@radix-ui/react-icons/dist/types'
+import type { ComponentType } from 'react'
 
 export type BuildRoute<Params extends any = void> = (params: Params) => string
 
@@ -24,15 +26,15 @@ export type Route<
     schema: Schema
     showInMenu?: boolean
     disabled?: boolean
-    desktopIcon?: string
-    mobileIcon?: string
+    /** Drawn beside the label in both menus, so a link reads the same everywhere. */
+    icon?: ComponentType<IconProps>
     translateKeyDesktop?: string
     translateKeyMobile?: string
     text?: string
     desktopOrder?: number
     mobileOrder?: number
     target?: '_blank'
-    desktopRender?: 'textWithIcon' | 'text' | 'icon'
+    desktopRender?: 'text' | 'icon'
     build: BuildRoute<BuildArgs>
   } & Optional<'children', Children>
 }

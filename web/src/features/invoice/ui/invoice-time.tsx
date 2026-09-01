@@ -14,6 +14,7 @@ import type { DesktopBodyCellRenderProps, DataTableConfig } from '@/shared'
 
 import {
   DataTable,
+  formatCount,
   formatDurationFromMinutes,
   getTimeActiveColor,
   Text,
@@ -56,19 +57,26 @@ export const InvoiceTime = () => {
       },
       {
         customKey: 'timeActive',
+        width: 120,
         headerText: t('dashboard.worklogsTable.head.timeActive'),
       },
       {
         dataKey: 'keyboardKeys',
+        width: 110,
         headerText: t('dashboard.worklogsTable.head.keyboard'),
+        getValue: (row) => formatCount(row.keyboardKeys),
       },
       {
         dataKey: 'mouseKeys',
+        width: 110,
         headerText: t('dashboard.worklogsTable.head.mouse'),
+        getValue: (row) => formatCount(row.mouseKeys),
       },
       {
         dataKey: 'mouseDistance',
+        width: 140,
         headerText: t('dashboard.worklogsTable.head.mouseDistance'),
+        getValue: (row) => formatCount(row.mouseDistance),
       },
     ],
     [t],
@@ -113,6 +121,12 @@ const Cell = memo((props: DesktopBodyCellRenderProps<InvoiceTimeRow>) => {
     )
   }
 
+  // Notes wrap rather than truncate: this table is the invoice's evidence and
+  // goes to paper, where a clipped note is a clipped record.
+  if (props.dataKey === 'note') {
+    return <NoteText size="2">{props.data.note}</NoteText>
+  }
+
   return (
     <Text size="2">
       <props.DefaultBodyComponent {...props} />
@@ -143,6 +157,12 @@ const CreatedAtCell = memo(
     )
   },
 )
+
+const NoteText = styled(Text)`
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
+`
 
 // Print column widths, in the same order as `tableConfig` above:
 // date | note | time | keyboard | mouse | distance

@@ -7,12 +7,16 @@ interface Options {
   when: boolean
   title?: string
   description?: string
+  confirmLabel?: string
+  cancelLabel?: string
 }
 
 export const useLeaveConfirm = ({
   when,
   title = 'Leave this page?',
   description = "It seems you didn't save the changes you've made.",
+  confirmLabel = 'Leave',
+  cancelLabel = 'Stay',
 }: Options) => {
   const blocker = useBlocker(when)
   const { confirm } = useConfirm()
@@ -26,8 +30,8 @@ export const useLeaveConfirm = ({
     void confirm({
       title,
       description,
-      confirmLabel: 'Leave',
-      cancelLabel: 'Stay',
+      confirmLabel,
+      cancelLabel,
       onConfirm: () => {
         blocker.proceed()
         blockedRef.current = false
@@ -39,5 +43,5 @@ export const useLeaveConfirm = ({
     })
 
     blockedRef.current = true
-  }, [blocker, confirm, description, title])
+  }, [blocker, confirm, description, title, confirmLabel, cancelLabel])
 }

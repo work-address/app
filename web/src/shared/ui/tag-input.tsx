@@ -382,11 +382,9 @@ const Item = styled.button`
   cursor: pointer;
   background: transparent;
 
-  &[data-active] {
-    background: var(--accent-a3);
-  }
-
+  &[data-active],
   &:hover {
-    background: var(--accent-a3);
+    background: var(--ds-accent-3);
+    color: var(--ds-accent-11);
   }
 `

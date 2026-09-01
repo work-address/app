@@ -102,7 +102,7 @@ const $pending = combine(profileQuery.$pending, $profilePending, (...args) =>
 sample({
   clock: saveProfileMutation.finished.success,
   fn: () => ({
-    type: 'info' as const,
+    type: 'success' as const,
     messageKey: 'profile.form.edit.success',
     closeButton: true,
   }),

@@ -1,3 +1,4 @@
+import { Cross1Icon, ExitIcon, HamburgerMenuIcon } from '@radix-ui/react-icons'
 import { useUnit } from 'effector-react'
 import { AnimatePresence, motion } from 'motion/react'
 import { useState, useEffect, useRef } from 'react'
@@ -5,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { Link, NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { IconImg, MobileMenuNav, mobileMenuRowStyles } from '../styled'
+import { MobileMenuNav, mobileMenuRowStyles } from '../styled'
 
 import { DesktopMenu } from './desktop-menu'
 import { HeaderUserLink } from './header-user-link'
@@ -14,16 +15,7 @@ import { MobileMenu, itemVariants } from './mobile-menu'
 import { $authenticated, $user, logout } from '@/entities/profile'
 import { showPremiumBanner } from '@/features/dashboard'
 import { routes } from '@/routes'
-import {
-  CrossIcon,
-  ExitIcon,
-  HamburgerMenuIcon,
-  Logo,
-  useBreakpoint,
-  Button,
-  navigateFx,
-  Tooltip,
-} from '@/shared'
+import { Logo, useBreakpoint, Button, navigateFx, Tooltip } from '@/shared'
 
 const menuVariants = {
   initial: { opacity: 1 },
@@ -120,7 +112,7 @@ export const Header = () => {
                   aria-label={t('header.exitHint')}
                   onClick={() => logoutEvent()}
                 >
-                  <IconImg src={ExitIcon} alt="" aria-hidden="true" />
+                  <ExitIcon width={18} height={18} aria-hidden="true" />
                 </ExitButton>
               </Tooltip>
             </>
@@ -141,17 +133,9 @@ export const Header = () => {
             onClick={() => setMobileMenuOpen((s) => !s)}
           >
             {mobileMenuOpen ? (
-              <BurgerToggleImg
-                src={CrossIcon}
-                alt={t('header.closeMenu')}
-                aria-hidden="true"
-              />
+              <Cross1Icon width={16} height={16} aria-hidden="true" />
             ) : (
-              <BurgerToggleImg
-                src={HamburgerMenuIcon}
-                alt={t('header.openMenu')}
-                aria-hidden="true"
-              />
+              <HamburgerMenuIcon width={16} height={16} aria-hidden="true" />
             )}
           </BurgerButton>
         </MobileRight>
@@ -212,7 +196,7 @@ export const Header = () => {
                       }}
                       variants={itemVariants}
                     >
-                      <IconImg src={ExitIcon} alt={t('header.exit')} />
+                      <ExitIcon width={18} height={18} aria-hidden="true" />
                       <span>{t('header.exit')}</span>
                     </MobileMenuButton>
                   )}
@@ -301,6 +285,7 @@ const BurgerButton = styled.button`
   border: 1px solid var(--c-rgba-0-8-48-0_27);
   border-radius: 6px;
   background: transparent;
+  color: var(--ds-neutral-12);
   cursor: pointer;
 
   &:hover {
@@ -311,17 +296,6 @@ const BurgerButton = styled.button`
     width: 32px;
     height: 32px;
     border-radius: 4px;
-  }
-`
-
-const BurgerToggleImg = styled.img`
-  width: 18px;
-  height: 18px;
-  display: block;
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    width: 16px;
-    height: 16px;
   }
 `
 
@@ -373,11 +347,13 @@ const ExitButton = styled.button`
   border: 0;
   border-radius: 8px;
   background: var(--ds-neutral-2);
+  color: var(--ds-neutral-11);
   cursor: pointer;
   transition: background 0.15s ease;
 
   &:hover {
     background: var(--ds-neutral-alpha-3);
+    color: var(--ds-neutral-12);
   }
 
   &:active {

@@ -1,3 +1,4 @@
+import { ArrowLeftIcon } from '@radix-ui/react-icons'
 import { Flex, IconButton, Separator, Skeleton, Text } from '@radix-ui/themes'
 import {
   Controller,
@@ -106,7 +107,7 @@ export const ProfileEditDetails = ({
                   type={'button'}
                   aria-label={t('profile.aria.back')}
                 >
-                  ←
+                  <ArrowLeftIcon width={20} height={20} />
                 </IconButton>
               </Tooltip>
             </Link>

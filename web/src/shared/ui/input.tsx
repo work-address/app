@@ -43,8 +43,12 @@ export const Input = forwardRef(
   ) => {
     const isDesktop = useBreakpoint('isDesktop')
 
+    // A label above its field sits close to it; a label beside it (the
+    // two-column profile form) needs a gutter. Stacked is the norm, so the
+    // wide gap only applies to the explicit side-by-side layout on a desktop.
+    const isStacked = columns === '1' || columns === '1fr' || Boolean(rows)
     const usingGap = label
-      ? (gap ?? (isDesktop ? 'var(--space-5)' : 'var(--space-2)'))
+      ? (gap ?? (isDesktop && !isStacked ? 'var(--space-5)' : 'var(--space-2)'))
       : '0'
 
     const errorProps: InputProps | null =

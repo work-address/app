@@ -13,7 +13,7 @@ import type { ProjectFormValues } from '../../model'
 
 import { $user } from '@/entities/profile'
 import { $rawProjects, editProjectMutation } from '@/entities/projects'
-import { Input, TextArea, type InputProps, BASE_CURRENCY } from '@/shared'
+import { Input, Text, TextArea, type InputProps, BASE_CURRENCY } from '@/shared'
 
 type ProjectsDialogFormProps = {
   projectId: string
@@ -125,8 +125,13 @@ export const ProjectsDialogForm = ({
         />
         <Input
           label={t('dashboard.projectsTable.form.rate')}
-          addonRight={BASE_CURRENCY.symbol}
+          addonLeft={
+            <Text size={'2'} color={'gray'}>
+              {BASE_CURRENCY.symbol}
+            </Text>
+          }
           id="rate"
+          inputMode="decimal"
           disabled={isPending}
           state={errors.rateHour ? 'error' : 'valid'}
           {...inputProps}

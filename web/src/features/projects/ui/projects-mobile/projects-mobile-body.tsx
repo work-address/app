@@ -6,7 +6,7 @@ import { ProjectsTableContext } from '../projects-table/projects-table-context'
 import type { ProjectWithStats } from '@/entities/projects'
 import type { MobileBodyRenderProps } from '@/shared'
 
-import { formatDurationFromMinutes, Hint, Text } from '@/shared'
+import { formatCount, formatDurationFromMinutes, Hint, Text } from '@/shared'
 
 export const ProjectsMobileBody = memo(
   (props: MobileBodyRenderProps<ProjectWithStats>) => {
@@ -32,6 +32,24 @@ export const ProjectsMobileBody = memo(
             {formatDurationFromMinutes(minutes, t)}
           </Text>
         </Grid>
+      )
+    }
+
+    if (
+      props.dataKey === 'keyboardKeys' ||
+      props.dataKey === 'mouseKeys' ||
+      props.dataKey === 'mouseDistance'
+    ) {
+      const key = props.dataKey
+
+      return (
+        <props.DefaultBodyComponent
+          {...props}
+          columnConfig={{
+            ...props.columnConfig,
+            getValue: (data) => formatCount(data[key]),
+          }}
+        />
       )
     }
 

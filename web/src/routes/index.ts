@@ -1,12 +1,12 @@
-import type { Route, IdRouteParams, NoChildRoutes, MappingRoute } from './types'
-
 import {
   DashboardIcon,
+  DownloadIcon,
+  FileTextIcon,
   PersonIcon,
-  PrintIcon,
   QuestionMarkCircledIcon,
-  TimeTrackerIcon,
-} from '@/shared/icons'
+} from '@radix-ui/react-icons'
+
+import type { Route, IdRouteParams, NoChildRoutes, MappingRoute } from './types'
 
 /* eslint-disable */
 type MainRoutes =
@@ -15,7 +15,7 @@ type MainRoutes =
   & Route<'/profile/:walletAddress', 'profile', ProfileRoutes, { walletAddress: string }>
   & Route<'https://address.work/docs', 'docs'>
   & Route<'/connect', 'connect', NoChildRoutes, { nonce?: string }>
-  & Route<'/time-tracker', 'timeTracker'>
+  & Route<'https://address.work/en/download/', 'timeTracker'>
   & Route<'/download', 'download'>
   & Route<'/invoice/:id', 'invoice', NoChildRoutes, IdRouteParams>
   & Route<'/invoice', 'invoices'>
@@ -45,7 +45,7 @@ export const routes: MainRoutes = {
     showInMenu: true,
     translateKeyDesktop: 'header.nav.dashboard',
     translateKeyMobile: 'header.nav.dashboard',
-    mobileIcon: DashboardIcon,
+    icon: DashboardIcon,
   },
 
   profile: {
@@ -55,7 +55,7 @@ export const routes: MainRoutes = {
     desktopOrder: 1,
     mobileOrder: 0,
 
-    mobileIcon: PersonIcon,
+    icon: PersonIcon,
     showInMenu: true,
     translateKeyDesktop: 'header.nav.profile',
     translateKeyMobile: 'header.nav.profile',
@@ -80,7 +80,7 @@ export const routes: MainRoutes = {
     showInMenu: true,
     translateKeyDesktop: 'header.nav.invoices',
     translateKeyMobile: 'header.nav.invoices',
-    mobileIcon: PrintIcon,
+    icon: FileTextIcon,
   },
 
   docs: {
@@ -94,17 +94,21 @@ export const routes: MainRoutes = {
     desktopOrder: 3,
     mobileOrder: 3,
 
-    mobileIcon: QuestionMarkCircledIcon,
+    icon: QuestionMarkCircledIcon,
   },
 
+  // The desktop tracker is distributed from the marketing site; there is no
+  // page for it in the app, so the menu entry leaves the app the way Help
+  // Center does.
   timeTracker: {
-    schema: '/time-tracker',
-    build: () => '/time-tracker',
+    schema: 'https://address.work/en/download/',
+    build: () => 'https://address.work/en/download/',
+    target: '_blank',
 
     mobileOrder: 4,
 
     translateKeyMobile: 'header.nav.timeTracker',
-    mobileIcon: TimeTrackerIcon,
+    icon: DownloadIcon,
   },
 
   download: {

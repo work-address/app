@@ -5,8 +5,8 @@ import { $invoice } from '../model'
 
 import {
   dateFormatter,
+  formatCount,
   formatCurrency,
-  numberFormatter,
   formatDurationFromMinutes,
 } from '@/shared'
 
@@ -72,17 +72,17 @@ export const useInvoiceInfoFields = (): InvoiceInfoFieldRow[] => {
     },
     {
       id: 'keyboard',
-      value: numberFormatter.format(report?.keyboardKeys ?? 0),
+      value: formatCount(report?.keyboardKeys),
       desc: t('common.metricDesc.keyboard'),
     },
     {
       id: 'mouse',
-      value: numberFormatter.format(report?.mouseKeys ?? 0),
+      value: formatCount(report?.mouseKeys),
       desc: t('common.metricDesc.mouse'),
     },
     {
       id: 'mouseDistance',
-      value: numberFormatter.format(report?.mouseDistance ?? 0),
+      value: formatCount(report?.mouseDistance),
       desc: t('common.metricDesc.mouseDistance'),
     },
   ]

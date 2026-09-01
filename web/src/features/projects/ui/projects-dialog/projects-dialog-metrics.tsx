@@ -7,6 +7,7 @@ import { getProjectStatusTranslationKey } from '../../model'
 import type { ProjectWithStats } from '@/entities/projects'
 
 import {
+  formatCount,
   formatCurrency,
   formatDurationFromMinutes,
   Hint,
@@ -64,19 +65,19 @@ export const ProjectsDialogMetrics = ({ data }: ProjectsDialogMetricsProps) => {
         label={t('dashboard.projectsTable.head.keyboardKeys')}
         description={t('common.metricDesc.keyboard')}
       >
-        {data.keyboardKeys}
+        {formatCount(data.keyboardKeys)}
       </Metric>
       <Metric
         label={t('dashboard.projectsTable.head.mouseKeys')}
         description={t('common.metricDesc.mouse')}
       >
-        {data.mouseKeys}
+        {formatCount(data.mouseKeys)}
       </Metric>
       <Metric
         label={t('dashboard.projectsTable.head.mouseDistance')}
         description={t('common.metricDesc.mouseDistance')}
       >
-        {data.mouseDistance}
+        {formatCount(data.mouseDistance)}
       </Metric>
     </Grid>
   )

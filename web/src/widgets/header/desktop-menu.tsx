@@ -1,10 +1,11 @@
+import { ArrowTopRightIcon } from '@radix-ui/react-icons'
 import { useUnit } from 'effector-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation } from 'react-router-dom'
 import { match } from 'ts-pattern'
 
-import { NavLink, IconLink, IconImg } from '../styled'
+import { NavLink, IconLink } from '../styled'
 
 import { $authenticated, $user } from '@/entities/profile'
 import {
@@ -17,6 +18,8 @@ import {
 type Props = {
   mappedRoutes?: MappingRoute[]
 }
+
+const ICON_SIZE = 16
 
 export const DesktopMenu = ({ mappedRoutes = defaultMappedRoutes }: Props) => {
   const { pathname } = useLocation()
@@ -41,7 +44,7 @@ export const DesktopMenu = ({ mappedRoutes = defaultMappedRoutes }: Props) => {
           translateKeyDesktop,
           text,
           children,
-          desktopIcon,
+          icon: Icon,
           desktopOrder,
           target,
           desktopRender,
@@ -70,10 +73,11 @@ export const DesktopMenu = ({ mappedRoutes = defaultMappedRoutes }: Props) => {
             return null
           }
 
+          const isExternal = target === '_blank'
+
           switch (desktopRender) {
             default:
-            case 'text':
-            case 'textWithIcon': {
+            case 'text': {
               return (
                 <NavLink
                   key={key}
@@ -84,12 +88,20 @@ export const DesktopMenu = ({ mappedRoutes = defaultMappedRoutes }: Props) => {
                       : pathname.includes(url)) || undefined
                   }
                   target={target}
+                  rel={isExternal ? 'noopener noreferrer' : undefined}
                   viewTransition
                 >
-                  {desktopRender === 'textWithIcon' && (
-                    <IconImg src={desktopIcon} alt={renderText} />
-                  )}
+                  {Icon && <Icon width={ICON_SIZE} height={ICON_SIZE} />}
                   {renderText}
+                  {/* Says "this leaves the app" before the click does. */}
+                  {isExternal && (
+                    <ArrowTopRightIcon
+                      width={12}
+                      height={12}
+                      aria-hidden="true"
+                      data-external
+                    />
+                  )}
                   {children.length > 0 && (
                     <DesktopMenu mappedRoutes={children} />
                   )}
@@ -106,7 +118,7 @@ export const DesktopMenu = ({ mappedRoutes = defaultMappedRoutes }: Props) => {
                   target={target}
                   viewTransition
                 >
-                  <IconImg src={desktopIcon} alt={renderText} />
+                  {Icon && <Icon width={ICON_SIZE} height={ICON_SIZE} />}
                 </IconLink>
               )
             }

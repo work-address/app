@@ -19,16 +19,12 @@ export const TimeNoteInput = () => {
 
   return (
     <Input
-      label={'Note'}
+      label={t('dashboard.page.filters.note')}
       id={'note'}
       value={value ?? ''}
       placeholder={t('dashboard.page.filters.searchNote')}
       onChange={(e) => changeFiltersEvent({ note: e.target.value })}
       columns="1fr"
-      rows="auto auto"
-      gap="2"
-      textSize="3"
-      textWeight="regular"
     />
   )
 }

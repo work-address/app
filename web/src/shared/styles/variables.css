@@ -120,3 +120,15 @@
   --c-rgba-28-32-36-0_92: rgba(28, 32, 36, 0.92);
   --c-rgba-63-103-164-0_25: rgba(63, 103, 164, 0.25);
 }
+
+/*
+ * Radix draws every focus ring - text fields, text areas, checkboxes - from
+ * --focus-8, which its accent preset resolves to indigo. The app's controls
+ * are the brand blue, so the ring follows them; otherwise a focused field is
+ * the one purple thing on the page. The attribute selector outranks Radix's
+ * own :where() rule, which is how this wins despite loading first.
+ */
+.radix-themes[data-accent-color] {
+  --focus-8: var(--ds-accent-9);
+  --focus-a8: var(--c-rgba-63-103-164-0_25);
+}

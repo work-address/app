@@ -304,11 +304,6 @@ export const TimeDialog = ({
                       field.onChange(value)
                     }}
                     label={t('dashboard.worklogsTable.head.paymentStatus')}
-                    inputProps={{
-                      gap: '9px',
-                      textSize: '3',
-                      textWeight: 'regular',
-                    }}
                   />
                 )}
               />

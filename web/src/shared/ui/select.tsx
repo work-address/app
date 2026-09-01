@@ -59,10 +59,21 @@ export const Select = ({
 
   const ph = placeholder ?? t('ui.motionSelect.placeholder')
 
+  // An empty string is a real choice when the options offer one - "All
+  // projects", say - and only means "nothing chosen" when they do not.
+  const hasEmptyOption = useMemo(
+    () => !multi && options.some((o) => o.value === ''),
+    [multi, options],
+  )
+
   const selectedSet = useMemo(() => {
-    const arr = Array.isArray(value) ? value : value ? [value] : []
+    const arr = Array.isArray(value)
+      ? value
+      : value || hasEmptyOption
+        ? [value]
+        : []
     return new Set(arr)
-  }, [value])
+  }, [value, hasEmptyOption])
 
   const buttonText = useMemo(() => {
     if (selectedSet.size === 0) {
@@ -77,7 +88,7 @@ export const Select = ({
       .filter((o) => selectedSet.has(o.value))
       .map((o) => o.label)
 
-    return labels.join(', ')
+    return labels.length > 0 ? labels.join(', ') : null
   }, [multi, options, selectedSet, allSelectedText])
 
   const toggle = (v: string) => {
@@ -95,7 +106,7 @@ export const Select = ({
   const Content = (
     <>
       {title && <MenuTitle>{title}</MenuTitle>}
-      <MenuList $maxHeight={menuMaxHeight}>
+      <MenuList $maxHeight={menuMaxHeight} role="listbox">
         {options.map((o) => {
           const checked = selectedSet.has(o.value)
 
@@ -103,13 +114,22 @@ export const Select = ({
             <MenuItem
               key={o.value}
               type="button"
+              role="option"
+              aria-selected={checked}
+              data-selected={checked || undefined}
               onClick={() => toggle(o.value)}
             >
               {isDesktop && multi && <Checkbox checked={checked} />}
-              <Text size={'3'} style={{ color: 'var(--c-000000)' }}>
-                {o.label}
-              </Text>
-              {isMobile && multi && checked && <CheckIcon aria-hidden="true" />}
+              <ItemLabel size={'3'}>{o.label}</ItemLabel>
+              {/* The current choice is marked in every list, not only the
+                  multi one: a single-select reopened later should show what
+                  it already holds. */}
+              {(!multi || isMobile) && (
+                <ItemCheck
+                  aria-hidden="true"
+                  data-visible={checked || undefined}
+                />
+              )}
             </MenuItem>
           )
         })}
@@ -118,7 +138,7 @@ export const Select = ({
   )
 
   const TriggerEl = (
-    <InputWrapper>
+    <InputWrapper data-open={open || undefined}>
       <Input
         className={className}
         label={label}
@@ -134,6 +154,9 @@ export const Select = ({
           textOverflow: 'ellipsis',
           caretColor: 'transparent',
         }}
+        role="combobox"
+        aria-expanded={open}
+        aria-haspopup="listbox"
         {...inputProps}
         readOnly
       />
@@ -145,7 +168,9 @@ export const Select = ({
       <Drawer
         open={open}
         onOpenChange={setOpen}
-        title={title ?? ph}
+        // The sheet is titled by the field it opened from, so "Select" alone
+        // never has to stand in for "Project status".
+        title={title ?? label ?? ph}
         trigger={TriggerEl}
         footer={
           multi ? (
@@ -183,9 +208,12 @@ export const Select = ({
 
 const PopoverContent = styled(Popover.Content)`
   z-index: 60;
-  width: var(--radix-popover-trigger-width);
+  /* At least as wide as the trigger, wider when an option needs it, so long
+     labels stay on one line instead of folding under themselves. */
+  min-width: var(--radix-popover-trigger-width);
+  max-width: min(360px, calc(100vw - 32px));
   outline: none;
-  padding: var(--space-2);
+  padding: var(--space-1);
 `
 
 const MenuTitle = styled.div`
@@ -198,6 +226,7 @@ const MenuTitle = styled.div`
 const MenuList = styled.div<{ $maxHeight?: string | number }>`
   display: flex;
   flex-direction: column;
+  gap: 1px;
 
   ${(p) =>
     p.$maxHeight != null &&
@@ -211,23 +240,55 @@ const MenuItem = styled.button`
   width: 100%;
   display: flex;
   align-items: center;
-  justify-content: space-between;
-  gap: 14px;
+  gap: var(--space-2);
   background: transparent;
   border: 0;
   text-align: left;
   cursor: pointer;
-  border-radius: 8px;
+  border-radius: var(--radius-2);
   padding: 12px;
+  color: var(--gray-12);
+  transition: background 0.12s ease;
 
-  &:hover {
-    background: var(--c-rgba-0-0-51-0_04);
+  &:hover,
+  &:focus-visible {
+    background: var(--ds-neutral-alpha-3);
+    outline: none;
+  }
+
+  &[data-selected] {
+    background: var(--ds-accent-3);
+    color: var(--ds-accent-11);
   }
 
   ${(p) => p.theme.breakpoints.up('md')} {
-    padding: 6px 12px;
-    border-radius: 8px;
-    justify-content: flex-start;
+    padding: 7px 10px;
+  }
+`
+
+const ItemLabel = styled(Text)`
+  flex: 1;
+  min-width: 0;
+  color: inherit;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+
+  ${(p) => p.theme.breakpoints.up('md')} {
+    font-size: var(--font-size-2);
+    line-height: var(--line-height-2);
+  }
+`
+
+/* Always in the layout so labels line up whether or not they are chosen. */
+const ItemCheck = styled(CheckIcon)`
+  flex-shrink: 0;
+  width: 16px;
+  height: 16px;
+  opacity: 0;
+
+  &[data-visible] {
+    opacity: 1;
   }
 `
 
@@ -241,12 +302,33 @@ const InputWrapper = styled.span`
     cursor: pointer;
   }
 
+  /* Radix paints a read-only field with the disabled gray fill. The trigger
+     is read-only only to keep a caret out of it, so it takes the surface a
+     writable field has and darkens a step on hover like a button would. */
+  && .rt-TextFieldRoot:has(.rt-TextFieldInput:read-only:not(:disabled)) {
+    background-image: none;
+    box-shadow: inset 0 0 0 1px var(--gray-a7);
+    transition: box-shadow 0.12s ease;
+  }
+
+  &:hover .rt-TextFieldRoot:has(.rt-TextFieldInput:read-only:not(:disabled)) {
+    box-shadow: inset 0 0 0 1px var(--gray-a9);
+  }
+
   & .rt-TextFieldInput {
     pointer-events: none;
     caret-color: transparent;
+    /* Radix dims read-only text to the disabled tone; the trigger is read-only
+       only to keep the caret out, so a chosen value stays at full strength. */
+    color: var(--gray-12);
+  }
+
+  & .rt-TextFieldInput:placeholder-shown {
+    color: var(--gray-a10);
   }
 
   .rt-TextFieldSlot {
     cursor: pointer;
+    color: var(--gray-11);
   }
 `

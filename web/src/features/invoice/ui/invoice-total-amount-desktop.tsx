@@ -1,4 +1,4 @@
-import { Flex, Grid, Skeleton } from '@radix-ui/themes'
+import { Badge, Flex, Grid, Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Trans, useTranslation } from 'react-i18next'
@@ -7,6 +7,9 @@ import styled from 'styled-components'
 import { useInvoiceInfoFields } from '../lib'
 import { $invoice, $invoiceLoading } from '../model'
 
+import { InvoicePaymentActions } from './invoice-payment-actions'
+
+import { $user } from '@/entities/profile'
 import {
   BASE_CURRENCY,
   Text,
@@ -26,10 +29,16 @@ export const InvoiceTotalAmountDesktop = () => {
 
   const infoFields = useInvoiceInfoFields()
 
-  const { invoice, loading } = useUnit({
+  const { invoice, loading, user } = useUnit({
     invoice: $invoice,
     loading: $invoiceLoading,
+    user: $user,
   })
+
+  const isPaid = invoice?.state === 'PAID'
+  // Only the issuer may settle: the person owed the money is the one who
+  // knows whether it arrived.
+  const canSettle = Boolean(user?.id && invoice?.user?.id === user.id)
 
   const handleShare = () => {
     copyToClipboard(window.location.href)
@@ -87,8 +96,25 @@ export const InvoiceTotalAmountDesktop = () => {
                 {formatCurrency(invoice?.totalAmount)}
               </Text>
             )}
+            {/* The state prints: a PDF that does not say whether it was paid
+                is only half a record. */}
+            {loading ? (
+              <Skeleton width="60px" height="22px" loading={loading} />
+            ) : (
+              <Badge size="2" variant="soft" color={isPaid ? 'green' : 'amber'}>
+                {t(isPaid ? 'invoice.state.paid' : 'invoice.state.requested')}
+              </Badge>
+            )}
           </Flex>
-          <InvoiceNoPrint gap={'3'}>
+          <InvoiceNoPrint gap={'3'} align={'center'}>
+            {invoice?.id ? (
+              <InvoicePaymentActions
+                invoiceId={invoice.id}
+                isPaid={isPaid}
+                canSettle={canSettle}
+                compact={false}
+              />
+            ) : null}
             <Button color="neutral" variant="soft" onClick={handleShare}>
               {t('invoice.actions.share')}
             </Button>

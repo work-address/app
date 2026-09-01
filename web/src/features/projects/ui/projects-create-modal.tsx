@@ -190,7 +190,11 @@ export const ProjectsCreateModal = ({
                 label={t('dashboard.projectsTable.form.rate')}
                 id={'rate'}
                 placeholder={t('project.createModal.ratePlaceholder')}
-                addonRight={BASE_CURRENCY.symbol}
+                addonLeft={
+                  <Text size={'2'} color={'gray'}>
+                    {BASE_CURRENCY.symbol}
+                  </Text>
+                }
                 disabled={pending}
                 inputMode="decimal"
                 state={errors.rateHour ? 'error' : 'valid'}

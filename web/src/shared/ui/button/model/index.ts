@@ -79,7 +79,7 @@ export const BUTTON_TONE_SPECS: Record<
     soft: {
       background: 'var(--ds-accent-3)',
       color: 'var(--ds-accent-11)',
-      hover: { filter: 'brightness(0.97)' },
+      hover: { filter: 'brightness(0.95)' },
     },
     outline: {
       background: 'transparent',
@@ -102,7 +102,7 @@ export const BUTTON_TONE_SPECS: Record<
     soft: {
       background: 'var(--ds-secondary)',
       color: 'var(--ds-neutral-11)',
-      hover: { filter: 'brightness(0.97)' },
+      hover: { filter: 'brightness(0.95)' },
     },
     outline: {
       background: 'transparent',
@@ -120,12 +120,12 @@ export const BUTTON_TONE_SPECS: Record<
     solid: {
       background: 'var(--c-e5484d)',
       color: 'var(--white)',
-      hover: { filter: 'brightness(0.98)' },
+      hover: { filter: 'brightness(0.92)' },
     },
     soft: {
       background: 'var(--ds-secondary)',
       color: 'var(--error-11)',
-      hover: { filter: 'brightness(0.97)' },
+      hover: { filter: 'brightness(0.95)' },
     },
     outline: {
       background: 'transparent',

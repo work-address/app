@@ -26,7 +26,7 @@ export const TimeFilters = () => {
       </S.Field>
       <S.Field $basis={300}>
         <Flex gap={'2'} direction={'column'}>
-          <Text weight={'medium'} as="label" htmlFor={activeDateId}>
+          <Text size={'2'} weight={'medium'} as="label" htmlFor={activeDateId}>
             {t('dashboard.page.filters.date')}
           </Text>
           <Grid columns={'1fr 1fr'} gap={'2'}>

@@ -33,12 +33,14 @@ export const INVOICE_PAGE_SIZE = 20
 
 export type InvoiceListParams = {
   projectId?: string
+  state?: 'PAID' | 'Requested'
   page: number
 }
 
 export const invoiceListQuery = createQuery({
   handler: async ({
     projectId,
+    state,
     page,
   }: InvoiceListParams): Promise<{
     items: baseApi.InvoiceSearch[]
@@ -54,7 +56,10 @@ export const invoiceListQuery = createQuery({
           // Filtered server-side rather than in the browser: the search
           // returns one page, so filtering what happened to arrive would hide
           // invoices that simply fell past the page boundary.
-          filter: projectId ? { projectId } : {},
+          filter: {
+            ...(projectId ? { projectId } : {}),
+            ...(state ? { state } : {}),
+          },
           sort: { createdAt: 'DESC' },
           page,
           limit: INVOICE_PAGE_SIZE,
@@ -83,6 +88,38 @@ export const invoiceProjectsQuery = createQuery({
         body: { filter: {}, sort: { title: 'ASC' }, page: 0, limit: 100 },
       }),
     )) as [baseApi.Project[], number]
+
+    return items ?? []
+  },
+})
+
+/**
+ * How many invoices the summary strip is allowed to add up.
+ *
+ * The search endpoint pages but does not aggregate, so the strip has to read
+ * the rows itself. One page this deep covers years of a freelancer's billing;
+ * past it the strip would under-report rather than fail, which is the lesser
+ * wrong for a figure that exists to orient, not to reconcile.
+ */
+export const INVOICE_SUMMARY_LIMIT = 1000
+
+/** Every visible invoice for the project filter, for the totals strip. */
+export const invoiceSummaryQuery = createQuery({
+  handler: async ({
+    projectId,
+  }: {
+    projectId?: string
+  }): Promise<baseApi.InvoiceSearch[]> => {
+    const [items] = (await runApiData(() =>
+      baseApi.invoiceControllerSearch({
+        body: {
+          filter: projectId ? { projectId } : {},
+          sort: { createdAt: 'DESC' },
+          page: 0,
+          limit: INVOICE_SUMMARY_LIMIT,
+        },
+      }),
+    )) as [baseApi.InvoiceSearch[], number]
 
     return items ?? []
   },

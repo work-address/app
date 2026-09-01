@@ -10,8 +10,17 @@ type TextProps = {
   $letterSpacing?: string
 } & RadixTextProps
 
-export const Text = ({ $themeVariant, ...props }: TextProps) => {
-  return <Root data-theme-variant={$themeVariant} {...props} />
+/**
+ * Radix Text with the brand colour variants.
+ *
+ * `as` is handed to Radix as `forwardedAs`, never to styled-components: on a
+ * styled component `as` replaces the wrapped component itself, so
+ * `<Text as="label" size="2">` used to render a bare <label> with none of
+ * the size, weight or colour it was given - every form label and stat caption
+ * in the app came out at the browser's 16px default.
+ */
+export const Text = ({ $themeVariant, as, ...props }: TextProps) => {
+  return <Root data-theme-variant={$themeVariant} forwardedAs={as} {...props} />
 }
 
 const Root = styled(RadixText)<Pick<TextProps, '$letterSpacing'>>`

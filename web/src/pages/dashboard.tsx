@@ -3,6 +3,7 @@ import { Badge, Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
 import {
   fetchProjects,
@@ -15,22 +16,21 @@ import {
   DashboardApplicationsUsage,
   DashboardPremiumBanner,
   DashboardProjectsSearchInput,
+  DashboardSummary,
 } from '@/features/dashboard'
 import { ProjectsCreateModal, ProjectsTable } from '@/features/projects'
 import { TimeWorklogs } from '@/features/time'
 import {
   PageHelmet,
+  SectionTitle,
   Text,
   Wrapper,
-  useBreakpoint,
   DashboardEmptyState,
   ListPageLayout as S,
 } from '@/shared'
 import { DashboardEmptyStateImage } from '@/shared'
 
 export default function DashboardPage() {
-  const isDesktop = useBreakpoint('isDesktop')
-
   const { t, i18n } = useTranslation()
   const [createProjectOpen, setCreateProjectOpen] = useState(false)
 
@@ -69,18 +69,19 @@ export default function DashboardPage() {
       />
       <Wrapper>
         <DashboardPremiumBanner />
+        {/* The page reads top-down: the headline figures, then the projects
+            they come from beside the app breakdown, then the worklog feed. */}
+        <Overview>
+          <PageTitle>{t('dashboard.page.title')}</PageTitle>
+          <DashboardSummary />
+        </Overview>
         <S.Content>
           <S.Main>
-            <Flex
-              gap={'10px'}
-              align={{ md: 'center' }}
-              direction={{ initial: 'column', md: 'row' }}
-              mb={{ initial: '3' }}
-            >
-              <Flex align={'center'} gap={'10px'}>
-                <Text size={isDesktop ? '6' : '4'} weight={'medium'}>
-                  {t('dashboard.page.title')}
-                </Text>
+            <ProjectsHead>
+              <Flex align={'center'} gap={'2'} style={{ minWidth: 0 }}>
+                <S.SectionTitle>
+                  {t('dashboard.page.projects.title')}
+                </S.SectionTitle>
                 <Badge size={'2'} color={'gray'}>
                   <Text weight={'medium'} size={'1'}>
                     {t('dashboard.page.projectsCount', {
@@ -90,11 +91,11 @@ export default function DashboardPage() {
                 </Badge>
               </Flex>
               {showSkeletons && (
-                <Flex mb={{ initial: '3', sm: '0' }}>
+                <SearchArea>
                   <DashboardProjectsSearchInput />
-                </Flex>
+                </SearchArea>
               )}
-            </Flex>
+            </ProjectsHead>
             {showSkeletons && (
               <S.TableArea>
                 <ProjectsTable />
@@ -121,9 +122,42 @@ export default function DashboardPage() {
             actionLabel={t('dashboard.page.empty.action')}
             size="l"
             buttonIcon={<PlusIcon width={18} height={18} />}
+            onAction={() => setCreateProjectOpen(true)}
           />
         )}
       </Wrapper>
     </>
   )
 }
+
+const PageTitle = styled(SectionTitle).attrs({ as: 'h1' })`
+  ${(p) => p.theme.breakpoints.up('md')} {
+    font-size: var(--font-size-7);
+  }
+`
+
+const Overview = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-4);
+  margin-bottom: var(--space-6);
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    gap: var(--space-3);
+    margin-bottom: var(--space-5);
+  }
+`
+
+/* On a phone the search takes its own line rather than squeezing the title. */
+const ProjectsHead = styled(S.SectionTitleRow)`
+  flex-wrap: wrap;
+`
+
+const SearchArea = styled.div`
+  width: 280px;
+  max-width: 100%;
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    width: 100%;
+  }
+`

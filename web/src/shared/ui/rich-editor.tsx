@@ -73,7 +73,13 @@ export const RichEditor = ({
       return
     }
 
-    editor?.commands.setContent(value ?? '')
+    // React runs effects twice in development, and the first run's editor is
+    // already destroyed by the time the second fires - calling into it throws.
+    if (!editor || editor.isDestroyed) {
+      return
+    }
+
+    editor.commands.setContent(value ?? '')
   }, [value, editor])
 
   return (

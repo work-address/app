@@ -2,6 +2,7 @@ import { Grid } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useEffect } from 'react'
 import { type SubmitHandler, useForm } from 'react-hook-form'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { $profile, $profileLoading } from '../../model'
@@ -32,6 +33,7 @@ const EMPTY_FORM_VALUES: ProfileEditFormState = {
 }
 
 export const ProfileEdit = () => {
+  const { t } = useTranslation()
   const isDesktop = useBreakpoint('isDesktop')
   const { confirm } = useConfirm()
 
@@ -69,15 +71,36 @@ export const ProfileEdit = () => {
       // An empty email is dropped rather than sent as '': the column carries a
       // unique index, and the backend rejects a blank email for an account
       // that has no phone. Omitting the key leaves the stored value untouched.
-      ...(trimmedEmail ? { email: trimmedEmail } : {}),
+      // An unchanged one is dropped too - the uniqueness check would otherwise
+      // find the account's own row and refuse the save.
+      ...(trimmedEmail && trimmedEmail !== user?.email
+        ? { email: trimmedEmail }
+        : {}),
     })
   }
 
   const onReset = () => {
-    confirm().then(() => resetForm())
+    confirm({
+      title: t('profile.form.discard.title'),
+      description: t('profile.form.discard.description'),
+      confirmLabel: t('profile.form.discard.confirm'),
+      cancelLabel: t('profile.form.discard.cancel'),
+    })
+      .then(() => resetForm())
+      .catch(() => {})
   }
 
-  useLeaveConfirm({ when: isDirty })
+  // Not while a save is in flight: the model routes back to the profile the
+  // moment the save lands, before React has had a chance to re-seed the form
+  // from the stored user - so the draft still counts as dirty at that instant
+  // and the guard would ask "leave this page?" about changes just saved.
+  useLeaveConfirm({
+    when: isDirty && !profileSaving,
+    title: t('profile.form.leave.title'),
+    description: t('profile.form.leave.description'),
+    confirmLabel: t('profile.form.leave.confirm'),
+    cancelLabel: t('profile.form.leave.cancel'),
+  })
 
   // react-hook-form owns the draft, so seeding it from the loaded profile
   // stays a React concern.
@@ -142,7 +165,9 @@ export const ProfileEdit = () => {
 }
 
 const Root = styled.div`
-  padding-bottom: 50px;
+  /* Clears the fixed Cancel/Save sheet on phones, so the last field can
+     scroll out from under it. */
+  padding-bottom: 96px;
 
   ${(p) => p.theme.breakpoints.up('md')} {
     max-width: 710px;

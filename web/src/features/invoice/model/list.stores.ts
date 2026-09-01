@@ -1,7 +1,7 @@
 import { combine, createEvent, createStore } from 'effector'
 
 import { markInvoicePaidMutation, markInvoiceUnpaidMutation } from './mutations'
-import { invoiceListQuery } from './queries'
+import { invoiceListQuery, invoiceSummaryQuery } from './queries'
 
 import type { baseApi } from '@/shared'
 
@@ -9,11 +9,27 @@ export const fetchInvoiceList = createEvent()
 export const loadMoreInvoices = createEvent()
 export const invoiceProjectFilterChanged = createEvent<string>()
 
+/** Empty string means "every state" - the tab the list opens on. */
+export type InvoiceStateFilter = '' | 'PAID' | 'Requested'
+
+export const invoiceStateFilterChanged = createEvent<InvoiceStateFilter>()
+
 /** Empty string means "every project" - the filter's default. */
 export const $invoiceProjectFilter = createStore('').on(
   invoiceProjectFilterChanged,
   (_, projectId) => projectId,
 )
+
+export const $invoiceStateFilter = createStore<InvoiceStateFilter>('').on(
+  invoiceStateFilterChanged,
+  (_, state) => state,
+)
+
+/** Either filter describes a different query, so both start the list over. */
+export const invoiceFilterChanged = [
+  invoiceProjectFilterChanged,
+  invoiceStateFilterChanged,
+]
 
 type InvoiceFeed = {
   items: baseApi.InvoiceSearch[]
@@ -75,18 +91,18 @@ export const $invoiceFeed = createStore<InvoiceFeed>(emptyFeed)
       }),
     }),
   )
-  .reset(invoiceProjectFilterChanged)
+  .reset(invoiceFilterChanged)
 
 export const $invoices = $invoiceFeed.map((feed) => feed.items)
 
 export const $invoicesTotal = createStore(0)
   .on(invoiceListQuery.finished.success, (_, { result }) => result.total)
-  .reset(invoiceProjectFilterChanged)
+  .reset(invoiceFilterChanged)
 
 /** The last page the server actually answered for, so the next is page + 1. */
 export const $invoicePage = createStore(0)
   .on(invoiceListQuery.finished.success, (_, { params }) => params.page)
-  .reset(invoiceProjectFilterChanged)
+  .reset(invoiceFilterChanged)
 
 export const $hasMoreInvoices = combine(
   $invoiceFeed,
@@ -101,4 +117,54 @@ export const $hasMoreInvoices = combine(
 export const $isLoadingMoreInvoices = createStore(false)
   .on(invoiceListQuery.start, (_, params) => params.page > 0)
   .on(invoiceListQuery.finished.finally, () => false)
-  .reset(invoiceProjectFilterChanged)
+  .reset(invoiceFilterChanged)
+
+export type InvoiceSummary = {
+  paidCents: number
+  paidCount: number
+  requestedCents: number
+  requestedCount: number
+  totalCents: number
+  totalCount: number
+}
+
+const emptySummary: InvoiceSummary = {
+  paidCents: 0,
+  paidCount: 0,
+  requestedCents: 0,
+  requestedCount: 0,
+  totalCents: 0,
+  totalCount: 0,
+}
+
+/**
+ * What the visible invoices add up to, split by whether the money arrived.
+ *
+ * Reduced from its own unpaged query rather than from the list, which holds
+ * one page at a time: a total built from the first twenty rows would be
+ * wrong the moment there was a twenty-first. Follows the project filter but
+ * not the state tab - the tab narrows the rows, the strip is what they narrow
+ * from.
+ */
+export const $invoiceSummary = invoiceSummaryQuery.$data.map(
+  (items): InvoiceSummary =>
+    (items ?? []).reduce((acc, item) => {
+      const cents = Math.trunc(Number(item.amountCents ?? 0)) || 0
+      const paid = item.state === 'PAID'
+
+      return {
+        paidCents: acc.paidCents + (paid ? cents : 0),
+        paidCount: acc.paidCount + (paid ? 1 : 0),
+        requestedCents: acc.requestedCents + (paid ? 0 : cents),
+        requestedCount: acc.requestedCount + (paid ? 0 : 1),
+        totalCents: acc.totalCents + cents,
+        totalCount: acc.totalCount + 1,
+      }
+    }, emptySummary),
+)
+
+export const $invoiceSummaryLoading = combine(
+  invoiceSummaryQuery.$pending,
+  invoiceSummaryQuery.$data,
+  (pending, data) => pending && data === null,
+)

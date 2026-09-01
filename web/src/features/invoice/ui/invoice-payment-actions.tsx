@@ -23,11 +23,19 @@ export const InvoicePaymentActions = ({
   isPaid,
   canSettle,
   onChanged,
+  compact = true,
+  stretch = false,
 }: {
   invoiceId: string
   isPaid: boolean
   canSettle: boolean
   onChanged?: () => void
+  /**
+   * The list row squeezes the button below the `s`/`m`/`l` scale; the invoice
+   * page sits it beside Share and Save PDF, where it takes their size.
+   */
+  compact?: boolean
+  stretch?: boolean
 }) => {
   const { t } = useTranslation()
 
@@ -72,9 +80,11 @@ export const InvoicePaymentActions = ({
       )}
     >
       <SettleButton
-        size="l"
+        size={compact ? 'l' : 'm'}
         variant={isPaid ? 'outline' : 'solid'}
         loading={pending}
+        stretch={stretch}
+        data-compact={compact || undefined}
         onClick={() => (isPaid ? markUnpaid(invoiceId) : markPaid(invoiceId))}
       >
         {t(isPaid ? 'invoice.payment.revert' : 'invoice.payment.markPaid')}
@@ -96,8 +106,9 @@ const SettleButton = styled(Button)`
   position: relative;
   z-index: 1;
 
-  && {
+  &&[data-compact] {
     height: 26px;
+    min-height: 26px;
     padding: 0 14px;
     font-size: 14px;
     border-radius: 5px;

@@ -36,7 +36,7 @@ function getInitialLanguage(): string {
     return 'ru'
   }
 
-  return 'ja'
+  return 'en'
 }
 
 void i18n.use(initReactI18next).init({

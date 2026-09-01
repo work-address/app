@@ -45,6 +45,7 @@ import {
 import {
   type MobileDataTableConfig,
   type DataTableConfig,
+  formatCount,
   formatCurrency,
 } from '@/shared'
 import {
@@ -204,16 +205,19 @@ export const ProjectsTable = () => {
         dataKey: 'keyboardKeys',
         headerText: t('dashboard.projectsTable.head.keyboardKeys'),
         description: t('common.metricDesc.keyboard'),
+        getValue: (data) => formatCount(data.keyboardKeys),
       },
       {
         dataKey: 'mouseKeys',
         headerText: t('dashboard.projectsTable.head.mouseKeys'),
         description: t('common.metricDesc.mouse'),
+        getValue: (data) => formatCount(data.mouseKeys),
       },
       {
         dataKey: 'mouseDistance',
         headerText: t('dashboard.projectsTable.head.mouseDistance'),
         description: t('common.metricDesc.mouseDistance'),
+        getValue: (data) => formatCount(data.mouseDistance),
       },
     ],
     [t],

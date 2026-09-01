@@ -44,6 +44,23 @@ export const NavLink = styled(Link)`
     }
   }
 
+  /* The icon is a cue, not a second label: it sits a step back from the text
+     and only comes forward with it on the active item. */
+  & > svg {
+    flex-shrink: 0;
+    color: var(--ds-neutral-11);
+  }
+
+  &[data-active] > svg,
+  &:hover > svg {
+    color: var(--ds-accent-11);
+  }
+
+  & > svg[data-external] {
+    margin-left: -2px;
+    align-self: flex-start;
+  }
+
   ${(p) => p.theme.breakpoints.down('lg')} {
     font-size: var(--font-size-2);
   }
@@ -86,8 +103,12 @@ export const mobileMenuRowStyles = css`
     background: var(--c-rgba-28-32-36-0_06);
   }
 
-  img {
-    width: 18px;
-    height: 18px;
+  & > svg:first-child {
+    flex-shrink: 0;
+    color: var(--ds-neutral-11);
+  }
+
+  &[data-active] > svg:first-child {
+    color: var(--ds-accent-11);
   }
 `

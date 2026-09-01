@@ -1,3 +1,4 @@
+import { ArrowTopRightIcon } from '@radix-ui/react-icons'
 import { useUnit } from 'effector-react'
 import { motion } from 'motion/react'
 import React, { useMemo } from 'react'
@@ -6,7 +7,7 @@ import { useLocation, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 import { match } from 'ts-pattern'
 
-import { IconImg, mobileMenuRowStyles } from '../styled'
+import { mobileMenuRowStyles } from '../styled'
 
 import { $authenticated, $user } from '@/entities/profile'
 import { AUTH_REQUIRED_ROUTES, defaultMappedRoutes, routes } from '@/routes'
@@ -20,6 +21,8 @@ export const itemVariants = {
 type Props = {
   setOpen: (value: boolean) => void
 }
+
+const ICON_SIZE = 18
 
 export const MobileMenu = ({ setOpen }: Props) => {
   const { t } = useTranslation()
@@ -44,7 +47,7 @@ export const MobileMenu = ({ setOpen }: Props) => {
 
     if (path) {
       if (target === '_blank') {
-        window.open(path)
+        window.open(path, '_blank', 'noopener,noreferrer')
       } else {
         navigate(path, { viewTransition: true })
       }
@@ -56,7 +59,7 @@ export const MobileMenu = ({ setOpen }: Props) => {
       {sorted.map(
         ({
           schema,
-          mobileIcon,
+          icon: Icon,
           translateKeyMobile,
           key,
           text,
@@ -85,6 +88,9 @@ export const MobileMenu = ({ setOpen }: Props) => {
             )
             .otherwise(() => schema)
 
+          const label = translateKeyMobile ? t(translateKeyMobile) : text || key
+          const isExternal = target === '_blank'
+
           return (
             <MobileMenuItem
               key={key}
@@ -96,12 +102,15 @@ export const MobileMenu = ({ setOpen }: Props) => {
               }
               variants={itemVariants}
               target={target}
+              rel={isExternal ? 'noopener noreferrer' : undefined}
             >
-              <IconImg
-                src={mobileIcon}
-                alt={translateKeyMobile ? t(translateKeyMobile) : text || key}
-              />
-              {translateKeyMobile && <span>{t(translateKeyMobile)}</span>}
+              {Icon && (
+                <Icon width={ICON_SIZE} height={ICON_SIZE} aria-hidden="true" />
+              )}
+              <span>{label}</span>
+              {isExternal && (
+                <External width={14} height={14} aria-hidden="true" />
+              )}
             </MobileMenuItem>
           )
         },
@@ -116,5 +125,11 @@ const MobileMenuItem = styled(motion.a)`
 
   &[data-active] {
     background: var(--c-rgba-5-86-205-0_0588);
+    color: var(--ds-accent-11);
   }
+`
+
+const External = styled(ArrowTopRightIcon)`
+  margin-left: auto;
+  color: var(--ds-neutral-11);
 `

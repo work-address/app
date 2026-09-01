@@ -147,11 +147,6 @@ export const TimeMobileBulkActions = ({
           setAction(value as BulkAction)
         }}
         placeholder={t('dashboard.worklogsTable.bulk.actionPlaceholder')}
-        inputProps={{
-          gap: '9px',
-          textSize: '3',
-          textWeight: 'regular',
-        }}
       />
       <Button
         stretch

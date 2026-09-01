@@ -152,14 +152,22 @@ const Root = styled.button`
     filter: var(--ds-button-hover-filter, none);
   }
 
+  /* A press reads as a press: a shade darker than hover, and no lag. */
+  &:active:not(:disabled) {
+    filter: brightness(0.9);
+    transition-duration: 0s;
+  }
+
+  /* Solid enough to find with the eye: the earlier 26% ring vanished against
+     the soft surfaces most of these buttons sit on. */
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-alpha-6);
-    outline-offset: 1px;
+    outline: 2px solid var(--ds-accent-9);
+    outline-offset: 2px;
   }
 
   &:disabled {
-    opacity: 0.68;
-    cursor: default;
+    opacity: 0.55;
+    cursor: not-allowed;
   }
 
   &[data-stretch] {

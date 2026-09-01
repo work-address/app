@@ -5,7 +5,7 @@ import styled from 'styled-components'
 
 import type { Time } from '@/entities/time'
 
-import { formatDurationFromMinutes, Hint, Text } from '@/shared'
+import { formatCount, formatDurationFromMinutes, Hint, Text } from '@/shared'
 
 type TimeDialogMetricsProps = {
   row: Time
@@ -32,19 +32,19 @@ export const TimeDialogMetrics = ({ row }: TimeDialogMetricsProps) => {
           label={t('dashboard.worklogsTable.head.keyboard')}
           description={t('common.metricDesc.keyboard')}
         >
-          {row.keyboardKeys}
+          {formatCount(row.keyboardKeys)}
         </Metric>
         <Metric
           label={t('dashboard.worklogsTable.head.mouse')}
           description={t('common.metricDesc.mouse')}
         >
-          {row.mouseKeys}
+          {formatCount(row.mouseKeys)}
         </Metric>
         <Metric
           label={t('dashboard.worklogsTable.head.mouseDistance')}
           description={t('common.metricDesc.mouseDistance')}
         >
-          {row.mouseDistance}
+          {formatCount(row.mouseDistance)}
         </Metric>
       </MetricsGrid>
     </Root>

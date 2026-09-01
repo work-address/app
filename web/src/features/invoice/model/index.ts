@@ -5,12 +5,19 @@ import {
   $hasMoreInvoices,
   $invoicePage,
   $invoiceProjectFilter,
+  $invoiceStateFilter,
   fetchInvoiceList,
+  invoiceFilterChanged,
   invoiceProjectFilterChanged,
   loadMoreInvoices,
 } from './list.stores'
-import { ensureInvoiceMutation, invoiceSelectedTimeMutation } from './mutations'
-import { invoiceListQuery, invoiceQuery } from './queries'
+import {
+  ensureInvoiceMutation,
+  invoiceSelectedTimeMutation,
+  markInvoicePaidMutation,
+  markInvoiceUnpaidMutation,
+} from './mutations'
+import { invoiceListQuery, invoiceQuery, invoiceSummaryQuery } from './queries'
 
 import { routes } from '@/routes'
 import { navigateFx, showToastFx } from '@/shared'
@@ -31,9 +38,13 @@ sample({
 
 // A first load, and every change of filter, start again from page 0.
 sample({
-  clock: [fetchInvoiceList, invoiceProjectFilterChanged],
-  source: $invoiceProjectFilter,
-  fn: (projectId) => ({ projectId: projectId || undefined, page: 0 }),
+  clock: [fetchInvoiceList, ...invoiceFilterChanged],
+  source: { projectId: $invoiceProjectFilter, state: $invoiceStateFilter },
+  fn: ({ projectId, state }) => ({
+    projectId: projectId || undefined,
+    state: state || undefined,
+    page: 0,
+  }),
   target: invoiceListQuery.start,
 })
 
@@ -41,6 +52,7 @@ sample({
   clock: loadMoreInvoices,
   source: {
     projectId: $invoiceProjectFilter,
+    state: $invoiceStateFilter,
     page: $invoicePage,
     hasMore: $hasMoreInvoices,
     pending: invoiceListQuery.$pending,
@@ -48,11 +60,41 @@ sample({
   // Guarded rather than trusted to the button's disabled state: a double click
   // would otherwise fire the same page twice.
   filter: ({ hasMore, pending }) => hasMore && !pending,
-  fn: ({ projectId, page }) => ({
+  fn: ({ projectId, state, page }) => ({
     projectId: projectId || undefined,
+    state: state || undefined,
     page: page + 1,
   }),
   target: invoiceListQuery.start,
+})
+
+// The strip follows the project filter only; the state tab narrows the rows
+// underneath it, not the totals they are a slice of. Settling an invoice moves
+// money from one figure to the other, so that re-reads it too.
+sample({
+  clock: [
+    fetchInvoiceList,
+    invoiceProjectFilterChanged,
+    markInvoicePaidMutation.finished.success,
+    markInvoiceUnpaidMutation.finished.success,
+  ],
+  source: $invoiceProjectFilter,
+  fn: (projectId) => ({ projectId: projectId || undefined }),
+  target: invoiceSummaryQuery.start,
+})
+
+// The invoice page shows the state it was opened with; settling from that page
+// re-reads the record so the badge and the button agree with the server.
+sample({
+  clock: [
+    markInvoicePaidMutation.finished.success,
+    markInvoiceUnpaidMutation.finished.success,
+  ],
+  source: invoiceQuery.$data,
+  filter: (invoice, { params }) =>
+    Boolean(invoice?.id) && invoice?.id === params,
+  fn: (invoice) => invoice?.id as string,
+  target: invoiceQuery.start,
 })
 
 export { fetchInvoice, resetInvoice } from './events'
@@ -63,17 +105,24 @@ export {
   invoiceListQuery,
   invoiceProjectsQuery,
   invoiceQuery,
+  invoiceSummaryQuery,
 } from './queries'
 export {
   $hasMoreInvoices,
   $invoicePage,
   $invoiceProjectFilter,
+  $invoiceStateFilter,
+  $invoiceSummary,
+  $invoiceSummaryLoading,
   $invoices,
   $invoicesTotal,
   $isLoadingMoreInvoices,
   fetchInvoiceList,
   invoiceProjectFilterChanged,
+  invoiceStateFilterChanged,
   loadMoreInvoices,
+  type InvoiceStateFilter,
+  type InvoiceSummary,
 } from './list.stores'
 export * from './format'
 export * from './mutations'

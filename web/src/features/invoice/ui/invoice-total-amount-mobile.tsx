@@ -1,4 +1,4 @@
-import { Flex, Separator, Grid, Skeleton } from '@radix-ui/themes'
+import { Badge, Flex, Separator, Grid, Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Fragment } from 'react'
@@ -7,6 +7,9 @@ import { useTranslation } from 'react-i18next'
 import { useInvoiceInfoFields } from '../lib'
 import { $invoice, $invoiceLoading } from '../model'
 
+import { InvoicePaymentActions } from './invoice-payment-actions'
+
+import { $user } from '@/entities/profile'
 import { BASE_CURRENCY, formatCurrency, Hint, Text } from '@/shared'
 
 export const InvoiceTotalAmountMobile = () => {
@@ -14,14 +17,24 @@ export const InvoiceTotalAmountMobile = () => {
 
   const infoFields = useInvoiceInfoFields()
 
-  const { invoice, loading } = useUnit({
+  const { invoice, loading, user } = useUnit({
     invoice: $invoice,
     loading: $invoiceLoading,
+    user: $user,
   })
+
+  const isPaid = invoice?.state === 'PAID'
+  const canSettle = Boolean(user?.id && invoice?.user?.id === user.id)
 
   return (
     <Flex gap={'3'} direction={'column'}>
-      <Flex justify={'center'} align={'center'} direction={'column'} p={'4'}>
+      <Flex
+        justify={'center'}
+        align={'center'}
+        direction={'column'}
+        gap={'2'}
+        p={'4'}
+      >
         <Text size={'4'} color={'gray'}>
           {t('invoice.totalAmount')}
         </Text>
@@ -32,7 +45,23 @@ export const InvoiceTotalAmountMobile = () => {
             {formatCurrency(invoice?.totalAmount)}
           </Text>
         )}
+        {loading ? (
+          <Skeleton height="22px" width="90px" />
+        ) : (
+          <Badge size="2" variant="soft" color={isPaid ? 'green' : 'amber'}>
+            {t(isPaid ? 'invoice.state.paid' : 'invoice.state.requested')}
+          </Badge>
+        )}
       </Flex>
+      {invoice?.id && canSettle ? (
+        <InvoicePaymentActions
+          invoiceId={invoice.id}
+          isPaid={isPaid}
+          canSettle={canSettle}
+          compact={false}
+          stretch
+        />
+      ) : null}
       <Separator size={'4'} />
       <Grid
         columns={{ initial: '137px 1fr' }}
