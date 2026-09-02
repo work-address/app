@@ -98,7 +98,6 @@ export const ProjectsDialogForm = ({
     rows: 'auto auto',
     columns: '1fr',
     gap: '2',
-    size: '3',
   }
 
   return (
@@ -143,7 +142,6 @@ export const ProjectsDialogForm = ({
           placeholder={t('project.createModal.descriptionPlaceholder')}
           rows={3}
           id="description"
-          size="3"
           disabled={isPending}
           state={errors.text ? 'error' : 'valid'}
           {...register('text', { required: true })}

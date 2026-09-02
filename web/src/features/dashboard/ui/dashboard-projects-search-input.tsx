@@ -7,14 +7,11 @@ import {
   changeProjectStateFilter,
   setProjectsStateFiltering,
 } from '@/entities/projects'
-import { useBreakpoint } from '@/shared'
 import { SearchInput } from '@/shared'
 
 const SEARCH_DEBOUNCE_TIME = 1000
 
 export const DashboardProjectsSearchInput = () => {
-  const isDesktop = useBreakpoint('isDesktop')
-
   const searchTextFromStore = useStoreMap({
     store: $projectStateFilter,
     keys: [],
@@ -46,12 +43,5 @@ export const DashboardProjectsSearchInput = () => {
     setSearchText(searchTextFromStore)
   }, [searchTextFromStore])
 
-  return (
-    <SearchInput
-      value={searchText}
-      onChange={handleChange}
-      radius={isDesktop ? 'large' : undefined}
-      size={'3'}
-    />
-  )
+  return <SearchInput value={searchText} onChange={handleChange} />
 }

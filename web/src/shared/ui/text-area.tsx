@@ -12,7 +12,13 @@ type TextAreaProps = RadixTextAreaProps & {
   state?: 'error' | 'valid'
 }
 
-export const TextArea = ({ label, id, state, ...props }: TextAreaProps) => {
+export const TextArea = ({
+  label,
+  id,
+  state,
+  size,
+  ...props
+}: TextAreaProps) => {
   const { breakpoints } = useTheme()
   const isUpMd = useMediaQuery(breakpoints.up('md'))
 
@@ -28,7 +34,14 @@ export const TextArea = ({ label, id, state, ...props }: TextAreaProps) => {
       <Text as={'label'} size={'2'} weight={'medium'} htmlFor={id}>
         {label}
       </Text>
-      <RadixTextArea id={id} size={'3'} {...props} {...errorProps} />
+      {/* Same responsive default as Input, so a textarea and the fields
+          around it share one scale: Radix size 2 on desktop, 3 on phones. */}
+      <RadixTextArea
+        id={id}
+        size={size ?? (isUpMd ? undefined : '3')}
+        {...props}
+        {...errorProps}
+      />
     </Grid>
   )
 }

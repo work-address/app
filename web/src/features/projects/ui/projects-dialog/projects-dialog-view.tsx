@@ -53,7 +53,6 @@ export const ProjectsDialogView = ({ data }: ProjectsDialogViewProps) => {
     rows: 'auto auto',
     columns: '1fr',
     gap: '2',
-    size: '3',
   }
 
   return (
@@ -84,7 +83,6 @@ export const ProjectsDialogView = ({ data }: ProjectsDialogViewProps) => {
           disabled
           value={data.text}
           rows={3}
-          size="3"
         />
         {collaborators.length > 0 && (
           <>

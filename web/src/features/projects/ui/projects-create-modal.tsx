@@ -92,7 +92,6 @@ export const ProjectsCreateModal = ({
     rows: 'auto 1fr',
     columns: '1fr',
     gap: '2',
-    size: '3',
   }
 
   const handleFormSubmit = (data: ProjectFormValues) => {

@@ -148,9 +148,16 @@ const Overview = styled.div`
   }
 `
 
-/* On a phone the search takes its own line rather than squeezing the title. */
+/* The search belongs to the projects group, so it sits beside the title
+   rather than being pushed to the far edge. On a phone it takes its own line
+   rather than squeezing the title. */
 const ProjectsHead = styled(S.SectionTitleRow)`
   flex-wrap: wrap;
+  justify-content: flex-start;
+
+  ${(p) => p.theme.breakpoints.up('md')} {
+    gap: var(--space-5);
+  }
 `
 
 const SearchArea = styled.div`

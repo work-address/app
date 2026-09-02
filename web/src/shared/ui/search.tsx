@@ -26,7 +26,7 @@ export const SearchInput = ({ ...props }: SearchProps) => {
         onChange?.(e.currentTarget.value, e)
       }}
       placeholder={t('ui.search.placeholderProjects')}
-      addonLeft={<MagnifyingGlassIcon width={20} height={20} />}
+      addonLeft={<MagnifyingGlassIcon width={16} height={16} />}
       addonRight={
         value ? (
           <Tooltip content={t('ui.search.clear')}>
