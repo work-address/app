@@ -296,7 +296,7 @@ class DemoDataSeeder {
   /**
    * `Time` is unique on (project, fromAt) — *without* the user — so two people
    * cannot start an entry at the same instant on the same project. Each
-   * contributor is offset by a minute within the ten-minute grid so a project
+   * contributor is offset by a minute within the sampling grid so a project
    * with three of them seeds without colliding.
    */
   private async seedTime(

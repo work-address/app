@@ -201,8 +201,10 @@ export class TimeControllerTest extends BaseControllerTest {
     const row = res.data[0] as Record<string, unknown>
     expect(row.projectId).to.be.eq(projectA.id)
     expect(row.rateHour).to.be.eq(projectA.rateHour)
-    expect(row.rateTotal).to.be.eq(10)
-    expect(row.minutes).to.be.eq(10)
+    // the entry spans a full hour, and minutes is now read from that span
+    // rather than assumed from the row count, so an hour at 60/hour bills 60
+    expect(row.rateTotal).to.be.eq(60)
+    expect(row.minutes).to.be.eq(60)
     expect(row.minutesActive).to.be.eq(timeA.minutesActive)
     expect(row.mouseKeys).to.be.eq(timeA.mouseKeys)
     expect(row.keyboardKeys).to.be.eq(timeA.keyboardKeys)

@@ -183,7 +183,9 @@ export class ProjectManager {
 
       const times: Time[] = []
       const fromAt = moment().startOf('day')
-      const toAt = moment().startOf('day').add(10, 'minutes')
+      const toAt = moment()
+        .startOf('day')
+        .add(Calc.trackerIntervalMinutes, 'minutes')
 
       for (let i = 1; i < 6; i++) {
         const time = new Time()

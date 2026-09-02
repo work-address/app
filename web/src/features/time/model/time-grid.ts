@@ -6,9 +6,9 @@ const MS_PER_MINUTE = 60_000
 /**
  * Percentage boundaries between activity tones.
  *
- * Chosen so that at the ten-minute slot the tracker emits they reproduce the
- * buckets the list view already badges with (0-2 min red, 3-5 min orange, 6+
- * green), while staying correct for a slot of any other length.
+ * Chosen so that at a ten-minute slot they reproduce the buckets the list
+ * view already badges with (0-2 min red, 3-5 min orange, 6+ green), while
+ * staying correct for a slot of any other length.
  */
 const MEDIUM_TONE_FROM_PERCENT = 30
 const HIGH_TONE_FROM_PERCENT = 60
