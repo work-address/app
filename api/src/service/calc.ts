@@ -8,7 +8,7 @@ export class Calc {
    * still span the old one - see {@link spanMinutes}. The constant is for
    * generated entries, which have to pick a width for themselves.
    */
-  public static readonly trackerIntervalMinutes = 15
+  public static readonly trackerIntervalMinutes = 10
 
   public static rateTotal(minutes: number, rateHour: number): number {
     return Number(rateHour) * (Number(minutes) / 60)
