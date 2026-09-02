@@ -12,6 +12,7 @@ import { type ProfileEditFormState } from './profile-edit-field'
 import { ProfileEditLinks } from './profile-edit-links'
 
 import { saveProfileMutation } from '@/entities/profile'
+import { LocalWalletCard } from '@/features/local-wallet'
 import { useLeaveConfirm, useConfirm, useBreakpoint } from '@/shared'
 
 const EMPTY_FORM_VALUES: ProfileEditFormState = {
@@ -134,8 +135,10 @@ export const ProfileEdit = () => {
   }, [user, resetForm])
 
   return (
-    <form onSubmit={handleSubmit(onSubmit)}>
-      <Root>
+    <Root>
+      {/* The wallet card sits outside the form: its own dialogs submit, and
+          a submit inside a form would save the profile instead. */}
+      <form onSubmit={handleSubmit(onSubmit)}>
         <Grid rows={{ initial: 'auto auto' }} gap={'20px'}>
           <ProfileEditDetails
             user={user}
@@ -159,12 +162,16 @@ export const ProfileEdit = () => {
             setValue={setValue}
           />
         </Grid>
-      </Root>
-    </form>
+      </form>
+      <LocalWalletCard />
+    </Root>
   )
 }
 
 const Root = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: 20px;
   /* Clears the fixed Cancel/Save sheet on phones, so the last field can
      scroll out from under it. */
   padding-bottom: 96px;

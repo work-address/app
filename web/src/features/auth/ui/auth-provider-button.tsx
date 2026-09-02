@@ -1,9 +1,13 @@
 import { ChevronRightIcon } from '@radix-ui/react-icons'
 import styled from 'styled-components'
 
+import type { ReactNode } from 'react'
+
 type Props = {
-  iconUrl: string
-  iconAlt: string
+  iconUrl?: string
+  iconAlt?: string
+  /** Drawn in the mark's slot when the option has no network logo. */
+  icon?: ReactNode
   children: string
   onClick?: () => void
   onMouseEnter?: () => void
@@ -19,6 +23,7 @@ export const AuthProviderButton = ({
   children,
   iconAlt,
   iconUrl,
+  icon,
   onClick,
   onMouseEnter,
   onFocus,
@@ -30,7 +35,11 @@ export const AuthProviderButton = ({
       onFocus={onFocus}
       type={'button'}
     >
-      <Icon src={iconUrl} alt={iconAlt} />
+      {iconUrl ? (
+        <Icon src={iconUrl} alt={iconAlt ?? ''} />
+      ) : (
+        <IconSlot aria-hidden="true">{icon}</IconSlot>
+      )}
       <Text>{children}</Text>
       <Chevron aria-hidden="true" />
     </Button>
@@ -81,6 +90,18 @@ export const Icon = styled.img`
   height: 28px;
   display: block;
   flex-shrink: 0;
+`
+
+const IconSlot = styled.span`
+  width: 28px;
+  height: 28px;
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  border-radius: 50%;
+  background: var(--ds-accent-3);
+  color: var(--ds-accent-11);
 `
 
 export const Text = styled.span`

@@ -9,7 +9,7 @@ import { AuthWalletList } from './auth-wallet-list'
 
 import type { SupportedWallet } from '../model'
 
-export type SignInGuideMode = 'default' | 'ton' | 'solana' | 'eth'
+export type SignInGuideMode = 'default' | 'ton' | 'solana' | 'eth' | 'local'
 
 type PanelSpec = {
   mode: SignInGuideMode
@@ -22,6 +22,7 @@ const PANELS: PanelSpec[] = [
   { mode: 'ton', stepCount: 4, wallets: TON_WALLETS },
   { mode: 'solana', stepCount: 4, wallets: SOLANA_WALLETS },
   { mode: 'eth', stepCount: 4, wallets: ETHEREUM_WALLETS },
+  { mode: 'local', stepCount: 4 },
 ]
 
 type Props = {

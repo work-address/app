@@ -35,10 +35,13 @@ export const Confirm = () => {
                 </Text>
               </Dialog.Title>
               {entry.props.description && (
+                // Description is itself a <p>, so the text inside is a block
+                // span: a <p> in a <p> is invalid HTML React warns about.
                 <Dialog.Description>
                   <Text
                     size={isDesktop ? '2' : '3'}
-                    as="p"
+                    as="span"
+                    style={{ display: 'block' }}
                     align={{ initial: 'center', sm: 'left' }}
                   >
                     {entry.props.description}

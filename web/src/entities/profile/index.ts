@@ -344,5 +344,8 @@ export {
   $normalizedUser as $user,
 } from './profile.stores'
 export { saveProfileMutation } from './profile.mutations'
-export { subscribeEthEventsFx } from './eth.model'
+// `loginEthFx` is the shared tail of every Ethereum sign-in: the browser
+// wallet feature signs the nonce itself and hands the signature here, so it
+// gets the same token handling, status fetch and failure path as a wallet app.
+export { loginEthFx, subscribeEthEventsFx } from './eth.model'
 export { subscribeTonUiEventsFx } from './ton.model'
