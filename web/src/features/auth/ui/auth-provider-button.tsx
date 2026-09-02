@@ -1,3 +1,4 @@
+import { ChevronRightIcon } from '@radix-ui/react-icons'
 import styled from 'styled-components'
 
 type Props = {
@@ -9,6 +10,11 @@ type Props = {
   onFocus?: () => void
 }
 
+/**
+ * One sign-in option. Laid out like a form's primary control - full width,
+ * one row, a leading network mark - so the three of them read as the choice
+ * the page is asking for rather than as a list of logos.
+ */
 export const AuthProviderButton = ({
   children,
   iconAlt,
@@ -26,53 +32,72 @@ export const AuthProviderButton = ({
     >
       <Icon src={iconUrl} alt={iconAlt} />
       <Text>{children}</Text>
+      <Chevron aria-hidden="true" />
     </Button>
   )
 }
 
 export const Button = styled.button`
   width: 100%;
-  border-radius: 8px;
-  background: var(--white);
   display: flex;
   align-items: center;
-  gap: 12px;
-  height: 56px;
-  padding: 0 12px;
-  color: var(--ds-accent-11);
+  gap: 14px;
+  height: 52px;
+  padding: 0 14px 0 12px;
+  border: 1px solid var(--ds-neutral-alpha-6);
+  border-radius: 8px;
+  background: var(--white);
+  color: var(--ds-neutral-12);
+  text-align: left;
+  cursor: pointer;
+  transition:
+    border-color 0.15s ease,
+    background 0.15s ease,
+    box-shadow 0.15s ease;
 
   &:hover {
-    background: var(--c-rgba-0-0-51-0_02);
+    border-color: var(--ds-accent-9);
+    background: var(--ds-accent-3);
   }
 
-  ${({ theme }) => theme.breakpoints.up('md')} {
-    padding: 0 14px;
-    height: 76px;
-    border: 1px solid var(--c-rgba-0-0-51-0_12);
+  &:active {
+    background: var(--ds-accent-alpha-6);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ds-accent-9);
+    outline-offset: 2px;
+  }
+
+  &:hover svg,
+  &:focus-visible svg {
+    color: var(--ds-accent-11);
+    transform: translateX(2px);
   }
 `
 
 export const Icon = styled.img`
-  height: 32px;
-  width: 32px;
+  width: 28px;
+  height: 28px;
   display: block;
-
-  ${({ theme }) => theme.breakpoints.up('md')} {
-    width: 52px;
-    height: 52px;
-  }
+  flex-shrink: 0;
 `
 
-export const Text = styled.div`
+export const Text = styled.span`
+  flex: 1;
+  min-width: 0;
+  font-size: var(--font-size-3);
+  line-height: 1.3;
   font-weight: 500;
-  font-size: var(--font-size-4);
-  line-height: 24px;
-  font-family: Inter, sans-serif;
-  color: var(--ds-accent-11);
-  letter-spacing: -0.45px;
+  color: inherit;
+`
 
-  ${({ theme }) => theme.breakpoints.up('md')} {
-    color: var(--c-rgba-0-7-20-0_82);
-    letter-spacing: 0.54px;
-  }
+const Chevron = styled(ChevronRightIcon)`
+  flex-shrink: 0;
+  width: 18px;
+  height: 18px;
+  color: var(--ds-neutral-11);
+  transition:
+    color 0.15s ease,
+    transform 0.15s ease;
 `

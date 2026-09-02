@@ -11,7 +11,7 @@ export const AuthLayout = () => {
   const fullScreen = matchPath(routes.signIn.schema, pathname) !== null
 
   return (
-    <Root>
+    <Root $fullScreen={fullScreen}>
       <Stage $fullScreen={fullScreen}>
         <Outlet />
       </Stage>
@@ -19,9 +19,12 @@ export const AuthLayout = () => {
   )
 }
 
-const Root = styled.main`
+/* The sign-in page paints its own two panels edge to edge; the patterned
+   backdrop is for the smaller auth pages that sit in a card on top of it. */
+const Root = styled.main<{ $fullScreen: boolean }>`
   min-height: 100vh;
-  background: url(${SignBg}) center / cover no-repeat;
+  background: ${(p) =>
+    p.$fullScreen ? 'var(--white)' : `url(${SignBg}) center / cover no-repeat`};
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -41,11 +44,14 @@ const Stage = styled.div<{ $fullScreen: boolean }>`
     margin: 44px 0 0 0;
   }
 
-  ${({ theme, $fullScreen }) =>
+  /* Doubled so it outranks the breakpoint rules above, which are emitted
+     after the base declarations and would otherwise restore the offset. */
+  ${({ $fullScreen }) =>
     $fullScreen &&
     css`
-      ${theme.breakpoints.up('lg')} {
+      && {
         margin: 0;
+        padding: 0;
         width: 100%;
       }
     `}

@@ -84,19 +84,13 @@ export const Actions = styled.div`
 `
 
 export const Learn = styled(Link)`
-  color: var(--ds-accent-9);
+  color: var(--ds-accent-11);
   font-weight: 500;
-  padding: 6px 0 0;
-  letter-spacing: 0.5px;
-  font-size: var(--font-size-2);
+  text-decoration: underline;
+  text-underline-offset: 2px;
 
   &:hover {
-    text-decoration: underline;
-  }
-
-  ${({ theme }) => theme.breakpoints.up('md')} {
-    line-height: 150%;
-    font-size: var(--font-size-3);
+    color: var(--ds-accent-9);
   }
 `
 export const FootLine = styled.div`
@@ -108,7 +102,7 @@ export const FootLine = styled.div`
 `
 
 export const FootLabel = styled.span`
-  font-weight: 300;
+  color: var(--c-rgba-0-7-20-0_52);
 `
 
 export const FootWalletLink = styled.a`
@@ -116,7 +110,7 @@ export const FootWalletLink = styled.a`
   text-decoration: none;
 
   &:hover {
-    color: var(--ds-accent-9);
+    color: var(--ds-accent-11);
     text-decoration: underline;
   }
 `

@@ -26,13 +26,18 @@ const PANELS: PanelSpec[] = [
 
 type Props = {
   mode: SignInGuideMode
+  /**
+   * `dark` sets the guide on the brand panel, where the copy has to be
+   * white on blue; `light` keeps the default ink for a pale surface.
+   */
+  tone?: 'light' | 'dark'
 }
 
-export const AuthSignInGuide = ({ mode }: Props) => {
+export const AuthSignInGuide = ({ mode, tone = 'light' }: Props) => {
   const { t } = useTranslation()
 
   return (
-    <Root>
+    <Root data-tone={tone}>
       {PANELS.map((panel) => {
         const active = panel.mode === mode
 
@@ -107,18 +112,37 @@ export const AuthSignInGuideMobile = () => {
   )
 }
 
+/* The palette is a set of variables so the two tones share one markup. */
 const Root = styled.div`
   position: relative;
   height: 100%;
   min-height: 460px;
+
+  --guide-eyebrow: var(--ds-accent-9);
+  --guide-title: var(--ds-neutral-12);
+  --guide-text: var(--c-rgba-0-7-20-0_82);
+  --guide-muted: var(--c-rgba-0-7-20-0_52);
+  --guide-note: var(--ds-accent-11);
+  --guide-rule: var(--c-rgba-0-0-51-0_12);
+  --guide-badge-bg: var(--white);
+  --guide-badge-fg: var(--ds-accent-11);
+  --guide-badge-border: var(--c-rgba-0-0-51-0_12);
+
+  &[data-tone='dark'] {
+    --guide-eyebrow: var(--c-rgba-255-255-255-0_92);
+    --guide-title: var(--white);
+    --guide-text: var(--c-rgba-255-255-255-0_92);
+    --guide-muted: var(--c-rgba-255-255-255-0_5);
+    --guide-note: var(--c-rgba-255-255-255-0_92);
+    --guide-rule: var(--c-rgba-255-255-255-0_2);
+    --guide-badge-bg: var(--c-rgba-255-255-255-0_2);
+    --guide-badge-fg: var(--white);
+    --guide-badge-border: transparent;
+  }
 `
 
 const MobileRoot = styled.div`
-  margin-bottom: 12px;
-
-  ${({ theme }) => theme.breakpoints.up('lg')} {
-    display: none;
-  }
+  width: 100%;
 `
 
 const MobileToggle = styled.button`
@@ -127,12 +151,21 @@ const MobileToggle = styled.button`
   justify-content: center;
   gap: 6px;
   width: 100%;
-  min-height: 44px;
+  min-height: 40px;
   padding: 6px 12px;
+  border-radius: 6px;
   font-size: var(--font-size-2);
   font-weight: 500;
-  letter-spacing: 0.4px;
   color: var(--ds-accent-11);
+
+  &:hover {
+    background: var(--ds-accent-3);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ds-accent-9);
+    outline-offset: 2px;
+  }
 `
 
 const MobileChevron = styled(ChevronDownIcon)<{ $open: boolean }>`
@@ -165,7 +198,7 @@ const Panel = styled.div<{ $active: boolean }>`
   display: flex;
   flex-direction: column;
   justify-content: center;
-  padding: 40px 44px;
+  padding: 0;
   text-align: left;
   opacity: ${({ $active }) => ($active ? 1 : 0)};
   transition: opacity 0.2s ease;
@@ -177,7 +210,7 @@ const Eyebrow = styled.div`
   font-weight: 600;
   letter-spacing: 1.4px;
   text-transform: uppercase;
-  color: var(--ds-accent-9);
+  color: var(--guide-eyebrow);
   margin-bottom: 10px;
 `
 
@@ -185,14 +218,14 @@ const PanelTitle = styled.h2`
   font-size: var(--font-size-5);
   font-weight: 500;
   letter-spacing: 0.4px;
-  color: var(--ds-neutral-12);
+  color: var(--guide-title);
   line-height: 28px;
   margin-bottom: 8px;
 `
 
 const Intro = styled.p`
   font-size: var(--font-size-2);
-  color: var(--c-rgba-0-7-20-0_62);
+  color: var(--guide-text);
   line-height: 20px;
   letter-spacing: 0.3px;
   margin-bottom: 10px;
@@ -215,9 +248,9 @@ const StepBadge = styled.span`
   flex: 0 0 24px;
   height: 24px;
   border-radius: 50%;
-  background: var(--white);
-  border: 1px solid var(--c-rgba-0-0-51-0_12);
-  color: var(--ds-accent-11);
+  background: var(--guide-badge-bg);
+  border: 1px solid var(--guide-badge-border);
+  color: var(--guide-badge-fg);
   font-size: var(--font-size-1);
   font-weight: 600;
   display: flex;
@@ -230,7 +263,7 @@ const StepText = styled.span`
   font-size: var(--font-size-2);
   line-height: 20px;
   letter-spacing: 0.3px;
-  color: var(--c-rgba-0-7-20-0_82);
+  color: var(--guide-text);
 `
 
 const Wallets = styled.div`
@@ -238,7 +271,11 @@ const Wallets = styled.div`
   font-size: var(--font-size-1);
   line-height: 18px;
   letter-spacing: 0.4px;
-  color: var(--c-rgba-0-7-20-0_52);
+  color: var(--guide-muted);
+
+  a:hover {
+    color: var(--guide-title);
+  }
 `
 
 const WalletsLabel = styled.span`
@@ -250,15 +287,15 @@ const Hint = styled.div`
   font-size: var(--font-size-1);
   line-height: 18px;
   letter-spacing: 0.4px;
-  color: var(--c-rgba-0-7-20-0_52);
+  color: var(--guide-muted);
 `
 
 const Note = styled.div`
   margin-top: 14px;
   padding-top: 12px;
-  border-top: 1px solid var(--c-rgba-0-0-51-0_12);
+  border-top: 1px solid var(--guide-rule);
   font-size: var(--font-size-1);
   line-height: 18px;
   letter-spacing: 0.4px;
-  color: var(--ds-accent-11);
+  color: var(--guide-note);
 `
