@@ -9,6 +9,7 @@ import { User } from '@/entity/user'
 import moment from 'moment'
 import { Time } from '@/entity/time'
 import { TimeRepository } from '@/repository/time-repository'
+import { Calc } from '@/service/calc'
 import { ProjectAccessAddresses } from '@/model/dto/project'
 import { RepoEffect } from '@/repository/abstract-repository-template'
 import { Entitlement } from '@/service/entitlement'
@@ -198,8 +199,8 @@ export class ProjectManager {
 
         times.push(time)
 
-        fromAt.add(1 * 10, 'minutes')
-        toAt.add(1 * 10, 'minutes')
+        fromAt.add(Calc.trackerIntervalMinutes, 'minutes')
+        toAt.add(Calc.trackerIntervalMinutes, 'minutes')
       }
 
       return Effect.gen(this, function* () {

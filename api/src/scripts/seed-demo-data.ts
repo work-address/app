@@ -9,6 +9,7 @@ import { DbConnector } from '@/connector/db-connector'
 import { Project } from '@/entity/project'
 import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
+import { Calc } from '@/service/calc'
 import { EProjectState } from '@/model/project'
 import { EUserRole } from '@/model/user'
 import { InvoiceRepository } from '@/repository/invoice-repository'
@@ -51,8 +52,8 @@ import { runPromise } from '@/service/effect-bridge'
 const DEFAULT_PROJECTS = 4
 const WORKERS_PER_PROJECT = 2
 const DAYS_OF_HISTORY = 21
-/** Matches the tracker's sampling interval, so `entries * 10` reads as minutes. */
-const ENTRY_MINUTES = 10
+/** Each generated entry spans one tracker sampling window. */
+const ENTRY_MINUTES = Calc.trackerIntervalMinutes
 const SEED_TAG = '[seed:demo]'
 
 /**

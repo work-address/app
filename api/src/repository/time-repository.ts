@@ -73,10 +73,11 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     qb.select([
       'project.id as projectId',
       'project.rateHour as rateHour',
-      // Entry count, converted to minutes by the `* 10` below: the tracker
-      // samples on a ten-minute interval, so this is wall-clock time covered,
-      // as distinct from `minutesActive` which is time actually worked.
-      'COUNT(time.id) as minutes',
+      // Wall-clock time covered, summed from each row's own span rather than
+      // inferred from the row count: the tracker's interval has changed over
+      // time, so a fixed multiplier would misread every row from before the
+      // change. Distinct from `minutesActive`, which is time actually worked.
+      'ROUND(SUM(EXTRACT(EPOCH FROM (time.toAt - time.fromAt)) / 60)) as minutes',
       'SUM(time.minutesActive) as minutesActive',
       'SUM(CASE WHEN COALESCE(time.isPaid, false) = true THEN time.minutesActive ELSE 0 END) as minutesPaid',
       'SUM(CASE WHEN COALESCE(time.isPaid, false) = false THEN time.minutesActive ELSE 0 END) as minutesUnpaid',
@@ -98,8 +99,8 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         return {
           projectId: r.projectid,
           rateHour: r.ratehour,
-          rateTotal: Calc.rateTotal(r.minutes * 10, r.ratehour),
-          minutes: Number(r.minutes * 10),
+          rateTotal: Calc.rateTotal(Number(r.minutes), r.ratehour),
+          minutes: Number(r.minutes),
           minutesActive: Number(r.minutesactive),
           minutesPaid: Number(r.minutespaid),
           minutesUnpaid: Number(r.minutesunpaid),

@@ -68,15 +68,16 @@ export class InvoiceManager {
    * Rolls a set of entries up for display.
    *
    * Summed in memory from the same rows that are returned as line items, so
-   * the two cannot drift. `minutes` is the wall-clock span the tracker covered
-   * - it samples on a ten-minute interval, so each entry stands for ten
-   * minutes - as distinct from `minutesActive`, which is time actually worked.
+   * the two cannot drift. `minutes` is the wall-clock span the tracker
+   * covered, read from each entry's own fromAt/toAt rather than assumed from
+   * a fixed interval, so an invoice spanning a change of interval still bills
+   * correctly. Distinct from `minutesActive`, which is time actually worked.
    */
   public static reportFor(times: Time[], rateHour: number): IInvoiceReport {
     const sum = (pick: (time: Time) => number | null | undefined): number =>
       times.reduce((total, time) => total + (Number(pick(time)) || 0), 0)
 
-    const minutes = times.length * 10
+    const minutes = Calc.spanMinutes(times)
     const minutesActive = sum((time) => time.minutesActive)
 
     return {
