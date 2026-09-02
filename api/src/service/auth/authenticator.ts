@@ -15,7 +15,6 @@ import AuthenticationException from '@/exception/authentication-exception'
 import { UserManager } from '@/service/user-manager'
 import { RedisClient } from '@/service/redis-client'
 import { Signer } from '@/service/auth/signer'
-import { ProjectManager } from '@/service/project-manager'
 import { TimeRepository } from '@/repository/time-repository'
 import { TonProofService } from '@/service/auth/ton-proof-service'
 import { IAuthTonPayload } from '@/model/auth'
@@ -39,8 +38,6 @@ export class Authenticator {
   protected userRepository: UserRepository
   @inject('TimeRepository')
   protected timeRepository: TimeRepository
-  @inject('ProjectManager')
-  protected projectManager: ProjectManager
   @inject('UserManager')
   protected userManager: UserManager
   @inject('Mailer')
@@ -116,7 +113,7 @@ export class Authenticator {
       yield* fromPromise(() => this.redis.del(key))
 
       const existing = yield* this.userRepository.findByAddressPublic(address)
-      const user = existing ?? (yield* this.createUserWithDemoData(address))
+      const user = existing ?? (yield* this.createUser(address))
 
       return yield* Effect.sync(() => this.getTokens(user))
     })
@@ -274,16 +271,17 @@ export class Authenticator {
     return bcrypt.hashSync(plainPassword, 8)
   }
 
-  private createUserWithDemoData(address: string): AuthEffect<User> {
+  private createUser(address: string): AuthEffect<User> {
     // Built inside the generator so each run creates its own User; hoisting it
     // would make a second run re-save the instance the first run persisted.
+    // A new account starts empty: the dashboard's empty state walks the user
+    // through creating their first project.
     return Effect.gen(this, function* () {
       const user = new User()
       user.address = address
       user.roles = [EUserRole.ROLE_USER]
 
       yield* this.userManager.saveSingle(user)
-      yield* this.projectManager.createDemoData(user)
 
       return user
     })

@@ -6,10 +6,6 @@ import { Project } from '@/entity/project'
 import { ProjectRepository } from '@/repository/project-repository'
 import { EProjectState } from '@/model/project'
 import { User } from '@/entity/user'
-import moment from 'moment'
-import { Time } from '@/entity/time'
-import { TimeRepository } from '@/repository/time-repository'
-import { Calc } from '@/service/calc'
 import { ProjectAccessAddresses } from '@/model/dto/project'
 import { RepoEffect } from '@/repository/abstract-repository-template'
 import { Entitlement } from '@/service/entitlement'
@@ -19,8 +15,6 @@ import { WalletAddress } from '@/service/wallet-address'
 export class ProjectManager {
   @inject('ProjectRepository')
   protected projectRepository: ProjectRepository
-  @inject('TimeRepository')
-  protected timeRepository: TimeRepository
   @inject('Entitlement')
   protected entitlement: Entitlement
 
@@ -169,46 +163,4 @@ export class ProjectManager {
   }
 
   // @deprecated remove demo data
-  public createDemoData(user: User): RepoEffect<void> {
-    // Effect.suspend so the demo entities are built per run rather than when
-    // the effect is described - otherwise a second run would re-save the very
-    // same instances, updating the rows the first run inserted.
-    return Effect.suspend(() => {
-      const project = new Project()
-      project.title = 'Your first project'
-      project.text = 'Demo'
-      project.rateHour = 0
-      project.user = user
-      project.state = EProjectState.ACTIVE
-
-      const times: Time[] = []
-      const fromAt = moment().startOf('day')
-      const toAt = moment()
-        .startOf('day')
-        .add(Calc.trackerIntervalMinutes, 'minutes')
-
-      for (let i = 1; i < 6; i++) {
-        const time = new Time()
-        time.project = project
-        time.user = user
-        time.note = `Demo entry ${i}`
-        time.mouseKeys = 0
-        time.mouseDistance = 0
-        time.keyboardKeys = 0
-        time.minutesActive = i
-        time.fromAt = fromAt.toDate()
-        time.toAt = toAt.toDate()
-
-        times.push(time)
-
-        fromAt.add(Calc.trackerIntervalMinutes, 'minutes')
-        toAt.add(Calc.trackerIntervalMinutes, 'minutes')
-      }
-
-      return Effect.gen(this, function* () {
-        yield* this.save(project)
-        yield* this.timeRepository.saveMany(times)
-      })
-    })
-  }
 }

@@ -20,9 +20,7 @@ import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { RedisClient } from '@/service/redis-client'
 import { AuthenticatorTimeTracker } from '@/service/auth/authenticator-time-tracker'
 import { ProjectRepository } from '@/repository/project-repository'
-import { TimeRepository } from '@/repository/time-repository'
 import { IConfigParameters } from '@/model/config'
-import moment from 'moment'
 import {
   buildSolanaAuthPayload,
   buildSolanaAuthPayloadWithInvalidSignature,
@@ -40,7 +38,6 @@ export class AuthControllerTest extends BaseControllerTest {
   protected redisClient: RedisClient
   protected authenticatorTimeTracker: AuthenticatorTimeTracker
   protected projectRepository: ProjectRepository
-  protected timeRepository: TimeRepository
 
   constructor() {
     super()
@@ -48,7 +45,6 @@ export class AuthControllerTest extends BaseControllerTest {
     this.redisClient = this.container.get('RedisClient')
     this.userRepository = this.container.get('UserRepository')
     this.projectRepository = this.container.get('ProjectRepository')
-    this.timeRepository = this.container.get('TimeRepository')
   }
 
   @test()
@@ -70,25 +66,15 @@ export class AuthControllerTest extends BaseControllerTest {
     const user = await runPromise(
       this.userRepository.findByAddressPublicOrFail(account.address),
     )
-    const project = await runPromise(
-      this.projectRepository.findOneByOrFail({
-        where: {
-          user: { id: user.id },
-        },
-      }),
+    const projects = await runPromise(
+      this.projectRepository.findBy({ where: { user: { id: user.id } } }),
     )
-    const times = await runPromise(
-      this.timeRepository.findAllTimeForProject(project, user),
-    )
-
-    const fromAt = moment().startOf('day').add(40, 'minutes')
 
     expect(res.status).to.be.equal(200)
     this.expectEmptyResponseBody(res.data)
     expect(res.headers).to.contain.keys(['authorization', 'refresh-token'])
-    expect(project.title).to.be.equal('Your first project')
-    expect(times.length).to.be.equal(5)
-    expect(times[0].fromAt.toISOString()).to.be.equal(fromAt.toISOString())
+    // A new account starts empty; nothing is seeded on first sign-in.
+    expect(projects.length).to.be.equal(0)
   }
 
   @test()
@@ -232,20 +218,15 @@ export class AuthControllerTest extends BaseControllerTest {
     const user = await runPromise(
       this.userRepository.findByAddressPublicOrFail(address),
     )
-    const project = await runPromise(
-      this.projectRepository.findOneByOrFail({
-        where: { user: { id: user.id } },
-      }),
-    )
-    const times = await runPromise(
-      this.timeRepository.findAllTimeForProject(project, user),
+    const projects = await runPromise(
+      this.projectRepository.findBy({ where: { user: { id: user.id } } }),
     )
 
     expect(res.status).to.be.equal(200)
     this.expectEmptyResponseBody(res.data)
     expect(res.headers).to.contain.keys(['authorization', 'refresh-token'])
-    expect(project.title).to.be.equal('Your first project')
-    expect(times.length).to.be.equal(5)
+    // A new account starts empty; nothing is seeded on first sign-in.
+    expect(projects.length).to.be.equal(0)
   }
 
   @test()
@@ -407,20 +388,15 @@ export class AuthControllerTest extends BaseControllerTest {
     const user = await runPromise(
       this.userRepository.findByAddressPublicOrFail(payload.address),
     )
-    const project = await runPromise(
-      this.projectRepository.findOneByOrFail({
-        where: { user: { id: user.id } },
-      }),
-    )
-    const times = await runPromise(
-      this.timeRepository.findAllTimeForProject(project, user),
+    const projects = await runPromise(
+      this.projectRepository.findBy({ where: { user: { id: user.id } } }),
     )
 
     expect(res.status).to.be.equal(200)
     this.expectEmptyResponseBody(res.data)
     expect(res.headers).to.contain.keys(['authorization', 'refresh-token'])
-    expect(project.title).to.be.equal('Your first project')
-    expect(times.length).to.be.equal(5)
+    // A new account starts empty; nothing is seeded on first sign-in.
+    expect(projects.length).to.be.equal(0)
   }
 
   @test()
