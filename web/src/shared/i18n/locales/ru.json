@@ -348,6 +348,7 @@
   "localWallet.remove.description": "Зашифрованный ключ будет удалён из этого браузера. Без резервной копии приватного ключа кошелёк — и аккаунт, в который им входили, — восстановить нельзя.",
   "localWallet.remove.title": "Удалить кошелёк из браузера?",
   "localWallet.removed": "Кошелёк удалён из этого браузера",
+  "localWallet.reveal.button": "Показать приватный ключ",
   "localWallet.status.authorizing": "Выполняем вход…",
   "localWallet.status.decrypting": "Разблокируем кошелёк…",
   "localWallet.status.encrypting": "Шифруем его вашим паролем. Это займёт немного времени.",

@@ -340,6 +340,7 @@
   "localWallet.remove.description": "暗号化された鍵がこのブラウザから削除されます。秘密鍵のバックアップがなければ、ウォレットも、それでサインインしたアカウントも復元できません。",
   "localWallet.remove.title": "このウォレットをブラウザから削除しますか？",
   "localWallet.removed": "ウォレットをこのブラウザから削除しました",
+  "localWallet.reveal.button": "秘密鍵を表示",
   "localWallet.status.authorizing": "サインインしています…",
   "localWallet.status.decrypting": "ウォレットのロックを解除しています…",
   "localWallet.status.encrypting": "パスワードで暗号化しています。少々お待ちください。",

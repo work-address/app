@@ -12,6 +12,7 @@ import { $profile, $isAuthenticatedUserProfile } from '../../model'
 import { ProfileViewCard } from './profile-view-styles'
 
 import { $pending } from '@/entities/profile'
+import { LocalWalletRevealButton } from '@/features/local-wallet'
 import { routes } from '@/routes'
 import {
   Text,
@@ -133,6 +134,13 @@ export const ProfileViewQrCode = ({
               >
                 {t('common.share')} <Share1Icon />
               </Button>
+              {isAuthenticatedUserProfile && (
+                <LocalWalletRevealButton
+                  address={user?.address}
+                  size="m"
+                  stretch
+                />
+              )}
             </Flex>
           )}
         </Flex>

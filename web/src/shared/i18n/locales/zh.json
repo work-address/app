@@ -340,6 +340,7 @@
   "localWallet.remove.description": "加密的私钥将从此浏览器删除。没有私钥备份，钱包以及用它登录的账户都无法恢复。",
   "localWallet.remove.title": "从浏览器中移除此钱包？",
   "localWallet.removed": "钱包已从此浏览器移除",
+  "localWallet.reveal.button": "显示私钥",
   "localWallet.status.authorizing": "正在登录…",
   "localWallet.status.decrypting": "正在解锁钱包…",
   "localWallet.status.encrypting": "正在用你的密码加密，请稍候。",

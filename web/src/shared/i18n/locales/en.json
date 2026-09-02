@@ -342,6 +342,7 @@
   "localWallet.remove.description": "The encrypted key is deleted from this browser. Without a backup of the private key, the wallet — and the account signed in with it — cannot be recovered.",
   "localWallet.remove.title": "Remove this wallet from the browser?",
   "localWallet.removed": "Wallet removed from this browser",
+  "localWallet.reveal.button": "Reveal private key",
   "localWallet.status.authorizing": "Signing you in…",
   "localWallet.status.decrypting": "Unlocking your wallet…",
   "localWallet.status.encrypting": "Encrypting it with your password. This takes a moment.",

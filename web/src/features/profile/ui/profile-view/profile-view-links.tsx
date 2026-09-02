@@ -16,6 +16,7 @@ import {
 import { ProfileViewInfoRow } from './profile-view-info-row'
 import { ProfileViewCard } from './profile-view-styles'
 
+import { LocalWalletRevealButton } from '@/features/local-wallet'
 import { routes } from '@/routes'
 import {
   Button,
@@ -146,6 +147,9 @@ export const ProfileViewLinks = ({
                 </Flex>
               </Flex>
               <Flex gap={'2'} align={'center'}>
+                {isAuthenticatedUserProfile && (
+                  <LocalWalletRevealButton address={user?.address} />
+                )}
                 <Button
                   variant="outline"
                   color="neutral"

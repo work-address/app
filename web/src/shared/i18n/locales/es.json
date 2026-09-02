@@ -344,6 +344,7 @@
   "localWallet.remove.description": "La clave cifrada se borra de este navegador. Sin una copia de la clave privada, la wallet, y la cuenta con la que se inició sesión, no se pueden recuperar.",
   "localWallet.remove.title": "¿Quitar esta wallet del navegador?",
   "localWallet.removed": "Wallet quitada de este navegador",
+  "localWallet.reveal.button": "Mostrar clave privada",
   "localWallet.status.authorizing": "Iniciando sesión…",
   "localWallet.status.decrypting": "Desbloqueando tu wallet…",
   "localWallet.status.encrypting": "Cifrándola con tu contraseña. Tarda un momento.",
