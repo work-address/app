@@ -17,6 +17,12 @@ import { showPremiumBanner } from '@/features/dashboard'
 import { routes } from '@/routes'
 import { Logo, useBreakpoint, Button, navigateFx, Tooltip } from '@/shared'
 
+/**
+ * The mobile header is one row of equals: the logo, the profile card and the
+ * burger are all this tall, and the burger is this wide too.
+ */
+const MOBILE_ROW_HEIGHT = 48
+
 const menuVariants = {
   initial: { opacity: 1 },
   animate: {
@@ -123,6 +129,14 @@ export const Header = () => {
           )}
         </Right>
         <MobileRight>
+          {authenticated && (
+            <HeaderUserLink
+              user={user}
+              userAlt={t('header.userAlt')}
+              stretch
+              onNoPremiumClick={revealPremiumBanner}
+            />
+          )}
           <BurgerButton
             type="button"
             aria-label={
@@ -133,9 +147,9 @@ export const Header = () => {
             onClick={() => setMobileMenuOpen((s) => !s)}
           >
             {mobileMenuOpen ? (
-              <Cross1Icon width={16} height={16} aria-hidden="true" />
+              <Cross1Icon width={18} height={18} aria-hidden="true" />
             ) : (
-              <HamburgerMenuIcon width={16} height={16} aria-hidden="true" />
+              <HamburgerMenuIcon width={18} height={18} aria-hidden="true" />
             )}
           </BurgerButton>
         </MobileRight>
@@ -153,19 +167,7 @@ export const Header = () => {
               transition={{ duration: 0.18, ease: 'easeInOut' }}
             >
               <MobileMenuInner>
-                {authenticated ? (
-                  <>
-                    <MobileMenuTop>
-                      <HeaderUserLink
-                        user={user}
-                        userAlt={t('header.userAlt')}
-                        stretch
-                        onNoPremiumClick={revealPremiumBanner}
-                      />
-                    </MobileMenuTop>
-                    <Divider />
-                  </>
-                ) : (
+                {!authenticated && (
                   <>
                     <MobileMenuTop>
                       <NavLink
@@ -219,13 +221,19 @@ const HeaderInner = styled.div`
   display: flex;
   justify-content: space-between;
   align-items: center;
+  gap: 12px;
   padding: 12px 28px;
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    padding: 12px 16px;
+  }
 `
 
 const LogoLink = styled(Link)`
   display: inline-flex;
   align-items: center;
   gap: 10px;
+  flex-shrink: 0;
 
   position: relative;
 `
@@ -270,7 +278,19 @@ const Right = styled.div`
 
 const MobileRight = styled.div`
   display: none;
-  align-items: center;
+  /* stretch, not center: the burger takes its height from this row rather
+     than carrying a size of its own that drifts from the profile card's. */
+  align-items: stretch;
+  /* Keeps the burger against the right edge when it is alone in this row -
+     signed out there is no profile card to push it there. */
+  justify-content: flex-end;
+  gap: 8px;
+  height: ${MOBILE_ROW_HEIGHT}px;
+
+  /* The profile card sits here now, so this row is the one that both claims
+     the space left over by the logo and gives way when it runs short. */
+  flex: 1;
+  min-width: 0;
 
   ${(p) => p.theme.breakpoints.down('md')} {
     display: flex;
@@ -278,24 +298,31 @@ const MobileRight = styled.div`
 `
 
 const BurgerButton = styled.button`
-  width: 45px;
-  height: 45px;
+  /* Square, and as tall as the row - the height comes from the stretch above. */
+  width: ${MOBILE_ROW_HEIGHT}px;
+  flex-shrink: 0;
   display: grid;
   place-items: center;
-  border: 1px solid var(--c-rgba-0-8-48-0_27);
-  border-radius: 6px;
-  background: transparent;
-  color: var(--ds-neutral-12);
+  /*
+   * The same surface, radius and timing as the profile card beside it and the
+   * exit button on desktop, so the header reads as one set of controls. It
+   * previously sat in an outline box on ad-hoc --c-rgba-* values, half the
+   * height of everything around it.
+   */
+  border: 0;
+  border-radius: 8px;
+  background: var(--ds-neutral-2);
+  color: var(--ds-neutral-11);
   cursor: pointer;
+  transition: background 0.15s ease;
 
   &:hover {
-    background: var(--c-rgba-28-32-36-0_06);
+    background: var(--ds-neutral-alpha-3);
+    color: var(--ds-neutral-12);
   }
 
-  ${(p) => p.theme.breakpoints.down('md')} {
-    width: 32px;
-    height: 32px;
-    border-radius: 4px;
+  &:active {
+    background: var(--ds-neutral-alpha-6);
   }
 `
 

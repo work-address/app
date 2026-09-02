@@ -80,6 +80,9 @@ export const HeaderUserLink = ({
 const Root = styled.div`
   position: relative;
   display: inline-flex;
+  /* Free to give way when the row around it runs out of room - in the mobile
+     header it shares that row with the logo and the burger. */
+  min-width: 0;
   border-radius: 8px;
   background: var(--ds-neutral-2);
   transition: background 0.15s ease;
@@ -127,7 +130,7 @@ const ProfileCard = styled.div`
   display: inline-flex;
   align-items: center;
   justify-content: center;
-  flex-shrink: 0;
+  min-width: 0;
   min-height: 32px;
   padding: 0 6px 0 1px;
   gap: 8px;
@@ -152,6 +155,10 @@ const UserBox = styled.div`
 const UserAvatar = styled.div`
   width: 40px;
   height: 40px;
+  /* Fixed, not merely sized: the QR inside is 32px, so letting the box shrink
+     under a long display name squeezes it down to the code itself and the
+     inset around it disappears. The name ellipsizes instead. */
+  flex-shrink: 0;
   border-radius: 6px;
   background: var(--gray-100);
   display: inline-flex;

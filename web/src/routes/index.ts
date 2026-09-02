@@ -1,6 +1,5 @@
 import {
   DashboardIcon,
-  DownloadIcon,
   FileTextIcon,
   PersonIcon,
   QuestionMarkCircledIcon,
@@ -15,7 +14,6 @@ type MainRoutes =
   & Route<'/profile/:walletAddress', 'profile', ProfileRoutes, { walletAddress: string }>
   & Route<'https://address.work/docs', 'docs'>
   & Route<'/connect', 'connect', NoChildRoutes, { nonce?: string }>
-  & Route<'https://address.work/en/download/', 'timeTracker'>
   & Route<'/download', 'download'>
   & Route<'/invoice/:id', 'invoice', NoChildRoutes, IdRouteParams>
   & Route<'/invoice', 'invoices'>
@@ -94,20 +92,6 @@ export const routes: MainRoutes = {
     icon: QuestionMarkCircledIcon,
   },
 
-  // The desktop tracker is distributed from the marketing site; there is no
-  // page for it in the app, so the menu entry leaves the app the way Help
-  // Center does.
-  timeTracker: {
-    schema: 'https://address.work/en/download/',
-    build: () => 'https://address.work/en/download/',
-    target: '_blank',
-
-    mobileOrder: 4,
-
-    translateKeyMobile: 'header.nav.timeTracker',
-    icon: DownloadIcon,
-  },
-
   download: {
     schema: '/download',
     build: () => '/download',
@@ -165,7 +149,6 @@ export const AUTH_REQUIRED_ROUTES = new Set<string>([
   routes.dashboard.schema,
   routes.profile.schema,
   routes.invoices.schema,
-  routes.timeTracker.schema,
 ])
 
 // eslint-disable-next-line
