@@ -1,4 +1,4 @@
-import { CopyIcon, EyeOpenIcon } from '@radix-ui/react-icons'
+import { EyeOpenIcon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useState } from 'react'
@@ -18,13 +18,14 @@ import {
   LocalWalletPasswordFields,
   type PasswordFormValues,
 } from './local-wallet-fields'
+import { LocalWalletKeyReveal } from './local-wallet-key-reveal'
+import { LocalWalletStatus } from './local-wallet-status'
 
 import { $user } from '@/entities/profile'
 import {
   AdaptiveDialog,
   Button,
   Card,
-  copyToClipboard,
   DIALOG_WIDTH_STANDARD,
   normalizeAddress,
   showToast,
@@ -170,21 +171,6 @@ const LocalWalletExportDialog = ({
     }
   }
 
-  const handleCopy = () => {
-    if (!privateKey) {
-      return
-    }
-
-    copyToClipboard(privateKey)
-      .then(() =>
-        showToast('info', {
-          message: t('localWallet.export.copied'),
-          position: 'top-center',
-        }),
-      )
-      .catch(() => {})
-  }
-
   return (
     <AdaptiveDialog
       open={open}
@@ -194,20 +180,16 @@ const LocalWalletExportDialog = ({
       desktopShowClose
     >
       <Flex direction="column" gap="4">
-        <Warning>{t('localWallet.export.intro')}</Warning>
         {privateKey ? (
           <>
-            <KeyBox>{privateKey}</KeyBox>
-            <Flex justify="end" gap="3">
+            <LocalWalletKeyReveal privateKey={privateKey} />
+            <Flex justify="end">
               <Button
                 color="neutral"
                 variant="soft"
                 onClick={() => close(false)}
               >
                 {t('common.close')}
-              </Button>
-              <Button iconLeft={<CopyIcon />} onClick={handleCopy}>
-                {t('localWallet.export.copy')}
               </Button>
             </Flex>
           </>
@@ -220,6 +202,9 @@ const LocalWalletExportDialog = ({
               void handleSubmit(onSubmit)(event)
             }}
           >
+            <Text size="2" color="gray">
+              {t('localWallet.export.passwordIntro')}
+            </Text>
             <LocalWalletPasswordFields
               register={register}
               errors={errors}
@@ -228,6 +213,7 @@ const LocalWalletExportDialog = ({
               confirm={false}
               autoFocus
             />
+            <LocalWalletStatus />
             {submitError && <FieldError>{submitError}</FieldError>}
             <Flex justify="end" gap="3">
               <Button
@@ -278,26 +264,4 @@ const Form = styled.form`
   display: flex;
   flex-direction: column;
   gap: var(--space-4);
-`
-
-const Warning = styled.div`
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-2);
-  background: var(--amber-a3);
-  color: var(--amber-11);
-  font-size: var(--font-size-2);
-  line-height: 1.45;
-`
-
-const KeyBox = styled.code`
-  display: block;
-  padding: var(--space-3);
-  border: 1px solid var(--ds-neutral-alpha-6);
-  border-radius: var(--radius-2);
-  background: var(--ds-neutral-2);
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: var(--font-size-2);
-  line-height: 1.5;
-  overflow-wrap: anywhere;
-  user-select: all;
 `

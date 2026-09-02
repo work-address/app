@@ -1,4 +1,4 @@
-import { createEffect, createStore } from 'effector'
+import { createEffect, createEvent, createStore } from 'effector'
 
 import type { HDNodeWallet, Wallet } from 'ethers'
 
@@ -35,6 +35,26 @@ type StoredLocalWallet = LocalWalletSummary & {
 }
 
 export type UnlockedLocalWallet = Wallet | HDNodeWallet
+
+/**
+ * What the wallet is busy with, for the dialog to narrate. Key derivation
+ * takes a second or two on purpose (scrypt), and a silent spinner that long
+ * reads as a hang.
+ */
+export type LocalWalletPhase =
+  | 'idle'
+  | 'generating'
+  | 'encrypting'
+  | 'decrypting'
+  | 'signing'
+  | 'authorizing'
+
+const phaseChanged = createEvent<LocalWalletPhase>()
+
+export const $localWalletPhase = createStore<LocalWalletPhase>('idle').on(
+  phaseChanged,
+  (_, phase) => phase,
+)
 
 export type LocalWalletErrorCode = 'missing' | 'wrong-password' | 'invalid-key'
 
@@ -101,6 +121,8 @@ const persist = async (
   wallet: UnlockedLocalWallet,
   password: string,
 ): Promise<LocalWalletSummary> => {
+  phaseChanged('encrypting')
+
   const stored: StoredLocalWallet = {
     address: wallet.address,
     keystore: await wallet.encrypt(password),
@@ -114,11 +136,18 @@ const persist = async (
 
 export const createLocalWalletFx = createEffect(
   async ({ password }: { password: string }) => {
+    phaseChanged('generating')
+
     const { Wallet } = await loadEthers()
     const wallet = Wallet.createRandom()
-    const summary = await persist(wallet, password)
 
-    return { wallet: wallet as UnlockedLocalWallet, summary }
+    try {
+      const summary = await persist(wallet, password)
+
+      return { wallet: wallet as UnlockedLocalWallet, summary }
+    } finally {
+      phaseChanged('idle')
+    }
   },
 )
 
@@ -139,9 +168,13 @@ export const importLocalWalletFx = createEffect(
       throw new LocalWalletError('invalid-key')
     }
 
-    const summary = await persist(wallet, password)
+    try {
+      const summary = await persist(wallet, password)
 
-    return { wallet, summary }
+      return { wallet, summary }
+    } finally {
+      phaseChanged('idle')
+    }
   },
 )
 
@@ -156,10 +189,14 @@ export const unlockLocalWalletFx = createEffect(
 
     const { Wallet } = await loadEthers()
 
+    phaseChanged('decrypting')
+
     try {
       return await Wallet.fromEncryptedJson(stored.keystore, password)
     } catch {
       throw new LocalWalletError('wrong-password')
+    } finally {
+      phaseChanged('idle')
     }
   },
 )
@@ -182,12 +219,20 @@ export const removeLocalWalletFx = createEffect(() => {
 export const signInWithLocalWalletFx = createEffect(
   async (wallet: UnlockedLocalWallet) => {
     const address = wallet.address
-    const nonce = await runApiData(() =>
-      baseApi.authControllerNonce({ body: { address } }),
-    )
-    const signature = await wallet.signMessage(nonce as string)
 
-    await loginEthFx({ signature, address })
+    try {
+      phaseChanged('signing')
+
+      const nonce = await runApiData(() =>
+        baseApi.authControllerNonce({ body: { address } }),
+      )
+      const signature = await wallet.signMessage(nonce as string)
+
+      phaseChanged('authorizing')
+      await loginEthFx({ signature, address })
+    } finally {
+      phaseChanged('idle')
+    }
   },
 )
 
