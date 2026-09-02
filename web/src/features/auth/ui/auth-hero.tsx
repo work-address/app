@@ -17,7 +17,6 @@ export const AuthHero = () => {
     <Root>
       <Title>{t('signIn.hero.title')}</Title>
       <Subtitle>{t('signIn.hero.subtitle')}</Subtitle>
-      <Rule aria-hidden="true" />
       <Points>
         {POINTS.map((point) => (
           <Point key={point}>
@@ -62,19 +61,13 @@ const Subtitle = styled.p`
   margin: 0;
 `
 
-const Rule = styled.div`
-  width: 120px;
-  height: 2px;
-  margin: 40px 0 32px;
-  background: var(--white);
-  opacity: 0.9;
-`
-
+/* Spacing alone separates the points from the subtitle: the panel's one rule
+   belongs to the wallet caption beneath, and a second one read as clutter. */
 const Points = styled.ul`
   display: flex;
   flex-direction: column;
   gap: 14px;
-  margin: 0;
+  margin: 36px 0 0;
   padding: 0;
   list-style: none;
   font-size: var(--font-size-3);

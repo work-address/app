@@ -484,7 +484,7 @@
   "signIn.lead": "Tu wallet es tu cuenta. Elige la red en la que está y aprueba la solicitud que te muestre.",
   "signIn.learnMore": "Centro de ayuda",
   "signIn.local.option.continue": "Continuar con {{address}}",
-  "signIn.local.option.create": "Crear una wallet en el navegador",
+  "signIn.local.option.create": "Usar una wallet del navegador",
   "signIn.local.or": "o",
   "signIn.logoAlt": "Address Work",
   "signIn.noAccount": "¿Es tu primera vez? Iniciar sesión con una wallet crea tu cuenta.",

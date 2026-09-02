@@ -480,7 +480,7 @@
   "signIn.lead": "ウォレットがあなたのアカウントです。ウォレットのネットワークを選び、表示されるリクエストを承認してください。",
   "signIn.learnMore": "ヘルプセンター",
   "signIn.local.option.continue": "{{address}} で続ける",
-  "signIn.local.option.create": "ブラウザにウォレットを作成",
+  "signIn.local.option.create": "ブラウザウォレットを使う",
   "signIn.local.or": "または",
   "signIn.logoAlt": "Address Work",
   "signIn.noAccount": "初めてですか？ウォレットでサインインするとアカウントが作成されます。",

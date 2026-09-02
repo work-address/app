@@ -488,7 +488,7 @@
   "signIn.lead": "Ваш кошелёк — это ваш аккаунт. Выберите его сеть и подтвердите запрос, который он покажет.",
   "signIn.learnMore": "Справочный центр",
   "signIn.local.option.continue": "Продолжить с {{address}}",
-  "signIn.local.option.create": "Создать кошелёк в браузере",
+  "signIn.local.option.create": "Использовать кошелёк в браузере",
   "signIn.local.or": "или",
   "signIn.logoAlt": "Address Work",
   "signIn.noAccount": "Впервые здесь? Вход через кошелёк создаёт аккаунт.",

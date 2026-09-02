@@ -8,6 +8,11 @@ type Props = {
   iconAlt?: string
   /** Drawn in the mark's slot when the option has no network logo. */
   icon?: ReactNode
+  /**
+   * `primary` paints the option in the brand blue: the one choice the page
+   * recommends to someone with no wallet app, set apart from the networks.
+   */
+  variant?: 'default' | 'primary'
   children: string
   onClick?: () => void
   onMouseEnter?: () => void
@@ -24,12 +29,14 @@ export const AuthProviderButton = ({
   iconAlt,
   iconUrl,
   icon,
+  variant = 'default',
   onClick,
   onMouseEnter,
   onFocus,
 }: Props) => {
   return (
     <Button
+      data-variant={variant}
       onClick={onClick}
       onMouseEnter={onMouseEnter}
       onFocus={onFocus}
@@ -41,7 +48,7 @@ export const AuthProviderButton = ({
         <IconSlot aria-hidden="true">{icon}</IconSlot>
       )}
       <Text>{children}</Text>
-      <Chevron aria-hidden="true" />
+      <Chevron aria-hidden="true" data-chevron />
     </Button>
   )
 }
@@ -78,10 +85,33 @@ export const Button = styled.button`
     outline-offset: 2px;
   }
 
-  &:hover svg,
-  &:focus-visible svg {
+  /* Only the trailing chevron nudges on hover; the leading mark stays put. */
+  &:hover [data-chevron],
+  &:focus-visible [data-chevron] {
     color: var(--ds-accent-11);
     transform: translateX(2px);
+  }
+
+  &[data-variant='primary'] {
+    border-color: var(--ds-accent-11);
+    background: var(--ds-accent-11);
+    color: var(--white);
+    box-shadow: 0 6px 16px -8px var(--c-rgba-63-103-164-0_25);
+
+    &:hover {
+      border-color: var(--ds-accent-9);
+      background: var(--ds-accent-9);
+    }
+
+    &:active {
+      background: var(--accent-10);
+    }
+
+    & [data-chevron],
+    &:hover [data-chevron],
+    &:focus-visible [data-chevron] {
+      color: var(--white);
+    }
   }
 `
 
@@ -102,6 +132,11 @@ const IconSlot = styled.span`
   border-radius: 50%;
   background: var(--ds-accent-3);
   color: var(--ds-accent-11);
+
+  [data-variant='primary'] > & {
+    background: var(--c-rgba-255-255-255-0_2);
+    color: var(--white);
+  }
 `
 
 export const Text = styled.span`

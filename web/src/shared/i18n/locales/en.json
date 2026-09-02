@@ -482,7 +482,7 @@
   "signIn.lead": "Your wallet is your account. Pick the network it lives on, then approve the request it shows you.",
   "signIn.learnMore": "Help Center",
   "signIn.local.option.continue": "Continue with {{address}}",
-  "signIn.local.option.create": "Create a browser wallet",
+  "signIn.local.option.create": "Use a browser wallet",
   "signIn.local.or": "or",
   "signIn.logoAlt": "Address Work",
   "signIn.noAccount": "New here? Signing in with a wallet creates your account.",

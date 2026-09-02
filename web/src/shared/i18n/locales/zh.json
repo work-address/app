@@ -480,7 +480,7 @@
   "signIn.lead": "你的钱包就是你的账户。选择它所在的网络，然后批准钱包显示的请求。",
   "signIn.learnMore": "帮助中心",
   "signIn.local.option.continue": "以 {{address}} 继续",
-  "signIn.local.option.create": "在浏览器中创建钱包",
+  "signIn.local.option.create": "使用浏览器钱包",
   "signIn.local.or": "或",
   "signIn.logoAlt": "Address Work",
   "signIn.noAccount": "第一次来？用钱包登录即可创建账户。",

@@ -3,25 +3,18 @@ import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { ETHEREUM_WALLETS, SOLANA_WALLETS, TON_WALLETS } from '../model'
-
-import { AuthWalletList } from './auth-wallet-list'
-
-import type { SupportedWallet } from '../model'
-
 export type SignInGuideMode = 'default' | 'ton' | 'solana' | 'eth' | 'local'
 
 type PanelSpec = {
   mode: SignInGuideMode
   stepCount: number
-  wallets?: SupportedWallet[]
 }
 
 const PANELS: PanelSpec[] = [
   { mode: 'default', stepCount: 3 },
-  { mode: 'ton', stepCount: 4, wallets: TON_WALLETS },
-  { mode: 'solana', stepCount: 4, wallets: SOLANA_WALLETS },
-  { mode: 'eth', stepCount: 4, wallets: ETHEREUM_WALLETS },
+  { mode: 'ton', stepCount: 4 },
+  { mode: 'solana', stepCount: 4 },
+  { mode: 'eth', stepCount: 4 },
   { mode: 'local', stepCount: 4 },
 ]
 
@@ -44,7 +37,6 @@ export const AuthSignInGuide = ({ mode, tone = 'light' }: Props) => {
 
         return (
           <Panel key={panel.mode} $active={active} aria-hidden={!active}>
-            <Eyebrow>{t('signIn.guide.eyebrow')}</Eyebrow>
             <PanelTitle>{t(`signIn.guide.${panel.mode}.title`)}</PanelTitle>
             {panel.mode === 'default' && (
               <Intro>{t('signIn.guide.default.intro')}</Intro>
@@ -59,14 +51,9 @@ export const AuthSignInGuide = ({ mode, tone = 'light' }: Props) => {
                 </Step>
               ))}
             </Steps>
-            {panel.wallets ? (
-              <Wallets>
-                <WalletsLabel>{t('signIn.guide.walletsLabel')}</WalletsLabel>{' '}
-                <AuthWalletList wallets={panel.wallets} breakAfter={Infinity} />
-              </Wallets>
-            ) : (
-              <Hint>{t('signIn.guide.default.hint')}</Hint>
-            )}
+            {/* No wallet list here: the caption under the panel already names
+                every supported wallet, and saying it twice on one screen read
+                as clutter. */}
             <Note>{t('signIn.guide.free')}</Note>
           </Panel>
         )
@@ -135,7 +122,8 @@ const Root = styled.div`
     --guide-text: var(--c-rgba-255-255-255-0_92);
     --guide-muted: var(--c-rgba-255-255-255-0_5);
     --guide-note: var(--c-rgba-255-255-255-0_92);
-    --guide-rule: var(--c-rgba-255-255-255-0_2);
+    /* No rule of its own on the brand panel; the wallet caption below has one. */
+    --guide-rule: transparent;
     --guide-badge-bg: var(--c-rgba-255-255-255-0_2);
     --guide-badge-fg: var(--white);
     --guide-badge-border: transparent;
@@ -206,36 +194,40 @@ const Panel = styled.div<{ $active: boolean }>`
   pointer-events: ${({ $active }) => ($active ? 'auto' : 'none')};
 `
 
-const Eyebrow = styled.div`
-  font-size: var(--font-size-1);
-  font-weight: 600;
-  letter-spacing: 1.4px;
-  text-transform: uppercase;
-  color: var(--guide-eyebrow);
-  margin-bottom: 10px;
-`
-
+/* Set like the hero title it stands in for, so hovering a network swaps the
+   words and nothing else. */
 const PanelTitle = styled.h2`
-  font-size: var(--font-size-5);
-  font-weight: 500;
-  letter-spacing: 0.4px;
+  font-size: 44px;
+  font-weight: 700;
+  line-height: 1.12;
+  letter-spacing: -0.02em;
   color: var(--guide-title);
-  line-height: 28px;
-  margin-bottom: 8px;
+  margin: 0 0 18px;
+  text-wrap: balance;
+
+  @media (min-width: 1280px) {
+    font-size: 52px;
+  }
 `
 
 const Intro = styled.p`
-  font-size: var(--font-size-2);
+  font-size: var(--font-size-4);
   color: var(--guide-text);
-  line-height: 20px;
-  letter-spacing: 0.3px;
-  margin-bottom: 10px;
+  line-height: 1.5;
+  max-width: 34ch;
+  margin: 0;
 `
 
 const Steps = styled.ol`
   list-style: none;
   margin: 14px 0 0;
   padding: 0;
+
+  ${Root} & {
+    margin-top: 36px;
+    font-size: var(--font-size-3);
+    line-height: 1.5;
+  }
 `
 
 const Step = styled.li`
@@ -265,30 +257,12 @@ const StepText = styled.span`
   line-height: 20px;
   letter-spacing: 0.3px;
   color: var(--guide-text);
-`
 
-const Wallets = styled.div`
-  margin-top: 8px;
-  font-size: var(--font-size-1);
-  line-height: 18px;
-  letter-spacing: 0.4px;
-  color: var(--guide-muted);
-
-  a:hover {
-    color: var(--guide-title);
+  ${Root} & {
+    font-size: inherit;
+    line-height: inherit;
+    letter-spacing: 0;
   }
-`
-
-const WalletsLabel = styled.span`
-  font-weight: 300;
-`
-
-const Hint = styled.div`
-  margin-top: 8px;
-  font-size: var(--font-size-1);
-  line-height: 18px;
-  letter-spacing: 0.4px;
-  color: var(--guide-muted);
 `
 
 const Note = styled.div`

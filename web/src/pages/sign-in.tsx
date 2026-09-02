@@ -96,6 +96,19 @@ export default function SignInPage() {
 
   const showHero = guideMode === 'default'
 
+  const walletsFooter = (
+    <>
+      <FootTitle>{t('signIn.supportedWallets')}</FootTitle>
+      {WALLET_LINES.map((line) => (
+        <FootLine key={line.labelKey}>
+          <S.FootLabel>{t(line.labelKey)}</S.FootLabel>{' '}
+          <AuthWalletList wallets={line.wallets} breakAfter={Infinity} />
+        </FootLine>
+      ))}
+      <Version>Version: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}</Version>
+    </>
+  )
+
   return (
     <>
       <PageHelmet
@@ -135,6 +148,7 @@ export default function SignInPage() {
               {/* For people with no wallet app: a key the app keeps for them,
                   encrypted in this browser behind a password. */}
               <AuthProviderButton
+                variant="primary"
                 icon={<LockClosedIcon width={16} height={16} />}
                 onClick={() => setLocalWalletOpen(true)}
                 onMouseEnter={() => setGuideMode('local')}
@@ -162,16 +176,10 @@ export default function SignInPage() {
               </S.Learn>
             </Secondary>
           </Form>
-          <PanelFoot>
-            <FootTitle>{t('signIn.supportedWallets')}</FootTitle>
-            {WALLET_LINES.map((line) => (
-              <FootLine key={line.labelKey}>
-                <S.FootLabel>{t(line.labelKey)}</S.FootLabel>{' '}
-                <AuthWalletList wallets={line.wallets} breakAfter={Infinity} />
-              </FootLine>
-            ))}
-            <Version>Version: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}</Version>
-          </PanelFoot>
+          {/* Under the form while the page is one column; the brand panel
+              carries it once there is one, so the form column never has to
+              scroll on a desktop. */}
+          <PanelFoot>{walletsFooter}</PanelFoot>
         </Panel>
         <Brand>
           <BrandInner>
@@ -182,12 +190,15 @@ export default function SignInPage() {
               <AuthSignInGuide mode={guideMode} tone="dark" />
             </BrandLayer>
           </BrandInner>
+          <BrandFoot>{walletsFooter}</BrandFoot>
         </Brand>
       </Screen>
     </>
   )
 }
 
+/* One column that scrolls on small screens; on a desktop the two panels are
+   pinned to the viewport and nothing scrolls. */
 const Screen = styled.div`
   width: 100%;
   min-height: 100dvh;
@@ -197,6 +208,9 @@ const Screen = styled.div`
 
   ${({ theme }) => theme.breakpoints.up('lg')} {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    height: 100dvh;
+    min-height: 0;
+    overflow: hidden;
   }
 `
 
@@ -208,8 +222,10 @@ const Brand = styled.section`
   ${({ theme }) => theme.breakpoints.up('lg')} {
     position: relative;
     display: flex;
-    align-items: center;
-    padding: 64px;
+    flex-direction: column;
+    justify-content: center;
+    min-height: 0;
+    padding: 48px 64px;
     overflow: hidden;
     color: var(--white);
     background: linear-gradient(
@@ -247,22 +263,52 @@ const Brand = styled.section`
   }
 `
 
+/* The hero and the guide share one grid cell, so the block is as tall as the
+   taller of the two and the footer under it never moves when they swap. Both
+   sit at the bottom of the cell, right above the footer. */
 const BrandInner = styled.div`
   position: relative;
+  display: grid;
   width: 100%;
   max-width: 520px;
   margin: 0 auto;
-  min-height: 460px;
+`
+
+/* The wallet list at the foot of the brand panel, in the panel's own ink. */
+/* Compact, and set on the same left edge as the hero so the two read as one
+   block. Each network is one short line. */
+const BrandFoot = styled.footer`
+  position: relative;
+  width: 100%;
+  max-width: 520px;
+  margin: 28px auto 0;
+  padding-top: 16px;
+  border-top: 1px solid var(--c-rgba-255-255-255-0_2);
+  text-align: left;
+  font-size: var(--font-size-0);
+  line-height: 16px;
+  color: var(--c-rgba-255-255-255-0_92);
+
+  ${({ theme }) => theme.breakpoints.down('lg')} {
+    display: none;
+  }
+
+  & span {
+    color: var(--c-rgba-255-255-255-0_5);
+  }
+
+  a:hover {
+    color: var(--white);
+  }
 `
 
 /* The hero and the guide share one slot and crossfade, so the panel never
    jumps in height when the hover target changes. */
 const BrandLayer = styled.div`
-  position: absolute;
-  inset: 0;
+  grid-area: 1 / 1;
   display: flex;
   flex-direction: column;
-  justify-content: center;
+  justify-content: flex-end;
   opacity: 0;
   transition: opacity 0.2s ease;
   pointer-events: none;
@@ -286,7 +332,11 @@ const Panel = styled.section`
 
   ${({ theme }) => theme.breakpoints.up('lg')} {
     min-height: 0;
-    padding: 28px 48px 28px;
+    height: 100%;
+    padding: 24px 48px;
+    /* The column itself scrolls only if a very short window cannot hold the
+       form; the page never does. */
+    overflow-y: auto;
   }
 `
 
@@ -409,6 +459,10 @@ const PanelFoot = styled.footer`
   font-size: var(--font-size-1);
   line-height: 18px;
   color: var(--ds-neutral-11);
+
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    display: none;
+  }
 `
 
 const FootTitle = styled.div`
@@ -416,17 +470,17 @@ const FootTitle = styled.div`
   font-weight: 600;
   letter-spacing: 0.08em;
   text-transform: uppercase;
-  color: var(--ds-neutral-11);
+  color: inherit;
   margin-bottom: 8px;
 `
 
 const FootLine = styled.div`
-  margin-top: 4px;
+  margin-top: 2px;
 `
 
 const Version = styled.div`
-  margin-top: 16px;
+  margin-top: 8px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: var(--font-size-0);
-  color: var(--c-rgba-0-7-20-0_38);
+  opacity: 0.6;
 `
