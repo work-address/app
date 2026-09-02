@@ -21,7 +21,7 @@ type Props = {
 /** "Reveal private key": opens the password-gated key dialog. */
 export const LocalWalletRevealButton = ({
   address,
-  size = 'l',
+  size = 'm',
   stretch,
   variant = 'outline',
   color = 'neutral',

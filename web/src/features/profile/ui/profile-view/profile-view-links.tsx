@@ -102,9 +102,10 @@ export const ProfileViewLinks = ({
     profileLoading: $profileLoading,
   })
 
-  const walletAddress = formatWalletAddress(
-    user?.friendlyWalletAddress || 'efgH1234567890',
-  )
+  const displayName = user?.name || user?.title
+  const walletAddress = user?.friendlyWalletAddress
+    ? formatWalletAddress(user.friendlyWalletAddress)
+    : null
 
   const infoRowGap: FlexProps['gap'] = {
     initial: '0',
@@ -121,28 +122,36 @@ export const ProfileViewLinks = ({
           {isDesktop ? (
             <>
               <Flex direction={'column'} gap={'2'}>
-                <Skeleton loading={profileLoading}>
-                  <Text size={'7'} weight={'medium'}>
-                    {user?.name || user?.title || t('profile.view.mockName')}
-                  </Text>
-                </Skeleton>
+                {profileLoading ? (
+                  <Skeleton width={'220px'} height={'32px'} loading />
+                ) : (
+                  displayName && (
+                    <Text size={'7'} weight={'medium'}>
+                      {displayName}
+                    </Text>
+                  )
+                )}
                 <Flex gap={'2'} align={'center'}>
-                  <Button
-                    variant="ghost"
-                    color="neutral"
-                    onClick={onWalletAddressCopy}
-                  >
-                    <Skeleton loading={profileLoading}>
-                      <Text
-                        $themeVariant={'primary'}
-                        size={'3'}
-                        weight={'medium'}
+                  {profileLoading ? (
+                    <Skeleton width={'150px'} height={'20px'} loading />
+                  ) : (
+                    walletAddress && (
+                      <Button
+                        variant="ghost"
+                        color="neutral"
+                        onClick={onWalletAddressCopy}
                       >
-                        {walletAddress}
-                      </Text>
-                    </Skeleton>
-                    <CopyIcon />
-                  </Button>
+                        <Text
+                          $themeVariant={'primary'}
+                          size={'3'}
+                          weight={'medium'}
+                        >
+                          {walletAddress}
+                        </Text>
+                        <CopyIcon />
+                      </Button>
+                    )
+                  )}
                   {user?.premium && <PremiumBadge />}
                 </Flex>
               </Flex>
@@ -153,7 +162,6 @@ export const ProfileViewLinks = ({
                 <Button
                   variant="outline"
                   color="neutral"
-                  size="l"
                   onClick={onShareProfile}
                 >
                   {t('common.share')}
@@ -166,7 +174,7 @@ export const ProfileViewLinks = ({
                     })}
                     viewTransition
                   >
-                    <Button size="l">
+                    <Button>
                       {t('common.edit')}
                       <Pencil1Icon />
                     </Button>
@@ -186,9 +194,7 @@ export const ProfileViewLinks = ({
               text={
                 <Flex gap={{ initial: '5px', md: '6px' }}>
                   <Text color={'gray'}>{t('profile.view.worksAt')}</Text>
-                  <Text weight={'medium'}>
-                    {user?.company ?? t('profile.view.mockCompany')}
-                  </Text>
+                  <Text weight={'medium'}>{user.company}</Text>
                 </Flex>
               }
             />

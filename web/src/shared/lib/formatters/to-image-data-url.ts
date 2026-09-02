@@ -1,6 +1,3 @@
-/**
- * Преобразует base64-строку скриншота в data URL для <img src>.
- */
 export function toImageDataUrl(
   value: string | null | undefined,
   mimeType = 'image/webp',

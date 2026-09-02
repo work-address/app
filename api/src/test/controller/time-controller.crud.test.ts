@@ -209,7 +209,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
         projectId,
         fromIndex: 3000,
         toIndex: 3001,
-        note: 'Тест 123',
+        note: 'Test 123',
         fromAt: '2026-01-27T15:40:00',
         toAt: '2026-01-27T15:40:00',
         keyboardKeys: 0,

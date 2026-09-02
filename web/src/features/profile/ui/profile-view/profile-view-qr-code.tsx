@@ -49,6 +49,7 @@ export const ProfileViewQrCode = ({
 
   const [qrModalOpened, setQrModalOpened] = useState(false)
   const qrCodeSize = isMobile ? 140 : 180
+  const displayName = user?.name || user?.title
 
   return (
     <>
@@ -61,33 +62,39 @@ export const ProfileViewQrCode = ({
         >
           {isMobile && (
             <Flex direction={'column'} align={'center'} gap={{ initial: '2' }}>
-              <Skeleton loading={profileLoading}>
-                <Text size={'6'} weight={'medium'}>
-                  {user?.name ?? user?.title ?? t('profile.view.mockName')}
-                </Text>
-              </Skeleton>
+              {profileLoading ? (
+                <Skeleton width={'180px'} height={'28px'} loading />
+              ) : (
+                displayName && (
+                  <Text size={'6'} weight={'medium'}>
+                    {displayName}
+                  </Text>
+                )
+              )}
               <Flex gap={'2'} align={'center'}>
-                <Skeleton loading={profileLoading}>
-                  <Tooltip content={t('profile.view.copyAddressHint')}>
-                    <Button
-                      variant="ghost"
-                      color="neutral"
-                      onClick={onWalletAddressCopy}
-                      aria-label={t('profile.view.copyAddressHint')}
-                    >
-                      <Text
-                        $themeVariant={'primary'}
-                        size={'2'}
-                        weight={'medium'}
+                {profileLoading ? (
+                  <Skeleton width={'130px'} height={'18px'} loading />
+                ) : (
+                  user?.friendlyWalletAddress && (
+                    <Tooltip content={t('profile.view.copyAddressHint')}>
+                      <Button
+                        variant="ghost"
+                        color="neutral"
+                        onClick={onWalletAddressCopy}
+                        aria-label={t('profile.view.copyAddressHint')}
                       >
-                        {user?.friendlyWalletAddress
-                          ? formatWalletAddress(user?.friendlyWalletAddress)
-                          : '...'}
-                      </Text>
-                      <CopyIcon />
-                    </Button>
-                  </Tooltip>
-                </Skeleton>
+                        <Text
+                          $themeVariant={'primary'}
+                          size={'2'}
+                          weight={'medium'}
+                        >
+                          {formatWalletAddress(user.friendlyWalletAddress)}
+                        </Text>
+                        <CopyIcon />
+                      </Button>
+                    </Tooltip>
+                  )
+                )}
                 {user?.premium && <PremiumBadge />}
               </Flex>
             </Flex>
@@ -135,11 +142,7 @@ export const ProfileViewQrCode = ({
                 {t('common.share')} <Share1Icon />
               </Button>
               {isAuthenticatedUserProfile && (
-                <LocalWalletRevealButton
-                  address={user?.address}
-                  size="m"
-                  stretch
-                />
+                <LocalWalletRevealButton address={user?.address} stretch />
               )}
             </Flex>
           )}

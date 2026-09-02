@@ -31,9 +31,6 @@ type ProfileRoutes =
 
 /* eslint-enable */
 
-/* Схема сайта. Роут выводится в меню если прописан order.
-  Поле text в приоритете вывода, если не хочется
-  добавлять translateKey и искать словарь */
 export const routes: MainRoutes = {
   dashboard: {
     schema: '/',

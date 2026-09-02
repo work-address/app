@@ -18,7 +18,6 @@ client.setConfig({
   baseURL: import.meta.env.VITE_API_URL,
 })
 
-// Request interceptor - добавляем access token в заголовки
 client.instance.interceptors.request.use(
   (config: InternalAxiosRequestConfig) => {
     const accessToken = localStorage.getItem(ACCESS_TOKEN_KEY)
@@ -61,7 +60,6 @@ const refreshTokens = async (refreshToken: string) => {
   return newAccessToken
 }
 
-// Response interceptor - обрабатываем 401 и обновляем токен
 client.instance.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {

@@ -15,20 +15,6 @@ type ProfileViewDescriptionAndSkillsProps = {
   gridArea?: string
 }
 
-const mockData = [
-  'Python',
-  'JavaScript',
-  'Java',
-  'Express.js',
-  'MySQL',
-  'GraphQL',
-  'Google Cloud',
-  'Authentication',
-  'GitHub',
-  'Unit testing',
-  '+12',
-]
-
 export const ProfileViewDescriptionAndSkills = ({
   gridArea,
 }: ProfileViewDescriptionAndSkillsProps) => {
@@ -41,17 +27,16 @@ export const ProfileViewDescriptionAndSkills = ({
   })
 
   const displayName = user?.name || user?.title
-  const jobTitle =
-    user?.title && user.title !== displayName
-      ? user.title
-      : t('profile.view.jobTitle')
+  const jobTitle = user?.title && user.title !== displayName ? user.title : null
   const skills = useMemo(
     () =>
       user?.skills
-        ? user?.skills?.split(',').filter((s) => Boolean(s.trim()))
-        : mockData,
+        ?.split(',')
+        .map((skill) => skill.trim())
+        .filter(Boolean) ?? [],
     [user?.skills],
   )
+  const hasDetails = Boolean(jobTitle || user?.bio) || skills.length > 0
 
   return (
     <Root $gridArea={gridArea} shadow={false}>
@@ -62,9 +47,11 @@ export const ProfileViewDescriptionAndSkills = ({
             direction={{ initial: 'column', md: 'row' }}
             gap={{ initial: '1', md: '0' }}
           >
-            <Text size={isMobile ? '5' : '6'} weight={'medium'}>
-              {jobTitle}
-            </Text>
+            {jobTitle && (
+              <Text size={isMobile ? '5' : '6'} weight={'medium'}>
+                {jobTitle}
+              </Text>
+            )}
             <Text color={'blue'} $themeVariant={'primary'}>
               <Flex gap={'1'} align={'end'}>
                 <Skeleton loading={profileLoading}>
@@ -79,31 +66,50 @@ export const ProfileViewDescriptionAndSkills = ({
             </Text>
           </Flex>
         </div>
-        <Separator size={'4'} />
-        <Skeleton loading={profileLoading}>
-          <Text
-            dangerouslySetInnerHTML={{
-              __html: user?.bio || t('profile.view.bio'),
-            }}
-          />
-        </Skeleton>
-        <Separator size={'4'} />
-        <div>
-          <Text size={isMobile ? '3' : '4'} weight={'medium'}>
-            {t('profile.form.skills')}
-          </Text>
-        </div>
-        <Skeleton loading={profileLoading}>
-          <Flex gap={'2'} wrap={'wrap'} mb={{ initial: '0', md: '2' }}>
-            {skills.map((skill) => (
-              <Badge key={skill} color={'gray'} size={isMobile ? '1' : '2'}>
-                <Text weight={'medium'} size={'1'}>
-                  {skill}
-                </Text>
-              </Badge>
-            ))}
-          </Flex>
-        </Skeleton>
+        {profileLoading ? (
+          <>
+            <Separator size={'4'} />
+            <Skeleton width={'100%'} height={'72px'} loading />
+            <Separator size={'4'} />
+            <Skeleton width={'120px'} height={'20px'} loading />
+            <Skeleton width={'100%'} height={'48px'} loading />
+          </>
+        ) : (
+          <>
+            {user?.bio && (
+              <>
+                <Separator size={'4'} />
+                <Text dangerouslySetInnerHTML={{ __html: user.bio }} />
+              </>
+            )}
+            {skills.length > 0 && (
+              <>
+                <Separator size={'4'} />
+                <div>
+                  <Text size={isMobile ? '3' : '4'} weight={'medium'}>
+                    {t('profile.form.skills')}
+                  </Text>
+                </div>
+                <Flex gap={'2'} wrap={'wrap'} mb={{ initial: '0', md: '2' }}>
+                  {skills.map((skill) => (
+                    <Badge
+                      key={skill}
+                      color={'gray'}
+                      size={isMobile ? '1' : '2'}
+                    >
+                      <Text weight={'medium'} size={'1'}>
+                        {skill}
+                      </Text>
+                    </Badge>
+                  ))}
+                </Flex>
+              </>
+            )}
+            {!hasDetails && (
+              <Text color={'gray'}>{t('profile.view.empty.details')}</Text>
+            )}
+          </>
+        )}
       </Flex>
     </Root>
   )

@@ -144,8 +144,6 @@ export const normalizeLink = (prefix: string, value: string) =>
     .replace(/\/$/, '')
     .replace(/^\//, '')
 
-// Проверяем вхождение хоста именно как домена, а не подстроки:
-// "x.com" не должен матчиться в "max.com".
 export const containsHost = (text: string, host: string) => {
   const escaped = host.replaceAll(/[$()*+.?[\\\]^{|}]/g, String.raw`\$&`)
   return new RegExp(`(^|[/@.\\s])${escaped}`, 'i').test(text)

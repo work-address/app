@@ -99,7 +99,6 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
               // tracked time, not a fault to flag.
               color={props.data.isPaid ? 'green' : 'gray'}
               onClick={(event) => {
-                // Не даём клику по бейджу открыть модалку строки
                 event.stopPropagation()
 
                 if (!timeId || setPaidStatusStatus === 'pending') {

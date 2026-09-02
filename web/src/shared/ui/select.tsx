@@ -35,7 +35,6 @@ type SelectProps = {
   label?: string
   allSelectedText?: string
   inputProps?: InputProps
-  /** Макс. высота списка опций; при превышении появляется скролл */
   menuMaxHeight?: string | number
 }
 

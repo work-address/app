@@ -45,14 +45,11 @@ const $gateAddress = ProfileGate.state.map(
   (gateState) => gateState.friendlyWalletAddress,
 )
 
-// Сбрасываем данные предыдущего профиля до старта новой загрузки,
-// чтобы при переходе между профилями не мелькали чужие данные.
 sample({
   clock: $gateAddress,
   target: profileQuery.reset,
 })
 
-// Публичный профиль грузим всегда — и гостю, и владельцу (одинаковые поля с API)
 sample({
   clock: $gateAddress,
   filter: Boolean,
