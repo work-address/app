@@ -139,7 +139,10 @@ export const ProfileEdit = () => {
       {/* The wallet card sits outside the form: its own dialogs submit, and
           a submit inside a form would save the profile instead. */}
       <form onSubmit={handleSubmit(onSubmit)}>
-        <Grid rows={{ initial: 'auto auto' }} gap={'20px'}>
+        <Grid
+          rows={{ initial: 'auto auto' }}
+          gap={{ initial: '0', md: '20px' }}
+        >
           <ProfileEditDetails
             user={user}
             isDesktop={isDesktop}
@@ -171,12 +174,16 @@ export const ProfileEdit = () => {
 const Root = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 20px;
+  /* No gap on a phone. The sections are full-bleed and carry neither border
+     nor shadow there, so a blank 20px between two white blocks read as one
+     form with a hole in it. Each section rules its own top edge instead. */
+  gap: 0;
   /* Clears the fixed Cancel/Save sheet on phones, so the last field can
      scroll out from under it. */
   padding-bottom: 96px;
 
   ${(p) => p.theme.breakpoints.up('md')} {
+    gap: 20px;
     max-width: 710px;
     margin: 0 auto;
     padding: 26px 28px 40px;

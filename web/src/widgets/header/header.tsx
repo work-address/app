@@ -98,7 +98,6 @@ export const Header = () => {
           viewTransition
         >
           <LogoImg src={Logo} alt={t('header.logoAlt')} />
-          <Beta>beta</Beta>
         </LogoLink>
         {isDesktop && (
           <Nav>
@@ -234,8 +233,6 @@ const LogoLink = styled(Link)`
   align-items: center;
   gap: 10px;
   flex-shrink: 0;
-
-  position: relative;
 `
 
 const LogoImg = styled.img`
@@ -386,22 +383,4 @@ const ExitButton = styled.button`
   &:active {
     background: var(--ds-neutral-alpha-6);
   }
-`
-
-const Beta = styled.span`
-  color: var(--white);
-  background: var(--c-253854);
-
-  position: absolute;
-  right: 9px;
-  bottom: 5px;
-  font-weight: 500;
-
-  border-radius: 3px;
-  pointer-events: none;
-  user-select: none;
-  transform: translate(20%, 20%);
-  opacity: 0.9;
-  font-size: 9px;
-  padding: 0px 3px;
 `

@@ -122,7 +122,6 @@ const Root = styled(ProfileViewCard)`
   }
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    margin-top: var(--space-3);
     padding: var(--space-5);
   }
 `

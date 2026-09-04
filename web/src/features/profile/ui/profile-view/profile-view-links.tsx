@@ -111,6 +111,16 @@ export const ProfileViewLinks = ({
     initial: '0',
   }
 
+  const hasLinks =
+    Boolean(user?.company || user?.city || user?.country) ||
+    SOCIAL_LINKS.some(({ name }) => Boolean(user?.[name]))
+
+  // On a phone the name and the buttons live in the QR card, so this card is
+  // only the links - and with none to show it has nothing to say.
+  if (!isDesktop && !hasLinks) {
+    return null
+  }
+
   return (
     <Root $gridArea={gridArea} shadow={false}>
       <Flex
@@ -118,8 +128,8 @@ export const ProfileViewLinks = ({
         direction={'column'}
         style={{ height: '100%' }}
       >
-        <Flex justify={'between'} gap={'5'} align={'center'}>
-          {isDesktop ? (
+        {isDesktop && (
+          <Flex justify={'between'} gap={'5'} align={'center'}>
             <>
               <Flex direction={'column'} gap={'2'}>
                 {profileLoading ? (
@@ -182,10 +192,8 @@ export const ProfileViewLinks = ({
                 )}
               </Flex>
             </>
-          ) : (
-            <div />
-          )}
-        </Flex>
+          </Flex>
+        )}
         <Flex direction={'column'} gap={{ initial: '3', md: '4' }}>
           {user?.company && (
             <ProfileViewInfoRow
@@ -258,12 +266,5 @@ const Root = styled(ProfileViewCard)`
 
   ${(p) => p.theme.breakpoints.up('md')} {
     padding-inline: var(--space-4);
-  }
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    border-top: none;
-    padding-top: 0;
-    border-top-right-radius: 0;
-    border-top-left-radius: 0;
   }
 `

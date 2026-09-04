@@ -9,10 +9,11 @@ import { ProfileViewDescriptionAndSkills } from './profile-view-description-and-
 import { ProfileViewLinks } from './profile-view-links'
 import { ProfileViewQrCode } from './profile-view-qr-code'
 
-import { showToast, copyToClipboard } from '@/shared'
+import { showToast, copyToClipboard, useBreakpoint } from '@/shared'
 
 export const ProfileView = () => {
   const { t } = useTranslation()
+  const isDesktop = useBreakpoint('isDesktop')
   const { user } = useUnit({ user: $profile })
 
   const handleCopyWalletAddress = () => {
@@ -33,34 +34,51 @@ export const ProfileView = () => {
     })
   }
 
+  // A plain stack on a phone rather than the named-area grid: the links card
+  // renders nothing there when the profile has no links, and an empty named
+  // area still costs a row plus its gaps. In a stack a missing card costs
+  // nothing.
+  if (!isDesktop) {
+    return (
+      <Root>
+        <Stack>
+          <ProfileViewQrCode
+            onWalletAddressCopy={handleCopyWalletAddress}
+            onShareProfile={handleShareProfile}
+          />
+          <ProfileViewLinks
+            onWalletAddressCopy={handleCopyWalletAddress}
+            onShareProfile={handleShareProfile}
+          />
+          <ProfileViewDescriptionAndSkills />
+        </Stack>
+      </Root>
+    )
+  }
+
   return (
     <Root>
       <Grid
         areas={{
           initial: `
-          "qrcode"
-          "profile"
-          "description"
-        `,
-          md: `
           "qrcode profile"
           "description description"
         `,
         }}
+        /* Capped, not fixed: 246 + 668 + the gap is 934px, which is wider
+           than a tablet in portrait or a large phone on its side. Fixed
+           tracks there hung the cards off both edges of the screen. */
         columns={{
-          initial: '1fr',
-          md: '246px 668px',
+          initial: 'minmax(0, 246px) minmax(0, 668px)',
         }}
         rows={{
-          initial: 'auto auto auto',
-          md: `auto auto`,
+          initial: `auto auto`,
         }}
         gap={{
-          initial: '0',
-          sm: '20px',
+          initial: '20px',
         }}
         justify={{
-          md: 'center',
+          initial: 'center',
         }}
       >
         <ProfileViewQrCode
@@ -81,4 +99,16 @@ export const ProfileView = () => {
 
 const Root = styled.div`
   padding: 24px;
+
+  /* The same inset as the other pages' Wrapper, so the cards line up with
+     the dashboard and the invoices list when switching between tabs. */
+  ${(p) => p.theme.breakpoints.down('md')} {
+    padding: 18px 16px 24px;
+  }
+`
+
+const Stack = styled.div`
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
 `

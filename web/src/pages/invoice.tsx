@@ -20,6 +20,7 @@ import {
   Card,
   IconButton,
   PageHelmet,
+  SectionTitle,
   Text,
   useBreakpoint,
   WidePageCard,
@@ -58,28 +59,33 @@ export default function InvoicePage() {
       />
       <Root shadow={false} as={isMobile ? 'div' : undefined}>
         <Flex direction={'column'} gap={'20px'}>
+          {/* The back arrow shares a row with the title rather than sitting
+              alone above it, and the title is set like the other pages'. */}
           {isMobile && (
-            <InvoiceNoPrint gap={'4'} direction={'column'}>
-              <Flex direction={'column'}>
+            <InvoiceNoPrint gap={'1'} direction={'column'}>
+              <Flex align={'center'} gap={'2'}>
                 <BackLink to={routes.dashboard.build()}>
-                  <IconButton variant={'ghost'} radius={'full'} color={'gray'}>
+                  <IconButton
+                    variant={'ghost'}
+                    radius={'full'}
+                    color={'gray'}
+                    aria-label={t('common.back')}
+                  >
                     <ArrowLeftIcon />
                   </IconButton>
                 </BackLink>
                 {loading ? (
                   <Skeleton width="150px" height="24px" />
                 ) : (
-                  <Text>
-                    <Skeleton loading={loading}>{invoice?.title}</Skeleton>
-                  </Text>
+                  <Title>{invoice?.title}</Title>
                 )}
               </Flex>
               {loading ? (
                 <Skeleton width="200px" height="20px" />
               ) : (
-                <Text color={'gray'} size={'2'}>
+                <Reference color={'gray'} size={'2'}>
                   {invoice?.id}
-                </Text>
+                </Reference>
               )}
             </InvoiceNoPrint>
           )}
@@ -115,6 +121,11 @@ const InvoicePrintGlobalStyle = createGlobalStyle`
 `
 
 const Root = styled(WidePageCard)`
+  /* The same inset as the pages that use Wrapper. */
+  ${(p) => p.theme.breakpoints.down('md')} {
+    padding: 18px 16px 24px;
+  }
+
   @media print {
     width: 100%;
     max-width: none;
@@ -139,5 +150,17 @@ const InvoiceNoPrint = styled(Flex)`
 `
 
 const BackLink = styled(NavLink)`
-  padding-left: var(--space-2);
+  display: inline-flex;
+  flex-shrink: 0;
+`
+
+const Title = styled(SectionTitle)`
+  min-width: 0;
+  overflow-wrap: anywhere;
+`
+
+/* An id has no break opportunities of its own; without this a long one
+   pushes the page wider than the phone. */
+const Reference = styled(Text)`
+  overflow-wrap: anywhere;
 `

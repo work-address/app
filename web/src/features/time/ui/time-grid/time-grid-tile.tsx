@@ -111,6 +111,17 @@ const Media = styled.div`
   background: var(--ds-neutral-2);
   border-bottom: 1px solid var(--ds-neutral-alpha-6);
   overflow: hidden;
+
+  /* One column on a phone, so a tile is as wide as the screen and a 16:10
+     placeholder with nothing in it is most of the viewport. Tiles with no
+     screenshot keep a short band instead; the ones with a screenshot keep
+     their shape. */
+  ${(p) => p.theme.breakpoints.down('md')} {
+    ${Root}[data-empty] & {
+      aspect-ratio: auto;
+      min-height: 56px;
+    }
+  }
 `
 
 const Thumb = styled.img`

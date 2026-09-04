@@ -76,7 +76,7 @@ export const ProfileEditLinks = ({
   }
 
   return (
-    <Root style={{ paddingTop: isDesktop ? undefined : 0 }}>
+    <Root>
       <Text
         size={isDesktop ? '6' : '4'}
         weight={'medium'}
@@ -116,14 +116,26 @@ export const ProfileEditLinks = ({
 const Root = styled(Card)<CardProps>`
   box-shadow: none;
 
+  /* Edge to edge on a phone, so the card is the page and a shadow under it
+     reads as a stray band. The attribute selector is what Card's own shadow
+     rule uses, so this is what it takes to outrank it. The rule on top is
+     then the only thing separating this section from the account form above -
+     without it the two run together as one undivided list of fields. */
   ${(p) => p.theme.breakpoints.down('md')} {
     border: none;
+    border-top: 1px solid var(--ds-neutral-alpha-6);
+
+    &[data-shadow] {
+      box-shadow: none;
+    }
   }
 `
 
 const BottomSheet = styled(Grid)`
   position: fixed;
-  padding: var(--space-2) var(--space-5) 14px;
+  /* Clears the home indicator on phones without a hardware button. */
+  padding: var(--space-2) var(--space-5)
+    calc(14px + env(safe-area-inset-bottom, 0px));
   left: 0;
   right: 0;
   bottom: 0;

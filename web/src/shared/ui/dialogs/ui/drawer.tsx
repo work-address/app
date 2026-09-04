@@ -110,7 +110,9 @@ const DrawerHandle = styled.div`
 `
 
 const DrawerInner = styled.div`
-  padding: 8px 16px 16px;
+  /* The sheet sits on the bottom edge, so its last row has to clear the home
+     indicator on phones without a hardware button. */
+  padding: 8px 16px calc(16px + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   flex: 1;

@@ -64,7 +64,7 @@ export const LocalWalletCard = () => {
   return (
     <Root shadow={false}>
       <Flex direction="column" gap="3">
-        <Text size="6" weight="medium">
+        <Text size={{ initial: '4', md: '6' }} weight="medium">
           {t('localWallet.card.title')}
         </Text>
         <Text size="2" color="gray">
@@ -102,11 +102,19 @@ export const LocalWalletCard = () => {
   )
 }
 
+/* Set like the other sections of the profile form it sits under - same rule
+   on top, same heading size - so the wallet reads as the last section rather
+   than a block appended to the page. */
 const Root = styled(Card)<CardProps>`
   box-shadow: none;
 
   ${(p) => p.theme.breakpoints.down('md')} {
     border: none;
+    border-top: 1px solid var(--ds-neutral-alpha-6);
+
+    &[data-shadow] {
+      box-shadow: none;
+    }
   }
 `
 

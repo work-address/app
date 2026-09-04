@@ -121,8 +121,12 @@ export const TimeWorklogs = () => {
         <Actions>
           {/* Beside the toggle rather than inside a view: the list can also
               sort from its column headers, and both write the same store. */}
-          <TimeSortSelect />
-          <TimeViewToggle />
+          {isDesktop && (
+            <>
+              <TimeSortSelect />
+              <TimeViewToggle />
+            </>
+          )}
           {isMobile && (
             <TimeMobileFilters
               filtersOpen={filtersOpen}
@@ -131,6 +135,16 @@ export const TimeWorklogs = () => {
           )}
         </Actions>
       </S.SectionTitleRow>
+      {/* A phone cannot fit all three controls beside the title - the last
+          one used to land past the right edge of the screen. The filters
+          button stays with the title; the sort picker and the view toggle
+          take the row underneath. */}
+      {isMobile && (
+        <MobileToolbar>
+          <TimeSortSelect />
+          <TimeViewToggle />
+        </MobileToolbar>
+      )}
       {isDesktop && <TimeFilters />}
       {hasEntries ? (
         <TimeContext.Provider value={contextValue}>
@@ -168,6 +182,15 @@ const Actions = styled.div`
   grid-auto-flow: column;
   align-items: center;
   gap: var(--space-2);
+`
+
+const MobileToolbar = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+  margin-bottom: 14px;
 `
 
 const Empty = styled.div`

@@ -136,7 +136,7 @@ export default function InvoicesPage() {
   return (
     <Wrapper>
       <PageHelmet title={t('invoices.page.title')} />
-      <Flex direction="column" gap="5" py="2">
+      <Flex direction="column" gap="5" pb="2">
         <PageHead>
           <Flex direction="column" gap="1" style={{ minWidth: 0 }}>
             <PageTitle>{t('invoices.page.title')}</PageTitle>

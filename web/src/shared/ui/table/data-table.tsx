@@ -1,5 +1,12 @@
 import { Flex, Skeleton } from '@radix-ui/themes'
-import { Fragment, useMemo, useRef, type ReactNode } from 'react'
+import {
+  Fragment,
+  useEffect,
+  useMemo,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react'
 import styled, { keyframes } from 'styled-components'
 
 import { useReachEnd } from '../../hooks/use-reach-end'
@@ -95,6 +102,36 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
     resetKey: data.length,
   })
 
+  /**
+   * Whether columns continue past the right edge. On a phone the table is
+   * wider than the screen, and a column cut off mid-word with nothing to say
+   * so looks broken rather than scrollable - the card fades that edge while
+   * there is more to the right, and drops the fade at the end.
+   */
+  const [overflowsRight, setOverflowsRight] = useState(false)
+
+  useEffect(() => {
+    const el = scrollRef.current
+
+    if (!el) {
+      return
+    }
+
+    const update = () => {
+      setOverflowsRight(el.scrollLeft + el.clientWidth < el.scrollWidth - 1)
+    }
+
+    update()
+    el.addEventListener('scroll', update, { passive: true })
+    const observer = new ResizeObserver(update)
+    observer.observe(el)
+
+    return () => {
+      el.removeEventListener('scroll', update)
+      observer.disconnect()
+    }
+  }, [data.length])
+
   const selectedIds = 'selectedIds' in props ? props.selectedIds : undefined
 
   const onSelectedIdsChange =
@@ -137,6 +174,7 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
       $minHeight={minHeight}
       $maxHeight={maxHeight}
       data-filtering={isFiltering || undefined}
+      data-overflows-right={overflowsRight || undefined}
     >
       <TableScroll ref={scrollRef}>
         <Root data-nowrap={nowrap || undefined}>
@@ -374,6 +412,33 @@ const TableCard = styled(Card)<{
 
   &[data-filtering]::before {
     display: block;
+  }
+
+  /* The scroll cue: a fade over the right edge while columns continue past
+     it. Phones only - on a desktop the table fits, and when it does not, a
+     scrollbar already says so. */
+  ${(p) => p.theme.breakpoints.down('md')} {
+    &::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      right: 0;
+      bottom: 0;
+      width: 32px;
+      background: linear-gradient(
+        to right,
+        var(--c-rgba-255-255-255-0),
+        var(--white)
+      );
+      opacity: 0;
+      transition: opacity 0.15s;
+      pointer-events: none;
+      z-index: 2;
+    }
+
+    &[data-overflows-right]::after {
+      opacity: 1;
+    }
   }
 `
 

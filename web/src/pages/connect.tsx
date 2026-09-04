@@ -263,6 +263,9 @@ const StatusNote = styled.p`
   letter-spacing: 0.2px;
   line-height: 1.5;
   text-align: center;
+  /* A wallet address has no break opportunities; on a narrow phone it would
+     otherwise run past the edge. */
+  overflow-wrap: anywhere;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     margin-top: 24px;

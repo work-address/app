@@ -267,7 +267,13 @@ export const ProfileEditDetails = ({
 const Root = styled(Card)<CardProps>`
   box-shadow: none;
 
+  /* See profile-edit-links.tsx: the shadow has to be switched off through
+     the same attribute selector Card turns it on with. */
   ${(p) => p.theme.breakpoints.down('md')} {
     border: none;
+
+    &[data-shadow] {
+      box-shadow: none;
+    }
   }
 `

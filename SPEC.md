@@ -1,5 +1,9 @@
 # Domain specification
 
+This file governs the **domain model** only. The product description — features,
+users, pricing, phases and the discrepancy register — is `PRODUCT.md` in the
+`work-address/web` repository.
+
 Work Address has **five core domains and no others**:
 
 | Domain | What it owns |
@@ -51,7 +55,12 @@ record would name nobody and leave the contributors with nothing of their own.
 
 **`Time.isPaid` is owned by `Invoice`.** `InvoiceManager.markPaid` sets it and
 `markUnpaid` clears it, scoped to the issuer's own entries in the invoiced
-period. Nothing else writes it except a user correcting a single entry by hand.
+period. Nothing else writes it except an author correcting their own entries by
+hand — one at a time, or in bulk through `POST /time/paid` and `/time/unpaid`.
+Those bulk paths do not update the invoice that covers the entries, so work and
+money can be driven apart through them; that divergence is a known defect, not
+a second owner of the flag.
+
 This is what stops the work record and the money record from drifting.
 
 **Only the issuer may mark an invoice paid.** The person owed the money is the
@@ -71,14 +80,35 @@ always keeps the detail behind it.
 
 ## Who can see what
 
-| | Own invoices | Others' invoices on the project |
-| --- | --- | --- |
-| Issuer | yes | no |
-| Project owner | yes | yes |
-| Project viewer | yes | yes |
-| Project worker | yes | **no** |
+| | Project time and statistics | Own invoices | Others' invoices |
+| --- | --- | --- | --- |
+| Project owner | yes | yes | yes |
+| Project worker | yes | yes | **no** |
+| Project viewer | yes | **no** | **no** |
 
 A worker sees their own invoices only: one contractor's rate and hours are not
-another contractor's business. Collaborator access of any kind requires the
-project owner to hold premium; a self-hosted instance is unconditionally
-entitled (see `service/entitlement.ts`).
+another contractor's business.
+
+**A viewer sees no invoices at all.** The role exists to watch progress, not
+money. The rate-privacy reason given above for workers applies to a viewer more
+strongly, not less: a viewer added to a project with several contributors would
+otherwise read every contributor's rate, and a viewer is typically further from
+those contributors than a fellow worker is.
+
+There is no mechanism for granting an outsider access to a single invoice. An
+invoice leaves the product as a PDF, sent by the issuer.
+
+## What premium governs
+
+**Collaborators are free.** Adding a worker or a viewer costs nothing and is
+not gated.
+
+Premium governs **how long recorded time is kept**. On the hosted service an
+unpaid workspace rotates timelogs at 14 days; paying converts the whole
+workspace so nothing rotates. A self-hosted instance is unconditionally
+entitled — unlimited seats, no rotation (see `service/entitlement.ts`).
+
+Retention is a property of the workspace, never of one person: `ProjectStatistics`
+and invoice reports aggregate across contributors, so a project whose
+contributors had different retention would report totals that quietly disagree
+with the work done.

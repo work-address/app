@@ -180,16 +180,12 @@ export const ProfileViewQrCode = ({
   )
 }
 
+/* A whole card on a phone. It used to lose its bottom edge so the links card
+   could continue it, but that card is often empty there, and a card that ends
+   in nothing looked like a rendering fault. */
 const Root = styled(ProfileViewCard)`
   box-shadow: var(--shadow-4);
   height: 100%;
-  ${(p) => p.theme.breakpoints.down('md')} {
-    border-bottom: none;
-    padding-top: var(--space-3);
-    padding-bottom: 0;
-    border-bottom-left-radius: 0;
-    border-bottom-right-radius: 0;
-  }
 
   ${(p) => p.theme.breakpoints.up('md')} {
     padding: 33px;
