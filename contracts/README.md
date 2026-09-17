@@ -1,8 +1,13 @@
 # Work Address contracts
 
-Open-source marketplace escrow for Work Address, implementing the v1 rules in
-`web/docs/smart-contracts/SPEC.md` (SC-ES-01..03) and
-`web/docs/specification/escrow-payments.md` (ESC-04/05).
+The open contract half of Work Address, implementing the v1 rules in
+`web/docs/smart-contracts/SPEC.md` — `MarketplaceEscrow` for settlement
+(SC-ES-01..03, and ESC-04/05 in `web/docs/specification/escrow-payments.md`)
+and `IdentityRegistry` for profile publication (SC-ID-01, SC-PR-01).
+
+Both are immutable deployments with no owner, no pause and no upgrade hook.
+Nothing here depends on the dashboard, the website or a hosted API: a verifier
+needs an RPC endpoint and nothing else.
 
 > **Unaudited. Not for real funds.** The release gate in SPEC §14 — independent
 > security review, testnet pilot, reproducible verified deployment — has not
@@ -34,6 +39,48 @@ allocation `budget = held + workerTransferred + feeTransferred + clientRefunded`
 and the contract's token balance equals `totalHeld` (plus any surplus sent
 directly, which is never credited).
 
+## `IdentityRegistry`
+
+A wallet-signed profile document already proves authorship without any chain.
+The two things a signature cannot do are the only things this contract stores:
+which version is **current**, and whether it has been **withdrawn**.
+
+| Step | Who | Rule |
+| --- | --- | --- |
+| `publish` | Subject | Appends a version; legal when unpublished, active or withdrawn — the last case is reactivation |
+| `deactivate` | Subject | Withdraws the current presentation; appends no version, and voids the subject's unsubmitted authorizations |
+| `readIdentity` / `readIdentityAt` / `checkPresentation` | Anyone | What is current, what an older version held, and how a presented document compares |
+
+`publishFor` and `deactivateFor` are the relayed forms, taking an EIP-712
+`Action` bound to the operation, subject, payload, the subject's next nonce and
+a deadline, with ERC-1271 for contract wallets — the same shape as the escrow,
+under a different domain so the two can never be interchanged. There is
+deliberately no `activate()`: re-exposing a withdrawn profile has to restate
+what is being published.
+
+**No profile content is on chain and none can be.** What gets published is
+`profileCommitment(subject, schemaId, merkleRoot)` — a domain-separated hash of
+a salted Merkle root, never the bare root. The contract cannot open it, which
+keeps names, rates and links off a permanent ledger by construction rather than
+by policy. Leaves bind the subject, so a stolen export cannot be transplanted
+onto another record.
+
+**There is no reputation contract, and that is a decision rather than a gap.**
+The only reputation fact a chain can attest is that an address was paid an
+amount by another address under known terms, and `MarketplaceEscrow` already
+emits exactly that. A second record would restate a stronger source, and SPEC
+§2 forbids a deployment that only buys a badge. Work receipts are signed
+exports checked against escrow events plus `readAllocation` — and a verifier
+must check the emitting contract against a published allowlist, because this
+code is MIT and a self-funded clone emits a structurally perfect `Released`.
+
+**Subjects are `did:pkh:eip155` only.** The record key is a 20-byte EVM
+address, so there is nowhere to put a Solana ed25519 key or a TON
+workchain:hash pair; the refusal is structural, not a rule a later change can
+relax. Solana and TON accounts keep sign-in, profiles and the same portable
+export, self-signed — they simply have no anchor. No `did:workaddress` is
+minted and no DID Core conformance is claimed.
+
 ## Develop
 
 ```bash
@@ -47,6 +94,27 @@ npm run deploy:local
 
 ## Still open before any deployment
 
-- Chain, exact USDT asset and confirmation rule (DEC-09).
-- Uniqueness of an obligation across future contract versions (SC-DEC-03).
-- Independent review, testnet pilot and a verified, reproducible deployment.
+Settlement network is **Ethereum** (DEC-09, decided 17 September 2026). What
+that leaves open:
+
+- The exact asset and its confirmation rule. Mainnet USDT
+  (`0xdAC17F958D2ee523a2206206994597C13D831ec7`, 6 decimals) returns no bool
+  from `transfer`, can blacklist an address, and needs an allowance reset to
+  zero before a non-zero re-approve. A blacklisted payee or fee recipient makes
+  `release` revert, and it is atomic by design — so that allocation waits
+  rather than settling partially.
+- Whether the registry is deployed on the same chain as the escrow. One chain
+  means a verifier needs one RPC endpoint and one reorg policy; it also
+  permanently joins a wallet's profile-edit rhythm to its earnings graph. That
+  is a product trade, not an ops convenience.
+- Uniqueness of an obligation across future contract versions (SC-DEC-03), and
+  who publishes and signs the official deployment allowlist — with no on-chain
+  reputation, that manifest is the trust root for every settlement receipt.
+- Schema v1's slot table: which public profile fields occupy which of the 32
+  leaves. It must be written fresh rather than reusing the current public
+  profile serialization, which still leaks email, phone and roles (PRODUCT G13).
+- Salt custody. If the hosted API holds both values and salts, the commitment
+  protects privacy against chain observers but not against us, and the docs
+  must say so.
+- Independent review, testnet pilot and a verified, reproducible deployment —
+  the SPEC §14 gate, unmet for both contracts.
