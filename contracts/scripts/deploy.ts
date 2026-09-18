@@ -1,37 +1,47 @@
-import { ethers, network } from 'hardhat'
+import hre from 'hardhat'
+
+import {
+  LOCAL_TOKENS,
+  deployLocal,
+  escrowEnvLines,
+  localAccountKey,
+  manifestPath,
+  writeManifest,
+} from './local-chain'
+
+import type { LocalToken } from './local-chain'
 
 /**
- * Deploys a mock USDT and the escrow to the in-process Hardhat network, for
- * local development of the funding screens. Refuses any other network: a
- * public deployment waits for the chain/asset decision and the security
- * review (SPEC §14–15).
+ * Deploys the local test USDT, the escrow and the identity registry to the
+ * local Hardhat chain — in process (`deploy:local`) or a running
+ * `hardhat node` (`deploy:localhost`), which also gets a manifest in
+ * deployments/. Refuses every other chain, mainnet by name: a public
+ * deployment waits for the security review (SPEC §14–15).
+ *
+ * LOCAL_TOKEN=MockUSDT swaps the Tether-like token for a plain ERC-20.
  */
 async function main() {
-  if (network.name !== 'hardhat' && network.name !== 'localhost') {
-    throw new Error(`Refusing to deploy to ${network.name}: local networks only`)
+  const token = (process.env.LOCAL_TOKEN ?? 'TetherLikeUSDT') as LocalToken
+
+  if (!LOCAL_TOKENS.includes(token)) {
+    throw new Error(`LOCAL_TOKEN must be ${LOCAL_TOKENS.join(' or ')}, not ${token}`)
   }
 
-  const [deployer, feeRecipient, originSigner] = await ethers.getSigners()
-  const token = await (await ethers.getContractFactory('MockUSDT')).deploy()
-  const escrow = await (
-    await ethers.getContractFactory('MarketplaceEscrow')
-  ).deploy(await token.getAddress(), feeRecipient.address, originSigner.address)
+  const manifest = await deployLocal(hre, { token })
 
-  console.log(
-    JSON.stringify(
-      {
-        network: network.name,
-        chainId: Number((await ethers.provider.getNetwork()).chainId),
-        deployer: deployer.address,
-        token: await token.getAddress(),
-        escrow: await escrow.getAddress(),
-        feeRecipient: feeRecipient.address,
-        originSigner: originSigner.address,
-      },
-      null,
-      2,
-    ),
-  )
+  console.log(JSON.stringify(manifest, null, 2))
+
+  if (hre.network.name === 'hardhat') {
+    console.log('\nIn-process chain: nothing was persisted. Use deploy:localhost against `npm run node`.')
+    return
+  }
+
+  const file = manifestPath(hre.network.name)
+
+  writeManifest(file, manifest)
+  console.log(`\nWrote ${file}`)
+  console.log('\n# web/api/.env — local Hardhat node only; the key is a public Hardhat test key')
+  console.log(escrowEnvLines(manifest, localAccountKey(hre, manifest.originSigner)).join('\n'))
 }
 
 main().catch((error) => {

@@ -1,0 +1,118 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Work Address contract deployment manifest",
+  "description": "Written by scripts/deploy.ts to deployments/<network>.json. Everything a consumer needs to reach one deployment: the chain, where each contract lives, the first block to index from and the two immutable escrow roles. The chain is pinned to the local Hardhat chain until the SPEC §14 gate is met; admitting another chain here is a deliberate decision, not a config change.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "network",
+    "chainId",
+    "deployBlock",
+    "deployer",
+    "feeRecipient",
+    "originSigner",
+    "token",
+    "escrow",
+    "identityRegistry"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "network": {
+      "description": "Hardhat network name the deploy ran against.",
+      "type": "string",
+      "minLength": 1
+    },
+    "chainId": {
+      "description": "EIP-155 chain id. Only the local Hardhat chain.",
+      "enum": [
+        31337
+      ]
+    },
+    "deployBlock": {
+      "description": "Block of the first contract deployed here; indexers start from it.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "deployer": {
+      "$ref": "#/definitions/address"
+    },
+    "feeRecipient": {
+      "description": "MarketplaceEscrow.feeRecipient: receives the 5% on release.",
+      "$ref": "#/definitions/address"
+    },
+    "originSigner": {
+      "description": "MarketplaceEscrow.originSigner: the address web/api's APP_ESCROW_ORIGIN_SIGNER_KEY must control.",
+      "$ref": "#/definitions/address"
+    },
+    "token": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "address",
+        "decimals"
+      ],
+      "properties": {
+        "contract": {
+          "description": "Local test token. TetherLikeUSDT reproduces mainnet USDT's approve-reset, no-return and sender-blacklist behaviour.",
+          "enum": [
+            "TetherLikeUSDT",
+            "MockUSDT"
+          ]
+        },
+        "address": {
+          "$ref": "#/definitions/address"
+        },
+        "decimals": {
+          "const": 6
+        }
+      }
+    },
+    "escrow": {
+      "$ref": "#/definitions/escrow"
+    },
+    "identityRegistry": {
+      "$ref": "#/definitions/identityRegistry"
+    }
+  },
+  "definitions": {
+    "address": {
+      "type": "string",
+      "pattern": "^0x[0-9a-fA-F]{40}$"
+    },
+    "escrow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "address"
+      ],
+      "properties": {
+        "contract": {
+          "const": "MarketplaceEscrow"
+        },
+        "address": {
+          "$ref": "#/definitions/address"
+        }
+      }
+    },
+    "identityRegistry": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "contract",
+        "address"
+      ],
+      "properties": {
+        "contract": {
+          "const": "IdentityRegistry"
+        },
+        "address": {
+          "$ref": "#/definitions/address"
+        }
+      }
+    }
+  }
+}
