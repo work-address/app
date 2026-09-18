@@ -10,6 +10,7 @@ import { UserFixture } from '@/test/fixture/user-fixture'
 import { UserRepository } from '@/repository/user-repository'
 import { Filter } from '@/service/filter'
 import { Entitlement } from '@/service/entitlement'
+import { InvoiceCommitment } from '@/service/invoice-commitment'
 import { InvoiceRecord } from '@/service/invoice-record'
 import { EntitlementSignature } from '@/service/entitlement-signature'
 import { UserManager } from '@/service/user-manager'
@@ -91,6 +92,7 @@ export class AppContainer {
     container
     container
     container.bind<InvoiceRecord>('InvoiceRecord').to(InvoiceRecord)
+    container.bind<InvoiceCommitment>('InvoiceCommitment').to(InvoiceCommitment)
     container
     container
       .bind<ProjectStatisticsManager>('ProjectStatisticsManager')

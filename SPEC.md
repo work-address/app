@@ -117,6 +117,18 @@ bytes are a published format — `api/src/test/fixture/invoice-record.v1.json`
 holds the vectors, and a change that moves one byte needs a new version. A
 legacy invoice has no record.
 
+**InvoiceCommitment v1** is what a worker submits to the escrow instead of the
+invoice (`InvoiceCommitment`, `api/src/service/invoice-commitment.ts`):
+`keccak256(DOMAIN || salt || document)`, where `DOMAIN` is keccak256 of
+`work-address/invoice-commitment/v1`, the salt is 32 random bytes the issuer
+keeps, and the document is the RFC 8785 text of `{ allocationId, chainId,
+escrow, record }` with the invoice's InvoiceRecord v1 as `record`. Disclosing
+the record and the salt opens it against chain data alone; without the salt
+it cannot be recomputed from public ids. The vectors in
+`api/src/test/fixture/invoice-commitment.v1.json` are byte-identical to the
+contracts repository's `test/fixtures` copy, which is checked against
+`MarketplaceEscrow` itself, and the contracts README specifies the encoding.
+
 **Retention never destroys an invoice's evidence.** The free-tier purge skips
 entries covered by an invoice from the same issuer, so a financial record
 always keeps the detail behind it.

@@ -88,3 +88,18 @@ export interface IInvoiceRecord {
   periodEnd: string
   lines: IInvoiceLine[]
 }
+
+/**
+ * Where an invoice commitment is submitted: the escrow allocation it bills.
+ *
+ * Committed alongside the record, so an opening proves which chain, which
+ * escrow deployment and which allocation the invoice was submitted to - the
+ * same invoice and salt submitted anywhere else is a different commitment.
+ * `escrow` is an EVM address and `allocationId` a 0x-prefixed bytes32, both in
+ * any casing; the commitment lowercases them.
+ */
+export interface IInvoiceCommitmentBinding {
+  chainId: number
+  escrow: string
+  allocationId: string
+}
