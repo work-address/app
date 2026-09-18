@@ -244,6 +244,11 @@ export class InvoiceManager {
    *
    * Shared by `create` and `ensureForProject` so there is one rule rather than
    * two that can drift - the second would inevitably be the lenient one.
+   *
+   * Role alone decides it, never the owner's plan. The role check used to
+   * fall back to the owner's stored premium flag, which nothing sets on a
+   * self-hosted instance, so there a worker could open the project and then
+   * be refused an invoice for their own hours.
    */
   private assertCanInvoice(
     project: Project,

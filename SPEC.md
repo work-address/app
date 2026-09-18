@@ -105,11 +105,15 @@ invoice leaves the product as a PDF, sent by the issuer.
 ## What premium governs
 
 **Collaborators are free.** Adding a worker or a viewer costs nothing and is
-not gated.
+not gated. Project access is address membership alone: the owner's plan is not
+part of any access check, so a subscription that lapses or resumes neither
+removes nor restores anyone's access. The same holds on a self-hosted instance,
+where a worker invoices exactly as on the hosted service.
 
-Premium governs **how long recorded time is kept**. On the hosted service an
-unpaid workspace rotates timelogs at 14 days; paying converts the whole
-workspace so nothing rotates. A self-hosted instance is unconditionally
+Premium governs **how long recorded time is kept**, and nothing else. On the
+hosted service an unpaid workspace rotates timelogs at 14 days; paying converts
+the whole workspace so nothing rotates. The retention check in `TimeManager` is
+the only code that asks `Entitlement` whether an account is premium. A self-hosted instance is unconditionally
 entitled — unlimited seats, no rotation (see `service/entitlement.ts`).
 
 Retention is a property of the workspace, never of one person: `ProjectStatistics`

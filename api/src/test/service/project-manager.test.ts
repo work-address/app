@@ -187,10 +187,15 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     expect(updated.viewerAddresses).to.deep.equal([worker.address])
   }
 
+  /**
+   * Collaborators are free: a free owner adds a worker and a viewer, and
+   * nothing about the owner's plan is consulted.
+   */
   @test()
-  async createAndSave_rejectsAccessAddressesForNonPremiumOwner() {
+  async createAndSave_acceptsAccessAddressesForNonPremiumOwner() {
     const owner = await this.userFixture.createUser()
     const worker = await this.userFixture.createUser()
+    const viewer = await this.userFixture.createUser()
     const project = new Project()
 
     project.title = 'access test'
@@ -198,18 +203,16 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     project.state = EProjectState.ACTIVE
     project.user = owner
     project.workerAddresses = [worker.address]
-    project.viewerAddresses = []
+    project.viewerAddresses = [viewer.address]
 
-    let error: unknown
+    const saved = await runPromise(this.projectManager.createAndSave(project))
+    const reloaded = await runPromise(
+      this.projectRepository.findOneByIdOrFail(saved.id),
+    )
 
-    try {
-      await runPromise(this.projectManager.createAndSave(project))
-    } catch (e: unknown) {
-      error = e
-    }
-
-    expect(error).to.exist
-    expect((error as { httpCode?: number }).httpCode).to.be.equal(400)
+    expect(owner.premium).to.not.be.ok
+    expect(reloaded.workerAddresses).to.deep.equal([worker.address])
+    expect(reloaded.viewerAddresses).to.deep.equal([viewer.address])
   }
 
   @test()
@@ -231,38 +234,33 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
   }
 
   @test()
-  async editAndSave_rejectsAccessAddressesForNonPremiumOwner() {
+  async editAndSave_acceptsAccessAddressesForNonPremiumOwner() {
     const owner = await this.userFixture.createUser()
     const worker = await this.userFixture.createUser()
+    const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner)
 
     const patch = new Project()
     patch.workerAddresses = [worker.address]
+    patch.viewerAddresses = [viewer.address]
 
-    let error: unknown
+    await runPromise(this.projectManager.editAndSave(project, patch))
 
-    try {
-      await runPromise(this.projectManager.editAndSave(project, patch))
-    } catch (e: unknown) {
-      error = e
-    }
-
-    expect(error).to.exist
-    expect((error as { httpCode?: number }).httpCode).to.be.equal(400)
-
-    const unchanged = await runPromise(
+    const updated = await runPromise(
       this.projectRepository.findOneByIdOrFail(project.id),
     )
-    expect(unchanged.workerAddresses ?? []).to.deep.equal([])
+    expect(owner.premium).to.not.be.ok
+    expect(updated.workerAddresses).to.deep.equal([worker.address])
+    expect(updated.viewerAddresses).to.deep.equal([viewer.address])
   }
 
   /**
-   * Gating collaborators at write time is not enough on its own: without a
-   * check on the read path, anyone added during a paid month keeps access for
-   * good once the owner cancels.
+   * The owner's plan governs retention only. A subscription lapsing or
+   * resuming must neither drop nor restore anyone's access - otherwise a
+   * client's billing hiccup locks their contractor out mid-engagement.
    */
   @test()
-  async findProjectCheckAccess_revokedWhenOwnerLosesPremium() {
+  async findProjectCheckAccess_unaffectedByTheOwnersPremiumFlag() {
     const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
@@ -271,63 +269,63 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     project.viewerAddresses = [viewer.address]
     await runPromise(this.projectRepository.saveSingle(project))
 
-    expect(
-      await runPromise(
-        this.projectManager.findProjectCheckAccess(project, worker),
-      ),
-    ).to.exist
-    expect(
-      await runPromise(
-        this.projectManager.findProjectCheckAccess(project, viewer),
-      ),
-    ).to.exist
+    const expectAccess = async () => {
+      for (const member of [owner, worker, viewer]) {
+        const found = await runPromise(
+          this.projectManager.findProjectCheckAccess(project, member),
+        )
+
+        expect(found?.id, `premium=${owner.premium}`).to.equal(project.id)
+      }
+    }
+
+    await expectAccess()
 
     owner.premium = false
     await runPromise(this.userManager.saveSingle(owner))
+    await expectAccess()
 
-    expect(
-      await runPromise(
-        this.projectManager.findProjectCheckAccess(project, worker),
-      ),
-    ).to.be.undefined
-    expect(
-      await runPromise(
-        this.projectManager.findProjectCheckAccess(project, viewer),
-      ),
-    ).to.be.undefined
-    // The owner never loses access to their own project.
-    expect(
-      await runPromise(
-        this.projectManager.findProjectCheckAccess(project, owner),
-      ),
-    ).to.exist
+    owner.premium = true
+    await runPromise(this.userManager.saveSingle(owner))
+    await expectAccess()
+
+    const reloaded = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
+    )
+    expect(reloaded.workerAddresses).to.deep.equal([worker.address])
+    expect(reloaded.viewerAddresses).to.deep.equal([viewer.address])
   }
 
   @test()
   async isWorkerAndIsViewer_matchTheSqlAccessFilters() {
     const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
+    const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner)
     project.user = owner
     project.workerAddresses = [worker.address.toUpperCase()]
-    project.viewerAddresses = []
+    project.viewerAddresses = [viewer.address]
 
     // Address casing must not decide access.
     expect(project.isWorker(worker)).to.be.true
     expect(project.isViewer(worker)).to.be.true
+    expect(project.isWorker(viewer)).to.be.false
+    expect(project.isViewer(viewer)).to.be.true
 
+    // Neither must the owner's plan - the SQL filters no longer read it.
     owner.premium = false
-    expect(project.isWorker(worker)).to.be.false
-    expect(project.isViewer(worker)).to.be.false
+    expect(project.isWorker(worker)).to.be.true
+    expect(project.isViewer(worker)).to.be.true
+    expect(project.isViewer(viewer)).to.be.true
     expect(project.isOwner(owner)).to.be.true
   }
 
   /**
-   * A lapsed owner must still be able to take access away - the gate is on
-   * granting, not on revoking.
+   * An owner edits the list freely whatever their plan: removing someone and
+   * adding someone back are both ordinary edits.
    */
   @test()
-  async editAndSave_allowsNonPremiumOwnerToRemoveExistingCollaborators() {
+  async editAndSave_letsANonPremiumOwnerRemoveAndAddCollaborators() {
     const owner = await this.userFixture.createPremiumUser()
     const workerA = await this.userFixture.createUser()
     const workerB = await this.userFixture.createUser()
@@ -344,7 +342,6 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
       this.projectRepository.findOneByIdOrFail(project.id),
     )
 
-    // Dropping one of the two is allowed...
     const revoke = new Project()
     revoke.workerAddresses = [workerA.address]
     await runPromise(this.projectManager.editAndSave(reloaded, revoke))
@@ -354,18 +351,16 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     )
     expect(afterRevoke.workerAddresses).to.deep.equal([workerA.address])
 
-    // ...but swapping in someone new is still a grant, and still refused.
     const regrant = new Project()
     regrant.workerAddresses = [workerA.address, workerB.address]
+    await runPromise(this.projectManager.editAndSave(afterRevoke, regrant))
 
-    let error: unknown
-    try {
-      await runPromise(this.projectManager.editAndSave(afterRevoke, regrant))
-    } catch (e: unknown) {
-      error = e
-    }
-
-    expect(error).to.exist
-    expect((error as { httpCode?: number }).httpCode).to.be.equal(400)
+    const afterRegrant = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
+    )
+    expect(afterRegrant.workerAddresses).to.deep.equal([
+      workerA.address,
+      workerB.address,
+    ])
   }
 }

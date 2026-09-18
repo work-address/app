@@ -123,42 +123,44 @@ export class InvoiceControllerCreateTest extends BaseControllerTest {
 
   @test()
   /**
-   * The owner here is on the free plan, so the worker has no collaborator
-   * access to the project at all. A worker on a premium owner's project may
-   * invoice their own hours - see InvoiceManagerTest.
+   * The owner here is on the free plan, and collaborators are free: the
+   * worker invoices their own hours through the API like any other worker.
    */
-  async create_deniedForWorkerOnAFreeOwnersProject() {
+  async create_letsAWorkerOnAFreeOwnersProjectInvoice() {
     const owner = await this.userFixture.createUser()
     const worker = await this.userFixture.createUser()
-    const project = await this.projectFixture.create(
-      owner,
-      EProjectState.ACTIVE,
-    )
+    const project = await this.projectFixture.createPersonal(owner, 60)
     project.workerAddresses = [worker.address]
     await runPromise(this.projectRepository.saveSingle(project))
 
-    let error: unknown
+    const fromAt = moment.utc().subtract(2, 'hours')
+    const toAt = moment.utc().subtract(1, 'hour')
+    const time = await this.timeFixture.create(
+      project,
+      fromAt.toDate(),
+      toAt.toDate(),
+      worker,
+    )
+    time.minutesActive = 30
+    await runPromise(this.timeRepository.saveSingle(time))
 
-    try {
-      await invoiceControllerCreate({
-        client: this.apiClient(),
-        path: { projectId: project.id as never },
-        headers: {
-          Authorization: this.authenticator.getTokens(worker).accessToken,
-        },
-        body: {
-          fromUnix: moment.utc().subtract(1, 'day').valueOf(),
-          toUnix: moment.utc().valueOf(),
-        },
-        throwOnError: true,
-      })
-    } catch (e: unknown) {
-      error = e
-    }
+    const res = await invoiceControllerCreate({
+      client: this.apiClient(),
+      path: { projectId: project.id as never },
+      headers: {
+        Authorization: this.authenticator.getTokens(worker).accessToken,
+      },
+      body: {
+        fromUnix: fromAt.valueOf(),
+        toUnix: toAt.valueOf(),
+      },
+      throwOnError: true,
+    })
 
-    if (!axios.isAxiosError(error)) throw error
-    expect(error.response?.status).to.be.equal(403)
-    expect(error.response?.data.name).to.be.equal('UserAccessException')
+    expect(owner.premium).to.not.be.ok
+    expect(res.status).to.be.equal(200)
+    expect(res.data.amountCents).to.be.equal(3000)
+    expect(res.data.project?.id).to.be.equal(project.id)
   }
 
   @test()
@@ -168,7 +170,7 @@ export class InvoiceControllerCreateTest extends BaseControllerTest {
    * with no record of their own.
    */
   async create_coversOnlyTheIssuersOwnTime() {
-    const owner = await this.userFixture.createPremiumUser()
+    const owner = await this.userFixture.createUser()
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner, 60)
     project.workerAddresses = [worker.address]

@@ -62,8 +62,8 @@ export class UserFixture {
     return runPromise(this.userManager.saveSingle(user))
   }
 
-  /** Collaborator access (workers/viewers) is premium-only - use this for a
-   *  project owner in tests that grant worker/viewer access. */
+  /** Premium governs retention only: use this for a project owner whose
+   *  entries must outlive the free window. Collaborators need no plan. */
   public async createPremiumUser(): Promise<User> {
     const user = await this.createUser()
 

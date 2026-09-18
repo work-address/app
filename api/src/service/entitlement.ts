@@ -7,9 +7,12 @@ import { User } from '@/entity/user'
  * Who is entitled to premium features, and — just as importantly — whether
  * this instance is one where that question has an answer.
  *
+ * Premium governs one thing: how long recorded time is kept (see
+ * TimeManager). Collaborators are free and never consult this service.
+ *
  * A self-hosted instance has no billing service to push entitlement to it, so
- * `user.premium` is never set on anything and would gate every account out of
- * collaborators and history. Absence of billing therefore reads as *entitled*,
+ * `user.premium` is never set on anything and would put every account on the
+ * rotating free history. Absence of billing therefore reads as *entitled*,
  * not as a free tier: the open-source build is unrestricted by design.
  *
  * SaaS mode is detected from the entitlement secret rather than a dedicated
@@ -32,16 +35,5 @@ export class Entitlement {
     }
 
     return Boolean(user?.premium)
-  }
-
-  /**
-   * Whether a `premium = true` predicate should be applied to a query at all.
-   * Query builders cannot call `isPremium` per row, so self-hosted instances
-   * omit the clause instead of relying on column data - entitlement is
-   * deployment configuration, not a fact about a user row, and writing it into
-   * the table would strand any instance later pointed at the SaaS.
-   */
-  public shouldFilterByPremium(): boolean {
-    return this.isSaaS()
   }
 }

@@ -4,9 +4,13 @@ import moment from 'moment'
 import { suite, test } from '@testdeck/mocha'
 
 import {
+  invoiceControllerCreate,
+  invoiceControllerRead,
+  invoiceControllerSearch,
   projectControllerEdit,
   projectControllerGetStats,
   projectControllerRead,
+  projectControllerSearch,
 } from '@app/api-client'
 import {
   timeControllerCreateOrUpdateMany,
@@ -35,13 +39,17 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
     this.projectRepository = this.container.get('ProjectRepository')
   }
 
+  private token(user: User): string {
+    return this.authenticator.getTokens(user).accessToken
+  }
+
   private async grantAccess(
     project: Project,
     owner: User,
     worker: User,
     viewer: User,
   ) {
-    await projectControllerEdit({
+    return projectControllerEdit({
       client: this.apiClient(),
       path: { id: project.id as never },
       headers: {
@@ -96,6 +104,141 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
     expect(res.status).to.be.equal(200)
     expect(res.data[0]).to.not.have.property('error')
     expect(res.data[0]).to.have.property('id')
+  }
+
+  /**
+   * The whole collaboration loop on the hosted service with an owner who
+   * never paid: collaborators are free, and a viewer sees work but no money.
+   * This is the marketplace case too - the client who hires is usually on
+   * the free plan, and the freelancer must still record and invoice.
+   */
+  @test
+  async freeOwner_workerRecordsAndInvoices_viewerSeesWorkButNoInvoices() {
+    const owner = await this.userFixture.createUser()
+    const worker = await this.userFixture.createUser()
+    const viewer = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner, 60)
+
+    const granted = await this.grantAccess(project, owner, worker, viewer)
+    const stored = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
+    )
+
+    expect(this.parameters.entitlementSecret).to.not.equal('')
+    expect(owner.premium).to.not.be.ok
+    expect(granted.status).to.be.equal(200)
+    expect(stored.workerAddresses).to.deep.equal([worker.address])
+    expect(stored.viewerAddresses).to.deep.equal([viewer.address])
+
+    // The worker finds the project and records time on it.
+    const workerSearch = await projectControllerSearch({
+      client: this.apiClient(),
+      headers: { Authorization: this.token(worker) },
+      body: { filter: {}, sort: { createdAt: 'ASC' }, page: 0 },
+      throwOnError: true,
+    })
+    const fromAt = moment.utc().subtract(40, 'minutes')
+    const toAt = moment.utc().subtract(10, 'minutes')
+    const tracked = await timeControllerCreateOrUpdateMany({
+      client: this.apiClient(),
+      headers: { Authorization: this.token(worker) },
+      body: [
+        {
+          fromIndex: 1000,
+          toIndex: 1001,
+          note: 'worker entry',
+          keyboardKeys: 1,
+          minutesActive: 30,
+          mouseKeys: 1,
+          mouseDistance: 1,
+          fromAt: fromAt.toISOString(),
+          toAt: toAt.toISOString(),
+          projectId: project.id,
+        },
+      ] as ApiTimeCreateDto[],
+      throwOnError: true,
+    })
+
+    expect(
+      (workerSearch.data[0] as Array<{ id: string }>).map((row) => row.id),
+    ).to.include(project.id)
+    expect(tracked.data[0]).to.not.have.property('error')
+    expect(tracked.data[0]).to.have.property('id')
+
+    // ...and invoices it: everything outstanding, 30 minutes at $60.
+    const invoiced = await invoiceControllerCreate({
+      client: this.apiClient(),
+      path: { projectId: project.id as never },
+      headers: { Authorization: this.token(worker) },
+      body: {},
+      throwOnError: true,
+    })
+
+    expect(invoiced.status).to.be.equal(200)
+    expect(invoiced.data?.amountCents).to.be.equal(3000)
+
+    // The viewer sees the project, its time and its statistics...
+    const viewerRead = await projectControllerRead({
+      client: this.apiClient(),
+      path: { id: project.id as never },
+      headers: { Authorization: this.token(viewer) },
+      throwOnError: true,
+    })
+    const viewerTime = await timeControllerSearch({
+      client: this.apiClient(),
+      headers: { Authorization: this.token(viewer) },
+      body: {
+        filter: { projectId: project.id },
+        sort: { createdAt: 'ASC' },
+        page: 0,
+      },
+      throwOnError: true,
+    })
+    const viewerStats = await projectControllerGetStats({
+      client: this.apiClient(),
+      path: {
+        id: project.id as never,
+        period: EProjectStatisticsPeriod.ONE_DAY,
+      },
+      headers: { Authorization: this.token(viewer) },
+      throwOnError: true,
+    })
+
+    expect(viewerRead.status).to.be.equal(200)
+    expect(viewerRead.data.id).to.be.equal(project.id)
+    expect((viewerTime.data[0] as unknown[]).length).to.be.equal(1)
+    expect(viewerStats.status).to.be.equal(200)
+
+    // ...but no invoice, by search or by id.
+    const viewerInvoices = await invoiceControllerSearch({
+      client: this.apiClient(),
+      headers: { Authorization: this.token(viewer) },
+      body: {
+        filter: { projectId: project.id },
+        sort: { createdAt: 'ASC' },
+        page: 0,
+      },
+      throwOnError: true,
+    })
+
+    expect((viewerInvoices.data[0] as unknown[]).length).to.be.equal(0)
+    expect(viewerInvoices.data[1]).to.be.equal(0)
+
+    let error: unknown
+
+    try {
+      await invoiceControllerRead({
+        client: this.apiClient(),
+        path: { id: invoiced.data?.id as never },
+        headers: { Authorization: this.token(viewer) },
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
+    }
+
+    if (!axios.isAxiosError(error)) throw error
+    expect(error.response?.status).to.be.equal(403)
   }
 
   @test

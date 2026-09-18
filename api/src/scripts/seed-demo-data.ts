@@ -45,8 +45,8 @@ import { runPromise } from '@/service/effect-bridge'
  * resolves the same thing from a login JWT, which is usually easier to get:
  *   JSON.parse(localStorage.getItem('wa.auth.session')).accessToken
  *
- * The owner is made premium: collaborators are a premium feature, so a free
- * demo account would have no workers and half the screens would be empty.
+ * The owner is made premium: the history spans DAYS_OF_HISTORY days, and a
+ * free workspace keeps only the last 14, so most of the demo would rotate away.
  */
 
 const DEFAULT_PROJECTS = 4
@@ -167,8 +167,8 @@ class DemoDataSeeder {
         throw new Error(`No account with address ${address}`)
       }
 
-      // Collaborators are premium-gated; without this the seeded workers
-      // would be refused and the demo would show solo projects only.
+      // The seeded history is older than the free retention window; without
+      // this most of it would rotate away on the first sync.
       existing.premium = true
 
       return runPromise(this.userRepository.saveSingle(existing))

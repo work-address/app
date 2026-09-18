@@ -136,44 +136,29 @@ export class Project extends AbstractBaseEntity implements IProject {
     return this.user?.id === user.id
   }
 
-  public isWorker(user: User, ownerIsPremium?: boolean): boolean {
+  public isWorker(user: User): boolean {
     return (
-      this.isOwner(user) ||
-      this.hasCollaborator(this.workerAddresses, user, ownerIsPremium)
+      this.isOwner(user) || this.hasCollaborator(this.workerAddresses, user)
     )
   }
 
-  public isViewer(user: User, ownerIsPremium?: boolean): boolean {
+  public isViewer(user: User): boolean {
     return (
-      this.isWorker(user, ownerIsPremium) ||
-      this.hasCollaborator(this.viewerAddresses, user, ownerIsPremium)
+      this.isWorker(user) || this.hasCollaborator(this.viewerAddresses, user)
     )
   }
 
   /**
-   * Mirrors the SQL access filters in ProjectRepository: addresses match
-   * case-insensitively, and collaborator access only counts while the owner
-   * holds a premium plan. Kept in step with those filters deliberately - two
-   * different answers to "who may see this project" is how access bugs start.
+   * Mirrors the SQL access filters in ProjectRepository: membership is the
+   * address alone, matched on its canonical form. The owner's plan does not
+   * enter into it - collaborators are free, and premium governs retention
+   * only. Kept in step with those filters deliberately - two different
+   * answers to "who may see this project" is how access bugs start.
    */
   private hasCollaborator(
     addresses: string[] | undefined,
     user: User,
-    ownerIsPremium?: boolean,
   ): boolean {
-    // Defaults to the owner's stored flag so existing callers are unchanged.
-    // A self-hosted instance has no billing service to set it, so Entitlement
-    // passes `true` explicitly - see Entitlement.isPremium.
-    const entitled =
-      (ownerIsPremium ?? Boolean(this.user?.premium)) ||
-      // A marketplace hire is the collaboration the client agreed to on
-      // address.work; it does not wait for the client to buy Premium.
-      Boolean(this.marketplaceContractId)
-
-    if (!entitled) {
-      return false
-    }
-
     // Canonical on both sides: the two TON spellings of one account must
     // compare equal, and lowercasing alone does not achieve that.
     const target = WalletAddress.toCanonical(user.address ?? '')

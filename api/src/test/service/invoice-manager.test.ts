@@ -8,8 +8,10 @@ import { ProjectFixture } from '@/test/fixture/project-fixture'
 import { ProjectRepository } from '@/repository/project-repository'
 import { TimeFixture } from '@/test/fixture/time-fixture'
 import { TimeRepository } from '@/repository/time-repository'
-import AccessException from '@/exception/access-exception'
-import { EProjectState } from '@/model/project'
+import { Entitlement } from '@/service/entitlement'
+import { Project } from '@/entity/project'
+import { Time } from '@/entity/time'
+import { User } from '@/entity/user'
 import { runPromise } from '@/service/effect-bridge'
 
 @suite()
@@ -19,6 +21,7 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
   protected projectRepository: ProjectRepository
   protected timeFixture: TimeFixture
   protected timeRepository: TimeRepository
+  protected entitlement: Entitlement
 
   constructor() {
     super()
@@ -27,6 +30,44 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
     this.projectRepository = this.container.get('ProjectRepository')
     this.timeFixture = this.container.get('TimeFixture')
     this.timeRepository = this.container.get('TimeRepository')
+    this.entitlement = this.container.get('Entitlement')
+  }
+
+  /**
+   * Runs `body` as a self-hosted instance: no entitlement secret, so no
+   * billing service and nothing ever sets `premium`. The config object is the
+   * one the container hands every service, so the mode applies throughout,
+   * and it is restored even when an assertion fails.
+   */
+  private async asSelfHosted(body: () => Promise<void>): Promise<void> {
+    const secret = this.parameters.entitlementSecret
+
+    this.parameters.entitlementSecret = ''
+
+    try {
+      await body()
+    } finally {
+      this.parameters.entitlementSecret = secret
+    }
+  }
+
+  /** One hour of the author's time, ending `hoursAgo - 1` hours ago. */
+  private async hourOfWork(
+    project: Project,
+    author: User,
+    hoursAgo: number,
+  ): Promise<Time> {
+    const fromAt = moment.utc().subtract(hoursAgo, 'hours')
+    const time = await this.timeFixture.create(
+      project,
+      fromAt.toDate(),
+      fromAt.clone().add(1, 'hour').toDate(),
+      author,
+    )
+
+    time.minutesActive = 60
+
+    return runPromise(this.timeRepository.saveSingle(time))
   }
 
   @test()
@@ -37,9 +78,7 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
    * to raise their own.
    */
   async create_scopesToTheIssuersOwnTimeOnly() {
-    // Premium: collaborator access is gated on the owner's plan, so a worker
-    // on a free project has no access to invoice against in the first place.
-    const owner = await this.userFixture.createPremiumUser()
+    const owner = await this.userFixture.createUser()
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner, 60)
     project.workerAddresses = [worker.address]
@@ -134,37 +173,85 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
 
   @test()
   /**
-   * The gate is the owner's plan, not the caller's role. A worker on a premium
-   * owner's project invoices their own hours; a worker on a free one has no
-   * collaborator access at all, so there is nothing for them to bill against.
+   * Collaborators are free, so the owner's plan does not decide who may
+   * invoice - the role does. A worker on a free owner's project on the hosted
+   * service bills their own hours like any other worker.
    */
-  async create_throwsAccessExceptionForWorkerOnAFreeOwnersProject() {
+  async create_letsAWorkerOnAFreeOwnersProjectInvoice() {
     const owner = await this.userFixture.createUser()
     const worker = await this.userFixture.createUser()
-    const project = await this.projectFixture.create(
-      owner,
-      EProjectState.ACTIVE,
-    )
+    const project = await this.projectFixture.createPersonal(owner, 60)
     project.workerAddresses = [worker.address]
     await runPromise(this.projectRepository.saveSingle(project))
 
-    let error: unknown
+    await this.hourOfWork(project, worker, 3)
 
-    try {
-      await runPromise(
+    const invoice = await runPromise(
+      this.invoiceManager.create(
+        {
+          fromUnix: moment.utc().subtract(1, 'day').valueOf(),
+          toUnix: moment.utc().valueOf(),
+        },
+        project,
+        worker,
+      ),
+    )
+
+    expect(this.entitlement.isSaaS()).to.be.true
+    expect(this.entitlement.isPremium(owner)).to.be.false
+    expect(invoice.user?.id).to.equal(worker.id)
+    expect(invoice.amountCents).to.equal(6000)
+  }
+
+  @test()
+  /**
+   * G11. A self-hosted instance has no billing service, so `premium` is never
+   * set on anyone. The role check used to fall back to that column, so a
+   * worker could open the project and then be refused an invoice for their
+   * own hours. Every creation mode is exercised - each one goes through the
+   * same check.
+   */
+  async selfHosted_workerOnAFreeOwnersProjectInvoicesInEveryMode() {
+    await this.asSelfHosted(async () => {
+      const owner = await this.userFixture.createUser()
+      const worker = await this.userFixture.createUser()
+      const project = await this.projectFixture.createPersonal(owner, 60)
+      project.workerAddresses = [worker.address]
+      await runPromise(this.projectRepository.saveSingle(project))
+
+      expect(this.entitlement.isSaaS()).to.be.false
+      expect(owner.premium).to.not.be.ok
+
+      // By range: a window around exactly one entry.
+      const inRange = await this.hourOfWork(project, worker, 9)
+      const byRange = await runPromise(
         this.invoiceManager.create(
           {
-            fromUnix: moment.utc().subtract(1, 'day').valueOf(),
-            toUnix: moment.utc().valueOf(),
+            fromUnix: new Date(inRange.fromAt).getTime(),
+            toUnix: new Date(inRange.toAt).getTime(),
           },
           project,
           worker,
         ),
       )
-    } catch (e: unknown) {
-      error = e
-    }
 
-    expect(error).to.be.instanceOf(AccessException)
+      // By selection.
+      const selected = await this.hourOfWork(project, worker, 6)
+      const byIds = await runPromise(
+        this.invoiceManager.createFromTimeIds(project, worker, [selected.id]),
+      )
+
+      // Everything still outstanding.
+      await this.hourOfWork(project, worker, 3)
+      const ensured = await runPromise(
+        this.invoiceManager.ensureForProject(project, worker),
+      )
+
+      for (const invoice of [byRange, byIds, ensured]) {
+        expect(invoice?.user?.id).to.equal(worker.id)
+        expect(invoice?.amountCents).to.equal(6000)
+      }
+      expect(new Set([byRange.id, byIds.id, ensured?.id]).size).to.equal(3)
+    })
   }
 }

@@ -46,13 +46,6 @@ export class EntitlementTest {
   }
 
   @test()
-  selfHosted_queriesOmitThePremiumPredicate() {
-    const entitlement = this.build('')
-
-    expect(entitlement.shouldFilterByPremium()).to.be.false
-  }
-
-  @test()
   saas_entitlementFollowsTheStoredFlag() {
     const entitlement = this.build('a-shared-secret')
 
@@ -64,17 +57,10 @@ export class EntitlementTest {
   }
 
   @test()
-  saas_queriesApplyThePremiumPredicate() {
-    const entitlement = this.build('a-shared-secret')
-
-    expect(entitlement.shouldFilterByPremium()).to.be.true
-  }
-
-  @test()
   whitespaceOnlySecretIsNotAConfiguredBillingService() {
     // app-config trims, so a secret of only whitespace arrives as ''. Asserted
     // so a future loader change cannot quietly flip an instance into SaaS mode
-    // and lock every self-hosted account out of its own collaborators.
+    // and put every self-hosted account on the rotating free history.
     expect(this.build('').isSaaS()).to.be.false
   }
 }

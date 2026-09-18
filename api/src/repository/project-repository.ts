@@ -15,15 +15,6 @@ import AccessException from '@/exception/access-exception'
 import { EProjectState } from '@/model/project'
 import { ProjectSearchDto } from '@/model/dto/project'
 import { UserRepository } from '@/repository/user-repository'
-import { Entitlement } from '@/service/entitlement'
-
-/**
- * Collaborator access needs a premium owner, except on projects opened by a
- * marketplace hire: the client already agreed to work with that person.
- * Mirrors Project.hasCollaborator.
- */
-const MARKETPLACE_OR_PREMIUM = (ownerAlias: string) =>
-  `(${ownerAlias}.premium = true OR project.marketplaceContractId IS NOT NULL)`
 
 @injectable()
 export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
@@ -31,8 +22,6 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
   protected filter: Filter
   @inject('UserRepository')
   protected userRepository: UserRepository
-  @inject('Entitlement')
-  protected entitlement: Entitlement
   protected target = Project
 
   public findProjectAsOwner(
@@ -259,6 +248,12 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
     })
   }
 
+  /**
+   * The owner, or anyone whose address is on the worker or viewer list.
+   *
+   * Membership alone decides it: collaborators are free, so the owner's plan
+   * is not part of the predicate. Mirrors Project.isViewer.
+   */
   private applyViewAccessFilter(
     qb: SelectQueryBuilder<ObjectLiteral>,
     ownerAlias: string,
@@ -271,34 +266,18 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
         subQb
           .where(`${ownerAlias}.id = :accessUserId`, { accessUserId })
           .orWhere(
-            new Brackets((collaboratorQb) => {
-              const addresses = new Brackets((addressQb) => {
-                addressQb
-                  .where(
-                    `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`,
-                    { userAddress },
-                  )
-                  .orWhere(
-                    `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.viewerAddresses, '{}')) AS address)`,
-                    { userAddress },
-                  )
-              })
-
-              // Self-hosted instances omit the predicate rather than relying on
-              // column data - see Entitlement.shouldFilterByPremium.
-              if (this.entitlement.shouldFilterByPremium()) {
-                collaboratorQb
-                  .where(MARKETPLACE_OR_PREMIUM(ownerAlias))
-                  .andWhere(addresses)
-              } else {
-                collaboratorQb.where(addresses)
-              }
-            }),
+            `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`,
+            { userAddress },
+          )
+          .orWhere(
+            `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.viewerAddresses, '{}')) AS address)`,
+            { userAddress },
           )
       }),
     )
   }
 
+  /** The owner, or a worker on the project. Mirrors Project.isWorker. */
   private applyWorkerAccessFilter(
     qb: SelectQueryBuilder<ObjectLiteral>,
     ownerAlias: string,
@@ -311,17 +290,8 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
         subQb
           .where(`${ownerAlias}.id = :accessUserId`, { accessUserId })
           .orWhere(
-            new Brackets((collaboratorQb) => {
-              const isWorkerAddress = `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`
-
-              if (this.entitlement.shouldFilterByPremium()) {
-                collaboratorQb
-                  .where(MARKETPLACE_OR_PREMIUM(ownerAlias))
-                  .andWhere(isWorkerAddress, { userAddress })
-              } else {
-                collaboratorQb.where(isWorkerAddress, { userAddress })
-              }
-            }),
+            `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`,
+            { userAddress },
           )
       }),
     )
