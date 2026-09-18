@@ -1,0 +1,76 @@
+name: CI
+
+on:
+  push:
+    branches: [main, dev]
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  verify:
+    runs-on: ubuntu-latest
+
+    # In test mode api/src/app/app-config.ts loads api/.env.test with
+    # override: true, so environment variables set here cannot redirect the
+    # suite. The services are shaped to the committed file instead: its user
+    # (`ivan`, empty password), its database (`address_work_test`) and its
+    # redis URL. Change the two together.
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: ivan
+          POSTGRES_DB: address_work_test
+          POSTGRES_HOST_AUTH_METHOD: trust
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U ivan -d address_work_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 10
+
+    steps:
+      - uses: actions/checkout@v4
+
+      # Reads the pnpm version from packageManager in the root package.json.
+      - uses: pnpm/action-setup@v4
+
+      # 22, not latest: mocha 9 routes .ts through Node 24's ESM loader instead
+      # of ts-node/register and no test file parses.
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 22
+          cache: pnpm
+
+      - run: pnpm install --frozen-lockfile
+
+      # api has no lint script of its own; `eslint src` is the check it is held to.
+      - name: Lint
+        run: |
+          pnpm --filter ./api exec eslint src
+          pnpm --filter ./web run lint
+
+      - name: Typecheck
+        run: |
+          pnpm --filter ./api exec tsc --noEmit -p tsconfig.json
+          pnpm --filter ./web exec tsc --noEmit -p tsconfig.app.json
+          pnpm --filter ./web exec tsc --noEmit -p tsconfig.node.json
+
+      # The test data source synchronizes and drops the schema itself, so no
+      # schema step runs first.
+      - name: API tests
+        run: pnpm --filter ./api test
+
+      - name: Web unit tests
+        run: pnpm --filter ./web test
