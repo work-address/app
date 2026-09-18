@@ -81,6 +81,119 @@ relax. Solana and TON accounts keep sign-in, profiles and the same portable
 export, self-signed — they simply have no anchor. No `did:workaddress` is
 minted and no DID Core conformance is claimed.
 
+## Canonical encodings
+
+The escrow stores four hashes it never opens: the allocation and obligation
+ids, `termsHash` and `invoiceCommitment`. A worker who needs to submit an
+invoice while the hosted services are down (SPEC §12), or anyone checking a
+settlement, has to rebuild them byte for byte. This section says how.
+
+### Funding terms: EIP-712 `Terms`
+
+The platform's origin signature is EIP-712 over `Terms` (the field order is
+`TERMS_TYPEHASH` in the contract), under the domain
+`{ name: "WorkAddressMarketplaceEscrow", version: "1", chainId, verifyingContract }`.
+`termsDigest(terms)` returns the digest on chain. The vector is
+`test/fixtures/escrow-terms.contract.json`.
+
+### Allocation and obligation ids
+
+The marketplace API (`web/api/src/service/escrow-manager.ts`) derives them with
+Solidity packed encoding. `contractId` is the marketplace contract's UUID as
+text, and `workStart` and `workEnd` are Unix seconds:
+
+```text
+obligationId = keccak256(abi.encodePacked("work-address:contract-period", contractId, uint64 workStart, uint64 workEnd))
+allocationId = keccak256(abi.encodePacked(uint256 chainId, address escrow, obligationId))
+```
+
+The contract does not check either derivation. It only requires both to be
+non-zero and each to be unused.
+
+### `termsHash`
+
+`termsHash` is a commitment to the accepted terms document. The text itself
+stays off chain. Today the marketplace API computes it as:
+
+```text
+termsHash = keccak256(UTF-8(JSON.stringify({
+  contractId, title, paymentType, amount, weeklyLimit, startDate, terms
+})))
+```
+
+The keys come in exactly that order and the JSON has no whitespace.
+`contractId` is a UUID string. `title` and `terms` are free text (`terms` may be
+`null`). `paymentType` is `HOURLY` or `FIXED`. `amount` is an integer of whole
+USDT (per hour or in total). `weeklyLimit` is an integer or `null`, and
+`startDate` is a `YYYY-MM-DD` string or `null`.
+
+It is not RFC 8785. The key order is fixed by the code, not sorted, and the
+free text is hashed as `JSON.stringify` escapes it. That output is
+deterministic for this one shape, but it is not a published canonical form.
+It has no salt either, so anyone holding the terms text can confirm a guess.
+Moving it to JCS with vectors is open work on the marketplace API. Until then,
+this paragraph is its specification.
+
+### `invoiceCommitment` (InvoiceCommitment v1)
+
+The payee's `submitInvoice` / `submitInvoiceFor` commits to one issued app
+invoice, as captured in the invoice's frozen snapshot:
+
+```text
+commitment = keccak256(DOMAIN || salt || document)
+           = keccak256(abi.encodePacked(DOMAIN, salt, bytes(document)))
+
+DOMAIN   = keccak256(UTF-8("work-address/invoice-commitment/v1"))
+         = 0x0e99e479fd427cdce7dee9378966edd2f8cc887862004a9d5f05d4d24f6f7d17
+salt     = 32 bytes the issuer draws at random and keeps; never all zero
+document = UTF-8 of the RFC 8785 (JCS) text of
+           { "allocationId": <bytes32, lowercase 0x hex>,
+             "chainId":      <integer>,
+             "escrow":       <escrow address, lowercase 0x hex>,
+             "record":       <the invoice's InvoiceRecord v1> }
+```
+
+- **InvoiceRecord v1** is the app's canonical invoice document
+  (`GET /invoice/:id/record`, for the issuer and the project owner). It holds
+  the invoice and project ids, the issuer id, the issuer and owner addresses
+  in canonical form, `currency`, `rateHourCents`, `minutesActive`,
+  `amountCents`, the period, and the billed `lines`. Every number is an
+  integer, and timestamps are ISO-8601 UTC with milliseconds. The record
+  comes from the snapshot frozen at issuance, so it is the same document on
+  every read. JCS nests, so the record's own JCS text appears in `document`
+  unchanged.
+- **The binding** (`chainId`, `escrow`, `allocationId`) is committed. An
+  opening therefore proves where the invoice was submitted as well as what it
+  said. The same invoice and salt give a different commitment on any other
+  chain, deployment or allocation.
+- **The salt** keeps the commitment from being a guessable hash of public
+  data. Without it, anyone who knows the ids and the rate could confirm a
+  guessed invoice.
+- **The on-chain amount is not in the document.** The escrow records `billed`
+  itself, and in `submitInvoiceFor` the payee's signature covers
+  `keccak256(abi.encode(invoiceCommitment, amount))`.
+
+To open a commitment, the issuer discloses the record and the salt. A verifier
+takes `chainId` from the node, `escrow` from the address that emitted
+`InvoiceSubmitted`, and `allocationId` and `invoiceCommitment` from the event
+(or `readAllocation`), recomputes the commitment, and compares. Change any
+record field, any binding field or the salt, and the commitment no longer
+matches.
+
+This replaces the unsalted
+`keccak256("work-address:invoice:<contractId>:<allocationId>:<amount>")`, which
+anyone could recompute from public ids and which said nothing about the
+invoice.
+
+`scripts/invoice-commitment.ts` implements the encoding without the app, and
+`test/invoice-commitment.test.ts` holds it to
+`test/fixtures/invoice-commitment.v1.json`. Those vectors were produced by an
+independent encoder, and the app (`app/api/src/service/invoice-commitment.ts`)
+must reproduce them too. The same test deploys `MarketplaceEscrow` at the
+vectors' escrow address, submits the vector commitments directly and relayed,
+and opens them from chain data. A change that moves one byte of any output is
+a new version with a new domain tag, not an edit.
+
 ## Develop
 
 ```bash
@@ -96,8 +209,18 @@ Hardhat's in-process network. Run the same four before opening one. `tsc` is
 not redundant with the tests: Hardhat loads TypeScript transpile-only, so a
 type error in a test or script shows up nowhere else.
 
-`test/fixtures/escrow-terms.contract.json` is shared with the marketplace API
-(`web/api/src/test/fixture`), so both sides agree on the signed terms digest.
+Two fixtures are byte-identical copies of files in other repositories, so
+both sides are held to the same bytes (see "Canonical encodings"):
+
+| Fixture | Other copy | What it pins |
+| --- | --- | --- |
+| `test/fixtures/escrow-terms.contract.json` | `web/api/src/test/fixture` | The EIP-712 `Terms` digest the marketplace API signs |
+| `test/fixtures/invoice-commitment.v1.json` | `app/api/src/test/fixture` | InvoiceCommitment v1, which the app computes and the escrow stores |
+
+Change a shared fixture in both places or in neither.
+`invoice-commitment.v1.json` is also pinned by its SHA-256 in the test on each
+side, so an edit to one copy fails that side's test until the other copy
+matches.
 
 ## Run the whole flow locally
 
@@ -224,8 +347,9 @@ variant. How it differs from a standard ERC-20, and what that means here:
 - Schema v1's slot table: which public profile fields occupy which of the 32
   leaves. It must be written fresh rather than reusing the current public
   profile serialization, which still leaks email, phone and roles (PRODUCT G13).
-- Salt custody. If the hosted API holds both values and salts, the commitment
-  protects privacy against chain observers but not against us, and the docs
-  must say so.
+- Salt custody, for profile and invoice commitments alike. If the hosted API
+  holds both values and salts, the commitment protects privacy against chain
+  observers but not against us, and the docs must say so. InvoiceCommitment v1
+  fixes the encoding, not who keeps an invoice's salt.
 - Independent review, testnet pilot and a verified, reproducible deployment —
   the SPEC §14 gate, unmet for both contracts.

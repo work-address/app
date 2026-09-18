@@ -1,0 +1,137 @@
+{
+  "format": "InvoiceCommitment v1. commitment = keccak256(domain || salt || document): domain is keccak256 of the UTF-8 domainTag (32 bytes), salt is 32 bytes the issuer draws at random and keeps, and document is the UTF-8 RFC 8785 (JCS) text of {allocationId, chainId, escrow, record} - allocationId and escrow as lowercase 0x hex, chainId an integer, record the invoice's InvoiceRecord v1 document, whose own JCS text therefore appears in the document verbatim. Equivalently keccak256(abi.encodePacked(domain, salt, bytes(document))). amount is what the contracts test bills on chain for the vector, in token base units; it is not committed. The escrow is where that test deploys MarketplaceEscrow: the first CREATE of the key-less address 0x000000000000000000000000000000000000c0de on chain 31337. retired is the unsalted formula v1 replaces. A byte-identical copy lives in app/api/src/test/fixture and contracts/test/fixtures: change both or neither, and a change to any output needs a new version, not an edit.",
+  "domainTag": "work-address/invoice-commitment/v1",
+  "domain": "0x0e99e479fd427cdce7dee9378966edd2f8cc887862004a9d5f05d4d24f6f7d17",
+  "vectors": [
+    {
+      "name": "90 active minutes at $20/h, billed to the local escrow by the payee",
+      "chainId": 31337,
+      "escrow": "0x8bbc3514477d75ec797bbe4e19d7961660bb849c",
+      "allocationId": "0x7d2a37f82ee0232848aace4b0c421193fa05c3f906d79e01f0ccf4dfd1769d1e",
+      "salt": "0x86c48df6d06849c23e4ff94b2c724abe6b394bb9ed07b2d7f558b5d109314558",
+      "record": {
+        "version": 1,
+        "invoiceId": "4e61ff62-5642-478f-901b-f7be07550426",
+        "projectId": "8f19e321-6669-4928-8f98-1f61d623bfbd",
+        "issuerId": "e8e8bc72-fae0-4c16-a71f-b6a959b90bc6",
+        "issuerAddress": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+        "ownerAddress": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+        "currency": "USD",
+        "rateHourCents": 2000,
+        "minutesActive": 90,
+        "amountCents": 3000,
+        "periodStart": "2026-09-01T09:00:00.000Z",
+        "periodEnd": "2026-09-01T10:30:00.000Z",
+        "lines": [
+          {
+            "timeId": "17897485-f84c-4dea-9bda-6c185f0f4820",
+            "fromAt": "2026-09-01T09:00:00.000Z",
+            "toAt": "2026-09-01T09:30:00.000Z",
+            "minutesActive": 30
+          },
+          {
+            "timeId": "0256d128-9cd9-4c02-a262-08dff191a8df",
+            "fromAt": "2026-09-01T09:30:00.000Z",
+            "toAt": "2026-09-01T10:00:00.000Z",
+            "minutesActive": 30
+          },
+          {
+            "timeId": "b93289a9-02e4-4cdd-a473-d0bc91e94f7e",
+            "fromAt": "2026-09-01T10:00:00.000Z",
+            "toAt": "2026-09-01T10:30:00.000Z",
+            "minutesActive": 30
+          }
+        ]
+      },
+      "document": "{\"allocationId\":\"0x7d2a37f82ee0232848aace4b0c421193fa05c3f906d79e01f0ccf4dfd1769d1e\",\"chainId\":31337,\"escrow\":\"0x8bbc3514477d75ec797bbe4e19d7961660bb849c\",\"record\":{\"amountCents\":3000,\"currency\":\"USD\",\"invoiceId\":\"4e61ff62-5642-478f-901b-f7be07550426\",\"issuerAddress\":\"0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc\",\"issuerId\":\"e8e8bc72-fae0-4c16-a71f-b6a959b90bc6\",\"lines\":[{\"fromAt\":\"2026-09-01T09:00:00.000Z\",\"minutesActive\":30,\"timeId\":\"17897485-f84c-4dea-9bda-6c185f0f4820\",\"toAt\":\"2026-09-01T09:30:00.000Z\"},{\"fromAt\":\"2026-09-01T09:30:00.000Z\",\"minutesActive\":30,\"timeId\":\"0256d128-9cd9-4c02-a262-08dff191a8df\",\"toAt\":\"2026-09-01T10:00:00.000Z\"},{\"fromAt\":\"2026-09-01T10:00:00.000Z\",\"minutesActive\":30,\"timeId\":\"b93289a9-02e4-4cdd-a473-d0bc91e94f7e\",\"toAt\":\"2026-09-01T10:30:00.000Z\"}],\"minutesActive\":90,\"ownerAddress\":\"0x70997970c51812dc3a010c7d01b50e0d17dc79c8\",\"periodEnd\":\"2026-09-01T10:30:00.000Z\",\"periodStart\":\"2026-09-01T09:00:00.000Z\",\"projectId\":\"8f19e321-6669-4928-8f98-1f61d623bfbd\",\"rateHourCents\":2000,\"version\":1}}",
+      "commitment": "0x5c1512f0855a790e948e87fc260f374ad20e0139cf2ac1e3d9eec103c3e86617",
+      "amount": "30000000"
+    },
+    {
+      "name": "the same invoice and allocation under another salt",
+      "chainId": 31337,
+      "escrow": "0x8bbc3514477d75ec797bbe4e19d7961660bb849c",
+      "allocationId": "0x7d2a37f82ee0232848aace4b0c421193fa05c3f906d79e01f0ccf4dfd1769d1e",
+      "salt": "0xea8e09d5c89c39a91df196d12dd47eaf5c029aff33fb9abc65031c8ee0ea33f7",
+      "record": {
+        "version": 1,
+        "invoiceId": "4e61ff62-5642-478f-901b-f7be07550426",
+        "projectId": "8f19e321-6669-4928-8f98-1f61d623bfbd",
+        "issuerId": "e8e8bc72-fae0-4c16-a71f-b6a959b90bc6",
+        "issuerAddress": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+        "ownerAddress": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+        "currency": "USD",
+        "rateHourCents": 2000,
+        "minutesActive": 90,
+        "amountCents": 3000,
+        "periodStart": "2026-09-01T09:00:00.000Z",
+        "periodEnd": "2026-09-01T10:30:00.000Z",
+        "lines": [
+          {
+            "timeId": "17897485-f84c-4dea-9bda-6c185f0f4820",
+            "fromAt": "2026-09-01T09:00:00.000Z",
+            "toAt": "2026-09-01T09:30:00.000Z",
+            "minutesActive": 30
+          },
+          {
+            "timeId": "0256d128-9cd9-4c02-a262-08dff191a8df",
+            "fromAt": "2026-09-01T09:30:00.000Z",
+            "toAt": "2026-09-01T10:00:00.000Z",
+            "minutesActive": 30
+          },
+          {
+            "timeId": "b93289a9-02e4-4cdd-a473-d0bc91e94f7e",
+            "fromAt": "2026-09-01T10:00:00.000Z",
+            "toAt": "2026-09-01T10:30:00.000Z",
+            "minutesActive": 30
+          }
+        ]
+      },
+      "document": "{\"allocationId\":\"0x7d2a37f82ee0232848aace4b0c421193fa05c3f906d79e01f0ccf4dfd1769d1e\",\"chainId\":31337,\"escrow\":\"0x8bbc3514477d75ec797bbe4e19d7961660bb849c\",\"record\":{\"amountCents\":3000,\"currency\":\"USD\",\"invoiceId\":\"4e61ff62-5642-478f-901b-f7be07550426\",\"issuerAddress\":\"0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc\",\"issuerId\":\"e8e8bc72-fae0-4c16-a71f-b6a959b90bc6\",\"lines\":[{\"fromAt\":\"2026-09-01T09:00:00.000Z\",\"minutesActive\":30,\"timeId\":\"17897485-f84c-4dea-9bda-6c185f0f4820\",\"toAt\":\"2026-09-01T09:30:00.000Z\"},{\"fromAt\":\"2026-09-01T09:30:00.000Z\",\"minutesActive\":30,\"timeId\":\"0256d128-9cd9-4c02-a262-08dff191a8df\",\"toAt\":\"2026-09-01T10:00:00.000Z\"},{\"fromAt\":\"2026-09-01T10:00:00.000Z\",\"minutesActive\":30,\"timeId\":\"b93289a9-02e4-4cdd-a473-d0bc91e94f7e\",\"toAt\":\"2026-09-01T10:30:00.000Z\"}],\"minutesActive\":90,\"ownerAddress\":\"0x70997970c51812dc3a010c7d01b50e0d17dc79c8\",\"periodEnd\":\"2026-09-01T10:30:00.000Z\",\"periodStart\":\"2026-09-01T09:00:00.000Z\",\"projectId\":\"8f19e321-6669-4928-8f98-1f61d623bfbd\",\"rateHourCents\":2000,\"version\":1}}",
+      "commitment": "0xfe984a010e3663a5aada5cdce336db433e32efb4deb9e23eb3e8047bc82e6019",
+      "amount": "30000000"
+    },
+    {
+      "name": "the next week's invoice, 125 minutes at $59.25/h, relayed for the payee",
+      "chainId": 31337,
+      "escrow": "0x8bbc3514477d75ec797bbe4e19d7961660bb849c",
+      "allocationId": "0xa5f9b7b366ba5a2be8513f4e08aa9cb5d37ad87be80de4157a33e2ac95843dd0",
+      "salt": "0xde6b58a534db8a445996ba8133948e3eddae9100ffb03debe331254523a5294c",
+      "record": {
+        "version": 1,
+        "invoiceId": "d2a7c1e4-58b3-4f0a-9e6d-3b1c7a2f4e90",
+        "projectId": "8f19e321-6669-4928-8f98-1f61d623bfbd",
+        "issuerId": "e8e8bc72-fae0-4c16-a71f-b6a959b90bc6",
+        "issuerAddress": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+        "ownerAddress": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+        "currency": "USD",
+        "rateHourCents": 5925,
+        "minutesActive": 125,
+        "amountCents": 12344,
+        "periodStart": "2026-09-15T09:00:00.000Z",
+        "periodEnd": "2026-09-15T12:05:00.000Z",
+        "lines": [
+          {
+            "timeId": "3e8f0b6a-9c21-4d7e-b5a4-0f6e2d1c8b73",
+            "fromAt": "2026-09-15T09:00:00.000Z",
+            "toAt": "2026-09-15T10:00:00.000Z",
+            "minutesActive": 45
+          },
+          {
+            "timeId": "a91c4d27-6e0b-4f38-8d52-7b3e9f1a0c64",
+            "fromAt": "2026-09-15T10:05:00.000Z",
+            "toAt": "2026-09-15T12:05:00.000Z",
+            "minutesActive": 80
+          }
+        ]
+      },
+      "document": "{\"allocationId\":\"0xa5f9b7b366ba5a2be8513f4e08aa9cb5d37ad87be80de4157a33e2ac95843dd0\",\"chainId\":31337,\"escrow\":\"0x8bbc3514477d75ec797bbe4e19d7961660bb849c\",\"record\":{\"amountCents\":12344,\"currency\":\"USD\",\"invoiceId\":\"d2a7c1e4-58b3-4f0a-9e6d-3b1c7a2f4e90\",\"issuerAddress\":\"0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc\",\"issuerId\":\"e8e8bc72-fae0-4c16-a71f-b6a959b90bc6\",\"lines\":[{\"fromAt\":\"2026-09-15T09:00:00.000Z\",\"minutesActive\":45,\"timeId\":\"3e8f0b6a-9c21-4d7e-b5a4-0f6e2d1c8b73\",\"toAt\":\"2026-09-15T10:00:00.000Z\"},{\"fromAt\":\"2026-09-15T10:05:00.000Z\",\"minutesActive\":80,\"timeId\":\"a91c4d27-6e0b-4f38-8d52-7b3e9f1a0c64\",\"toAt\":\"2026-09-15T12:05:00.000Z\"}],\"minutesActive\":125,\"ownerAddress\":\"0x70997970c51812dc3a010c7d01b50e0d17dc79c8\",\"periodEnd\":\"2026-09-15T12:05:00.000Z\",\"periodStart\":\"2026-09-15T09:00:00.000Z\",\"projectId\":\"8f19e321-6669-4928-8f98-1f61d623bfbd\",\"rateHourCents\":5925,\"version\":1}}",
+      "commitment": "0xd5678e9362bcc4d1e34fd245178f2dbc619778a259ee7ab6b3a57809d6ea43ff",
+      "amount": "123440000"
+    }
+  ],
+  "retired": {
+    "formula": "keccak256 of the UTF-8 text work-address:invoice:<contractId>:<allocationId>:<amount>",
+    "contractId": "6b0f5c52-3f0e-4d4e-9a53-2f7f1f0a9c11"
+  }
+}
