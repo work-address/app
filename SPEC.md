@@ -95,6 +95,10 @@ strongly, not less: a viewer added to a project with several contributors would
 otherwise read every contributor's rate, and a viewer is typically further from
 those contributors than a fellow worker is.
 
+Invoice access follows the issuer, not the issuer's current role: a worker who
+is later moved to the viewer list still sees the invoices they raised. It is
+their own record of money owed to them.
+
 There is no mechanism for granting an outsider access to a single invoice. An
 invoice leaves the product as a PDF, sent by the issuer.
 

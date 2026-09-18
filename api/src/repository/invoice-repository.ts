@@ -2,7 +2,6 @@ import _ from 'lodash'
 import { inject, injectable } from 'inversify'
 
 import { Filter } from '@/service/filter'
-import { Entitlement } from '@/service/entitlement'
 import { Brackets } from 'typeorm'
 
 import type { ObjectLiteral, SelectQueryBuilder } from 'typeorm'
@@ -22,46 +21,32 @@ import { InvoiceSearchDto } from '@/model/dto/invoice'
 export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
   @inject('Filter')
   protected filter: Filter
-  @inject('Entitlement')
-  protected entitlement: Entitlement
   protected target = Invoice
 
   /**
-   * Who may see an invoice: whoever issued it, the owner of its project, and
-   * that project's viewers.
+   * Who may see an invoice: whoever issued it, and the owner of its project.
+   * Nobody else - see "Who can see what" in SPEC.md.
    *
    * Workers see their own and no one else's - one contractor's rate and hours
    * are not the business of another contractor on the same project. Viewers
-   * see all of them, which is the point of the role.
+   * see none at all: the role exists to watch progress, not money, and a
+   * viewer is usually further from the contributors than a fellow worker is.
    *
-   * Mirrors ProjectRepository.applyViewAccessFilter, including the premium
-   * predicate being omitted entirely on self-hosted instances rather than
-   * relying on column data.
+   * Access follows the issuer, not the issuer's current role, so a worker
+   * later moved to the viewer list keeps sight of the invoices they raised.
+   * The project's collaborator lists play no part in the predicate at all.
    */
   private applyInvoiceAccessFilter(
     qb: SelectQueryBuilder<ObjectLiteral>,
     user: User,
   ): void {
-    const { accessUserId, userAddress } = Project.accessParams(user)
+    const accessUserId = user.id
 
     qb.andWhere(
       new Brackets((scope) => {
         scope
           .where('issuer.id = :accessUserId', { accessUserId })
           .orWhere('owner.id = :accessUserId', { accessUserId })
-          .orWhere(
-            new Brackets((viewer) => {
-              const isViewerAddress = `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.viewerAddresses, '{}')) AS address)`
-
-              if (this.entitlement.shouldFilterByPremium()) {
-                viewer
-                  .where('owner.premium = true')
-                  .andWhere(isViewerAddress, { userAddress })
-              } else {
-                viewer.where(isViewerAddress, { userAddress })
-              }
-            }),
-          )
       }),
     )
   }

@@ -10,6 +10,7 @@ import { ProjectFixture } from '@/test/fixture/project-fixture'
 import { ProjectRepository } from '@/repository/project-repository'
 import { UserFixture } from '@/test/fixture/user-fixture'
 import { runPromise } from '@/service/effect-bridge'
+import AccessException from '@/exception/access-exception'
 
 const search = { filter: {}, sort: { createdAt: 'ASC' as const }, page: 0 }
 
@@ -111,28 +112,107 @@ export class InvoiceAccessTest extends AbstractDatabaseIntegration {
     expect(rows.map((row) => row.id)).to.include(invoice.id)
   }
 
+  /**
+   * A viewer watches progress, not money: neither the owner's invoice nor a
+   * worker's reaches them, by search or by id. See "Who can see what" in
+   * SPEC.md. The owner is premium because that is where viewers used to be
+   * let in; with the plan out of every access check it no longer matters.
+   */
   @test()
-  async invoice_isVisibleToAProjectViewer() {
+  async invoice_isHiddenFromAProjectViewer() {
     const owner = await this.userFixture.createPremiumUser()
+    const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
     )
+    project.workerAddresses = [worker.address]
     project.viewerAddresses = [viewer.address]
     await runPromise(this.projectRepository.saveSingle(project))
 
-    const invoice = await this.invoiceFixture.create(
+    const ownersInvoice = await this.invoiceFixture.create(
       project,
       900,
       EInvoiceState.REQUESTED,
     )
+    ownersInvoice.user = owner
+    await runPromise(this.invoiceRepository.saveSingle(ownersInvoice))
 
-    const [rows] = await runPromise(
-      this.invoiceRepository.findAndCount(search, viewer),
+    const workersInvoice = await this.invoiceFixture.create(
+      project,
+      1500,
+      EInvoiceState.REQUESTED,
+    )
+    workersInvoice.user = worker
+    await runPromise(this.invoiceRepository.saveSingle(workersInvoice))
+
+    const [rows, count] = await runPromise(
+      this.invoiceRepository.findAndCount(
+        { ...search, filter: { projectId: project.id } },
+        viewer,
+      ),
     )
 
-    expect(rows.map((row) => row.id)).to.include(invoice.id)
+    expect(rows).to.have.length(0)
+    expect(count).to.equal(0)
+
+    for (const invoice of [ownersInvoice, workersInvoice]) {
+      let error: unknown
+
+      try {
+        await runPromise(
+          this.invoiceRepository.findOneConfirmUser(invoice, viewer),
+        )
+      } catch (e: unknown) {
+        error = e
+      }
+
+      expect(error).to.be.instanceOf(AccessException)
+    }
+  }
+
+  /**
+   * Access follows who issued the invoice, not the issuer's current role. A
+   * worker later moved to the viewer list still sees what they billed - it is
+   * their own record of money owed to them.
+   */
+  @test()
+  async issuerDemotedToViewer_stillSeesTheirOwnInvoice() {
+    const owner = await this.userFixture.createUser()
+    const worker = await this.userFixture.createUser()
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
+    project.workerAddresses = [worker.address]
+    await runPromise(this.projectRepository.saveSingle(project))
+
+    const invoice = await this.invoiceFixture.create(
+      project,
+      2100,
+      EInvoiceState.REQUESTED,
+    )
+    invoice.user = worker
+    await runPromise(this.invoiceRepository.saveSingle(invoice))
+
+    project.workerAddresses = []
+    project.viewerAddresses = [worker.address]
+    await runPromise(this.projectRepository.saveSingle(project))
+
+    const [rows] = await runPromise(
+      this.invoiceRepository.findAndCount(search, worker),
+    )
+    const read = await runPromise(
+      this.invoiceRepository.findOneConfirmUser(invoice, worker),
+    )
+    const [ownerRows] = await runPromise(
+      this.invoiceRepository.findAndCount(search, owner),
+    )
+
+    expect(rows.map((row) => row.id)).to.deep.equal([invoice.id])
+    expect(read.id).to.equal(invoice.id)
+    expect(ownerRows.map((row) => row.id)).to.include(invoice.id)
   }
 
   /** One contractor's rate is not another contractor's business. */
