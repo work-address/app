@@ -1,14 +1,9 @@
 import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
 
-import { $invoice } from '../model'
+import { $invoice, describeInvoiceRate } from '../model'
 
-import {
-  dateFormatter,
-  formatCount,
-  formatCurrency,
-  formatDurationFromMinutes,
-} from '@/shared'
+import { dateFormatter, formatCount, formatDurationFromMinutes } from '@/shared'
 
 export type InvoiceFieldId =
   | 'issueDate'
@@ -47,8 +42,9 @@ export const useInvoiceInfoFields = (): InvoiceInfoFieldRow[] => {
     },
     {
       id: 'rateHour',
-      value: formatCurrency(report?.rateHour),
-      desc: t('common.metricDesc.rateHour'),
+      // The rate the invoice was issued at, from its snapshot - never the
+      // project's current rate, which may have changed since.
+      ...describeInvoiceRate(invoice, t),
     },
     {
       id: 'timeTotal',

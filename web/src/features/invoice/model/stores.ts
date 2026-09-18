@@ -1,8 +1,9 @@
 import { combine } from 'effector'
 
+import { getInvoiceTimeRows } from './invoice-snapshot'
 import { invoiceQuery } from './queries'
 
-import type { InvoiceRead, ProjectInvoice } from './types'
+import type { ProjectInvoice } from './types'
 
 export const $invoice = combine(
   invoiceQuery.$data,
@@ -27,9 +28,10 @@ export const $invoice = combine(
   },
 )
 
-export const $invoiceTime = combine(
-  invoiceQuery.$data,
-  (record): NonNullable<InvoiceRead['time']> => record?.time ?? [],
-)
+/**
+ * The line table: what the invoice billed, from its snapshot, with each
+ * entry's note and activity alongside (see getInvoiceTimeRows).
+ */
+export const $invoiceTime = combine(invoiceQuery.$data, getInvoiceTimeRows)
 
 export const $invoiceLoading = invoiceQuery.$pending

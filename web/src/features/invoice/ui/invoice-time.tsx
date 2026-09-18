@@ -9,7 +9,7 @@ import { $invoiceTime, $invoiceLoading } from '../model'
 import { InvoiceTimeContext } from './invoice-time-context'
 
 import type { InvoiceTimeContextProps } from './invoice-time-context'
-import type { InvoiceRead } from '../model'
+import type { InvoiceTimeRow } from '../model'
 import type { DesktopBodyCellRenderProps, DataTableConfig } from '@/shared'
 
 import {
@@ -100,9 +100,6 @@ export const InvoiceTime = () => {
     </>
   )
 }
-
-/** One billed entry, exactly as the invoice read endpoint serializes it. */
-type InvoiceTimeRow = NonNullable<InvoiceRead['time']>[number]
 
 const rowIdGetter = (detail: InvoiceTimeRow) => detail.id ?? ''
 

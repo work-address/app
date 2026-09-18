@@ -99,7 +99,12 @@ sample({
 
 export { fetchInvoice, resetInvoice } from './events'
 export { $invoice, $invoiceTime, $invoiceLoading } from './stores'
-export type { InvoiceRead, InvoiceReport, ProjectInvoice } from './types'
+export type {
+  InvoiceLine,
+  InvoiceRead,
+  InvoiceReport,
+  ProjectInvoice,
+} from './types'
 export {
   INVOICE_PAGE_SIZE,
   invoiceListQuery,
@@ -125,6 +130,12 @@ export {
   type InvoiceSummary,
 } from './list.stores'
 export * from './format'
+export {
+  describeInvoiceRate,
+  getInvoiceRateCents,
+  getInvoiceTimeRows,
+  type InvoiceTimeRow,
+} from './invoice-snapshot'
 export * from './mutations'
 
 /**

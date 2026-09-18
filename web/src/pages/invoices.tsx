@@ -18,6 +18,7 @@ import {
   InvoicePaymentActions,
   fetchInvoiceList,
   formatCents,
+  getInvoiceRateCents,
   invoiceListQuery,
   invoiceProjectFilterChanged,
   invoiceProjectsQuery,
@@ -27,11 +28,7 @@ import {
   type InvoiceStateFilter,
 } from '@/features/invoice'
 import { routes } from '@/routes'
-import {
-  formatCurrency,
-  getFriendlyWalletAddress,
-  useDateFormatter,
-} from '@/shared'
+import { getFriendlyWalletAddress, useDateFormatter } from '@/shared'
 import {
   Button,
   PageHelmet,
@@ -279,6 +276,7 @@ export default function InvoicesPage() {
           ) : null}
           {rows.map((invoice) => {
             const isPaid = invoice.state === 'PAID'
+            const rateCents = getInvoiceRateCents(invoice)
             // Only the issuer may settle: the person owed the money is the
             // one who knows whether it arrived.
             const canSettle = Boolean(user?.id && invoice.user?.id === user.id)
@@ -344,15 +342,17 @@ export default function InvoicesPage() {
                   <Text size="4" weight="medium">
                     {formatCents(Number(invoice.amountCents ?? 0))}
                   </Text>
-                  {/* The project's rate as it stands today. The amount above
-                      was frozen when the invoice was raised, so editing the
-                      rate afterwards leaves the two describing different
-                      moments. */}
-                  <Text size="1" color="gray">
-                    {t('invoices.item.perHour', {
-                      rate: formatCurrency(invoice.project?.rateHour),
-                    })}
-                  </Text>
+                  {/* The rate the invoice was issued at, frozen with the
+                      amount above, so the two always describe the same
+                      bill. A legacy invoice never recorded one and shows
+                      none rather than the project's rate today. */}
+                  {rateCents === null ? null : (
+                    <Text size="1" color="gray">
+                      {t('invoices.item.perHour', {
+                        rate: formatCents(rateCents),
+                      })}
+                    </Text>
+                  )}
                 </Cell>
                 <Cell $area="action" $align="end">
                   <InvoicePaymentActions
