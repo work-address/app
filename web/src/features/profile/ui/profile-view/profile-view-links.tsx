@@ -25,7 +25,6 @@ import {
   InstagramIcon,
   LinkedinIcon,
   PersonIcon,
-  PremiumBadge,
   TelegramIcon,
   Text,
   TwitterIcon,
@@ -162,7 +161,6 @@ export const ProfileViewLinks = ({
                       </Button>
                     )
                   )}
-                  {user?.premium && <PremiumBadge />}
                 </Flex>
               </Flex>
               <Flex gap={'2'} align={'center'}>

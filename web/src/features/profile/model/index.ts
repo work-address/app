@@ -62,11 +62,21 @@ sample({
   target: profileQuery.reset,
 })
 
+/**
+ * What the profile page shows, whoever is looking: the public projection of
+ * GET /user/:address/address. Declared rather than inferred - an inferred
+ * union of object literals lets `profile.email` compile and render nothing,
+ * so a field the public read does not carry has to fail the build instead.
+ */
+type PublicProfile = baseApi.UserPublic & {
+  friendlyWalletAddress: string | null
+}
+
 const $profile = combine(
   $user,
   profileQuery.$data,
   $gateAddress,
-  (user, loadedProfileData, gateAddress) => {
+  (user, loadedProfileData, gateAddress): PublicProfile | null => {
     if (!gateAddress) {
       return null
     }

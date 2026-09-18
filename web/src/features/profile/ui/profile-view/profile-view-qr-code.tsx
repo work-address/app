@@ -19,7 +19,6 @@ import {
   useBreakpoint,
   Button,
   Modal,
-  PremiumBadge,
   Tooltip,
   formatWalletAddress,
 } from '@/shared'
@@ -95,7 +94,6 @@ export const ProfileViewQrCode = ({
                     </Tooltip>
                   )
                 )}
-                {user?.premium && <PremiumBadge />}
               </Flex>
             </Flex>
           )}
