@@ -1,7 +1,7 @@
 import { useUnit } from 'effector-react'
 import { useEffect, useState } from 'react'
 
-import { mapAddressesToCollaborators } from '../../model'
+import { $viewerOnlyProjectIds, mapAddressesToCollaborators } from '../../model'
 
 import { ProjectsDialogFooter } from './projects-dialog-footer'
 import { ProjectsDialogForm } from './projects-dialog-form'
@@ -32,10 +32,13 @@ export const ProjectsDialog = ({
 }: ProjectsDialogProps) => {
   const [modalMode, setModalMode] = useState<ProjectsDialogMode>('view')
 
-  const { editingStatus, resetEditingMutation } = useUnit({
-    editingStatus: editProjectMutation.$status,
-    resetEditingMutation: editProjectMutation.reset,
-  })
+  const { editingStatus, resetEditingMutation, viewerOnlyProjectIds } = useUnit(
+    {
+      editingStatus: editProjectMutation.$status,
+      resetEditingMutation: editProjectMutation.reset,
+      viewerOnlyProjectIds: $viewerOnlyProjectIds,
+    },
+  )
 
   useEffect(() => {
     if (!open) {
@@ -60,6 +63,7 @@ export const ProjectsDialog = ({
         <ProjectsDialogTitle
           title={row?.title}
           projectId={row?.id}
+          canInvoice={!viewerOnlyProjectIds.includes(row?.id ?? '')}
           mode={modalMode}
           onDelete={() => onDeleteClick(row)}
         />

@@ -17,7 +17,8 @@ import {
 
 /**
  * The card heading on a phone: the name with its status on one line, the
- * money and the invoice link on the next.
+ * money and the invoice link on the next. A viewer gets no invoice link - they
+ * see no invoices and may not raise one.
  *
  * The invoice link used to sit inline after the title, which wrapped a long
  * name around it - "Elegant Gold / Shirt | Invoice" - so the two rows are
@@ -25,7 +26,7 @@ import {
  */
 export const ProjectsMobileHeader = React.memo(
   (props: MobileHeaderRenderProps<ProjectWithStats>) => {
-    const { t } = useContext(ProjectsTableContext)
+    const { t, canInvoice } = useContext(ProjectsTableContext)
     const statusKey = getProjectStatusTranslationKey(props.data.state)
 
     return (
@@ -42,15 +43,17 @@ export const ProjectsMobileHeader = React.memo(
           <Text color={'gray'} size={'2'}>
             {formatCurrency(props.data.paid)}
           </Text>
-          <InvoiceLink
-            projectId={props.data.id ?? ''}
-            onClick={(event) => event.stopPropagation()}
-          >
-            <Text size={'2'} as="span">
-              {t('dashboard.projectsTable.actions.invoice')}
-            </Text>
-            <img src={PrintIcon} alt="" width={20} height={20} />
-          </InvoiceLink>
+          {canInvoice(props.data) && (
+            <InvoiceLink
+              projectId={props.data.id ?? ''}
+              onClick={(event) => event.stopPropagation()}
+            >
+              <Text size={'2'} as="span">
+                {t('dashboard.projectsTable.actions.invoice')}
+              </Text>
+              <img src={PrintIcon} alt="" width={20} height={20} />
+            </InvoiceLink>
+          )}
         </Flex>
       </Flex>
     )

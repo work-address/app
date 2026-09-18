@@ -23,11 +23,6 @@ export const invoiceQuery = createQuery({
     ) as Promise<InvoiceRead>,
 })
 
-/**
- * Every invoice the caller can see: their own, plus all of them on projects
- * they own or view. Server-side access decides which - the client never
- * filters, so a bug here cannot widen visibility.
- */
 /** One page of invoices. Matches the server's own default. */
 export const INVOICE_PAGE_SIZE = 20
 
@@ -37,6 +32,12 @@ export type InvoiceListParams = {
   page: number
 }
 
+/**
+ * Every invoice the caller can see: the ones they issued, plus all of them on
+ * projects they own. A project's viewers see none of its invoices, so a user
+ * who only views projects gets an empty list. The server decides which; the
+ * client never filters, so a bug here cannot widen visibility.
+ */
 export const invoiceListQuery = createQuery({
   handler: async ({
     projectId,

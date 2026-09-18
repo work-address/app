@@ -12,6 +12,7 @@ import {
   $isProjectDialogOpen,
   $projectSelection,
   $selectedProject,
+  $viewerOnlyProjectIds,
   projectCreateDialogOpenChanged,
   projectDeleteRequested,
   projectDialogOpenChanged,
@@ -84,6 +85,7 @@ export const ProjectsTable = () => {
     isCreateDialogOpen,
     setCreateDialogOpen,
     allowDeleteAll,
+    viewerOnlyProjectIds,
   } = useUnit({
     projects: $filteredProjects,
     isProjectsLoading: $projectsLoading,
@@ -101,6 +103,7 @@ export const ProjectsTable = () => {
     isCreateDialogOpen: $isProjectCreateDialogOpen,
     setCreateDialogOpen: projectCreateDialogOpenChanged,
     allowDeleteAll: $canDeleteAllProjects,
+    viewerOnlyProjectIds: $viewerOnlyProjectIds,
   })
 
   const renderingData = isProjectsLoading ? [] : projects
@@ -223,12 +226,18 @@ export const ProjectsTable = () => {
     [t],
   )
 
+  const canInvoice: ProjectsTableContextValues['canInvoice'] = useCallback(
+    (row) => !viewerOnlyProjectIds.includes(row.id ?? ''),
+    [viewerOnlyProjectIds],
+  )
+
   const projectsContextValues = useMemo(
     (): ProjectsTableContextValues => ({
       handleActionClick,
+      canInvoice,
       t,
     }),
-    [handleActionClick, t],
+    [handleActionClick, canInvoice, t],
   )
 
   return (

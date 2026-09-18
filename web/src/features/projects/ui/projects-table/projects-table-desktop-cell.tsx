@@ -19,7 +19,7 @@ import {
 
 export const ProjectsDesktopCell = React.memo(
   (props: DesktopBodyCellRenderProps<ProjectWithStats>) => {
-    const { t } = useContext(ProjectsTableContext)
+    const { t, canInvoice } = useContext(ProjectsTableContext)
     let content: ReactNode | null
 
     switch (props.dataKey) {
@@ -27,20 +27,24 @@ export const ProjectsDesktopCell = React.memo(
         content = (
           <TitleCell align="center" gap="2">
             <Text $themeVariant={'primary'}>{props.data.title}</Text>
-            <Tooltip content={t('dashboard.projectsTable.actions.invoiceHint')}>
-              <InvoiceLink
-                projectId={props.data.id ?? ''}
-                onClick={(event) => event.stopPropagation()}
+            {canInvoice(props.data) && (
+              <Tooltip
+                content={t('dashboard.projectsTable.actions.invoiceHint')}
               >
-                <Text color={'gray'} size={'2'} as="span">
-                  |
-                </Text>
-                <Text size={'2'} as="span">
-                  {t('dashboard.projectsTable.actions.invoice')}
-                </Text>
-                <img src={PrintIcon} alt="" width={28} height={28} />
-              </InvoiceLink>
-            </Tooltip>
+                <InvoiceLink
+                  projectId={props.data.id ?? ''}
+                  onClick={(event) => event.stopPropagation()}
+                >
+                  <Text color={'gray'} size={'2'} as="span">
+                    |
+                  </Text>
+                  <Text size={'2'} as="span">
+                    {t('dashboard.projectsTable.actions.invoice')}
+                  </Text>
+                  <img src={PrintIcon} alt="" width={28} height={28} />
+                </InvoiceLink>
+              </Tooltip>
+            )}
           </TitleCell>
         )
         break

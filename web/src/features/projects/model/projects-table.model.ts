@@ -1,7 +1,11 @@
 import { attach, combine, createEvent, createStore, sample } from 'effector'
 
+import { getViewerOnlyProjectIds } from './project-role'
+
+import { $user } from '@/entities/profile'
 import {
   $filteredProjects,
+  $projects,
   changeProjectStateFilter,
   deleteProjectMutation,
   type ProjectsFilter,
@@ -55,6 +59,19 @@ export const $canDeleteAllProjects = combine(
       selected.every(Boolean)
     )
   },
+)
+
+/**
+ * Projects the signed-in user only views. They get no Invoice action: a viewer
+ * sees no invoices, and the API refuses to raise one for them.
+ *
+ * Read from every loaded project rather than the filtered list, so a dialog
+ * left open while the filter changes still knows the answer for its row.
+ */
+export const $viewerOnlyProjectIds = combine(
+  $projects,
+  $user,
+  (projects, user): string[] => getViewerOnlyProjectIds(projects, user),
 )
 
 sample({

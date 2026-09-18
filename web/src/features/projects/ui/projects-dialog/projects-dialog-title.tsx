@@ -10,6 +10,8 @@ import { IconButton, PrintIcon, Text, Tooltip, useBreakpoint } from '@/shared'
 type ProjectsDialogTitleProps = {
   title?: string
   projectId?: string
+  /** False for a viewer: they see no invoices and may not raise one. */
+  canInvoice: boolean
   mode: ProjectsDialogMode
   onDelete: () => void
 }
@@ -17,6 +19,7 @@ type ProjectsDialogTitleProps = {
 export const ProjectsDialogTitle = ({
   title,
   projectId,
+  canInvoice,
   mode,
   onDelete,
 }: ProjectsDialogTitleProps) => {
@@ -24,14 +27,15 @@ export const ProjectsDialogTitle = ({
   const isDesktop = useBreakpoint('isDesktop')
 
   // TODO: move invoice link next to hte other buttons
-  const invoiceLink = projectId ? (
-    <OpenInvoiceLink projectId={projectId} variant={'button'}>
-      <Text size="2" as="span">
-        {t('dashboard.projectsTable.drawer.invoice')}
-      </Text>
-      <img src={PrintIcon} alt="" width={28} height={28} />
-    </OpenInvoiceLink>
-  ) : null
+  const invoiceLink =
+    projectId && canInvoice ? (
+      <OpenInvoiceLink projectId={projectId} variant={'button'}>
+        <Text size="2" as="span">
+          {t('dashboard.projectsTable.drawer.invoice')}
+        </Text>
+        <img src={PrintIcon} alt="" width={28} height={28} />
+      </OpenInvoiceLink>
+    ) : null
 
   const heading =
     mode === 'view'

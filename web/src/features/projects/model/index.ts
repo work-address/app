@@ -16,6 +16,7 @@ export {
   $isProjectDialogOpen,
   $projectSelection,
   $selectedProject,
+  $viewerOnlyProjectIds,
   projectCreateDialogOpenChanged,
   projectDeleteRequested,
   projectDialogOpenChanged,
