@@ -5,13 +5,13 @@ import { type SubmitHandler, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { $profile, $profileLoading } from '../../model'
+import { $profileLoading } from '../../model'
 
 import { ProfileEditDetails } from './profile-edit-details'
 import { type ProfileEditFormState } from './profile-edit-field'
 import { ProfileEditLinks } from './profile-edit-links'
 
-import { saveProfileMutation } from '@/entities/profile'
+import { $user, saveProfileMutation } from '@/entities/profile'
 import { LocalWalletCard } from '@/features/local-wallet'
 import { useLeaveConfirm, useConfirm, useBreakpoint } from '@/shared'
 
@@ -38,7 +38,9 @@ export const ProfileEdit = () => {
   const isDesktop = useBreakpoint('isDesktop')
   const { confirm } = useConfirm()
 
-  const user = useUnit($profile)
+  // The holder's own record, not the public profile the page shows: only the
+  // holder reaches this form, and only their own record carries the email.
+  const user = useUnit($user)
 
   const { profileSaving, profileLoading, saveProfile } = useUnit({
     profileSaving: saveProfileMutation.$pending,
@@ -103,7 +105,7 @@ export const ProfileEdit = () => {
     cancelLabel: t('profile.form.leave.cancel'),
   })
 
-  // react-hook-form owns the draft, so seeding it from the loaded profile
+  // react-hook-form owns the draft, so seeding it from the holder's record
   // stays a React concern.
   useEffect(() => {
     if (user) {

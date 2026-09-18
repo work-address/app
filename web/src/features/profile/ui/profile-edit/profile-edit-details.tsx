@@ -10,7 +10,7 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { SKILLS_SUGGESTIONS, type $profile } from '../../model'
+import { SKILLS_SUGGESTIONS } from '../../model'
 
 import { ProfileEditActions } from './profile-edit-actions'
 import {
@@ -19,6 +19,7 @@ import {
   type ProfileEditFormState,
 } from './profile-edit-field'
 
+import { type $user } from '@/entities/profile'
 import { routes } from '@/routes'
 import {
   Card,
@@ -54,7 +55,7 @@ const TEXT_FIELDS = [
 ]
 
 type Props = {
-  user: ReturnType<typeof $profile.getState>
+  user: ReturnType<typeof $user.getState>
   isDesktop: boolean
   profileLoading: boolean
   isDirty: boolean
