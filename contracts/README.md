@@ -89,6 +89,12 @@ npm test
 npm run deploy:local
 ```
 
+CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm run build`, `npm test` and
+`npx tsc --noEmit` on every push to `main` and every pull request, all on
+Hardhat's in-process network. Run the same four before opening one. `tsc` is
+not redundant with the tests: Hardhat loads TypeScript transpile-only, so a
+type error in a test or script shows up nowhere else.
+
 `test/fixtures/escrow-terms.contract.json` is shared with the marketplace API
 (`web/api/src/test/fixture`), so both sides agree on the signed terms digest.
 
