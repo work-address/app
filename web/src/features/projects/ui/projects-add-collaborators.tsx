@@ -1,4 +1,4 @@
-import { LockClosedIcon, PlusIcon, TrashIcon } from '@radix-ui/react-icons'
+import { PlusIcon, TrashIcon } from '@radix-ui/react-icons'
 import { Flex, IconButton } from '@radix-ui/themes'
 import { useMemo } from 'react'
 import {
@@ -34,8 +34,6 @@ type Props = {
   disabled?: boolean
   /** View mode: hide add/remove and render fields read-only. */
   readOnly?: boolean
-  /** Collaborators are a premium-only feature - lock the whole section. */
-  premiumLocked?: boolean
   inputProps?: InputProps
 }
 
@@ -45,15 +43,11 @@ export const ProjectsAddCollaborators = ({
   errors,
   disabled,
   readOnly,
-  premiumLocked,
   inputProps,
 }: Props) => {
   const { t } = useTranslation()
-  const fieldsDisabled = Boolean(disabled || readOnly || premiumLocked)
-  // A lapsed subscription blocks *granting* access, never revoking it - an
-  // owner must always be able to remove a collaborator they already added.
-  // Mirrors the same rule in ProjectManager.setAccessAddresses on the API.
-  const removeDisabled = Boolean(disabled || readOnly)
+  // Collaborators are free: no plan is checked here or on the API.
+  const fieldsDisabled = Boolean(disabled || readOnly)
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -104,24 +98,13 @@ export const ProjectsAddCollaborators = ({
 
   return (
     <Flex direction={'column'} gap={'4'}>
-      <Flex align={'center'} gap={'2'}>
-        <Text size={'3'} weight={'medium'}>
-          {t(
-            readOnly
-              ? 'project.createModal.collaborators.viewTitle'
-              : 'project.createModal.collaborators.title',
-          )}
-        </Text>
-        {premiumLocked && (
-          <Tooltip
-            content={t('project.createModal.collaborators.premiumRequired')}
-          >
-            <LockIconWrap>
-              <LockClosedIcon width={14} height={14} />
-            </LockIconWrap>
-          </Tooltip>
+      <Text size={'3'} weight={'medium'}>
+        {t(
+          readOnly
+            ? 'project.createModal.collaborators.viewTitle'
+            : 'project.createModal.collaborators.title',
         )}
-      </Flex>
+      </Text>
       {fields.map((field, index) => {
         const addressError = errors.collaborators?.[index]?.address
 
@@ -178,7 +161,7 @@ export const ProjectsAddCollaborators = ({
                       color={'red'}
                       radius={'full'}
                       mb={'1'}
-                      disabled={removeDisabled}
+                      disabled={fieldsDisabled}
                       aria-label={t('project.createModal.collaborators.remove')}
                       onClick={() => remove(index)}
                     >
@@ -196,42 +179,20 @@ export const ProjectsAddCollaborators = ({
           </Flex>
         )
       })}
-      {!readOnly &&
-        (premiumLocked ? (
-          <Tooltip
-            content={t('project.createModal.collaborators.premiumRequired')}
-          >
-            <span>
-              <AddMoreButton
-                variant="ghost"
-                color="neutral"
-                iconLeft={<PlusIcon />}
-                disabled
-              >
-                {t('project.createModal.collaborators.addMore')}
-              </AddMoreButton>
-            </span>
-          </Tooltip>
-        ) : (
-          <AddMoreButton
-            variant="ghost"
-            color="neutral"
-            iconLeft={<PlusIcon />}
-            disabled={fieldsDisabled}
-            onClick={() => append({ address: '', role: 'Viewer' })}
-          >
-            {t('project.createModal.collaborators.addMore')}
-          </AddMoreButton>
-        ))}
+      {!readOnly && (
+        <AddMoreButton
+          variant="ghost"
+          color="neutral"
+          iconLeft={<PlusIcon />}
+          disabled={fieldsDisabled}
+          onClick={() => append({ address: '', role: 'Viewer' })}
+        >
+          {t('project.createModal.collaborators.addMore')}
+        </AddMoreButton>
+      )}
     </Flex>
   )
 }
-
-const LockIconWrap = styled.span`
-  display: inline-flex;
-  align-items: center;
-  color: var(--gray-9);
-`
 
 const AddressField = styled.div`
   flex: 1;
