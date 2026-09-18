@@ -61,3 +61,17 @@ export const getViewerOnlyProjectIds = (
   projects.flatMap((project) =>
     project.id && isProjectViewerOnly(project, member) ? [project.id] : [],
   )
+
+/**
+ * Whether `member` only views any of these projects.
+ *
+ * The worklogs' bulk Invoice action reads this for the projects its selection
+ * spans: an invoice covers one project the member may invoice, so a selection
+ * touching a project they only view can never become one - either it is that
+ * project, which the API refuses them, or it spans several, which it refuses
+ * everyone.
+ */
+export const hasViewerOnlyProject = (
+  projects: readonly ProjectMembership[],
+  member: ProjectMember | null | undefined,
+): boolean => projects.some((project) => isProjectViewerOnly(project, member))

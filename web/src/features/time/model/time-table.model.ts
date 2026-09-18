@@ -1,13 +1,16 @@
 import { attach, combine, createEvent, createStore, sample } from 'effector'
 
 import { hasInvoicedTime } from './time-invoiced'
+import { getSelectedTimeProjects } from './time-selection'
 
+import { $user } from '@/entities/profile'
 import {
   $allTime,
   deleteTimeMutation,
   setTimePaidStatusMutation,
   type Time,
 } from '@/entities/time'
+import { hasViewerOnlyProject } from '@/features/projects'
 import { confirmFx, showToastFx, translate } from '@/shared'
 
 /**
@@ -81,6 +84,20 @@ export const $selectionHasInvoicedTime = combine(
   $allTime,
   $selectedTimeIds,
   hasInvoicedTime,
+)
+
+/**
+ * Whether the selection touches a project the signed-in user only views. A
+ * viewer may not invoice (the API refuses with a 403), and an invoice covers
+ * one project, so such a selection can never be invoiced and the bulk Invoice
+ * action is not offered for it.
+ */
+export const $selectionHasViewerOnlyProject = combine(
+  $allTime,
+  $selectedTimeIds,
+  $user,
+  (entries, selectedIds, user) =>
+    hasViewerOnlyProject(getSelectedTimeProjects(entries, selectedIds), user),
 )
 
 export const $isTimeBulkPending = combine(

@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest'
 
 import {
   getViewerOnlyProjectIds,
+  hasViewerOnlyProject,
   isProjectViewerOnly,
   type ProjectMembership,
 } from './project-role'
@@ -103,5 +104,25 @@ describe('getViewerOnlyProjectIds', () => {
 
   it('lists none before the user has loaded', () => {
     expect(getViewerOnlyProjectIds(projects, null)).toEqual([])
+  })
+})
+
+describe('hasViewerOnlyProject', () => {
+  const viewed = project()
+  const worked = project({ workerAddresses: [VIEWER.address] })
+
+  it('is true when the member only views one of the projects', () => {
+    expect(hasViewerOnlyProject([worked, viewed], VIEWER)).toBe(true)
+  })
+
+  it('is false when the member may invoice every project', () => {
+    expect(hasViewerOnlyProject([worked], VIEWER)).toBe(false)
+    expect(hasViewerOnlyProject([viewed, worked], OWNER)).toBe(false)
+    expect(hasViewerOnlyProject([viewed], WORKER)).toBe(false)
+  })
+
+  it('is false for no projects, and before the user has loaded', () => {
+    expect(hasViewerOnlyProject([], VIEWER)).toBe(false)
+    expect(hasViewerOnlyProject([viewed], null)).toBe(false)
   })
 })

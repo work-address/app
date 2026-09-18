@@ -25,6 +25,7 @@ export {
   $selectedTimeId,
   $selectedTimeIds,
   $selectionHasInvoicedTime,
+  $selectionHasViewerOnlyProject,
   $timeFiltersOpen,
   $timeSelection,
   timeBulkDeleteRequested,
@@ -48,6 +49,7 @@ export {
   type TimeSortOrder,
 } from './time-sort'
 export { hasInvoicedTime, isTimeInvoiced } from './time-invoiced'
+export { getSelectedTimeProjects } from './time-selection'
 export { $timeView, timeViewChanged } from './time-view.model'
 export type {
   TimeActivityTone,

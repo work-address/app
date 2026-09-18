@@ -9,6 +9,7 @@ import {
   $selectedTimeCount,
   $selectedTimeIds,
   $selectionHasInvoicedTime,
+  $selectionHasViewerOnlyProject,
   timeBulkDeleteRequested,
   timeBulkPaidStatusRequested,
   timeSelectionCleared,
@@ -30,6 +31,7 @@ export const TimeWorklogsBulkActions = () => {
     selectedCount,
     isBulkPending,
     hasInvoiced,
+    hasViewerOnlyProject,
     invoicing,
     invoiceSelected,
     requestBulkDelete,
@@ -41,6 +43,7 @@ export const TimeWorklogsBulkActions = () => {
     selectedCount: $selectedTimeCount,
     isBulkPending: $isTimeBulkPending,
     hasInvoiced: $selectionHasInvoicedTime,
+    hasViewerOnlyProject: $selectionHasViewerOnlyProject,
     invoicing: invoiceSelectedTimeMutation.$pending,
     invoiceSelected: invoiceSelectedTimeMutation.start,
     requestBulkDelete: timeBulkDeleteRequested,
@@ -151,20 +154,25 @@ export const TimeWorklogsBulkActions = () => {
       ) : (
         <ActionGroup>{paidStatusButtons}</ActionGroup>
       )}
-      <Tooltip content={t('dashboard.worklogsTable.bulk.invoiceHint')}>
-        <span>
-          <Button
-            variant="outline"
-            size="s"
-            type="button"
-            disabled={isBulkPending || invoicing}
-            loading={invoicing}
-            onClick={handleInvoice}
-          >
-            {t('dashboard.worklogsTable.bulk.invoice')}
-          </Button>
-        </span>
-      </Tooltip>
+      {/* Not offered at all on a project the user only views, as on the
+          projects table: a viewer sees no invoices and may raise none, so
+          there is nothing to explain - the action is simply not theirs. */}
+      {!hasViewerOnlyProject && (
+        <Tooltip content={t('dashboard.worklogsTable.bulk.invoiceHint')}>
+          <span>
+            <Button
+              variant="outline"
+              size="s"
+              type="button"
+              disabled={isBulkPending || invoicing}
+              loading={invoicing}
+              onClick={handleInvoice}
+            >
+              {t('dashboard.worklogsTable.bulk.invoice')}
+            </Button>
+          </span>
+        </Tooltip>
+      )}
       {/* An invoice keeps the hours it bills, and the API refuses the whole
           delete if one selected entry is on an invoice - so, as with payment,
           the action says why it is unavailable. */}

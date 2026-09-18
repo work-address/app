@@ -3,6 +3,7 @@ export {
   mapCollaboratorsToAddresses,
 } from './collaborators'
 export { getProjectStatusTranslationKey } from './get-project-status-translation-key'
+export { hasViewerOnlyProject, isProjectViewerOnly } from './project-role'
 export {
   buildProjectUsageChart,
   USAGE_PERIOD_TO_STATS_PERIOD,
