@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import {
+  isTimeInvoiced,
   timeEntryDeleteRequested,
   timeProcessesRemoveRequested,
   timeScreenshotRemoveRequested,
@@ -189,6 +190,9 @@ export const TimeDialog = ({
   // Derived straight from the row: the feed clears screenshot/processes when
   // the mutation lands, so there is no local copy to keep in step.
   const hasScreenshot = Boolean(row?.screenshot)
+  // An invoiced entry's payment follows its invoice. The field still shows
+  // it, but cannot change it - the API would refuse the save with a 409.
+  const isInvoiced = row ? isTimeInvoiced(row) : false
   const hasProcesses = Boolean(row?.processes && row.processes.length > 0)
   const isPending =
     isDeleting || isEditing || isRemovingScreenshot || isRemovingProcesses
@@ -289,24 +293,32 @@ export const TimeDialog = ({
             )}
             <DetailsColumn data-full-width={!hasScreenshot || undefined}>
               {!hasScreenshot && <TimeDialogMetrics row={row} />}
-              <Controller
-                name="paymentStatus"
-                control={control}
-                render={({ field }) => (
-                  <Select
-                    options={paymentStatusOptions}
-                    value={field.value}
-                    onChange={(value) => {
-                      if (isPending || Array.isArray(value)) {
-                        return
-                      }
+              <PaymentField>
+                <Controller
+                  name="paymentStatus"
+                  control={control}
+                  render={({ field }) => (
+                    <Select
+                      options={paymentStatusOptions}
+                      value={field.value}
+                      disabled={isInvoiced}
+                      onChange={(value) => {
+                        if (isPending || isInvoiced || Array.isArray(value)) {
+                          return
+                        }
 
-                      field.onChange(value)
-                    }}
-                    label={t('dashboard.worklogsTable.head.paymentStatus')}
-                  />
+                        field.onChange(value)
+                      }}
+                      label={t('dashboard.worklogsTable.head.paymentStatus')}
+                    />
+                  )}
+                />
+                {isInvoiced && (
+                  <Text size="1" color="gray">
+                    {t('dashboard.worklogsTable.paymentStatus.invoicedHint')}
+                  </Text>
                 )}
-              />
+              </PaymentField>
               <Controller
                 name="note"
                 control={control}
@@ -370,6 +382,11 @@ const DetailsColumn = styled.div`
   ${(p) => p.theme.breakpoints.down('md')} {
     width: 100%;
   }
+`
+
+const PaymentField = styled.div`
+  display: grid;
+  gap: var(--space-1);
 `
 
 const ScreenshotColumn = styled.div`

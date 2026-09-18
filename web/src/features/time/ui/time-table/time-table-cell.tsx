@@ -3,6 +3,7 @@ import { useUnit } from 'effector-react'
 import { memo, useContext } from 'react'
 import styled from 'styled-components'
 
+import { isTimeInvoiced } from '../../model'
 import { TimeContext } from '../time-context'
 
 import type { Time } from '@/entities/time'
@@ -91,17 +92,31 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
     default: {
       if (props.customKey === 'paidStatus') {
         const timeId = props.data.id
+        // An invoiced entry's payment follows its invoice; the API refuses a
+        // direct change, so the badge is a status here, not a toggle.
+        const isInvoiced = isTimeInvoiced(props.data)
 
         return (
-          <Tooltip content={t('common.metricDesc.paymentStatus')}>
+          <Tooltip
+            content={t(
+              isInvoiced
+                ? 'dashboard.worklogsTable.paymentStatus.invoicedHint'
+                : 'common.metricDesc.paymentStatus',
+            )}
+          >
             <PaidStatusBadge
               // Gray rather than red: unpaid is the ordinary state of freshly
               // tracked time, not a fault to flag.
               color={props.data.isPaid ? 'green' : 'gray'}
+              aria-disabled={isInvoiced || undefined}
               onClick={(event) => {
                 event.stopPropagation()
 
-                if (!timeId || setPaidStatusStatus === 'pending') {
+                if (
+                  !timeId ||
+                  isInvoiced ||
+                  setPaidStatusStatus === 'pending'
+                ) {
                   return
                 }
 
@@ -148,4 +163,8 @@ const NoteText = styled(Text)`
 
 const PaidStatusBadge = styled(Badge)`
   cursor: pointer;
+
+  &[aria-disabled='true'] {
+    cursor: not-allowed;
+  }
 `

@@ -23,6 +23,13 @@ export type TimeTotalDetail = {
 
 export type Time = baseApi.Time & {
   project?: baseApi.Project
+  /**
+   * The invoice that bills this entry, or null. Sent by the search endpoint
+   * (read-only, API `Time.invoiceId`); declared here until the generated
+   * client is next regenerated. Once set, the entry's payment follows the
+   * invoice and the API refuses to change it directly.
+   */
+  invoiceId?: string | null
 }
 
 export type TimeFilters = {

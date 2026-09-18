@@ -36,6 +36,8 @@ type SelectProps = {
   allSelectedText?: string
   inputProps?: InputProps
   menuMaxHeight?: string | number
+  /** Shows the current value but never opens; the field reads as disabled. */
+  disabled?: boolean
 }
 
 export const Select = ({
@@ -50,11 +52,16 @@ export const Select = ({
   allSelectedText,
   inputProps,
   menuMaxHeight,
+  disabled = false,
 }: SelectProps) => {
   const { t } = useTranslation()
   const isMobile = useBreakpoint('isMobile')
   const isDesktop = useBreakpoint('isDesktop')
-  const [open, setOpen] = useState(false)
+  const [openState, setOpenState] = useState(false)
+  // A disabled field never opens, whatever the trigger reports - the
+  // wrapper, not the input, receives the click.
+  const open = openState && !disabled
+  const setOpen = (next: boolean) => setOpenState(next && !disabled)
 
   const ph = placeholder ?? t('ui.motionSelect.placeholder')
 
@@ -157,6 +164,7 @@ export const Select = ({
         aria-expanded={open}
         aria-haspopup="listbox"
         {...inputProps}
+        disabled={disabled || inputProps?.disabled}
         readOnly
       />
     </InputWrapper>
@@ -301,6 +309,10 @@ const InputWrapper = styled.span`
     cursor: pointer;
   }
 
+  &&:has(.rt-TextFieldInput:disabled) {
+    cursor: not-allowed;
+  }
+
   /* Radix paints a read-only field with the disabled gray fill. The trigger
      is read-only only to keep a caret out of it, so it takes the surface a
      writable field has and darkens a step on hover like a button would. */
@@ -324,6 +336,10 @@ const InputWrapper = styled.span`
 
   & .rt-TextFieldInput:placeholder-shown {
     color: var(--gray-a10);
+  }
+
+  & .rt-TextFieldInput:disabled {
+    color: var(--gray-a11);
   }
 
   .rt-TextFieldSlot {

@@ -8,6 +8,7 @@ import {
   $isTimeBulkPending,
   $selectedTimeCount,
   $selectedTimeIds,
+  $selectionHasInvoicedTime,
   timeBulkDeleteRequested,
   timeBulkPaidStatusRequested,
   timeSelectionCleared,
@@ -28,6 +29,7 @@ export const TimeWorklogsBulkActions = () => {
     selectedIds,
     selectedCount,
     isBulkPending,
+    hasInvoiced,
     invoicing,
     invoiceSelected,
     requestBulkDelete,
@@ -38,6 +40,7 @@ export const TimeWorklogsBulkActions = () => {
     selectedIds: $selectedTimeIds,
     selectedCount: $selectedTimeCount,
     isBulkPending: $isTimeBulkPending,
+    hasInvoiced: $selectionHasInvoicedTime,
     invoicing: invoiceSelectedTimeMutation.$pending,
     invoiceSelected: invoiceSelectedTimeMutation.start,
     requestBulkDelete: timeBulkDeleteRequested,
@@ -78,17 +81,16 @@ export const TimeWorklogsBulkActions = () => {
     invoiceSelected({ projectId: selectedProjectId, timeIds: selectedIds })
   }
 
-  return (
-    <Root>
-      <S.Label>
-        {t('dashboard.worklogsTable.bulk.selectedCount', {
-          count: selectedCount,
-        })}
-      </S.Label>
+  const paidStatusInvoicedHint = t(
+    'dashboard.worklogsTable.bulk.paidStatusInvoicedHint',
+  )
+
+  const paidStatusButtons = (
+    <>
       <Button
         size="s"
         type="button"
-        disabled={isBulkPending}
+        disabled={isBulkPending || hasInvoiced}
         onClick={() => requestBulkPaidStatus(true)}
       >
         {t('dashboard.worklogsTable.paymentStatus.paid')}
@@ -98,11 +100,39 @@ export const TimeWorklogsBulkActions = () => {
         variant="soft"
         size="s"
         type="button"
-        disabled={isBulkPending}
+        disabled={isBulkPending || hasInvoiced}
         onClick={() => requestBulkPaidStatus(false)}
       >
         {t('dashboard.worklogsTable.paymentStatus.unpaid')}
       </Button>
+    </>
+  )
+
+  return (
+    <Root>
+      <S.Label>
+        {t('dashboard.worklogsTable.bulk.selectedCount', {
+          count: selectedCount,
+        })}
+      </S.Label>
+      {/* An invoiced entry's payment follows its invoice, and the API refuses
+          the whole request if one is selected - so the actions say why they
+          are unavailable instead of being offered and refused. A disabled
+          button fires no pointer events and takes no focus, so the tooltip
+          anchors on the group, which is focusable for keyboard users. */}
+      {hasInvoiced ? (
+        <Tooltip content={paidStatusInvoicedHint}>
+          <PaidStatusGroup
+            role="group"
+            aria-label={paidStatusInvoicedHint}
+            tabIndex={0}
+          >
+            {paidStatusButtons}
+          </PaidStatusGroup>
+        </Tooltip>
+      ) : (
+        <PaidStatusGroup>{paidStatusButtons}</PaidStatusGroup>
+      )}
       <Tooltip content={t('dashboard.worklogsTable.bulk.invoiceHint')}>
         <span>
           <Button
@@ -151,4 +181,11 @@ const Root = styled.div`
   align-items: center;
   gap: var(--space-2);
   margin-bottom: var(--space-3);
+`
+
+const PaidStatusGroup = styled.span`
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  gap: var(--space-2);
 `

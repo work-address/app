@@ -1,5 +1,7 @@
 import { attach, combine, createEvent, createStore, sample } from 'effector'
 
+import { hasInvoicedTime } from './time-invoiced'
+
 import {
   $allTime,
   deleteTimeMutation,
@@ -69,6 +71,17 @@ export const $selectedTimeEntry = combine(
   (rows, selectedId) => rows.find((row) => row.id === selectedId) ?? null,
 )
 
+/**
+ * Whether the selection includes an entry an invoice bills. Its payment is
+ * the invoice's to change, and the API refuses the whole paid/unpaid request
+ * if any entry has one, so the bulk actions are withheld instead.
+ */
+export const $selectionHasInvoicedTime = combine(
+  $allTime,
+  $selectedTimeIds,
+  hasInvoicedTime,
+)
+
 export const $isTimeBulkPending = combine(
   setTimePaidStatusMutation.$pending,
   deleteTimeMutation.$pending,
@@ -79,8 +92,13 @@ export const $isTimeBulkPending = combine(
 
 sample({
   clock: timeBulkPaidStatusRequested,
-  source: { ids: $selectedTimeIds, isPending: $isTimeBulkPending },
-  filter: ({ ids, isPending }) => !isPending && ids.length > 0,
+  source: {
+    ids: $selectedTimeIds,
+    isPending: $isTimeBulkPending,
+    hasInvoiced: $selectionHasInvoicedTime,
+  },
+  filter: ({ ids, isPending, hasInvoiced }) =>
+    !isPending && !hasInvoiced && ids.length > 0,
   fn: ({ ids }, isPaid) => ({ ids, isPaid }),
   target: setTimePaidStatusMutation.start,
 })
