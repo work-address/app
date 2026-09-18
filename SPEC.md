@@ -113,8 +113,9 @@ where a worker invoices exactly as on the hosted service.
 Premium governs **how long recorded time is kept**, and nothing else. On the
 hosted service an unpaid workspace rotates timelogs at 14 days; paying converts
 the whole workspace so nothing rotates. The retention check in `TimeManager` is
-the only code that asks `Entitlement` whether an account is premium. A self-hosted instance is unconditionally
-entitled — unlimited seats, no rotation (see `service/entitlement.ts`).
+the only code that asks `Entitlement` whether an account is premium. A
+self-hosted instance is unconditionally entitled — unlimited seats, no rotation
+(see `service/entitlement.ts`).
 
 Retention is a property of the workspace, never of one person: `ProjectStatistics`
 and invoice reports aggregate across contributors, so a project whose
