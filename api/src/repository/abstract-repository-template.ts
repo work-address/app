@@ -1,6 +1,7 @@
 import { Effect } from 'effect'
 import {
   DeepPartial,
+  EntityManager,
   EntityTarget,
   FindOptionsWhere,
   FindManyOptions,
@@ -36,6 +37,26 @@ export type RepoEffect<A> = Effect.Effect<A, unknown>
 export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
   protected filter: Filter
   protected target: EntityTarget<T> & { name: string }
+  /** Set only on a copy made by {@link within}. */
+  protected manager?: EntityManager
+
+  /**
+   * This repository, with every query it runs going through `manager` - the
+   * handle of a transaction opened by `UnitOfWork.run`.
+   *
+   * A copy rather than a parameter on each method: every method already
+   * reaches the database through {@link getRepo}, so binding the copy there
+   * moves all of them into the transaction at once, and none can be missed.
+   * The copy inherits everything else (injected services, the target) from
+   * this instance through its prototype.
+   */
+  public within(manager: EntityManager): this {
+    const scoped = Object.create(this) as this
+
+    scoped.manager = manager
+
+    return scoped
+  }
 
   public validateAndSave(entity: T): RepoEffect<T> {
     return Effect.gen(this, function* () {
@@ -100,7 +121,7 @@ export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
   }
 
   public getRepo(): Repository<T> {
-    return getDataSource().getRepository(this.target)
+    return (this.manager ?? getDataSource().manager).getRepository(this.target)
   }
 
   public findOneByQueryBuilder<Entity extends ObjectLiteral>(

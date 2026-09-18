@@ -26,6 +26,7 @@ import { TimeRepository } from '@/repository/time-repository'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { TimeManager } from '@/service/time-manager'
 import { InvoiceManager } from '@/service/invoice-manager'
+import { UnitOfWork } from '@/service/unit-of-work'
 import { AuthenticatorTimeTracker } from '@/service/auth/authenticator-time-tracker'
 import { TonProofService } from '@/service/auth/ton-proof-service'
 import { ImageResizer } from '@/service/image-resizer'
@@ -76,6 +77,7 @@ export class AppContainer {
       .to(AuthenticatorTimeTracker)
     container.bind<RedisClient>('RedisClient').to(RedisClient)
     container.bind<Filter>('Filter').to(Filter)
+    container.bind<UnitOfWork>('UnitOfWork').to(UnitOfWork)
     container.bind<Entitlement>('Entitlement').to(Entitlement)
     container
       .bind<EntitlementSignature>('EntitlementSignature')
