@@ -17,13 +17,15 @@ import {
   localAccountKey,
   writeManifest,
 } from '../scripts/local-chain'
+import { mintLocal } from '../scripts/mint'
+import { advanceTime, parseDuration } from '../scripts/time-advance'
 
 import type { LocalDeployment } from '../scripts/local-chain'
 
 /**
- * The local chain tooling behind `npm run node` and `deploy:localhost`, run
- * against the in-process Hardhat chain (the same chain id, 31337, as a
- * `hardhat node`).
+ * The local chain tooling behind `npm run node`, `deploy:localhost`,
+ * `mint:localhost` and `time:advance`, run against the in-process Hardhat chain
+ * (the same chain id, 31337, as a `hardhat node`).
  */
 
 const USDT = (value: number | string) => ethers.parseUnits(String(value), 6)
@@ -108,13 +110,20 @@ describe('local chain tooling', () => {
       expect(() => assertLocalChain(BigInt(31337))).not.to.throw()
     })
 
-    it('deploy asks for the chain id first and stops on mainnet', async () => {
+    it('deploy, mint and time:advance ask for the chain id first and stop on mainnet', async () => {
       const calls: string[] = []
+      const mainnet = mainnetRuntime(calls)
+      const someone = ethers.Wallet.createRandom().address
 
-      expect((await rejection(deployLocal(mainnetRuntime(calls)))).message).to.match(
-        /Ethereum mainnet/,
-      )
-      expect(calls).to.deep.eq(['eth_chainId'])
+      for (const attempt of [
+        deployLocal(mainnet),
+        mintLocal(mainnet, { to: someone, amount: '1', manifest: file }),
+        advanceTime(mainnet, 60),
+      ]) {
+        expect((await rejection(attempt)).message).to.match(/Ethereum mainnet/)
+      }
+
+      expect(calls).to.deep.eq(['eth_chainId', 'eth_chainId', 'eth_chainId'])
     })
   })
 
@@ -279,6 +288,80 @@ describe('local chain tooling', () => {
       expect(escrowEnvLines({ ...manifest, originSigner: stranger }, null)[3]).to.eq(
         `APP_ESCROW_ORIGIN_SIGNER_KEY=<private key of ${stranger}>`,
       )
+    })
+  })
+
+  describe('mint', () => {
+    it('gives any address test USDT and enough ETH for gas', async () => {
+      const wallet = ethers.Wallet.createRandom().address
+      const token = await ethers.getContractAt('TetherLikeUSDT', manifest.token.address)
+
+      await hre.run('mint', { to: wallet, amount: '1000', manifest: file })
+
+      expect(await token.balanceOf(wallet)).to.eq(USDT(1000))
+      expect(await ethers.provider.getBalance(wallet)).to.eq(ethers.parseEther('10'))
+
+      const again = await mintLocal(hre, { to: wallet, amount: '12.5', manifest: file })
+
+      expect(again.balance).to.eq(USDT('1012.5'))
+      expect(again.gasToppedUp).to.eq(false)
+    })
+
+    it('refuses a bad address, a non-positive amount and a missing manifest', async () => {
+      const wallet = ethers.Wallet.createRandom().address
+
+      const mintError = async (to: string, amount: string, manifest = file) =>
+        (await rejection(mintLocal(hre, { to, amount, manifest }))).message
+
+      expect(await mintError('nobody', '1')).to.match(/invalid address/)
+      expect(await mintError(wallet, '0')).to.match(/Cannot mint 0/)
+      expect(await mintError(wallet, '1', path.join(dir, 'none.json'))).to.match(
+        /deploy:localhost/,
+      )
+    })
+
+    it('refuses a manifest written for mainnet or for a node that has since restarted', async () => {
+      const wallet = ethers.Wallet.createRandom().address
+      const mainnetFile = path.join(dir, 'mainnet.json')
+      const staleFile = path.join(dir, 'stale.json')
+
+      writeManifest(mainnetFile, { ...manifest, chainId: 1 })
+      writeManifest(staleFile, {
+        ...manifest,
+        token: { ...manifest.token, address: ethers.Wallet.createRandom().address },
+      })
+
+      const mintError = async (manifest: string) =>
+        (await rejection(mintLocal(hre, { to: wallet, amount: '1', manifest }))).message
+
+      expect(await mintError(mainnetFile)).to.match(/Ethereum mainnet/)
+      expect(await mintError(staleFile)).to.match(/restarted/)
+    })
+  })
+
+  describe('time:advance', () => {
+    it('reads seconds and s / m / h / d durations', () => {
+      expect(parseDuration('90')).to.eq(90)
+      expect(parseDuration('90s')).to.eq(90)
+      expect(parseDuration('15m')).to.eq(900)
+      expect(parseDuration('72h')).to.eq(259_200)
+      expect(parseDuration('8d')).to.eq(691_200)
+
+      for (const bad of ['', '0', '-5', '1.5h', '3w', 'soon']) {
+        expect(() => parseDuration(bad), bad).to.throw(/Cannot read/)
+      }
+    })
+
+    it('mines one block carrying the new time', async () => {
+      const before = (await ethers.provider.getBlock('latest'))!
+
+      await hre.run('time:advance', { duration: '2h' })
+
+      const after = (await ethers.provider.getBlock('latest'))!
+
+      expect(after.number).to.eq(before.number + 1)
+      expect(after.timestamp).to.be.gte(before.timestamp + 7_200)
+      expect(after.timestamp).to.be.lt(before.timestamp + 7_200 + 60)
     })
   })
 })

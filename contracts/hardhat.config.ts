@@ -1,12 +1,20 @@
 import '@nomicfoundation/hardhat-ethers'
 import '@nomicfoundation/hardhat-chai-matchers'
 
-import { subtask } from 'hardhat/config'
+import { formatUnits } from 'ethers'
+import { subtask, task } from 'hardhat/config'
 import { TASK_NODE_SERVER_READY } from 'hardhat/builtin-tasks/task-names'
 
 import type { HardhatUserConfig } from 'hardhat/config'
 
-import { LOCAL_CHAIN_ID, LOCAL_RPC_URL, enableIntervalMining } from './scripts/local-chain'
+import {
+  LOCAL_CHAIN_ID,
+  LOCAL_RPC_URL,
+  enableIntervalMining,
+  manifestPath,
+} from './scripts/local-chain'
+import { mintLocal } from './scripts/mint'
+import { advanceTime, parseDuration } from './scripts/time-advance'
 
 /**
  * Local development and tests only. There is deliberately no public network
@@ -34,5 +42,34 @@ subtask(TASK_NODE_SERVER_READY).setAction(async (args, _hre, runSuper) => {
   await enableIntervalMining(args.provider)
   console.log('Interval mining: a block every 5 s, so chain time keeps moving while idle.\n')
 })
+
+task('mint', 'Mints local test USDT to an address, and tops up its gas')
+  .addPositionalParam('to', 'Recipient address')
+  .addPositionalParam('amount', 'Whole USDT, e.g. 1000')
+  .addOptionalParam('manifest', 'Deployment manifest (default: deployments/<network>.json)')
+  .setAction(async ({ to, amount, manifest }, hre) => {
+    const result = await mintLocal(hre, {
+      to,
+      amount,
+      manifest: manifest ?? manifestPath(hre.network.name),
+    })
+
+    console.log(
+      `Minted ${formatUnits(result.minted, 6)} USDT to ${result.to}; ` +
+        `balance ${formatUnits(result.balance, 6)} USDT` +
+        (result.gasToppedUp ? '; gas topped up to 10 ETH' : ''),
+    )
+  })
+
+task('time:advance', 'Moves the local chain clock forward and mines a block')
+  .addPositionalParam('duration', 'Seconds, or a number with s, m, h or d: 90, 72h, 8d')
+  .setAction(async ({ duration }, hre) => {
+    const { before, after } = await advanceTime(hre, parseDuration(duration))
+
+    console.log(
+      `Block ${before.number} at ${new Date(before.timestamp * 1000).toISOString()} -> ` +
+        `block ${after.number} at ${new Date(after.timestamp * 1000).toISOString()}`,
+    )
+  })
 
 export default config
