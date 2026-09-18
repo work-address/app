@@ -92,17 +92,22 @@ npm run deploy:local
 `test/fixtures/escrow-terms.contract.json` is shared with the marketplace API
 (`web/api/src/test/fixture`), so both sides agree on the signed terms digest.
 
+## Settlement asset
+
+**Ethereum mainnet, Tether USDT** at `0xdAC17F958D2ee523a2206206994597C13D831ec7`,
+6 decimals — DEC-09, decided 17 September 2026. No bridged or look-alike
+variant. How it differs from a standard ERC-20, and what that means here:
+
+| USDT behaviour | Effect on the escrow |
+| --- | --- |
+| `transfer`, `transferFrom` and `approve` return nothing | Handled by SafeERC20. `test/usdt-mainnet.test.ts` is the only suite that guards this: replace any `safeTransfer` with `transfer` and the other suites still pass while every mainnet payout would revert |
+| The blacklist checks the **sender** only | A blacklisted payee or fee recipient is still paid. A blacklisted payer cannot fund, and nothing is recorded |
+| Blacklisting the escrow address, or pausing USDT | Every exit reverts until the issuer lifts it. Nothing is lost or reassigned, but nobody — including the deployer — can move the funds meanwhile. An accepted issuer risk that the public terms must state |
+| An issuer transfer fee (currently 0) | Funding fails closed with `IncompleteTransfer`. If switched on after funding, the escrow's books stay exact and recipients receive less by the token's fee |
+| A non-zero allowance must be reset to zero first | The escrow never approves. A client wallet raising a stale allowance must send `approve(0)` first |
+
 ## Still open before any deployment
 
-Settlement network is **Ethereum** (DEC-09, decided 17 September 2026). What
-that leaves open:
-
-- The exact asset and its confirmation rule. Mainnet USDT
-  (`0xdAC17F958D2ee523a2206206994597C13D831ec7`, 6 decimals) returns no bool
-  from `transfer`, can blacklist an address, and needs an allowance reset to
-  zero before a non-zero re-approve. A blacklisted payee or fee recipient makes
-  `release` revert, and it is atomic by design — so that allocation waits
-  rather than settling partially.
 - Whether the registry is deployed on the same chain as the escrow. One chain
   means a verifier needs one RPC endpoint and one reorg policy; it also
   permanently joins a wallet's profile-edit rhythm to its earnings graph. That
