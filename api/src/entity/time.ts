@@ -52,8 +52,8 @@ export class Time extends AbstractBaseEntity implements ITime {
    *
    * Owned by the invoice that covers it - `InvoiceManager.markPaid` sets it and
    * `markUnpaid` clears it - so the work record and the money record cannot
-   * disagree. An invoice covering a period is what makes its entries paid;
-   * nothing else should write this except a user correcting an entry directly.
+   * disagree. Its author may set it by hand only while no invoice covers the
+   * entry; once one does, `TimeManager` refuses direct edits with a 409.
    */
   @Column('bool', { nullable: true, default: false })
   @IsBoolean()

@@ -281,7 +281,18 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     })
   }
 
-  public findByIdsAsAuthor(ids: string[], user: User): RepoEffect<Time[]> {
+  /**
+   * Entries by id, all of which must be the user's own - one that is not, or
+   * does not exist, refuses the whole set.
+   *
+   * Ordered by (fromAt, id) like every locking read here, so a caller that
+   * locks them cannot deadlock against invoicing.
+   */
+  public findByIdsAsAuthor(
+    ids: string[],
+    user: User,
+    options: ITimeReadOptions = {},
+  ): RepoEffect<Time[]> {
     const uniqueIds = [...new Set(ids)]
 
     if (uniqueIds.length === 0) {
@@ -289,12 +300,15 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     }
 
     return fromPromise(async () => {
-      const times = await this.getRepo()
+      const qb = this.getRepo()
         .createQueryBuilder('time')
         .innerJoinAndSelect('time.user', 'author')
         .where('time.id IN (:...ids)', { ids: uniqueIds })
         .andWhere('author.id = :userId', { userId: user.id })
-        .getMany()
+        .orderBy('time.fromAt', 'ASC')
+        .addOrderBy('time.id', 'ASC')
+
+      const times = await this.lockIf(qb, options).getMany()
 
       if (times.length !== uniqueIds.length) {
         throw new AccessException()

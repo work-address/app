@@ -7,17 +7,22 @@ import moment from 'moment'
 import {
   projectControllerEdit,
   timeControllerCreateOrUpdateMany,
+  timeControllerEdit,
   timeControllerMarkPaid,
   timeControllerMarkUnpaid,
   timeControllerSearch,
 } from '@app/api-client'
 import type { TimeCreateDto as ApiTimeCreateDto } from '@app/api-client'
 
+import { App } from '@/app/app'
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { TimeRepository } from '@/repository/time-repository'
 import { InvoiceManager } from '@/service/invoice-manager'
+import { EInvoiceState } from '@/model/invoice'
 import { EProjectState } from '@/model/project'
+import { Invoice } from '@/entity/invoice'
 import { Project } from '@/entity/project'
+import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
 import { runPromise } from '@/service/effect-bridge'
 
@@ -433,6 +438,172 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
     )
 
     return { owner, project, invoiced, free, invoice }
+  }
+
+  private async reload(time: Time): Promise<Time> {
+    return runPromise(this.timeRepository.findOneByIdOrFail(time.id))
+  }
+
+  private async rejectionOf(call: () => Promise<unknown>) {
+    try {
+      await call()
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error
+      }
+
+      throw error
+    }
+
+    throw new Error('Expected the request to be refused')
+  }
+
+  /**
+   * G4. An invoiced entry's isPaid is its invoice's: flipping it by hand used
+   * to leave a PAID invoice owning unpaid hours. Refused with a 409 that
+   * names the invoice, and nothing moves - not the entry, not the invoice.
+   */
+  @test()
+  async markUnpaid_onAnEntryOfAPaidInvoice_is409AndChangesNothing() {
+    const { owner, invoiced, invoice } = await this.oneInvoicedOneNot()
+    await runPromise(this.invoiceManager.markPaid(invoice, owner))
+
+    const error = await this.rejectionOf(() =>
+      timeControllerMarkUnpaid({
+        client: this.apiClient(),
+        headers: {
+          Authorization: this.authenticator.getTokens(owner).accessToken,
+        },
+        body: { ids: [invoiced.id] },
+        throwOnError: true,
+      }),
+    )
+
+    expect(error.response?.status).to.be.equal(409)
+    expect(error.response?.data.name).to.be.equal('InvoicedTimeException')
+    expect(error.response?.data.message).to.contain(invoice.id)
+
+    const stored = await App.conn
+      .getRepository(Invoice)
+      .findOneByOrFail({ id: invoice.id })
+    const lines = await runPromise(this.timeRepository.findForInvoice(invoice))
+
+    expect(stored.state).to.be.equal(EInvoiceState.PAID)
+    expect(lines).to.have.length(1)
+    expect(lines.every((time) => time.isPaid)).to.be.true
+  }
+
+  /** And a REQUESTED invoice must not come to own hours marked paid. */
+  @test()
+  async markPaid_onAnEntryOfARequestedInvoice_is409() {
+    const { owner, invoiced } = await this.oneInvoicedOneNot()
+
+    const error = await this.rejectionOf(() =>
+      timeControllerMarkPaid({
+        client: this.apiClient(),
+        headers: {
+          Authorization: this.authenticator.getTokens(owner).accessToken,
+        },
+        body: { ids: [invoiced.id] },
+        throwOnError: true,
+      }),
+    )
+
+    expect(error.response?.status).to.be.equal(409)
+    expect((await this.reload(invoiced)).isPaid).to.be.false
+  }
+
+  /** A bulk action never half-applies: one invoiced entry refuses them all. */
+  @test()
+  async markPaid_withOneInvoicedEntry_refusesTheWholeRequest() {
+    const { owner, invoiced, free } = await this.oneInvoicedOneNot()
+
+    const error = await this.rejectionOf(() =>
+      timeControllerMarkPaid({
+        client: this.apiClient(),
+        headers: {
+          Authorization: this.authenticator.getTokens(owner).accessToken,
+        },
+        body: { ids: [invoiced.id, free.id] },
+        throwOnError: true,
+      }),
+    )
+
+    expect(error.response?.status).to.be.equal(409)
+    expect((await this.reload(invoiced)).isPaid).to.be.false
+    expect((await this.reload(free)).isPaid).to.be.false
+  }
+
+  /** Entries no invoice covers toggle exactly as before. */
+  @test()
+  async markPaid_onAnUninvoicedEntry_stillTogglesBesideAnInvoice() {
+    const { owner, free } = await this.oneInvoicedOneNot()
+    const headers = {
+      Authorization: this.authenticator.getTokens(owner).accessToken,
+    }
+
+    await timeControllerMarkPaid({
+      client: this.apiClient(),
+      headers,
+      body: { ids: [free.id] },
+      throwOnError: true,
+    })
+    expect((await this.reload(free)).isPaid).to.be.true
+
+    await timeControllerMarkUnpaid({
+      client: this.apiClient(),
+      headers,
+      body: { ids: [free.id] },
+      throwOnError: true,
+    })
+    expect((await this.reload(free)).isPaid).to.be.false
+  }
+
+  /** The row edit is the third way in, and is refused the same way. */
+  @test()
+  async edit_changingIsPaidOnAnInvoicedEntry_is409AndChangesNothing() {
+    const { owner, invoiced } = await this.oneInvoicedOneNot()
+
+    const error = await this.rejectionOf(() =>
+      timeControllerEdit({
+        client: this.apiClient(),
+        path: { id: invoiced.id as never },
+        headers: {
+          Authorization: this.authenticator.getTokens(owner).accessToken,
+        },
+        body: { note: 'changed', isPaid: true },
+        throwOnError: true,
+      }),
+    )
+
+    expect(error.response?.status).to.be.equal(409)
+
+    const stored = await this.reload(invoiced)
+    expect(stored.isPaid).to.be.false
+    expect(stored.note).to.be.equal(invoiced.note)
+  }
+
+  /**
+   * The time dialog sends isPaid with every save. Sending the value the entry
+   * already has is not a change, so an invoiced entry's note stays editable.
+   */
+  @test()
+  async edit_keepingIsPaidOnAnInvoicedEntry_savesTheNote() {
+    const { owner, invoiced } = await this.oneInvoicedOneNot()
+
+    await timeControllerEdit({
+      client: this.apiClient(),
+      path: { id: invoiced.id as never },
+      headers: {
+        Authorization: this.authenticator.getTokens(owner).accessToken,
+      },
+      body: { note: 'still editable', isPaid: false },
+      throwOnError: true,
+    })
+
+    const stored = await this.reload(invoiced)
+    expect(stored.note).to.be.equal('still editable')
+    expect(stored.isPaid).to.be.false
   }
 
   /**

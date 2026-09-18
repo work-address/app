@@ -11,10 +11,12 @@ import { ErrorFormatter } from '@/service/error-formatter'
 import { TimeCreateDto } from '@/model/dto/time'
 import { Entitlement } from '@/service/entitlement'
 import AccessException from '@/exception/access-exception'
+import InvoicedTimeException from '@/exception/invoiced-time-exception'
 import RetentionExceededException from '@/exception/retention-exceeded-exception'
 import { ImageResizer } from '@/service/image-resizer'
 import { RepoEffect } from '@/repository/abstract-repository-template'
 import { fromPromise } from '@/service/effect-bridge'
+import { UnitOfWork } from '@/service/unit-of-work'
 
 @injectable()
 export class TimeManager {
@@ -26,6 +28,8 @@ export class TimeManager {
   protected imageResizer: ImageResizer
   @inject('Entitlement')
   protected entitlement: Entitlement
+  @inject('UnitOfWork')
+  protected unitOfWork: UnitOfWork
 
   // Projects owned by a non-premium account keep only the trailing N days of
   // time logs. Entitlement is the project owner's, not the author's - see
@@ -172,30 +176,91 @@ export class TimeManager {
     return this.timeRepository.validateAndSave(time)
   }
 
+  /**
+   * The author marks their own entries paid or unpaid by hand - allowed only
+   * for entries no invoice covers.
+   *
+   * An invoiced entry's `isPaid` belongs to its invoice (SPEC.md, "Time.isPaid
+   * is owned by Invoice"): flipping it here would leave a PAID invoice owning
+   * unpaid hours, or a REQUESTED one owning paid hours. One invoiced entry
+   * refuses the whole request with a 409 that names the invoice, so a bulk
+   * action never half-applies. The rows are locked while they are checked
+   * and written, so an invoice cannot claim one in between.
+   */
   public setIsPaidMany(
     ids: string[],
     isPaid: boolean,
     user: User,
   ): RepoEffect<void> {
-    return Effect.gen(this, function* () {
-      const times = yield* this.timeRepository.findByIdsAsAuthor(ids, user)
+    return this.unitOfWork.run((manager) =>
+      Effect.gen(this, function* () {
+        const times = yield* this.timeRepository
+          .within(manager)
+          .findByIdsAsAuthor(ids, user, { forUpdate: true })
 
-      for (const time of times) {
-        time.isPaid = isPaid
-      }
+        yield* TimeManager.refuseInvoiced(times)
 
-      yield* this.timeRepository.saveMany(times)
-    })
+        for (const time of times) {
+          time.isPaid = isPaid
+        }
+
+        yield* this.timeRepository.within(manager).saveMany(times)
+      }),
+    )
   }
 
+  /**
+   * A single-entry edit from the time dialog: the note always, `isPaid` only
+   * while no invoice covers the entry.
+   *
+   * The dialog sends `isPaid` with every save, so sending the value the entry
+   * already has is not a change and an invoiced entry's note stays editable.
+   * The edit is applied to the row as locked now, not to the copy the request
+   * loaded: saving that copy could write back an `isPaid` an invoice changed
+   * in the meantime.
+   */
   public editAndSave(time: Time, data: Time): RepoEffect<void> {
-    time.note = data.note
+    return this.unitOfWork.run((manager) =>
+      Effect.gen(this, function* () {
+        const [current] = yield* this.timeRepository
+          .within(manager)
+          .findByIdsAsAuthor([time.id], time.user, { forUpdate: true })
 
-    if (data.isPaid !== undefined) {
-      time.isPaid = data.isPaid
+        if (
+          data.isPaid !== undefined &&
+          data.isPaid !== Boolean(current.isPaid)
+        ) {
+          yield* TimeManager.refuseInvoiced([current])
+
+          current.isPaid = data.isPaid
+        }
+
+        current.note = data.note
+
+        yield* this.timeRepository.within(manager).validateAndSave(current)
+      }),
+    )
+  }
+
+  /** Fails with a 409 naming the invoices if any of the entries has one. */
+  private static refuseInvoiced(times: Time[]): Effect.Effect<void, unknown> {
+    const invoiceIds = [
+      ...new Set(
+        times
+          .map((time) => time.invoiceId)
+          .filter((id): id is string => Boolean(id)),
+      ),
+    ]
+
+    if (invoiceIds.length === 0) {
+      return Effect.void
     }
 
-    return this.timeRepository.validateAndSave(time).pipe(Effect.asVoid)
+    return Effect.fail(
+      new InvoicedTimeException(
+        `Payment for invoiced time follows its invoice - mark invoice ${invoiceIds.join(', ')} paid or unpaid instead`,
+      ),
+    )
   }
 
   public removeScreenshots(ids: string[], user: User): RepoEffect<void> {

@@ -3,6 +3,8 @@ import moment from 'moment'
 import { suite, test } from '@testdeck/mocha'
 
 import { AbstractDatabaseIntegration } from '@/test/abstract-database.integration'
+import { ConcurrentCalls } from '@/test/fixture/concurrent-calls'
+import { InvoiceManager } from '@/service/invoice-manager'
 import { TimeManager } from '@/service/time-manager'
 import { ProjectFixture } from '@/test/fixture/project-fixture'
 import { ProjectRepository } from '@/repository/project-repository'
@@ -12,6 +14,7 @@ import AccessException from '@/exception/access-exception'
 import { EProjectState } from '@/model/project'
 import { TimeCreateDto } from '@/model/dto/time'
 import { Invoice } from '@/entity/invoice'
+import { Time } from '@/entity/time'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { UserManager } from '@/service/user-manager'
 import { EInvoiceState } from '@/model/invoice'
@@ -643,5 +646,54 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
 
     expect(invoiced).to.exist
     expect(uninvoiced).to.be.undefined
+  }
+
+  /**
+   * A hand-made paid mark racing an invoice for the same entry. Whichever
+   * wins, the records must agree: either the entry is paid and on no
+   * invoice, or it is on the (unpaid) invoice and the mark was refused. The
+   * mark used to read the entry, then write it, with the invoice free to
+   * claim it in between - ending paid under a REQUESTED invoice. Run over
+   * several entries so both orders get exercised.
+   */
+  @test()
+  async setIsPaidMany_racingAnInvoice_neverLeavesThemDisagreeing() {
+    const invoiceManager: InvoiceManager = this.container.get('InvoiceManager')
+    const owner = await this.userFixture.createUser()
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
+    const now = moment.utc()
+
+    for (let round = 1; round <= 6; round += 1) {
+      const entry = await this.timeFixture.create(
+        project,
+        now.clone().subtract(round, 'hours').toDate(),
+        now.clone().subtract(round, 'hours').add(30, 'minutes').toDate(),
+        owner,
+      )
+
+      const [mark] = await new ConcurrentCalls(this.conn).settle<unknown>([
+        () =>
+          runPromise(this.timeManager.setIsPaidMany([entry.id], true, owner)),
+        () => runPromise(invoiceManager.ensureForProject(project, owner)),
+      ])
+
+      const stored = await this.conn.getRepository(Time).findOneOrFail({
+        where: { id: entry.id },
+        relations: { invoice: true },
+      })
+
+      if (stored.invoice) {
+        expect(stored.invoice.state, `round ${round}`).to.equal(
+          EInvoiceState.REQUESTED,
+        )
+        expect(stored.isPaid, `round ${round}`).to.be.false
+        expect(mark.status, `round ${round}`).to.equal('rejected')
+      } else {
+        expect(stored.isPaid, `round ${round}`).to.be.true
+      }
+    }
   }
 }
