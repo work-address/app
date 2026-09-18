@@ -67,8 +67,15 @@ This is what stops the work record and the money record from drifting.
 one who knows whether it arrived; letting the payer self-certify would make the
 record worth less than the wallet history it summarises.
 
-**Already-paid hours cannot be re-billed.** Invoice creation only considers
-unpaid time, so the same hour cannot appear on two invoices.
+**An hour is billed once.** Every way of raising an invoice — a selection, a
+range, or everything outstanding — considers only time that is unpaid *and*
+not yet linked to an invoice (`Time.invoice`), and the link is written under
+that same condition, so an entry on one invoice is never moved to another.
+Reading the entries, saving the invoice and linking them happen in one
+transaction with the entries locked: two requests at once cannot both bill
+the same hour, and a failure part-way leaves no invoice behind. Marking an
+invoice paid or unpaid changes its state and its entries' `isPaid` in one
+transaction as well.
 
 **Money is integer cents.** `Invoice.amountCents`, never a float — a float
 cannot represent every cent exactly, so sums drift and two clients can render
