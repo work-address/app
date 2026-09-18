@@ -106,11 +106,15 @@ export class InvoiceManager {
   }
 
   /**
-   * Issues an invoice for the caller's own unpaid time in a range.
+   * Issues an invoice for the caller's own unpaid, uninvoiced time in a range.
    *
    * Access is worker-or-owner, not owner-only: a contractor billing for their
    * hours is the primary case, and requiring the owner to raise it on their
    * behalf would make the owner author both sides of the transaction.
+   *
+   * Entries in the range that another invoice already bills are left where
+   * they are; only the rest are billed, and a range with nothing else in it
+   * is refused.
    */
   public create(
     data: InvoiceCreateDto,
@@ -140,7 +144,9 @@ export class InvoiceManager {
 
       if (times.length === 0) {
         return yield* Effect.fail(
-          new BadRequestError('There is no unpaid tracked time in that period'),
+          new BadRequestError(
+            'There is no unpaid tracked time in that period that is not already on an invoice',
+          ),
         )
       }
 

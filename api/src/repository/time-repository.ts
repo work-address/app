@@ -433,12 +433,17 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
   }
 
   /**
-   * A single contributor's unpaid time on one project within a range - the
-   * entries an invoice is built from.
+   * A single contributor's unpaid, uninvoiced time on one project within a
+   * range - the entries an invoice for that range is built from.
    *
    * Scoped by author rather than by project owner: a worker invoices for the
    * hours *they* logged, and an owner for theirs. `findTimeBetweenForProject`
    * scopes by owner instead, which sums every contributor's hours together.
+   *
+   * `invoiceId IS NULL` as well as unpaid: raising an invoice does not mark
+   * its hours paid, so without it a range over hours already on a REQUESTED
+   * invoice re-pointed them at the new one - the first invoice kept its
+   * amount but lost its lines, and the same hours were billed twice.
    */
   public findUnpaidTimeForAuthorBetween(
     from: Date,
@@ -457,6 +462,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         .andWhere('project.id = :projectId', { projectId: project.id })
         .andWhere('project.deletedAt IS NULL')
         .andWhere('COALESCE(time.isPaid, false) = false')
+        .andWhere('time.invoiceId IS NULL')
         .getMany(),
     )
   }

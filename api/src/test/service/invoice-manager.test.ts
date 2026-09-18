@@ -1,5 +1,6 @@
 import { expect } from 'chai'
 import moment from 'moment'
+import { HttpError } from 'routing-controllers'
 import { suite, test } from '@testdeck/mocha'
 
 import { AbstractDatabaseIntegration } from '@/test/abstract-database.integration'
@@ -9,6 +10,7 @@ import { ProjectRepository } from '@/repository/project-repository'
 import { TimeFixture } from '@/test/fixture/time-fixture'
 import { TimeRepository } from '@/repository/time-repository'
 import { Entitlement } from '@/service/entitlement'
+import { Invoice } from '@/entity/invoice'
 import { Project } from '@/entity/project'
 import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
@@ -68,6 +70,23 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
     time.minutesActive = 60
 
     return runPromise(this.timeRepository.saveSingle(time))
+  }
+
+  /** The ids of the entries an invoice bills, by its link. */
+  private async linesOf(invoice: Invoice): Promise<string[]> {
+    const lines = await runPromise(this.timeRepository.findForInvoice(invoice))
+
+    return lines.map((time) => time.id).sort()
+  }
+
+  private async failureOf(run: () => Promise<unknown>): Promise<HttpError> {
+    try {
+      await run()
+    } catch (error: unknown) {
+      return error as HttpError
+    }
+
+    throw new Error('Expected the call to fail')
   }
 
   @test()
@@ -253,5 +272,80 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
       }
       expect(new Set([byRange.id, byIds.id, ensured?.id]).size).to.equal(3)
     })
+  }
+
+  @test()
+  /**
+   * G3. The range query used to check `isPaid` only, and raising an invoice
+   * does not mark its hours paid, so a range over hours already on a
+   * REQUESTED invoice re-pointed them at a second one: the first kept its
+   * amount but lost its lines, and the same hours were billed twice.
+   */
+  async create_rangeOverTimeAlreadyOnAnInvoice_isRefusedAndMovesNothing() {
+    const owner = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner, 60)
+    const earlier = await this.hourOfWork(project, owner, 5)
+    const later = await this.hourOfWork(project, owner, 3)
+
+    const first = await runPromise(
+      this.invoiceManager.createFromTimeIds(project, owner, [
+        earlier.id,
+        later.id,
+      ]),
+    )
+
+    const error = await this.failureOf(() =>
+      runPromise(
+        this.invoiceManager.create(
+          {
+            fromUnix: new Date(earlier.fromAt).getTime(),
+            toUnix: new Date(later.toAt).getTime(),
+          },
+          project,
+          owner,
+        ),
+      ),
+    )
+
+    expect(error.httpCode).to.equal(400)
+    expect(error.message).to.contain('not already on an invoice')
+    expect(await this.linesOf(first)).to.deep.equal(
+      [earlier.id, later.id].sort(),
+    )
+    expect(await this.conn.getRepository(Invoice).count()).to.equal(1)
+  }
+
+  @test()
+  /** A range that overlaps an invoice bills only what that invoice does not. */
+  async create_rangePartlyOverAnInvoice_billsOnlyTheUninvoicedTime() {
+    const owner = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner, 60)
+    const invoiced = await this.hourOfWork(project, owner, 5)
+    const outstanding = await this.hourOfWork(project, owner, 3)
+
+    const first = await runPromise(
+      this.invoiceManager.createFromTimeIds(project, owner, [invoiced.id]),
+    )
+
+    const second = await runPromise(
+      this.invoiceManager.create(
+        {
+          fromUnix: new Date(invoiced.fromAt).getTime(),
+          toUnix: new Date(outstanding.toAt).getTime(),
+        },
+        project,
+        owner,
+      ),
+    )
+
+    // One hour at $60/hour, not two.
+    expect(second.amountCents).to.equal(6000)
+    expect(await this.linesOf(second)).to.deep.equal([outstanding.id])
+    expect(await this.linesOf(first)).to.deep.equal([invoiced.id])
+
+    const reloadedFirst = await this.conn
+      .getRepository(Invoice)
+      .findOneByOrFail({ id: first.id })
+    expect(reloadedFirst.amountCents).to.equal(6000)
   }
 }
