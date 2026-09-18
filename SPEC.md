@@ -54,12 +54,13 @@ One invoice never sums several contributors together, because the resulting
 record would name nobody and leave the contributors with nothing of their own.
 
 **`Time.isPaid` is owned by `Invoice`.** `InvoiceManager.markPaid` sets it and
-`markUnpaid` clears it, scoped to the issuer's own entries in the invoiced
-period. Nothing else writes it except an author correcting their own entries by
-hand — one at a time, or in bulk through `POST /time/paid` and `/time/unpaid`.
-Those bulk paths do not update the invoice that covers the entries, so work and
-money can be driven apart through them; that divergence is a known defect, not
-a second owner of the flag.
+`markUnpaid` clears it, on exactly the entries linked to that invoice. An
+author may also set it by hand — one entry in the time dialog
+(`PUT /time/:id`), or in bulk through `POST /time/paid` and `/time/unpaid` —
+but only on entries no invoice covers. A request that would change it on an
+invoiced entry is refused whole with a 409 naming the invoice, and the worklog
+table, dialog and bulk actions disable the control for such entries and say
+why: the payment is changed on the invoice.
 
 This is what stops the work record and the money record from drifting.
 
