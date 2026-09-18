@@ -57,6 +57,7 @@ export type Project = {
     text: string;
     rateHour?: string;
     state: string;
+    marketplaceContractId?: string;
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
@@ -301,6 +302,18 @@ export type EntitlementPushDto = {
     expiresAt?: string;
 };
 
+export type MarketplaceHireDto = {
+    contractId: string;
+    clientId: string;
+    freelancerId: string;
+    freelancerAddress?: string;
+    title: string;
+    text?: string;
+    rateHour: number;
+    issuedAt: number;
+    nonce: string;
+};
+
 /**
  * Subset of User serialized with class-transformer group "search".
  */
@@ -372,6 +385,7 @@ export type ProjectSearch = {
     rateHour?: string;
     state?: string;
     user?: UserSearch;
+    marketplaceContractId?: string;
     invoices?: InvoiceSearch;
     time?: TimeSearch;
 };
@@ -1079,6 +1093,23 @@ export type EntitlementControllerPushData = {
 };
 
 export type EntitlementControllerPushResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type MarketplaceHireControllerHireData = {
+    /**
+     * MarketplaceHireDto
+     */
+    body?: MarketplaceHireDto;
+    path?: never;
+    query?: never;
+    url: '/api/internal/marketplace/hire';
+};
+
+export type MarketplaceHireControllerHireResponses = {
     /**
      * Successful response
      */

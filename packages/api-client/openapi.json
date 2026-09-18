@@ -119,7 +119,7 @@
           "state"
         ],
         "example": {
-          "id": "baf71337-8c84-4e9d-a68a-15782936a1e0"
+          "id": "992ad9cf-e2a6-405e-b441-b1b5dcf0b933"
         }
       },
       "ProjectStatistics": {
@@ -180,7 +180,7 @@
           "period"
         ],
         "example": {
-          "id": "2cdb6f11-ae3c-4d1e-a145-9630a0440f43"
+          "id": "4f825ca5-fcbf-4d63-9e18-ab0ca39bf4d2"
         }
       },
       "Time": {
@@ -274,7 +274,7 @@
           "toAt"
         ],
         "example": {
-          "id": "485a0a4d-53e0-4d53-9d9a-5120e9e24c72"
+          "id": "1c12c8ff-46bd-419f-a9e2-2ab13a9382dc"
         }
       },
       "Project": {
@@ -324,6 +324,9 @@
             "type": "string",
             "minLength": 1
           },
+          "marketplaceContractId": {
+            "type": "string"
+          },
           "id": {
             "minLength": 1,
             "type": "string",
@@ -361,7 +364,7 @@
           "state"
         ],
         "example": {
-          "id": "3013e1c7-4d97-45c9-91a8-2315511e3f56"
+          "id": "46d3fe64-e9c3-4789-8d7a-be06c6d515a8"
         }
       },
       "User": {
@@ -467,7 +470,7 @@
         },
         "type": "object",
         "example": {
-          "id": "3b70c900-7ca8-453c-b1ce-e32c44e6f0bc"
+          "id": "92c68a9b-46a9-496b-be3a-60bc3be673d8"
         }
       },
       "AuthForgotPasswordDto": {
@@ -1246,6 +1249,55 @@
           "nonce"
         ]
       },
+      "MarketplaceHireDto": {
+        "properties": {
+          "contractId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "clientId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "freelancerId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "freelancerAddress": {
+            "maxLength": 128,
+            "type": "string"
+          },
+          "title": {
+            "maxLength": 200,
+            "type": "string"
+          },
+          "text": {
+            "maxLength": 5000,
+            "type": "string"
+          },
+          "rateHour": {
+            "maximum": 9999,
+            "type": "number",
+            "minimum": 0
+          },
+          "issuedAt": {
+            "type": "integer"
+          },
+          "nonce": {
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "contractId",
+          "clientId",
+          "freelancerId",
+          "title",
+          "rateHour",
+          "issuedAt",
+          "nonce"
+        ]
+      },
       "User_search": {
         "type": "object",
         "description": "Subset of User serialized with class-transformer group \"search\".",
@@ -1497,6 +1549,9 @@
           },
           "user": {
             "$ref": "#/components/schemas/User_search"
+          },
+          "marketplaceContractId": {
+            "type": "string"
           },
           "invoices": {
             "$ref": "#/components/schemas/Invoice_search"
@@ -3206,7 +3261,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "d46a58c2-2a27-4bca-bd8c-31681ad17b13"
+                  "projectId": "01386194-da80-44dc-a59d-213a8c66ea80"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -3274,8 +3329,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1788091680622,
-                "toUnix": 1788178080622
+                "fromUnix": 1789646573213,
+                "toUnix": 1789732973213
               }
             }
           },
@@ -3568,6 +3623,34 @@
         ]
       }
     },
+    "/api/internal/marketplace/hire": {
+      "post": {
+        "operationId": "MarketplaceHireController.hire",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MarketplaceHireDto"
+              }
+            }
+          },
+          "description": "MarketplaceHireDto",
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Hire",
+        "tags": [
+          "Marketplace Hire"
+        ]
+      }
+    },
     "/api/auth/timeTracker/nonce": {
       "post": {
         "operationId": "AuthTimeTrackerController.timeTrackerNonceGenerate",
@@ -3639,7 +3722,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "aeb38ddb-9805-427e-91dc-0f478a046cad"
+                "nonce": "2023ce77-68c0-4541-98b2-e8fd39d7a3d8"
               },
               "schema": {
                 "properties": {
@@ -3684,7 +3767,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "de9758eb-17f4-4139-8d7f-f192ed91a710"
+                "nonce": "d812a7cf-ccf8-4f2e-b590-743760d3a669"
               },
               "schema": {
                 "properties": {
@@ -3725,21 +3808,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "d5e14fa8-24ae-48a0-a9e1-8cee7c649f2e",
+                      "nonce": "ac1f22e8-1988-4dd5-8d54-734241386ef0",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "772f0e98-a1e8-470d-b579-d3c60b5b5c66",
+                      "nonce": "05329e43-acde-463d-80ab-8b9eb3903127",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "ce85e2d9-15c6-4010-ab83-c2d91d25dbaa",
+                      "nonce": "4ed6cf44-0dea-444b-8b74-d84d2439cea4",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {
