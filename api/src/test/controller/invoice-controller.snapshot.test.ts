@@ -441,10 +441,13 @@ export class InvoiceControllerSnapshotTest extends BaseControllerTest {
       5000,
       EInvoiceState.REQUESTED,
     )
+    // One instant, both ends derived from it: the minutes asserted below
+    // must not depend on the clock moving between two reads.
+    const now = moment.utc()
     const time = await this.timeFixture.create(
       project,
-      moment.utc().subtract(3, 'hours').toDate(),
-      moment.utc().subtract(2, 'hours').toDate(),
+      now.clone().subtract(3, 'hours').toDate(),
+      now.clone().subtract(2, 'hours').toDate(),
     )
 
     await runPromise(this.timeRepository.claimForInvoice(legacy, [time]))
