@@ -174,15 +174,18 @@ export class TimeControllerTest extends BaseControllerTest {
     const user = await this.userFixture.createUser()
     const projectA = await this.projectFixture.createPersonal(user, 60)
     const projectB = await this.projectFixture.createPersonal(user)
+    // One instant for both ends, so the span is exactly an hour: two clock
+    // reads can straddle a millisecond tick and bill 60.0000167.
+    const now = moment.utc()
     const timeA = await this.timeFixture.create(
       projectA,
-      moment.utc().subtract(60, 'minutes').toDate(),
-      moment.utc().toDate(),
+      now.clone().subtract(60, 'minutes').toDate(),
+      now.toDate(),
     )
     await this.timeFixture.create(
       projectB,
-      moment.utc().subtract(60, 'minutes').toDate(),
-      moment.utc().toDate(),
+      now.clone().subtract(60, 'minutes').toDate(),
+      now.toDate(),
     )
 
     const client = this.apiClient()

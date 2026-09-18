@@ -156,10 +156,13 @@ export class InvoiceControllerTest extends BaseControllerTest {
   async read_carriesTheTimeItBills() {
     const owner = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner, 60)
+    // One instant for both ends: two separate clock reads can straddle a
+    // millisecond tick, and the ten-minute span then reports 10.0000167.
+    const now = moment.utc()
     const billed = await this.timeFixture.create(
       project,
-      moment.utc().subtract(2, 'hours').toDate(),
-      moment.utc().subtract(110, 'minutes').toDate(),
+      now.clone().subtract(2, 'hours').toDate(),
+      now.clone().subtract(110, 'minutes').toDate(),
     )
 
     const created = await invoiceControllerCreate({
