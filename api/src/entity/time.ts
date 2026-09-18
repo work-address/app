@@ -1,4 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToOne, Unique } from 'typeorm'
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  RelationId,
+  Unique,
+} from 'typeorm'
 import { faker } from '@faker-js/faker'
 import { Exclude, Expose, Type } from 'class-transformer'
 import { JSONSchema } from 'class-validator-jsonschema'
@@ -15,6 +22,7 @@ import {
   IsNumber,
   IsOptional,
   IsString,
+  IsUUID,
 } from 'class-validator'
 
 @JSONSchema({
@@ -59,12 +67,27 @@ export class Time extends AbstractBaseEntity implements ITime {
    * entries can be invoiced in an arbitrary selection, so a period covering
    * Monday and Friday must not silently claim Tuesday through Thursday.
    *
-   * Deliberately outside every serialisation group - which invoice an entry
-   * belongs to is server-side bookkeeping, and exposing it would let a client
-   * round-trip it back on an edit and move hours between invoices.
+   * The relation itself stays outside every serialisation group: exposing it
+   * would let a client round-trip it back on an edit and move hours between
+   * invoices. `invoiceId` below is the read-only view of it.
    */
   @ManyToOne(() => Invoice, { nullable: true, onDelete: 'SET NULL' })
   invoice?: Invoice | null
+
+  /**
+   * The id of the invoice that bills this entry, or null - read-only.
+   *
+   * A client needs it to know the entry's payment is the invoice's to change,
+   * and to point there. It is safe to serialise where the relation above is
+   * not: a `@RelationId` is derived on read and never written back, so a
+   * client round-tripping it on an edit still cannot move hours between
+   * invoices.
+   */
+  @Expose({ groups: ['search'] })
+  @RelationId((time: Time) => time.invoice)
+  @IsUUID()
+  @IsOptional()
+  invoiceId?: string | null
 
   @Expose({ groups: ['search', 'create', 'edit'] })
   @Column('text', { nullable: true })

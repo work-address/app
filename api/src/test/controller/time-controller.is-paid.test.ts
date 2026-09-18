@@ -9,11 +9,13 @@ import {
   timeControllerCreateOrUpdateMany,
   timeControllerMarkPaid,
   timeControllerMarkUnpaid,
+  timeControllerSearch,
 } from '@app/api-client'
 import type { TimeCreateDto as ApiTimeCreateDto } from '@app/api-client'
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { TimeRepository } from '@/repository/time-repository'
+import { InvoiceManager } from '@/service/invoice-manager'
 import { EProjectState } from '@/model/project'
 import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
@@ -22,11 +24,13 @@ import { runPromise } from '@/service/effect-bridge'
 @suite()
 export class TimeControllerIsPaidTest extends BaseControllerTest {
   protected timeRepository: TimeRepository
+  protected invoiceManager: InvoiceManager
 
   constructor() {
     super()
 
     this.timeRepository = this.container.get('TimeRepository')
+    this.invoiceManager = this.container.get('InvoiceManager')
   }
 
   private async grantAccess(
@@ -401,5 +405,61 @@ export class TimeControllerIsPaidTest extends BaseControllerTest {
     if (!axios.isAxiosError(error)) throw error
     expect(error.response?.status).to.be.equal(400)
     expect(error.response?.data.errors[0].property).to.be.equal('ids')
+  }
+
+  /**
+   * Two of the owner's entries, from one instant, with the first on an
+   * invoice of its own and the second on none.
+   */
+  private async oneInvoicedOneNot() {
+    const owner = await this.userFixture.createPremiumUser()
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
+    const now = moment.utc()
+    const invoiced = await this.timeFixture.create(
+      project,
+      now.clone().subtract(120, 'minutes').toDate(),
+      now.clone().subtract(90, 'minutes').toDate(),
+    )
+    const free = await this.timeFixture.create(
+      project,
+      now.clone().subtract(60, 'minutes').toDate(),
+      now.toDate(),
+    )
+    const invoice = await runPromise(
+      this.invoiceManager.createFromTimeIds(project, owner, [invoiced.id]),
+    )
+
+    return { owner, project, invoiced, free, invoice }
+  }
+
+  /**
+   * The table needs to know which entries an invoice covers to disable their
+   * paid toggle, so the search carries the invoice id - read-only.
+   */
+  @test()
+  async search_carriesTheInvoiceOfEachEntry() {
+    const { owner, project, invoiced, free, invoice } =
+      await this.oneInvoicedOneNot()
+
+    const res = await timeControllerSearch({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(owner).accessToken,
+      },
+      body: { filter: { projectId: project.id }, sort: {}, page: 0 },
+      throwOnError: true,
+    })
+
+    const [rows] = res.data as unknown as [
+      { id: string; invoiceId?: string | null }[],
+      number,
+    ]
+    const byId = new Map(rows.map((row) => [row.id, row.invoiceId]))
+
+    expect(byId.get(invoiced.id)).to.be.equal(invoice.id)
+    expect(byId.get(free.id) ?? null).to.be.null
   }
 }
