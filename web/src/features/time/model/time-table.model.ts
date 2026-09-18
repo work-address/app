@@ -73,8 +73,9 @@ export const $selectedTimeEntry = combine(
 
 /**
  * Whether the selection includes an entry an invoice bills. Its payment is
- * the invoice's to change, and the API refuses the whole paid/unpaid request
- * if any entry has one, so the bulk actions are withheld instead.
+ * the invoice's to change, and the invoice keeps the hours it bills: the API
+ * refuses the whole paid/unpaid or delete request if any entry has one, so
+ * those bulk actions are withheld instead.
  */
 export const $selectionHasInvoicedTime = combine(
   $allTime,
@@ -133,10 +134,16 @@ const $pendingDeleteIds = createStore<string[]>([])
   .on(timeBulkDeleteRequested, (_, ids) => ids)
   .reset(deleteTimeMutation.finished.finally, confirmBulkDeleteFx.fail)
 
+// An invoice keeps the hours it bills, and the API refuses the whole delete
+// (409) if one selected entry is on an invoice - so it is not asked.
 sample({
   clock: timeBulkDeleteRequested,
-  source: $isTimeBulkPending,
-  filter: (isPending, ids) => !isPending && ids.length > 0,
+  source: {
+    isPending: $isTimeBulkPending,
+    hasInvoiced: $selectionHasInvoicedTime,
+  },
+  filter: ({ isPending, hasInvoiced }, ids) =>
+    !isPending && !hasInvoiced && ids.length > 0,
   fn: (_, ids) => ({
     title: translate('dashboard.worklogsTable.bulk.confirmDelete.title'),
     description: translate(

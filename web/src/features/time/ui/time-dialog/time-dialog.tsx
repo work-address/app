@@ -191,7 +191,8 @@ export const TimeDialog = ({
   // the mutation lands, so there is no local copy to keep in step.
   const hasScreenshot = Boolean(row?.screenshot)
   // An invoiced entry's payment follows its invoice. The field still shows
-  // it, but cannot change it - the API would refuse the save with a 409.
+  // it, but cannot change it - the API would refuse the save with a 409 -
+  // and the entry cannot be deleted from under the invoice either.
   const isInvoiced = row ? isTimeInvoiced(row) : false
   const hasProcesses = Boolean(row?.processes && row.processes.length > 0)
   const isPending =
@@ -267,6 +268,7 @@ export const TimeDialog = ({
             canSave={isDirty}
             hasScreenshot={hasScreenshot}
             hasProcesses={hasProcesses}
+            canDelete={!isInvoiced}
             onDelete={handleDelete}
             onRemoveScreenshot={handleRemoveScreenshot}
             onRemoveProcesses={handleRemoveProcesses}

@@ -9,6 +9,11 @@ type TimeDialogFooterProps = {
   canSave: boolean
   hasScreenshot: boolean
   hasProcesses: boolean
+  /**
+   * False for an entry an invoice bills: the API refuses to delete it (409),
+   * so the button says why instead of being offered and refused.
+   */
+  canDelete: boolean
   onDelete: () => void
   onRemoveScreenshot: () => void
   onRemoveProcesses: () => void
@@ -22,6 +27,7 @@ export const TimeDialogFooter = ({
   canSave,
   hasScreenshot,
   hasProcesses,
+  canDelete,
   onDelete,
   onRemoveScreenshot,
   onRemoveProcesses,
@@ -33,9 +39,28 @@ export const TimeDialogFooter = ({
   return (
     <Root>
       <DangerActions>
-        <Button color="danger" disabled={isPending} onClick={onDelete}>
-          {t('dashboard.worklogsTable.dialog.deleteEntry')}
-        </Button>
+        {canDelete ? (
+          <Button color="danger" disabled={isPending} onClick={onDelete}>
+            {t('dashboard.worklogsTable.dialog.deleteEntry')}
+          </Button>
+        ) : (
+          // A disabled button takes no pointer events or focus, so the hint
+          // anchors on a focusable wrapper instead.
+          <Tooltip
+            content={t('dashboard.worklogsTable.dialog.deleteInvoicedHint')}
+          >
+            <DeleteHint
+              tabIndex={0}
+              aria-label={t(
+                'dashboard.worklogsTable.dialog.deleteInvoicedHint',
+              )}
+            >
+              <Button color="danger" disabled>
+                {t('dashboard.worklogsTable.dialog.deleteEntry')}
+              </Button>
+            </DeleteHint>
+          </Tooltip>
+        )}
         {hasScreenshot && (
           <Tooltip content={t('dashboard.worklogsTable.removeScreenshot')}>
             <Button
@@ -110,6 +135,10 @@ const DangerActions = styled.div`
       min-width: 0;
     }
   }
+`
+
+const DeleteHint = styled.span`
+  display: grid;
 `
 
 const PrimaryActions = styled.div`

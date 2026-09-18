@@ -108,6 +108,24 @@ export const TimeWorklogsBulkActions = () => {
     </>
   )
 
+  const deleteInvoicedHint = t(
+    'dashboard.worklogsTable.bulk.deleteInvoicedHint',
+  )
+
+  const deleteButton = (
+    <Button
+      color="danger"
+      variant="outline"
+      size="s"
+      type="button"
+      iconLeft={<TrashIcon width={TRASH_ICON_SIZE} height={TRASH_ICON_SIZE} />}
+      disabled={isBulkPending || hasInvoiced}
+      onClick={() => requestBulkDelete(selectedIds)}
+    >
+      {t('dashboard.worklogsTable.bulk.delete')}
+    </Button>
+  )
+
   return (
     <Root>
       <S.Label>
@@ -122,16 +140,16 @@ export const TimeWorklogsBulkActions = () => {
           anchors on the group, which is focusable for keyboard users. */}
       {hasInvoiced ? (
         <Tooltip content={paidStatusInvoicedHint}>
-          <PaidStatusGroup
+          <ActionGroup
             role="group"
             aria-label={paidStatusInvoicedHint}
             tabIndex={0}
           >
             {paidStatusButtons}
-          </PaidStatusGroup>
+          </ActionGroup>
         </Tooltip>
       ) : (
-        <PaidStatusGroup>{paidStatusButtons}</PaidStatusGroup>
+        <ActionGroup>{paidStatusButtons}</ActionGroup>
       )}
       <Tooltip content={t('dashboard.worklogsTable.bulk.invoiceHint')}>
         <span>
@@ -147,19 +165,22 @@ export const TimeWorklogsBulkActions = () => {
           </Button>
         </span>
       </Tooltip>
-      <Button
-        color="danger"
-        variant="outline"
-        size="s"
-        type="button"
-        iconLeft={
-          <TrashIcon width={TRASH_ICON_SIZE} height={TRASH_ICON_SIZE} />
-        }
-        disabled={isBulkPending}
-        onClick={() => requestBulkDelete(selectedIds)}
-      >
-        {t('dashboard.worklogsTable.bulk.delete')}
-      </Button>
+      {/* An invoice keeps the hours it bills, and the API refuses the whole
+          delete if one selected entry is on an invoice - so, as with payment,
+          the action says why it is unavailable. */}
+      {hasInvoiced ? (
+        <Tooltip content={deleteInvoicedHint}>
+          <ActionGroup
+            role="group"
+            aria-label={deleteInvoicedHint}
+            tabIndex={0}
+          >
+            {deleteButton}
+          </ActionGroup>
+        </Tooltip>
+      ) : (
+        deleteButton
+      )}
       <Button
         variant="outline"
         color="neutral"
@@ -183,7 +204,7 @@ const Root = styled.div`
   margin-bottom: var(--space-3);
 `
 
-const PaidStatusGroup = styled.span`
+const ActionGroup = styled.span`
   display: grid;
   grid-auto-flow: column;
   align-items: center;
