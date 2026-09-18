@@ -266,4 +266,34 @@ export class HelpControllerTest extends BaseControllerTest {
       '#/components/schemas/Project_search',
     )
   }
+
+  /**
+   * The entitlement push and the marketplace hire answer the web service,
+   * which signs them with a shared secret. They are no browser's business,
+   * so the spec the browser clients and the docs are built from leaves them,
+   * and the request bodies only they take, out.
+   */
+  @test()
+  async openApi_leavesServiceToServiceRoutesOut() {
+    const res = await helpControllerSwagger({
+      client: this.apiClient(),
+      throwOnError: true,
+    })
+    const spec = res.data as {
+      paths: Record<string, unknown>
+      components: { schemas: Record<string, unknown> }
+    }
+
+    expect(
+      Object.keys(spec.paths).filter((path) =>
+        path.startsWith('/api/internal'),
+      ),
+    ).to.deep.equal([])
+    expect(spec.components.schemas).to.not.have.any.keys(
+      'EntitlementPushDto',
+      'MarketplaceHireDto',
+    )
+    expect(spec.paths).to.have.property('/api/project')
+    expect(spec.components.schemas).to.have.property('Project_search')
+  }
 }

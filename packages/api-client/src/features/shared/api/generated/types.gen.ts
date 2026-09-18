@@ -294,26 +294,6 @@ export type InvoiceCreateDto = {
     timeIds?: Array<string>;
 };
 
-export type EntitlementPushDto = {
-    userId: string;
-    premium: boolean;
-    issuedAt: number;
-    nonce: string;
-    expiresAt?: string;
-};
-
-export type MarketplaceHireDto = {
-    contractId: string;
-    clientId: string;
-    freelancerId: string;
-    freelancerAddress?: string;
-    title: string;
-    text?: string;
-    rateHour: number;
-    issuedAt: number;
-    nonce: string;
-};
-
 /**
  * Subset of User serialized with class-transformer group "search".
  */
@@ -1099,40 +1079,6 @@ export type InvoiceControllerMarkUnpaidResponses = {
 };
 
 export type InvoiceControllerMarkUnpaidResponse = InvoiceControllerMarkUnpaidResponses[keyof InvoiceControllerMarkUnpaidResponses];
-
-export type EntitlementControllerPushData = {
-    /**
-     * EntitlementPushDto
-     */
-    body?: EntitlementPushDto;
-    path?: never;
-    query?: never;
-    url: '/api/internal/entitlement';
-};
-
-export type EntitlementControllerPushResponses = {
-    /**
-     * Successful response
-     */
-    200: unknown;
-};
-
-export type MarketplaceHireControllerHireData = {
-    /**
-     * MarketplaceHireDto
-     */
-    body?: MarketplaceHireDto;
-    path?: never;
-    query?: never;
-    url: '/api/internal/marketplace/hire';
-};
-
-export type MarketplaceHireControllerHireResponses = {
-    /**
-     * Successful response
-     */
-    200: unknown;
-};
 
 export type AuthTimeTrackerControllerTimeTrackerNonceGenerateData = {
     body?: never;
