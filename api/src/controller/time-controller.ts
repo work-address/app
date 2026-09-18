@@ -313,6 +313,14 @@ export class TimeController {
 
   @OpenAPIExtended({
     summary: 'Delete time entries (tracking worker only)',
+    operation: {
+      responses: {
+        409: {
+          description:
+            'An invoice bills one of the entries; nothing was deleted, and the message names the invoice',
+        },
+      },
+    },
     body: {
       schema: TimeIdsDto,
       options: {

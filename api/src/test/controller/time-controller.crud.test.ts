@@ -5,6 +5,8 @@ import moment from 'moment'
 import fs from 'fs'
 
 import {
+  invoiceControllerCreate,
+  invoiceControllerRead,
   timeControllerCreateOrUpdateMany,
   timeControllerDelete,
 } from '@app/api-client'
@@ -661,5 +663,124 @@ export class TimeControllerCrudTest extends BaseControllerTest {
       }),
     )
     expect(stillThere).to.not.eq(undefined)
+  }
+
+  /**
+   * DEC-04: an issued invoice is a record of money owed for specific hours,
+   * so an hour it bills cannot be deleted from under it. One invoiced entry
+   * refuses the whole request with a 409 naming the invoice - the uninvoiced
+   * entry sent with it survives too - and the invoice still reads whole.
+   */
+  @test()
+  async delete_invoicedEntry_isRefusedWholeWith409NamingTheInvoice() {
+    const owner = await this.userFixture.createPremiumUser()
+    const project = await this.projectFixture.createPersonal(owner, 20)
+    const now = moment.utc()
+    const invoiced = await this.timeFixture.create(
+      project,
+      now.clone().subtract(180, 'minutes').toDate(),
+      now.clone().subtract(170, 'minutes').toDate(),
+    )
+    const free = await this.timeFixture.create(
+      project,
+      now.clone().subtract(60, 'minutes').toDate(),
+      now.clone().subtract(50, 'minutes').toDate(),
+    )
+    const headers = {
+      Authorization: this.authenticator.getTokens(owner).accessToken,
+    }
+
+    const invoice = await invoiceControllerCreate({
+      client: this.apiClient(),
+      path: { projectId: project.id as never },
+      headers,
+      body: { timeIds: [invoiced.id] },
+      throwOnError: true,
+    })
+
+    let error: unknown
+
+    try {
+      await timeControllerDelete({
+        client: this.apiClient(),
+        body: { ids: [free.id, invoiced.id] },
+        headers,
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
+    }
+
+    if (!axios.isAxiosError(error)) throw error
+    expect(error.response?.status).to.be.equal(409)
+    expect(error.response?.data?.message).to.contain(invoice.data.id)
+
+    for (const id of [invoiced.id, free.id]) {
+      const stillThere = await runPromise(
+        this.timeRepository.findOneBy({ where: { id } }),
+      )
+
+      expect(stillThere, id).to.not.eq(undefined)
+    }
+
+    const read = await invoiceControllerRead({
+      client: this.apiClient(),
+      path: { id: invoice.data.id as never },
+      headers,
+      throwOnError: true,
+    })
+
+    expect(read.data.time?.map((time) => time.id)).to.deep.eq([invoiced.id])
+    expect(read.data.lines?.map((line) => line.timeId)).to.deep.eq([
+      invoiced.id,
+    ])
+  }
+
+  /** Time no invoice bills is still the author's to delete. */
+  @test()
+  async delete_uninvoicedEntryBesideAnInvoicedOne_isAllowed() {
+    const owner = await this.userFixture.createPremiumUser()
+    const project = await this.projectFixture.createPersonal(owner, 20)
+    const now = moment.utc()
+    const invoiced = await this.timeFixture.create(
+      project,
+      now.clone().subtract(180, 'minutes').toDate(),
+      now.clone().subtract(170, 'minutes').toDate(),
+    )
+    const free = await this.timeFixture.create(
+      project,
+      now.clone().subtract(60, 'minutes').toDate(),
+      now.clone().subtract(50, 'minutes').toDate(),
+    )
+    const headers = {
+      Authorization: this.authenticator.getTokens(owner).accessToken,
+    }
+
+    await invoiceControllerCreate({
+      client: this.apiClient(),
+      path: { projectId: project.id as never },
+      headers,
+      body: { timeIds: [invoiced.id] },
+      throwOnError: true,
+    })
+
+    const res = await timeControllerDelete({
+      client: this.apiClient(),
+      body: { ids: [free.id] },
+      headers,
+      throwOnError: true,
+    })
+
+    expect(res.status).to.be.equal(200)
+    expect(
+      await runPromise(
+        this.timeRepository.findOneBy({ where: { id: free.id } }),
+      ),
+    ).to.be.undefined
+    expect(
+      await runPromise(
+        this.timeRepository.findOneBy({ where: { id: invoiced.id } }),
+      ),
+    ).to.not.eq(undefined)
   }
 }

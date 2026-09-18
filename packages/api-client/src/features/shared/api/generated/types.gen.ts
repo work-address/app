@@ -892,6 +892,13 @@ export type TimeControllerDeleteData = {
     url: '/api/time';
 };
 
+export type TimeControllerDeleteErrors = {
+    /**
+     * An invoice bills one of the entries; nothing was deleted, and the message names the invoice
+     */
+    409: unknown;
+};
+
 export type TimeControllerDeleteResponses = {
     200: unknown;
 };

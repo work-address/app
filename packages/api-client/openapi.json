@@ -150,7 +150,7 @@
           "state"
         ],
         "example": {
-          "id": "b71549cc-e2e9-42cc-a8f4-af0567332dd0"
+          "id": "066cbc40-ac38-4cbd-bac5-e28822a05e2a"
         }
       },
       "ProjectStatistics": {
@@ -211,7 +211,7 @@
           "period"
         ],
         "example": {
-          "id": "a19fac8b-c420-4e13-a035-74795c122608"
+          "id": "0ef1f826-b09d-47ee-bf73-f3568bb5e7fd"
         }
       },
       "Time": {
@@ -309,7 +309,7 @@
           "toAt"
         ],
         "example": {
-          "id": "19e934f5-f1ee-410b-b403-286d1ad8f952"
+          "id": "b2189fda-782c-4e73-b200-9407385e76bb"
         }
       },
       "Project": {
@@ -399,7 +399,7 @@
           "state"
         ],
         "example": {
-          "id": "089e6998-a9c2-48ad-9524-1060a0fbfe55"
+          "id": "788656af-9e2b-478f-8442-f4d51414085a"
         }
       },
       "User": {
@@ -505,7 +505,7 @@
         },
         "type": "object",
         "example": {
-          "id": "b0bb13a5-22d4-45d4-ad08-ecff2eea6a4e"
+          "id": "1bc5177f-3bca-45dd-beb8-965b1e12175b"
         }
       },
       "AuthForgotPasswordDto": {
@@ -3126,6 +3126,9 @@
         "responses": {
           "200": {
             "description": ""
+          },
+          "409": {
+            "description": "An invoice bills one of the entries; nothing was deleted, and the message names the invoice"
           }
         },
         "summary": "Delete time entries (tracking worker only)",
@@ -3288,7 +3291,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "87f2f46d-d381-4207-985a-53acfde2307b"
+                  "projectId": "7f3c2e7d-8d00-4572-b2cc-0af7901a1855"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -3356,8 +3359,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1789690400759,
-                "toUnix": 1789776800759
+                "fromUnix": 1789690406247,
+                "toUnix": 1789776806247
               }
             }
           },
@@ -3860,7 +3863,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "cd74fd85-c1d6-451c-9fbc-89d3a3186f28"
+                "nonce": "c0de2c9b-f4f2-444e-8ead-59e5e9bf1d5e"
               },
               "schema": {
                 "properties": {
@@ -3905,7 +3908,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "2f2a7cb8-ab54-46e8-b0d7-bb9d370a8a0a"
+                "nonce": "2d26078f-61ef-4a5d-9b92-be39ec142b18"
               },
               "schema": {
                 "properties": {
@@ -3946,21 +3949,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "c03bb988-9a84-4dae-90c8-e1141da421a8",
+                      "nonce": "a9b3c217-609f-4feb-b535-57222ae36d8c",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "d4323c75-d0ae-46a9-9849-a6b11efd11d7",
+                      "nonce": "b7231ad5-03fa-4251-a41e-6b5d8f675449",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "cb0c0ddf-2dc2-4d81-9e9f-234b62ec8a25",
+                      "nonce": "66fb10ee-67fd-4b97-97fd-bb05f09cd0af",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

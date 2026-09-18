@@ -242,8 +242,15 @@ export class TimeManager {
     )
   }
 
-  /** Fails with a 409 naming the invoices if any of the entries has one. */
-  private static refuseInvoiced(times: Time[]): Effect.Effect<void, unknown> {
+  /**
+   * Fails with a 409 naming the invoices if any of the entries has one. The
+   * default message is the payment one; deletion passes its own.
+   */
+  private static refuseInvoiced(
+    times: Time[],
+    message: (invoiceIds: string) => string = (invoiceIds) =>
+      `Payment for invoiced time follows its invoice - mark invoice ${invoiceIds} paid or unpaid instead`,
+  ): Effect.Effect<void, unknown> {
     const invoiceIds = [
       ...new Set(
         times
@@ -257,9 +264,7 @@ export class TimeManager {
     }
 
     return Effect.fail(
-      new InvoicedTimeException(
-        `Payment for invoiced time follows its invoice - mark invoice ${invoiceIds.join(', ')} paid or unpaid instead`,
-      ),
+      new InvoicedTimeException(message(invoiceIds.join(', '))),
     )
   }
 
@@ -287,12 +292,37 @@ export class TimeManager {
     })
   }
 
+  /**
+   * Deletes the author's own entries - never one an invoice bills.
+   *
+   * An issued invoice is a record of money owed for specific hours; deleting
+   * one of those hours would leave the invoice charging for work the work
+   * record no longer shows (DEC-04). One invoiced entry refuses the whole
+   * request with a 409 naming the invoice, so a bulk delete never
+   * half-applies; a mistaken invoice is corrected by a new one, not by
+   * editing the evidence under the old. Screenshots and processes are
+   * monitoring evidence rather than billing, and stay removable on their own
+   * (`removeScreenshots`, `removeProcesses`).
+   *
+   * The rows are locked while they are checked and deleted, so an invoice
+   * cannot claim one in between.
+   */
   public removeMany(ids: string[], user: User): RepoEffect<void> {
-    return Effect.gen(this, function* () {
-      const times = yield* this.timeRepository.findByIdsAsAuthor(ids, user)
+    return this.unitOfWork.run((manager) =>
+      Effect.gen(this, function* () {
+        const times = yield* this.timeRepository
+          .within(manager)
+          .findByIdsAsAuthor(ids, user, { forUpdate: true })
 
-      yield* this.timeRepository.removeMany(times)
-    })
+        yield* TimeManager.refuseInvoiced(
+          times,
+          (invoiceIds) =>
+            `Invoiced time cannot be deleted - invoice ${invoiceIds} bills it. Nothing was deleted`,
+        )
+
+        yield* this.timeRepository.within(manager).removeMany(times)
+      }),
+    )
   }
 
   public async resize(screenshot?: string): Promise<string | null> {
