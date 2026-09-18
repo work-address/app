@@ -11,7 +11,7 @@ Work Address has **five core domains and no others**:
 | `User` | Identity. A wallet address, a profile, roles, the premium flag. |
 | `Project` | A body of work, its hourly rate, and who may touch it — `workerAddresses` / `viewerAddresses`, resolved to `workers: User[]` / `viewers: User[]`. |
 | `Time` | The work record. Tracked entries with activity data, and `isPaid`. |
-| `Invoice` | The money record. A period of one person's time, an amount, and whether it was paid. |
+| `Invoice` | The money record. A period of one person's time, an amount, the financial snapshot the amount was computed from, and whether it was paid. |
 | `ProjectStatistics` | Derived aggregates over `Time`, for reporting. |
 
 ## No new domains
@@ -81,6 +81,41 @@ transaction as well.
 **Money is integer cents.** `Invoice.amountCents`, never a float — a float
 cannot represent every cent exactly, so sums drift and two clients can render
 the same row differently. It becomes a decimal string only at the UI edge.
+
+**An issued invoice keeps its own breakdown (DEC-04).** The amount is not
+the only thing frozen at issuance: in the same write, the invoice records the
+snapshot it was computed from — `snapshotVersion`, the issuer's and the
+project owner's addresses in canonical form, `rateHourCents`, `currency`
+(USD), the total `minutesActive`, and the billed `lines` (each entry's
+`timeId`, `fromAt`, `toAt` and `minutesActive`). `amountCents` is that
+snapshot's own arithmetic — active minutes × rate ÷ 60, rounded once, half
+up — so the record always explains its total. None of it is ever updated:
+changing the project's rate, re-syncing an entry, or clearing its
+screenshots or processes changes nothing the invoice billed, and the invoice
+page reads its rate, minutes and lines from the snapshot. The snapshot is
+columns on `Invoice`, not a domain of its own.
+
+- Monitoring evidence stays deletable. Screenshots and processes can be
+  cleared from an invoiced entry; the invoice never depended on them.
+- An entry an invoice bills cannot be deleted. `DELETE /time` refuses the
+  whole request with a 409 naming the invoice, and the worklogs offer no
+  delete for such entries.
+- A mistake is corrected by a new invoice referencing the original, never
+  by editing an issued one or the entries under it. Nothing records that
+  reference yet; how a correction links to what it corrects is still an
+  open policy decision.
+- Invoices issued before snapshots are **legacy** (`snapshotVersion` 0, set
+  by the one-off `backfill:invoice-snapshot` script). They keep their frozen
+  amount and report no rate: the rate they were raised at was never
+  recorded, and today's project rate is not it.
+
+The snapshot serialises to **InvoiceRecord v1** (`GET /invoice/:id/record`,
+for the issuer and the owner): RFC 8785 canonical JSON, integers only,
+UTC timestamps with milliseconds, lines ordered by start then id, and no
+paid state. It is the document an escrow invoice commitment hashes, so its
+bytes are a published format — `api/src/test/fixture/invoice-record.v1.json`
+holds the vectors, and a change that moves one byte needs a new version. A
+legacy invoice has no record.
 
 **Retention never destroys an invoice's evidence.** The free-tier purge skips
 entries covered by an invoice from the same issuer, so a financial record
