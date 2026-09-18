@@ -78,7 +78,9 @@ export class InvoiceController {
     // Three shapes on one route, so there is a single place deciding who may
     // invoice a project: an explicit selection, an explicit range, or - the
     // one the UI uses by default - everything outstanding, idempotently.
-    if (data?.timeIds?.length) {
+    // InvoiceCreateDto has already refused an empty selection and a range
+    // with one bound, so neither can fall through to "everything".
+    if (Array.isArray(data?.timeIds)) {
       return runPromise(
         this.invoiceManager.createFromTimeIds(
           project,
@@ -88,7 +90,7 @@ export class InvoiceController {
       )
     }
 
-    if (data?.fromUnix === undefined || data?.toUnix === undefined) {
+    if (data?.fromUnix === undefined && data?.toUnix === undefined) {
       return runPromise(
         this.invoiceManager.ensureForProject(project, currentUser),
       )

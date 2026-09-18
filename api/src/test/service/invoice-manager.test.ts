@@ -376,4 +376,29 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
     expect(await this.linesOf(first)).to.deep.equal([entry.id])
     expect(await this.linesOf(second)).to.deep.equal([other.id])
   }
+
+  @test()
+  /**
+   * A period with one end is not "everything outstanding" and not "until
+   * now": it is refused, so a caller cannot bill more than it described.
+   */
+  async create_rangeWithOneBound_isRefused() {
+    const owner = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner, 60)
+    const entry = await this.hourOfWork(project, owner, 3)
+
+    for (const range of [
+      { fromUnix: new Date(entry.fromAt).getTime() },
+      { toUnix: new Date(entry.toAt).getTime() },
+    ]) {
+      const error = await this.failureOf(() =>
+        runPromise(this.invoiceManager.create(range, project, owner)),
+      )
+
+      expect(error.httpCode).to.equal(400)
+      expect(error.message).to.contain('both a start and an end')
+    }
+
+    expect(await this.conn.getRepository(Invoice).count()).to.equal(0)
+  }
 }

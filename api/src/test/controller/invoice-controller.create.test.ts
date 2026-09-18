@@ -356,6 +356,84 @@ export class InvoiceControllerCreateTest extends BaseControllerTest {
     return runPromise(this.timeRepository.saveSingle(time))
   }
 
+  private async rejectionOf(call: () => Promise<unknown>) {
+    try {
+      await call()
+    } catch (error: unknown) {
+      if (axios.isAxiosError(error)) {
+        return error
+      }
+
+      throw error
+    }
+
+    throw new Error('Expected the request to be refused')
+  }
+
+  /**
+   * An empty selection used to fall through to "everything outstanding" and
+   * bill all of it - the opposite of what a client selecting nothing meant.
+   */
+  @test()
+  async create_refusesAnEmptySelection() {
+    const owner = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner, 60)
+    await this.hourOfWork(project, owner)
+
+    const error = await this.rejectionOf(() =>
+      invoiceControllerCreate({
+        client: this.apiClient(),
+        path: { projectId: project.id as never },
+        headers: {
+          Authorization: this.authenticator.getTokens(owner).accessToken,
+        },
+        body: { timeIds: [] },
+        throwOnError: true,
+      }),
+    )
+
+    expect(error.response?.status).to.be.equal(400)
+    expect(error.response?.data.errors[0].property).to.be.equal('timeIds')
+    expect(await App.conn.getRepository(Invoice).count()).to.be.equal(0)
+  }
+
+  /**
+   * Half a range is not "everything outstanding" either: it used to be routed
+   * there, billing far more than the one bound described.
+   */
+  @test()
+  async create_refusesARangeWithOnlyOneBound() {
+    const owner = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner, 60)
+    const time = await this.hourOfWork(project, owner)
+
+    for (const [body, missing] of [
+      [{ fromUnix: new Date(time.fromAt).getTime() }, 'toUnix'],
+      [{ toUnix: new Date(time.toAt).getTime() }, 'fromUnix'],
+    ] as const) {
+      const error = await this.rejectionOf(() =>
+        invoiceControllerCreate({
+          client: this.apiClient(),
+          path: { projectId: project.id as never },
+          headers: {
+            Authorization: this.authenticator.getTokens(owner).accessToken,
+          },
+          body,
+          throwOnError: true,
+        }),
+      )
+
+      expect(error.response?.status).to.be.equal(400)
+      expect(
+        error.response?.data.errors.map(
+          (violation: { property: string }) => violation.property,
+        ),
+      ).to.deep.equal([missing])
+    }
+
+    expect(await App.conn.getRepository(Invoice).count()).to.be.equal(0)
+  }
+
   /**
    * A double click sends the default request twice at once. Both must come
    * back with the same invoice, and only one may exist.

@@ -129,8 +129,16 @@ export class InvoiceManager {
     return Effect.gen(this, function* () {
       const accessible = yield* this.assertCanInvoice(project, author)
 
-      // The controller routes a missing range to ensureForProject, so both
-      // bounds are present by the time this runs.
+      // The DTO refuses a lone bound over HTTP; this covers every other caller
+      // (a scheduler, say), for which "no end" must not quietly mean "now".
+      if (data.fromUnix === undefined || data.toUnix === undefined) {
+        return yield* Effect.fail(
+          new BadRequestError(
+            'An invoice period needs both a start and an end',
+          ),
+        )
+      }
+
       const fromAt = moment.utc(data.fromUnix).toDate()
       const toAt = moment.utc(data.toUnix).toDate()
 
