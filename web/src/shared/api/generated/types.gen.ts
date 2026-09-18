@@ -322,8 +322,6 @@ export type UserSearch = {
     createdAt?: string | string;
     updatedAt?: string | string;
     address?: string;
-    email?: string;
-    phone?: string;
     name?: string;
     title?: string;
     company?: string;
@@ -339,8 +337,28 @@ export type UserSearch = {
     tz?: string;
     city?: string;
     country?: string;
-    roles?: Array<'ROLE_USER'>;
-    premium?: boolean;
+};
+
+/**
+ * Subset of User serialized with class-transformer group "public".
+ */
+export type UserPublic = {
+    address?: string;
+    name?: string;
+    title?: string;
+    company?: string;
+    bio?: string;
+    rate?: string;
+    skills?: string;
+    facebook?: string;
+    linkedIn?: string;
+    twitter?: string;
+    instagram?: string;
+    youtube?: string;
+    telegram?: string;
+    tz?: string;
+    city?: string;
+    country?: string;
 };
 
 /**
@@ -614,7 +632,7 @@ export type UserControllerReadErrors = {
 export type UserControllerReadError = UserControllerReadErrors[keyof UserControllerReadErrors];
 
 export type UserControllerReadResponses = {
-    200: UserSearch;
+    200: UserPublic;
 };
 
 export type UserControllerReadResponse = UserControllerReadResponses[keyof UserControllerReadResponses];

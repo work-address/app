@@ -3,11 +3,14 @@ import axios from 'axios'
 import { faker } from '@faker-js/faker'
 import { suite, test } from '@testdeck/mocha'
 
+import { In } from 'typeorm'
 import { userControllerSearch } from '@app/api-client'
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { User } from '@/entity/user'
 import { EUserRole } from '@/model/user'
+import { UserRepository } from '@/repository/user-repository'
+import { runPromise } from '@/service/effect-bridge'
 
 @suite()
 export class UserControllerSearchTest extends BaseControllerTest {
@@ -77,11 +80,57 @@ export class UserControllerSearchTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const rows = res.data[0] as Array<{ roles: EUserRole[] }>
+    // Rows no longer carry roles (they are other people's), so the filter is
+    // checked against the stored rows instead of the response.
+    const rows = res.data[0] as Array<{ id: string; roles?: EUserRole[] }>
     expect(res.status).to.be.equal(200)
     expect(rows.length).to.be.greaterThan(0)
-    expect(rows.every((row) => row.roles.includes(EUserRole.ROLE_USER))).to.be
+    expect(rows.every((row) => row.roles === undefined)).to.be.true
+
+    const stored = await runPromise(
+      this.container.get<UserRepository>('UserRepository').findBy({
+        where: { id: In(rows.map((row) => row.id)) },
+      }),
+    )
+    expect(stored).to.have.length(rows.length)
+    expect(stored.every((row) => row.roles.includes(EUserRole.ROLE_USER))).to.be
       .true
+  }
+
+  @test()
+  async search_rowsCarryNoContactDetailsRolesOrPlan() {
+    const searcher = await this.userFixture.createUser()
+    const other = await this.userFixture.createUser()
+    const userRepository = this.container.get<UserRepository>('UserRepository')
+
+    other.phone = this.faker.phone()
+    other.whatsapp = this.faker.phone()
+    other.premium = true
+    await runPromise(userRepository.saveSingle(other))
+
+    // Another person's row, and the searcher's own: /user/search is how one
+    // account sees another, so neither carries contact details. The holder's
+    // own come from GET /auth/status.
+    for (const target of [other, searcher]) {
+      const res = await userControllerSearch({
+        client: this.apiClient(),
+        headers: this.authHeaders(searcher),
+        body: {
+          filter: { id: target.id },
+          sort: { createdAt: 'DESC' },
+          page: 0,
+        },
+        throwOnError: true,
+      })
+
+      const rows = res.data[0] as Array<Record<string, unknown>>
+      expect(rows).to.have.length(1)
+      expect(rows[0].id).to.be.eq(target.id)
+      expect(rows[0].address).to.be.eq(target.address)
+      for (const key of ['email', 'phone', 'whatsapp', 'roles', 'premium']) {
+        expect(rows[0], key).to.not.have.property(key)
+      }
+    }
   }
 
   @test()

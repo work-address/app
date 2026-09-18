@@ -231,7 +231,12 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
     expect(rows[0].state).to.be.eq(EProjectState.ACTIVE)
     expect(rows[0].user?.id).to.be.eq(user.id)
     expect(rows[0].user?.address).to.be.eq(user.address)
-    expect(rows[0].user?.roles).to.deep.eq(user.roles)
+    // The nested owner carries no roles or contact details: every member of
+    // the project reads this same row.
+    expect(user.roles).to.not.be.empty
+    expect(rows[0].user).to.not.have.property('roles')
+    expect(rows[0].user).to.not.have.property('email')
+    expect(rows[0].user).to.not.have.property('premium')
   }
 
   @test()

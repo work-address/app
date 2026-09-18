@@ -4,18 +4,95 @@ import * as web3 from 'web3'
 import { faker } from '@faker-js/faker'
 import { suite, test } from '@testdeck/mocha'
 
-import { userControllerEdit, userControllerRead } from '@app/api-client'
+import {
+  authControllerStatus,
+  userControllerEdit,
+  userControllerRead,
+} from '@app/api-client'
 import type { UserEdit } from '@app/api-client'
 
+import { User } from '@/entity/user'
 import { UserRepository } from '@/repository/user-repository'
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { runPromise } from '@/service/effect-bridge'
 
+/**
+ * Everything the anonymous profile may carry (PRODUCT.md 4.7): the address,
+ * and the name, title, company, bio, rate, skills, location and social links
+ * the profile page shows. Pinned exactly, so widening the public projection
+ * is a decision somebody has to change this list for.
+ */
+const PUBLIC_PROFILE_KEYS = [
+  'address',
+  'name',
+  'title',
+  'company',
+  'bio',
+  'rate',
+  'skills',
+  'facebook',
+  'linkedIn',
+  'twitter',
+  'instagram',
+  'youtube',
+  'telegram',
+  'tz',
+  'city',
+  'country',
+]
+
+/** Held on the account, never shown on its profile - whoever is asking. */
+const PRIVATE_KEYS = [
+  'email',
+  'phone',
+  'whatsapp',
+  'roles',
+  'premium',
+  'password',
+  'deletedAt',
+]
+
 @suite()
 export class UserControllerReadTest extends BaseControllerTest {
+  private get userRepository(): UserRepository {
+    return this.container.get<UserRepository>('UserRepository')
+  }
+
+  /** An account with every private field filled, so an absence means something. */
+  private async createUserWithPrivateDetails(): Promise<User> {
+    const user = await this.userFixture.createUser()
+
+    user.phone = this.faker.phone()
+    user.whatsapp = this.faker.phone()
+    user.premium = true
+    user.name = faker.person.fullName()
+    user.title = faker.person.jobTitle()
+
+    return runPromise(this.userRepository.saveSingle(user))
+  }
+
+  private expectPublicProjectionOnly(data: unknown): void {
+    expect(Object.keys(data as object)).to.have.members(PUBLIC_PROFILE_KEYS)
+    for (const key of PRIVATE_KEYS) {
+      expect(data, key).to.not.have.property(key)
+    }
+  }
+
+  private async readStatus(user: User) {
+    const res = await authControllerStatus({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
+      throwOnError: true,
+    })
+
+    return res.data as unknown as { premium?: boolean | null }
+  }
+
   @test()
   async read_returnsProfileForExistingAddress() {
-    const user = await this.userFixture.createUser()
+    const user = await this.createUserWithPrivateDetails()
     const client = this.apiClient()
 
     const res = await userControllerRead({
@@ -25,10 +102,8 @@ export class UserControllerReadTest extends BaseControllerTest {
     })
 
     expect(res.status).to.be.equal(200)
-    expect(res.data!.id).to.be.eq(user.id)
     expect(res.data!.address).to.be.eq(user.address)
-    expect(res.data!.email).to.be.eq(user.email)
-    expect(res.data!.phone).to.be.eq(user.phone)
+    expect(res.data!.name).to.be.eq(user.name)
     expect(res.data!.title).to.be.eq(user.title)
     expect(res.data!.company).to.be.eq(user.company)
     expect(res.data!.bio).to.be.eq(user.bio)
@@ -40,21 +115,46 @@ export class UserControllerReadTest extends BaseControllerTest {
     expect(res.data!.instagram).to.be.eq(user.instagram)
     expect(res.data!.youtube).to.be.eq(user.youtube)
     expect(res.data!.telegram).to.be.eq(user.telegram)
-    expect(res.data!.roles).to.deep.eq(user.roles)
     expect(res.data!.tz).to.be.eq(user.tz)
     expect(res.data!.city).to.be.eq(user.city)
     expect(res.data!.country).to.be.eq(user.country)
-    expect(res.data!.createdAt).to.exist
-    expect(new Date(res.data!.createdAt!).toISOString()).to.be.eq(
-      user.createdAt.toISOString(),
-    )
-    expect(res.data!.updatedAt).to.exist
-    expect(new Date(res.data!.updatedAt!).toISOString()).to.be.eq(
-      user.updatedAt.toISOString(),
-    )
-    expect(res.data).to.not.have.property('password')
-    expect(res.data).to.not.have.property('whatsapp')
-    expect(res.data).to.not.have.property('deletedAt')
+    // The anonymous read used to hand out the contact details and roles
+    // (G13). The account holds them; the profile does not show them.
+    expect(user.email).to.be.a('string').and.not.be.empty
+    expect(user.phone).to.be.a('string').and.not.be.empty
+    expect(res.data).to.not.have.property('email')
+    expect(res.data).to.not.have.property('phone')
+    expect(res.data).to.not.have.property('roles')
+    // Not on the page, so not in the projection: the row id and timestamps
+    // identify the account, not the person.
+    expect(res.data).to.not.have.property('id')
+    expect(res.data).to.not.have.property('createdAt')
+    expect(res.data).to.not.have.property('updatedAt')
+    this.expectPublicProjectionOnly(res.data)
+  }
+
+  @test()
+  async read_signedInCallerGetsTheSamePublicProjection() {
+    const owner = await this.createUserWithPrivateDetails()
+    const stranger = await this.userFixture.createUser()
+
+    // A token changes nothing: the read is the profile, not the account,
+    // whether a stranger or the holder is asking.
+    for (const caller of [stranger, owner]) {
+      const res = await userControllerRead({
+        client: this.apiClient(),
+        headers: {
+          Authorization: this.authenticator.getTokens(caller).accessToken,
+        },
+        path: { address: owner.address as never },
+        throwOnError: true,
+      })
+
+      expect(res.status).to.be.equal(200)
+      expect(res.data!.address).to.be.eq(owner.address)
+      expect(res.data!.name).to.be.eq(owner.name)
+      this.expectPublicProjectionOnly(res.data)
+    }
   }
 
   @test()
@@ -149,12 +249,11 @@ export class UserControllerReadTest extends BaseControllerTest {
   }
 
   @test()
-  async read_exposesPremiumFlag() {
+  async read_hidesPremiumFlag_holderStillReadsIt() {
     const user = await this.userFixture.createUser()
-    const userRepository = this.container.get<UserRepository>('UserRepository')
 
     user.premium = true
-    await runPromise(userRepository.saveSingle(user))
+    await runPromise(this.userRepository.saveSingle(user))
 
     const client = this.apiClient()
     const res = await userControllerRead({
@@ -163,7 +262,10 @@ export class UserControllerReadTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    expect((res.data as unknown as { premium: boolean }).premium).to.be.eq(true)
+    // Premium governs retention; it is not a credential to show visitors.
+    expect(res.data).to.not.have.property('premium')
+    // It moved to the holder's own record rather than disappearing.
+    expect((await this.readStatus(user)).premium).to.be.eq(true)
   }
 
   @test()
@@ -177,9 +279,8 @@ export class UserControllerReadTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    expect((res.data as unknown as { premium: boolean }).premium).to.be.eq(
-      false,
-    )
+    expect(res.data).to.not.have.property('premium')
+    expect((await this.readStatus(user)).premium).to.be.eq(false)
   }
 
   @test()
@@ -196,14 +297,12 @@ export class UserControllerReadTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const readRes = await userControllerRead({
-      client,
-      path: { address: user.address as never },
-      throwOnError: true,
-    })
-
-    expect((readRes.data as unknown as { premium: boolean }).premium).to.be.eq(
-      false,
+    // Read back where the flag is visible - the holder's own record - and
+    // from the row itself, so the check cannot pass on an absent key.
+    expect((await this.readStatus(user)).premium).to.be.eq(false)
+    const stored = await runPromise(
+      this.userRepository.findByAddressPublicOrFail(user.address),
     )
+    expect(stored.premium).to.be.eq(false)
   }
 }

@@ -609,6 +609,8 @@ export class AuthControllerTest extends BaseControllerTest {
   async status_user() {
     const client = this.apiClient()
     const user = await this.userFixture.createUser()
+    user.phone = this.faker.phone()
+    await runPromise(this.userRepository.saveSingle(user))
     const token = this.authenticator.generateJwtToken(user)
 
     const res = await authControllerStatus({
@@ -627,6 +629,11 @@ export class AuthControllerTest extends BaseControllerTest {
     expect(res.data!.email).to.be.equal(user.email)
     expect(res.data!.id).to.be.equal(user.id)
     expect(res.data!.roles).to.deep.equal(user.roles)
+    // The holder's own record is the one place the contact details and the
+    // plan are served; every other read of a user leaves them out.
+    expect(res.data!.phone).to.be.equal(user.phone)
+    expect(res.data!.premium).to.be.equal(false)
+    expect(res.data).to.not.have.property('whatsapp')
   }
 
   @test()

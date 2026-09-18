@@ -30,6 +30,10 @@ export class UserController {
     this.userRepository = App.container.get('UserRepository')
   }
 
+  /**
+   * Any signed-in account can page through every other one here, so rows
+   * use `search`, which carries no email, phone, roles or plan.
+   */
   @OpenAPIExtended({
     summary: 'Search users',
     searchRequestBody: {
@@ -50,11 +54,16 @@ export class UserController {
     return runPromise(this.userRepository.findAndCount(search))
   }
 
+  /**
+   * Anonymous, so it answers with the narrowest projection: what the profile
+   * page shows (PRODUCT.md 4.7) and nothing more. The caller's own contact
+   * details and plan come from GET /auth/status, never from here.
+   */
   @OpenAPIExtended({
     summary: 'Public profile by wallet address',
     response: {
       schema: User,
-      options: { serializationGroup: 'search' },
+      options: { serializationGroup: 'public' },
     },
   })
   @Get('/:address/address')

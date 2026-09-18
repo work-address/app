@@ -71,7 +71,40 @@ export class HelpControllerTest extends BaseControllerTest {
     expect(
       userReadGet?.responses?.['200']?.content?.['application/json']?.schema
         ?.$ref,
-    ).to.be.equal('#/components/schemas/User_search')
+    ).to.be.equal('#/components/schemas/User_public')
+
+    // The generated client types the public read from these schemas, so they
+    // are what keeps a consumer from reading a contact detail off a profile.
+    const schemas = (
+      res.data as {
+        components?: {
+          schemas?: Record<string, { properties?: Record<string, unknown> }>
+        }
+      }
+    ).components?.schemas
+    expect(Object.keys(schemas?.User_public?.properties ?? {})).to.have.members(
+      [
+        'address',
+        'name',
+        'title',
+        'company',
+        'bio',
+        'rate',
+        'skills',
+        'facebook',
+        'linkedIn',
+        'twitter',
+        'instagram',
+        'youtube',
+        'telegram',
+        'tz',
+        'city',
+        'country',
+      ],
+    )
+    for (const key of ['email', 'phone', 'whatsapp', 'roles', 'premium']) {
+      expect(schemas?.User_search?.properties, key).to.not.have.property(key)
+    }
 
     expect(userReadGet?.responses?.['404']).to.exist
     expect(userReadGet?.responses?.['404']?.description).to.be.equal(

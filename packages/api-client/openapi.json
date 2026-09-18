@@ -119,7 +119,7 @@
           "state"
         ],
         "example": {
-          "id": "992ad9cf-e2a6-405e-b441-b1b5dcf0b933"
+          "id": "daba5c97-06dc-4eb3-a3e3-fdce9f05b8ad"
         }
       },
       "ProjectStatistics": {
@@ -180,7 +180,7 @@
           "period"
         ],
         "example": {
-          "id": "4f825ca5-fcbf-4d63-9e18-ab0ca39bf4d2"
+          "id": "02917bb8-5b98-4012-933f-dceef26e2b80"
         }
       },
       "Time": {
@@ -274,7 +274,7 @@
           "toAt"
         ],
         "example": {
-          "id": "1c12c8ff-46bd-419f-a9e2-2ab13a9382dc"
+          "id": "560c4c0f-9b30-4c5c-959d-a0f1fd10bc93"
         }
       },
       "Project": {
@@ -364,7 +364,7 @@
           "state"
         ],
         "example": {
-          "id": "46d3fe64-e9c3-4789-8d7a-be06c6d515a8"
+          "id": "dc4e6b0e-a3e6-4cfe-be16-7ae017d0e95d"
         }
       },
       "User": {
@@ -470,7 +470,7 @@
         },
         "type": "object",
         "example": {
-          "id": "92c68a9b-46a9-496b-be3a-60bc3be673d8"
+          "id": "f2a46d21-0e4a-4b86-837b-e24da85177a5"
         }
       },
       "AuthForgotPasswordDto": {
@@ -1334,10 +1334,58 @@
           "address": {
             "type": "string"
           },
-          "email": {
+          "name": {
             "type": "string"
           },
-          "phone": {
+          "title": {
+            "type": "string"
+          },
+          "company": {
+            "type": "string"
+          },
+          "bio": {
+            "type": "string"
+          },
+          "rate": {
+            "type": "string"
+          },
+          "skills": {
+            "type": "string"
+          },
+          "facebook": {
+            "type": "string"
+          },
+          "linkedIn": {
+            "type": "string"
+          },
+          "twitter": {
+            "type": "string"
+          },
+          "instagram": {
+            "type": "string"
+          },
+          "youtube": {
+            "type": "string"
+          },
+          "telegram": {
+            "type": "string"
+          },
+          "tz": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          }
+        }
+      },
+      "User_public": {
+        "type": "object",
+        "description": "Subset of User serialized with class-transformer group \"public\".",
+        "properties": {
+          "address": {
             "type": "string"
           },
           "name": {
@@ -1384,18 +1432,6 @@
           },
           "country": {
             "type": "string"
-          },
-          "roles": {
-            "items": {
-              "enum": [
-                "ROLE_USER"
-              ],
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "premium": {
-            "type": "boolean"
           }
         }
       },
@@ -2284,7 +2320,7 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/User_search"
+                  "$ref": "#/components/schemas/User_public"
                 }
               }
             },
@@ -3261,7 +3297,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "01386194-da80-44dc-a59d-213a8c66ea80"
+                  "projectId": "f93122ec-acc9-4a84-8c6c-a0676d699346"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -3329,8 +3365,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1789646573213,
-                "toUnix": 1789732973213
+                "fromUnix": 1789646856859,
+                "toUnix": 1789733256859
               }
             }
           },
@@ -3722,7 +3758,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "2023ce77-68c0-4541-98b2-e8fd39d7a3d8"
+                "nonce": "71265418-f9d8-4257-805a-a45ceb3f6557"
               },
               "schema": {
                 "properties": {
@@ -3767,7 +3803,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "d812a7cf-ccf8-4f2e-b590-743760d3a669"
+                "nonce": "982d4bd2-1825-43e8-a69e-0c6dedeb0910"
               },
               "schema": {
                 "properties": {
@@ -3808,21 +3844,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "ac1f22e8-1988-4dd5-8d54-734241386ef0",
+                      "nonce": "44f738af-37a2-47bc-b047-e0edfdd0c99f",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "05329e43-acde-463d-80ab-8b9eb3903127",
+                      "nonce": "fbf5c68b-09e9-4077-bbe3-8f7227f0765f",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "4ed6cf44-0dea-444b-8b74-d84d2439cea4",
+                      "nonce": "e7a5e804-9e01-498c-8be9-e808ff0bc05e",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

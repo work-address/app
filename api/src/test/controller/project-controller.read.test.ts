@@ -3,10 +3,15 @@ import { expect } from 'chai'
 import axios from 'axios'
 import { suite, test } from '@testdeck/mocha'
 
-import { projectControllerEdit, projectControllerRead } from '@app/api-client'
+import {
+  projectControllerEdit,
+  projectControllerRead,
+  projectControllerSearch,
+} from '@app/api-client'
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { ProjectRepository } from '@/repository/project-repository'
+import { UserRepository } from '@/repository/user-repository'
 import { EProjectState } from '@/model/project'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
@@ -177,7 +182,73 @@ export class ProjectControllerReadTest extends BaseControllerTest {
     ).user
     expect(ownerInResponse?.id).to.be.equal(owner.id)
     expect(ownerInResponse?.address).to.be.equal(owner.address)
-    expect(ownerInResponse?.roles).to.deep.equal(owner.roles)
+    // The nested owner is serialized the same way for every member who can
+    // read the project, so it carries nothing the owner would not show them.
+    expect(owner.roles).to.not.be.empty
+    expect(ownerInResponse).to.not.have.property('roles')
+    expect(ownerInResponse).to.not.have.property('email')
+    expect(ownerInResponse).to.not.have.property('premium')
+  }
+
+  @test
+  async readAsViewer_nestedUsersCarryNoContactDetails() {
+    const userRepository = this.container.get<UserRepository>('UserRepository')
+    const [owner, worker, viewer] = await Promise.all([
+      this.userFixture.createPremiumUser(),
+      this.userFixture.createUser(),
+      this.userFixture.createUser(),
+    ])
+    for (const member of [owner, worker]) {
+      member.phone = this.faker.phone()
+      member.whatsapp = this.faker.phone()
+      await runPromise(userRepository.saveSingle(member))
+    }
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
+    await this.grantAccess(project, owner, worker, viewer)
+    const headers = {
+      Authorization: this.authenticator.getTokens(viewer).accessToken,
+    }
+
+    const read = await projectControllerRead({
+      client: this.apiClient(),
+      path: { id: project.id as never },
+      headers,
+      throwOnError: true,
+    })
+    const search = await projectControllerSearch({
+      client: this.apiClient(),
+      headers,
+      body: { filter: {}, sort: { createdAt: 'DESC' }, page: 0 },
+      throwOnError: true,
+    })
+    const rows = search.data[0] as Array<{ id?: string }>
+    const searched = rows.find((row) => row.id === project.id)
+    expect(searched, 'the viewer finds the project').to.exist
+
+    // Both ways a viewer reaches the project, and every person nested in it:
+    // other members' email and phone stay with their accounts.
+    for (const payload of [read.data, searched]) {
+      const nested = payload as {
+        user?: Record<string, unknown>
+        workers?: Array<Record<string, unknown>>
+        viewers?: Array<Record<string, unknown>>
+      }
+      const people = [
+        { person: nested.user, expected: owner },
+        { person: nested.workers?.[0], expected: worker },
+        { person: nested.viewers?.[0], expected: viewer },
+      ]
+      for (const { person, expected } of people) {
+        expect(person?.id).to.be.equal(expected.id)
+        expect(person?.address).to.be.equal(expected.address)
+        for (const key of ['email', 'phone', 'whatsapp', 'roles', 'premium']) {
+          expect(person, key).to.not.have.property(key)
+        }
+      }
+    }
   }
 
   @test
