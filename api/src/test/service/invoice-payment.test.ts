@@ -3,6 +3,8 @@ import { expect } from 'chai'
 import moment from 'moment'
 
 import { AbstractDatabaseIntegration } from '@/test/abstract-database.integration'
+import { ForcedWriteFailure } from '@/test/fixture/forced-write-failure'
+import { Invoice } from '@/entity/invoice'
 import { EInvoiceState } from '@/model/invoice'
 import { EProjectState } from '@/model/project'
 import { InvoiceManager } from '@/service/invoice-manager'
@@ -171,5 +173,71 @@ export class InvoicePaymentTest extends AbstractDatabaseIntegration {
     }
 
     expect(error?.message).to.contain('no unpaid tracked time')
+  }
+
+  /**
+   * The cascade onto the time and the invoice's own state are one write or
+   * none. They used to be separate: a failure saving the invoice left its
+   * hours marked paid under an invoice still marked unpaid.
+   */
+  @test()
+  async markPaid_aFailureSavingTheInvoice_leavesTheTimeUnpaid() {
+    const { worker, invoice, workerTime } = await this.scenario()
+
+    const error = await this.failureDuringInvoiceUpdates(() =>
+      runPromise(this.invoiceManager.markPaid(invoice, worker)),
+    )
+
+    expect(error?.message).to.contain(ForcedWriteFailure.MESSAGE)
+
+    const time = await runPromise(
+      this.timeRepository.findOneByIdOrFail(workerTime.id),
+    )
+    const stored = await this.conn
+      .getRepository(Invoice)
+      .findOneByOrFail({ id: invoice.id })
+
+    expect(time.isPaid).to.be.false
+    expect(stored.state).to.be.equal(EInvoiceState.REQUESTED)
+  }
+
+  @test()
+  async markUnpaid_aFailureSavingTheInvoice_leavesTheTimePaid() {
+    const { worker, invoice, workerTime } = await this.scenario()
+
+    await runPromise(this.invoiceManager.markPaid(invoice, worker))
+
+    const error = await this.failureDuringInvoiceUpdates(() =>
+      runPromise(this.invoiceManager.markUnpaid(invoice, worker)),
+    )
+
+    expect(error?.message).to.contain(ForcedWriteFailure.MESSAGE)
+
+    const time = await runPromise(
+      this.timeRepository.findOneByIdOrFail(workerTime.id),
+    )
+    const stored = await this.conn
+      .getRepository(Invoice)
+      .findOneByOrFail({ id: invoice.id })
+
+    expect(time.isPaid).to.be.true
+    expect(stored.state).to.be.equal(EInvoiceState.PAID)
+  }
+
+  private async failureDuringInvoiceUpdates(
+    run: () => Promise<unknown>,
+  ): Promise<Error | undefined> {
+    return new ForcedWriteFailure(this.conn).duringUpdatesOf(
+      Invoice,
+      async () => {
+        try {
+          await run()
+        } catch (e: unknown) {
+          return e as Error
+        }
+
+        return undefined
+      },
+    )
   }
 }

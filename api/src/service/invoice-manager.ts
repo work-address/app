@@ -328,41 +328,56 @@ export class InvoiceManager {
    * the record worth less than the wallet history it is meant to summarise.
    */
   public markPaid(invoice: Invoice, actor: User): RepoEffect<Invoice> {
-    return Effect.gen(this, function* () {
-      this.assertIssuer(invoice, actor)
-
-      if (invoice.state === EInvoiceState.PAID) {
-        return invoice
-      }
-
-      yield* this.setTimePaidFlag(invoice, true)
-
-      invoice.state = EInvoiceState.PAID
-      invoice.paidAt = new Date()
-
-      const saved = yield* this.invoiceRepository.saveSingle(invoice)
-
-      return saved
-    })
+    return this.setPaid(invoice, actor, true)
   }
 
   /** Reverts a mistaken mark, releasing the entries back to unpaid. */
   public markUnpaid(invoice: Invoice, actor: User): RepoEffect<Invoice> {
+    return this.setPaid(invoice, actor, false)
+  }
+
+  /**
+   * The invoice's state and its entries' `isPaid` change together or not at
+   * all.
+   *
+   * One transaction, with the invoice row locked first: the state is read
+   * from the locked row rather than from the copy the request loaded, so a
+   * concurrent mark waits and then sees this one's result, and a failure
+   * saving the invoice takes the cascade back with it.
+   */
+  private setPaid(
+    invoice: Invoice,
+    actor: User,
+    isPaid: boolean,
+  ): RepoEffect<Invoice> {
     return Effect.gen(this, function* () {
       this.assertIssuer(invoice, actor)
 
-      if (invoice.state !== EInvoiceState.PAID) {
-        return invoice
-      }
+      return yield* this.unitOfWork.run((manager) =>
+        Effect.gen(this, function* () {
+          const current = yield* this.invoiceRepository
+            .within(manager)
+            .findOneForUpdate(invoice)
 
-      yield* this.setTimePaidFlag(invoice, false)
+          invoice.state = current.state
+          invoice.paidAt = current.paidAt
 
-      invoice.state = EInvoiceState.REQUESTED
-      invoice.paidAt = null
+          if ((invoice.state === EInvoiceState.PAID) === isPaid) {
+            return invoice
+          }
 
-      const saved = yield* this.invoiceRepository.saveSingle(invoice)
+          yield* this.timeRepository
+            .within(manager)
+            .setPaidForInvoice(invoice, isPaid)
 
-      return saved
+          invoice.state = isPaid ? EInvoiceState.PAID : EInvoiceState.REQUESTED
+          invoice.paidAt = isPaid ? new Date() : null
+
+          return yield* this.invoiceRepository
+            .within(manager)
+            .saveSingle(invoice)
+        }),
+      )
     })
   }
 
@@ -372,29 +387,6 @@ export class InvoiceManager {
         'Only whoever issued an invoice can change whether it is paid',
       )
     }
-  }
-
-  /**
-   * Cascades the invoice's state onto the entries it bills.
-   *
-   * Follows the `invoice` link rather than the period: the invoice's dates are
-   * only the span of what it covers, and a sparse selection leaves entries in
-   * between that it must not touch.
-   */
-  private setTimePaidFlag(invoice: Invoice, isPaid: boolean): RepoEffect<void> {
-    return Effect.gen(this, function* () {
-      const times = yield* this.timeRepository.findForInvoice(invoice)
-
-      if (times.length === 0) {
-        return
-      }
-
-      for (const time of times) {
-        time.isPaid = isPaid
-      }
-
-      yield* this.timeRepository.saveMany(times)
-    })
   }
 
   /**

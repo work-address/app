@@ -560,6 +560,39 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     })
   }
 
+  /**
+   * Cascades an invoice's paid state onto every entry it bills.
+   *
+   * Follows the `invoice` link rather than the period: the invoice's dates are
+   * only the span of what it covers, and a sparse selection leaves entries in
+   * between that it must not touch. The rows are locked in the same order
+   * every other locking read here uses before they are written, so this
+   * cannot deadlock against a concurrent paid/unpaid request on them.
+   */
+  public setPaidForInvoice(
+    invoice: Invoice,
+    isPaid: boolean,
+  ): RepoEffect<void> {
+    return fromPromise(async () => {
+      await this.lockIf(
+        this.getRepo()
+          .createQueryBuilder('time')
+          .select('time.id')
+          .andWhere('time.invoiceId = :invoiceId', { invoiceId: invoice.id })
+          .orderBy('time.fromAt', 'ASC')
+          .addOrderBy('time.id', 'ASC'),
+        { forUpdate: true },
+      ).getMany()
+
+      await this.getRepo()
+        .createQueryBuilder()
+        .update(Time)
+        .set({ isPaid })
+        .where('"invoiceId" = :invoiceId', { invoiceId: invoice.id })
+        .execute()
+    })
+  }
+
   /** Everything an invoice bills, by link rather than by period. */
   public findForInvoice(invoice: Invoice): RepoEffect<Time[]> {
     return fromPromise(() =>

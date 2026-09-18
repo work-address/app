@@ -95,6 +95,26 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
     )
   }
 
+  /**
+   * The invoice as it stands now, with its row locked until the caller's
+   * transaction ends.
+   *
+   * Marking paid and unpaid read the state they are about to change through
+   * here rather than trusting the copy loaded with the request, so two
+   * concurrent marks on one invoice run one after the other and the second
+   * sees what the first did. No joins: `FOR UPDATE` would lock the project
+   * and issuer rows too.
+   */
+  public findOneForUpdate(invoice: Invoice): RepoEffect<Invoice> {
+    return fromPromise(() =>
+      this.getRepo()
+        .createQueryBuilder('invoice')
+        .andWhere('invoice.id = :invoiceId', { invoiceId: invoice.id })
+        .setLock('pessimistic_write')
+        .getOneOrFail(),
+    )
+  }
+
   public findAndCount(
     search: InvoiceSearchDto,
     user: User,
