@@ -46,3 +46,13 @@ export interface ITimeTotals {
  */
 /** Batch create/update row outcome; aligned with {@link TimeInsertionResultDto} for OpenAPI. */
 export type ITimeInsertionResult = TimeInsertionResultDto
+
+/** For a read of entries the caller is about to write. */
+export interface ITimeReadOptions {
+  /**
+   * Lock the returned rows (`FOR UPDATE`) until the caller's transaction
+   * ends, so no concurrent request can invoice or re-flag them in between.
+   * Only valid on a repository bound to a `UnitOfWork` transaction.
+   */
+  forUpdate?: boolean
+}

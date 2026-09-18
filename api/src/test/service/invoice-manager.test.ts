@@ -348,4 +348,32 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
       .findOneByOrFail({ id: first.id })
     expect(reloadedFirst.amountCents).to.equal(6000)
   }
+
+  @test()
+  /**
+   * The link is enforced on the write, not only on the read before it: an
+   * entry already on an invoice is never moved to another, whatever the
+   * caller read.
+   */
+  async claimForInvoice_neverMovesAnEntryOffItsInvoice() {
+    const owner = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner, 60)
+    const entry = await this.hourOfWork(project, owner, 5)
+    const other = await this.hourOfWork(project, owner, 3)
+
+    const first = await runPromise(
+      this.invoiceManager.createFromTimeIds(project, owner, [entry.id]),
+    )
+    const second = await runPromise(
+      this.invoiceManager.createFromTimeIds(project, owner, [other.id]),
+    )
+
+    const claimed = await runPromise(
+      this.timeRepository.claimForInvoice(second, [entry]),
+    )
+
+    expect(claimed).to.equal(0)
+    expect(await this.linesOf(first)).to.deep.equal([entry.id])
+    expect(await this.linesOf(second)).to.deep.equal([other.id])
+  }
 }

@@ -20,7 +20,7 @@ import {
   SelectQueryBuilder,
 } from 'typeorm'
 
-import { ITimeTotals } from '@/model/time'
+import { ITimeReadOptions, ITimeTotals } from '@/model/time'
 import { Calc } from '@/service/calc'
 import AccessException from '@/exception/access-exception'
 import { TimeSearchDto } from '@/model/dto/time'
@@ -450,21 +450,13 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     to: Date,
     project: Project,
     author: User,
+    options: ITimeReadOptions = {},
   ): RepoEffect<Time[]> {
-    return fromPromise(() =>
-      this.getRepo()
-        .createQueryBuilder('time')
-        .innerJoinAndSelect('time.project', 'project')
-        .innerJoin('time.user', 'author')
-        .andWhere('time.fromAt >= :from', { from })
-        .andWhere('time.toAt <= :to', { to })
-        .andWhere('author.id = :authorId', { authorId: author.id })
-        .andWhere('project.id = :projectId', { projectId: project.id })
-        .andWhere('project.deletedAt IS NULL')
-        .andWhere('COALESCE(time.isPaid, false) = false')
-        .andWhere('time.invoiceId IS NULL')
-        .getMany(),
-    )
+    const qb = this.invoiceableQuery(project, author)
+      .andWhere('time.fromAt >= :from', { from })
+      .andWhere('time.toAt <= :to', { to })
+
+    return fromPromise(() => this.lockIf(qb, options).getMany())
   }
 
   /**
@@ -505,19 +497,10 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
   public findUninvoicedUnpaidTimeForAuthor(
     project: Project,
     author: User,
+    options: ITimeReadOptions = {},
   ): RepoEffect<Time[]> {
     return fromPromise(() =>
-      this.getRepo()
-        .createQueryBuilder('time')
-        .innerJoinAndSelect('time.project', 'project')
-        .innerJoin('time.user', 'author')
-        .andWhere('author.id = :authorId', { authorId: author.id })
-        .andWhere('project.id = :projectId', { projectId: project.id })
-        .andWhere('project.deletedAt IS NULL')
-        .andWhere('COALESCE(time.isPaid, false) = false')
-        .andWhere('time.invoiceId IS NULL')
-        .orderBy('time.fromAt', 'ASC')
-        .getMany(),
+      this.lockIf(this.invoiceableQuery(project, author), options).getMany(),
     )
   }
 
@@ -532,25 +515,49 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     ids: string[],
     project: Project,
     author: User,
+    options: ITimeReadOptions = {},
   ): RepoEffect<Time[]> {
     if (ids.length === 0) {
       return Effect.succeed([])
     }
 
-    return fromPromise(() =>
-      this.getRepo()
-        .createQueryBuilder('time')
-        .innerJoinAndSelect('time.project', 'project')
-        .innerJoin('time.user', 'author')
-        .andWhere('time.id IN (:...ids)', { ids })
-        .andWhere('author.id = :authorId', { authorId: author.id })
-        .andWhere('project.id = :projectId', { projectId: project.id })
-        .andWhere('project.deletedAt IS NULL')
-        .andWhere('COALESCE(time.isPaid, false) = false')
-        .andWhere('time.invoiceId IS NULL')
-        .orderBy('time.fromAt', 'ASC')
-        .getMany(),
+    const qb = this.invoiceableQuery(project, author).andWhere(
+      'time.id IN (:...ids)',
+      { ids },
     )
+
+    return fromPromise(() => this.lockIf(qb, options).getMany())
+  }
+
+  /**
+   * Links entries to the invoice that bills them - and only entries no
+   * invoice has claimed yet.
+   *
+   * The `invoiceId IS NULL` condition sits on the write itself, not only on
+   * the read before it, so an entry already on an invoice can never be moved
+   * to another one, whatever the caller read. Returns how many entries were
+   * linked; the caller treats anything short of all of them as a conflict
+   * and rolls the invoice back.
+   */
+  public claimForInvoice(invoice: Invoice, times: Time[]): RepoEffect<number> {
+    const ids = times.map((time) => time.id)
+
+    if (ids.length === 0) {
+      return Effect.succeed(0)
+    }
+
+    return fromPromise(async () => {
+      const result = await this.getRepo()
+        .createQueryBuilder()
+        .update(Time)
+        .set({ invoice: { id: invoice.id } })
+        .where('id IN (:...ids)', { ids })
+        .andWhere('"invoiceId" IS NULL')
+        .andWhere('COALESCE("isPaid", false) = false')
+        .execute()
+
+      return result.affected ?? 0
+    })
   }
 
   /** Everything an invoice bills, by link rather than by period. */
@@ -613,6 +620,50 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         .andWhere('COALESCE(time.isPaid, false) = false')
         .getMany(),
     )
+  }
+
+  /**
+   * What an author may still invoice on a project: their own entries, on a
+   * live project, neither paid nor already on an invoice.
+   *
+   * Ordered by (fromAt, id) because the invoicing reads lock these rows: two
+   * transactions taking overlapping locks in the same order wait for each
+   * other instead of deadlocking.
+   */
+  private invoiceableQuery(
+    project: Project,
+    author: User,
+  ): SelectQueryBuilder<Time> {
+    return this.getRepo()
+      .createQueryBuilder('time')
+      .innerJoinAndSelect('time.project', 'project')
+      .innerJoin('time.user', 'author')
+      .andWhere('author.id = :authorId', { authorId: author.id })
+      .andWhere('project.id = :projectId', { projectId: project.id })
+      .andWhere('project.deletedAt IS NULL')
+      .andWhere('COALESCE(time.isPaid, false) = false')
+      .andWhere('time.invoiceId IS NULL')
+      .orderBy('time.fromAt', 'ASC')
+      .addOrderBy('time.id', 'ASC')
+  }
+
+  /**
+   * `FOR UPDATE OF time` when the caller is about to write the rows it reads.
+   *
+   * Only the time rows: the joined project and author are read, not written,
+   * and locking them would serialise unrelated work on the same project. A
+   * waiting reader re-checks each row once the lock is released, so rows a
+   * concurrent invoice claimed in the meantime drop out of its result.
+   */
+  private lockIf<Q extends SelectQueryBuilder<Time>>(
+    qb: Q,
+    options: ITimeReadOptions,
+  ): Q {
+    if (options.forUpdate) {
+      qb.setLock('pessimistic_write', undefined, ['"time"'])
+    }
+
+    return qb
   }
 
   private applyViewAccessFilter(

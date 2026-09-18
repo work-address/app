@@ -6,7 +6,12 @@ import { suite, test } from '@testdeck/mocha'
 
 import { invoiceControllerCreate } from '@app/api-client'
 
+import { App } from '@/app/app'
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
+import { ConcurrentCalls } from '@/test/fixture/concurrent-calls'
+import { Invoice } from '@/entity/invoice'
+import { Project } from '@/entity/project'
+import { User } from '@/entity/user'
 import { EProjectState } from '@/model/project'
 import { ProjectRepository } from '@/repository/project-repository'
 import { TimeRepository } from '@/repository/time-repository'
@@ -336,5 +341,52 @@ export class InvoiceControllerCreateTest extends BaseControllerTest {
     const second = await call()
 
     expect(second.data.id).to.be.equal(first.data.id)
+  }
+
+  private async hourOfWork(project: Project, owner: User) {
+    const fromAt = moment.utc().subtract(3, 'hours')
+    const time = await this.timeFixture.create(
+      project,
+      fromAt.toDate(),
+      fromAt.clone().add(1, 'hour').toDate(),
+      owner,
+    )
+    time.minutesActive = 60
+
+    return runPromise(this.timeRepository.saveSingle(time))
+  }
+
+  /**
+   * A double click sends the default request twice at once. Both must come
+   * back with the same invoice, and only one may exist.
+   */
+  @test()
+  async create_withoutARange_inParallel_raisesOneInvoice() {
+    const owner = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner, 60)
+    await this.hourOfWork(project, owner)
+
+    const settled = await new ConcurrentCalls(App.conn).settle(
+      [1, 2, 3].map(
+        () => () =>
+          invoiceControllerCreate({
+            client: this.apiClient(),
+            path: { projectId: project.id as never },
+            headers: {
+              Authorization: this.authenticator.getTokens(owner).accessToken,
+            },
+            body: {},
+            throwOnError: true,
+          }),
+      ),
+    )
+    const responses = settled.map((result) => {
+      if (result.status === 'rejected') throw result.reason
+      return result.value
+    })
+
+    expect(new Set(responses.map((res) => res.data.id)).size).to.be.equal(1)
+    expect(await App.conn.getRepository(Invoice).count()).to.be.equal(1)
+    expect(responses[0].data.amountCents).to.be.equal(6000)
   }
 }

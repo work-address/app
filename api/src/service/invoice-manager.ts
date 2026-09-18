@@ -2,6 +2,7 @@ import { Effect } from 'effect'
 import { inject, injectable } from 'inversify'
 import { BadRequestError } from 'routing-controllers'
 import moment from 'moment'
+import { EntityManager } from 'typeorm'
 
 import { Invoice } from '@/entity/invoice'
 import { InvoiceRepository } from '@/repository/invoice-repository'
@@ -14,7 +15,9 @@ import { User } from '@/entity/user'
 import { EInvoiceState, IInvoiceReport } from '@/model/invoice'
 import { InvoiceCreateDto } from '@/model/dto/invoice'
 import { Calc } from '@/service/calc'
+import { UnitOfWork } from '@/service/unit-of-work'
 import AccessException from '@/exception/access-exception'
+import InvoicedTimeException from '@/exception/invoiced-time-exception'
 
 /**
  * Invoices are the money record; `Time` is the work record. Nothing else
@@ -34,6 +37,8 @@ export class InvoiceManager {
   protected projectRepository: ProjectRepository
   @inject('TimeRepository')
   protected timeRepository: TimeRepository
+  @inject('UnitOfWork')
+  protected unitOfWork: UnitOfWork
 
   /**
    * Everything the invoice page needs, in one read: the invoice, the entries
@@ -135,39 +140,28 @@ export class InvoiceManager {
         )
       }
 
-      const times = yield* this.timeRepository.findUnpaidTimeForAuthorBetween(
-        fromAt,
-        toAt,
-        accessible,
-        author,
+      return yield* this.unitOfWork.run((manager) =>
+        Effect.gen(this, function* () {
+          const times = yield* this.timeRepository
+            .within(manager)
+            .findUnpaidTimeForAuthorBetween(fromAt, toAt, accessible, author, {
+              forUpdate: true,
+            })
+
+          if (times.length === 0) {
+            return yield* Effect.fail(
+              new BadRequestError(
+                'There is no unpaid tracked time in that period that is not already on an invoice',
+              ),
+            )
+          }
+
+          return yield* this.issue(manager, accessible, author, times, {
+            fromAt,
+            toAt,
+          })
+        }),
       )
-
-      if (times.length === 0) {
-        return yield* Effect.fail(
-          new BadRequestError(
-            'There is no unpaid tracked time in that period that is not already on an invoice',
-          ),
-        )
-      }
-
-      const invoice = new Invoice()
-
-      invoice.project = accessible
-      invoice.user = author
-      invoice.fromAt = fromAt
-      invoice.toAt = toAt
-      invoice.amountCents = InvoiceManager.amountFor(
-        times,
-        Number(accessible.rateHour) || 0,
-      )
-      invoice.state = EInvoiceState.REQUESTED
-      invoice.paidAt = null
-
-      const saved = yield* this.invoiceRepository.validateAndSave(invoice)
-
-      yield* this.attachTime(saved, times)
-
-      return saved
     })
   }
 
@@ -195,54 +189,96 @@ export class InvoiceManager {
         )
       }
 
-      const times = yield* this.timeRepository.findInvoiceableByIds(
-        unique,
-        accessible,
-        author,
+      return yield* this.unitOfWork.run((manager) =>
+        Effect.gen(this, function* () {
+          const times = yield* this.timeRepository
+            .within(manager)
+            .findInvoiceableByIds(unique, accessible, author, {
+              forUpdate: true,
+            })
+
+          if (times.length !== unique.length) {
+            return yield* Effect.fail(
+              new BadRequestError(
+                'Some of the selected entries are not yours, already paid, or already on an invoice',
+              ),
+            )
+          }
+
+          // The period spans the selection. It is descriptive only - what the
+          // invoice bills is the linked entries, so a sparse selection does
+          // not claim the days between them.
+          return yield* this.issue(
+            manager,
+            accessible,
+            author,
+            times,
+            InvoiceManager.spanOf(times),
+          )
+        }),
       )
+    })
+  }
 
-      if (times.length !== unique.length) {
-        return yield* Effect.fail(
-          new BadRequestError(
-            'Some of the selected entries are not yours, already paid, or already on an invoice',
-          ),
-        )
-      }
-
+  /**
+   * Saves the invoice and links the entries it bills, inside the caller's
+   * transaction.
+   *
+   * Every caller has already read `times` with a row lock, so no concurrent
+   * issuance can have claimed them since; the claim re-checks that on the
+   * write anyway, and a short count rolls the whole invoice back rather than
+   * leaving one whose amount covers lines it does not have.
+   */
+  private issue(
+    manager: EntityManager,
+    project: Project,
+    author: User,
+    times: Time[],
+    period: { fromAt: Date; toAt: Date },
+  ): RepoEffect<Invoice> {
+    return Effect.gen(this, function* () {
       const invoice = new Invoice()
 
-      invoice.project = accessible
+      invoice.project = project
       invoice.user = author
-      // The period spans the selection. It is descriptive only - what the
-      // invoice bills is the linked entries, so a sparse selection does not
-      // claim the days between them.
-      invoice.fromAt = new Date(
-        Math.min(...times.map((time) => new Date(time.fromAt).getTime())),
-      )
-      invoice.toAt = new Date(
-        Math.max(...times.map((time) => new Date(time.toAt).getTime())),
-      )
+      invoice.fromAt = period.fromAt
+      invoice.toAt = period.toAt
       invoice.amountCents = InvoiceManager.amountFor(
         times,
-        Number(accessible.rateHour) || 0,
+        Number(project.rateHour) || 0,
       )
       invoice.state = EInvoiceState.REQUESTED
       invoice.paidAt = null
 
-      const saved = yield* this.invoiceRepository.validateAndSave(invoice)
+      const saved = yield* this.invoiceRepository
+        .within(manager)
+        .validateAndSave(invoice)
 
-      yield* this.attachTime(saved, times)
+      const claimed = yield* this.timeRepository
+        .within(manager)
+        .claimForInvoice(saved, times)
+
+      if (claimed !== times.length) {
+        return yield* Effect.fail(
+          new InvoicedTimeException(
+            'Another invoice claimed some of these entries first; nothing was billed',
+          ),
+        )
+      }
 
       return saved
     })
   }
 
-  private attachTime(invoice: Invoice, times: Time[]): RepoEffect<void> {
-    for (const time of times) {
-      time.invoice = invoice
-    }
+  /** The span a set of entries covers, from the first start to the last end. */
+  private static spanOf(times: Time[]): { fromAt: Date; toAt: Date } {
+    const starts = times.map((time) => new Date(time.fromAt).getTime())
+    const ends = times.map((time) => new Date(time.toAt).getTime())
 
-    return this.timeRepository.saveMany(times).pipe(Effect.asVoid)
+    return {
+      fromAt: new Date(Math.min(...starts)),
+      toAt: new Date(Math.max(...ends)),
+    }
   }
 
   /**
@@ -381,40 +417,32 @@ export class InvoiceManager {
     return Effect.gen(this, function* () {
       const accessible = yield* this.assertCanInvoice(project, author)
 
-      const outstanding =
-        yield* this.timeRepository.findUninvoicedUnpaidTimeForAuthor(
-          accessible,
-          author,
-        )
+      // One transaction, with the outstanding rows locked: a double click
+      // sends two of these at once, and the second waits for the first, then
+      // finds nothing outstanding and returns the invoice the first raised.
+      return yield* this.unitOfWork.run((manager) =>
+        Effect.gen(this, function* () {
+          const outstanding = yield* this.timeRepository
+            .within(manager)
+            .findUninvoicedUnpaidTimeForAuthor(accessible, author, {
+              forUpdate: true,
+            })
 
-      if (outstanding.length === 0) {
-        return yield* this.invoiceRepository.findLatestForAuthor(
-          accessible,
-          author,
-        )
-      }
+          if (outstanding.length === 0) {
+            return yield* this.invoiceRepository
+              .within(manager)
+              .findLatestForAuthor(accessible, author)
+          }
 
-      const starts = outstanding.map((time) => new Date(time.fromAt).getTime())
-      const ends = outstanding.map((time) => new Date(time.toAt).getTime())
-
-      const invoice = new Invoice()
-
-      invoice.project = accessible
-      invoice.user = author
-      invoice.fromAt = new Date(Math.min(...starts))
-      invoice.toAt = new Date(Math.max(...ends))
-      invoice.amountCents = InvoiceManager.amountFor(
-        outstanding,
-        Number(accessible.rateHour) || 0,
+          return yield* this.issue(
+            manager,
+            accessible,
+            author,
+            outstanding,
+            InvoiceManager.spanOf(outstanding),
+          )
+        }),
       )
-      invoice.state = EInvoiceState.REQUESTED
-      invoice.paidAt = null
-
-      const saved = yield* this.invoiceRepository.validateAndSave(invoice)
-
-      yield* this.attachTime(saved, outstanding)
-
-      return saved
     })
   }
 }
