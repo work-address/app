@@ -17,6 +17,14 @@ import { ProjectSearchDto } from '@/model/dto/project'
 import { UserRepository } from '@/repository/user-repository'
 import { Entitlement } from '@/service/entitlement'
 
+/**
+ * Collaborator access needs a premium owner, except on projects opened by a
+ * marketplace hire: the client already agreed to work with that person.
+ * Mirrors Project.hasCollaborator.
+ */
+const MARKETPLACE_OR_PREMIUM = (ownerAlias: string) =>
+  `(${ownerAlias}.premium = true OR project.marketplaceContractId IS NOT NULL)`
+
 @injectable()
 export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
   @inject('Filter')
@@ -280,7 +288,7 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
               // column data - see Entitlement.shouldFilterByPremium.
               if (this.entitlement.shouldFilterByPremium()) {
                 collaboratorQb
-                  .where(`${ownerAlias}.premium = true`)
+                  .where(MARKETPLACE_OR_PREMIUM(ownerAlias))
                   .andWhere(addresses)
               } else {
                 collaboratorQb.where(addresses)
@@ -308,7 +316,7 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
 
               if (this.entitlement.shouldFilterByPremium()) {
                 collaboratorQb
-                  .where(`${ownerAlias}.premium = true`)
+                  .where(MARKETPLACE_OR_PREMIUM(ownerAlias))
                   .andWhere(isWorkerAddress, { userAddress })
               } else {
                 collaboratorQb.where(isWorkerAddress, { userAddress })

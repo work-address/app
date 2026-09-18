@@ -1,4 +1,4 @@
-import { Column, Entity, ManyToOne, OneToMany } from 'typeorm'
+import { Column, Entity, Index, ManyToOne, OneToMany } from 'typeorm'
 import { faker } from '@faker-js/faker'
 import { Exclude, Expose, Type } from 'class-transformer'
 import { JSONSchema } from 'class-validator-jsonschema'
@@ -105,6 +105,19 @@ export class Project extends AbstractBaseEntity implements IProject {
   @ManyToOne(() => User, { eager: true, nullable: true })
   user: User
 
+  /**
+   * The marketplace contract this project was created for, when a client hired
+   * someone on address.work. Unique, so a retried hire finds the project it
+   * already made instead of creating a second one; null for every project
+   * created here directly.
+   */
+  @Expose({ groups: ['search'] })
+  @Index({ unique: true })
+  @Column('text', { nullable: true })
+  @IsString()
+  @IsOptional()
+  marketplaceContractId?: string | null
+
   @Expose({ groups: ['search'] })
   @Type(() => Invoice)
   @OneToMany(() => Invoice, (invoice) => invoice.project)
@@ -151,7 +164,11 @@ export class Project extends AbstractBaseEntity implements IProject {
     // Defaults to the owner's stored flag so existing callers are unchanged.
     // A self-hosted instance has no billing service to set it, so Entitlement
     // passes `true` explicitly - see Entitlement.isPremium.
-    const entitled = ownerIsPremium ?? Boolean(this.user?.premium)
+    const entitled =
+      (ownerIsPremium ?? Boolean(this.user?.premium)) ||
+      // A marketplace hire is the collaboration the client agreed to on
+      // address.work; it does not wait for the client to buy Premium.
+      Boolean(this.marketplaceContractId)
 
     if (!entitled) {
       return false
