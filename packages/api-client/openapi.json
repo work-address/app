@@ -65,6 +65,37 @@
             "type": "string",
             "minLength": 1
           },
+          "snapshotVersion": {
+            "enum": [
+              "LEGACY",
+              "V1",
+              0,
+              1
+            ],
+            "type": "string"
+          },
+          "issuerAddress": {
+            "type": "string"
+          },
+          "ownerAddress": {
+            "type": "string"
+          },
+          "currency": {
+            "enum": [
+              "USD"
+            ],
+            "type": "string"
+          },
+          "rateHourCents": {
+            "type": "integer"
+          },
+          "minutesActive": {
+            "type": "integer"
+          },
+          "lines": {
+            "items": {},
+            "type": "array"
+          },
           "state": {
             "minLength": 1,
             "type": "string"
@@ -119,7 +150,7 @@
           "state"
         ],
         "example": {
-          "id": "daba5c97-06dc-4eb3-a3e3-fdce9f05b8ad"
+          "id": "7a1ace44-7d7f-48c2-bf53-b13d6f7d7e9e"
         }
       },
       "ProjectStatistics": {
@@ -180,13 +211,17 @@
           "period"
         ],
         "example": {
-          "id": "02917bb8-5b98-4012-933f-dceef26e2b80"
+          "id": "ef062978-2e4a-4336-b981-99920feb44ac"
         }
       },
       "Time": {
         "properties": {
           "isPaid": {
             "type": "boolean"
+          },
+          "invoiceId": {
+            "format": "uuid",
+            "type": "string"
           },
           "note": {
             "type": "string"
@@ -274,7 +309,7 @@
           "toAt"
         ],
         "example": {
-          "id": "560c4c0f-9b30-4c5c-959d-a0f1fd10bc93"
+          "id": "0c322ab1-28fa-4383-b59a-5e6ddfcf9f71"
         }
       },
       "Project": {
@@ -364,7 +399,7 @@
           "state"
         ],
         "example": {
-          "id": "dc4e6b0e-a3e6-4cfe-be16-7ae017d0e95d"
+          "id": "9e538595-8d3c-43bc-b615-11f722214799"
         }
       },
       "User": {
@@ -470,7 +505,7 @@
         },
         "type": "object",
         "example": {
-          "id": "f2a46d21-0e4a-4b86-837b-e24da85177a5"
+          "id": "33545a68-c74a-4095-887f-ed5440e415bf"
         }
       },
       "AuthForgotPasswordDto": {
@@ -1217,7 +1252,8 @@
               "format": "uuid",
               "type": "string"
             },
-            "type": "array"
+            "type": "array",
+            "minItems": 1
           }
         },
         "type": "object"
@@ -1708,6 +1744,10 @@
           "isPaid": {
             "type": "boolean"
           },
+          "invoiceId": {
+            "format": "uuid",
+            "type": "string"
+          },
           "note": {
             "type": "string"
           },
@@ -1834,6 +1874,33 @@
           "amountCents": {
             "type": "string",
             "minLength": 1
+          },
+          "snapshotVersion": {
+            "enum": [
+              "LEGACY",
+              "V1",
+              0,
+              1
+            ],
+            "type": "string"
+          },
+          "issuerAddress": {
+            "type": "string"
+          },
+          "ownerAddress": {
+            "type": "string"
+          },
+          "currency": {
+            "enum": [
+              "USD"
+            ],
+            "type": "string"
+          },
+          "rateHourCents": {
+            "type": "integer"
+          },
+          "minutesActive": {
+            "type": "integer"
           },
           "state": {
             "minLength": 1,
@@ -3221,7 +3288,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "f93122ec-acc9-4a84-8c6c-a0676d699346"
+                  "projectId": "6500dc8f-1bc9-4c88-8030-29a6fcfdfb9b"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -3289,8 +3356,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1789646856859,
-                "toUnix": 1789733256859
+                "fromUnix": 1789678792304,
+                "toUnix": 1789765192304
               }
             }
           },
@@ -3371,14 +3438,43 @@
                             "$ref": "#/components/schemas/Time_search"
                           }
                         },
+                        "lines": {
+                          "type": "array",
+                          "nullable": true,
+                          "items": {
+                            "type": "object",
+                            "required": [
+                              "timeId",
+                              "fromAt",
+                              "toAt",
+                              "minutesActive"
+                            ],
+                            "properties": {
+                              "timeId": {
+                                "type": "string"
+                              },
+                              "fromAt": {
+                                "type": "string"
+                              },
+                              "toAt": {
+                                "type": "string"
+                              },
+                              "minutesActive": {
+                                "type": "integer"
+                              }
+                            }
+                          }
+                        },
                         "report": {
                           "type": "object",
                           "properties": {
                             "rateHour": {
-                              "type": "number"
+                              "type": "number",
+                              "nullable": true
                             },
                             "rateTotal": {
-                              "type": "number"
+                              "type": "number",
+                              "nullable": true
                             },
                             "minutes": {
                               "type": "number"
@@ -3626,7 +3722,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "71265418-f9d8-4257-805a-a45ceb3f6557"
+                "nonce": "d5dcee42-90cf-4be0-954a-b85c151370f7"
               },
               "schema": {
                 "properties": {
@@ -3671,7 +3767,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "982d4bd2-1825-43e8-a69e-0c6dedeb0910"
+                "nonce": "2bfb284d-0ac0-4dd4-82ef-ac2c5d155474"
               },
               "schema": {
                 "properties": {
@@ -3712,21 +3808,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "44f738af-37a2-47bc-b047-e0edfdd0c99f",
+                      "nonce": "71e281fe-a933-4831-b7de-25abcbc2aeec",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "fbf5c68b-09e9-4077-bbe3-8f7227f0765f",
+                      "nonce": "6887432e-b56d-4790-9790-38956bfd5ee4",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "e7a5e804-9e01-498c-8be9-e808ff0bc05e",
+                      "nonce": "6cd78ef5-727d-48ea-b94d-b65bc30f8c5a",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

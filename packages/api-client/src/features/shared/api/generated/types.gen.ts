@@ -14,6 +14,13 @@ export type Invoice = {
     fromAt: string | string;
     toAt: string | string;
     amountCents: string;
+    snapshotVersion?: 'LEGACY' | 'V1' | 0 | 1;
+    issuerAddress?: string;
+    ownerAddress?: string;
+    currency?: 'USD';
+    rateHourCents?: number;
+    minutesActive?: number;
+    lines?: Array<unknown>;
     state: string;
     paidAt?: string | string;
     id?: string;
@@ -32,6 +39,7 @@ export type ProjectStatistics = {
 
 export type Time = {
     isPaid?: boolean;
+    invoiceId?: string;
     note?: string;
     screenshot?: string;
     processes?: Array<unknown>;
@@ -439,6 +447,7 @@ export type TimeSearch = {
     project?: ProjectSearch;
     user?: UserSearch;
     isPaid?: boolean;
+    invoiceId?: string;
     note?: string;
     screenshot?: string;
     processes?: Array<unknown>;
@@ -470,6 +479,12 @@ export type InvoiceSearch = {
     fromAt?: string | string;
     toAt?: string | string;
     amountCents?: string;
+    snapshotVersion?: 'LEGACY' | 'V1' | 0 | 1;
+    issuerAddress?: string;
+    ownerAddress?: string;
+    currency?: 'USD';
+    rateHourCents?: number;
+    minutesActive?: number;
     state?: string;
     paidAt?: string | string;
 };
@@ -1010,9 +1025,15 @@ export type InvoiceControllerReadError = InvoiceControllerReadErrors[keyof Invoi
 export type InvoiceControllerReadResponses = {
     200: InvoiceSearch & {
         time?: Array<TimeSearch>;
+        lines?: Array<{
+            timeId: string;
+            fromAt: string;
+            toAt: string;
+            minutesActive: number;
+        }> | null;
         report?: {
-            rateHour?: number;
-            rateTotal?: number;
+            rateHour?: number | null;
+            rateTotal?: number | null;
             minutes?: number;
             minutesActive?: number;
             minutesPaid?: number;

@@ -38,4 +38,32 @@ export class CalcTest {
     expect(b5).to.be.eq(25)
     expect(b6).to.be.eq(30)
   }
+
+  /** The acceptance case for the invoice snapshot: 90 minutes at $20/h. */
+  @test()
+  amountCents_ninetyMinutesAtTwentyDollarsIsThreeThousandCents() {
+    expect(Calc.amountCents(90, Calc.rateHourCents(20))).to.be.eq(3000)
+    expect(Calc.amountCents(90, Calc.rateHourCents('20.00'))).to.be.eq(3000)
+  }
+
+  /**
+   * Integer in, one rounding out, half up: anyone holding a snapshot's minutes
+   * and rate recomputes its amount exactly. 7 minutes at $33.33 is 388.85
+   * cents; 1 minute at $0.30 is exactly half a cent.
+   */
+  @test()
+  amountCents_roundsOnceHalfUp() {
+    expect(Calc.amountCents(7, 3333)).to.be.eq(389)
+    expect(Calc.amountCents(1, 30)).to.be.eq(1)
+    expect(Calc.amountCents(0, 3333)).to.be.eq(0)
+  }
+
+  /** The rate column is a two-decimal string; float noise never moves a cent. */
+  @test()
+  rateHourCents_readsTheDecimalColumnExactly() {
+    expect(Calc.rateHourCents('20.10')).to.be.eq(2010)
+    expect(Calc.rateHourCents(0.29)).to.be.eq(29)
+    expect(Calc.rateHourCents('9999.99')).to.be.eq(999999)
+    expect(Calc.rateHourCents(null)).to.be.eq(0)
+  }
 }

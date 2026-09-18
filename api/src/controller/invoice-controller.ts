@@ -7,6 +7,7 @@ import {
   Post,
 } from 'routing-controllers'
 import { faker } from '@faker-js/faker'
+import { SchemaObject } from 'openapi3-ts'
 import { OpenAPIExtended } from '@/decorator/openapi/openapi-extended'
 import { App } from '@/app/app'
 import { CurrentUser } from '@/decorator/current-user'
@@ -25,6 +26,18 @@ import { runPromise } from '@/service/effect-bridge'
 export class InvoiceController {
   protected invoiceManager: InvoiceManager
   protected invoiceRepository: InvoiceRepository
+
+  /** One billed entry of an invoice's snapshot (`IInvoiceLine`). */
+  private static readonly LINE_SCHEMA: SchemaObject = {
+    type: 'object',
+    required: ['timeId', 'fromAt', 'toAt', 'minutesActive'],
+    properties: {
+      timeId: { type: 'string' },
+      fromAt: { type: 'string' },
+      toAt: { type: 'string' },
+      minutesActive: { type: 'integer' },
+    },
+  }
 
   constructor() {
     this.invoiceManager = App.container.get('InvoiceManager')
@@ -119,11 +132,19 @@ export class InvoiceController {
                   type: 'array',
                   items: { $ref: '#/components/schemas/Time_search' },
                 },
+                // The billed entries as frozen at issuance; null on a legacy
+                // invoice, which never recorded them.
+                lines: {
+                  type: 'array',
+                  nullable: true,
+                  items: InvoiceController.LINE_SCHEMA,
+                },
                 report: {
                   type: 'object',
                   properties: {
-                    rateHour: { type: 'number' },
-                    rateTotal: { type: 'number' },
+                    // Null on a legacy invoice: its rate was never recorded.
+                    rateHour: { type: 'number', nullable: true },
+                    rateTotal: { type: 'number', nullable: true },
                     minutes: { type: 'number' },
                     minutesActive: { type: 'number' },
                     minutesPaid: { type: 'number' },

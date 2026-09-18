@@ -1,51 +1,120 @@
 import { injectable } from 'inversify'
 
 import { Invoice } from '@/entity/invoice'
-
-/** Bump when the field list or their order changes. */
-export const INVOICE_RECORD_VERSION = 1
+import {
+  EInvoiceSnapshotVersion,
+  IInvoiceLine,
+  IInvoiceRecord,
+} from '@/model/invoice'
+import { CanonicalJson } from '@/service/canonical-json'
 
 /**
- * Canonical serialisation of a paid invoice.
+ * InvoiceRecord v1: the canonical serialisation of an issued invoice.
  *
- * Nothing hashes this yet. It exists now because the format has to be
- * deterministic from the first paid invoice onwards: get it right and every
- * historical record stays verifiable when something does hash it; get it late
- * and the back catalogue is stranded on the day that happens.
- *
- * Rules, all load-bearing:
- *  - keys emitted in a fixed order, never `JSON.stringify` over an object
- *    whose key order depends on how it was built
- *  - integers only, in cents - no floats, whose text form varies by platform
- *  - timestamps as ISO-8601 in UTC with milliseconds, never locale-dependent
+ * This is what an escrow invoice commitment hashes (see InvoiceCommitment),
+ * so the same invoice must produce the same bytes forever, on any machine and
+ * in any implementation. Hence:
+ *  - RFC 8785 (JCS) text: keys sorted, no whitespace, so key order is a
+ *    property of the format rather than of whoever built the object
+ *  - integers only - money in cents, time in minutes - never floats, whose
+ *    text form varies by platform
+ *  - timestamps as ISO-8601 in UTC with milliseconds
+ *  - addresses in canonical form, so two spellings of one wallet agree
  *  - an explicit version, so the shape can change without invalidating what
  *    was written under the old one
+ *
+ * It reads only the snapshot the invoice froze at issuance, never the live
+ * project or user: an owner editing the rate afterwards must not change the
+ * record of what was billed. It holds nothing that changes after issuance
+ * either - not the paid state, which is settled after an escrow submission
+ * has already committed to the record. An invoice without a v1 snapshot has
+ * no record, and asking for one is refused rather than filled in.
+ *
+ * `api/src/test/fixture/invoice-record.v1.json` holds the vectors; a change
+ * that moves one byte of their output needs a new version, not an edit.
  */
 @injectable()
 export class InvoiceRecord {
+  public static readonly VERSION = EInvoiceSnapshotVersion.V1
+
   public serialise(invoice: Invoice): string {
-    const fields: [string, string | number][] = [
-      ['version', INVOICE_RECORD_VERSION],
-      ['invoiceId', invoice.id],
-      ['projectId', invoice.project.id],
-      ['issuerAddress', (invoice.user?.address ?? '').toLowerCase()],
-      ['ownerAddress', invoice.project.user.address.toLowerCase()],
-      ['periodStart', InvoiceRecord.timestamp(invoice.fromAt)],
-      ['periodEnd', InvoiceRecord.timestamp(invoice.toAt)],
-      ['amountCents', Math.trunc(invoice.amountCents)],
-      ['paidAt', InvoiceRecord.timestamp(invoice.paidAt ?? new Date(0))],
-    ]
-
-    // Built from an ordered list rather than an object literal so key order is
-    // a property of this function, not of however the caller assembled it.
-    const body = fields
-      .map(([key, value]) => `${JSON.stringify(key)}:${JSON.stringify(value)}`)
-      .join(',')
-
-    return `{${body}}`
+    return CanonicalJson.stringify(this.document(invoice))
   }
 
-  private static timestamp(value: Date): string {
+  public document(invoice: Invoice): IInvoiceRecord {
+    if (invoice.snapshotVersion !== InvoiceRecord.VERSION) {
+      throw new TypeError(
+        `Invoice ${invoice.id} has no v${InvoiceRecord.VERSION} snapshot, so it has no InvoiceRecord`,
+      )
+    }
+
+    return {
+      version: InvoiceRecord.VERSION,
+      invoiceId: invoice.id,
+      projectId: invoice.project.id,
+      issuerId: InvoiceRecord.required(invoice.user?.id, 'issuer'),
+      issuerAddress: InvoiceRecord.required(
+        invoice.issuerAddress,
+        'issuerAddress',
+      ),
+      ownerAddress: InvoiceRecord.required(
+        invoice.ownerAddress,
+        'ownerAddress',
+      ),
+      currency: InvoiceRecord.required(invoice.currency, 'currency'),
+      rateHourCents: InvoiceRecord.required(
+        invoice.rateHourCents,
+        'rateHourCents',
+      ),
+      minutesActive: InvoiceRecord.required(
+        invoice.minutesActive,
+        'minutesActive',
+      ),
+      amountCents: invoice.amountCents,
+      periodStart: InvoiceRecord.timestamp(invoice.fromAt),
+      periodEnd: InvoiceRecord.timestamp(invoice.toAt),
+      lines: InvoiceRecord.ordered(
+        InvoiceRecord.required(invoice.lines, 'lines'),
+      ).map((line) => ({
+        timeId: line.timeId,
+        fromAt: InvoiceRecord.timestamp(line.fromAt),
+        toAt: InvoiceRecord.timestamp(line.toAt),
+        minutesActive: line.minutesActive,
+      })),
+    }
+  }
+
+  /**
+   * Lines in the order the snapshot is written in: by start, then by id.
+   * Sorted again here so the record does not depend on how the array was
+   * stored or loaded.
+   */
+  public static ordered(lines: IInvoiceLine[]): IInvoiceLine[] {
+    return [...lines].sort((a, b) => {
+      const byStart =
+        new Date(a.fromAt).getTime() - new Date(b.fromAt).getTime()
+
+      if (byStart !== 0) {
+        return byStart
+      }
+
+      if (a.timeId === b.timeId) {
+        return 0
+      }
+
+      return a.timeId < b.timeId ? -1 : 1
+    })
+  }
+
+  public static timestamp(value: Date | string): string {
     return new Date(value).toISOString()
+  }
+
+  private static required<T>(value: T | null | undefined, field: string): T {
+    if (value === null || value === undefined) {
+      throw new TypeError(`The invoice snapshot is missing ${field}`)
+    }
+
+    return value
   }
 }

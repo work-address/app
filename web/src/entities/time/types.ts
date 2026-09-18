@@ -21,13 +21,14 @@ export type TimeTotalDetail = {
   id: string
 } & ITimeTotal
 
-export type Time = baseApi.Time & {
+export type Time = Omit<baseApi.Time, 'invoiceId'> & {
   project?: baseApi.Project
   /**
    * The invoice that bills this entry, or null. Sent by the search endpoint
-   * (read-only, API `Time.invoiceId`); declared here until the generated
-   * client is next regenerated. Once set, the entry's payment follows the
-   * invoice and the API refuses to change it directly.
+   * (read-only, API `Time.invoiceId`). Redeclared over the generated type,
+   * which leaves out the null the API sends for an entry on no invoice. Once
+   * set, the entry's payment follows the invoice and the API refuses to
+   * change it directly.
    */
   invoiceId?: string | null
 }

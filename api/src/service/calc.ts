@@ -15,6 +15,30 @@ export class Calc {
   }
 
   /**
+   * An hourly rate in whole cents.
+   *
+   * `Project.rateHour` is a two-decimal column that arrives as a string, so
+   * rounding here only removes float noise, never a real cent.
+   */
+  public static rateHourCents(rateHour: number | string | null): number {
+    return Math.round((Number(rateHour) || 0) * 100)
+  }
+
+  /**
+   * What `minutesActive` minutes cost at `rateHourCents`, in whole cents.
+   *
+   * Integer in, one rounding out (half up), so anyone holding an invoice's
+   * snapshot can recompute its amount exactly: 90 minutes at 2000 cents an
+   * hour is 3000 cents on every platform.
+   */
+  public static amountCents(
+    minutesActive: number,
+    rateHourCents: number,
+  ): number {
+    return Math.round((minutesActive * rateHourCents) / 60)
+  }
+
+  /**
    * Wall-clock minutes a set of entries covers, taken from each row's own
    * span so that entries recorded under different tracker intervals total
    * correctly together.

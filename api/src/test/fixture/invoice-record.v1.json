@@ -1,0 +1,79 @@
+{
+  "format": "InvoiceRecord v1 - RFC 8785 (JCS) text of the record document: keys sorted, no whitespace; integers only (money in cents, time in minutes); timestamps ISO-8601 UTC with milliseconds; addresses in canonical form (EVM and TON raw lowercase, Solana as typed); lines ordered by fromAt, then timeId. Each vector gives an invoice snapshot as stored and the exact bytes it serialises to. A change that moves one byte of any record needs a new version, not an edit to this file.",
+  "vectors": [
+    {
+      "name": "90 active minutes at $20/h bill 3000 cents",
+      "invoice": {
+        "id": "4e61ff62-5642-478f-901b-f7be07550426",
+        "projectId": "8f19e321-6669-4928-8f98-1f61d623bfbd",
+        "issuerId": "e8e8bc72-fae0-4c16-a71f-b6a959b90bc6",
+        "issuerAddress": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+        "ownerAddress": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+        "currency": "USD",
+        "rateHourCents": 2000,
+        "minutesActive": 90,
+        "amountCents": 3000,
+        "fromAt": "2026-09-01T09:00:00.000Z",
+        "toAt": "2026-09-01T10:30:00.000Z",
+        "lines": [
+          {
+            "timeId": "17897485-f84c-4dea-9bda-6c185f0f4820",
+            "fromAt": "2026-09-01T09:00:00.000Z",
+            "toAt": "2026-09-01T09:30:00.000Z",
+            "minutesActive": 30
+          },
+          {
+            "timeId": "0256d128-9cd9-4c02-a262-08dff191a8df",
+            "fromAt": "2026-09-01T09:30:00.000Z",
+            "toAt": "2026-09-01T10:00:00.000Z",
+            "minutesActive": 30
+          },
+          {
+            "timeId": "b93289a9-02e4-4cdd-a473-d0bc91e94f7e",
+            "fromAt": "2026-09-01T10:00:00.000Z",
+            "toAt": "2026-09-01T10:30:00.000Z",
+            "minutesActive": 30
+          }
+        ]
+      },
+      "record": "{\"amountCents\":3000,\"currency\":\"USD\",\"invoiceId\":\"4e61ff62-5642-478f-901b-f7be07550426\",\"issuerAddress\":\"0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc\",\"issuerId\":\"e8e8bc72-fae0-4c16-a71f-b6a959b90bc6\",\"lines\":[{\"fromAt\":\"2026-09-01T09:00:00.000Z\",\"minutesActive\":30,\"timeId\":\"17897485-f84c-4dea-9bda-6c185f0f4820\",\"toAt\":\"2026-09-01T09:30:00.000Z\"},{\"fromAt\":\"2026-09-01T09:30:00.000Z\",\"minutesActive\":30,\"timeId\":\"0256d128-9cd9-4c02-a262-08dff191a8df\",\"toAt\":\"2026-09-01T10:00:00.000Z\"},{\"fromAt\":\"2026-09-01T10:00:00.000Z\",\"minutesActive\":30,\"timeId\":\"b93289a9-02e4-4cdd-a473-d0bc91e94f7e\",\"toAt\":\"2026-09-01T10:30:00.000Z\"}],\"minutesActive\":90,\"ownerAddress\":\"0x70997970c51812dc3a010c7d01b50e0d17dc79c8\",\"periodEnd\":\"2026-09-01T10:30:00.000Z\",\"periodStart\":\"2026-09-01T09:00:00.000Z\",\"projectId\":\"8f19e321-6669-4928-8f98-1f61d623bfbd\",\"rateHourCents\":2000,\"version\":1}"
+    },
+    {
+      "name": "lines stored out of order, a shared start broken by timeId, offsets normalised to UTC, TON and Solana addresses",
+      "invoice": {
+        "id": "52845a7d-9cea-4ef3-b0eb-75f2fe9b71db",
+        "projectId": "b173e456-2f6c-40e0-a136-41468a6bbbc2",
+        "issuerId": "0bf83702-a16a-420d-a97c-6867c45cdc4f",
+        "issuerAddress": "0:4a5d1e2f3c4b5a69788796a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5",
+        "ownerAddress": "7EcDhSYGxXyscszYEp35KHN8vvw3svAuLKTzXwCFLtV",
+        "currency": "USD",
+        "rateHourCents": 3333,
+        "minutesActive": 7,
+        "amountCents": 389,
+        "fromAt": "2026-09-02T12:00:00+03:00",
+        "toAt": "2026-09-02T09:20:00.5Z",
+        "lines": [
+          {
+            "timeId": "c9d40afd-1121-44d2-9994-af5358caa831",
+            "fromAt": "2026-09-02T09:10:00.000Z",
+            "toAt": "2026-09-02T09:20:00.000Z",
+            "minutesActive": 0
+          },
+          {
+            "timeId": "80605015-144a-4599-b57e-1e315fe79d8a",
+            "fromAt": "2026-09-02T12:00:00+03:00",
+            "toAt": "2026-09-02T12:10:00+03:00",
+            "minutesActive": 3
+          },
+          {
+            "timeId": "11f4d191-7d0a-40c8-8310-06fc7bac0ad2",
+            "fromAt": "2026-09-02T09:00:00.000Z",
+            "toAt": "2026-09-02T09:10:00.000Z",
+            "minutesActive": 4
+          }
+        ]
+      },
+      "record": "{\"amountCents\":389,\"currency\":\"USD\",\"invoiceId\":\"52845a7d-9cea-4ef3-b0eb-75f2fe9b71db\",\"issuerAddress\":\"0:4a5d1e2f3c4b5a69788796a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5\",\"issuerId\":\"0bf83702-a16a-420d-a97c-6867c45cdc4f\",\"lines\":[{\"fromAt\":\"2026-09-02T09:00:00.000Z\",\"minutesActive\":4,\"timeId\":\"11f4d191-7d0a-40c8-8310-06fc7bac0ad2\",\"toAt\":\"2026-09-02T09:10:00.000Z\"},{\"fromAt\":\"2026-09-02T09:00:00.000Z\",\"minutesActive\":3,\"timeId\":\"80605015-144a-4599-b57e-1e315fe79d8a\",\"toAt\":\"2026-09-02T09:10:00.000Z\"},{\"fromAt\":\"2026-09-02T09:10:00.000Z\",\"minutesActive\":0,\"timeId\":\"c9d40afd-1121-44d2-9994-af5358caa831\",\"toAt\":\"2026-09-02T09:20:00.000Z\"}],\"minutesActive\":7,\"ownerAddress\":\"7EcDhSYGxXyscszYEp35KHN8vvw3svAuLKTzXwCFLtV\",\"periodEnd\":\"2026-09-02T09:20:00.500Z\",\"periodStart\":\"2026-09-02T09:00:00.000Z\",\"projectId\":\"b173e456-2f6c-40e0-a136-41468a6bbbc2\",\"rateHourCents\":3333,\"version\":1}"
+    }
+  ]
+}

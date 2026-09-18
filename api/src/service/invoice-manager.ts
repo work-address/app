@@ -12,9 +12,17 @@ import { ProjectRepository } from '@/repository/project-repository'
 import { Time } from '@/entity/time'
 import { TimeRepository } from '@/repository/time-repository'
 import { User } from '@/entity/user'
-import { EInvoiceState, IInvoiceReport } from '@/model/invoice'
+import {
+  EInvoiceCurrency,
+  EInvoiceSnapshotVersion,
+  EInvoiceState,
+  IInvoiceLine,
+  IInvoiceReport,
+} from '@/model/invoice'
 import { InvoiceCreateDto } from '@/model/dto/invoice'
 import { Calc } from '@/service/calc'
+import { InvoiceRecord } from '@/service/invoice-record'
+import { WalletAddress } from '@/service/wallet-address'
 import { UnitOfWork } from '@/service/unit-of-work'
 import AccessException from '@/exception/access-exception'
 import InvoicedTimeException from '@/exception/invoiced-time-exception'
@@ -49,6 +57,10 @@ export class InvoiceManager {
    * project's time instead - which is what the separate report endpoint used
    * to serve here - listed hours from other invoices and uninvoiced hours
    * under a total that covered neither.
+   *
+   * The money side of the roll-up comes from the invoice's own snapshot, not
+   * from the project: an owner who changes the rate after the invoice was
+   * issued changes nothing on it (DEC-04).
    */
   public read(invoice: Invoice, user: User): RepoEffect<Invoice> {
     return Effect.gen(this, function* () {
@@ -60,54 +72,106 @@ export class InvoiceManager {
       const times = yield* this.timeRepository.findForInvoiceSummary(found)
 
       found.time = times
-      found.report = InvoiceManager.reportFor(
-        times,
-        Number(found.project?.rateHour) || 0,
-      )
+      found.report = InvoiceManager.reportFor(found, times)
 
       return found
     })
   }
 
   /**
-   * Rolls a set of entries up for display.
+   * Rolls an invoice up for display.
    *
-   * Summed in memory from the same rows that are returned as line items, so
-   * the two cannot drift. `minutes` is the wall-clock span the tracker
-   * covered, read from each entry's own fromAt/toAt rather than assumed from
-   * a fixed interval, so an invoice spanning a change of interval still bills
-   * correctly. Distinct from `minutesActive`, which is time actually worked.
+   * With a snapshot, the minutes, the rate and what is paid come from what the
+   * invoice froze at issuance - its lines, its rate, its state - so the
+   * summary and the amount beneath it cannot drift apart. The activity
+   * counters are summed from the linked entries: they are monitoring
+   * evidence, not billing, and clearing or re-syncing them is allowed.
+   *
+   * A legacy invoice never recorded its rate, so it reports none rather than
+   * borrowing today's project rate; its minutes are summed from the linked
+   * entries as before.
+   *
+   * `minutes` is the wall-clock span covered, read from each line's own
+   * fromAt/toAt rather than assumed from a fixed interval. Distinct from
+   * `minutesActive`, which is time actually worked.
    */
-  public static reportFor(times: Time[], rateHour: number): IInvoiceReport {
+  public static reportFor(invoice: Invoice, times: Time[]): IInvoiceReport {
     const sum = (pick: (time: Time) => number | null | undefined): number =>
       times.reduce((total, time) => total + (Number(pick(time)) || 0), 0)
 
-    const minutes = Calc.spanMinutes(times)
-    const minutesActive = sum((time) => time.minutesActive)
-
-    return {
-      rateHour,
-      rateTotal: Calc.rateTotal(minutes, rateHour),
-      minutes,
-      minutesActive,
-      minutesPaid: sum((time) => (time.isPaid ? time.minutesActive : 0)),
-      minutesUnpaid: sum((time) => (time.isPaid ? 0 : time.minutesActive)),
+    const activity = {
       keyboardKeys: sum((time) => time.keyboardKeys),
       mouseKeys: sum((time) => time.mouseKeys),
       mouseDistance: sum((time) => time.mouseDistance),
+    }
+
+    if (
+      invoice.snapshotVersion === EInvoiceSnapshotVersion.V1 &&
+      invoice.lines
+    ) {
+      const minutes = Calc.spanMinutes(
+        invoice.lines.map((line) => ({
+          fromAt: new Date(line.fromAt),
+          toAt: new Date(line.toAt),
+        })),
+      )
+      const minutesActive = Number(invoice.minutesActive) || 0
+      const rateHour = (Number(invoice.rateHourCents) || 0) / 100
+      const isPaid = invoice.state === EInvoiceState.PAID
+
+      return {
+        rateHour,
+        rateTotal: Calc.rateTotal(minutes, rateHour),
+        minutes,
+        minutesActive,
+        // Payment is the invoice's, and covers every line at once.
+        minutesPaid: isPaid ? minutesActive : 0,
+        minutesUnpaid: isPaid ? 0 : minutesActive,
+        ...activity,
+      }
+    }
+
+    return {
+      rateHour: null,
+      rateTotal: null,
+      minutes: Calc.spanMinutes(times),
+      minutesActive: sum((time) => time.minutesActive),
+      minutesPaid: sum((time) => (time.isPaid ? time.minutesActive : 0)),
+      minutesUnpaid: sum((time) => (time.isPaid ? 0 : time.minutesActive)),
+      ...activity,
     }
   }
 
   /** Hourly cost of a set of entries, in whole cents. */
   public static amountFor(times: Time[], rateHour: number): number {
-    const minutes = times.reduce(
-      (sum, time) => sum + (time.minutesActive || 0),
-      0,
-    )
-
     // Rounded once, at the end: rounding per entry accumulates a cent of drift
     // for every row on a long invoice.
-    return Math.round((minutes / 60) * rateHour * 100)
+    return Calc.amountCents(
+      InvoiceManager.minutesActiveOf(times),
+      Calc.rateHourCents(rateHour),
+    )
+  }
+
+  /**
+   * The lines an invoice freezes: each billed entry's span and active
+   * minutes, in record order (start, then id).
+   */
+  public static linesFor(times: Time[]): IInvoiceLine[] {
+    return InvoiceRecord.ordered(
+      times.map((time) => ({
+        timeId: time.id,
+        fromAt: InvoiceRecord.timestamp(time.fromAt),
+        toAt: InvoiceRecord.timestamp(time.toAt),
+        minutesActive: Number(time.minutesActive) || 0,
+      })),
+    )
+  }
+
+  private static minutesActiveOf(times: Time[]): number {
+    return times.reduce(
+      (sum, time) => sum + (Number(time.minutesActive) || 0),
+      0,
+    )
   }
 
   /**
@@ -229,8 +293,13 @@ export class InvoiceManager {
   }
 
   /**
-   * Saves the invoice and links the entries it bills, inside the caller's
-   * transaction.
+   * Saves the invoice with its financial snapshot and links the entries it
+   * bills, inside the caller's transaction.
+   *
+   * The snapshot - rate, currency, both addresses, active minutes and the
+   * lines - is written in the same insert as `amountCents`, and the amount is
+   * computed from it, so the stored record always explains its own total and
+   * later edits to the project or the entries change neither (DEC-04).
    *
    * Every caller has already read `times` with a row lock, so no concurrent
    * issuance can have claimed them since; the claim re-checks that on the
@@ -246,15 +315,25 @@ export class InvoiceManager {
   ): RepoEffect<Invoice> {
     return Effect.gen(this, function* () {
       const invoice = new Invoice()
+      const lines = InvoiceManager.linesFor(times)
+      const minutesActive = lines.reduce(
+        (sum, line) => sum + line.minutesActive,
+        0,
+      )
+      const rateHourCents = Calc.rateHourCents(project.rateHour)
 
       invoice.project = project
       invoice.user = author
       invoice.fromAt = period.fromAt
       invoice.toAt = period.toAt
-      invoice.amountCents = InvoiceManager.amountFor(
-        times,
-        Number(project.rateHour) || 0,
-      )
+      invoice.snapshotVersion = EInvoiceSnapshotVersion.V1
+      invoice.issuerAddress = WalletAddress.toCanonical(author.address)
+      invoice.ownerAddress = WalletAddress.toCanonical(project.user.address)
+      invoice.currency = EInvoiceCurrency.USD
+      invoice.rateHourCents = rateHourCents
+      invoice.minutesActive = minutesActive
+      invoice.lines = lines
+      invoice.amountCents = Calc.amountCents(minutesActive, rateHourCents)
       invoice.state = EInvoiceState.REQUESTED
       invoice.paidAt = null
 
