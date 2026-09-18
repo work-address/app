@@ -2,7 +2,7 @@ import _ from 'lodash'
 import { inject, injectable } from 'inversify'
 
 import { Filter } from '@/service/filter'
-import { Brackets } from 'typeorm'
+import { Brackets, IsNull } from 'typeorm'
 
 import type { ObjectLiteral, SelectQueryBuilder } from 'typeorm'
 import { Project } from '@/entity/project'
@@ -16,6 +16,7 @@ import { Invoice } from '@/entity/invoice'
 import { User } from '@/entity/user'
 import AccessException from '@/exception/access-exception'
 import { InvoiceSearchDto } from '@/model/dto/invoice'
+import { EInvoiceSnapshotVersion } from '@/model/invoice'
 
 @injectable()
 export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
@@ -93,6 +94,30 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
         .orderBy('invoice.createdAt', 'DESC')
         .getOne(),
     )
+  }
+
+  /**
+   * Marks every invoice issued before invoices kept a financial snapshot as
+   * legacy, and returns how many it marked.
+   *
+   * Only the version changes. The rate such an invoice was raised at was
+   * never recorded, and today's project rate is not it, so nothing else is
+   * filled in: a legacy invoice keeps its frozen amount and reports no rate.
+   * Rows already marked, and every invoice carrying a snapshot, are left
+   * alone, so a second run marks nothing. Soft-deleted invoices are marked
+   * too - restoring one must not bring back an unmarked row.
+   */
+  public markUnsnapshottedAsLegacy(): RepoEffect<number> {
+    return fromPromise(async () => {
+      const result = await this.getRepo()
+        .createQueryBuilder()
+        .update(Invoice)
+        .set({ snapshotVersion: EInvoiceSnapshotVersion.LEGACY })
+        .where({ snapshotVersion: IsNull() })
+        .execute()
+
+      return result.affected ?? 0
+    })
   }
 
   /**

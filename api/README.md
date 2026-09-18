@@ -41,16 +41,17 @@ pnpm run schema:sync
 
 ## Scripts
 
-| Script                                      | Purpose                                               |
-| ------------------------------------------- | ----------------------------------------------------- |
-| `pnpm run dev`                              | Development server (`ts-node-dev`, HTTPS env flag)    |
-| `pnpm run build`                            | Compile TypeScript to `build/`                        |
-| `pnpm run prod`                             | Run `build/server.js` (set `NODE_ENV=production`)     |
-| `pnpm test`                                 | Tests with coverage (`nyc` + `mocha` + `ts-node`)     |
-| `pnpm run lint` / `lint:check` / `lint:fix` | ESLint (`@app/eslint-config`, `eslint.config.js`)     |
-| `pnpm run prettier:check` / `prettier:fix`  | Formatting                                            |
-| `pnpm run schema:sync` / `schema:drop`      | TypeORM schema sync/drop (`src/ormconfig.ts`)         |
-| `pnpm run typeorm:cli`                      | TypeORM CLI (pass subcommand + `-d src/ormconfig.ts`) |
+| Script                                      | Purpose                                                          |
+| ------------------------------------------- | ---------------------------------------------------------------- |
+| `pnpm run dev`                              | Development server (`ts-node-dev`, HTTPS env flag)               |
+| `pnpm run build`                            | Compile TypeScript to `build/`                                   |
+| `pnpm run prod`                             | Run `build/server.js` (set `NODE_ENV=production`)                |
+| `pnpm test`                                 | Tests with coverage (`nyc` + `mocha` + `ts-node`)                |
+| `pnpm run lint` / `lint:check` / `lint:fix` | ESLint (`@app/eslint-config`, `eslint.config.js`)                |
+| `pnpm run prettier:check` / `prettier:fix`  | Formatting                                                       |
+| `pnpm run schema:sync` / `schema:drop`      | TypeORM schema sync/drop (`src/ormconfig.ts`)                    |
+| `pnpm run typeorm:cli`                      | TypeORM CLI (pass subcommand + `-d src/ormconfig.ts`)            |
+| `pnpm run backfill:invoice-snapshot`        | One-off, after `schema:sync`: marks pre-snapshot invoices legacy |
 
 ## API documentation
 
