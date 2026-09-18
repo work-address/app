@@ -42,11 +42,17 @@ export function OpenAPIExtended<E = unknown>(
       args.length === 3
         ? inferNotFoundResponseFromEntityParam(args[0], args[1])
         : undefined
-    const operation: Partial<OperationObject> = {
+    // Responses merge rather than replace: an endpoint documenting its own
+    // 409 still 404s on an unknown id.
+    const responses = {
       ...(inferredNotFoundResponse === undefined
         ? {}
-        : { responses: { 404: inferredNotFoundResponse } }),
+        : { 404: inferredNotFoundResponse }),
+      ...(options.operation?.responses ?? {}),
+    }
+    const operation: Partial<OperationObject> = {
       ...(options.operation ?? {}),
+      ...(Object.keys(responses).length === 0 ? {} : { responses }),
       ...(options.summary === undefined ? {} : { summary: options.summary }),
     }
     if (Object.keys(operation).length > 0) {

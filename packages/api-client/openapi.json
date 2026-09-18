@@ -150,7 +150,7 @@
           "state"
         ],
         "example": {
-          "id": "7a1ace44-7d7f-48c2-bf53-b13d6f7d7e9e"
+          "id": "b71549cc-e2e9-42cc-a8f4-af0567332dd0"
         }
       },
       "ProjectStatistics": {
@@ -211,7 +211,7 @@
           "period"
         ],
         "example": {
-          "id": "ef062978-2e4a-4336-b981-99920feb44ac"
+          "id": "a19fac8b-c420-4e13-a035-74795c122608"
         }
       },
       "Time": {
@@ -309,7 +309,7 @@
           "toAt"
         ],
         "example": {
-          "id": "0c322ab1-28fa-4383-b59a-5e6ddfcf9f71"
+          "id": "19e934f5-f1ee-410b-b403-286d1ad8f952"
         }
       },
       "Project": {
@@ -399,7 +399,7 @@
           "state"
         ],
         "example": {
-          "id": "9e538595-8d3c-43bc-b615-11f722214799"
+          "id": "089e6998-a9c2-48ad-9524-1060a0fbfe55"
         }
       },
       "User": {
@@ -505,7 +505,7 @@
         },
         "type": "object",
         "example": {
-          "id": "33545a68-c74a-4095-887f-ed5440e415bf"
+          "id": "b0bb13a5-22d4-45d4-ad08-ecff2eea6a4e"
         }
       },
       "AuthForgotPasswordDto": {
@@ -3288,7 +3288,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "6500dc8f-1bc9-4c88-8030-29a6fcfdfb9b"
+                  "projectId": "87f2f46d-d381-4207-985a-53acfde2307b"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -3356,8 +3356,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1789678792304,
-                "toUnix": 1789765192304
+                "fromUnix": 1789690400759,
+                "toUnix": 1789776800759
               }
             }
           },
@@ -3529,6 +3529,144 @@
           }
         },
         "summary": "Get invoice by id, with the time it bills and a roll-up",
+        "tags": [
+          "Invoice"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/invoice/{id}/record": {
+      "get": {
+        "operationId": "InvoiceController.record",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Invoice"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "version",
+                    "invoiceId",
+                    "projectId",
+                    "issuerId",
+                    "issuerAddress",
+                    "ownerAddress",
+                    "currency",
+                    "rateHourCents",
+                    "minutesActive",
+                    "amountCents",
+                    "periodStart",
+                    "periodEnd",
+                    "lines"
+                  ],
+                  "properties": {
+                    "version": {
+                      "type": "integer"
+                    },
+                    "invoiceId": {
+                      "type": "string"
+                    },
+                    "projectId": {
+                      "type": "string"
+                    },
+                    "issuerId": {
+                      "type": "string"
+                    },
+                    "issuerAddress": {
+                      "type": "string"
+                    },
+                    "ownerAddress": {
+                      "type": "string"
+                    },
+                    "currency": {
+                      "type": "string"
+                    },
+                    "rateHourCents": {
+                      "type": "integer"
+                    },
+                    "minutesActive": {
+                      "type": "integer"
+                    },
+                    "amountCents": {
+                      "type": "integer"
+                    },
+                    "periodStart": {
+                      "type": "string"
+                    },
+                    "periodEnd": {
+                      "type": "string"
+                    },
+                    "lines": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "timeId",
+                          "fromAt",
+                          "toAt",
+                          "minutesActive"
+                        ],
+                        "properties": {
+                          "timeId": {
+                            "type": "string"
+                          },
+                          "fromAt": {
+                            "type": "string"
+                          },
+                          "toAt": {
+                            "type": "string"
+                          },
+                          "minutesActive": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "Invoice does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "NotFoundError"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Invoice does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The invoice was issued before invoices kept a snapshot, so it has no record"
+          }
+        },
+        "summary": "Get the InvoiceRecord v1 of an invoice - the canonical document an escrow invoice commitment hashes",
         "tags": [
           "Invoice"
         ],
@@ -3722,7 +3860,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "d5dcee42-90cf-4be0-954a-b85c151370f7"
+                "nonce": "cd74fd85-c1d6-451c-9fbc-89d3a3186f28"
               },
               "schema": {
                 "properties": {
@@ -3767,7 +3905,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "2bfb284d-0ac0-4dd4-82ef-ac2c5d155474"
+                "nonce": "2f2a7cb8-ab54-46e8-b0d7-bb9d370a8a0a"
               },
               "schema": {
                 "properties": {
@@ -3808,21 +3946,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "71e281fe-a933-4831-b7de-25abcbc2aeec",
+                      "nonce": "c03bb988-9a84-4dae-90c8-e1141da421a8",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "6887432e-b56d-4790-9790-38956bfd5ee4",
+                      "nonce": "d4323c75-d0ae-46a9-9849-a6b11efd11d7",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "6cd78ef5-727d-48ea-b94d-b65bc30f8c5a",
+                      "nonce": "cb0c0ddf-2dc2-4d81-9e9f-234b62ec8a25",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

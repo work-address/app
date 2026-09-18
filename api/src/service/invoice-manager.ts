@@ -17,6 +17,7 @@ import {
   EInvoiceSnapshotVersion,
   EInvoiceState,
   IInvoiceLine,
+  IInvoiceRecord,
   IInvoiceReport,
 } from '@/model/invoice'
 import { InvoiceCreateDto } from '@/model/dto/invoice'
@@ -26,6 +27,7 @@ import { WalletAddress } from '@/service/wallet-address'
 import { UnitOfWork } from '@/service/unit-of-work'
 import AccessException from '@/exception/access-exception'
 import InvoicedTimeException from '@/exception/invoiced-time-exception'
+import LegacyInvoiceException from '@/exception/legacy-invoice-exception'
 
 /**
  * Invoices are the money record; `Time` is the work record. Nothing else
@@ -47,6 +49,8 @@ export class InvoiceManager {
   protected timeRepository: TimeRepository
   @inject('UnitOfWork')
   protected unitOfWork: UnitOfWork
+  @inject('InvoiceRecord')
+  protected invoiceRecord: InvoiceRecord
 
   /**
    * Everything the invoice page needs, in one read: the invoice, the entries
@@ -75,6 +79,35 @@ export class InvoiceManager {
       found.report = InvoiceManager.reportFor(found, times)
 
       return found
+    })
+  }
+
+  /**
+   * The invoice's InvoiceRecord v1: the canonical document an escrow invoice
+   * commitment hashes (see InvoiceCommitment), for whoever may read the
+   * invoice - the issuer, who commits to it, and the project owner, who
+   * checks the opening.
+   *
+   * Built from the snapshot alone, so it is the same document on every read.
+   * A legacy invoice has no snapshot and is refused with a 409 rather than
+   * given a record assembled from today's project.
+   */
+  public record(invoice: Invoice, user: User): RepoEffect<IInvoiceRecord> {
+    return Effect.gen(this, function* () {
+      const found = yield* this.invoiceRepository.findOneConfirmUser(
+        invoice,
+        user,
+      )
+
+      if (found.snapshotVersion !== InvoiceRecord.VERSION) {
+        return yield* Effect.fail(
+          new LegacyInvoiceException(
+            `Invoice ${found.id} was issued before invoices kept their rate and lines, so it has no InvoiceRecord`,
+          ),
+        )
+      }
+
+      return this.invoiceRecord.document(found)
     })
   }
 

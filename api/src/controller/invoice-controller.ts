@@ -16,6 +16,7 @@ import { Invoice } from '@/entity/invoice'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
 import { EUserRole } from '@/model/user'
+import { IInvoiceRecord } from '@/model/invoice'
 import { InvoiceManager } from '@/service/invoice-manager'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { InvoiceCreateDto, InvoiceSearchDto } from '@/model/dto/invoice'
@@ -169,6 +170,64 @@ export class InvoiceController {
     invoice: Invoice,
   ) {
     return runPromise(this.invoiceManager.read(invoice, currentUser))
+  }
+
+  @OpenAPIExtended({
+    summary:
+      'Get the InvoiceRecord v1 of an invoice - the canonical document an escrow invoice commitment hashes',
+    operation: {
+      responses: {
+        409: {
+          description:
+            'The invoice was issued before invoices kept a snapshot, so it has no record',
+        },
+      },
+    },
+    response: {
+      schema: null,
+      options: {
+        inlineSchema: {
+          type: 'object',
+          required: [
+            'version',
+            'invoiceId',
+            'projectId',
+            'issuerId',
+            'issuerAddress',
+            'ownerAddress',
+            'currency',
+            'rateHourCents',
+            'minutesActive',
+            'amountCents',
+            'periodStart',
+            'periodEnd',
+            'lines',
+          ],
+          properties: {
+            version: { type: 'integer' },
+            invoiceId: { type: 'string' },
+            projectId: { type: 'string' },
+            issuerId: { type: 'string' },
+            issuerAddress: { type: 'string' },
+            ownerAddress: { type: 'string' },
+            currency: { type: 'string' },
+            rateHourCents: { type: 'integer' },
+            minutesActive: { type: 'integer' },
+            amountCents: { type: 'integer' },
+            periodStart: { type: 'string' },
+            periodEnd: { type: 'string' },
+            lines: { type: 'array', items: InvoiceController.LINE_SCHEMA },
+          },
+        },
+      },
+    },
+  })
+  @Get('/:id/record')
+  public record(
+    @CurrentUser() currentUser: User,
+    @EntityFromParam({ paramName: 'id' }) invoice: Invoice,
+  ): Promise<IInvoiceRecord> {
+    return runPromise(this.invoiceManager.record(invoice, currentUser))
   }
 
   @OpenAPIExtended({

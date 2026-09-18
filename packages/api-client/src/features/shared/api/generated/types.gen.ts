@@ -1047,6 +1047,56 @@ export type InvoiceControllerReadResponses = {
 
 export type InvoiceControllerReadResponse = InvoiceControllerReadResponses[keyof InvoiceControllerReadResponses];
 
+export type InvoiceControllerRecordData = {
+    body?: never;
+    path: {
+        id: Invoice;
+    };
+    query?: never;
+    url: '/api/invoice/{id}/record';
+};
+
+export type InvoiceControllerRecordErrors = {
+    /**
+     * Invoice does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+    /**
+     * The invoice was issued before invoices kept a snapshot, so it has no record
+     */
+    409: unknown;
+};
+
+export type InvoiceControllerRecordError = InvoiceControllerRecordErrors[keyof InvoiceControllerRecordErrors];
+
+export type InvoiceControllerRecordResponses = {
+    200: {
+        version: number;
+        invoiceId: string;
+        projectId: string;
+        issuerId: string;
+        issuerAddress: string;
+        ownerAddress: string;
+        currency: string;
+        rateHourCents: number;
+        minutesActive: number;
+        amountCents: number;
+        periodStart: string;
+        periodEnd: string;
+        lines: Array<{
+            timeId: string;
+            fromAt: string;
+            toAt: string;
+            minutesActive: number;
+        }>;
+    };
+};
+
+export type InvoiceControllerRecordResponse = InvoiceControllerRecordResponses[keyof InvoiceControllerRecordResponses];
+
 export type InvoiceControllerMarkPaidData = {
     body?: never;
     path: {

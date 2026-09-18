@@ -1,10 +1,12 @@
 import { expect } from 'chai'
+import axios from 'axios'
 import moment from 'moment'
 import { suite, test } from '@testdeck/mocha'
 
 import {
   invoiceControllerCreate,
   invoiceControllerRead,
+  invoiceControllerRecord,
   projectControllerEdit,
   timeControllerCreateOrUpdateMany,
   timeControllerRemoveProcesses,
@@ -22,6 +24,7 @@ import {
   EInvoiceSnapshotVersion,
   EInvoiceState,
 } from '@/model/invoice'
+import { InvoiceRecord } from '@/service/invoice-record'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { ProjectRepository } from '@/repository/project-repository'
 import { TimeRepository } from '@/repository/time-repository'
@@ -38,6 +41,7 @@ export class InvoiceControllerSnapshotTest extends BaseControllerTest {
   protected invoiceRepository: InvoiceRepository
   protected projectRepository: ProjectRepository
   protected timeRepository: TimeRepository
+  protected invoiceRecord: InvoiceRecord
 
   constructor() {
     super()
@@ -45,6 +49,7 @@ export class InvoiceControllerSnapshotTest extends BaseControllerTest {
     this.invoiceRepository = this.container.get('InvoiceRepository')
     this.projectRepository = this.container.get('ProjectRepository')
     this.timeRepository = this.container.get('TimeRepository')
+    this.invoiceRecord = this.container.get('InvoiceRecord')
   }
 
   private auth(user: User) {
@@ -331,11 +336,104 @@ export class InvoiceControllerSnapshotTest extends BaseControllerTest {
   }
 
   /**
-   * An invoice issued before snapshots never recorded its rate: its page
-   * reports no rate rather than today's.
+   * GET /invoice/:id/record is the snapshot's InvoiceRecord v1, the document
+   * an escrow commitment hashes, for the issuer and the owner alike.
    */
   @test()
-  async legacyInvoice_reportsNoRate() {
+  async record_isTheCanonicalRecordOfTheSnapshot() {
+    const owner = await this.userFixture.createUser()
+    const worker = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner, 20)
+
+    project.workerAddresses = [worker.address]
+    await runPromise(this.projectRepository.saveSingle(project))
+
+    const times = await this.ninetyActiveMinutes(project, worker)
+    const created = await invoiceControllerCreate({
+      client: this.apiClient(),
+      path: { projectId: project.id as never },
+      headers: this.auth(worker),
+      body: {},
+      throwOnError: true,
+    })
+
+    await this.setRate(owner, project, '50.00')
+
+    const expected = JSON.parse(
+      this.invoiceRecord.serialise(await this.stored(created.data.id!)),
+    )
+
+    for (const reader of [worker, owner]) {
+      const res = await invoiceControllerRecord({
+        client: this.apiClient(),
+        path: { id: created.data.id as never },
+        headers: this.auth(reader),
+        throwOnError: true,
+      })
+
+      expect(res.data).to.deep.eq(expected)
+    }
+
+    expect(expected).to.deep.include({
+      version: 1,
+      invoiceId: created.data.id,
+      projectId: project.id,
+      issuerId: worker.id,
+      issuerAddress: WalletAddress.toCanonical(worker.address),
+      ownerAddress: WalletAddress.toCanonical(owner.address),
+      currency: 'USD',
+      rateHourCents: 2000,
+      minutesActive: 90,
+      amountCents: 3000,
+    })
+    expect(
+      expected.lines.map((line: { timeId: string }) => line.timeId),
+    ).to.deep.eq(times.map((time) => time.id))
+  }
+
+  /** The record is the invoice's, and follows the invoice's own access. */
+  @test()
+  async record_isRefusedToAnyoneWhoCannotReadTheInvoice() {
+    const owner = await this.userFixture.createUser()
+    const outsider = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner, 20)
+
+    await this.ninetyActiveMinutes(project, owner)
+
+    const created = await invoiceControllerCreate({
+      client: this.apiClient(),
+      path: { projectId: project.id as never },
+      headers: this.auth(owner),
+      body: {},
+      throwOnError: true,
+    })
+
+    let status: number | undefined
+
+    try {
+      await invoiceControllerRecord({
+        client: this.apiClient(),
+        path: { id: created.data.id as never },
+        headers: this.auth(outsider),
+        throwOnError: true,
+      })
+    } catch (error: unknown) {
+      if (!axios.isAxiosError(error)) {
+        throw error
+      }
+
+      status = error.response?.status
+    }
+
+    expect(status).to.be.eq(403)
+  }
+
+  /**
+   * An invoice issued before snapshots never recorded its rate: it has no
+   * record (409), and its page reports no rate rather than today's.
+   */
+  @test()
+  async legacyInvoice_hasNoRecordAndReportsNoRate() {
     const owner = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner, 60)
     const legacy = await this.invoiceFixture.create(
@@ -350,6 +448,28 @@ export class InvoiceControllerSnapshotTest extends BaseControllerTest {
     )
 
     await runPromise(this.timeRepository.claimForInvoice(legacy, [time]))
+
+    let status: number | undefined
+    let message: string | undefined
+
+    try {
+      await invoiceControllerRecord({
+        client: this.apiClient(),
+        path: { id: legacy.id as never },
+        headers: this.auth(owner),
+        throwOnError: true,
+      })
+    } catch (error: unknown) {
+      if (!axios.isAxiosError(error)) {
+        throw error
+      }
+
+      status = error.response?.status
+      message = error.response?.data?.message
+    }
+
+    expect(status).to.be.eq(409)
+    expect(message).to.contain(legacy.id)
 
     const read = await invoiceControllerRead({
       client: this.apiClient(),
