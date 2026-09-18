@@ -60,9 +60,9 @@ export class CollaboratorAddressFormatTest extends AbstractDatabaseIntegration {
     // Exactly what a wallet puts on the clipboard.
     await runPromise(
       this.projectManager.editAndSave(project, {
-      ...project,
-      workerAddresses: [TON_FRIENDLY],
-      viewerAddresses: [],
+        ...project,
+        workerAddresses: [TON_FRIENDLY],
+        viewerAddresses: [],
       } as never),
     )
 
@@ -90,9 +90,9 @@ export class CollaboratorAddressFormatTest extends AbstractDatabaseIntegration {
 
     await runPromise(
       this.projectManager.editAndSave(project, {
-      ...project,
-      workerAddresses: [TON_FRIENDLY, TON_RAW],
-      viewerAddresses: [],
+        ...project,
+        workerAddresses: [TON_FRIENDLY, TON_RAW],
+        viewerAddresses: [],
       } as never),
     )
 
@@ -115,9 +115,9 @@ export class CollaboratorAddressFormatTest extends AbstractDatabaseIntegration {
 
     await runPromise(
       this.projectManager.editAndSave(project, {
-      ...project,
-      workerAddresses: [checksummed],
-      viewerAddresses: [],
+        ...project,
+        workerAddresses: [checksummed],
+        viewerAddresses: [],
       } as never),
     )
 

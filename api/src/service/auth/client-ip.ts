@@ -109,7 +109,11 @@ export class ClientIp {
       return null
     }
 
-    const groups = [...head, ...new Array<string>(filled).fill('0'), ...tail]
+    const groups = [
+      ...head,
+      ...Array.from({ length: filled }, () => '0'),
+      ...tail,
+    ]
 
     if (
       groups.length !== 8 ||
