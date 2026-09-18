@@ -86,7 +86,8 @@ minted and no DID Core conformance is claimed.
 ```bash
 npm install
 npm test
-npm run deploy:local
+npm run typecheck
+npm run deploy:local   # in-process smoke deploy; nothing outlives the command
 ```
 
 CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm run build`, `npm test` and
@@ -97,6 +98,105 @@ type error in a test or script shows up nowhere else.
 
 `test/fixtures/escrow-terms.contract.json` is shared with the marketplace API
 (`web/api/src/test/fixture`), so both sides agree on the signed terms digest.
+
+## Run the whole flow locally
+
+Everything here targets the local Hardhat chain, chain id 31337, and nothing
+else. `hardhat.config.ts` defines no other network. Before sending anything,
+deploy, mint and time-advance each ask the node for its chain id and refuse
+any other; chain id 1 is refused by name.
+
+1. **Start a node** in its own terminal. It keeps its state until you stop it
+   with Ctrl-C. While idle it mines a block every 5 seconds, so the latest
+   block's timestamp keeps up with the clock. The escrow panel reads that
+   timestamp as "now".
+
+   ```bash
+   npm run node
+   ```
+
+   From the web repository, `docker compose -f docker-compose-dev.yml up chain`
+   runs the same node in a container.
+
+2. **Deploy** the test USDT, `MarketplaceEscrow` and `IdentityRegistry`:
+
+   ```bash
+   npm run deploy:localhost
+   ```
+
+   The token is `TetherLikeUSDT`, so the mainnet approve-reset rule applies
+   locally too. Set `LOCAL_TOKEN=MockUSDT` for a plain ERC-20. The deploy
+   writes `deployments/localhost.json` (the schema is
+   `deployments/manifest.schema.json`; the file is git-ignored). It also
+   prints the `APP_ESCROW_*` lines for `web/api/.env`. The node's account #0
+   deploys, #1 receives the 5% fee and #2 is the origin signer. Hardhat prints
+   #2's key on start, so the key in those lines is public. On a fresh node
+   the addresses are always the same:
+
+   | Contract | Address |
+   | --- | --- |
+   | `TetherLikeUSDT` | `0x5FbDB2315678afecb367f032d93F642f64180aa3` |
+   | `MarketplaceEscrow` | `0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512` |
+   | `IdentityRegistry` | `0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0` |
+
+3. **Fund a wallet** with test USDT, in whole units. A wallet holding less
+   than 1 ETH is topped up to 10 ETH for gas:
+
+   ```bash
+   npm run mint:localhost -- 0xYourWallet 1000
+   ```
+
+4. **Move time.** This calls `evm_increaseTime` and mines one block, so the new
+   time is on chain. It takes seconds, or a number ending in `s`, `m`, `h` or `d`:
+
+   ```bash
+   npm run time:advance -- 8d
+   ```
+
+### Walkthrough: fund, advance, submit, advance, release
+
+The scripted version uses the node's account #3 as the client and #4 as the
+worker. It funds 120 USDT, advances to the end of work, bills 100, advances
+past the 7-day dispute window, releases the bill and refunds the unbilled
+remainder:
+
+```bash
+npm run walkthrough:localhost
+```
+
+```text
+1. fund      client 0x90F79bf6EB2c4f870365E785982E1f101E93b906 funded 120.0 USDT
+2. advance   chain time is now … (work end)
+3. submit    worker 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65 billed 100.0 USDT
+4. advance   chain time is now … (dispute window over)
+5. release   worker +95.0 USDT, fee recipient +5.0 USDT, client refunded 20.0 USDT (spent 100.0 USDT)
+```
+
+The same steps through the site:
+
+1. Paste the printed `APP_ESCROW_*` lines into `web/api/.env` and restart the
+   API. `GET /escrow/config` now returns `enabled: true`, and the escrow panel
+   appears on ACTIVE contracts.
+2. Mint to the client's browser wallet (step 3 above), or import account #3's
+   key. If the wallet does not know chain 31337, connecting offers to add
+   "Hardhat Local" at `http://127.0.0.1:8545`.
+3. As the client, prepare a period that starts soon, then fund it.
+4. `npm run time:advance -- <seconds until work end>`, then submit the invoice
+   as the freelancer.
+5. `npm run time:advance -- 7d`, then release. The freelancer receives 95% and
+   account #1 receives 5%. Refund-remainder returns any unbilled budget.
+
+Two things to know:
+
+- Only the chain's clock moves. The API signs terms against the wall clock,
+  with an origin expiry at most `APP_ESCROW_ORIGIN_TTL_SECONDS` away. Once the
+  chain is further ahead than that TTL, it rejects every new signature as
+  expired. The scripted walkthrough moves the chain 8 days ahead, so run the
+  site steps on a fresh node.
+- Restarting the node wipes every contract, while `deployments/localhost.json`
+  remains. Mint and the walkthrough detect this and ask you to deploy again,
+  which brings back the same addresses. MetaMask also caches nonces for each
+  chain, so after a restart clear the account's activity data.
 
 ## Settlement asset
 

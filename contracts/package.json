@@ -12,7 +12,8 @@
     "node": "hardhat node",
     "deploy:localhost": "hardhat run scripts/deploy.ts --network localhost",
     "mint:localhost": "hardhat --network localhost mint",
-    "time:advance": "hardhat --network localhost time:advance"
+    "time:advance": "hardhat --network localhost time:advance",
+    "walkthrough:localhost": "hardhat --network localhost walkthrough"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.1.2",

@@ -19,13 +19,14 @@ import {
 } from '../scripts/local-chain'
 import { mintLocal } from '../scripts/mint'
 import { advanceTime, parseDuration } from '../scripts/time-advance'
+import { runWalkthrough } from '../scripts/walkthrough'
 
 import type { LocalDeployment } from '../scripts/local-chain'
 
 /**
  * The local chain tooling behind `npm run node`, `deploy:localhost`,
- * `mint:localhost` and `time:advance`, run against the in-process Hardhat chain
- * (the same chain id, 31337, as a `hardhat node`).
+ * `mint:localhost`, `time:advance` and the README walkthrough, run against the
+ * in-process Hardhat chain (the same chain id, 31337, as a `hardhat node`).
  */
 
 const USDT = (value: number | string) => ethers.parseUnits(String(value), 6)
@@ -362,6 +363,37 @@ describe('local chain tooling', () => {
       expect(after.number).to.eq(before.number + 1)
       expect(after.timestamp).to.be.gte(before.timestamp + 7_200)
       expect(after.timestamp).to.be.lt(before.timestamp + 7_200 + 60)
+    })
+  })
+
+  describe('README walkthrough', () => {
+    it('fund, advance, submit, advance, release ends 95 / 5, and the unbilled 20 goes back', async () => {
+      const lines: string[] = []
+      const result = await runWalkthrough(hre, {
+        manifest: file,
+        log: (line) => lines.push(line),
+      })
+      const escrow = await ethers.getContractAt('MarketplaceEscrow', manifest.escrow.address)
+      const token = await ethers.getContractAt('TetherLikeUSDT', manifest.token.address)
+      const allocation = await escrow.readAllocation(result.allocationId)
+
+      expect(lines.map((line) => line.split(/\s+/)[1])).to.deep.eq([
+        'fund',
+        'advance',
+        'submit',
+        'advance',
+        'release',
+      ])
+      expect(result.budget).to.eq(USDT(120))
+      expect(result.billed).to.eq(USDT(100))
+      expect(result.workerReceived).to.eq(USDT(95))
+      expect(result.feeReceived).to.eq(USDT(5))
+      expect(result.clientRefunded).to.eq(USDT(20))
+      expect(result.clientSpent).to.eq(USDT(100))
+      expect(allocation.state).to.eq(BigInt(6)) // Released
+      expect(allocation.remainderRefunded).to.eq(true)
+      expect(await escrow.heldOf(result.allocationId)).to.eq(BigInt(0))
+      expect(await token.balanceOf(manifest.escrow.address)).to.eq(await escrow.totalHeld())
     })
   })
 })

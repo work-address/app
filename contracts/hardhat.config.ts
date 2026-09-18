@@ -15,6 +15,7 @@ import {
 } from './scripts/local-chain'
 import { mintLocal } from './scripts/mint'
 import { advanceTime, parseDuration } from './scripts/time-advance'
+import { runWalkthrough } from './scripts/walkthrough'
 
 /**
  * Local development and tests only. There is deliberately no public network
@@ -70,6 +71,12 @@ task('time:advance', 'Moves the local chain clock forward and mines a block')
       `Block ${before.number} at ${new Date(before.timestamp * 1000).toISOString()} -> ` +
         `block ${after.number} at ${new Date(after.timestamp * 1000).toISOString()}`,
     )
+  })
+
+task('walkthrough', 'Funds, submits, releases and refunds one allocation on the local deployment')
+  .addOptionalParam('manifest', 'Deployment manifest (default: deployments/<network>.json)')
+  .setAction(async ({ manifest }, hre) => {
+    await runWalkthrough(hre, { manifest: manifest ?? manifestPath(hre.network.name) })
   })
 
 export default config
