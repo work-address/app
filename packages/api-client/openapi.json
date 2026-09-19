@@ -771,6 +771,27 @@
           "sort"
         ]
       },
+      "IdentityPublishDto": {
+        "properties": {
+          "presentation": {
+            "type": "object"
+          },
+          "custody": {
+            "enum": [
+              "hosted",
+              "holder"
+            ],
+            "type": "string"
+          },
+          "export": {
+            "type": "object"
+          }
+        },
+        "type": "object",
+        "required": [
+          "presentation"
+        ]
+      },
       "ProjectSearchSortDto": {
         "properties": {
           "createdAt": {
@@ -2524,6 +2545,433 @@
           }
         },
         "summary": "Update current user profile",
+        "tags": [
+          "User"
+        ]
+      }
+    },
+    "/api/user/identity": {
+      "put": {
+        "operationId": "UserController.publishIdentity",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentityPublishDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "address",
+                    "subject",
+                    "version",
+                    "presentation",
+                    "status",
+                    "history",
+                    "custody"
+                  ],
+                  "properties": {
+                    "address": {
+                      "type": "string"
+                    },
+                    "subject": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    },
+                    "presentation": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "status": {
+                      "type": "object",
+                      "required": [
+                        "result",
+                        "subjectDeactivated",
+                        "checkedAtBlock",
+                        "finalized",
+                        "unavailable"
+                      ],
+                      "properties": {
+                        "result": {
+                          "type": "string",
+                          "enum": [
+                            "Unpublished",
+                            "VersionUnknown",
+                            "CommitmentMismatch",
+                            "SchemaMismatch",
+                            "Superseded",
+                            "Deactivated",
+                            "Current",
+                            null
+                          ],
+                          "nullable": true
+                        },
+                        "subjectDeactivated": {
+                          "type": "boolean",
+                          "nullable": true
+                        },
+                        "checkedAtBlock": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "finalized": {
+                          "type": "boolean"
+                        },
+                        "unavailable": {
+                          "type": "string",
+                          "enum": [
+                            "NotConfigured",
+                            "RpcUnavailable",
+                            "WrongChain",
+                            null
+                          ],
+                          "nullable": true
+                        }
+                      }
+                    },
+                    "history": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "kind",
+                          "version",
+                          "schemaId",
+                          "commitment",
+                          "at",
+                          "blockNumber",
+                          "transactionHash",
+                          "logIndex"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "PUBLISHED",
+                              "DEACTIVATED"
+                            ]
+                          },
+                          "version": {
+                            "type": "integer"
+                          },
+                          "schemaId": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "commitment": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "blockNumber": {
+                            "type": "integer"
+                          },
+                          "transactionHash": {
+                            "type": "string"
+                          },
+                          "logIndex": {
+                            "type": "integer"
+                          }
+                        }
+                      },
+                      "nullable": true
+                    },
+                    "custody": {
+                      "type": "string",
+                      "enum": [
+                        "hosted",
+                        "holder"
+                      ]
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "description": "The presentation's subject is another account"
+          },
+          "409": {
+            "description": "The registry does not hold it as the current version: unpublished, superseded, withdrawn, or another commitment or schema"
+          },
+          "422": {
+            "description": "The account cannot be anchored (TON, Solana), or the presentation or export does not verify, or names another registry"
+          },
+          "503": {
+            "description": "Anchoring is not configured here, or the chain could not be read; says nothing about the presentation"
+          }
+        },
+        "summary": "Host the caller's current anchored profile presentation (EVM accounts only); verified offline and against IdentityRegistry, and stored only if it is the current version",
+        "tags": [
+          "User"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "UserController.removeIdentity",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "removed",
+                    "exportRemoved",
+                    "chainUnchanged",
+                    "message"
+                  ],
+                  "properties": {
+                    "removed": {
+                      "type": "boolean"
+                    },
+                    "exportRemoved": {
+                      "type": "boolean"
+                    },
+                    "chainUnchanged": {
+                      "type": "boolean"
+                    },
+                    "message": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Remove the hosted presentation and any held export; IdentityRegistry and copies elsewhere are unchanged",
+        "tags": [
+          "User"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/user/identity/export": {
+      "get": {
+        "operationId": "UserController.identityExport",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "additionalProperties": true
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "The caller's private export, held under hosted salt custody: every field's value and salt",
+        "tags": [
+          "User"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/user/{address}/identity": {
+      "get": {
+        "operationId": "UserController.readIdentity",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "address",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/User"
+            }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "address",
+                    "subject",
+                    "version",
+                    "presentation",
+                    "status",
+                    "history"
+                  ],
+                  "properties": {
+                    "address": {
+                      "type": "string"
+                    },
+                    "subject": {
+                      "type": "string"
+                    },
+                    "version": {
+                      "type": "integer"
+                    },
+                    "presentation": {
+                      "type": "object",
+                      "additionalProperties": true
+                    },
+                    "status": {
+                      "type": "object",
+                      "required": [
+                        "result",
+                        "subjectDeactivated",
+                        "checkedAtBlock",
+                        "finalized",
+                        "unavailable"
+                      ],
+                      "properties": {
+                        "result": {
+                          "type": "string",
+                          "enum": [
+                            "Unpublished",
+                            "VersionUnknown",
+                            "CommitmentMismatch",
+                            "SchemaMismatch",
+                            "Superseded",
+                            "Deactivated",
+                            "Current",
+                            null
+                          ],
+                          "nullable": true
+                        },
+                        "subjectDeactivated": {
+                          "type": "boolean",
+                          "nullable": true
+                        },
+                        "checkedAtBlock": {
+                          "type": "integer",
+                          "nullable": true
+                        },
+                        "finalized": {
+                          "type": "boolean"
+                        },
+                        "unavailable": {
+                          "type": "string",
+                          "enum": [
+                            "NotConfigured",
+                            "RpcUnavailable",
+                            "WrongChain",
+                            null
+                          ],
+                          "nullable": true
+                        }
+                      }
+                    },
+                    "history": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "kind",
+                          "version",
+                          "schemaId",
+                          "commitment",
+                          "at",
+                          "blockNumber",
+                          "transactionHash",
+                          "logIndex"
+                        ],
+                        "properties": {
+                          "kind": {
+                            "type": "string",
+                            "enum": [
+                              "PUBLISHED",
+                              "DEACTIVATED"
+                            ]
+                          },
+                          "version": {
+                            "type": "integer"
+                          },
+                          "schemaId": {
+                            "type": "integer",
+                            "nullable": true
+                          },
+                          "commitment": {
+                            "type": "string",
+                            "nullable": true
+                          },
+                          "at": {
+                            "type": "string",
+                            "format": "date-time"
+                          },
+                          "blockNumber": {
+                            "type": "integer"
+                          },
+                          "transactionHash": {
+                            "type": "string"
+                          },
+                          "logIndex": {
+                            "type": "integer"
+                          }
+                        }
+                      },
+                      "nullable": true
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "User does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "NotFoundError"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "User does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "An account's hosted profile presentation, with the registry's answer about it now and its version history; a hidden profile is found only by its holder",
         "tags": [
           "User"
         ]

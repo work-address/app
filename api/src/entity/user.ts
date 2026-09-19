@@ -18,6 +18,15 @@ import { EmailConstraint } from '@/entity/constraint/email-constraint'
 import { EUserRole } from '@/model/user'
 import { IUser } from '@/model/user'
 import { Project } from '@/entity/project'
+import type { ProfileExport, ProfilePresentation } from '@/vendor/identity'
+
+/** Read and written only by UserRepository's hosted-identity methods. */
+const IDENTITY_COLUMN = {
+  nullable: true,
+  select: false,
+  insert: false,
+  update: false,
+} as const
 
 /**
  * Three read projections, from narrowest to broadest:
@@ -176,8 +185,8 @@ export class User extends AbstractBaseEntity implements IUser {
 
   /**
    * Whether the profile is public. A hidden one answers 404 to everyone but
-   * its holder at GET /user/:address/address, and is left out of other
-   * people's /user/search. Only the holder reads or sets it: nobody else is
+   * its holder at GET /user/:address/address and /user/:address/identity,
+   * and is left out of other people's /user/search. Only the holder reads or sets it: nobody else is
    * shown the profile, so nobody else is told it was hidden.
    *
    * It hides what this service serves, and nothing more. A profile published
@@ -194,4 +203,36 @@ export class User extends AbstractBaseEntity implements IUser {
   @ValidateIf((_user, value) => value !== undefined, { groups: ['edit'] })
   @IsBoolean({ groups: ['edit'] })
   visible: boolean
+
+  /*
+   * Portable identity (IdentityManager). The hosted copy of the holder's
+   * CURRENT anchored presentation, and nothing older: the version history is
+   * IdentityRegistry's, read from its events whenever it is shown, so no
+   * table here duplicates the chain. These are columns on User rather than a
+   * domain of their own because a profile presentation is the user's profile.
+   *
+   * None of them is in any serialization group, so no user response - public,
+   * search or the holder's own - can carry them, and `select: false` keeps
+   * them out of every load but the identity routes' own. `insert` and
+   * `update` false: saving a User never writes them - TypeORM sets a fresh
+   * row's nullable columns to null on the object it inserted, and a later
+   * save of that object would otherwise wipe a presentation hosted since.
+   * UserRepository writes them itself, and nothing else does.
+   */
+
+  /** The presentation as the holder anchored it (profile schema v1). */
+  @Column('jsonb', IDENTITY_COLUMN)
+  identityPresentation?: ProfilePresentation | null
+
+  /** The registry version the presentation is anchored as. */
+  @Column('int', IDENTITY_COLUMN)
+  identityVersion?: number | null
+
+  /**
+   * Under hosted salt custody, the holder's private export for that
+   * presentation: every field's value and salt. It lets the operator open
+   * every field of the commitment, which is exactly what SPEC.md says.
+   */
+  @Column('jsonb', IDENTITY_COLUMN)
+  identityExport?: ProfileExport | null
 }

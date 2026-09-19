@@ -311,7 +311,61 @@ a profile does not undo a collaboration.
 Hiding is about the pages this service serves and nothing else. It never
 touches a profile published on chain: that stays current until its holder
 withdraws it there, and a withdrawal is itself on chain, where every earlier
-version stays readable. The edit form says so next to the switch.
+version stays readable. The edit form says so next to the switch. The hosted
+identity (`GET /user/:address/identity`, below) is hidden with the profile.
+
+## Portable identity
+
+A holder can anchor a profile on chain: their wallet publishes a commitment
+to `IdentityRegistry` (profile schema v1, from the contracts repository), and
+this service hosts the presentation that opens it, so the public profile can
+show which fields are anchored. It is part of `User`, not a domain of its
+own: the profile it commits to is the user's profile.
+
+- **Where.** `GET /identity/config` (anonymous) names the chain and registry
+  this instance reads (`APP_IDENTITY_*`), or `enabled: false`. The service
+  only reads the chain; the holder's own wallet sends every transaction.
+- **Only EVM accounts anchor.** The registry keys records by a 20-byte EVM
+  address (`did:pkh:eip155`), so a TON or Solana account is refused by name
+  (422) - which takes nothing away from a self-signed export made on the
+  holder's device.
+- **What is hosted.** `PUT /user/identity` takes an anchored presentation,
+  checks it offline with `@work-address/identity` (vendored under
+  `api/src/vendor/identity`, pinned to the published vectors) and then with
+  the registry's own `checkPresentation`, and stores it only when its
+  subject is the caller (403) and the chain holds it as the subject's
+  **current** version. A superseded, withdrawn or unpublished version is
+  refused (409) rather than stored as such: the hosted copy is the current
+  profile. It is three columns on `User` - the presentation, its version and
+  the export below - in no serialisation group, and never written by a save
+  of the user. Only the current presentation is kept; the version history
+  is the registry's, read from its events whenever
+  `GET /user/:address/identity` shows it, with the chain's answer now
+  (`result`, `subjectDeactivated`, the block checked and whether the
+  finalized block agrees). A chain that cannot be read is reported as such
+  (503 on publish, `status.unavailable` on read), never as a failed proof.
+- **Taking it down.** `DELETE /user/identity` removes the hosted copy and
+  the held export, and nothing else: the registry keeps every version the
+  holder published and copies others saved remain (SC-A07). Withdrawing on
+  chain is the holder's `deactivate` transaction. Hiding the profile hides
+  the hosted identity from everyone but its holder too.
+
+**Salt custody (adopted default; the owner decision is still open).** Every
+field is committed with its own random salt, and who holds those salts
+decides who can open the commitment. By default (`custody: hosted`) the
+holder sends their private export with the presentation - every field's
+value and salt - and this service keeps it, returning it to the holder alone
+(`GET /user/identity/export`). This protects the profile from **chain
+observers**: the commitment on chain opens nothing, and no field can be
+guessed and checked against it without its salt. It does **not** protect it
+from the **platform operator**, who holds every value in the `User` table and
+every salt in the export, and so can open any field of the commitment. A
+holder who wants the operator unable to open the fields they did not show
+asks for `custody: holder`: only the presentation is stored - the salts of
+the fields shown in public, which are public anyway - and the export stays on
+their device. Profile schema v1 itself recommends drawing salts on the
+holder's device and says a service keeping the export must state what it can
+see; this is that statement.
 
 ## What premium governs
 

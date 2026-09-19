@@ -15,6 +15,7 @@ import { InvoiceRecord } from '@/service/invoice-record'
 import { EntitlementSignature } from '@/service/entitlement-signature'
 import { UserManager } from '@/service/user-manager'
 import { IdentityManager } from '@/service/identity-manager'
+import { IdentityChainFactory } from '@/service/identity-chain-factory'
 import { Mailer } from '@/service/mailer'
 import { Faker } from '@/service/faker'
 import { Authenticator } from '@/service/auth/authenticator'
@@ -86,6 +87,10 @@ export class AppContainer {
       .to(EntitlementSignature)
     container.bind<UserManager>('UserManager').to(UserManager)
     container.bind<IdentityManager>('IdentityManager').to(IdentityManager)
+    container
+      .bind<IdentityChainFactory>('IdentityChainFactory')
+      .to(IdentityChainFactory)
+      .inSingletonScope()
     container.bind<TimeManager>('TimeManager').to(TimeManager)
     container.bind<InvoiceManager>('InvoiceManager').to(InvoiceManager)
     container.bind<Mailer>('Mailer').to(Mailer)

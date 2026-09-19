@@ -178,6 +178,16 @@ export type UserSearchDto = {
     limit?: number;
 };
 
+export type IdentityPublishDto = {
+    presentation: {
+        [key: string]: unknown;
+    };
+    custody?: 'hosted' | 'holder';
+    export?: {
+        [key: string]: unknown;
+    };
+};
+
 export type ProjectSearchSortDto = {
     createdAt?: 'ASC' | 'DESC';
     updatedAt?: 'ASC' | 'DESC';
@@ -681,6 +691,150 @@ export type UserControllerEditResponses = {
 };
 
 export type UserControllerEditResponse = UserControllerEditResponses[keyof UserControllerEditResponses];
+
+export type UserControllerRemoveIdentityData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/user/identity';
+};
+
+export type UserControllerRemoveIdentityResponses = {
+    200: {
+        removed: boolean;
+        exportRemoved: boolean;
+        chainUnchanged: boolean;
+        message: string;
+    };
+};
+
+export type UserControllerRemoveIdentityResponse = UserControllerRemoveIdentityResponses[keyof UserControllerRemoveIdentityResponses];
+
+export type UserControllerPublishIdentityData = {
+    body: IdentityPublishDto;
+    path?: never;
+    query?: never;
+    url: '/api/user/identity';
+};
+
+export type UserControllerPublishIdentityErrors = {
+    /**
+     * The presentation's subject is another account
+     */
+    403: unknown;
+    /**
+     * The registry does not hold it as the current version: unpublished, superseded, withdrawn, or another commitment or schema
+     */
+    409: unknown;
+    /**
+     * The account cannot be anchored (TON, Solana), or the presentation or export does not verify, or names another registry
+     */
+    422: unknown;
+    /**
+     * Anchoring is not configured here, or the chain could not be read; says nothing about the presentation
+     */
+    503: unknown;
+};
+
+export type UserControllerPublishIdentityResponses = {
+    200: {
+        address: string;
+        subject: string;
+        version: number;
+        presentation: {
+            [key: string]: unknown;
+        };
+        status: {
+            result: 'Unpublished' | 'VersionUnknown' | 'CommitmentMismatch' | 'SchemaMismatch' | 'Superseded' | 'Deactivated' | 'Current' | null;
+            subjectDeactivated: boolean | null;
+            checkedAtBlock: number | null;
+            finalized: boolean;
+            unavailable: 'NotConfigured' | 'RpcUnavailable' | 'WrongChain' | null;
+        };
+        history: Array<{
+            kind: 'PUBLISHED' | 'DEACTIVATED';
+            version: number;
+            schemaId: number | null;
+            commitment: string | null;
+            at: string;
+            blockNumber: number;
+            transactionHash: string;
+            logIndex: number;
+        }> | null;
+        custody: 'hosted' | 'holder';
+    };
+};
+
+export type UserControllerPublishIdentityResponse = UserControllerPublishIdentityResponses[keyof UserControllerPublishIdentityResponses];
+
+export type UserControllerIdentityExportData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/user/identity/export';
+};
+
+export type UserControllerIdentityExportResponses = {
+    200: {
+        [key: string]: unknown;
+    };
+};
+
+export type UserControllerIdentityExportResponse = UserControllerIdentityExportResponses[keyof UserControllerIdentityExportResponses];
+
+export type UserControllerReadIdentityData = {
+    body?: never;
+    headers?: {
+        Authorization?: string;
+    };
+    path: {
+        address: User;
+    };
+    query?: never;
+    url: '/api/user/{address}/identity';
+};
+
+export type UserControllerReadIdentityErrors = {
+    /**
+     * User does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type UserControllerReadIdentityError = UserControllerReadIdentityErrors[keyof UserControllerReadIdentityErrors];
+
+export type UserControllerReadIdentityResponses = {
+    200: {
+        address: string;
+        subject: string;
+        version: number;
+        presentation: {
+            [key: string]: unknown;
+        };
+        status: {
+            result: 'Unpublished' | 'VersionUnknown' | 'CommitmentMismatch' | 'SchemaMismatch' | 'Superseded' | 'Deactivated' | 'Current' | null;
+            subjectDeactivated: boolean | null;
+            checkedAtBlock: number | null;
+            finalized: boolean;
+            unavailable: 'NotConfigured' | 'RpcUnavailable' | 'WrongChain' | null;
+        };
+        history: Array<{
+            kind: 'PUBLISHED' | 'DEACTIVATED';
+            version: number;
+            schemaId: number | null;
+            commitment: string | null;
+            at: string;
+            blockNumber: number;
+            transactionHash: string;
+            logIndex: number;
+        }> | null;
+    };
+};
+
+export type UserControllerReadIdentityResponse = UserControllerReadIdentityResponses[keyof UserControllerReadIdentityResponses];
 
 export type IdentityControllerConfigData = {
     body?: never;

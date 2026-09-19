@@ -10,6 +10,7 @@ import {
 } from '@/repository/abstract-repository-template'
 import { fromPromise } from '@/service/effect-bridge'
 import { UserSearchDto } from '@/model/dto/user'
+import { IHostedIdentity } from '@/model/identity'
 import { WalletAddress } from '@/service/wallet-address'
 
 @injectable()
@@ -54,6 +55,72 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
         .take(limit)
         .getManyAndCount(),
     )
+  }
+
+  /** The user's hosted presentation, or undefined when none is held. */
+  public findHostedIdentity(
+    user: User,
+  ): RepoEffect<IHostedIdentity | undefined> {
+    return fromPromise(async () => {
+      const row = await this.getRepo()
+        .createQueryBuilder('user')
+        .select('user.id')
+        .addSelect([
+          'user.identityPresentation',
+          'user.identityVersion',
+          'user.identityExport',
+        ])
+        .where('user.id = :id', { id: user.id })
+        .getOne()
+
+      if (!row?.identityPresentation || !row.identityVersion) {
+        return undefined
+      }
+
+      return {
+        presentation: row.identityPresentation,
+        version: row.identityVersion,
+        export: row.identityExport ?? null,
+      }
+    })
+  }
+
+  /**
+   * Replaces whatever was held: only the current presentation is kept.
+   *
+   * SQL rather than `update()`, because the columns are `update: false` so
+   * that no save of a User can touch them (see User) - and TypeORM's update
+   * builder honours that too.
+   */
+  public saveHostedIdentity(
+    user: User,
+    identity: IHostedIdentity,
+  ): RepoEffect<void> {
+    return this.writeHostedIdentity(user, [
+      JSON.stringify(identity.presentation),
+      identity.version,
+      identity.export === null ? null : JSON.stringify(identity.export),
+    ])
+  }
+
+  public removeHostedIdentity(user: User): RepoEffect<void> {
+    return this.writeHostedIdentity(user, [null, null, null])
+  }
+
+  private writeHostedIdentity(
+    user: User,
+    [presentation, version, held]: [
+      string | null,
+      number | null,
+      string | null,
+    ],
+  ): RepoEffect<void> {
+    return fromPromise(async () => {
+      await this.getRepo().query(
+        'UPDATE "user" SET "identityPresentation" = $1, "identityVersion" = $2, "identityExport" = $3 WHERE "id" = $4',
+        [presentation, version, held, user.id],
+      )
+    })
   }
 
   public findByEmailPhoneOrFail(emailOrPhone: string): RepoEffect<User> {

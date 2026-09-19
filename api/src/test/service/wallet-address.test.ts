@@ -1,6 +1,7 @@
 import { suite, test } from '@testdeck/mocha'
 import { expect } from 'chai'
 
+import { EWalletChain } from '@/model/user'
 import { WalletAddress } from '@/service/wallet-address'
 
 const RAW = '0:4a5d1923244b0a845a7b5d8a29fd654b5a2a7a0331ce597e445b98dd23ab4025'
@@ -12,6 +13,18 @@ const SOLANA = '7xKXtg2CW87d97TXJSDpbD5jBkheTqA83TZRuJosgAsU'
 
 @suite()
 export class WalletAddressTest {
+  /** Which account can anchor on IdentityRegistry is decided by this. */
+  @test()
+  chainOfNamesEachAccountsChain() {
+    expect(WalletAddress.chainOf(EVM)).to.equal(EWalletChain.EVM)
+    expect(WalletAddress.chainOf(EVM.toLowerCase())).to.equal(EWalletChain.EVM)
+    expect(WalletAddress.chainOf(` ${EVM} `)).to.equal(EWalletChain.EVM)
+    expect(WalletAddress.chainOf(RAW)).to.equal(EWalletChain.TON)
+    expect(WalletAddress.chainOf(FRIENDLY)).to.equal(EWalletChain.TON)
+    expect(WalletAddress.chainOf(BOUNCEABLE)).to.equal(EWalletChain.TON)
+    expect(WalletAddress.chainOf(SOLANA)).to.equal(EWalletChain.SOLANA)
+  }
+
   /** The bug this exists for: a friendly address must match the stored raw one. */
   @test()
   friendlyAndRawTonAreTheSameAccount() {

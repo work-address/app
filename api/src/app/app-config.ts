@@ -51,6 +51,9 @@ export class AppConfig {
         ).trim(),
         rpcUrl: (process.env.APP_IDENTITY_RPC_URL ?? '').trim(),
         manifestUrl: (process.env.APP_IDENTITY_MANIFEST_URL ?? '').trim(),
+        deployBlock: AppConfig.blockNumber(
+          process.env.APP_IDENTITY_DEPLOY_BLOCK,
+        ),
       },
       database: {
         type: 'postgres',
@@ -61,6 +64,19 @@ export class AppConfig {
         database: process.env.APP_DB_NAME as string,
       },
     }
+  }
+
+  /** A block number in decimal, or 0 (the chain's first block) for anything else. */
+  private static blockNumber(raw: string | undefined): number {
+    const value = (raw ?? '').trim()
+
+    if (!/^(0|[1-9]\d*)$/.test(value)) {
+      return 0
+    }
+
+    const block = Number(value)
+
+    return Number.isSafeInteger(block) ? block : 0
   }
 
   /**

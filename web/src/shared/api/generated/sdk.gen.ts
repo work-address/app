@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthControllerCheckProofHandlerData, AuthControllerCheckProofHandlerResponses, AuthControllerLoginEthData, AuthControllerLoginEthResponses, AuthControllerLoginSolanaData, AuthControllerLoginSolanaResponses, AuthControllerNonceData, AuthControllerNonceResponses, AuthControllerRefreshData, AuthControllerRefreshResponses, AuthControllerStatusData, AuthControllerStatusResponses, AuthControllerTonNonceData, AuthControllerTonNonceResponses, AuthTimeTrackerControllerTimeTrackerConnectData, AuthTimeTrackerControllerTimeTrackerConnectResponses, AuthTimeTrackerControllerTimeTrackerLoginData, AuthTimeTrackerControllerTimeTrackerLoginResponses, AuthTimeTrackerControllerTimeTrackerNonceGenerateData, AuthTimeTrackerControllerTimeTrackerNonceGenerateResponses, AuthTimeTrackerControllerTimeTrackerNonceGetData, AuthTimeTrackerControllerTimeTrackerNonceGetResponses, HelpControllerSwaggerData, HelpControllerSwaggerResponses, IdentityControllerConfigData, IdentityControllerConfigResponses, InvoiceControllerCreateData, InvoiceControllerCreateErrors, InvoiceControllerCreateResponses, InvoiceControllerEscrowSubmissionData, InvoiceControllerEscrowSubmissionErrors, InvoiceControllerEscrowSubmissionResponses, InvoiceControllerMarkPaidData, InvoiceControllerMarkPaidErrors, InvoiceControllerMarkPaidResponses, InvoiceControllerMarkUnpaidData, InvoiceControllerMarkUnpaidErrors, InvoiceControllerMarkUnpaidResponses, InvoiceControllerReadData, InvoiceControllerReadErrors, InvoiceControllerReadResponses, InvoiceControllerRecordData, InvoiceControllerRecordErrors, InvoiceControllerRecordResponses, InvoiceControllerSearchData, InvoiceControllerSearchResponses, ProjectControllerCloseData, ProjectControllerCloseErrors, ProjectControllerCloseResponses, ProjectControllerCreateData, ProjectControllerCreateResponses, ProjectControllerDeleteData, ProjectControllerDeleteErrors, ProjectControllerDeleteResponses, ProjectControllerEditData, ProjectControllerEditErrors, ProjectControllerEditResponses, ProjectControllerGetStatsData, ProjectControllerGetStatsErrors, ProjectControllerGetStatsResponses, ProjectControllerReadData, ProjectControllerReadErrors, ProjectControllerReadResponses, ProjectControllerSearchData, ProjectControllerSearchResponses, TimeControllerCreateOrUpdateManyData, TimeControllerCreateOrUpdateManyResponses, TimeControllerDeleteData, TimeControllerDeleteErrors, TimeControllerDeleteResponses, TimeControllerEditData, TimeControllerEditErrors, TimeControllerEditResponses, TimeControllerGetTotalsData, TimeControllerGetTotalsErrors, TimeControllerGetTotalsResponses, TimeControllerMarkPaidData, TimeControllerMarkPaidResponses, TimeControllerMarkUnpaidData, TimeControllerMarkUnpaidResponses, TimeControllerReadData, TimeControllerReadErrors, TimeControllerReadResponses, TimeControllerRemoveProcessesData, TimeControllerRemoveProcessesResponses, TimeControllerRemoveScreenshotsData, TimeControllerRemoveScreenshotsResponses, TimeControllerSearchData, TimeControllerSearchResponses, UserControllerEditData, UserControllerEditResponses, UserControllerReadData, UserControllerReadErrors, UserControllerReadResponses, UserControllerSearchData, UserControllerSearchResponses } from './types.gen';
+import type { AuthControllerCheckProofHandlerData, AuthControllerCheckProofHandlerResponses, AuthControllerLoginEthData, AuthControllerLoginEthResponses, AuthControllerLoginSolanaData, AuthControllerLoginSolanaResponses, AuthControllerNonceData, AuthControllerNonceResponses, AuthControllerRefreshData, AuthControllerRefreshResponses, AuthControllerStatusData, AuthControllerStatusResponses, AuthControllerTonNonceData, AuthControllerTonNonceResponses, AuthTimeTrackerControllerTimeTrackerConnectData, AuthTimeTrackerControllerTimeTrackerConnectResponses, AuthTimeTrackerControllerTimeTrackerLoginData, AuthTimeTrackerControllerTimeTrackerLoginResponses, AuthTimeTrackerControllerTimeTrackerNonceGenerateData, AuthTimeTrackerControllerTimeTrackerNonceGenerateResponses, AuthTimeTrackerControllerTimeTrackerNonceGetData, AuthTimeTrackerControllerTimeTrackerNonceGetResponses, HelpControllerSwaggerData, HelpControllerSwaggerResponses, IdentityControllerConfigData, IdentityControllerConfigResponses, InvoiceControllerCreateData, InvoiceControllerCreateErrors, InvoiceControllerCreateResponses, InvoiceControllerEscrowSubmissionData, InvoiceControllerEscrowSubmissionErrors, InvoiceControllerEscrowSubmissionResponses, InvoiceControllerMarkPaidData, InvoiceControllerMarkPaidErrors, InvoiceControllerMarkPaidResponses, InvoiceControllerMarkUnpaidData, InvoiceControllerMarkUnpaidErrors, InvoiceControllerMarkUnpaidResponses, InvoiceControllerReadData, InvoiceControllerReadErrors, InvoiceControllerReadResponses, InvoiceControllerRecordData, InvoiceControllerRecordErrors, InvoiceControllerRecordResponses, InvoiceControllerSearchData, InvoiceControllerSearchResponses, ProjectControllerCloseData, ProjectControllerCloseErrors, ProjectControllerCloseResponses, ProjectControllerCreateData, ProjectControllerCreateResponses, ProjectControllerDeleteData, ProjectControllerDeleteErrors, ProjectControllerDeleteResponses, ProjectControllerEditData, ProjectControllerEditErrors, ProjectControllerEditResponses, ProjectControllerGetStatsData, ProjectControllerGetStatsErrors, ProjectControllerGetStatsResponses, ProjectControllerReadData, ProjectControllerReadErrors, ProjectControllerReadResponses, ProjectControllerSearchData, ProjectControllerSearchResponses, TimeControllerCreateOrUpdateManyData, TimeControllerCreateOrUpdateManyResponses, TimeControllerDeleteData, TimeControllerDeleteErrors, TimeControllerDeleteResponses, TimeControllerEditData, TimeControllerEditErrors, TimeControllerEditResponses, TimeControllerGetTotalsData, TimeControllerGetTotalsErrors, TimeControllerGetTotalsResponses, TimeControllerMarkPaidData, TimeControllerMarkPaidResponses, TimeControllerMarkUnpaidData, TimeControllerMarkUnpaidResponses, TimeControllerReadData, TimeControllerReadErrors, TimeControllerReadResponses, TimeControllerRemoveProcessesData, TimeControllerRemoveProcessesResponses, TimeControllerRemoveScreenshotsData, TimeControllerRemoveScreenshotsResponses, TimeControllerSearchData, TimeControllerSearchResponses, UserControllerEditData, UserControllerEditResponses, UserControllerIdentityExportData, UserControllerIdentityExportResponses, UserControllerPublishIdentityData, UserControllerPublishIdentityErrors, UserControllerPublishIdentityResponses, UserControllerReadData, UserControllerReadErrors, UserControllerReadIdentityData, UserControllerReadIdentityErrors, UserControllerReadIdentityResponses, UserControllerReadResponses, UserControllerRemoveIdentityData, UserControllerRemoveIdentityResponses, UserControllerSearchData, UserControllerSearchResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -139,6 +139,49 @@ export const userControllerEdit = <ThrowOnError extends boolean = false>(options
         'Content-Type': 'application/json',
         ...options.headers
     }
+});
+
+/**
+ * Remove the hosted presentation and any held export; IdentityRegistry and copies elsewhere are unchanged
+ */
+export const userControllerRemoveIdentity = <ThrowOnError extends boolean = false>(options?: Options<UserControllerRemoveIdentityData, ThrowOnError>) => (options?.client ?? client).delete<UserControllerRemoveIdentityResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/user/identity',
+    ...options
+});
+
+/**
+ * Host the caller's current anchored profile presentation (EVM accounts only); verified offline and against IdentityRegistry, and stored only if it is the current version
+ */
+export const userControllerPublishIdentity = <ThrowOnError extends boolean = false>(options: Options<UserControllerPublishIdentityData, ThrowOnError>) => (options.client ?? client).put<UserControllerPublishIdentityResponses, UserControllerPublishIdentityErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/user/identity',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The caller's private export, held under hosted salt custody: every field's value and salt
+ */
+export const userControllerIdentityExport = <ThrowOnError extends boolean = false>(options?: Options<UserControllerIdentityExportData, ThrowOnError>) => (options?.client ?? client).get<UserControllerIdentityExportResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/user/identity/export',
+    ...options
+});
+
+/**
+ * An account's hosted profile presentation, with the registry's answer about it now and its version history; a hidden profile is found only by its holder
+ */
+export const userControllerReadIdentity = <ThrowOnError extends boolean = false>(options: Options<UserControllerReadIdentityData, ThrowOnError>) => (options.client ?? client).get<UserControllerReadIdentityResponses, UserControllerReadIdentityErrors, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/user/{address}/identity',
+    ...options
 });
 
 /**

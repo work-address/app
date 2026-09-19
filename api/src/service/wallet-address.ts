@@ -1,6 +1,8 @@
 import { Address } from '@ton/core'
 import { injectable } from 'inversify'
 
+import { EWalletChain } from '@/model/user'
+
 /** TON user-friendly address (EQ/UQ/kQ/0Q + 46 base64url chars). */
 const TON_FRIENDLY = /^[0EKUk][Qq][\w-]{46}$/
 /** TON raw address, e.g. `0:4a5d…`. */
@@ -101,6 +103,25 @@ export class WalletAddress {
     }
 
     return value
+  }
+
+  /**
+   * Which chain an account address is on, by its spelling: an EVM address or
+   * either TON form, and otherwise Solana - the third chain an account can
+   * sign in with, and the one whose base58 has no fixed prefix to test.
+   */
+  public static chainOf(address: string): EWalletChain {
+    const value = address.trim()
+
+    if (EVM.test(value)) {
+      return EWalletChain.EVM
+    }
+
+    if (TON_FRIENDLY.test(value) || TON_RAW.test(value)) {
+      return EWalletChain.TON
+    }
+
+    return EWalletChain.SOLANA
   }
 
   /** Equality on the canonical form, so the two spellings compare equal. */

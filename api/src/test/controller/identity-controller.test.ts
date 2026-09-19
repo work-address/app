@@ -1,5 +1,5 @@
 import { expect } from 'chai'
-import { suite, test } from '@testdeck/mocha'
+import { suite, test, timeout } from '@testdeck/mocha'
 
 import { identityControllerConfig } from '@app/api-client'
 
@@ -16,11 +16,13 @@ const MANIFEST_URL = 'https://example.test/deployments/localhost.json'
 export class IdentityControllerTest extends BaseControllerTest {
   private saved: IConfigParameters['identity']
 
+  @timeout(10000)
   async before() {
     await super.before()
     this.saved = { ...this.parameters.identity }
   }
 
+  @timeout(10000)
   async after() {
     Object.assign(this.parameters.identity, this.saved)
     await super.after()
@@ -32,6 +34,7 @@ export class IdentityControllerTest extends BaseControllerTest {
       registryAddress: '',
       rpcUrl: '',
       manifestUrl: '',
+      deployBlock: 0,
       ...identity,
     })
   }

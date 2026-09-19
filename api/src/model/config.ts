@@ -27,6 +27,12 @@ export interface IConfigParameters {
     rpcUrl: string
     /** Where the signed release manifest naming this registry is published. */
     manifestUrl: string
+    /**
+     * The registry's deployment block: where the version history's event
+     * scan starts. 0 when unset, which a local node answers but a public
+     * RPC's log-range limit may not.
+     */
+    deployBlock: number
   }
   database: {
     type: string
