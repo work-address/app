@@ -53,6 +53,14 @@ same buckets, so two people tracking one project at once send the same
 and a project's totals count every author's rows. The same author sending a
 slice again updates their own row. Nobody else's row is ever touched.
 
+**A slice claims only what a tracker could have recorded.** Invoices bill
+`minutesActive`, so the server bounds every row `POST /time` receives
+(`TimeBounds`): `fromAt` before `toAt` and at most 60 minutes apart, `toAt`
+at most 5 minutes past the server's clock, `minutesActive` from 0 to the
+slice's length in minutes, and no negative activity counter. A row that
+breaks a rule is refused in its own slot of the batch, naming the field and
+the rule, and the rest of the batch is stored.
+
 **An invoice covers exactly one person's hours.** Whoever issued it
 (`Invoice.user`) is the person whose time it bills for — a worker invoices the
 project owner for their own hours, an owner invoices their client for theirs.
@@ -96,13 +104,18 @@ project owner's addresses in canonical form, `rateHourCents`, `currency`
 `timeId`, `fromAt`, `toAt` and `minutesActive`). `amountCents` is that
 snapshot's own arithmetic — active minutes × rate ÷ 60, rounded once, half
 up — so the record always explains its total. None of it is ever updated:
-changing the project's rate, re-syncing an entry, or clearing its
-screenshots or processes changes nothing the invoice billed, and the invoice
-page reads its rate, minutes and lines from the snapshot. The snapshot is
+changing the project's rate or clearing an entry's screenshots or processes
+changes nothing the invoice billed, and the invoice page reads its rate,
+minutes and lines from the snapshot. The snapshot is
 columns on `Invoice`, not a domain of its own.
 
 - Monitoring evidence stays deletable. Screenshots and processes can be
   cleared from an invoiced entry; the invoice never depended on them.
+- A tracker re-sync cannot rewrite a settled entry — one an invoice bills,
+  or one marked paid. `POST /time` refuses that row alone with a 409 naming
+  the invoice and the fields it would have changed, and the entry stays as
+  billed. Re-sending the same values changes nothing and is answered with
+  the entry's id, so a retrying tracker is not told it failed.
 - An entry an invoice bills cannot be deleted. `DELETE /time` refuses the
   whole request with a 409 naming the invoice, and the worklogs offer no
   delete for such entries.

@@ -458,6 +458,68 @@ export class TimeControllerCrudTest extends BaseControllerTest {
     ])
   }
 
+  /**
+   * A row out of bounds comes back over HTTP as a validation error in its
+   * own slot, naming the field, the value and the rule, while the request
+   * succeeds and the row beside it is stored.
+   */
+  @test
+  async createOutOfBoundsRow_isRefusedInItsOwnSlot() {
+    const user = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(user)
+    const toAt = moment.utc()
+    const fromAt = toAt.clone().subtract(10, 'minutes')
+    const row = (note: string, minutesActive: number, hoursAgo: number) => ({
+      fromIndex: 1000,
+      toIndex: 1001,
+      note,
+      keyboardKeys: 1,
+      minutesActive,
+      mouseKeys: 1,
+      mouseDistance: 1,
+      fromAt: fromAt.clone().subtract(hoursAgo, 'hours').toISOString(),
+      toAt: toAt.clone().subtract(hoursAgo, 'hours').toISOString(),
+      projectId: project.id,
+    })
+    const data = [row('valid', 10, 0), row('inflated', 11, 1)]
+
+    const res = await timeControllerCreateOrUpdateMany({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
+      body: data as unknown as ApiTimeCreateDto[],
+      throwOnError: true,
+    })
+
+    expect(res.status).to.be.equal(200)
+    expect(res.data[0].id).to.be.a('string')
+    expect(res.data[1]).to.be.deep.equal({
+      ...data[1],
+      error: {
+        name: 'ConstraintsValidationException',
+        message: 'Constraint validation error has occurred.',
+        errors: [
+          {
+            value: 11,
+            property: 'minutesActive',
+            constraints: {
+              maxSpanMinutes:
+                'minutesActive must not exceed the 10 minute(s) from fromAt to toAt',
+            },
+            children: [],
+          },
+        ],
+      },
+    })
+
+    const stored = await runPromise(
+      this.timeRepository.findBy({ where: { project: { id: project.id } } }),
+    )
+
+    expect(stored.map((time) => time.note)).to.be.deep.equal(['valid'])
+  }
+
   @test
   async updatePersonal() {
     // Uses a fixed historical timestamp well outside the free-tier 7-day
@@ -489,7 +551,8 @@ export class TimeControllerCrudTest extends BaseControllerTest {
         toIndex: 1001,
         note: faker.string.uuid(),
         keyboardKeys: 100000,
-        minutesActive: 100000,
+        // Within the ten-minute slice: minutesActive is bounded by its span.
+        minutesActive: 7,
         mouseKeys: 100000,
         mouseDistance: 100000,
         fromAt: fromAt.toISOString(),
@@ -501,7 +564,7 @@ export class TimeControllerCrudTest extends BaseControllerTest {
         toIndex: 2001,
         note: faker.string.uuid(),
         keyboardKeys: 200000,
-        minutesActive: 200000,
+        minutesActive: 8,
         mouseKeys: 200000,
         mouseDistance: 200000,
         fromAt: fromAt.toISOString(),

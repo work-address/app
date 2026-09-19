@@ -262,9 +262,11 @@ export class InvoiceControllerSnapshotTest extends BaseControllerTest {
   }
 
   /**
-   * The entries are evidence and may change after issuance: a tracker
-   * re-sync rewrites an entry's activity, and screenshots and processes can
-   * be cleared. None of it reaches what the invoice billed.
+   * The invoice does not lean on its entries after issuance. A tracker
+   * re-sync over a billed entry is refused and changes nothing (REC-02);
+   * screenshots and processes can still be cleared; and an entry changed
+   * underneath the invoice anyway - one rewritten before re-syncs were
+   * refused, or edited by hand - still does not reach what it billed.
    */
   @test()
   async resyncAndMediaRemoval_leaveTheSnapshotAlone() {
@@ -300,12 +302,22 @@ export class InvoiceControllerSnapshotTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    await timeControllerCreateOrUpdateMany({
+    const resynced = await timeControllerCreateOrUpdateMany({
       client: this.apiClient(),
       headers: this.auth(owner),
       body: [entry(2)],
       throwOnError: true,
     })
+
+    const billed = await runPromise(
+      this.timeRepository.findOneByOrFail({ where: { id: timeId } }),
+    )
+
+    expect(resynced.data[0].error?.name).to.be.eq('InvoicedTimeException')
+    expect(billed.minutesActive).to.be.eq(9)
+
+    billed.minutesActive = 2
+    await runPromise(this.timeRepository.saveSingle(billed))
     await timeControllerRemoveScreenshots({
       client: this.apiClient(),
       headers: this.auth(owner),
@@ -326,7 +338,7 @@ export class InvoiceControllerSnapshotTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    // The re-sync really did rewrite the entry...
+    // The entry really did change underneath...
     expect(read.data.time?.[0]?.minutesActive).to.be.eq(2)
     // ...and the invoice still bills what it billed.
     expect(read.data.lines?.[0]?.minutesActive).to.be.eq(9)

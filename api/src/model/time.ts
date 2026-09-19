@@ -47,6 +47,22 @@ export interface ITimeTotals {
 /** Batch create/update row outcome; aligned with {@link TimeInsertionResultDto} for OpenAPI. */
 export type ITimeInsertionResult = TimeInsertionResultDto
 
+/**
+ * What one uploaded row writes onto a Time entry, once resized: the
+ * slice's key (project, author, `fromAt`) aside, everything a re-upload can
+ * change.
+ */
+export type TimeUpload = Pick<
+  ITime,
+  | 'toAt'
+  | 'note'
+  | 'minutesActive'
+  | 'keyboardKeys'
+  | 'mouseKeys'
+  | 'mouseDistance'
+  | 'processes'
+> & { screenshot: string | null }
+
 /** For a read of entries the caller is about to write. */
 export interface ITimeReadOptions {
   /**

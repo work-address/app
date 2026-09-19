@@ -1,13 +1,16 @@
 import { Cause, Effect } from 'effect'
 import { inject, injectable } from 'inversify'
 import moment from 'moment'
+import _ from 'lodash'
 
 import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
 import { TimeRepository } from '@/repository/time-repository'
 import { ProjectRepository } from '@/repository/project-repository'
-import { ITimeInsertionResult } from '@/model/time'
+import { ITimeInsertionResult, TimeUpload } from '@/model/time'
 import { ErrorFormatter } from '@/service/error-formatter'
+import { TimeBounds } from '@/service/time-bounds'
+import ConstraintsValidationException from '@/exception/constraints-validation-exception'
 import { TimeCreateDto } from '@/model/dto/time'
 import { Entitlement } from '@/service/entitlement'
 import InvoicedTimeException from '@/exception/invoiced-time-exception'
@@ -64,6 +67,9 @@ export class TimeManager {
       // Fixed for the whole request so every entry is judged against the same
       // window, and so the purge below cannot move past what was just accepted.
       const retentionCutoff = TimeManager.retentionCutoff()
+      // One clock read for the batch, so every row's "not in the future" is
+      // measured against the same instant.
+      const now = moment.utc().toDate()
       const projectIdsUnderRetention = new Set<string>()
 
       const storeEntry = (
@@ -94,35 +100,59 @@ export class TimeManager {
             }
           }
 
-          // The caller's own row for this slice. Anyone else's row for the
-          // same slice is theirs and stays as it is: the key includes the
-          // author, so a colleague tracking at the same time is not a clash.
-          const existing = yield* this.timeRepository.findAuthorsSlice(
-            project,
-            user,
-            fromAt,
-          )
+          const violations = TimeBounds.violations(item, { fromAt, toAt }, now)
 
-          const time = existing ?? new Time()
-
-          if (!existing) {
-            time.user = user
+          if (violations.length > 0) {
+            return yield* Effect.fail(
+              new ConstraintsValidationException(violations),
+            )
           }
 
-          time.fromAt = fromAt
-          time.toAt = toAt
-          time.note = item.note
-          time.minutesActive = item.minutesActive
-          time.keyboardKeys = item.keyboardKeys
-          time.mouseKeys = item.mouseKeys
-          time.mouseDistance = item.mouseDistance
-          time.project = project
-          time.screenshot = yield* fromPromise(() =>
-            this.resize(item.screenshot),
-          )
-          time.processes = item.processes
+          // Resized before the transaction below: it is the slow part, and
+          // the row lock should not wait on it.
+          const upload: TimeUpload = {
+            toAt,
+            note: item.note,
+            minutesActive: item.minutesActive,
+            keyboardKeys: item.keyboardKeys,
+            mouseKeys: item.mouseKeys,
+            mouseDistance: item.mouseDistance,
+            screenshot: yield* fromPromise(() => this.resize(item.screenshot)),
+            processes: item.processes,
+          }
 
-          const savedTime = yield* this.timeRepository.validateAndSave(time)
+          const savedTime = yield* this.unitOfWork.run((manager) =>
+            Effect.gen(this, function* () {
+              const times = this.timeRepository.within(manager)
+              // The caller's own row for this slice, locked so an invoice
+              // cannot claim it between the check below and the write. Anyone
+              // else's row for the same slice is theirs and stays as it is:
+              // the key includes the author, so a colleague tracking at the
+              // same time is not a clash.
+              const existing = yield* times.findAuthorsSlice(
+                project,
+                user,
+                fromAt,
+                { forUpdate: true },
+              )
+
+              if (existing && (existing.invoiceId || existing.isPaid)) {
+                return yield* TimeManager.keepSettled(existing, upload)
+              }
+
+              const time = existing ?? new Time()
+
+              if (!existing) {
+                time.user = user
+              }
+
+              Object.assign(time, upload)
+              time.fromAt = fromAt
+              time.project = project
+
+              return yield* times.validateAndSave(time)
+            }),
+          )
 
           return {
             ...item,
@@ -164,6 +194,61 @@ export class TimeManager {
 
       return program
     })
+  }
+
+  /**
+   * A re-upload over an entry an invoice bills, or one marked paid (REC-02).
+   *
+   * Such an entry is evidence for money already asked for or received, so a
+   * tracker re-syncing its slice must not rewrite it - the partial-bucket
+   * re-upload used to replace its minutes and counters wholesale, under an
+   * issued invoice. The same values again change nothing and are answered
+   * with the entry's id, so a tracker that retries is not told it failed;
+   * anything different is refused for this row alone, and the entry stays
+   * as it was.
+   */
+  private static keepSettled(
+    existing: Time,
+    upload: TimeUpload,
+  ): Effect.Effect<Time, InvoicedTimeException> {
+    const changed = TimeManager.changedFields(existing, upload)
+
+    if (changed.length === 0) {
+      return Effect.succeed(existing)
+    }
+
+    const fields = changed.join(', ')
+
+    return Effect.fail(
+      new InvoicedTimeException(
+        existing.invoiceId
+          ? `Invoice ${existing.invoiceId} bills this entry, so a re-upload cannot change it (${fields}). Nothing was changed`
+          : `This entry is marked paid, so a re-upload cannot change it (${fields}) - mark it unpaid first. Nothing was changed`,
+      ),
+    )
+  }
+
+  /**
+   * The fields a save of `upload` onto `existing` would change. A field the
+   * upload leaves undefined is one the save would not write.
+   */
+  private static changedFields(existing: Time, upload: TimeUpload): string[] {
+    const same: Record<keyof TimeUpload, boolean> = {
+      toAt: existing.toAt.getTime() === upload.toAt.getTime(),
+      note: upload.note === undefined || existing.note === upload.note,
+      minutesActive: existing.minutesActive === upload.minutesActive,
+      keyboardKeys: existing.keyboardKeys === upload.keyboardKeys,
+      mouseKeys: existing.mouseKeys === upload.mouseKeys,
+      mouseDistance: existing.mouseDistance === upload.mouseDistance,
+      screenshot: (existing.screenshot ?? null) === upload.screenshot,
+      processes:
+        upload.processes === undefined ||
+        _.isEqual(existing.processes ?? null, upload.processes ?? null),
+    }
+
+    return Object.entries(same)
+      .filter(([, isSame]) => !isSame)
+      .map(([field]) => field)
   }
 
   public save(time: Time): RepoEffect<Time> {

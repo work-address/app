@@ -441,17 +441,18 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     project: Project,
     author: User,
     fromAt: Date,
+    options: ITimeReadOptions = {},
   ): RepoEffect<Time | undefined> {
-    return fromPromise(() =>
-      this.getRepo()
-        .createQueryBuilder('time')
-        .innerJoinAndSelect('time.project', 'project')
-        .innerJoinAndSelect('time.user', 'user')
-        .andWhere('project.id = :projectId', { projectId: project.id })
-        .andWhere('user.id = :authorId', { authorId: author.id })
-        .andWhere('time.fromAt = :fromAt', { fromAt })
-        .getOne()
-        .then((result) => result ?? undefined),
+    const qb = this.getRepo()
+      .createQueryBuilder('time')
+      .innerJoinAndSelect('time.project', 'project')
+      .innerJoinAndSelect('time.user', 'user')
+      .andWhere('project.id = :projectId', { projectId: project.id })
+      .andWhere('user.id = :authorId', { authorId: author.id })
+      .andWhere('time.fromAt = :fromAt', { fromAt })
+
+    return fromPromise(
+      async () => (await this.lockIf(qb, options).getOne()) ?? undefined,
     )
   }
 
