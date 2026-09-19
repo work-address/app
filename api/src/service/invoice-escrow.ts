@@ -1,4 +1,5 @@
 import * as crypto from 'crypto'
+import * as web3 from 'web3'
 
 import { Invoice } from '@/entity/invoice'
 import {
@@ -6,6 +7,7 @@ import {
   IInvoiceCommitmentBinding,
   IInvoiceEscrowSettlement,
   IInvoiceEscrowSubmission,
+  IInvoiceEscrowSubmissionRequest,
 } from '@/model/invoice'
 
 /**
@@ -54,6 +56,84 @@ export class InvoiceEscrow {
       escrow: binding.escrow.toLowerCase(),
       allocationId: binding.allocationId.toLowerCase(),
     }
+  }
+
+  /**
+   * The tag the marketplace hashes a contract's funded work period under
+   * (web/api `EscrowManager`); an obligation id is that period's identity.
+   */
+  public static readonly OBLIGATION_TAG = 'work-address:contract-period'
+
+  /**
+   * The obligation id of a marketplace contract's work period:
+   * `keccak256(abi.encodePacked(string TAG, string contractId, uint64
+   * workStart, uint64 workEnd))`, times in unix seconds - byte for byte the
+   * id web/api's EscrowManager puts in the escrow terms it has signed.
+   */
+  public static obligationId(
+    contractId: string,
+    workStart: number,
+    workEnd: number,
+  ): string {
+    return InvoiceEscrow.keccakPacked(
+      { type: 'string', value: InvoiceEscrow.OBLIGATION_TAG },
+      { type: 'string', value: contractId },
+      { type: 'uint64', value: InvoiceEscrow.uint64(workStart) },
+      { type: 'uint64', value: InvoiceEscrow.uint64(workEnd) },
+    )
+  }
+
+  /**
+   * The allocation id MarketplaceEscrow funds an obligation under on one
+   * chain and escrow: `keccak256(abi.encodePacked(uint256 chainId, address
+   * escrow, bytes32 obligationId))`, lowercase like every stored id.
+   */
+  public static allocationId(
+    chainId: number,
+    escrow: string,
+    obligationId: string,
+  ): string {
+    return InvoiceEscrow.keccakPacked(
+      { type: 'uint256', value: chainId },
+      { type: 'address', value: escrow.toLowerCase() },
+      { type: 'bytes32', value: obligationId },
+    )
+  }
+
+  /**
+   * The allocation the marketplace funds for `contractId`'s work period in
+   * `request`, on the request's chain and escrow. The one allocation an
+   * invoice on that contract's project may be submitted to for that period:
+   * anything else funds another contract's work, or another period's.
+   */
+  public static contractPeriodAllocationId(
+    contractId: string,
+    request: IInvoiceEscrowSubmissionRequest,
+  ): string {
+    return InvoiceEscrow.allocationId(
+      request.chainId,
+      request.escrow,
+      InvoiceEscrow.obligationId(
+        contractId,
+        request.workStart,
+        request.workEnd,
+      ),
+    )
+  }
+
+  /**
+   * Whether the invoice's period - the one its record commits to - lies
+   * inside the work period, both ends included: an allocation pays for the
+   * work of its own period only.
+   */
+  public static withinPeriod(
+    invoice: Invoice,
+    period: { workStart: number; workEnd: number },
+  ): boolean {
+    return (
+      new Date(invoice.fromAt).getTime() >= period.workStart * 1000 &&
+      new Date(invoice.toAt).getTime() <= period.workEnd * 1000
+    )
   }
 
   /**
@@ -257,6 +337,29 @@ export class InvoiceEscrow {
     }
 
     return pushed > refunded ? { outcome: 'apply' } : { outcome: 'stale' }
+  }
+
+  /** A time in unix seconds as a uint64 takes it: a whole, non-negative number. */
+  private static uint64(seconds: number): number {
+    if (!Number.isSafeInteger(seconds) || seconds < 0) {
+      throw new TypeError(
+        `A time in unix seconds is a non-negative integer, got ${seconds}`,
+      )
+    }
+
+    return seconds
+  }
+
+  private static keccakPacked(
+    ...values: { type: string; value: string | number }[]
+  ): string {
+    const hash = web3.utils.soliditySha3(...values)
+
+    if (!hash) {
+      throw new TypeError('Nothing to hash')
+    }
+
+    return hash.toLowerCase()
   }
 
   /** Two base-unit amounts, as stored and as pushed, are the same number. */

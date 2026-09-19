@@ -130,6 +130,22 @@ export interface IInvoiceCommitmentBinding {
 }
 
 /**
+ * A request to submit an invoice to an allocation: the allocation, and the
+ * work period the marketplace funded it for, in unix seconds (the uint64s
+ * MarketplaceEscrow's terms carry).
+ *
+ * The marketplace derives every allocation id from its contract and period,
+ * so with the contract the invoice's project was hired under, the period is
+ * what lets this service recompute the id and refuse one that funds some
+ * other contract's work.
+ */
+export interface IInvoiceEscrowSubmissionRequest
+  extends IInvoiceCommitmentBinding {
+  workStart: number
+  workEnd: number
+}
+
+/**
  * What the issuer submits to MarketplaceEscrow for one invoice: the amount in
  * token base units and the commitment, with the allocation both are bound to
  * and the salt the commitment was drawn under.
