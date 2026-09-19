@@ -158,6 +158,38 @@ it cannot be recomputed from public ids. The vectors in
 contracts repository's `test/fixtures` copy, which is checked against
 `MarketplaceEscrow` itself, and the contracts README specifies the encoding.
 
+**Submitting an invoice to escrow binds it to one allocation.**
+`GET /invoice/:id/escrow-submission?chainId=&escrow=&allocationId=` gives the
+issuer — nobody else, the paying owner included (403) — what they hand
+`MarketplaceEscrow`: `amountBaseUnits`, the invoice's `amountCents` in USDT
+base units (6 decimals, so cents × 10^4, in integer arithmetic and as a
+decimal string), and `invoiceCommitment`, the InvoiceCommitment v1 of the
+invoice's record for that allocation. The first call stores the binding on
+the invoice — `escrowChainId`, `escrowAddress`, `escrowAllocationId`,
+`escrowCommitment`, and the salt — and every later call for the same
+allocation returns exactly that, so asking twice never mints a second
+commitment. The binding never moves: the chain cannot tell this service
+whether a commitment it handed out was sent, so letting the invoice go to a
+second allocation could bill it twice (409). An allocation takes one bill, so
+it binds one invoice, enforced by a unique index over the three binding
+columns (409). A legacy invoice has no record to commit to and a paid one has
+nothing left to bill (both 409). The binding is columns on `Invoice`: there
+is no Allocation entity here — the allocation itself is the marketplace's
+(`web/api`) and the chain's.
+
+**Salt custody (adopted default; the owner decision is still open).** The
+hosted API draws a fresh random 32-byte salt for each submission, stores it
+with the invoice (`Invoice.escrowSalt`, in no serialisation group, so no
+invoice response carries it) and lets only the issuer export it, in their own
+escrow-submission response. This protects the invoice from **chain
+observers**: without the salt, the commitment on chain cannot be recomputed
+from public ids or matched against a guessed record. It does **not** protect
+the invoice from the **platform operator**, who holds each salt next to the
+record it commits to and can open every commitment the hosted service drew.
+An issuer who needs the operator unable to open their commitment has to draw
+and keep the salt themselves and compute the commitment outside the hosted
+service, from the exported record and the published encoding.
+
 **Retention never destroys an invoice's evidence.** The free-tier purge skips
 entries covered by an invoice from the same issuer, so a financial record
 always keeps the detail behind it.

@@ -16,16 +16,21 @@ import {
   EInvoiceCurrency,
   EInvoiceSnapshotVersion,
   EInvoiceState,
+  IInvoiceCommitmentBinding,
+  IInvoiceEscrowSubmission,
   IInvoiceLine,
   IInvoiceRecord,
   IInvoiceReport,
 } from '@/model/invoice'
 import { InvoiceCreateDto } from '@/model/dto/invoice'
 import { Calc } from '@/service/calc'
+import { InvoiceCommitment } from '@/service/invoice-commitment'
+import { InvoiceEscrow } from '@/service/invoice-escrow'
 import { InvoiceRecord } from '@/service/invoice-record'
 import { WalletAddress } from '@/service/wallet-address'
 import { UnitOfWork } from '@/service/unit-of-work'
 import AccessException from '@/exception/access-exception'
+import InvoiceEscrowException from '@/exception/invoice-escrow-exception'
 import InvoicedTimeException from '@/exception/invoiced-time-exception'
 import LegacyInvoiceException from '@/exception/legacy-invoice-exception'
 
@@ -51,6 +56,8 @@ export class InvoiceManager {
   protected unitOfWork: UnitOfWork
   @inject('InvoiceRecord')
   protected invoiceRecord: InvoiceRecord
+  @inject('InvoiceCommitment')
+  protected invoiceCommitment: InvoiceCommitment
 
   /**
    * Everything the invoice page needs, in one read: the invoice, the entries
@@ -108,6 +115,112 @@ export class InvoiceManager {
       }
 
       return this.invoiceRecord.document(found)
+    })
+  }
+
+  /**
+   * What the issuer submits to MarketplaceEscrow for this invoice and
+   * allocation: the amount in token base units and the InvoiceCommitment v1,
+   * with the salt it was drawn under.
+   *
+   * The first call binds the invoice to the allocation: it draws a fresh
+   * salt, commits to the invoice's record for that allocation, and stores
+   * all of it on the invoice. Every later call for the same allocation
+   * returns exactly that - the same salt and commitment - so asking twice
+   * never produces a second commitment the chain could be handed. A call for
+   * any other allocation is refused (409): the chain cannot tell this
+   * service whether the first commitment was ever sent, so moving the
+   * invoice could bill it twice. An allocation already billing another
+   * invoice is refused too - it takes one bill.
+   *
+   * Issuer only (403 to the owner, who can read the invoice but is the
+   * payer, and to everyone else). A legacy invoice has no record to commit
+   * to (409), and a paid one has nothing left to bill (409).
+   */
+  public escrowSubmission(
+    invoice: Invoice,
+    actor: User,
+    binding: IInvoiceCommitmentBinding,
+  ): RepoEffect<IInvoiceEscrowSubmission> {
+    return Effect.gen(this, function* () {
+      const found = yield* this.invoiceRepository.findOneConfirmUser(
+        invoice,
+        actor,
+      )
+
+      if (!found.user || found.user.id !== actor.id) {
+        return yield* Effect.fail(
+          new AccessException(
+            'Only whoever issued an invoice can submit it to escrow',
+          ),
+        )
+      }
+
+      if (found.snapshotVersion !== InvoiceRecord.VERSION) {
+        return yield* Effect.fail(
+          new LegacyInvoiceException(
+            `Invoice ${found.id} was issued before invoices kept their rate and lines, so it has no record to commit to`,
+          ),
+        )
+      }
+
+      const target = InvoiceEscrow.binding(binding)
+      const record = this.invoiceRecord.document(found)
+
+      return yield* this.unitOfWork.run((manager) =>
+        Effect.gen(this, function* () {
+          const current = yield* this.invoiceRepository
+            .within(manager)
+            .findOneForUpdate(found)
+
+          if (InvoiceEscrow.isBound(current)) {
+            if (!InvoiceEscrow.isBoundTo(current, target)) {
+              return yield* Effect.fail(
+                new InvoiceEscrowException(
+                  `Invoice ${current.id} is already submitted to allocation ${current.escrowAllocationId}`,
+                ),
+              )
+            }
+
+            return InvoiceEscrow.submission(current)
+          }
+
+          if (current.state === EInvoiceState.PAID) {
+            return yield* Effect.fail(
+              new InvoiceEscrowException(
+                `Invoice ${current.id} is already paid, so there is nothing to bill through escrow`,
+              ),
+            )
+          }
+
+          const holder = yield* this.invoiceRepository
+            .within(manager)
+            .findByEscrowAllocation(target)
+
+          if (holder) {
+            return yield* Effect.fail(
+              new InvoiceEscrowException(
+                `Allocation ${target.allocationId} already bills another invoice`,
+              ),
+            )
+          }
+
+          const salt = InvoiceEscrow.drawSalt()
+          const commitment = this.invoiceCommitment.commit(record, target, salt)
+
+          yield* this.invoiceRepository
+            .within(manager)
+            .bindEscrow(current, target, commitment, salt)
+
+          current.escrowChainId = target.chainId
+          current.escrowAddress = target.escrow
+          current.escrowAllocationId = target.allocationId
+          current.escrowCommitment = commitment
+          current.escrowSalt = salt
+
+          return InvoiceEscrow.submission(current)
+        }),
+      )
     })
   }
 

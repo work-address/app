@@ -1,4 +1,4 @@
-import { Column, Entity, JoinColumn, ManyToOne } from 'typeorm'
+import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm'
 import { faker } from '@faker-js/faker'
 import { Exclude, Expose, Type } from 'class-transformer'
 import { JSONSchema } from 'class-validator-jsonschema'
@@ -34,6 +34,15 @@ import type { Time } from '@/entity/time'
 })
 @Entity()
 @Exclude()
+// An escrow allocation takes one bill (MarketplaceEscrow moves it from Funded
+// to Submitted once), so it bills one invoice. The index is what makes that
+// hold when two submissions race; rows never submitted are all null, which a
+// unique index does not compare.
+@Index(
+  'UQ_invoice_escrow_allocation',
+  ['escrowChainId', 'escrowAddress', 'escrowAllocationId'],
+  { unique: true },
+)
 export class Invoice extends AbstractBaseEntity {
   @Expose({ groups: ['search'] })
   @Type(() => Project)
@@ -166,6 +175,61 @@ export class Invoice extends AbstractBaseEntity {
   @IsDate()
   @IsOptional()
   paidAt?: Date | null
+
+  /*
+   * The escrow allocation the invoice was submitted to (GET
+   * /invoice/:id/escrow-submission), and the commitment it was submitted
+   * under. Written once, on the first submission, and never moved: the
+   * escrow cannot say whether a commitment it was handed was ever sent, so
+   * letting the invoice go to a second allocation could bill it twice.
+   *
+   * All null for an invoice never submitted. Columns rather than an entity -
+   * which allocation an invoice was billed through is part of the invoice
+   * (SPEC.md, "No new domains").
+   */
+
+  @Expose({ groups: ['search'] })
+  @Column('integer', { nullable: true })
+  @IsInt()
+  @IsOptional()
+  escrowChainId?: number | null
+
+  /** The MarketplaceEscrow deployment, lowercase. */
+  @Expose({ groups: ['search'] })
+  @Column('text', { nullable: true })
+  @IsString()
+  @IsOptional()
+  escrowAddress?: string | null
+
+  /** The allocation's bytes32 id, lowercase 0x hex. */
+  @Expose({ groups: ['search'] })
+  @Column('text', { nullable: true })
+  @IsString()
+  @IsOptional()
+  escrowAllocationId?: string | null
+
+  /**
+   * InvoiceCommitment v1 of this invoice's record, for this allocation, under
+   * `escrowSalt`: the bytes32 the chain holds for the bill. Shown to both
+   * parties - it reveals nothing without the salt.
+   */
+  @Expose({ groups: ['search'] })
+  @Column('text', { nullable: true })
+  @IsString()
+  @IsOptional()
+  escrowCommitment?: string | null
+
+  /**
+   * The 32 random bytes the commitment was drawn under. In no serialisation
+   * group, so no invoice response carries it: only the issuer's own
+   * escrow-submission response does. Held here so the hosted service can
+   * hand the issuer the same submission again - which means the operator of
+   * this service can open the commitment, while a chain observer cannot
+   * (SPEC.md, "Salt custody"). No validators either, which keeps it out of
+   * the published Invoice schema: it is never input, and never output.
+   */
+  @Column('text', { nullable: true })
+  escrowSalt?: string | null
 
   /**
    * The entries this invoice bills, and their roll-up.

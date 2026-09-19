@@ -112,6 +112,18 @@
               }
             ]
           },
+          "escrowChainId": {
+            "type": "integer"
+          },
+          "escrowAddress": {
+            "type": "string"
+          },
+          "escrowAllocationId": {
+            "type": "string"
+          },
+          "escrowCommitment": {
+            "type": "string"
+          },
           "id": {
             "minLength": 1,
             "type": "string",
@@ -150,7 +162,7 @@
           "state"
         ],
         "example": {
-          "id": "066cbc40-ac38-4cbd-bac5-e28822a05e2a"
+          "id": "8d78bdf5-fde9-4046-a8ae-97d424e2d302"
         }
       },
       "ProjectStatistics": {
@@ -211,7 +223,7 @@
           "period"
         ],
         "example": {
-          "id": "0ef1f826-b09d-47ee-bf73-f3568bb5e7fd"
+          "id": "2ebba0e1-aeca-4e30-b334-442e00791438"
         }
       },
       "Time": {
@@ -309,7 +321,7 @@
           "toAt"
         ],
         "example": {
-          "id": "b2189fda-782c-4e73-b200-9407385e76bb"
+          "id": "4b22c492-02cc-4a3b-b22c-b2bf93f34b82"
         }
       },
       "Project": {
@@ -399,7 +411,7 @@
           "state"
         ],
         "example": {
-          "id": "788656af-9e2b-478f-8442-f4d51414085a"
+          "id": "afa65a93-452c-43a2-8f0d-ad5891b16896"
         }
       },
       "User": {
@@ -505,7 +517,7 @@
         },
         "type": "object",
         "example": {
-          "id": "1bc5177f-3bca-45dd-beb8-965b1e12175b"
+          "id": "43f24e66-6dde-4f5e-abb4-193b2e329fd3"
         }
       },
       "AuthForgotPasswordDto": {
@@ -1258,6 +1270,28 @@
         },
         "type": "object"
       },
+      "InvoiceEscrowSubmissionQueryDto": {
+        "properties": {
+          "chainId": {
+            "minimum": 1,
+            "type": "integer"
+          },
+          "escrow": {
+            "pattern": "^0x[\\dA-Fa-f]{40}$",
+            "type": "string"
+          },
+          "allocationId": {
+            "pattern": "^0x[\\dA-Fa-f]{64}$",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "chainId",
+          "escrow",
+          "allocationId"
+        ]
+      },
       "User_search": {
         "type": "object",
         "description": "Subset of User serialized with class-transformer group \"search\".",
@@ -1917,6 +1951,18 @@
                 "type": "string"
               }
             ]
+          },
+          "escrowChainId": {
+            "type": "integer"
+          },
+          "escrowAddress": {
+            "type": "string"
+          },
+          "escrowAllocationId": {
+            "type": "string"
+          },
+          "escrowCommitment": {
+            "type": "string"
           }
         }
       }
@@ -3291,7 +3337,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "7f3c2e7d-8d00-4572-b2cc-0af7901a1855"
+                  "projectId": "70ef3b08-ec9e-42b4-aecf-639904c138b2"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -3359,8 +3405,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1789690406247,
-                "toUnix": 1789776806247
+                "fromUnix": 1789691849811,
+                "toUnix": 1789778249811
               }
             }
           },
@@ -3680,6 +3726,124 @@
         ]
       }
     },
+    "/api/invoice/{id}/escrow-submission": {
+      "get": {
+        "operationId": "InvoiceController.escrowSubmission",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Invoice"
+            }
+          },
+          {
+            "in": "query",
+            "name": "chainId",
+            "required": true,
+            "schema": {
+              "minimum": 1,
+              "type": "integer"
+            }
+          },
+          {
+            "in": "query",
+            "name": "escrow",
+            "required": true,
+            "schema": {
+              "pattern": "^0x[\\dA-Fa-f]{40}$",
+              "type": "string"
+            }
+          },
+          {
+            "in": "query",
+            "name": "allocationId",
+            "required": true,
+            "schema": {
+              "pattern": "^0x[\\dA-Fa-f]{64}$",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "invoiceId",
+                    "chainId",
+                    "escrow",
+                    "allocationId",
+                    "amountBaseUnits",
+                    "invoiceCommitment",
+                    "salt"
+                  ],
+                  "properties": {
+                    "invoiceId": {
+                      "type": "string"
+                    },
+                    "chainId": {
+                      "type": "integer"
+                    },
+                    "escrow": {
+                      "type": "string"
+                    },
+                    "allocationId": {
+                      "type": "string"
+                    },
+                    "amountBaseUnits": {
+                      "type": "string"
+                    },
+                    "invoiceCommitment": {
+                      "type": "string"
+                    },
+                    "salt": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "Invoice does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "NotFoundError"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Invoice does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "409": {
+            "description": "The invoice is legacy, already paid, or bound to another allocation, or the allocation already bills another invoice"
+          }
+        },
+        "summary": "Get the amount and InvoiceCommitment v1 to submit this invoice to an escrow allocation (issuer only); the first call binds the invoice to that allocation",
+        "tags": [
+          "Invoice"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/invoice/{id}/paid": {
       "post": {
         "operationId": "InvoiceController.markPaid",
@@ -3863,7 +4027,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "c0de2c9b-f4f2-444e-8ead-59e5e9bf1d5e"
+                "nonce": "dcd31833-56b3-40ea-bf05-2cd26aaf5651"
               },
               "schema": {
                 "properties": {
@@ -3908,7 +4072,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "2d26078f-61ef-4a5d-9b92-be39ec142b18"
+                "nonce": "10de90cd-d2b4-448f-9ce7-368c7cbc433f"
               },
               "schema": {
                 "properties": {
@@ -3949,21 +4113,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "a9b3c217-609f-4feb-b535-57222ae36d8c",
+                      "nonce": "a901e55a-4726-47fe-9669-64e1fddb3d06",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "b7231ad5-03fa-4251-a41e-6b5d8f675449",
+                      "nonce": "763d3153-bd75-4688-856f-a2907b417062",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "66fb10ee-67fd-4b97-97fd-bb05f09cd0af",
+                      "nonce": "bac55a97-a800-4a33-8ee2-b5482a114780",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

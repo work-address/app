@@ -15,14 +15,21 @@ import { Invoice } from '@/entity/invoice'
 
 import { User } from '@/entity/user'
 import AccessException from '@/exception/access-exception'
+import InvoiceEscrowException from '@/exception/invoice-escrow-exception'
 import { InvoiceSearchDto } from '@/model/dto/invoice'
-import { EInvoiceSnapshotVersion } from '@/model/invoice'
+import {
+  EInvoiceSnapshotVersion,
+  IInvoiceCommitmentBinding,
+} from '@/model/invoice'
 
 @injectable()
 export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
   @inject('Filter')
   protected filter: Filter
   protected target = Invoice
+
+  /** Postgres SQLSTATE for a unique index refusing a row. */
+  private static readonly UNIQUE_VIOLATION = '23505'
 
   /**
    * Who may see an invoice: whoever issued it, and the owner of its project.
@@ -138,6 +145,75 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
         .setLock('pessimistic_write')
         .getOneOrFail(),
     )
+  }
+
+  /**
+   * The invoice an escrow allocation bills, if any - soft-deleted ones
+   * included, since the unique index counts them too.
+   */
+  public findByEscrowAllocation(
+    binding: IInvoiceCommitmentBinding,
+  ): RepoEffect<Invoice | null> {
+    return fromPromise(() =>
+      this.getRepo().findOne({
+        where: {
+          escrowChainId: binding.chainId,
+          escrowAddress: binding.escrow,
+          escrowAllocationId: binding.allocationId,
+        },
+        withDeleted: true,
+      }),
+    )
+  }
+
+  /**
+   * Binds the invoice to an escrow allocation under a commitment, writing
+   * only those columns.
+   *
+   * Only an unbound row is written, so a binding is never moved. A second
+   * invoice racing for the same allocation fails the unique index; that is
+   * reported as the conflict it is rather than a database error.
+   */
+  public bindEscrow(
+    invoice: Invoice,
+    binding: IInvoiceCommitmentBinding,
+    commitment: string,
+    salt: string,
+  ): RepoEffect<void> {
+    return fromPromise(async () => {
+      try {
+        const result = await this.getRepo()
+          .createQueryBuilder()
+          .update(Invoice)
+          .set({
+            escrowChainId: binding.chainId,
+            escrowAddress: binding.escrow,
+            escrowAllocationId: binding.allocationId,
+            escrowCommitment: commitment,
+            escrowSalt: salt,
+          })
+          .where('id = :id', { id: invoice.id })
+          .andWhere('"escrowAllocationId" IS NULL')
+          .execute()
+
+        if (result.affected !== 1) {
+          throw new InvoiceEscrowException(
+            `Invoice ${invoice.id} is already submitted to an escrow allocation`,
+          )
+        }
+      } catch (error: unknown) {
+        if (
+          (error as { code?: string }).code ===
+          InvoiceRepository.UNIQUE_VIOLATION
+        ) {
+          throw new InvoiceEscrowException(
+            `Allocation ${binding.allocationId} already bills another invoice`,
+          )
+        }
+
+        throw error
+      }
+    })
   }
 
   public findAndCount(

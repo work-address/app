@@ -103,3 +103,21 @@ export interface IInvoiceCommitmentBinding {
   escrow: string
   allocationId: string
 }
+
+/**
+ * What the issuer submits to MarketplaceEscrow for one invoice: the amount in
+ * token base units and the commitment, with the allocation both are bound to
+ * and the salt the commitment was drawn under.
+ *
+ * `amountBaseUnits` is the invoice's `amountCents` in USDT base units (6
+ * decimals, so a cent is 10^4 of them), as a decimal string: the chain takes
+ * a uint256, and no float ever touches it. `salt` is here because this
+ * response only ever goes to the issuer - it is the export that lets them
+ * open the commitment without this service.
+ */
+export interface IInvoiceEscrowSubmission extends IInvoiceCommitmentBinding {
+  invoiceId: string
+  amountBaseUnits: string
+  invoiceCommitment: string
+  salt: string
+}

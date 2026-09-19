@@ -5,6 +5,7 @@ import {
   HttpCode,
   JsonController,
   Post,
+  QueryParams,
 } from 'routing-controllers'
 import { faker } from '@faker-js/faker'
 import { SchemaObject } from 'openapi3-ts'
@@ -16,10 +17,14 @@ import { Invoice } from '@/entity/invoice'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
 import { EUserRole } from '@/model/user'
-import { IInvoiceRecord } from '@/model/invoice'
+import { IInvoiceEscrowSubmission, IInvoiceRecord } from '@/model/invoice'
 import { InvoiceManager } from '@/service/invoice-manager'
 import { InvoiceRepository } from '@/repository/invoice-repository'
-import { InvoiceCreateDto, InvoiceSearchDto } from '@/model/dto/invoice'
+import {
+  InvoiceCreateDto,
+  InvoiceEscrowSubmissionQueryDto,
+  InvoiceSearchDto,
+} from '@/model/dto/invoice'
 import { runPromise } from '@/service/effect-bridge'
 
 @Authorized([EUserRole.ROLE_USER])
@@ -228,6 +233,56 @@ export class InvoiceController {
     @EntityFromParam({ paramName: 'id' }) invoice: Invoice,
   ): Promise<IInvoiceRecord> {
     return runPromise(this.invoiceManager.record(invoice, currentUser))
+  }
+
+  @OpenAPIExtended({
+    summary:
+      'Get the amount and InvoiceCommitment v1 to submit this invoice to an escrow allocation (issuer only); the first call binds the invoice to that allocation',
+    operation: {
+      responses: {
+        409: {
+          description:
+            'The invoice is legacy, already paid, or bound to another allocation, or the allocation already bills another invoice',
+        },
+      },
+    },
+    response: {
+      schema: null,
+      options: {
+        inlineSchema: {
+          type: 'object',
+          required: [
+            'invoiceId',
+            'chainId',
+            'escrow',
+            'allocationId',
+            'amountBaseUnits',
+            'invoiceCommitment',
+            'salt',
+          ],
+          properties: {
+            invoiceId: { type: 'string' },
+            chainId: { type: 'integer' },
+            escrow: { type: 'string' },
+            allocationId: { type: 'string' },
+            // Token base units (USDT, 6 decimals) as a decimal string.
+            amountBaseUnits: { type: 'string' },
+            invoiceCommitment: { type: 'string' },
+            salt: { type: 'string' },
+          },
+        },
+      },
+    },
+  })
+  @Get('/:id/escrow-submission')
+  public escrowSubmission(
+    @CurrentUser() currentUser: User,
+    @EntityFromParam({ paramName: 'id' }) invoice: Invoice,
+    @QueryParams() query: InvoiceEscrowSubmissionQueryDto,
+  ): Promise<IInvoiceEscrowSubmission> {
+    return runPromise(
+      this.invoiceManager.escrowSubmission(invoice, currentUser, query),
+    )
   }
 
   @OpenAPIExtended({

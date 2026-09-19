@@ -23,6 +23,10 @@ export type Invoice = {
     lines?: Array<unknown>;
     state: string;
     paidAt?: string | string;
+    escrowChainId?: number;
+    escrowAddress?: string;
+    escrowAllocationId?: string;
+    escrowCommitment?: string;
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
@@ -302,6 +306,12 @@ export type InvoiceCreateDto = {
     timeIds?: Array<string>;
 };
 
+export type InvoiceEscrowSubmissionQueryDto = {
+    chainId: number;
+    escrow: string;
+    allocationId: string;
+};
+
 /**
  * Subset of User serialized with class-transformer group "search".
  */
@@ -487,6 +497,10 @@ export type InvoiceSearch = {
     minutesActive?: number;
     state?: string;
     paidAt?: string | string;
+    escrowChainId?: number;
+    escrowAddress?: string;
+    escrowAllocationId?: string;
+    escrowCommitment?: string;
 };
 
 export type HelpControllerSwaggerData = {
@@ -1103,6 +1117,49 @@ export type InvoiceControllerRecordResponses = {
 };
 
 export type InvoiceControllerRecordResponse = InvoiceControllerRecordResponses[keyof InvoiceControllerRecordResponses];
+
+export type InvoiceControllerEscrowSubmissionData = {
+    body?: never;
+    path: {
+        id: Invoice;
+    };
+    query: {
+        chainId: number;
+        escrow: string;
+        allocationId: string;
+    };
+    url: '/api/invoice/{id}/escrow-submission';
+};
+
+export type InvoiceControllerEscrowSubmissionErrors = {
+    /**
+     * Invoice does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+    /**
+     * The invoice is legacy, already paid, or bound to another allocation, or the allocation already bills another invoice
+     */
+    409: unknown;
+};
+
+export type InvoiceControllerEscrowSubmissionError = InvoiceControllerEscrowSubmissionErrors[keyof InvoiceControllerEscrowSubmissionErrors];
+
+export type InvoiceControllerEscrowSubmissionResponses = {
+    200: {
+        invoiceId: string;
+        chainId: number;
+        escrow: string;
+        allocationId: string;
+        amountBaseUnits: string;
+        invoiceCommitment: string;
+        salt: string;
+    };
+};
+
+export type InvoiceControllerEscrowSubmissionResponse = InvoiceControllerEscrowSubmissionResponses[keyof InvoiceControllerEscrowSubmissionResponses];
 
 export type InvoiceControllerMarkPaidData = {
     body?: never;

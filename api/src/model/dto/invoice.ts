@@ -4,9 +4,12 @@ import {
   IsArray,
   IsDate,
   IsEnum,
+  IsInt,
   IsNumber,
   IsOptional,
   IsUUID,
+  Matches,
+  Min,
   ValidateIf,
   ValidateNested,
 } from 'class-validator'
@@ -86,4 +89,23 @@ export class InvoiceCreateDto {
   @IsUUID('4', { each: true })
   @IsOptional()
   timeIds?: string[]
+}
+
+/**
+ * The escrow allocation an invoice is being submitted to (see
+ * `IInvoiceCommitmentBinding`). Query parameters, so the chain id arrives as
+ * text and is converted by its declared type.
+ */
+export class InvoiceEscrowSubmissionQueryDto {
+  @IsInt()
+  @Min(1)
+  chainId: number
+
+  /** The MarketplaceEscrow deployment, as an EVM address in any casing. */
+  @Matches(/^0x[\dA-Fa-f]{40}$/)
+  escrow: string
+
+  /** The allocation, as a 0x-prefixed bytes32 in any casing. */
+  @Matches(/^0x[\dA-Fa-f]{64}$/)
+  allocationId: string
 }
