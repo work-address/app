@@ -55,11 +55,21 @@ slice again updates their own row. Nobody else's row is ever touched.
 
 **A slice claims only what a tracker could have recorded.** Invoices bill
 `minutesActive`, so the server bounds every row `POST /time` receives
-(`TimeBounds`): `fromAt` before `toAt` and at most 60 minutes apart, `toAt`
+(`TimeBounds`): `fromAt` before `toAt` and at most 60 minutes apart, `fromAt`
 at most 5 minutes past the server's clock, `minutesActive` from 0 to the
-slice's length in minutes, and no negative activity counter. A row that
+minutes from `fromAt` to whichever comes first, `toAt` or 5 minutes past the
+server's clock (rounded up), and no negative activity counter. A row that
 breaks a rule is refused in its own slot of the batch, naming the field and
 the rule, and the rest of the batch is stored.
+
+The future bound is on what a row claims, not on `toAt`. The desktop tracker
+sends its ten-minute bucket with `toAt` at the bucket's planned end, and it
+uploads the bucket still in progress (on Stop, at start-up, on a token
+refresh), so a normal upload's `toAt` is up to ten minutes ahead. The
+tracker treats a refusal as final and never sends those rows again, so a
+bound on `toAt` would lose that work. This departs from the literal wording
+of REC-09 ("`toAt` at most 5 minutes in the future"); DEC-10, which the rule
+belongs to, is still open, and the values are the development plan's.
 
 **An invoice covers exactly one person's hours.** Whoever issued it
 (`Invoice.user`) is the person whose time it bills for — a worker invoices the

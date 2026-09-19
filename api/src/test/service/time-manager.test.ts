@@ -472,7 +472,6 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
         now.clone().subtract(6, 'minutes'),
         now.clone().add(4, 'minutes'),
       ),
-      row('ends in the future', now.clone(), now.clone().add(10, 'minutes')),
     ]
 
     const results = await runPromise(
@@ -513,7 +512,6 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
       refused('toAt', 'isAfterFromAt'),
       refused('toAt', 'maxSpan'),
       'stored',
-      refused('toAt', 'notInFuture'),
     ])
     expect(results.map((result) => result.note)).to.deep.equal(
       batch.map((payload) => payload.note),
@@ -537,6 +535,104 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
         'ends within the skew',
       ].sort(),
     )
+  }
+
+  /**
+   * The desktop tracker sends its ten-minute bucket with `toAt` at the
+   * bucket's planned end, and uploads the bucket still in progress on Stop,
+   * at start-up and on a token refresh. A refusal there is final on the
+   * desktop - it marks the rows failed and never sends them again - so the
+   * future bound is on what the row claims: a slice may not start past the
+   * skew allowance, and its active minutes may not reach past it. The
+   * in-progress bucket is stored; minutes not yet worked are not.
+   */
+  @test()
+  async createOrUpdateMany_bucketInProgress_isStored_butNotMinutesYetToCome() {
+    const owner = await this.userFixture.createPremiumUser()
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
+    // One instant; every slice is placed relative to it. The server reads
+    // its own clock a moment later, which only widens what has elapsed.
+    const now = moment.utc()
+    const bucket = (
+      note: string,
+      fromAt: moment.Moment,
+      minutesActive: number,
+    ): TimeCreateDto => ({
+      fromIndex: 1,
+      toIndex: 2,
+      note,
+      keyboardKeys: 1,
+      minutesActive,
+      mouseKeys: 1,
+      mouseDistance: 1,
+      fromAt: fromAt.toISOString(),
+      toAt: fromAt.clone().add(10, 'minutes').toISOString(),
+      projectId: project.id,
+    })
+    const twoMinutesIn = now.clone().subtract(2, 'minutes')
+
+    const batch = [
+      // Stopped two minutes into the bucket: toAt is eight minutes ahead.
+      bucket('stopped two minutes in', twoMinutesIn, 2),
+      // The same bucket claiming nine minutes: at most seven have passed,
+      // skew included. Refused, and the stored row keeps its two.
+      bucket('minutes not yet worked', twoMinutesIn, 9),
+      // A tracker clock a few minutes ahead of the server's.
+      bucket('starts within the skew', now.clone().add(4, 'minutes'), 1),
+      bucket('starts in the future', now.clone().add(10, 'minutes'), 0),
+    ]
+
+    const results = await runPromise(
+      this.timeManager.createOrUpdateMany(batch, owner),
+    )
+
+    expect(
+      results.map((result) =>
+        result.error
+          ? (
+              result.error.errors as {
+                property: string
+                constraints: Record<string, string>
+              }[]
+            ).map((error) => ({
+              property: error.property,
+              rules: Object.keys(error.constraints),
+            }))
+          : 'stored',
+      ),
+    ).to.deep.equal([
+      'stored',
+      [{ property: 'minutesActive', rules: ['maxElapsedMinutes'] }],
+      'stored',
+      [{ property: 'fromAt', rules: ['notInFuture'] }],
+    ])
+
+    const stored = await this.conn.getRepository(Time).find({
+      where: { project: { id: project.id } },
+      order: { fromAt: 'ASC' },
+    })
+
+    expect(
+      stored.map((time) => ({
+        note: time.note,
+        minutesActive: time.minutesActive,
+        toAt: time.toAt.toISOString(),
+      })),
+    ).to.deep.equal([
+      {
+        note: 'stopped two minutes in',
+        minutesActive: 2,
+        toAt: batch[0].toAt,
+      },
+      {
+        note: 'starts within the skew',
+        minutesActive: 1,
+        toAt: batch[2].toAt,
+      },
+    ])
   }
 
   /**
