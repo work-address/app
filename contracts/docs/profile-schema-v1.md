@@ -186,14 +186,121 @@ These never occupy a slot in v1, whatever a later API projection exposes:
 
 ## Subjects
 
-The subject is the EVM account that publishes to `IdentityRegistry`. Its DID
-string is `did:pkh:eip155:<chainId>:<EIP-55 address>`, where `chainId` is the
-registry's chain. The leaf binds the 20-byte address, so a leaf opened for one
-subject cannot be replayed under another.
+A subject is named with a `did:pkh` string (a CAIP-10 account). That is a
+naming convention only: no DID method, resolver or DID Core conformance is
+claimed. Every leaf binds a 20-byte `address subject`, the **leaf subject**,
+so a leaf opened for one subject cannot be replayed under another.
+
+| Subject | DID | Leaf subject | Bound by |
+| --- | --- | --- | --- |
+| EVM account | `did:pkh:eip155:<chainId>:<EIP-55 address>` | the address | the registry (anchored), or EIP-191 (self-signed) |
+| Solana account | `did:pkh:solana:<CAIP-2 reference>:<base58 key>` | the low 20 bytes of `keccak256(UTF-8(did))` | Ed25519 (self-signed only) |
+
+Only the canonical spelling is accepted: an EIP-55 address, a decimal chain id
+without leading zeros, a canonical base58 32-byte key. Any other `did:` is
+unsupported.
+
+The registry keys records by a 20-byte EVM address, so only an EVM subject
+can anchor, and then only on the registry's own chain: the DID's `chainId` is
+the anchor's. A Solana key has nowhere to go in the registry
+(`IdentityRegistry.sol`, "Subject scheme"), so it keeps the same tree, export
+and presentation, **self-signed**.
+
+## Documents
+
+Two documents carry a tree off the holder's device. Both are UTF-8 JCS text
+(RFC 8785) of a JSON object with exactly the keys shown, no more. Every
+32-byte word is lowercase `0x` hex. `createdAt` is ISO-8601 UTC with
+milliseconds, as ECMAScript `Date.prototype.toISOString` writes it; it is the
+holder's own claim and nothing checks it. `fields`, `fillers` and
+`disclosures` are in ascending slot order.
+
+### Private export
+
+```json
+{
+  "format": "work-address/profile-export",
+  "formatVersion": 1,
+  "schemaId": 1,
+  "subject": "<did>",
+  "root": "<bytes32>",
+  "createdAt": "<timestamp>",
+  "fields": [{ "slot": 0, "pointer": "/name", "value": "<canonical value>", "salt": "<bytes32>" }],
+  "fillers": [{ "slot": 14, "leaf": "<bytes32>" }]
+}
+```
+
+Every value, salt and filler: enough to rebuild the tree and present any field
+later. Whoever holds it reads every field, so it is kept like a key and never
+uploaded as it is. A reader rebuilds all 32 leaves from it and refuses the
+export unless they give `root`. It also refuses a slot covered twice or not at
+all, a field in a reserved slot, a value not in canonical form, and a salt or
+filler that is zero or repeats another word in the tree (a repeat means a
+broken random source).
+
+### Presentation
+
+```json
+{
+  "format": "work-address/profile-presentation",
+  "formatVersion": 1,
+  "schemaId": 1,
+  "subject": "<did>",
+  "anchor": { "chainId": 31337, "registry": "<EIP-55 address>", "version": 1 },
+  "root": "<bytes32>",
+  "commitment": "<bytes32>",
+  "signature": null,
+  "createdAt": "<timestamp>",
+  "disclosures": [{ "slot": 0, "pointer": "/name", "value": "<canonical value>", "salt": "<bytes32>", "proof": ["<bytes32>", "… 5 in all"] }]
+}
+```
+
+What a holder shows: the fields they chose, each with its salt and 5-element
+proof. It is bound one of two ways, never both:
+
+- **Anchored:** `anchor` and `commitment` are set and `signature` is `null`.
+  `commitment` must equal `profileCommitment(subject, 1, root)` for
+  `anchor.chainId` and `anchor.registry`.
+- **Self-signed:** `anchor` and `commitment` are `null`, and `signature` is
+  `{"scheme": "eip191" | "ed25519", "value": "<lowercase hex>"}`.
+
+A verifier refuses a presentation unless every disclosure names a v1 field
+slot with that slot's pointer, carries a canonical value and a 5-element
+proof, and its leaf, rebuilt with the leaf subject, opens to `root` through
+`MerkleProof.processProof`. Then it checks the binding:
+
+- An anchored presentation is only half-checked offline. The other half is one
+  call, `IdentityRegistry.checkPresentation(subject, anchor.version,
+  commitment, 1)`, which says whether that version is `Current`,
+  `Superseded` or `Deactivated`, or does not match. It needs an RPC endpoint.
+- A self-signed presentation is checked against the subject's own key. That
+  proves who wrote it, but not that it is the latest version or that it was
+  not withdrawn: only the registry can say that, and a verifier must show the
+  difference.
+
+### Self-signed message
+
+The subject's wallet signs this text, UTF-8, lines joined by LF, no trailing
+newline:
+
+```text
+Work Address profile, self-signed
+domain: work-address/profile-self-signed/v1
+schemaId: 1
+subject: <did>
+root: <root>
+```
+
+- **`eip191`** (EVM subjects): `personal_sign` of the message, 65 bytes
+  `r || s || v` with `v` 27 or 28. It must recover to the subject's address.
+  A contract wallet (ERC-1271) needs a chain call to check, so it is not
+  accepted offline.
+- **`ed25519`** (Solana subjects): the 64-byte RFC 8032 signature of the
+  message's UTF-8 by the key the DID names, checked strictly (not ZIP-215).
 
 ## Test vectors
 
-`test/fixtures/profile-schema-v1.vectors.json` has three cases:
+`test/fixtures/profile-schema-v1.vectors.json` has three anchored cases:
 
 1. a full profile with every field,
 2. a sparse profile with two fields and thirty fillers, where a zero rate and
@@ -202,16 +309,25 @@ subject cannot be replayed under another.
    holds quotes, a backslash, a tab, a newline, U+0001, U+2028 and an emoji ZWJ
    sequence.
 
-Each case gives the app record it maps from, the subject, every field's
-pointer, value, JCS text, salt, `pathHash`, `valueHash`, leaf and 5-element
-proof, the fillers, all 32 leaves, the root and the commitment. The chain is
-31337, and the registry is where the test deploys it: the first contract
-created by the key-less address `0x…1de0`.
+And two self-signed cases (`selfSignedCases`):
+
+4. an EVM subject that has not anchored, with an EIP-191 signature, and
+5. a Solana subject, with an Ed25519 signature and a hashed leaf subject.
+
+Each case gives the app record it maps from, the subject and leaf subject,
+every field's pointer, value, JCS text, salt, `pathHash`, `valueHash`, leaf and
+5-element proof, the fillers, all 32 leaves and the root. An anchored case
+adds the commitment; a self-signed case adds the message, the signer and the
+signature. Every case also gives the JCS text of its private export and of one
+presentation of some of its fields, created at `2026-09-19T12:00:00.000Z`.
+The chain is 31337, and the registry is where the test deploys it: the first
+contract created by the key-less address `0x…1de0`.
 
 The vectors are written by `test/fixtures/profile-schema-v1.vectors.py`. It
 uses only the Python standard library, including its own Keccak-256, ABI
-encoding, JCS, EIP-55 and CREATE address, and shares no code with the
-TypeScript here. To regenerate:
+encoding, JCS, EIP-55, CREATE address, secp256k1 with RFC 6979 nonces, and
+Ed25519. It shares no code with the TypeScript here. The test keys are derived
+from labels and hold nothing. To regenerate:
 
 ```bash
 python3 test/fixtures/profile-schema-v1.vectors.py > test/fixtures/profile-schema-v1.vectors.json
@@ -220,13 +336,15 @@ python3 test/fixtures/profile-schema-v1.vectors.py > test/fixtures/profile-schem
 The Hardhat test pins the file's SHA-256, then recomputes everything in
 Solidity. It computes every `pathHash`, `valueHash` and leaf with the deployed
 registry's `PROFILE_LEAF_TYPEHASH`, and every root with
-`Hashes.commutativeKeccak256`. It verifies every proof with
-`MerkleProof.verify`, and checks that a flipped bit in a salt, a proof element
-or the root fails. It checks every commitment against
+`Hashes.commutativeKeccak256`. It verifies every proof, and every disclosure
+of every presentation, with `MerkleProof.verify`, and checks that a flipped
+bit in a salt, a proof element or the root fails. It rebuilds every root from
+the export alone. It checks every anchored commitment against
 `registry.profileCommitment()`, then publishes it and reads it back as
-`Current` through `checkPresentation`. The vector salts and fillers are
-derived from labels so the file regenerates byte for byte. Real ones come from
-a CSPRNG.
+`Current` through `checkPresentation`. `packages/identity` must reproduce the
+same file byte for byte, documents and signatures included. The vector salts
+and fillers are derived from labels so the file regenerates byte for byte.
+Real ones come from a CSPRNG.
 
 ## Changing the schema
 

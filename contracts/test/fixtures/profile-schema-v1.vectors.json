@@ -1,5 +1,5 @@
 {
-  "format": "Profile schema v1 test vectors (docs/profile-schema-v1.md), written by test/fixtures/profile-schema-v1.vectors.py, an independent standard-library Python encoder. leaf = keccak256(keccak256(abi.encode(leafTypehash, uint32 schemaId, address subject, uint16 slot, keccak256(utf8(pointer)), keccak256(utf8(valueJcs)), bytes32 salt))); a slot with no field holds a 32-byte filler as its leaf; leaves[i] is slot i; internal nodes are keccak256 of the sorted pair; root is the top of the 32-leaf tree; commitment = keccak256(abi.encode(commitmentTypehash, chainId, registry, subject, schemaId, root)). source is the app public User projection each case maps from (tz is read and dropped). Salts and fillers here are derived from labels so the file regenerates; real ones are CSPRNG bytes. registry is the first CREATE of registryDeployer on chainId, where the Hardhat test deploys IdentityRegistry. A change to any output is a new schema id, not an edit.",
+  "format": "Profile schema v1 test vectors (docs/profile-schema-v1.md), written by test/fixtures/profile-schema-v1.vectors.py, an independent standard-library Python encoder. leaf = keccak256(keccak256(abi.encode(leafTypehash, uint32 schemaId, address leafSubject, uint16 slot, keccak256(utf8(pointer)), keccak256(utf8(valueJcs)), bytes32 salt))); a slot with no field holds a 32-byte filler as its leaf; leaves[i] is slot i; internal nodes are keccak256 of the sorted pair; root is the top of the 32-leaf tree; commitment = keccak256(abi.encode(commitmentTypehash, chainId, registry, leafSubject, schemaId, root)). source is the app public User projection each case maps from (tz is read and dropped). presentation.text and export.text are the RFC 8785 texts of the two documents, created at 2026-09-19T12:00:00.000Z. cases are anchored to registry, the first CREATE of registryDeployer on chainId, where the Hardhat test deploys IdentityRegistry; selfSignedCases have no anchor and sign selfSigned.message (EIP-191, or Ed25519 over its UTF-8) with a test key derived from a label. Salts and fillers are derived from labels so the file regenerates; real ones are CSPRNG bytes. A change to any output is a new schema id, not an edit.",
   "schemaId": 1,
   "leafType": "ProfileLeaf(uint32 schemaId,address subject,uint16 slot,bytes32 pathHash,bytes32 valueHash,bytes32 salt)",
   "leafTypehash": "0xbc0ad1be262a3d9761ac0eb68104f83a8f7886fe415ed8596378167b732a987f",
@@ -8,6 +8,9 @@
   "chainId": 31337,
   "registryDeployer": "0x0000000000000000000000000000000000001de0",
   "registry": "0xFB4CD1369863f2E5D31ce624Af79Aaf46BB9A6aE",
+  "presentationFormat": "work-address/profile-presentation",
+  "exportFormat": "work-address/profile-export",
+  "selfSignedDomain": "work-address/profile-self-signed/v1",
   "slots": [
     {
       "slot": 0,
@@ -459,7 +462,20 @@
         "0x226ea35741932279741c97afa1f96020bf79a8d725c6212e2f8a779dc415fc51"
       ],
       "root": "0xf6cffc022d07232cbe7e58b54bf96772443a32fe5779df02e4ef11c97f1d96b7",
-      "commitment": "0xd8c3d6837aaac8d5c04c78d210bedf5f3506174580e7b46756083661728d4493"
+      "commitment": "0xd8c3d6837aaac8d5c04c78d210bedf5f3506174580e7b46756083661728d4493",
+      "presentation": {
+        "disclose": [
+          0,
+          1,
+          4,
+          5,
+          9
+        ],
+        "text": "{\"anchor\":{\"chainId\":31337,\"registry\":\"0xFB4CD1369863f2E5D31ce624Af79Aaf46BB9A6aE\",\"version\":1},\"commitment\":\"0xd8c3d6837aaac8d5c04c78d210bedf5f3506174580e7b46756083661728d4493\",\"createdAt\":\"2026-09-19T12:00:00.000Z\",\"disclosures\":[{\"pointer\":\"/name\",\"proof\":[\"0xba89bfefdc89c6708065684c5f5ba9b50a04e8ca3cb4508b4ab86848ecf7373b\",\"0x01ed620d6eaf26aea98f313114a25766934cde5cd454abbd7ac6b83ceda0275a\",\"0x8cfe7cc144569e2e2eb11445b4f5da73025812023de1512e763794b35e38682e\",\"0x3843949a382ea5752f37fa9e807ac5221f330b3f8e11aace360a5e47657c9da7\",\"0x77d9d609f504dbb840e3b7ad3c87b03ef76dae431366b88ac86cbac3f650bf4b\"],\"salt\":\"0xb54e7a0c9f62da4703fa75caae0c0667ce3c4318bfc5772ec346a0caf36dbce4\",\"slot\":0,\"value\":\"Ada Lovelace\"},{\"pointer\":\"/title\",\"proof\":[\"0x0cc2ae6233be072af6fc3418a3c05d27329a799928cdb9e453ed802a19df4bcb\",\"0x01ed620d6eaf26aea98f313114a25766934cde5cd454abbd7ac6b83ceda0275a\",\"0x8cfe7cc144569e2e2eb11445b4f5da73025812023de1512e763794b35e38682e\",\"0x3843949a382ea5752f37fa9e807ac5221f330b3f8e11aace360a5e47657c9da7\",\"0x77d9d609f504dbb840e3b7ad3c87b03ef76dae431366b88ac86cbac3f650bf4b\"],\"salt\":\"0xf7df164e3fb5a73260b71cf88078086dd61257da3b6c92d24f505fe7fa9dfe7f\",\"slot\":1,\"value\":\"Smart contract engineer\"},{\"pointer\":\"/rate\",\"proof\":[\"0xa3fbdd8ef4c74b65c0f88a3177295d5ba8d0fddc2d10c5e4ba27380e77f15c9b\",\"0x97102b43a0d6807da8cb4b77d433dca325286a273f71661ab7eebc25546a9333\",\"0xc61ad770eb0ff8ae2e73fa445a46f8af709bb963975569601cd49d2f368d3483\",\"0x3843949a382ea5752f37fa9e807ac5221f330b3f8e11aace360a5e47657c9da7\",\"0x77d9d609f504dbb840e3b7ad3c87b03ef76dae431366b88ac86cbac3f650bf4b\"],\"salt\":\"0xf54c93a7949447fbffc26a7e0882c98c23dd06849570bfddf3f80173eda43ebe\",\"slot\":4,\"value\":{\"currency\":\"USDT\",\"rateHourCents\":8550}},{\"pointer\":\"/skills\",\"proof\":[\"0xe8fd2ab83c138f2c5e5ad66cf4384cf90189df4a1a41f3331fefc175da956a71\",\"0x97102b43a0d6807da8cb4b77d433dca325286a273f71661ab7eebc25546a9333\",\"0xc61ad770eb0ff8ae2e73fa445a46f8af709bb963975569601cd49d2f368d3483\",\"0x3843949a382ea5752f37fa9e807ac5221f330b3f8e11aace360a5e47657c9da7\",\"0x77d9d609f504dbb840e3b7ad3c87b03ef76dae431366b88ac86cbac3f650bf4b\"],\"salt\":\"0x275fb297e8289da76434a8828916bfdde4f49f145dfb8a64dbf8adaf6296fe5a\",\"slot\":5,\"value\":[\"Solidity\",\"TypeScript\",\"Rust\",\"Formal verification\"]},{\"pointer\":\"/social/linkedIn\",\"proof\":[\"0x9fd838acc41cbeab07c3b696d388084c90b714ecc9a586976bf25fecfa678f59\",\"0x50ba3caea9ec2d08f5fe835b5ee22926652803a27c83f2edd95a11eb82517850\",\"0xdadf2d595633c4dbd741c9415e03cc6d146acb31eba760e83df746d3bab5a9e5\",\"0xb10cd87f6d88a23e53f6184631a6b3451720bde74f598e672e91b8f570335906\",\"0x77d9d609f504dbb840e3b7ad3c87b03ef76dae431366b88ac86cbac3f650bf4b\"],\"salt\":\"0x07792f33c3903c041483f63acb85edf677b9fc54ed8a0c7cfba548ca06eb0261\",\"slot\":9,\"value\":\"ada-lovelace\"}],\"format\":\"work-address/profile-presentation\",\"formatVersion\":1,\"root\":\"0xf6cffc022d07232cbe7e58b54bf96772443a32fe5779df02e4ef11c97f1d96b7\",\"schemaId\":1,\"signature\":null,\"subject\":\"did:pkh:eip155:31337:0x22DeB921Fb4302B1ACee4B36313a49713492e1a2\"}"
+      },
+      "export": {
+        "text": "{\"createdAt\":\"2026-09-19T12:00:00.000Z\",\"fields\":[{\"pointer\":\"/name\",\"salt\":\"0xb54e7a0c9f62da4703fa75caae0c0667ce3c4318bfc5772ec346a0caf36dbce4\",\"slot\":0,\"value\":\"Ada Lovelace\"},{\"pointer\":\"/title\",\"salt\":\"0xf7df164e3fb5a73260b71cf88078086dd61257da3b6c92d24f505fe7fa9dfe7f\",\"slot\":1,\"value\":\"Smart contract engineer\"},{\"pointer\":\"/company\",\"salt\":\"0x27020914fc3fee71b217cd152ebbc6ae4885bf1104121933285102c2d7fd3513\",\"slot\":2,\"value\":\"Analytical Engines Ltd\"},{\"pointer\":\"/bio\",\"salt\":\"0x67bfd06d2d4a50ea1b44a748377defa2d09ed9d0de7c6adff733a17d17f63861\",\"slot\":3,\"value\":\"<p>Ten years of <b>Solidity</b> &amp; TypeScript. Audits, escrow and \\\"boring\\\" payments.</p>\"},{\"pointer\":\"/rate\",\"salt\":\"0xf54c93a7949447fbffc26a7e0882c98c23dd06849570bfddf3f80173eda43ebe\",\"slot\":4,\"value\":{\"currency\":\"USDT\",\"rateHourCents\":8550}},{\"pointer\":\"/skills\",\"salt\":\"0x275fb297e8289da76434a8828916bfdde4f49f145dfb8a64dbf8adaf6296fe5a\",\"slot\":5,\"value\":[\"Solidity\",\"TypeScript\",\"Rust\",\"Formal verification\"]},{\"pointer\":\"/location/city\",\"salt\":\"0x09960d017a30ca051ebfd35969b091dee0a9182d3639649ff309af52fa69d91c\",\"slot\":6,\"value\":\"London\"},{\"pointer\":\"/location/country\",\"salt\":\"0x2183b85830afb481e039cc54b9a4efbace1a39c14a0ba593c10fb638cbe885d4\",\"slot\":7,\"value\":\"GB\"},{\"pointer\":\"/social/facebook\",\"salt\":\"0x45ce3955ad175be8f1de087079c8f8a6924febc8180bc86bb291360dab3b7698\",\"slot\":8,\"value\":\"ada.lovelace\"},{\"pointer\":\"/social/linkedIn\",\"salt\":\"0x07792f33c3903c041483f63acb85edf677b9fc54ed8a0c7cfba548ca06eb0261\",\"slot\":9,\"value\":\"ada-lovelace\"},{\"pointer\":\"/social/twitter\",\"salt\":\"0x5f8df1829d07dd07b5fe4bbb33a0ded8b9afe5166937261c62106b1f68fdbdf0\",\"slot\":10,\"value\":\"ada_codes\"},{\"pointer\":\"/social/instagram\",\"salt\":\"0x92b825b129310ae206e21448ff3c9f205eb7488bdf5616ea4a9964ec2963cd16\",\"slot\":11,\"value\":\"ada.engines\"},{\"pointer\":\"/social/youtube\",\"salt\":\"0xcc66791a1ed9149c5ce380b4fe7c87f1f42e6451d8544cd8d41e30f0c45bb6d5\",\"slot\":12,\"value\":\"@adalovelace\"},{\"pointer\":\"/social/telegram\",\"salt\":\"0x98a6508eb7a31d0aeab77ac6e0d5073eaec9dd01c8d3d064c9974eea125d8d22\",\"slot\":13,\"value\":\"ada_l\"}],\"fillers\":[{\"leaf\":\"0xfd5a4e4c392789f3815753dc9ceec7a97e518573903179b83d4a19b2f63b05a0\",\"slot\":14},{\"leaf\":\"0x60c544454b348eb58240bfd924da92d744be6d870cfdaa93f117097c23bde88a\",\"slot\":15},{\"leaf\":\"0x92313b554edd022b022e9d0ab663b2d370a5db53e0dd635b49d31d836b746f0c\",\"slot\":16},{\"leaf\":\"0x4ee585e385f58da24ca38e9e5bdc975ba454894fa14a62e4d5fa6e9716c3bd87\",\"slot\":17},{\"leaf\":\"0x358a80240ef8ab4c8b66ef7485cbd07e1f827a49ec44b1fa0c02c08914d39d37\",\"slot\":18},{\"leaf\":\"0xc2d337ec314e594cebee5882fe6e31c9bcab25d062774bfbbe321f6331861fac\",\"slot\":19},{\"leaf\":\"0xa842bf37e233323e51826fcf6470d1304d59c4fd65a82fbb7ea274abe410e7f3\",\"slot\":20},{\"leaf\":\"0xf55a0ee9014e69bead7fb49761daa93aac7b3379a8035eac63fe70eb9c2d5e36\",\"slot\":21},{\"leaf\":\"0xcdf9b843f40e6c0edb641cf8521a5d2f913f3cbcad24697435f96771b1ac9a12\",\"slot\":22},{\"leaf\":\"0x02f6b4bc2e3b68d1f8f9ee814b7c24e14c9b58978c5366a02fde45b270e23c6a\",\"slot\":23},{\"leaf\":\"0x47e874859013c157f0fd490654484840a6efe243c64cbc472db074c22bb758cb\",\"slot\":24},{\"leaf\":\"0x56dc9f9b142cec08a0a2f5f334a046e790340f505fa6cadfe79577c08a4fb75c\",\"slot\":25},{\"leaf\":\"0x65dd0b8e2a1cf61f692689c3b5f235a050606abb944f8b894478f732357f20f3\",\"slot\":26},{\"leaf\":\"0x1fa0db7cb1e4f1c00eebb7b917bb5f964b5dd242c820b5da7b077b65a50f3f45\",\"slot\":27},{\"leaf\":\"0x6c58624d062ec07be24e769a360a2ffdf709d503b14c14693040f9c5ef052889\",\"slot\":28},{\"leaf\":\"0xd03837d9962f9628d53c1553aba6a263db8871858559fbc05e39ab6e954a1bf4\",\"slot\":29},{\"leaf\":\"0xfa8f19acc5682f4f1b2f9635d540f988012c4e08f6a742e16814092c19fa7e3e\",\"slot\":30},{\"leaf\":\"0x226ea35741932279741c97afa1f96020bf79a8d725c6212e2f8a779dc415fc51\",\"slot\":31}],\"format\":\"work-address/profile-export\",\"formatVersion\":1,\"root\":\"0xf6cffc022d07232cbe7e58b54bf96772443a32fe5779df02e4ef11c97f1d96b7\",\"schemaId\":1,\"subject\":\"did:pkh:eip155:31337:0x22DeB921Fb4302B1ACee4B36313a49713492e1a2\"}"
+      }
     },
     {
       "name": "sparse profile: two fields, thirty fillers; a zero rate and empty text are absent",
@@ -675,7 +691,16 @@
         "0x07bc34e07c23aed956fd34c33bcdd344fe8c7423342f07038553c37ccac278b2"
       ],
       "root": "0x49cc26afdc15e1cc035ca88968ddd3349f45672fd13069393517403ce97a5536",
-      "commitment": "0xcadd68563411c9e1c83671070662ec1a1d25d715d123ad8935a29de958523fae"
+      "commitment": "0xcadd68563411c9e1c83671070662ec1a1d25d715d123ad8935a29de958523fae",
+      "presentation": {
+        "disclose": [
+          0
+        ],
+        "text": "{\"anchor\":{\"chainId\":31337,\"registry\":\"0xFB4CD1369863f2E5D31ce624Af79Aaf46BB9A6aE\",\"version\":1},\"commitment\":\"0xcadd68563411c9e1c83671070662ec1a1d25d715d123ad8935a29de958523fae\",\"createdAt\":\"2026-09-19T12:00:00.000Z\",\"disclosures\":[{\"pointer\":\"/name\",\"proof\":[\"0x5cb4f8a4c84b26cc1e8df987969e5e4877e74499382128aeca56fbd10041f781\",\"0x6f7ddb9abfa260e6c8c755316659b2b2d604a477553a9d18d7f90b5de73e99eb\",\"0xcfa7f299507bac71e46cd9258923e84ad0051616f44c65eb18ae48b9d0c00359\",\"0x5501f2fa5a4769cd5ec2fabde2b9d8acffdf6abae1dbaf7c4a4d9c6500ccad53\",\"0x2925ca57b316dc9a2786b1da38b7f263990995a36099e7c6da592c3047b2035b\"],\"salt\":\"0x2941527355f3bb2291ecb9ab9a4661fd59f260303092ac1169513d741e9d9dad\",\"slot\":0,\"value\":\"Grace\"}],\"format\":\"work-address/profile-presentation\",\"formatVersion\":1,\"root\":\"0x49cc26afdc15e1cc035ca88968ddd3349f45672fd13069393517403ce97a5536\",\"schemaId\":1,\"signature\":null,\"subject\":\"did:pkh:eip155:31337:0xC5F52Fce47dffbd695159bA28595cD182Ba4Eba2\"}"
+      },
+      "export": {
+        "text": "{\"createdAt\":\"2026-09-19T12:00:00.000Z\",\"fields\":[{\"pointer\":\"/name\",\"salt\":\"0x2941527355f3bb2291ecb9ab9a4661fd59f260303092ac1169513d741e9d9dad\",\"slot\":0,\"value\":\"Grace\"},{\"pointer\":\"/location/country\",\"salt\":\"0xcd046a0445603751bbcafb6a97b382527bf78a15be99c8b02fdac8b0cb4fea32\",\"slot\":7,\"value\":\"US\"}],\"fillers\":[{\"leaf\":\"0x5cb4f8a4c84b26cc1e8df987969e5e4877e74499382128aeca56fbd10041f781\",\"slot\":1},{\"leaf\":\"0xd480964315647e359462897d8f0c7b6522c30685029a981513bd651e01efeef5\",\"slot\":2},{\"leaf\":\"0x0a94a8ee0003f12372061e2bc4c3d47766186c5cccc449845ba881e0dd5567f8\",\"slot\":3},{\"leaf\":\"0x60a2b7887046caddee6f8580b05dffc78ffb62df9a1123c730ba70586981d942\",\"slot\":4},{\"leaf\":\"0x40a3f4e6af94419873da82d79626444c16bfe192a75ccbdef54b638d792da511\",\"slot\":5},{\"leaf\":\"0xbea634533fc6868e197ed3cab83610c8c256ccdd58ed4066b11821f8874eb4bb\",\"slot\":6},{\"leaf\":\"0xf622c3ca51e5d976d6369e24d309d9d409b71bca73928f66357af4430d400a77\",\"slot\":8},{\"leaf\":\"0xa849fab491a8a5db19acca8afb70409e0860ccf45d407b4ee692898968209e95\",\"slot\":9},{\"leaf\":\"0x0ed283baffc14285242e3d599a1f7f3a02b8cf51471dcdb6d82841b4597ad6d3\",\"slot\":10},{\"leaf\":\"0xa4d6d498348e8f4d96a8a4d659bf8cdc76c3d08a762d6e1c18840cc3de9a0122\",\"slot\":11},{\"leaf\":\"0x7432eb9b83d088387bb5d62ba6f286639c91a032c48d9baf16f5cf84da58481f\",\"slot\":12},{\"leaf\":\"0xdbdd6885cf1160a0216a94fed2a7772f9fb6a9fb27021f3bb6de04cafbe6f3b2\",\"slot\":13},{\"leaf\":\"0x33b95d54a6313cbc0175aaa82f5d4287eac752c4f801e1e5ac05c07b5ecc8a03\",\"slot\":14},{\"leaf\":\"0x576cc56a644fdb9bbbdd913df23f534fbd551fac336f97be0b4494940aad4229\",\"slot\":15},{\"leaf\":\"0x45344de4018ed3e50f2fdf23cfe7444e2e2b8906e1b155dedd012bf39ae6e056\",\"slot\":16},{\"leaf\":\"0xf916b04314256181cec223d5d33f056f59076ef4a756cb76839b5749e81a6bf6\",\"slot\":17},{\"leaf\":\"0x23f94751529c049a4b818c51e1429a3c8ea6bade40ad878427fd3a77c6b090c7\",\"slot\":18},{\"leaf\":\"0x75d9d0b6f5264c4d157ced65b771d9dee221279969470f0aa8c65417403779c3\",\"slot\":19},{\"leaf\":\"0xe1681fff3143d161b64bcd8e11223a0783ee634260487b4ecc4b9f0345f3e3fb\",\"slot\":20},{\"leaf\":\"0xb622966ee1ea8f46a05fbf70a659eb4442ddc03ecaf3848c9b4b28a7816697e2\",\"slot\":21},{\"leaf\":\"0x02ac634e5cf5d90faaa416d571ae53e8d75c96c8b64ab39e41d96f47ef98afce\",\"slot\":22},{\"leaf\":\"0xac3d6bf58f710ffe1cf400b01e154eb7b364f62dc0d2b71099267fcd9ddf84f8\",\"slot\":23},{\"leaf\":\"0x7df29ee4132fba6454a5ec3a0667caef6860a31c83084c733120ed771f05818d\",\"slot\":24},{\"leaf\":\"0x7efa11d8c6952b41913419ff1cd223ca62442f2e19ef7b8277c1867566d5d928\",\"slot\":25},{\"leaf\":\"0xb0c4127221ce45b782d36dd679754d4286c76f65e0ccd08174eecece9014a0a5\",\"slot\":26},{\"leaf\":\"0x210c6a702b2e4b7af93af6691dc04c1fc3da17d2973a5d80f5a509fdbda04d7e\",\"slot\":27},{\"leaf\":\"0xedc654f32d0e7538c9f6d4d1e6e91dbb5753e00420967c5298528b6719b372c0\",\"slot\":28},{\"leaf\":\"0x52b02fdb03c97af55cd4c11fc183fa40d234107e376b46aca59ae269dedc11fe\",\"slot\":29},{\"leaf\":\"0x840f955989066e5aeec8f15f8960d41d20a45ddf57415139b83e89b648346579\",\"slot\":30},{\"leaf\":\"0x07bc34e07c23aed956fd34c33bcdd344fe8c7423342f07038553c37ccac278b2\",\"slot\":31}],\"format\":\"work-address/profile-export\",\"formatVersion\":1,\"root\":\"0x49cc26afdc15e1cc035ca88968ddd3349f45672fd13069393517403ce97a5536\",\"schemaId\":1,\"subject\":\"did:pkh:eip155:31337:0xC5F52Fce47dffbd695159bA28595cD182Ba4Eba2\"}"
+      }
     },
     {
       "name": "non-ASCII input in NFD with padding: committed as trimmed NFC, JCS escapes only what it must",
@@ -990,7 +1015,600 @@
         "0x21bb3eada3c6c2d9d95ac53cf396aa215f81b1fe644435b1649de678313fb830"
       ],
       "root": "0x16acfbc8ba7b1313cbf15ce49a32a9d66d6671c8d729f9ca917054e1a7b3a73c",
-      "commitment": "0x40c6bd17aa269702849300992bf5eb6039047cfdd6bc86c9bf590d321c671151"
+      "commitment": "0x40c6bd17aa269702849300992bf5eb6039047cfdd6bc86c9bf590d321c671151",
+      "presentation": {
+        "disclose": [
+          0,
+          3,
+          5,
+          6
+        ],
+        "text": "{\"anchor\":{\"chainId\":31337,\"registry\":\"0xFB4CD1369863f2E5D31ce624Af79Aaf46BB9A6aE\",\"version\":1},\"commitment\":\"0x40c6bd17aa269702849300992bf5eb6039047cfdd6bc86c9bf590d321c671151\",\"createdAt\":\"2026-09-19T12:00:00.000Z\",\"disclosures\":[{\"pointer\":\"/name\",\"proof\":[\"0x66af93c5d8d6f5939fde384b73c1cab92996f48059b852b615344b001597a27b\",\"0x3a4cf2377ebf354be14dd560abf70530e80f09b07d8dfe5dd2bf4a6a9bf47bdb\",\"0xefe3f66ab1afd62788bed45ca6a78774e92527b4eeed5d21662751d671d9d6fc\",\"0x614a38b8ea2c46e7658644d8be947063dfe7bd4ded14ac0b43aa5e99bbbc426d\",\"0xaf0413e4dd89fe29a5e74988ac535f5465c7fa2077ac3b40bb42d49d6695bdb7\"],\"salt\":\"0x89cf728e3ec2683fcb67ac1611a4b67e641e2f651554854f49d79ab5c1dc4d97\",\"slot\":0,\"value\":\"José Müller-Ångström\"},{\"pointer\":\"/bio\",\"proof\":[\"0xbb6c30c6166e983be42f32536391dc712a98d2f3d3d0f1978e277ea85499a4f7\",\"0x6acab3508032e98299dc00395b19d5e7928082be524c75b92af8b27d4221a609\",\"0xefe3f66ab1afd62788bed45ca6a78774e92527b4eeed5d21662751d671d9d6fc\",\"0x614a38b8ea2c46e7658644d8be947063dfe7bd4ded14ac0b43aa5e99bbbc426d\",\"0xaf0413e4dd89fe29a5e74988ac535f5465c7fa2077ac3b40bb42d49d6695bdb7\"],\"salt\":\"0xe8b7dc094b2c9569b633e94875eefd3f85b56381bcec1c939c28c8de0da1ee61\",\"slot\":3,\"value\":\"Line one\\nLine \\\"two\\\"\\tand a backslash \\\\ \\u0001 plus   and 👩‍💻 — café\"},{\"pointer\":\"/skills\",\"proof\":[\"0x259f432a961352ea85e84efb3f3897912b5ac462404c6e834b3084646e1927c3\",\"0x48b6eb3eef2a303077db8e47954cf3057e5a0de96acac6556ef5e74876fa2e6d\",\"0x7e00f16d8d07f3bf36b6602874cc5e0288b82409519b7f4e6820cec82829453d\",\"0x614a38b8ea2c46e7658644d8be947063dfe7bd4ded14ac0b43aa5e99bbbc426d\",\"0xaf0413e4dd89fe29a5e74988ac535f5465c7fa2077ac3b40bb42d49d6695bdb7\"],\"salt\":\"0xc6a2040c7268fb5251ccf159b02905b21ee24c30c4287456f7335d7d11200c18\",\"slot\":5,\"value\":[\"Rust\",\"日本語\",\"Ñandú\",\"Rust\"]},{\"pointer\":\"/location/city\",\"proof\":[\"0xe53af4664cc1c2900a4ec3d565fc0f1a6d818d2fd74ac0688668742365a512ae\",\"0xdf70337390567f9a276809cfb3560b83e29caf78a2e8386d00b8beb004c00c45\",\"0x7e00f16d8d07f3bf36b6602874cc5e0288b82409519b7f4e6820cec82829453d\",\"0x614a38b8ea2c46e7658644d8be947063dfe7bd4ded14ac0b43aa5e99bbbc426d\",\"0xaf0413e4dd89fe29a5e74988ac535f5465c7fa2077ac3b40bb42d49d6695bdb7\"],\"salt\":\"0x4382328215d08d6d72c6c8476cd6e089a274fbc22dec687914de752a526cff55\",\"slot\":6,\"value\":\"São Paulo\"}],\"format\":\"work-address/profile-presentation\",\"formatVersion\":1,\"root\":\"0x16acfbc8ba7b1313cbf15ce49a32a9d66d6671c8d729f9ca917054e1a7b3a73c\",\"schemaId\":1,\"signature\":null,\"subject\":\"did:pkh:eip155:31337:0x527cBbD6904C307Aa0215680011c14e6045D8142\"}"
+      },
+      "export": {
+        "text": "{\"createdAt\":\"2026-09-19T12:00:00.000Z\",\"fields\":[{\"pointer\":\"/name\",\"salt\":\"0x89cf728e3ec2683fcb67ac1611a4b67e641e2f651554854f49d79ab5c1dc4d97\",\"slot\":0,\"value\":\"José Müller-Ångström\"},{\"pointer\":\"/title\",\"salt\":\"0x9b28a876ff3905925b7a049adb7ea059454289bf07721d1d4f6c1e2789625965\",\"slot\":1,\"value\":\"Désignér · 設計者\"},{\"pointer\":\"/company\",\"salt\":\"0x9cde104f3870d5b3d46932e0939ddda10da377175c8a6284b38939244f7385f9\",\"slot\":2,\"value\":\"Ōkami 株式会社\"},{\"pointer\":\"/bio\",\"salt\":\"0xe8b7dc094b2c9569b633e94875eefd3f85b56381bcec1c939c28c8de0da1ee61\",\"slot\":3,\"value\":\"Line one\\nLine \\\"two\\\"\\tand a backslash \\\\ \\u0001 plus   and 👩‍💻 — café\"},{\"pointer\":\"/rate\",\"salt\":\"0xb56f9b245b886b66aa4d86450f91473da95cbea3e5f476f2bf6c4dfece4853bd\",\"slot\":4,\"value\":{\"currency\":\"USDT\",\"rateHourCents\":12050}},{\"pointer\":\"/skills\",\"salt\":\"0xc6a2040c7268fb5251ccf159b02905b21ee24c30c4287456f7335d7d11200c18\",\"slot\":5,\"value\":[\"Rust\",\"日本語\",\"Ñandú\",\"Rust\"]},{\"pointer\":\"/location/city\",\"salt\":\"0x4382328215d08d6d72c6c8476cd6e089a274fbc22dec687914de752a526cff55\",\"slot\":6,\"value\":\"São Paulo\"},{\"pointer\":\"/location/country\",\"salt\":\"0x1f04bee72cb2a4342b79d7ee0a34b07750306b4643c853f64f3a4bf02c18ad1b\",\"slot\":7,\"value\":\"BR\"},{\"pointer\":\"/social/telegram\",\"salt\":\"0x61552d6d03167b302872170528ece8dbf2a446b91e3f033cd4684450cdb14024\",\"slot\":13,\"value\":\"jose_müller\"}],\"fillers\":[{\"leaf\":\"0x9772daa3aec5c929b0c49a23838cb19f807c2813e67d041215022d0b46750bb4\",\"slot\":8},{\"leaf\":\"0x2c907196a4a50bcbe86f8eff2aa917aa04c4c492ed99a74561d88c9a381774ed\",\"slot\":9},{\"leaf\":\"0x45d818d38099b6c054b1e7323ff15dcb33db08151325c77ce735e49d2d961e03\",\"slot\":10},{\"leaf\":\"0xb90795fe4f2be1a8977b3ee04d2d3e76894ba35426db8d9be5d8a92b6adf0e19\",\"slot\":11},{\"leaf\":\"0xb1beec9b1519724a9f8e0c0baded0edd130cde4e48ef0998560dcab1d64d0867\",\"slot\":12},{\"leaf\":\"0x4c2270f4128e54981f0aa0806eac79c61b8b77a7119f45f4bd8a7e55b080938c\",\"slot\":14},{\"leaf\":\"0xbc056b3078c2d1dbda7415ab0af3090cb68ab6980696bb86f48913de98cdd32f\",\"slot\":15},{\"leaf\":\"0x3b4f49eb0a408c0793a2b0d7176bb1973f7d4c5fd7d4eae8c3f364020af1212e\",\"slot\":16},{\"leaf\":\"0x13cbc08be2d5758b51517b28c2742b0ae75776e09556ebe385e758bbf750f33d\",\"slot\":17},{\"leaf\":\"0xe96e2cf6bdbca17a72e12a23fa92df97997050cf381c57a4b2f479f41013b34b\",\"slot\":18},{\"leaf\":\"0x5d6f8dcdff453a114cf0d7c43c5004a4e5580b801fe93a7cc72d55e4db51b313\",\"slot\":19},{\"leaf\":\"0x48d39556cf9f0811ab049c001419df30d699f4940f6141d4f32de42cd8791d69\",\"slot\":20},{\"leaf\":\"0x2a0100403597271a29d52ff2938bfe5fca21b1c8452e61d435109eed2dc7374c\",\"slot\":21},{\"leaf\":\"0xf6cc493ab4b7026b2b7c25fa15ffa149a47fae75e68d53238594284f65c0d2f2\",\"slot\":22},{\"leaf\":\"0x742f285cc237e60f5d2532370c7470d9e744e46be87accd399ecb5c68d5adf21\",\"slot\":23},{\"leaf\":\"0xb2ffdd353ea2928d6ba187c1d78780d9392279a28472f22ec80005735010f527\",\"slot\":24},{\"leaf\":\"0x60887356c52ce70f73290e15ceb70cf82585b958518f66d1e194e680758254ed\",\"slot\":25},{\"leaf\":\"0x78e8fd7779d53ff2f8238f9e8b572d112e7cc0821fdbc8697ca99c474958c69b\",\"slot\":26},{\"leaf\":\"0xee9cc0ec3d7596fe7d2e1359b975c41104c2f34df08dfa5b32a5fd1f022616af\",\"slot\":27},{\"leaf\":\"0x6c5af78f24af4f75d210f248832b2e1c2bb78a129a21d08a5406c302804b99be\",\"slot\":28},{\"leaf\":\"0x51b9e08ffd868ffae26b3ad0b42b2c69dc216ce4b675cfb0479e949b4ebf506d\",\"slot\":29},{\"leaf\":\"0x00d6ff30be98a0ee69fcc39b6d2c3feb26a2a8068b4c92e58bd6d57ad1243509\",\"slot\":30},{\"leaf\":\"0x21bb3eada3c6c2d9d95ac53cf396aa215f81b1fe644435b1649de678313fb830\",\"slot\":31}],\"format\":\"work-address/profile-export\",\"formatVersion\":1,\"root\":\"0x16acfbc8ba7b1313cbf15ce49a32a9d66d6671c8d729f9ca917054e1a7b3a73c\",\"schemaId\":1,\"subject\":\"did:pkh:eip155:31337:0x527cBbD6904C307Aa0215680011c14e6045D8142\"}"
+      }
+    }
+  ],
+  "selfSignedCases": [
+    {
+      "name": "self-signed EVM subject: no anchor, an EIP-191 signature over schema, subject and root",
+      "subject": "did:pkh:eip155:1:0x5cB5E391AC6A7D21F5FDE2297a90d66fa998F019",
+      "leafSubject": "0x5cB5E391AC6A7D21F5FDE2297a90d66fa998F019",
+      "source": {
+        "name": "Linus",
+        "title": "Kernel maintainer",
+        "company": null,
+        "bio": null,
+        "rate": "150",
+        "skills": "C, Git",
+        "city": "Portland",
+        "country": "US",
+        "tz": "America/Los_Angeles",
+        "facebook": null,
+        "linkedIn": null,
+        "twitter": null,
+        "instagram": null,
+        "youtube": null,
+        "telegram": null
+      },
+      "fields": [
+        {
+          "slot": 0,
+          "pointer": "/name",
+          "value": "Linus",
+          "valueJcs": "\"Linus\"",
+          "salt": "0x75fee4e9c72d4b336e40230205814ffb2fb689fd158e525542db353b6c050144",
+          "pathHash": "0x830fa0e913eae4cea1398794dca8afd54ad8be223ed52b4654e84c8f635b36d7",
+          "valueHash": "0xbd7402540e15929adf989ef5259dfe8ca8e3c06119c48d61c1f4cdfa383596d9",
+          "leaf": "0xf7a8af33322380e4385648ba96da7282d189e227224344c447b08d5d9d26c46f",
+          "proof": [
+            "0xc977f1d18628d2bcd1af9570fa6a05511208f35fcbc39d85e6dbce76ae8e76cc",
+            "0xffceb0b7b1a860ce119514311d8dd366b322780b9cf0dab211640c54e420a29e",
+            "0x07df0d0902c38d2d503b837771e772dd336303b2253484d608dd31e8956edd16",
+            "0x8d3d768cfdd3d3439cd6b4d7a281adbd4d3913cb2cb50cc7e0d3e620b78ca426",
+            "0x12c6ba31a9e1718a98c27c18edbc359f94d169c567a87d02e9d7f9190db35968"
+          ]
+        },
+        {
+          "slot": 1,
+          "pointer": "/title",
+          "value": "Kernel maintainer",
+          "valueJcs": "\"Kernel maintainer\"",
+          "salt": "0xd58292d46da2da738f1014f351869cc99b6adf24f4dbf6663baa42ba50c33c4f",
+          "pathHash": "0x1cff9bf2a243db1f8c98df5764c4c8b0c24a59e84baf507be308bd69d811de6a",
+          "valueHash": "0xa62a3c28d2cf58b275b639ed31d00ff21e3c57fc61c4271d5bb86bf477ba6753",
+          "leaf": "0xc977f1d18628d2bcd1af9570fa6a05511208f35fcbc39d85e6dbce76ae8e76cc",
+          "proof": [
+            "0xf7a8af33322380e4385648ba96da7282d189e227224344c447b08d5d9d26c46f",
+            "0xffceb0b7b1a860ce119514311d8dd366b322780b9cf0dab211640c54e420a29e",
+            "0x07df0d0902c38d2d503b837771e772dd336303b2253484d608dd31e8956edd16",
+            "0x8d3d768cfdd3d3439cd6b4d7a281adbd4d3913cb2cb50cc7e0d3e620b78ca426",
+            "0x12c6ba31a9e1718a98c27c18edbc359f94d169c567a87d02e9d7f9190db35968"
+          ]
+        },
+        {
+          "slot": 4,
+          "pointer": "/rate",
+          "value": {
+            "currency": "USDT",
+            "rateHourCents": 15000
+          },
+          "valueJcs": "{\"currency\":\"USDT\",\"rateHourCents\":15000}",
+          "salt": "0x26015458cd28203a6a08810bb5800008d66e72bb0a44be33d6cfed0f1062a99a",
+          "pathHash": "0xe4d3dc09a526073c2f32be003225bc0ab856ad46f93a3f1f3c5c9d970c506728",
+          "valueHash": "0xffd7d44b3038ac629646ba284ce36f7e10b9eab6d5915b92c7a4e2d0c2793ac4",
+          "leaf": "0xb42accd2730d3085c8e54ec0c4bab5220e0c85ce11745e5f15c3041010477d03",
+          "proof": [
+            "0x41c806ebb10b6c1b241a6ed3a32cd20d8e0d7c5f5f01cec9e2a66e119691463e",
+            "0x03e5372e9fc44dceefe49b33f4fecb61792ebaf4bfb414a6d99cca1bb3a04d6a",
+            "0xc8788f58c5f2e8f11938ad6cb39760b5ed66bcab4658806654446da3981554e3",
+            "0x8d3d768cfdd3d3439cd6b4d7a281adbd4d3913cb2cb50cc7e0d3e620b78ca426",
+            "0x12c6ba31a9e1718a98c27c18edbc359f94d169c567a87d02e9d7f9190db35968"
+          ]
+        },
+        {
+          "slot": 5,
+          "pointer": "/skills",
+          "value": [
+            "C",
+            "Git"
+          ],
+          "valueJcs": "[\"C\",\"Git\"]",
+          "salt": "0x57ca940f7ae1fd6e747be15d11634c6adfe37358fad058e08f657b823d2e0316",
+          "pathHash": "0x857c89a1d095135e8bd475aeac73517f22ef3f86c7a10bcca2b26d0f6edbf5ac",
+          "valueHash": "0xdaefbc73a9cd8a41d88fd16d89cbf1ea538d9bd5e0e9b7134cfa9be5c0b4706e",
+          "leaf": "0x41c806ebb10b6c1b241a6ed3a32cd20d8e0d7c5f5f01cec9e2a66e119691463e",
+          "proof": [
+            "0xb42accd2730d3085c8e54ec0c4bab5220e0c85ce11745e5f15c3041010477d03",
+            "0x03e5372e9fc44dceefe49b33f4fecb61792ebaf4bfb414a6d99cca1bb3a04d6a",
+            "0xc8788f58c5f2e8f11938ad6cb39760b5ed66bcab4658806654446da3981554e3",
+            "0x8d3d768cfdd3d3439cd6b4d7a281adbd4d3913cb2cb50cc7e0d3e620b78ca426",
+            "0x12c6ba31a9e1718a98c27c18edbc359f94d169c567a87d02e9d7f9190db35968"
+          ]
+        },
+        {
+          "slot": 6,
+          "pointer": "/location/city",
+          "value": "Portland",
+          "valueJcs": "\"Portland\"",
+          "salt": "0x0ef50c2fe8583240326ede621cefca14cdf39898d67822a8c6299effa74d1f20",
+          "pathHash": "0xdebd64ca052d8e7898a4f18c403e88c5003e151209edc2dc4ba7f2368aa61e67",
+          "valueHash": "0xe365705d011021b9e19432e8fca4ac08b07168bc9076585ce1ca75ce7049f7f0",
+          "leaf": "0xd0faeda9a7a50c84de559421c405cfce86393620b80c0ec7fc98eb0335c9cdb0",
+          "proof": [
+            "0xd7548052993a0b72e8f6b872760a968ef1b3866e22ad353b5feb51c8744093e7",
+            "0x8b9ab7f39fca32f17ebdea2223b22baa311fc51c37b863ef3ded72d8137d0154",
+            "0xc8788f58c5f2e8f11938ad6cb39760b5ed66bcab4658806654446da3981554e3",
+            "0x8d3d768cfdd3d3439cd6b4d7a281adbd4d3913cb2cb50cc7e0d3e620b78ca426",
+            "0x12c6ba31a9e1718a98c27c18edbc359f94d169c567a87d02e9d7f9190db35968"
+          ]
+        },
+        {
+          "slot": 7,
+          "pointer": "/location/country",
+          "value": "US",
+          "valueJcs": "\"US\"",
+          "salt": "0x68845aebc1ccc8c72be16643a90e63bf9ee6e6b0cb02858d095384bfa7060b16",
+          "pathHash": "0x6406723eddb337d6ae069ee439585d10815dec664ea1f6a89c61699628a552e8",
+          "valueHash": "0x0229fcc76282ab5880a33c9eb854b769e050ba09da55968e9daf44a6bb32dea1",
+          "leaf": "0xd7548052993a0b72e8f6b872760a968ef1b3866e22ad353b5feb51c8744093e7",
+          "proof": [
+            "0xd0faeda9a7a50c84de559421c405cfce86393620b80c0ec7fc98eb0335c9cdb0",
+            "0x8b9ab7f39fca32f17ebdea2223b22baa311fc51c37b863ef3ded72d8137d0154",
+            "0xc8788f58c5f2e8f11938ad6cb39760b5ed66bcab4658806654446da3981554e3",
+            "0x8d3d768cfdd3d3439cd6b4d7a281adbd4d3913cb2cb50cc7e0d3e620b78ca426",
+            "0x12c6ba31a9e1718a98c27c18edbc359f94d169c567a87d02e9d7f9190db35968"
+          ]
+        }
+      ],
+      "fillers": [
+        {
+          "slot": 2,
+          "leaf": "0xc5b817f5e908025ef5feeb9d58de6b0f92a125869d948d2a804c067deb25c152"
+        },
+        {
+          "slot": 3,
+          "leaf": "0x34c18898c1cb3a2f64f80141ec5a269e12ad17429088c7e4ace930b4f7aab463"
+        },
+        {
+          "slot": 8,
+          "leaf": "0x51a3e11d75d2b74d362222f2769483e387300abe6f529132b9d898986067cbb4"
+        },
+        {
+          "slot": 9,
+          "leaf": "0x863c242b187008c21fe3dd238ef43cb66af9520744e9832c0b56be2005075291"
+        },
+        {
+          "slot": 10,
+          "leaf": "0x842b33f286c666a3b44b8633497c9fa6b7e75d9b08f9310867d19cb9b652d519"
+        },
+        {
+          "slot": 11,
+          "leaf": "0x7ba867511641369063a67e735a65d09b5ab68a304ee6ca91e983ee17572bd6df"
+        },
+        {
+          "slot": 12,
+          "leaf": "0x1e5d8baa0f5bb5eb0b14aabcd73cf57e86e9e255aab3228acf07cc4b6d7972a6"
+        },
+        {
+          "slot": 13,
+          "leaf": "0x6611144a6302b10f99d0e2e12344bf8f0b79761a259417e370e7778cb41a9c4e"
+        },
+        {
+          "slot": 14,
+          "leaf": "0x3729e9026268a8195690cd18ddfd061803441779ea4ea68c84979606e4961d40"
+        },
+        {
+          "slot": 15,
+          "leaf": "0xf0c20a43a93204dec5aa8cf88bc47235e629593c0e3417bc78efe19b55480151"
+        },
+        {
+          "slot": 16,
+          "leaf": "0x1967922e554806f8ef064951677f0674193d268f6c9e68883fcab7d4db4fa314"
+        },
+        {
+          "slot": 17,
+          "leaf": "0x3130ee10cb3c243e003bf33e0726d805a7fe528b6db853e941fc17238145c984"
+        },
+        {
+          "slot": 18,
+          "leaf": "0xc40c3312ebc38dadadfa7847037c1ef22219f89d807e5eb90fd8e30deb7f2cce"
+        },
+        {
+          "slot": 19,
+          "leaf": "0x3e1974f381d9f2ffe68c8cf06e086651215301f071245ae959db400a5a647575"
+        },
+        {
+          "slot": 20,
+          "leaf": "0xe8b60504903cb7e38b56a79fdbec2317ea72cfcaecadebae2a279ca8619e85b3"
+        },
+        {
+          "slot": 21,
+          "leaf": "0x2659becfda3232ed1c9fe90bf014b04ece5f03d4aee632a0137c551b96729972"
+        },
+        {
+          "slot": 22,
+          "leaf": "0xe4efbdc207d54da87807f6dd9e107e53c452dc2ae82d72affaed6be760db39a8"
+        },
+        {
+          "slot": 23,
+          "leaf": "0x14971b02333094deefc8f5345f48fdf27a8b77f2170476162e059f1b3eb3c031"
+        },
+        {
+          "slot": 24,
+          "leaf": "0x775080b56b7a7bc9499ac39e4ebb7e6e8205f5f007d082967e4cbb3378997ef1"
+        },
+        {
+          "slot": 25,
+          "leaf": "0xef53974a0e631cf4d943bdb0daf2e80adf5f651270c201feec5bc45593517f0d"
+        },
+        {
+          "slot": 26,
+          "leaf": "0x930adea9fda01de5a7db245489d7adefa9c168381b36dcc7f6b3a982d73ccfb0"
+        },
+        {
+          "slot": 27,
+          "leaf": "0xa22a8b1e534eff8bc4b4d62772c7b39ccfa580520a719effa85a71c09740abfc"
+        },
+        {
+          "slot": 28,
+          "leaf": "0xcd2ca6748c90f041cd35daf03054fb78cd31dd05f77abc79020464899d77599a"
+        },
+        {
+          "slot": 29,
+          "leaf": "0x331e97277460cfa0cb2a66bfc48f6138cdd182648e50b39248966996a1d70aae"
+        },
+        {
+          "slot": 30,
+          "leaf": "0x535cb11cc2ee2c307d23f571527a918b86b2b58e1d5e2ad0f502a90e1552a0dc"
+        },
+        {
+          "slot": 31,
+          "leaf": "0x951e57700236ae022a5901bb91f52c22391fff1d4dc23afd6ea5ae2cb24a9ad4"
+        }
+      ],
+      "leaves": [
+        "0xf7a8af33322380e4385648ba96da7282d189e227224344c447b08d5d9d26c46f",
+        "0xc977f1d18628d2bcd1af9570fa6a05511208f35fcbc39d85e6dbce76ae8e76cc",
+        "0xc5b817f5e908025ef5feeb9d58de6b0f92a125869d948d2a804c067deb25c152",
+        "0x34c18898c1cb3a2f64f80141ec5a269e12ad17429088c7e4ace930b4f7aab463",
+        "0xb42accd2730d3085c8e54ec0c4bab5220e0c85ce11745e5f15c3041010477d03",
+        "0x41c806ebb10b6c1b241a6ed3a32cd20d8e0d7c5f5f01cec9e2a66e119691463e",
+        "0xd0faeda9a7a50c84de559421c405cfce86393620b80c0ec7fc98eb0335c9cdb0",
+        "0xd7548052993a0b72e8f6b872760a968ef1b3866e22ad353b5feb51c8744093e7",
+        "0x51a3e11d75d2b74d362222f2769483e387300abe6f529132b9d898986067cbb4",
+        "0x863c242b187008c21fe3dd238ef43cb66af9520744e9832c0b56be2005075291",
+        "0x842b33f286c666a3b44b8633497c9fa6b7e75d9b08f9310867d19cb9b652d519",
+        "0x7ba867511641369063a67e735a65d09b5ab68a304ee6ca91e983ee17572bd6df",
+        "0x1e5d8baa0f5bb5eb0b14aabcd73cf57e86e9e255aab3228acf07cc4b6d7972a6",
+        "0x6611144a6302b10f99d0e2e12344bf8f0b79761a259417e370e7778cb41a9c4e",
+        "0x3729e9026268a8195690cd18ddfd061803441779ea4ea68c84979606e4961d40",
+        "0xf0c20a43a93204dec5aa8cf88bc47235e629593c0e3417bc78efe19b55480151",
+        "0x1967922e554806f8ef064951677f0674193d268f6c9e68883fcab7d4db4fa314",
+        "0x3130ee10cb3c243e003bf33e0726d805a7fe528b6db853e941fc17238145c984",
+        "0xc40c3312ebc38dadadfa7847037c1ef22219f89d807e5eb90fd8e30deb7f2cce",
+        "0x3e1974f381d9f2ffe68c8cf06e086651215301f071245ae959db400a5a647575",
+        "0xe8b60504903cb7e38b56a79fdbec2317ea72cfcaecadebae2a279ca8619e85b3",
+        "0x2659becfda3232ed1c9fe90bf014b04ece5f03d4aee632a0137c551b96729972",
+        "0xe4efbdc207d54da87807f6dd9e107e53c452dc2ae82d72affaed6be760db39a8",
+        "0x14971b02333094deefc8f5345f48fdf27a8b77f2170476162e059f1b3eb3c031",
+        "0x775080b56b7a7bc9499ac39e4ebb7e6e8205f5f007d082967e4cbb3378997ef1",
+        "0xef53974a0e631cf4d943bdb0daf2e80adf5f651270c201feec5bc45593517f0d",
+        "0x930adea9fda01de5a7db245489d7adefa9c168381b36dcc7f6b3a982d73ccfb0",
+        "0xa22a8b1e534eff8bc4b4d62772c7b39ccfa580520a719effa85a71c09740abfc",
+        "0xcd2ca6748c90f041cd35daf03054fb78cd31dd05f77abc79020464899d77599a",
+        "0x331e97277460cfa0cb2a66bfc48f6138cdd182648e50b39248966996a1d70aae",
+        "0x535cb11cc2ee2c307d23f571527a918b86b2b58e1d5e2ad0f502a90e1552a0dc",
+        "0x951e57700236ae022a5901bb91f52c22391fff1d4dc23afd6ea5ae2cb24a9ad4"
+      ],
+      "root": "0xc886406d6160cb06b751be43237c05fc481ea83a979e0dfef2469a0fdb579a1c",
+      "selfSigned": {
+        "signer": "0x5cB5E391AC6A7D21F5FDE2297a90d66fa998F019",
+        "message": "Work Address profile, self-signed\ndomain: work-address/profile-self-signed/v1\nschemaId: 1\nsubject: did:pkh:eip155:1:0x5cB5E391AC6A7D21F5FDE2297a90d66fa998F019\nroot: 0xc886406d6160cb06b751be43237c05fc481ea83a979e0dfef2469a0fdb579a1c",
+        "signature": {
+          "scheme": "eip191",
+          "value": "0x564f4af1f8bee58e177195e14d6c74ef2e413b45c9768456cceda45c50cbe6c81e461749b2509279be5573c93dab6383e0878cc125d02c9e21f357e8743bdce61c"
+        }
+      },
+      "presentation": {
+        "disclose": [
+          0,
+          7
+        ],
+        "text": "{\"anchor\":null,\"commitment\":null,\"createdAt\":\"2026-09-19T12:00:00.000Z\",\"disclosures\":[{\"pointer\":\"/name\",\"proof\":[\"0xc977f1d18628d2bcd1af9570fa6a05511208f35fcbc39d85e6dbce76ae8e76cc\",\"0xffceb0b7b1a860ce119514311d8dd366b322780b9cf0dab211640c54e420a29e\",\"0x07df0d0902c38d2d503b837771e772dd336303b2253484d608dd31e8956edd16\",\"0x8d3d768cfdd3d3439cd6b4d7a281adbd4d3913cb2cb50cc7e0d3e620b78ca426\",\"0x12c6ba31a9e1718a98c27c18edbc359f94d169c567a87d02e9d7f9190db35968\"],\"salt\":\"0x75fee4e9c72d4b336e40230205814ffb2fb689fd158e525542db353b6c050144\",\"slot\":0,\"value\":\"Linus\"},{\"pointer\":\"/location/country\",\"proof\":[\"0xd0faeda9a7a50c84de559421c405cfce86393620b80c0ec7fc98eb0335c9cdb0\",\"0x8b9ab7f39fca32f17ebdea2223b22baa311fc51c37b863ef3ded72d8137d0154\",\"0xc8788f58c5f2e8f11938ad6cb39760b5ed66bcab4658806654446da3981554e3\",\"0x8d3d768cfdd3d3439cd6b4d7a281adbd4d3913cb2cb50cc7e0d3e620b78ca426\",\"0x12c6ba31a9e1718a98c27c18edbc359f94d169c567a87d02e9d7f9190db35968\"],\"salt\":\"0x68845aebc1ccc8c72be16643a90e63bf9ee6e6b0cb02858d095384bfa7060b16\",\"slot\":7,\"value\":\"US\"}],\"format\":\"work-address/profile-presentation\",\"formatVersion\":1,\"root\":\"0xc886406d6160cb06b751be43237c05fc481ea83a979e0dfef2469a0fdb579a1c\",\"schemaId\":1,\"signature\":{\"scheme\":\"eip191\",\"value\":\"0x564f4af1f8bee58e177195e14d6c74ef2e413b45c9768456cceda45c50cbe6c81e461749b2509279be5573c93dab6383e0878cc125d02c9e21f357e8743bdce61c\"},\"subject\":\"did:pkh:eip155:1:0x5cB5E391AC6A7D21F5FDE2297a90d66fa998F019\"}"
+      },
+      "export": {
+        "text": "{\"createdAt\":\"2026-09-19T12:00:00.000Z\",\"fields\":[{\"pointer\":\"/name\",\"salt\":\"0x75fee4e9c72d4b336e40230205814ffb2fb689fd158e525542db353b6c050144\",\"slot\":0,\"value\":\"Linus\"},{\"pointer\":\"/title\",\"salt\":\"0xd58292d46da2da738f1014f351869cc99b6adf24f4dbf6663baa42ba50c33c4f\",\"slot\":1,\"value\":\"Kernel maintainer\"},{\"pointer\":\"/rate\",\"salt\":\"0x26015458cd28203a6a08810bb5800008d66e72bb0a44be33d6cfed0f1062a99a\",\"slot\":4,\"value\":{\"currency\":\"USDT\",\"rateHourCents\":15000}},{\"pointer\":\"/skills\",\"salt\":\"0x57ca940f7ae1fd6e747be15d11634c6adfe37358fad058e08f657b823d2e0316\",\"slot\":5,\"value\":[\"C\",\"Git\"]},{\"pointer\":\"/location/city\",\"salt\":\"0x0ef50c2fe8583240326ede621cefca14cdf39898d67822a8c6299effa74d1f20\",\"slot\":6,\"value\":\"Portland\"},{\"pointer\":\"/location/country\",\"salt\":\"0x68845aebc1ccc8c72be16643a90e63bf9ee6e6b0cb02858d095384bfa7060b16\",\"slot\":7,\"value\":\"US\"}],\"fillers\":[{\"leaf\":\"0xc5b817f5e908025ef5feeb9d58de6b0f92a125869d948d2a804c067deb25c152\",\"slot\":2},{\"leaf\":\"0x34c18898c1cb3a2f64f80141ec5a269e12ad17429088c7e4ace930b4f7aab463\",\"slot\":3},{\"leaf\":\"0x51a3e11d75d2b74d362222f2769483e387300abe6f529132b9d898986067cbb4\",\"slot\":8},{\"leaf\":\"0x863c242b187008c21fe3dd238ef43cb66af9520744e9832c0b56be2005075291\",\"slot\":9},{\"leaf\":\"0x842b33f286c666a3b44b8633497c9fa6b7e75d9b08f9310867d19cb9b652d519\",\"slot\":10},{\"leaf\":\"0x7ba867511641369063a67e735a65d09b5ab68a304ee6ca91e983ee17572bd6df\",\"slot\":11},{\"leaf\":\"0x1e5d8baa0f5bb5eb0b14aabcd73cf57e86e9e255aab3228acf07cc4b6d7972a6\",\"slot\":12},{\"leaf\":\"0x6611144a6302b10f99d0e2e12344bf8f0b79761a259417e370e7778cb41a9c4e\",\"slot\":13},{\"leaf\":\"0x3729e9026268a8195690cd18ddfd061803441779ea4ea68c84979606e4961d40\",\"slot\":14},{\"leaf\":\"0xf0c20a43a93204dec5aa8cf88bc47235e629593c0e3417bc78efe19b55480151\",\"slot\":15},{\"leaf\":\"0x1967922e554806f8ef064951677f0674193d268f6c9e68883fcab7d4db4fa314\",\"slot\":16},{\"leaf\":\"0x3130ee10cb3c243e003bf33e0726d805a7fe528b6db853e941fc17238145c984\",\"slot\":17},{\"leaf\":\"0xc40c3312ebc38dadadfa7847037c1ef22219f89d807e5eb90fd8e30deb7f2cce\",\"slot\":18},{\"leaf\":\"0x3e1974f381d9f2ffe68c8cf06e086651215301f071245ae959db400a5a647575\",\"slot\":19},{\"leaf\":\"0xe8b60504903cb7e38b56a79fdbec2317ea72cfcaecadebae2a279ca8619e85b3\",\"slot\":20},{\"leaf\":\"0x2659becfda3232ed1c9fe90bf014b04ece5f03d4aee632a0137c551b96729972\",\"slot\":21},{\"leaf\":\"0xe4efbdc207d54da87807f6dd9e107e53c452dc2ae82d72affaed6be760db39a8\",\"slot\":22},{\"leaf\":\"0x14971b02333094deefc8f5345f48fdf27a8b77f2170476162e059f1b3eb3c031\",\"slot\":23},{\"leaf\":\"0x775080b56b7a7bc9499ac39e4ebb7e6e8205f5f007d082967e4cbb3378997ef1\",\"slot\":24},{\"leaf\":\"0xef53974a0e631cf4d943bdb0daf2e80adf5f651270c201feec5bc45593517f0d\",\"slot\":25},{\"leaf\":\"0x930adea9fda01de5a7db245489d7adefa9c168381b36dcc7f6b3a982d73ccfb0\",\"slot\":26},{\"leaf\":\"0xa22a8b1e534eff8bc4b4d62772c7b39ccfa580520a719effa85a71c09740abfc\",\"slot\":27},{\"leaf\":\"0xcd2ca6748c90f041cd35daf03054fb78cd31dd05f77abc79020464899d77599a\",\"slot\":28},{\"leaf\":\"0x331e97277460cfa0cb2a66bfc48f6138cdd182648e50b39248966996a1d70aae\",\"slot\":29},{\"leaf\":\"0x535cb11cc2ee2c307d23f571527a918b86b2b58e1d5e2ad0f502a90e1552a0dc\",\"slot\":30},{\"leaf\":\"0x951e57700236ae022a5901bb91f52c22391fff1d4dc23afd6ea5ae2cb24a9ad4\",\"slot\":31}],\"format\":\"work-address/profile-export\",\"formatVersion\":1,\"root\":\"0xc886406d6160cb06b751be43237c05fc481ea83a979e0dfef2469a0fdb579a1c\",\"schemaId\":1,\"subject\":\"did:pkh:eip155:1:0x5cB5E391AC6A7D21F5FDE2297a90d66fa998F019\"}"
+      }
+    },
+    {
+      "name": "self-signed Solana subject: Ed25519 over the same message; the leaf subject is keccak256(did) low 20 bytes",
+      "subject": "did:pkh:solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:41M5fYK2UgGi1AN5YoEQsV6D5egthHSVJjqpwhTtAqdD",
+      "leafSubject": "0xfA4AafA3D53968FeaD56dF15eD774b98F8EED944",
+      "source": {
+        "name": "Anatoly",
+        "title": "Validator operator",
+        "company": "Proof of History Co",
+        "bio": null,
+        "rate": null,
+        "skills": "Rust, Anchor",
+        "city": null,
+        "country": "PT",
+        "tz": "Europe/Lisbon",
+        "facebook": null,
+        "linkedIn": null,
+        "twitter": "anatoly_sol",
+        "instagram": null,
+        "youtube": null,
+        "telegram": null
+      },
+      "fields": [
+        {
+          "slot": 0,
+          "pointer": "/name",
+          "value": "Anatoly",
+          "valueJcs": "\"Anatoly\"",
+          "salt": "0x30aecc2f03be2253122346091c1bca9362bc9933d2ef3a68b81f969fd863af66",
+          "pathHash": "0x830fa0e913eae4cea1398794dca8afd54ad8be223ed52b4654e84c8f635b36d7",
+          "valueHash": "0x7489953516d3d63c394d7ecc2ec894a034df7dd072ee8bb427e54f58e04a2484",
+          "leaf": "0x8c1189e60f1ad367257007198a9966e46accc14dac621e2740ac6a8dc13f3da8",
+          "proof": [
+            "0x4cc1d86814ae8eeb168038e642f0fdc5f8ef8de50e6e76c6ba635c6e4fd5261c",
+            "0x18505a9f51570cb068cbfbf07424b613ed0657b989e09f18f9cef6a37047fb46",
+            "0x783213df3dda150d5732ba52dd26aafc3f59dab6c222a0b0c2c371ac77345b6d",
+            "0x186599d7a954deb2d21bb7c6912422635cc69eb5113b39cf9297d33cc0e7d222",
+            "0x87490d426390ac55a85a66fd8bac44619691876c6e5c7c6023b9181ab4a437ee"
+          ]
+        },
+        {
+          "slot": 1,
+          "pointer": "/title",
+          "value": "Validator operator",
+          "valueJcs": "\"Validator operator\"",
+          "salt": "0x1165097ea7dbbe80876574640f5b1c514a8b157d1b9e9aea137df7993458ad44",
+          "pathHash": "0x1cff9bf2a243db1f8c98df5764c4c8b0c24a59e84baf507be308bd69d811de6a",
+          "valueHash": "0xc8e8f39717b40ee689d315d78a6f5b3c76b48023ab49ee3dc07a1b0630337593",
+          "leaf": "0x4cc1d86814ae8eeb168038e642f0fdc5f8ef8de50e6e76c6ba635c6e4fd5261c",
+          "proof": [
+            "0x8c1189e60f1ad367257007198a9966e46accc14dac621e2740ac6a8dc13f3da8",
+            "0x18505a9f51570cb068cbfbf07424b613ed0657b989e09f18f9cef6a37047fb46",
+            "0x783213df3dda150d5732ba52dd26aafc3f59dab6c222a0b0c2c371ac77345b6d",
+            "0x186599d7a954deb2d21bb7c6912422635cc69eb5113b39cf9297d33cc0e7d222",
+            "0x87490d426390ac55a85a66fd8bac44619691876c6e5c7c6023b9181ab4a437ee"
+          ]
+        },
+        {
+          "slot": 2,
+          "pointer": "/company",
+          "value": "Proof of History Co",
+          "valueJcs": "\"Proof of History Co\"",
+          "salt": "0x1f41d08b1dd9500279889eebd0627fa55447fcbd8d34972a08efb0960e7d50df",
+          "pathHash": "0xf250050a4a9418a768bc8eaee7513845b025d602389123c9715e5c6eeceaaf2c",
+          "valueHash": "0x13201ab497a164e52db450d23cb550e0d908203fb507e07ff74bae94625e73f1",
+          "leaf": "0x7f745bb95e04fded368733e08291ea0d3d638e438df37776de04aa68c24d4606",
+          "proof": [
+            "0xe76244254c1c340e0d428a6712e4ed9d62efd0204f2914a1075b305e8af0c506",
+            "0x8acbf9ecccdbb4e3acf7b6dde310fe5073dc0e973578cb3d4dd1c915ece60dbb",
+            "0x783213df3dda150d5732ba52dd26aafc3f59dab6c222a0b0c2c371ac77345b6d",
+            "0x186599d7a954deb2d21bb7c6912422635cc69eb5113b39cf9297d33cc0e7d222",
+            "0x87490d426390ac55a85a66fd8bac44619691876c6e5c7c6023b9181ab4a437ee"
+          ]
+        },
+        {
+          "slot": 5,
+          "pointer": "/skills",
+          "value": [
+            "Rust",
+            "Anchor"
+          ],
+          "valueJcs": "[\"Rust\",\"Anchor\"]",
+          "salt": "0xa9ece4192011b70c52d306e3cfbd8d67d04d26d1dcd4da521e9ddbeb97d89e86",
+          "pathHash": "0x857c89a1d095135e8bd475aeac73517f22ef3f86c7a10bcca2b26d0f6edbf5ac",
+          "valueHash": "0x2ffe6de01b667d9067f78c1b2c84b163e7b664c639de36dd8ca308eacd83c3f9",
+          "leaf": "0xffd5bb771a60895ea1be354801568810ea40e52dc71ab4b33b031516d1be6c37",
+          "proof": [
+            "0xfaada909b2fe612faa1404f679f581380ae8177addada777563b0d2bfbd3fa70",
+            "0xa3f137eebe8868968fe4895668a1da167010b2fc1471bba2c65a73b47bb1c500",
+            "0xf0b73d2e6c8ade06c30d33ecbf2460e7080ec8debf46162f646d15f28bc6f16c",
+            "0x186599d7a954deb2d21bb7c6912422635cc69eb5113b39cf9297d33cc0e7d222",
+            "0x87490d426390ac55a85a66fd8bac44619691876c6e5c7c6023b9181ab4a437ee"
+          ]
+        },
+        {
+          "slot": 7,
+          "pointer": "/location/country",
+          "value": "PT",
+          "valueJcs": "\"PT\"",
+          "salt": "0x8564e22d04e941e4e9a1dfaed7124b520be590abc729677fa28521270350332b",
+          "pathHash": "0x6406723eddb337d6ae069ee439585d10815dec664ea1f6a89c61699628a552e8",
+          "valueHash": "0x7e03c0a619c6c1d3b3afbb67dfdd46b8430c2c779e207a22985bf9d1be5e43c0",
+          "leaf": "0x075724bd4bc5930e557376b8300cc8bd742f7829a4ad9fc0cfcf6cdaf93654c3",
+          "proof": [
+            "0x718ce6ce4d0de5c650f434a9417e408dbea3c844b412a7c558fabb44ea3cd1a4",
+            "0x46baa73d565e84e63c4501854507fd7f305a215c108e9a9eb1511c5101b375d0",
+            "0xf0b73d2e6c8ade06c30d33ecbf2460e7080ec8debf46162f646d15f28bc6f16c",
+            "0x186599d7a954deb2d21bb7c6912422635cc69eb5113b39cf9297d33cc0e7d222",
+            "0x87490d426390ac55a85a66fd8bac44619691876c6e5c7c6023b9181ab4a437ee"
+          ]
+        },
+        {
+          "slot": 10,
+          "pointer": "/social/twitter",
+          "value": "anatoly_sol",
+          "valueJcs": "\"anatoly_sol\"",
+          "salt": "0x0f2c8c406beee59b49107c83f5c18f91010ec9d3abbcba2923336cc2258458b2",
+          "pathHash": "0x8a730e938aa9f1aaa68b6963d0d69cb88472837200120dfe2b83636276550f0b",
+          "valueHash": "0x3e5ba978b57c3e094824d7e2c6afded522358e089c00bf9a24363bf114955bcc",
+          "leaf": "0x73f2d134adf6da15986654d9a5f9ee99df0cffc08263c669142fd2ff8d43a371",
+          "proof": [
+            "0xb742fd19a2e585bcf84fc23f6d2a1c621504a6c5cd756d75cb954fe2788d1f06",
+            "0x582ad919ce4ef04ef83e194bfa5fd1c6288a1766793f8e73189629778c2663ea",
+            "0x3cfc6088bd19f1957a48355ecb9528897a954775c8c50a7f736d8214bb78486b",
+            "0x99688d3a6bba2831727893aa9b7baac57235ac836d7dc67182875d411a1c4845",
+            "0x87490d426390ac55a85a66fd8bac44619691876c6e5c7c6023b9181ab4a437ee"
+          ]
+        }
+      ],
+      "fillers": [
+        {
+          "slot": 3,
+          "leaf": "0xe76244254c1c340e0d428a6712e4ed9d62efd0204f2914a1075b305e8af0c506"
+        },
+        {
+          "slot": 4,
+          "leaf": "0xfaada909b2fe612faa1404f679f581380ae8177addada777563b0d2bfbd3fa70"
+        },
+        {
+          "slot": 6,
+          "leaf": "0x718ce6ce4d0de5c650f434a9417e408dbea3c844b412a7c558fabb44ea3cd1a4"
+        },
+        {
+          "slot": 8,
+          "leaf": "0xda3241438c044f1b90555bfbc232c337b3d9d57182ba21c3172f2af3f73f8b88"
+        },
+        {
+          "slot": 9,
+          "leaf": "0x64a192eefba8a0e7274374ff9d77341d5af474787c54fd2790f8240608d41b69"
+        },
+        {
+          "slot": 11,
+          "leaf": "0xb742fd19a2e585bcf84fc23f6d2a1c621504a6c5cd756d75cb954fe2788d1f06"
+        },
+        {
+          "slot": 12,
+          "leaf": "0x652d4f46838005aac9d7289e056800680136a1f35a45be36475a7b4c76d2e92e"
+        },
+        {
+          "slot": 13,
+          "leaf": "0xb6b00863a0c7101aba20eb84d090281d96f207331b63faf5128faf23e9164e77"
+        },
+        {
+          "slot": 14,
+          "leaf": "0xd68b907cb6cc3490bbcae77ea52ad744a8b5b8745635bcb5e205224dcdc4faec"
+        },
+        {
+          "slot": 15,
+          "leaf": "0x46f7ff3a2c2716e22f0a8e3574676a6780a09a9d1cf1027583f0393ef107a16f"
+        },
+        {
+          "slot": 16,
+          "leaf": "0xcc871fc67c3b3d9d80eb397549925f4c86c00df5c2059dc545464715d738307b"
+        },
+        {
+          "slot": 17,
+          "leaf": "0xf1bf1bd667909ab8e9126625f096974b2d12230e15e17a8244e5f6fef73aefc3"
+        },
+        {
+          "slot": 18,
+          "leaf": "0xf812a9d8543a209b292496499f846d48ba4837c1cba4464212dd9d9dddea8832"
+        },
+        {
+          "slot": 19,
+          "leaf": "0xbd56ba70cfe7313973e82bd4d73bac21b080e0595b34e4cb3e1802599851f32b"
+        },
+        {
+          "slot": 20,
+          "leaf": "0x3138c0ebdb9f46d4f6ac0a3cc6dbf2543ea214faa2685b909a443667403361e8"
+        },
+        {
+          "slot": 21,
+          "leaf": "0xf15d04a37eb334548c3369c1e3a410b70375688221c7595ca1fd280982aa8e6c"
+        },
+        {
+          "slot": 22,
+          "leaf": "0x42fabf87d6b04b9bbbd6bc736ca4943dc6ccd14d2ce39686c4461fb49ddfe1fb"
+        },
+        {
+          "slot": 23,
+          "leaf": "0x48ab2c622fa33107c92f3b67cf3931381d3f8ad8423e9505434de099edbeac89"
+        },
+        {
+          "slot": 24,
+          "leaf": "0xcf41caf994c02e95d236cc6e68362e3006e084c26192491f970f41a990a8323d"
+        },
+        {
+          "slot": 25,
+          "leaf": "0x3c620219b8833f6c56c24a9e557945d8863da9bb391748526e2ab55375835fa4"
+        },
+        {
+          "slot": 26,
+          "leaf": "0xf2e587af99706030a5a161721a74da011d67877bac653fdb3cb9a00868d92013"
+        },
+        {
+          "slot": 27,
+          "leaf": "0xc43e3d678782b5bd5a4a6021aa730f496c7a41d4655795d4449add2620697920"
+        },
+        {
+          "slot": 28,
+          "leaf": "0x11563eccf979f1e8077eef2ecc0a1c6370faf7638a52dd78e1454232f4aeb02d"
+        },
+        {
+          "slot": 29,
+          "leaf": "0x00ce4a8afb98cea5fc5f36faa7bd8fe57381c5123a93fe05ff6ae7ce7a9226e4"
+        },
+        {
+          "slot": 30,
+          "leaf": "0xc2a74860b356ab04d0cffe8aebc80d62e1df5eea20144a42e354030bfe8e138c"
+        },
+        {
+          "slot": 31,
+          "leaf": "0x53599b39f350bb3eb593d213bb9cddecf7ea44cb2b4655c665bfbebe25e05f22"
+        }
+      ],
+      "leaves": [
+        "0x8c1189e60f1ad367257007198a9966e46accc14dac621e2740ac6a8dc13f3da8",
+        "0x4cc1d86814ae8eeb168038e642f0fdc5f8ef8de50e6e76c6ba635c6e4fd5261c",
+        "0x7f745bb95e04fded368733e08291ea0d3d638e438df37776de04aa68c24d4606",
+        "0xe76244254c1c340e0d428a6712e4ed9d62efd0204f2914a1075b305e8af0c506",
+        "0xfaada909b2fe612faa1404f679f581380ae8177addada777563b0d2bfbd3fa70",
+        "0xffd5bb771a60895ea1be354801568810ea40e52dc71ab4b33b031516d1be6c37",
+        "0x718ce6ce4d0de5c650f434a9417e408dbea3c844b412a7c558fabb44ea3cd1a4",
+        "0x075724bd4bc5930e557376b8300cc8bd742f7829a4ad9fc0cfcf6cdaf93654c3",
+        "0xda3241438c044f1b90555bfbc232c337b3d9d57182ba21c3172f2af3f73f8b88",
+        "0x64a192eefba8a0e7274374ff9d77341d5af474787c54fd2790f8240608d41b69",
+        "0x73f2d134adf6da15986654d9a5f9ee99df0cffc08263c669142fd2ff8d43a371",
+        "0xb742fd19a2e585bcf84fc23f6d2a1c621504a6c5cd756d75cb954fe2788d1f06",
+        "0x652d4f46838005aac9d7289e056800680136a1f35a45be36475a7b4c76d2e92e",
+        "0xb6b00863a0c7101aba20eb84d090281d96f207331b63faf5128faf23e9164e77",
+        "0xd68b907cb6cc3490bbcae77ea52ad744a8b5b8745635bcb5e205224dcdc4faec",
+        "0x46f7ff3a2c2716e22f0a8e3574676a6780a09a9d1cf1027583f0393ef107a16f",
+        "0xcc871fc67c3b3d9d80eb397549925f4c86c00df5c2059dc545464715d738307b",
+        "0xf1bf1bd667909ab8e9126625f096974b2d12230e15e17a8244e5f6fef73aefc3",
+        "0xf812a9d8543a209b292496499f846d48ba4837c1cba4464212dd9d9dddea8832",
+        "0xbd56ba70cfe7313973e82bd4d73bac21b080e0595b34e4cb3e1802599851f32b",
+        "0x3138c0ebdb9f46d4f6ac0a3cc6dbf2543ea214faa2685b909a443667403361e8",
+        "0xf15d04a37eb334548c3369c1e3a410b70375688221c7595ca1fd280982aa8e6c",
+        "0x42fabf87d6b04b9bbbd6bc736ca4943dc6ccd14d2ce39686c4461fb49ddfe1fb",
+        "0x48ab2c622fa33107c92f3b67cf3931381d3f8ad8423e9505434de099edbeac89",
+        "0xcf41caf994c02e95d236cc6e68362e3006e084c26192491f970f41a990a8323d",
+        "0x3c620219b8833f6c56c24a9e557945d8863da9bb391748526e2ab55375835fa4",
+        "0xf2e587af99706030a5a161721a74da011d67877bac653fdb3cb9a00868d92013",
+        "0xc43e3d678782b5bd5a4a6021aa730f496c7a41d4655795d4449add2620697920",
+        "0x11563eccf979f1e8077eef2ecc0a1c6370faf7638a52dd78e1454232f4aeb02d",
+        "0x00ce4a8afb98cea5fc5f36faa7bd8fe57381c5123a93fe05ff6ae7ce7a9226e4",
+        "0xc2a74860b356ab04d0cffe8aebc80d62e1df5eea20144a42e354030bfe8e138c",
+        "0x53599b39f350bb3eb593d213bb9cddecf7ea44cb2b4655c665bfbebe25e05f22"
+      ],
+      "root": "0x9c6f297e4e83a70a9ebec2f147e88139b97c60eb322af0aa2dd344bdc6dd219e",
+      "selfSigned": {
+        "signer": "41M5fYK2UgGi1AN5YoEQsV6D5egthHSVJjqpwhTtAqdD",
+        "message": "Work Address profile, self-signed\ndomain: work-address/profile-self-signed/v1\nschemaId: 1\nsubject: did:pkh:solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:41M5fYK2UgGi1AN5YoEQsV6D5egthHSVJjqpwhTtAqdD\nroot: 0x9c6f297e4e83a70a9ebec2f147e88139b97c60eb322af0aa2dd344bdc6dd219e",
+        "signature": {
+          "scheme": "ed25519",
+          "value": "0x574488502bd0e8e2b36c806ae5fc498ad292b15885631cfa0ceaa52797bb54bb70a7e9e59018c3295a8621f2fb01ba29afc444a32a2ad9c6b3598d5a8f198209"
+        }
+      },
+      "presentation": {
+        "disclose": [
+          0,
+          1
+        ],
+        "text": "{\"anchor\":null,\"commitment\":null,\"createdAt\":\"2026-09-19T12:00:00.000Z\",\"disclosures\":[{\"pointer\":\"/name\",\"proof\":[\"0x4cc1d86814ae8eeb168038e642f0fdc5f8ef8de50e6e76c6ba635c6e4fd5261c\",\"0x18505a9f51570cb068cbfbf07424b613ed0657b989e09f18f9cef6a37047fb46\",\"0x783213df3dda150d5732ba52dd26aafc3f59dab6c222a0b0c2c371ac77345b6d\",\"0x186599d7a954deb2d21bb7c6912422635cc69eb5113b39cf9297d33cc0e7d222\",\"0x87490d426390ac55a85a66fd8bac44619691876c6e5c7c6023b9181ab4a437ee\"],\"salt\":\"0x30aecc2f03be2253122346091c1bca9362bc9933d2ef3a68b81f969fd863af66\",\"slot\":0,\"value\":\"Anatoly\"},{\"pointer\":\"/title\",\"proof\":[\"0x8c1189e60f1ad367257007198a9966e46accc14dac621e2740ac6a8dc13f3da8\",\"0x18505a9f51570cb068cbfbf07424b613ed0657b989e09f18f9cef6a37047fb46\",\"0x783213df3dda150d5732ba52dd26aafc3f59dab6c222a0b0c2c371ac77345b6d\",\"0x186599d7a954deb2d21bb7c6912422635cc69eb5113b39cf9297d33cc0e7d222\",\"0x87490d426390ac55a85a66fd8bac44619691876c6e5c7c6023b9181ab4a437ee\"],\"salt\":\"0x1165097ea7dbbe80876574640f5b1c514a8b157d1b9e9aea137df7993458ad44\",\"slot\":1,\"value\":\"Validator operator\"}],\"format\":\"work-address/profile-presentation\",\"formatVersion\":1,\"root\":\"0x9c6f297e4e83a70a9ebec2f147e88139b97c60eb322af0aa2dd344bdc6dd219e\",\"schemaId\":1,\"signature\":{\"scheme\":\"ed25519\",\"value\":\"0x574488502bd0e8e2b36c806ae5fc498ad292b15885631cfa0ceaa52797bb54bb70a7e9e59018c3295a8621f2fb01ba29afc444a32a2ad9c6b3598d5a8f198209\"},\"subject\":\"did:pkh:solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:41M5fYK2UgGi1AN5YoEQsV6D5egthHSVJjqpwhTtAqdD\"}"
+      },
+      "export": {
+        "text": "{\"createdAt\":\"2026-09-19T12:00:00.000Z\",\"fields\":[{\"pointer\":\"/name\",\"salt\":\"0x30aecc2f03be2253122346091c1bca9362bc9933d2ef3a68b81f969fd863af66\",\"slot\":0,\"value\":\"Anatoly\"},{\"pointer\":\"/title\",\"salt\":\"0x1165097ea7dbbe80876574640f5b1c514a8b157d1b9e9aea137df7993458ad44\",\"slot\":1,\"value\":\"Validator operator\"},{\"pointer\":\"/company\",\"salt\":\"0x1f41d08b1dd9500279889eebd0627fa55447fcbd8d34972a08efb0960e7d50df\",\"slot\":2,\"value\":\"Proof of History Co\"},{\"pointer\":\"/skills\",\"salt\":\"0xa9ece4192011b70c52d306e3cfbd8d67d04d26d1dcd4da521e9ddbeb97d89e86\",\"slot\":5,\"value\":[\"Rust\",\"Anchor\"]},{\"pointer\":\"/location/country\",\"salt\":\"0x8564e22d04e941e4e9a1dfaed7124b520be590abc729677fa28521270350332b\",\"slot\":7,\"value\":\"PT\"},{\"pointer\":\"/social/twitter\",\"salt\":\"0x0f2c8c406beee59b49107c83f5c18f91010ec9d3abbcba2923336cc2258458b2\",\"slot\":10,\"value\":\"anatoly_sol\"}],\"fillers\":[{\"leaf\":\"0xe76244254c1c340e0d428a6712e4ed9d62efd0204f2914a1075b305e8af0c506\",\"slot\":3},{\"leaf\":\"0xfaada909b2fe612faa1404f679f581380ae8177addada777563b0d2bfbd3fa70\",\"slot\":4},{\"leaf\":\"0x718ce6ce4d0de5c650f434a9417e408dbea3c844b412a7c558fabb44ea3cd1a4\",\"slot\":6},{\"leaf\":\"0xda3241438c044f1b90555bfbc232c337b3d9d57182ba21c3172f2af3f73f8b88\",\"slot\":8},{\"leaf\":\"0x64a192eefba8a0e7274374ff9d77341d5af474787c54fd2790f8240608d41b69\",\"slot\":9},{\"leaf\":\"0xb742fd19a2e585bcf84fc23f6d2a1c621504a6c5cd756d75cb954fe2788d1f06\",\"slot\":11},{\"leaf\":\"0x652d4f46838005aac9d7289e056800680136a1f35a45be36475a7b4c76d2e92e\",\"slot\":12},{\"leaf\":\"0xb6b00863a0c7101aba20eb84d090281d96f207331b63faf5128faf23e9164e77\",\"slot\":13},{\"leaf\":\"0xd68b907cb6cc3490bbcae77ea52ad744a8b5b8745635bcb5e205224dcdc4faec\",\"slot\":14},{\"leaf\":\"0x46f7ff3a2c2716e22f0a8e3574676a6780a09a9d1cf1027583f0393ef107a16f\",\"slot\":15},{\"leaf\":\"0xcc871fc67c3b3d9d80eb397549925f4c86c00df5c2059dc545464715d738307b\",\"slot\":16},{\"leaf\":\"0xf1bf1bd667909ab8e9126625f096974b2d12230e15e17a8244e5f6fef73aefc3\",\"slot\":17},{\"leaf\":\"0xf812a9d8543a209b292496499f846d48ba4837c1cba4464212dd9d9dddea8832\",\"slot\":18},{\"leaf\":\"0xbd56ba70cfe7313973e82bd4d73bac21b080e0595b34e4cb3e1802599851f32b\",\"slot\":19},{\"leaf\":\"0x3138c0ebdb9f46d4f6ac0a3cc6dbf2543ea214faa2685b909a443667403361e8\",\"slot\":20},{\"leaf\":\"0xf15d04a37eb334548c3369c1e3a410b70375688221c7595ca1fd280982aa8e6c\",\"slot\":21},{\"leaf\":\"0x42fabf87d6b04b9bbbd6bc736ca4943dc6ccd14d2ce39686c4461fb49ddfe1fb\",\"slot\":22},{\"leaf\":\"0x48ab2c622fa33107c92f3b67cf3931381d3f8ad8423e9505434de099edbeac89\",\"slot\":23},{\"leaf\":\"0xcf41caf994c02e95d236cc6e68362e3006e084c26192491f970f41a990a8323d\",\"slot\":24},{\"leaf\":\"0x3c620219b8833f6c56c24a9e557945d8863da9bb391748526e2ab55375835fa4\",\"slot\":25},{\"leaf\":\"0xf2e587af99706030a5a161721a74da011d67877bac653fdb3cb9a00868d92013\",\"slot\":26},{\"leaf\":\"0xc43e3d678782b5bd5a4a6021aa730f496c7a41d4655795d4449add2620697920\",\"slot\":27},{\"leaf\":\"0x11563eccf979f1e8077eef2ecc0a1c6370faf7638a52dd78e1454232f4aeb02d\",\"slot\":28},{\"leaf\":\"0x00ce4a8afb98cea5fc5f36faa7bd8fe57381c5123a93fe05ff6ae7ce7a9226e4\",\"slot\":29},{\"leaf\":\"0xc2a74860b356ab04d0cffe8aebc80d62e1df5eea20144a42e354030bfe8e138c\",\"slot\":30},{\"leaf\":\"0x53599b39f350bb3eb593d213bb9cddecf7ea44cb2b4655c665bfbebe25e05f22\",\"slot\":31}],\"format\":\"work-address/profile-export\",\"formatVersion\":1,\"root\":\"0x9c6f297e4e83a70a9ebec2f147e88139b97c60eb322af0aa2dd344bdc6dd219e\",\"schemaId\":1,\"subject\":\"did:pkh:solana:5eykt4UsFv8P8NJdTREpY1vzqKqZKvdp:41M5fYK2UgGi1AN5YoEQsV6D5egthHSVJjqpwhTtAqdD\"}"
+      }
     }
   ]
 }

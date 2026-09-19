@@ -16,7 +16,9 @@ import { canonicalJson } from '../scripts/invoice-commitment'
  * recomputes every leaf, root and proof in Solidity - the registry's own
  * PROFILE_LEAF_TYPEHASH, OpenZeppelin's MerkleProof.verify - and every
  * commitment with the deployed registry's profileCommitment(), then publishes
- * each commitment and reads it back as Current. One byte off anywhere fails.
+ * each commitment and reads it back as Current. Every presentation's
+ * disclosures open on chain, and every export rebuilds its root. One byte off
+ * anywhere fails.
  */
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -34,6 +36,8 @@ type Field = {
   proof: string[]
 }
 
+type Disclosure = { slot: number; pointer: string; value: unknown; salt: string; proof: string[] }
+
 type Case = {
   name: string
   subject: string
@@ -43,7 +47,12 @@ type Case = {
   fillers: { slot: number; leaf: string }[]
   leaves: string[]
   root: string
-  commitment: string
+  /** Anchored cases only. */
+  commitment?: string
+  /** Self-signed cases only. */
+  selfSigned?: { signer: string; message: string; signature: { scheme: string; value: string } }
+  presentation: { disclose: number[]; text: string }
+  export: { text: string }
 }
 
 type Fixture = {
@@ -55,14 +64,18 @@ type Fixture = {
   chainId: number
   registryDeployer: string
   registry: string
+  presentationFormat: string
+  exportFormat: string
+  selfSignedDomain: string
   slots: { slot: number; pointer: string; pathHash: string }[]
   cases: Case[]
+  selfSignedCases: Case[]
 }
 
 const FIXTURE_PATH = path.join(__dirname, 'fixtures/profile-schema-v1.vectors.json')
 
 /** Regenerating the fixture must be deliberate: re-pin only after reviewing the diff. */
-const FIXTURE_SHA256 = '6ccd277507fa5a8e60fa283496735b784bb8320370adaa79c339eced7dc42c86'
+const FIXTURE_SHA256 = '0228d6d3bb3ec449ab9a690251983abee9dcc9cec5ab047f459072bc89dd70a2'
 
 const fixture = JSON.parse(fs.readFileSync(FIXTURE_PATH, 'utf8')) as Fixture
 
@@ -157,13 +170,39 @@ describe('profile schema v1', () => {
     }
   })
 
-  for (const vector of fixture.cases) {
+  const vectors: [Case, 'anchored' | 'self-signed'][] = [
+    ...fixture.cases.map((vector): [Case, 'anchored'] => [vector, 'anchored']),
+    ...fixture.selfSignedCases.map((vector): [Case, 'self-signed'] => [vector, 'self-signed']),
+  ]
+
+  it('has three anchored and two self-signed cases', () => {
+    expect(fixture.cases).to.have.length(3)
+    expect(fixture.selfSignedCases.map((vector) => vector.subject.split(':').slice(0, 3).join(':'))).to.deep.eq([
+      'did:pkh:eip155',
+      'did:pkh:solana',
+    ])
+  })
+
+  for (const [vector, mode] of vectors) {
     describe(vector.name, () => {
+      it('binds its leaves to the subject the DID names', () => {
+        expect(ethers.getAddress(vector.leafSubject)).to.eq(vector.leafSubject)
+
+        if (mode === 'anchored') {
+          expect(vector.subject).to.eq(`did:pkh:eip155:${fixture.chainId}:${vector.leafSubject}`)
+        } else if (vector.subject.startsWith('did:pkh:eip155:')) {
+          expect(vector.subject).to.match(new RegExp(`^did:pkh:eip155:[1-9][0-9]*:${vector.leafSubject}$`))
+          expect(vector.selfSigned?.signer).to.eq(vector.leafSubject)
+        } else {
+          // A Solana key has no 20-byte address: the leaf binds a hash of its DID.
+          expect(vector.leafSubject).to.eq(ethers.getAddress(ethers.dataSlice(ethers.id(vector.subject), 12)))
+          expect(vector.subject.endsWith(`:${vector.selfSigned?.signer}`)).to.eq(true)
+        }
+      })
+
       it('every field leaf recomputes on chain from its pointer, JCS value and salt', async () => {
         const table = new Map(fixture.slots.map((row) => [row.slot, row.pointer]))
 
-        expect(vector.subject).to.eq(`did:pkh:eip155:${fixture.chainId}:${vector.leafSubject}`)
-        expect(ethers.getAddress(vector.leafSubject)).to.eq(vector.leafSubject)
         expect(vector.fields).to.have.length.greaterThan(0)
 
         for (const field of vector.fields) {
@@ -233,6 +272,106 @@ describe('profile schema v1', () => {
           expect(await harness.verify(field.proof, flipLastBit(vector.root), field.leaf), label).to.eq(false)
         }
       })
+
+      it('its export is JCS text that rebuilds the root on chain from values, salts and fillers alone', async () => {
+        const document = JSON.parse(vector.export.text) as Any
+
+        expect(canonicalJson(document)).to.eq(vector.export.text)
+        expect(Object.keys(document).sort()).to.deep.eq(
+          ['createdAt', 'fields', 'fillers', 'format', 'formatVersion', 'root', 'schemaId', 'subject'].sort(),
+        )
+        expect([document.format, document.formatVersion, document.schemaId]).to.deep.eq([fixture.exportFormat, 1, 1])
+        expect([document.subject, document.root]).to.deep.eq([vector.subject, vector.root])
+
+        const leaves: string[] = new Array(LEAF_COUNT)
+
+        for (const field of document.fields) {
+          const [, , leaf] = await harness.leaf(
+            await registry.getAddress(),
+            fixture.schemaId,
+            vector.leafSubject,
+            field.slot,
+            field.pointer,
+            ethers.toUtf8Bytes(canonicalJson(field.value)),
+            field.salt,
+          )
+
+          leaves[field.slot] = leaf
+        }
+        for (const filler of document.fillers) leaves[filler.slot] = filler.leaf
+
+        expect(await harness.root(leaves)).to.eq(vector.root)
+      })
+
+      it('its presentation is JCS text whose every disclosure opens on chain', async () => {
+        const document = JSON.parse(vector.presentation.text) as Any
+        const disclosures = document.disclosures as Disclosure[]
+
+        expect(canonicalJson(document)).to.eq(vector.presentation.text)
+        expect([document.format, document.formatVersion, document.schemaId]).to.deep.eq([
+          fixture.presentationFormat,
+          1,
+          1,
+        ])
+        expect([document.subject, document.root]).to.deep.eq([vector.subject, vector.root])
+        expect(disclosures.map((disclosure) => disclosure.slot)).to.deep.eq(vector.presentation.disclose)
+        expect(disclosures).to.deep.eq(
+          vector.fields
+            .filter((field) => vector.presentation.disclose.includes(field.slot))
+            .map(({ slot, pointer, value, salt, proof }) => ({ slot, pointer, value, salt, proof })),
+        )
+
+        if (mode === 'anchored') {
+          expect(document.anchor).to.deep.eq({ chainId: fixture.chainId, registry: fixture.registry, version: 1 })
+          expect(document.commitment).to.eq(vector.commitment)
+          expect(document.signature).to.eq(null)
+        } else {
+          expect([document.anchor, document.commitment]).to.deep.eq([null, null])
+          expect(document.signature).to.deep.eq(vector.selfSigned?.signature)
+        }
+
+        for (const disclosure of disclosures) {
+          const label = `slot ${disclosure.slot}`
+          const [, , leaf] = await harness.leaf(
+            await registry.getAddress(),
+            fixture.schemaId,
+            vector.leafSubject,
+            disclosure.slot,
+            disclosure.pointer,
+            ethers.toUtf8Bytes(canonicalJson(disclosure.value)),
+            disclosure.salt,
+          )
+
+          expect(disclosure.proof, label).to.have.length(DEPTH)
+          expect(await harness.verify(disclosure.proof, vector.root, leaf), label).to.eq(true)
+        }
+      })
+
+      if (mode === 'self-signed') {
+        it('signs exactly the documented message', () => {
+          const selfSigned = vector.selfSigned!
+
+          expect(selfSigned.message).to.eq(
+            [
+              'Work Address profile, self-signed',
+              `domain: ${fixture.selfSignedDomain}`,
+              `schemaId: ${fixture.schemaId}`,
+              `subject: ${vector.subject}`,
+              `root: ${vector.root}`,
+            ].join('\n'),
+          )
+
+          if (selfSigned.signature.scheme === 'eip191') {
+            // ethers checks the Python secp256k1 signature; Ed25519 is checked by packages/identity.
+            expect(ethers.verifyMessage(selfSigned.message, selfSigned.signature.value)).to.eq(selfSigned.signer)
+          } else {
+            expect(selfSigned.signature.scheme).to.eq('ed25519')
+            expect(ethers.dataLength(selfSigned.signature.value)).to.eq(64)
+          }
+        })
+
+        return
+      }
 
       it('its commitment is registry.profileCommitment(), and publishes as Current', async () => {
         expect(await registry.profileCommitment(vector.leafSubject, fixture.schemaId, vector.root)).to.eq(
