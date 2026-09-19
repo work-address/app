@@ -26,9 +26,10 @@ export type ProjectMember = Pick<baseApi.User, 'id' | 'address'>
  * nowhere. Mirrors Project.isWorker on the API - the owner and anyone on the
  * worker list may invoice, whatever else they are listed as.
  *
- * Addresses match case-insensitively, as the API's access filters do. An
- * unknown member is never treated as a viewer: hiding an action the server
- * would allow is worse than showing one it refuses.
+ * Addresses match by each chain's rule, as the API's access filters do: an
+ * EVM address in any case, a Solana address only exactly. An unknown member
+ * is never treated as a viewer: hiding an action the server would allow is
+ * worse than showing one it refuses.
  */
 export const isProjectViewerOnly = (
   project: ProjectMembership,

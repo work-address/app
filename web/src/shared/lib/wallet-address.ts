@@ -13,6 +13,11 @@ const TON_FRIENDLY_ADDRESS = /^[0EKUk][Qq][\w-]{46}$/
 const TON_RAW_ADDRESS = /^-?\d+:[\dA-Fa-f]{64}$/
 /** Solana address is base58, typically 32-44 chars. */
 const SOLANA_ADDRESS = /^[1-9A-HJ-NP-Za-km-z]{32,44}$/
+/**
+ * Hex addresses, whose case carries no identity: EVM (the prefix in either
+ * case, as the API matches it) and raw TON.
+ */
+const HEX_ADDRESS = /^(0[Xx][\dA-Fa-f]{40}|-?\d+:[\dA-Fa-f]{64})$/
 
 /** Returns true when the value looks like an EVM, TON or Solana address. */
 export const isValidWalletAddress = (value: string): boolean => {
@@ -26,10 +31,19 @@ export const isValidWalletAddress = (value: string): boolean => {
   )
 }
 
-/** Normalizes an address for equality checks (trim + lowercase). */
-export const normalizeAddress = (address: string): string =>
-  address.trim().toLowerCase()
+/**
+ * The form two addresses are compared on - the rule of the API's
+ * WalletAddress.toCanonical. An EVM or raw TON address is hex and compares
+ * lowercased. Anything else compares exactly, trimmed: a Solana address is
+ * base58, where two addresses differing only in case are two accounts, and
+ * lowercasing both sides treated them as one.
+ */
+export const normalizeAddress = (address: string): string => {
+  const value = address.trim()
 
-/** Case-insensitive address equality, the check both API and UI rely on. */
+  return HEX_ADDRESS.test(value) ? value.toLowerCase() : value
+}
+
+/** Address equality by each chain's rule, as the API's access filters use. */
 export const isSameWalletAddress = (a: string, b: string): boolean =>
   normalizeAddress(a) === normalizeAddress(b)

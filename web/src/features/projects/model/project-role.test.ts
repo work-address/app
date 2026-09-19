@@ -69,6 +69,21 @@ describe('isProjectViewerOnly', () => {
     expect(isProjectViewerOnly(stored, WORKER)).toBe(false)
   })
 
+  it('matches a Solana address only exactly, as the API does', () => {
+    const solanaViewer = {
+      id: 'solana-viewer-id',
+      address: '7EcDhSYGxXyscszYEp35KHN8vvw3svAuLKTzXwCFLtV',
+    }
+    // One letter's case flipped: in base58, another account.
+    const otherAccount = '7ecDhSYGxXyscszYEp35KHN8vvw3svAuLKTzXwCFLtV'
+    const stored = project({
+      workerAddresses: [otherAccount],
+      viewerAddresses: [solanaViewer.address],
+    })
+
+    expect(isProjectViewerOnly(stored, solanaViewer)).toBe(true)
+  })
+
   it('shows the action to a signed-out or unloaded user', () => {
     expect(isProjectViewerOnly(project(), null)).toBe(false)
     expect(isProjectViewerOnly(project(), { id: 'x' })).toBe(false)
