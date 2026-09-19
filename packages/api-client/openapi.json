@@ -206,7 +206,7 @@
           "state"
         ],
         "example": {
-          "id": "8d78bdf5-fde9-4046-a8ae-97d424e2d302"
+          "id": "6cfe44d5-4d66-4bae-aa78-be30de5c07da"
         }
       },
       "ProjectStatistics": {
@@ -267,7 +267,7 @@
           "period"
         ],
         "example": {
-          "id": "2ebba0e1-aeca-4e30-b334-442e00791438"
+          "id": "f518bd87-87f0-4519-ae11-3ec1a07bd8d6"
         }
       },
       "Time": {
@@ -365,7 +365,7 @@
           "toAt"
         ],
         "example": {
-          "id": "4b22c492-02cc-4a3b-b22c-b2bf93f34b82"
+          "id": "aed77cff-cb3f-4ac2-8a57-c111e61b7ede"
         }
       },
       "Project": {
@@ -455,7 +455,7 @@
           "state"
         ],
         "example": {
-          "id": "afa65a93-452c-43a2-8f0d-ad5891b16896"
+          "id": "62220240-399a-4a53-add5-d0961c9ade37"
         }
       },
       "User": {
@@ -561,7 +561,7 @@
         },
         "type": "object",
         "example": {
-          "id": "43f24e66-6dde-4f5e-abb4-193b2e329fd3"
+          "id": "bcb8573c-2f4e-4652-bddd-5ec887eba9d9"
         }
       },
       "AuthForgotPasswordDto": {
@@ -3437,7 +3437,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "70ef3b08-ec9e-42b4-aecf-639904c138b2"
+                  "projectId": "1ee84981-869a-4386-9881-626b8b46f0ab"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -3505,8 +3505,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1789691849811,
-                "toUnix": 1789778249811
+                "fromUnix": 1705741200000,
+                "toUnix": 1705827600000
               }
             }
           },
@@ -3812,7 +3812,7 @@
             }
           },
           "409": {
-            "description": "The invoice was issued before invoices kept a snapshot, so it has no record"
+            "description": "The invoice was issued before invoices kept a snapshot, or its snapshot lacks a field the record carries (its issuer, say), so it has no record"
           }
         },
         "summary": "Get the InvoiceRecord v1 of an invoice - the canonical document an escrow invoice commitment hashes",
@@ -4150,7 +4150,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "dcd31833-56b3-40ea-bf05-2cd26aaf5651"
+                "nonce": "d0bc3263-396f-4edc-82e5-391bfac7b43d"
               },
               "schema": {
                 "properties": {
@@ -4195,7 +4195,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "10de90cd-d2b4-448f-9ce7-368c7cbc433f"
+                "nonce": "d03e562d-fb07-43ea-b629-7fd13e007aec"
               },
               "schema": {
                 "properties": {
@@ -4236,21 +4236,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "a901e55a-4726-47fe-9669-64e1fddb3d06",
+                      "nonce": "01c32b23-74c2-4126-b31d-c0ca34fbe55e",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "763d3153-bd75-4688-856f-a2907b417062",
+                      "nonce": "204e73b0-4867-489c-9063-14971e13fa40",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "bac55a97-a800-4a33-8ee2-b5482a114780",
+                      "nonce": "0be9f164-b7b6-4689-9372-33f5807a6672",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

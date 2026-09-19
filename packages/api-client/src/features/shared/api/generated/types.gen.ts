@@ -1104,7 +1104,7 @@ export type InvoiceControllerRecordErrors = {
         message?: string;
     };
     /**
-     * The invoice was issued before invoices kept a snapshot, so it has no record
+     * The invoice was issued before invoices kept a snapshot, or its snapshot lacks a field the record carries (its issuer, say), so it has no record
      */
     409: unknown;
 };
