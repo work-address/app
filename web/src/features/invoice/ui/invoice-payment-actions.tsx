@@ -12,7 +12,9 @@ import { Button, Tooltip, showToast } from '@/shared'
  *
  * Only the issuer sees the control: the person owed the money is the one who
  * knows whether it arrived, so the owner of a project gets the status but not
- * the switch. Viewers see no invoices at all.
+ * the switch. Viewers see no invoices at all. Nobody gets it for an invoice
+ * submitted to escrow (`canMarkInvoiceByHand`): the chain's confirmed outcome
+ * settles that one, and the API refuses a hand mark with a 409.
  *
  * Marking paid also marks the hours behind it paid, server-side. The copy says
  * so, because an issuer who does not realise it will wonder why those hours

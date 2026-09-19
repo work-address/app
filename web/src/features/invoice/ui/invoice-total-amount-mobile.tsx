@@ -1,13 +1,15 @@
-import { Badge, Flex, Separator, Grid, Skeleton } from '@radix-ui/themes'
+import { Flex, Separator, Grid, Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Fragment } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useInvoiceInfoFields } from '../lib'
-import { $invoice, $invoiceLoading } from '../model'
+import { $invoice, $invoiceLoading, canMarkInvoiceByHand } from '../model'
 
+import { InvoiceEscrowSettlement } from './invoice-escrow-settlement'
 import { InvoicePaymentActions } from './invoice-payment-actions'
+import { InvoiceStatusBadge } from './invoice-status-badge'
 
 import { $user } from '@/entities/profile'
 import { BASE_CURRENCY, formatCurrency, Hint, Text } from '@/shared'
@@ -24,7 +26,8 @@ export const InvoiceTotalAmountMobile = () => {
   })
 
   const isPaid = invoice?.state === 'PAID'
-  const canSettle = Boolean(user?.id && invoice?.user?.id === user.id)
+  // The issuer's control, gone once the invoice is submitted to escrow.
+  const canSettle = canMarkInvoiceByHand(invoice, user?.id)
 
   return (
     <Flex gap={'3'} direction={'column'}>
@@ -48,9 +51,7 @@ export const InvoiceTotalAmountMobile = () => {
         {loading ? (
           <Skeleton height="22px" width="90px" />
         ) : (
-          <Badge size="2" variant="soft" color={isPaid ? 'green' : 'amber'}>
-            {t(isPaid ? 'invoice.state.paid' : 'invoice.state.requested')}
-          </Badge>
+          <InvoiceStatusBadge invoice={invoice} />
         )}
       </Flex>
       {invoice?.id && canSettle ? (
@@ -62,6 +63,7 @@ export const InvoiceTotalAmountMobile = () => {
           stretch
         />
       ) : null}
+      {loading ? null : <InvoiceEscrowSettlement invoice={invoice} />}
       <Separator size={'4'} />
       <Grid
         columns={{ initial: '137px 1fr' }}

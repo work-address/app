@@ -1,13 +1,15 @@
-import { Badge, Flex, Grid, Skeleton } from '@radix-ui/themes'
+import { Flex, Grid, Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { Trans, useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { useInvoiceInfoFields } from '../lib'
-import { $invoice, $invoiceLoading } from '../model'
+import { $invoice, $invoiceLoading, canMarkInvoiceByHand } from '../model'
 
+import { InvoiceEscrowSettlement } from './invoice-escrow-settlement'
 import { InvoicePaymentActions } from './invoice-payment-actions'
+import { InvoiceStatusBadge } from './invoice-status-badge'
 
 import { $user } from '@/entities/profile'
 import {
@@ -37,8 +39,9 @@ export const InvoiceTotalAmountDesktop = () => {
 
   const isPaid = invoice?.state === 'PAID'
   // Only the issuer may settle: the person owed the money is the one who
-  // knows whether it arrived.
-  const canSettle = Boolean(user?.id && invoice?.user?.id === user.id)
+  // knows whether it arrived. Nobody may once it is submitted to escrow -
+  // the chain's outcome settles it then.
+  const canSettle = canMarkInvoiceByHand(invoice, user?.id)
 
   const handleShare = () => {
     copyToClipboard(window.location.href)
@@ -101,9 +104,7 @@ export const InvoiceTotalAmountDesktop = () => {
             {loading ? (
               <Skeleton width="60px" height="22px" loading={loading} />
             ) : (
-              <Badge size="2" variant="soft" color={isPaid ? 'green' : 'amber'}>
-                {t(isPaid ? 'invoice.state.paid' : 'invoice.state.requested')}
-              </Badge>
+              <InvoiceStatusBadge invoice={invoice} />
             )}
           </Flex>
           <InvoiceNoPrint gap={'3'} align={'center'}>
@@ -123,6 +124,7 @@ export const InvoiceTotalAmountDesktop = () => {
             </Button>
           </InvoiceNoPrint>
         </Flex>
+        {loading ? null : <InvoiceEscrowSettlement invoice={invoice} />}
         <Text size={'4'} weight={'medium'}>
           {t('invoice.summary.heading')}
         </Text>

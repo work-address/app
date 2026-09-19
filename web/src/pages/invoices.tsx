@@ -15,7 +15,10 @@ import {
   $invoices,
   $invoicesTotal,
   $isLoadingMoreInvoices,
+  InvoiceEscrowSettlement,
   InvoicePaymentActions,
+  InvoiceStatusBadge,
+  canMarkInvoiceByHand,
   fetchInvoiceList,
   formatCents,
   getInvoiceRateCents,
@@ -23,6 +26,7 @@ import {
   invoiceProjectFilterChanged,
   invoiceProjectsQuery,
   invoiceStateFilterChanged,
+  isEscrowBound,
   loadMoreInvoices,
   shortenAddress,
   type InvoiceStateFilter,
@@ -278,8 +282,10 @@ export default function InvoicesPage() {
             const isPaid = invoice.state === 'PAID'
             const rateCents = getInvoiceRateCents(invoice)
             // Only the issuer may settle: the person owed the money is the
-            // one who knows whether it arrived.
-            const canSettle = Boolean(user?.id && invoice.user?.id === user.id)
+            // one who knows whether it arrived. Nobody may once it is
+            // submitted to escrow - the chain's outcome settles it then.
+            const canSettle = canMarkInvoiceByHand(invoice, user?.id)
+            const bound = isEscrowBound(invoice)
             const issuer =
               invoice.user?.name ||
               shortenAddress(
@@ -287,7 +293,7 @@ export default function InvoicesPage() {
               )
 
             return (
-              <Row key={invoice.id}>
+              <Row key={invoice.id} data-escrow={bound || undefined}>
                 <Cell $area="project">
                   <ProjectLink
                     to={routes.invoice.build({ id: invoice.id as string })}
@@ -303,17 +309,7 @@ export default function InvoicesPage() {
                 </Cell>
                 <Cell $area="status" label={t('invoices.item.status')}>
                   <Flex direction="column" align="start" gap="1">
-                    <Badge
-                      size="2"
-                      variant="soft"
-                      color={isPaid ? 'green' : 'amber'}
-                    >
-                      {t(
-                        isPaid
-                          ? 'invoice.state.paid'
-                          : 'invoice.state.requested',
-                      )}
-                    </Badge>
+                    <InvoiceStatusBadge invoice={invoice} />
                     {isPaid ? (
                       <Text size="1" color="gray">
                         {formatDate(invoice.paidAt)}
@@ -362,6 +358,14 @@ export default function InvoicesPage() {
                     stretch={!isDesktop}
                   />
                 </Cell>
+                {/* The escrow's figures and transaction, on a line of their
+                    own across the card: the columns above are the invoice,
+                    this is how it was settled. */}
+                {bound ? (
+                  <EscrowCell>
+                    <InvoiceEscrowSettlement invoice={invoice} layout="row" />
+                  </EscrowCell>
+                ) : null}
               </Row>
             )
           })}
@@ -461,6 +465,8 @@ const MOBILE_AREAS = `
   "period period"
   "action action"
 `
+const ESCROW_AREAS = `${AREAS} "escrow escrow escrow escrow escrow escrow escrow"`
+const MOBILE_ESCROW_AREAS = `${MOBILE_AREAS} "escrow escrow"`
 
 const PageTitle = styled(SectionTitle)`
   ${(p) => p.theme.breakpoints.up('md')} {
@@ -537,12 +543,25 @@ const Row = styled.div`
     border-color: var(--gray-a8);
   }
 
+  &[data-escrow] {
+    grid-template-areas: ${ESCROW_AREAS};
+  }
+
   ${(p) => p.theme.breakpoints.down('md')} {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     grid-template-areas: ${MOBILE_AREAS};
     align-items: start;
     gap: var(--space-3);
+
+    &[data-escrow] {
+      grid-template-areas: ${MOBILE_ESCROW_AREAS};
+    }
   }
+`
+
+const EscrowCell = styled.div`
+  grid-area: escrow;
+  min-width: 0;
 `
 
 const CellRoot = styled.div<{ $area: string; $align?: 'start' | 'end' }>`
