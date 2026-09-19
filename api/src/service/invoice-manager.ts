@@ -135,7 +135,7 @@ export class InvoiceManager {
    *
    * Issuer only (403 to the owner, who can read the invoice but is the
    * payer, and to everyone else). A legacy invoice has no record to commit
-   * to (409), and a paid one has nothing left to bill (409).
+   * to (409), and a paid one or one for nothing has nothing to bill (409).
    */
   public escrowSubmission(
     invoice: Invoice,
@@ -189,6 +189,16 @@ export class InvoiceManager {
             return yield* Effect.fail(
               new InvoiceEscrowException(
                 `Invoice ${current.id} is already paid, so there is nothing to bill through escrow`,
+              ),
+            )
+          }
+
+          // MarketplaceEscrow refuses a bill of 0; better said here than by
+          // a reverted transaction the worker paid gas for.
+          if (current.amountCents <= 0) {
+            return yield* Effect.fail(
+              new InvoiceEscrowException(
+                `Invoice ${current.id} bills nothing, so there is nothing to submit to escrow`,
               ),
             )
           }

@@ -506,6 +506,24 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
     }
   }
 
+  /**
+   * An invoice for nothing - a fixed-price project's, at a rate of 0 - has
+   * no bill to submit: MarketplaceEscrow reverts an amount of 0, so the
+   * issuer is told here (409) rather than by a failed transaction, and the
+   * invoice stays unbound.
+   */
+  @test()
+  async zeroAmountInvoice_is409AndStaysUnbound() {
+    const { worker, invoice } = await this.issued(0)
+
+    const status = await this.statusOf(
+      this.submit(invoice, worker, this.allocation()),
+    )
+
+    expect(status).to.be.eq(409)
+    expect((await this.stored(invoice.id)).escrowAllocationId).to.be.null
+  }
+
   /** A malformed allocation or escrow is a 400, before anything is bound. */
   @test()
   async malformedAllocation_is400() {

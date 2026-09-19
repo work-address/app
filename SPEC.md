@@ -172,8 +172,9 @@ commitment. The binding never moves: the chain cannot tell this service
 whether a commitment it handed out was sent, so letting the invoice go to a
 second allocation could bill it twice (409). An allocation takes one bill, so
 it binds one invoice, enforced by a unique index over the three binding
-columns (409). A legacy invoice has no record to commit to and a paid one has
-nothing left to bill (both 409). The binding is columns on `Invoice`: there
+columns (409). A legacy invoice has no record to commit to, and a paid one or
+one for 0 cents has nothing to bill — MarketplaceEscrow reverts an amount of 0
+(all 409). The binding is columns on `Invoice`: there
 is no Allocation entity here — the allocation itself is the marketplace's
 (`web/api`) and the chain's.
 
