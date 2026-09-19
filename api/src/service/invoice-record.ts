@@ -7,6 +7,8 @@ import {
   IInvoiceRecord,
 } from '@/model/invoice'
 import { CanonicalJson } from '@/service/canonical-json'
+import IncompleteInvoiceSnapshotException from '@/exception/incomplete-invoice-snapshot-exception'
+import LegacyInvoiceException from '@/exception/legacy-invoice-exception'
 
 /**
  * InvoiceRecord v1: the canonical serialisation of an issued invoice.
@@ -28,7 +30,10 @@ import { CanonicalJson } from '@/service/canonical-json'
  * record of what was billed. It holds nothing that changes after issuance
  * either - not the paid state, which is settled after an escrow submission
  * has already committed to the record. An invoice without a v1 snapshot has
- * no record, and asking for one is refused rather than filled in.
+ * no record, and asking for one is refused rather than filled in - as is a
+ * snapshot missing a field the record carries, its issuer included. Both
+ * refusals are 409s: they describe the invoice, not a fault in the server,
+ * so whichever endpoint asked answers with that instead of a 500.
  *
  * `api/src/test/fixture/invoice-record.v1.json` holds the vectors; a change
  * that moves one byte of their output needs a new version, not an edit.
@@ -43,44 +48,37 @@ export class InvoiceRecord {
 
   public document(invoice: Invoice): IInvoiceRecord {
     if (invoice.snapshotVersion !== InvoiceRecord.VERSION) {
-      throw new TypeError(
+      throw new LegacyInvoiceException(
         `Invoice ${invoice.id} has no v${InvoiceRecord.VERSION} snapshot, so it has no InvoiceRecord`,
       )
     }
+
+    const required = <T>(value: T | null | undefined, field: string): T =>
+      InvoiceRecord.required(invoice, value, field)
 
     return {
       version: InvoiceRecord.VERSION,
       invoiceId: invoice.id,
       projectId: invoice.project.id,
-      issuerId: InvoiceRecord.required(invoice.user?.id, 'issuer'),
-      issuerAddress: InvoiceRecord.required(
-        invoice.issuerAddress,
-        'issuerAddress',
-      ),
-      ownerAddress: InvoiceRecord.required(
-        invoice.ownerAddress,
-        'ownerAddress',
-      ),
-      currency: InvoiceRecord.required(invoice.currency, 'currency'),
-      rateHourCents: InvoiceRecord.required(
-        invoice.rateHourCents,
-        'rateHourCents',
-      ),
-      minutesActive: InvoiceRecord.required(
-        invoice.minutesActive,
-        'minutesActive',
-      ),
+      // The relation, not a snapshot column: Invoice.user is nullable for
+      // rows older than issuers, so a snapshotted row can still lack one.
+      issuerId: required(invoice.user?.id, 'issuer'),
+      issuerAddress: required(invoice.issuerAddress, 'issuerAddress'),
+      ownerAddress: required(invoice.ownerAddress, 'ownerAddress'),
+      currency: required(invoice.currency, 'currency'),
+      rateHourCents: required(invoice.rateHourCents, 'rateHourCents'),
+      minutesActive: required(invoice.minutesActive, 'minutesActive'),
       amountCents: invoice.amountCents,
       periodStart: InvoiceRecord.timestamp(invoice.fromAt),
       periodEnd: InvoiceRecord.timestamp(invoice.toAt),
-      lines: InvoiceRecord.ordered(
-        InvoiceRecord.required(invoice.lines, 'lines'),
-      ).map((line) => ({
-        timeId: line.timeId,
-        fromAt: InvoiceRecord.timestamp(line.fromAt),
-        toAt: InvoiceRecord.timestamp(line.toAt),
-        minutesActive: line.minutesActive,
-      })),
+      lines: InvoiceRecord.ordered(required(invoice.lines, 'lines')).map(
+        (line) => ({
+          timeId: line.timeId,
+          fromAt: InvoiceRecord.timestamp(line.fromAt),
+          toAt: InvoiceRecord.timestamp(line.toAt),
+          minutesActive: line.minutesActive,
+        }),
+      ),
     }
   }
 
@@ -110,9 +108,15 @@ export class InvoiceRecord {
     return new Date(value).toISOString()
   }
 
-  private static required<T>(value: T | null | undefined, field: string): T {
+  private static required<T>(
+    invoice: Invoice,
+    value: T | null | undefined,
+    field: string,
+  ): T {
     if (value === null || value === undefined) {
-      throw new TypeError(`The invoice snapshot is missing ${field}`)
+      throw new IncompleteInvoiceSnapshotException(
+        `Invoice ${invoice.id}'s snapshot has no ${field}, so it has no InvoiceRecord`,
+      )
     }
 
     return value

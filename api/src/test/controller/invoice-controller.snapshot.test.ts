@@ -501,6 +501,60 @@ export class InvoiceControllerSnapshotTest extends BaseControllerTest {
   }
 
   /**
+   * `Invoice.user` is nullable so rows from before issuers were recorded
+   * survive a schema sync. A snapshotted invoice whose issuer is gone has no
+   * issuerId to put in its record, and the record is refused with a 409
+   * naming the invoice and the missing field - not a 500 from a TypeError.
+   */
+  @test()
+  async record_ofASnapshotWithoutItsIssuerIsAConflict() {
+    const owner = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner, 20)
+
+    await this.ninetyActiveMinutes(project, owner)
+
+    const created = await invoiceControllerCreate({
+      client: this.apiClient(),
+      path: { projectId: project.id as never },
+      headers: this.auth(owner),
+      body: {},
+      throwOnError: true,
+    })
+
+    await this.invoiceRepository
+      .getRepo()
+      .update(created.data.id!, { user: null })
+
+    // Guard the premise: a v1 snapshot, now without its issuer.
+    const stored = await this.stored(created.data.id!)
+
+    expect(stored.snapshotVersion).to.be.eq(EInvoiceSnapshotVersion.V1)
+    expect(stored.user ?? null).to.be.null
+
+    let status: number | undefined
+    let message: string | undefined
+
+    try {
+      await invoiceControllerRecord({
+        client: this.apiClient(),
+        path: { id: created.data.id as never },
+        headers: this.auth(owner),
+        throwOnError: true,
+      })
+    } catch (error: unknown) {
+      if (!axios.isAxiosError(error)) {
+        throw error
+      }
+
+      status = error.response?.status
+      message = error.response?.data?.message
+    }
+
+    expect(status).to.be.eq(409)
+    expect(message).to.contain(created.data.id).and.to.contain('issuer')
+  }
+
+  /**
    * Marking paid and unpaid saves the invoice row again; no later save of it,
    * whatever the in-memory copy holds, can rewrite what it billed.
    */

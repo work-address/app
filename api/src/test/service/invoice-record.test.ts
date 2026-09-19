@@ -13,6 +13,8 @@ import {
   IInvoiceLine,
 } from '@/model/invoice'
 import { InvoiceRecord } from '@/service/invoice-record'
+import IncompleteInvoiceSnapshotException from '@/exception/incomplete-invoice-snapshot-exception'
+import LegacyInvoiceException from '@/exception/legacy-invoice-exception'
 
 type Snapshot = {
   id: string
@@ -170,7 +172,8 @@ export class InvoiceRecordTest {
 
   /**
    * A legacy invoice never recorded its rate or lines. It has no record, and
-   * asking for one is refused rather than answered from today's project.
+   * asking for one is refused (409) rather than answered from today's
+   * project.
    */
   @test()
   serialise_refusesAnInvoiceWithoutASnapshot() {
@@ -181,7 +184,9 @@ export class InvoiceRecordTest {
 
       invoice.snapshotVersion = version
 
-      expect(() => this.service.serialise(invoice)).to.throw(TypeError)
+      expect(() => this.service.serialise(invoice))
+        .to.throw(LegacyInvoiceException, vector.invoice.id)
+        .with.property('httpCode', 409)
     }
   }
 
@@ -192,9 +197,29 @@ export class InvoiceRecordTest {
 
     invoice.rateHourCents = null
 
-    expect(() => this.service.serialise(invoice)).to.throw(
-      TypeError,
-      /rateHourCents/,
-    )
+    expect(() => this.service.serialise(invoice))
+      .to.throw(IncompleteInvoiceSnapshotException, /rateHourCents/)
+      .with.property('httpCode', 409)
+  }
+
+  /**
+   * The issuer comes from the `user` relation, which is nullable for rows
+   * older than issuers: a snapshot without one is refused as a conflict
+   * naming the invoice, not a TypeError the API would answer with a 500.
+   */
+  @test()
+  serialise_refusesASnapshotWithoutItsIssuer() {
+    const [vector] = this.vectors()
+
+    for (const user of [null, undefined]) {
+      const invoice = this.invoiceOf(vector.invoice)
+
+      invoice.user = user
+
+      expect(() => this.service.serialise(invoice))
+        .to.throw(IncompleteInvoiceSnapshotException, vector.invoice.id)
+        .with.property('httpCode', 409)
+      expect(() => this.service.serialise(invoice)).to.throw(/issuer/)
+    }
   }
 }
