@@ -47,6 +47,12 @@ Everything about work done and money owed resolves to these two:
 
 ### The rules that keep them consistent
 
+**A slice of time belongs to its author.** Every tracker cuts time into the
+same buckets, so two people tracking one project at once send the same
+`fromAt`. Each keeps their own row: the key is (project, author, `fromAt`),
+and a project's totals count every author's rows. The same author sending a
+slice again updates their own row. Nobody else's row is ever touched.
+
 **An invoice covers exactly one person's hours.** Whoever issued it
 (`Invoice.user`) is the person whose time it bills for — a worker invoices the
 project owner for their own hours, an owner invoices their client for theirs.

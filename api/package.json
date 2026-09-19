@@ -12,7 +12,8 @@
     "schema:sync": "TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js schema:sync -d src/ormconfig.ts",
     "schema:drop": "TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js schema:drop -d src/ormconfig.ts",
     "seed:demo": "NODE_ENV=development TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register src/scripts/seed-demo-data.ts",
-    "backfill:invoice-snapshot": "TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register src/scripts/backfill-invoice-snapshot.ts"
+    "backfill:invoice-snapshot": "TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register src/scripts/backfill-invoice-snapshot.ts",
+    "audit:time-author-key": "TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register src/scripts/audit-time-author-key.ts"
   },
   "dependencies": {
     "@sentry/node": "^10.71.0",

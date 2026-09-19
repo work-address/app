@@ -55,8 +55,9 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
     projectId: string,
     userSuffix: number,
   ): TimeCreateDto {
-    const fromAt = moment.utc().subtract(10, 'minutes')
+    // One clock read, both ends derived from it: an exact ten-minute slice.
     const toAt = moment.utc()
+    const fromAt = toAt.clone().subtract(10, 'minutes')
 
     return {
       fromIndex: userSuffix,
@@ -261,8 +262,15 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
     expect(survivor, 'second run purged a project it never touched').to.exist
   }
 
+  /**
+   * G2. Every tracker aligns to the same ten-minute buckets, so two people
+   * tracking one project at the same time send the same slice. The key used
+   * to be (project, fromAt): the second author was refused with "Wrong user"
+   * and their tracker dropped the row for good. Each author now keeps their
+   * own row, and the project's totals count both.
+   */
   @test()
-  async createOrUpdateMany_returnsErrorWhenUpdatingAnotherUsersEntry() {
+  async createOrUpdateMany_twoWorkersPostingTheSameSlice_bothKeepTheirRows() {
     const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const otherWorker = await this.userFixture.createUser()
@@ -274,20 +282,125 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
     await runPromise(this.projectRepository.saveSingle(project))
 
     const payload = this.buildTimePayload(project.id, 4)
-    const [saved] = await runPromise(
+    const [first] = await runPromise(
       this.timeManager.createOrUpdateMany([payload], worker),
     )
-    expect(saved.id).to.be.a('string')
-
-    const [result] = await runPromise(
+    const [second] = await runPromise(
       this.timeManager.createOrUpdateMany(
-        [{ ...payload, note: 'stolen update' }],
+        [
+          {
+            ...payload,
+            note: 'the other worker',
+            minutesActive: 6,
+            keyboardKeys: 40,
+          },
+        ],
         otherWorker,
       ),
     )
 
-    expect(result.error).to.exist
-    expect(result.error?.name).to.be.equal('UserAccessException')
+    expect(first.error).to.be.undefined
+    expect(second.error).to.be.undefined
+    expect(first.id).to.be.a('string')
+    expect(second.id).to.be.a('string')
+    expect(second.id).to.not.equal(first.id)
+
+    const stored = await this.conn.getRepository(Time).find({
+      where: { project: { id: project.id } },
+      relations: { user: true },
+      order: { createdAt: 'ASC' },
+    })
+
+    expect(
+      stored.map((row) => [row.user.id, row.note, row.minutesActive]),
+    ).to.deep.equal([
+      [worker.id, payload.note, payload.minutesActive],
+      [otherWorker.id, 'the other worker', 6],
+    ])
+
+    const [totals] = await runPromise(
+      this.timeRepository.getTotals(owner, project.id),
+    )
+
+    expect(totals.minutesActive).to.equal(payload.minutesActive + 6)
+    expect(totals.keyboardKeys).to.equal(payload.keyboardKeys + 40)
+  }
+
+  /** The same author re-sending a slice updates their row; no second one. */
+  @test()
+  async createOrUpdateMany_sameAuthorRepostingASlice_updatesTheirOwnRow() {
+    const owner = await this.userFixture.createPremiumUser()
+    const worker = await this.userFixture.createUser()
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
+    project.workerAddresses = [worker.address]
+    await runPromise(this.projectRepository.saveSingle(project))
+
+    const payload = this.buildTimePayload(project.id, 5)
+    const [ownerRow] = await runPromise(
+      this.timeManager.createOrUpdateMany([payload], owner),
+    )
+    const [first] = await runPromise(
+      this.timeManager.createOrUpdateMany([payload], worker),
+    )
+    const [again] = await runPromise(
+      this.timeManager.createOrUpdateMany(
+        [{ ...payload, note: 'resent', minutesActive: 9 }],
+        worker,
+      ),
+    )
+
+    expect(again.error).to.be.undefined
+    expect(again.id).to.equal(first.id)
+
+    const stored = await this.conn.getRepository(Time).find({
+      where: { project: { id: project.id } },
+      relations: { user: true },
+    })
+    const byAuthor = new Map(stored.map((row) => [row.user.id, row]))
+
+    expect(stored.length).to.equal(2)
+    expect(byAuthor.get(worker.id)?.id).to.equal(first.id)
+    expect(byAuthor.get(worker.id)?.note).to.equal('resent')
+    expect(byAuthor.get(worker.id)?.minutesActive).to.equal(9)
+    // The owner's row for the same slice is theirs and untouched.
+    expect(byAuthor.get(owner.id)?.id).to.equal(ownerRow.id)
+    expect(byAuthor.get(owner.id)?.note).to.equal(payload.note)
+  }
+
+  /**
+   * The key itself: the database refuses a second row for one author and
+   * slice, and accepts one from another author. Written past the manager,
+   * so it is the constraint answering and not the lookup.
+   */
+  @test()
+  async timeUniqueKey_isProjectAuthorAndFromAt() {
+    const owner = await this.userFixture.createPremiumUser()
+    const worker = await this.userFixture.createUser()
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
+    const now = moment.utc()
+    const fromAt = now.clone().subtract(10, 'minutes').toDate()
+    const toAt = now.toDate()
+
+    await this.timeFixture.create(project, fromAt, toAt, owner)
+    await this.timeFixture.create(project, fromAt, toAt, worker)
+
+    let error: unknown
+
+    try {
+      await this.timeFixture.create(project, fromAt, toAt, worker)
+    } catch (e: unknown) {
+      error = e
+    }
+
+    expect((error as { driverError?: { constraint?: string } }).driverError)
+      .to.have.property('constraint')
+      .equal('UQ_TIME_PROJECT_USER_FROM_AT')
   }
 
   @test()

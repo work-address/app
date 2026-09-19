@@ -10,7 +10,6 @@ import { ITimeInsertionResult } from '@/model/time'
 import { ErrorFormatter } from '@/service/error-formatter'
 import { TimeCreateDto } from '@/model/dto/time'
 import { Entitlement } from '@/service/entitlement'
-import AccessException from '@/exception/access-exception'
 import InvoicedTimeException from '@/exception/invoiced-time-exception'
 import RetentionExceededException from '@/exception/retention-exceeded-exception'
 import { ImageResizer } from '@/service/image-resizer'
@@ -95,19 +94,14 @@ export class TimeManager {
             }
           }
 
-          const existing = yield* this.timeRepository.findTimeSingleForProject(
+          // The caller's own row for this slice. Anyone else's row for the
+          // same slice is theirs and stays as it is: the key includes the
+          // author, so a colleague tracking at the same time is not a clash.
+          const existing = yield* this.timeRepository.findAuthorsSlice(
             project,
+            user,
             fromAt,
-            toAt,
           )
-
-          if (existing && existing.user?.id !== user.id) {
-            return yield* Effect.fail(
-              new AccessException(
-                `Wrong user: the given time belongs to someone else`,
-              ),
-            )
-          }
 
           const time = existing ?? new Time()
 

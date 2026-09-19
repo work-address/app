@@ -56,3 +56,32 @@ export interface ITimeReadOptions {
    */
   forUpdate?: boolean
 }
+
+/**
+ * Rows sharing one slice of one project, for the author-key audit. Soft-deleted
+ * rows count: the unique constraint covers them too.
+ */
+export interface ITimeSliceGroup {
+  projectId: string
+  fromAt: Date
+  /** Distinct authors of the rows, sorted. */
+  userIds: string[]
+  /** The rows, oldest first. */
+  timeIds: string[]
+}
+
+/** What `audit:time-author-key` found. It reads, and never writes. */
+export interface ITimeAuthorKeyAudit {
+  /** Unique constraints on the time table as it stands. */
+  uniqueConstraints: string[]
+  /**
+   * Slices where one author has more than one row. The new key cannot be
+   * added while any exist, so each is for a person to resolve.
+   */
+  duplicateAuthorSlices: ITimeSliceGroup[]
+  /**
+   * Slices held by more than one author: refused by the old key, and
+   * separate entries under the new one.
+   */
+  sharedSlices: ITimeSliceGroup[]
+}

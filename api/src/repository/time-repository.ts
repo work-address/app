@@ -21,7 +21,7 @@ import {
   SelectQueryBuilder,
 } from 'typeorm'
 
-import { ITimeReadOptions, ITimeTotals } from '@/model/time'
+import { ITimeReadOptions, ITimeSliceGroup, ITimeTotals } from '@/model/time'
 import { Calc } from '@/service/calc'
 import AccessException from '@/exception/access-exception'
 import { TimeSearchDto } from '@/model/dto/time'
@@ -429,10 +429,18 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     )
   }
 
-  public findTimeSingleForProject(
+  /**
+   * The author's own entry for a slice, if they have one - looked up on
+   * exactly the unique key (project, author, fromAt), so a re-sent slice
+   * finds the row it would otherwise collide with.
+   *
+   * Another author's entry for the same slice is not this one: two people
+   * tracking one project at the same time each keep their own row.
+   */
+  public findAuthorsSlice(
     project: Project,
-    from: Date,
-    to: Date,
+    author: User,
+    fromAt: Date,
   ): RepoEffect<Time | undefined> {
     return fromPromise(() =>
       this.getRepo()
@@ -440,11 +448,93 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         .innerJoinAndSelect('time.project', 'project')
         .innerJoinAndSelect('time.user', 'user')
         .andWhere('project.id = :projectId', { projectId: project.id })
-        .andWhere('time.fromAt = :from', { from })
-        .andWhere('time.toAt = :to', { to })
+        .andWhere('user.id = :authorId', { authorId: author.id })
+        .andWhere('time.fromAt = :fromAt', { fromAt })
         .getOne()
         .then((result) => result ?? undefined),
     )
+  }
+
+  /**
+   * Slices where one author has more than one row - what would stop the
+   * (project, user, fromAt) key being added. Read-only, for the author-key
+   * audit; soft-deleted rows count, as they do for the constraint.
+   */
+  public findDuplicateAuthorSlices(): RepoEffect<ITimeSliceGroup[]> {
+    return this.findSliceGroups(
+      '"projectId", "userId", "fromAt"',
+      'count(*) > 1',
+    )
+  }
+
+  /**
+   * Slices held by more than one author - what the old (project, fromAt) key
+   * refused and the new one keeps as separate entries. Read-only, for the
+   * author-key audit.
+   */
+  public findSlicesSharedByAuthors(): RepoEffect<ITimeSliceGroup[]> {
+    return this.findSliceGroups(
+      '"projectId", "fromAt"',
+      'count(DISTINCT "userId") > 1',
+    )
+  }
+
+  /** Names of the unique constraints on the time table as it stands. */
+  public findUniqueConstraintNames(): RepoEffect<string[]> {
+    const table = this.getRepo().metadata.tableName
+
+    return fromPromise(async () => {
+      const rows: { name: string }[] = await this.getRepo().query(
+        `SELECT constraint_.conname AS name
+           FROM pg_constraint constraint_
+           JOIN pg_class table_ ON table_.oid = constraint_.conrelid
+           JOIN pg_namespace schema_ ON schema_.oid = table_.relnamespace
+          WHERE table_.relname = $1
+            AND schema_.nspname = current_schema()
+            AND constraint_.contype = 'u'
+          ORDER BY constraint_.conname`,
+        [table],
+      )
+
+      return rows.map((row) => row.name)
+    })
+  }
+
+  /**
+   * Groups every row, deleted or not, by `groupBy` and keeps the groups
+   * `having` selects. Both are fixed SQL from the methods above, never
+   * request data.
+   */
+  private findSliceGroups(
+    groupBy: string,
+    having: string,
+  ): RepoEffect<ITimeSliceGroup[]> {
+    const table = this.getRepo().metadata.tableName
+
+    return fromPromise(async () => {
+      const rows: {
+        projectId: string
+        fromAt: Date
+        userIds: string[]
+        timeIds: string[]
+      }[] = await this.getRepo().query(
+        `SELECT "projectId",
+                min("fromAt") AS "fromAt",
+                array_agg(DISTINCT "userId"::text ORDER BY "userId"::text) AS "userIds",
+                array_agg(id::text ORDER BY "createdAt", id) AS "timeIds"
+           FROM "${table}"
+          GROUP BY ${groupBy}
+         HAVING ${having}
+          ORDER BY "projectId", min("fromAt")`,
+      )
+
+      return rows.map((row) => ({
+        projectId: row.projectId,
+        fromAt: new Date(row.fromAt),
+        userIds: row.userIds,
+        timeIds: row.timeIds,
+      }))
+    })
   }
 
   /**

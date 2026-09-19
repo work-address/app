@@ -32,7 +32,17 @@ import {
 })
 @Entity()
 @Exclude()
-@Unique('UQ_PROJECT_FROM_AT', ['project', 'fromAt'])
+/**
+ * One row per author per slice. Every tracker aligns to the same buckets, so
+ * two people tracking the same project at the same time send the same
+ * `fromAt`; without the author in the key the second one was refused and its
+ * work lost. The same author re-sending a slice updates their own row.
+ *
+ * Applied by `schema:sync` like every schema change here. Before running it
+ * on existing data, `pnpm run audit:time-author-key` reports any row the new
+ * key would treat differently.
+ */
+@Unique('UQ_TIME_PROJECT_USER_FROM_AT', ['project', 'user', 'fromAt'])
 export class Time extends AbstractBaseEntity implements ITime {
   @Expose({ groups: ['search'] })
   @Type(() => Project)
