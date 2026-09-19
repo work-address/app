@@ -1,6 +1,7 @@
 import { suite, test } from '@testdeck/mocha'
 import { expect } from 'chai'
 import { instanceToPlain } from 'class-transformer'
+import { getMetadataArgsStorage } from 'typeorm'
 
 import { Invoice } from '@/entity/invoice'
 import { Project } from '@/entity/project'
@@ -97,6 +98,80 @@ export class UserProjectionTest {
     })
     expect(plain.roles).to.deep.equal([EUserRole.ROLE_USER])
     expect(plain).to.not.have.property('whatsapp')
+  }
+
+  /**
+   * The hosted identity is served by its own routes only: no projection of
+   * the user carries it, the holder's own record and the edit form included.
+   */
+  @test()
+  identity_isInNoProjection() {
+    const user = Object.assign(this.user(), {
+      visible: false,
+      identityPresentation: { commitment: '0x01' },
+      identityVersion: 3,
+      identityExport: { fields: [] },
+    })
+
+    for (const groups of [['public'], ['search'], ['search', 'me'], ['edit']]) {
+      const plain = instanceToPlain(user, { groups })
+
+      for (const key of [
+        'identityPresentation',
+        'identityVersion',
+        'identityExport',
+      ]) {
+        expect(plain, `${groups.join('+')}: ${key}`).to.not.have.property(key)
+      }
+    }
+  }
+
+  /**
+   * Their types, and that no load or save of a User touches them: only
+   * UserRepository's identity methods read or write these columns.
+   */
+  @test()
+  identity_columnsHaveTheirOwnTypesAndStayOutOfLoadsAndSaves() {
+    const columns = getMetadataArgsStorage().columns.filter(
+      (column) =>
+        column.target === User && column.propertyName.startsWith('identity'),
+    )
+
+    expect(
+      columns.map(({ propertyName, options }) => ({
+        propertyName,
+        type: options.type,
+        nullable: options.nullable,
+        select: options.select,
+        insert: options.insert,
+        update: options.update,
+      })),
+    ).to.have.deep.members([
+      {
+        propertyName: 'identityPresentation',
+        type: 'jsonb',
+        nullable: true,
+        select: false,
+        insert: false,
+        update: false,
+      },
+      {
+        propertyName: 'identityVersion',
+        type: 'int',
+        nullable: true,
+        select: false,
+        insert: false,
+        update: false,
+      },
+      {
+        propertyName: 'identityExport',
+        type: 'jsonb',
+        nullable: true,
+        select: false,
+        insert: false,
+        update: false,
+      },
+    ])
   }
 
   @test()

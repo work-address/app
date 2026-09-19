@@ -20,7 +20,12 @@ import { IUser } from '@/model/user'
 import { Project } from '@/entity/project'
 import type { ProfileExport, ProfilePresentation } from '@/vendor/identity'
 
-/** Read and written only by UserRepository's hosted-identity methods. */
+/**
+ * Read and written only by UserRepository's hosted-identity methods. Spread
+ * into each @Column, never passed as is: TypeORM writes the column's type
+ * into the options object it is given, so one shared object would give every
+ * identity column the type of the last one declared.
+ */
 const IDENTITY_COLUMN = {
   nullable: true,
   select: false,
@@ -221,11 +226,11 @@ export class User extends AbstractBaseEntity implements IUser {
    */
 
   /** The presentation as the holder anchored it (profile schema v1). */
-  @Column('jsonb', IDENTITY_COLUMN)
+  @Column('jsonb', { ...IDENTITY_COLUMN })
   identityPresentation?: ProfilePresentation | null
 
   /** The registry version the presentation is anchored as. */
-  @Column('int', IDENTITY_COLUMN)
+  @Column('int', { ...IDENTITY_COLUMN })
   identityVersion?: number | null
 
   /**
@@ -233,6 +238,6 @@ export class User extends AbstractBaseEntity implements IUser {
    * presentation: every field's value and salt. It lets the operator open
    * every field of the commitment, which is exactly what SPEC.md says.
    */
-  @Column('jsonb', IDENTITY_COLUMN)
+  @Column('jsonb', { ...IDENTITY_COLUMN })
   identityExport?: ProfileExport | null
 }
