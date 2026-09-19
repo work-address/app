@@ -73,3 +73,15 @@ NODE_ENV=test ./node_modules/.bin/mocha --require ts-node/register ./src/test/se
 ```
 
 Integration-style controller tests expect Postgres/Redis according to your test env.
+
+The identity routes also run against the real `IdentityRegistry` on a local
+Hardhat node. In the contracts repository run `npm run node` and then
+`npm run deploy:localhost`; then here:
+
+```sh
+IDENTITY_TEST_MANIFEST=<contracts>/deployments/localhost.json pnpm test
+```
+
+Without `IDENTITY_TEST_MANIFEST` that suite is skipped, and the same cases run
+against the contract's state machine in memory. It refuses any chain but
+31337, and funds its wallets from Hardhat's public test accounts.
