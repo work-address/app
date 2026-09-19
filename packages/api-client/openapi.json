@@ -529,6 +529,9 @@
           "premium": {
             "type": "boolean"
           },
+          "visible": {
+            "type": "boolean"
+          },
           "id": {
             "minLength": 1,
             "type": "string",
@@ -1548,6 +1551,9 @@
               "type": "string"
             },
             "type": "array"
+          },
+          "visible": {
+            "type": "boolean"
           }
         }
       },
@@ -2450,6 +2456,14 @@
             "schema": {
               "$ref": "#/components/schemas/User"
             }
+          },
+          {
+            "in": "header",
+            "name": "Authorization",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -2484,7 +2498,7 @@
             }
           }
         },
-        "summary": "Public profile by wallet address",
+        "summary": "Public profile by wallet address; a hidden profile is found only by its holder",
         "tags": [
           "User"
         ]

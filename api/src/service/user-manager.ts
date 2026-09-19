@@ -1,6 +1,7 @@
 import { validate } from 'class-validator'
 import { Effect } from 'effect'
 import { inject, injectable } from 'inversify'
+import { NotFoundError } from 'routing-controllers'
 
 import { User } from '@/entity/user'
 import ConstraintsValidationException from '@/exception/constraints-validation-exception'
@@ -15,6 +16,24 @@ export class UserManager {
   protected userRepository: UserRepository
   @inject('Mailer')
   protected mailer: Mailer
+
+  /**
+   * `user`'s profile as `viewer` may see it: anyone, unless it is hidden, and
+   * then only its holder. A hidden profile fails exactly as an address with
+   * no account does, so a 404 never says that someone is there and hiding.
+   */
+  public readProfile(
+    user: User,
+    viewer: User | null,
+  ): Effect.Effect<User, NotFoundError> {
+    return this.isVisibleTo(user, viewer)
+      ? Effect.succeed(user)
+      : Effect.fail(new NotFoundError('User does not exist'))
+  }
+
+  public isVisibleTo(user: User, viewer: User | null): boolean {
+    return user.visible !== false || viewer?.id === user.id
+  }
 
   public saveSingle(user: User): RepoEffect<User> {
     return this.userRepository.saveSingle(user)

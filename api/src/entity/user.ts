@@ -10,6 +10,7 @@ import {
   IsOptional,
   IsString,
   Validate,
+  ValidateIf,
 } from 'class-validator'
 import { AbstractBaseEntity } from '@/entity/abstract-base-entity'
 import { PhoneConstraint } from '@/entity/constraint/phone-constraint'
@@ -18,7 +19,6 @@ import { EUserRole } from '@/model/user'
 import { IUser } from '@/model/user'
 import { Project } from '@/entity/project'
 
-// TODO: add profile visibility flag, so user can hide their profile from the public
 /**
  * Three read projections, from narrowest to broadest:
  *
@@ -173,4 +173,25 @@ export class User extends AbstractBaseEntity implements IUser {
   @IsBoolean()
   @IsOptional()
   premium?: boolean | null
+
+  /**
+   * Whether the profile is public. A hidden one answers 404 to everyone but
+   * its holder at GET /user/:address/address, and is left out of other
+   * people's /user/search. Only the holder reads or sets it: nobody else is
+   * shown the profile, so nobody else is told it was hidden.
+   *
+   * It hides what this service serves, and nothing more. A profile published
+   * to IdentityRegistry stays on chain, and stays current, until the holder
+   * withdraws it there. Hiding is off-chain and undone by showing the profile
+   * again; a withdrawal is a chain transaction, and every version published
+   * before it stays readable (SC-A07).
+   *
+   * Absent from an edit leaves it as it is; null is refused, because the
+   * column has no "unknown" state to store it as.
+   */
+  @Expose({ groups: ['me', 'edit'] })
+  @Column('bool', { default: true })
+  @ValidateIf((_user, value) => value !== undefined, { groups: ['edit'] })
+  @IsBoolean({ groups: ['edit'] })
+  visible: boolean
 }

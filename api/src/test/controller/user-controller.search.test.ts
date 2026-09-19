@@ -133,6 +133,43 @@ export class UserControllerSearchTest extends BaseControllerTest {
     }
   }
 
+  /** ID-13: a hidden profile leaves everyone's listing but its holder's. */
+  @test()
+  async search_leavesOutOtherPeoplesHiddenProfiles() {
+    const searcher = await this.userFixture.createUser()
+    const hidden = await this.userFixture.createUser()
+
+    hidden.visible = false
+    await runPromise(
+      this.container.get<UserRepository>('UserRepository').saveSingle(hidden),
+    )
+
+    const find = async (caller: User) => {
+      const res = await userControllerSearch({
+        client: this.apiClient(),
+        headers: this.authHeaders(caller),
+        body: {
+          filter: { id: hidden.id },
+          sort: { createdAt: 'DESC' },
+          page: 0,
+        },
+        throwOnError: true,
+      })
+
+      return res.data
+    }
+
+    expect(await find(searcher)).to.deep.eq([[], 0])
+
+    const [rows, count] = (await find(hidden)) as [
+      Array<{ id: string }>,
+      number,
+    ]
+
+    expect(count).to.be.eq(1)
+    expect(rows[0].id).to.be.eq(hidden.id)
+  }
+
   @test()
   async search_returnsEmptyWhenNoRowsMatch() {
     const user = await this.userFixture.createUser()

@@ -13,7 +13,7 @@ import { App } from '@/app/app'
 import { User } from '@/entity/user'
 import { EUserRole } from '@/model/user'
 import { UserManager } from '@/service/user-manager'
-import { CurrentUser } from '@/decorator/current-user'
+import { CurrentUser, OptionalCurrentUser } from '@/decorator/current-user'
 import { UserRepository } from '@/repository/user-repository'
 import { UserSearchDto } from '@/model/dto/user'
 import { EntityFromParam } from '@/decorator/entity-from-param'
@@ -32,7 +32,8 @@ export class UserController {
 
   /**
    * Any signed-in account can page through every other one here, so rows
-   * use `search`, which carries no email, phone, roles or plan.
+   * use `search`, which carries no email, phone, roles or plan, and hidden
+   * profiles other than the caller's own are left out.
    */
   @OpenAPIExtended({
     summary: 'Search users',
@@ -50,17 +51,24 @@ export class UserController {
   })
   @Authorized([EUserRole.ROLE_USER])
   @Post('/search')
-  public search(@Body() search: UserSearchDto) {
-    return runPromise(this.userRepository.findAndCount(search))
+  public search(
+    @CurrentUser() currentUser: User,
+    @Body() search: UserSearchDto,
+  ) {
+    return runPromise(this.userRepository.findAndCount(search, currentUser))
   }
 
   /**
    * Anonymous, so it answers with the narrowest projection: what the profile
    * page shows (PRODUCT.md 4.7) and nothing more. The caller's own contact
    * details and plan come from GET /auth/status, never from here.
+   *
+   * A hidden profile is 404 unless the token is its holder's.
    */
   @OpenAPIExtended({
-    summary: 'Public profile by wallet address',
+    summary:
+      'Public profile by wallet address; a hidden profile is found only by its holder',
+    optionalAuthorizationHeader: true,
     response: {
       schema: User,
       options: { serializationGroup: 'public' },
@@ -70,8 +78,9 @@ export class UserController {
   public async read(
     @EntityFromParam({ paramName: 'address', lookupField: 'address' })
     user: User,
+    @OptionalCurrentUser() viewer: User | null,
   ): Promise<User> {
-    return user
+    return runPromise(this.userManager.readProfile(user, viewer))
   }
 
   @OpenAPIExtended({

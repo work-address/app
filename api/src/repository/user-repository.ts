@@ -24,7 +24,14 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
     return this.saveSingle(user)
   }
 
-  public findAndCount(search: UserSearchDto): RepoEffect<[User[], number]> {
+  /**
+   * A page of accounts as `caller` may list them: every visible profile, and
+   * the caller's own whether or not it is hidden.
+   */
+  public findAndCount(
+    search: UserSearchDto,
+    caller: User,
+  ): RepoEffect<[User[], number]> {
     const sort = this.filter.buildOrderByCondition('user', search)
     const limit = this.filter.buildLimit(search)
 
@@ -32,6 +39,9 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
       this.getRepo()
         .createQueryBuilder('user')
         .where((qb: SelectQueryBuilder<User>) => {
+          qb.andWhere('(user.visible = true OR user.id = :callerId)', {
+            callerId: caller.id,
+          })
           if (search.filter.id) {
             qb.andWhere('user.id = :id', { id: search.filter.id })
           }

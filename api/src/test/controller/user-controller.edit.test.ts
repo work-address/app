@@ -104,6 +104,82 @@ export class UserControllerEditTest extends BaseControllerTest {
     expect(updated.country).to.be.eq(data.country)
   }
 
+  /**
+   * ID-13: the holder hides and shows their profile through the same edit
+   * as every other field, and an edit that does not mention it leaves it as
+   * it is.
+   */
+  @test()
+  async edit_hidesAndShowsTheProfile() {
+    const user = await this.userFixture.createUser()
+    const headers = {
+      Authorization: this.authenticator.getTokens(user).accessToken,
+    }
+    const stored = async () =>
+      (
+        await runPromise(
+          this.userRepository.findByAddressPublicOrFail(user.address),
+        )
+      ).visible
+
+    expect(await stored()).to.be.eq(true)
+
+    await userControllerEdit({
+      client: this.apiClient(),
+      headers,
+      body: { visible: false },
+      throwOnError: true,
+    })
+    expect(await stored()).to.be.eq(false)
+
+    await userControllerEdit({
+      client: this.apiClient(),
+      headers,
+      body: { title: faker.person.jobTitle() },
+      throwOnError: true,
+    })
+    expect(await stored()).to.be.eq(false)
+
+    await userControllerEdit({
+      client: this.apiClient(),
+      headers,
+      body: { visible: true },
+      throwOnError: true,
+    })
+    expect(await stored()).to.be.eq(true)
+  }
+
+  @test()
+  async edit_refusesAVisibilityThatIsNotABoolean() {
+    const user = await this.userFixture.createUser()
+
+    for (const visible of [null, 'false', 0]) {
+      let error: unknown
+
+      try {
+        await userControllerEdit({
+          client: this.apiClient(),
+          headers: {
+            Authorization: this.authenticator.getTokens(user).accessToken,
+          },
+          body: { visible } as unknown as UserEdit,
+          throwOnError: true,
+        })
+      } catch (e: unknown) {
+        error = e
+      }
+
+      if (!axios.isAxiosError(error)) throw error
+      expect(error.response?.status, String(visible)).to.be.equal(400)
+    }
+
+    const stored = await runPromise(
+      this.userRepository.findByAddressPublicOrFail(user.address),
+    )
+
+    expect(stored.visible).to.be.eq(true)
+  }
+
   @test()
   async validationErrors() {
     const user = await this.userFixture.createUser()

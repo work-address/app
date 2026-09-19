@@ -22,3 +22,21 @@ export function CurrentUser() {
     },
   })
 }
+
+/**
+ * The caller when a valid token names one, and null otherwise - for an
+ * anonymous route whose answer also depends on whether the caller is the
+ * account being read. A missing, malformed or expired token is not an error
+ * here: it simply identifies nobody, exactly as no token does.
+ */
+export function OptionalCurrentUser() {
+  return createParamDecorator({
+    value: (action) => {
+      const authenticator: Authenticator =
+        AppContainer.getContainer().get('Authenticator')
+      const token = action.request.headers['authorization']
+
+      return runPromise(authenticator.getUserFromJwtToken(token))
+    },
+  })
+}

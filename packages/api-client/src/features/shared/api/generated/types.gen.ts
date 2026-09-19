@@ -105,6 +105,7 @@ export type User = {
     country?: string;
     roles?: Array<'ROLE_USER'>;
     premium?: boolean;
+    visible?: boolean;
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
@@ -391,6 +392,7 @@ export type UserEdit = {
     city?: string;
     country?: string;
     roles?: Array<'ROLE_USER'>;
+    visible?: boolean;
 };
 
 /**
@@ -639,6 +641,9 @@ export type UserControllerSearchResponse = UserControllerSearchResponses[keyof U
 
 export type UserControllerReadData = {
     body?: never;
+    headers?: {
+        Authorization?: string;
+    };
     path: {
         address: User;
     };

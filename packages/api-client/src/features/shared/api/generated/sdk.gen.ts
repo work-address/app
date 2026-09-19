@@ -121,7 +121,7 @@ export const userControllerSearch = <ThrowOnError extends boolean = false>(optio
 });
 
 /**
- * Public profile by wallet address
+ * Public profile by wallet address; a hidden profile is found only by its holder
  */
 export const userControllerRead = <ThrowOnError extends boolean = false>(options: Options<UserControllerReadData, ThrowOnError>) => (options.client ?? client).get<UserControllerReadResponses, UserControllerReadErrors, ThrowOnError>({
     responseType: 'json',

@@ -297,6 +297,22 @@ worker/viewer resolution and the public profile lookup by address
 and `sqlListContains`), so a query and `Project.isWorker` always give the
 same answer.
 
+## Who sees a profile
+
+A profile is public unless its holder hides it. `GET /user/:address/address`
+answers anyone with the `public` projection - the address and what the
+profile page shows, never contact details, roles or the plan. A hidden
+profile (`User.visible` false) answers that route with the same 404 as an
+address with no account, to everyone but its holder, so a 404 never says that
+someone is there and hiding; it also drops out of other people's
+`/user/search`. People who share a project still see each other on it: hiding
+a profile does not undo a collaboration.
+
+Hiding is about the pages this service serves and nothing else. It never
+touches a profile published on chain: that stays current until its holder
+withdraws it there, and a withdrawal is itself on chain, where every earlier
+version stays readable. The edit form says so next to the switch.
+
 ## What premium governs
 
 **Collaborators are free.** Adding a worker or a viewer costs nothing and is

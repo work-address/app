@@ -79,28 +79,55 @@ export class UserRepositoryIntegrationTest extends AbstractDatabaseIntegration {
   @test()
   async findAndCount() {
     const user = await this.userFixture.createUser()
+    const caller = await this.userFixture.createUser()
 
     const positiveA = await runPromise(
-      this.userRepository.findAndCount({
-        filter: {
-          id: user.id,
+      this.userRepository.findAndCount(
+        {
+          filter: {
+            id: user.id,
+          },
+          sort: { createdAt: 'ASC' },
+          page: 0,
         },
-        sort: { createdAt: 'ASC' },
-        page: 0,
-      }),
+        caller,
+      ),
     )
     const positiveB = await runPromise(
-      this.userRepository.findAndCount({
-        filter: {
-          id: user.id,
-          role: EUserRole.ROLE_USER,
+      this.userRepository.findAndCount(
+        {
+          filter: {
+            id: user.id,
+            role: EUserRole.ROLE_USER,
+          },
+          sort: { createdAt: 'ASC' },
+          page: 0,
         },
-        sort: { createdAt: 'ASC' },
-        page: 0,
-      }),
+        caller,
+      ),
     )
 
     expect(positiveA[1]).to.be.eq(1)
     expect(positiveB[1]).to.be.eq(1)
+  }
+
+  @test()
+  async findAndCount_listsAHiddenProfileOnlyToItsHolder() {
+    const hidden = await this.userFixture.createUser()
+    const other = await this.userFixture.createUser()
+
+    hidden.visible = false
+    await runPromise(this.userRepository.saveSingle(hidden))
+
+    const byId = (caller: User) =>
+      runPromise(
+        this.userRepository.findAndCount(
+          { filter: { id: hidden.id }, sort: { createdAt: 'ASC' }, page: 0 },
+          caller,
+        ),
+      )
+
+    expect((await byId(other))[1]).to.be.eq(0)
+    expect((await byId(hidden))[1]).to.be.eq(1)
   }
 }

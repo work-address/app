@@ -377,6 +377,97 @@ export class UserControllerReadTest extends BaseControllerTest {
   }
 
   /**
+   * ID-13. A hidden profile answers exactly as an address with no account
+   * does - 404, whoever else is asking - while its holder still opens it. The
+   * holder gets the same public projection anyone gets for a visible one.
+   */
+  @test()
+  async read_hiddenProfileIsNotFoundToAnyoneButItsHolder() {
+    const owner = await this.createUserWithPrivateDetails()
+    const stranger = await this.userFixture.createUser()
+
+    owner.visible = false
+    await runPromise(this.userRepository.saveSingle(owner))
+
+    expect(await this.readStatusFor(owner.address)).to.be.eq(404)
+    expect(await this.readStatusFor(owner.address, stranger)).to.be.eq(404)
+
+    let notFound: unknown
+
+    try {
+      await userControllerRead({
+        client: this.apiClient(),
+        path: { address: owner.address as never },
+        throwOnError: true,
+      })
+    } catch (error: unknown) {
+      notFound = error
+    }
+
+    if (!axios.isAxiosError(notFound)) throw notFound
+    // The same body an unknown address gets, so a 404 says nothing about
+    // whether an account is there.
+    expect(notFound.response?.data).to.deep.eq({
+      name: 'NotFoundError',
+      message: 'User does not exist',
+    })
+
+    const res = await userControllerRead({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(owner).accessToken,
+      },
+      path: { address: owner.address as never },
+      throwOnError: true,
+    })
+
+    expect(res.status).to.be.eq(200)
+    expect(res.data!.name).to.be.eq(owner.name)
+    this.expectPublicProjectionOnly(res.data)
+  }
+
+  @test()
+  async read_showingAHiddenProfileAgainMakesItPublic() {
+    const owner = await this.userFixture.createUser()
+
+    owner.visible = false
+    await runPromise(this.userRepository.saveSingle(owner))
+    expect(await this.readStatusFor(owner.address)).to.be.eq(404)
+
+    await userControllerEdit({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(owner).accessToken,
+      },
+      body: { visible: true },
+      throwOnError: true,
+    })
+
+    expect(await this.readStatusFor(owner.address)).to.be.eq(200)
+  }
+
+  /**
+   * The flag is the holder's alone: visitors never see it, even on a
+   * visible profile, and the holder reads it on their own record.
+   */
+  @test()
+  async read_visibilityIsOnTheHoldersRecordOnly() {
+    const user = await this.userFixture.createUser()
+
+    const res = await userControllerRead({
+      client: this.apiClient(),
+      path: { address: user.address as never },
+      throwOnError: true,
+    })
+
+    expect(res.data).to.not.have.property('visible')
+
+    const status = (await this.readStatus(user)) as { visible?: boolean }
+
+    expect(status.visible).to.be.eq(true)
+  }
+
+  /**
    * A base58 Solana address with both lowercase and uppercase letters, and
    * the same string with one letter's case flipped.
    */
@@ -415,10 +506,20 @@ export class UserControllerReadTest extends BaseControllerTest {
     return runPromise(this.userRepository.saveSingle(user))
   }
 
-  private async readStatusFor(address: string): Promise<number | undefined> {
+  private async readStatusFor(
+    address: string,
+    caller?: User,
+  ): Promise<number | undefined> {
     try {
       const res = await userControllerRead({
         client: this.apiClient(),
+        ...(caller
+          ? {
+              headers: {
+                Authorization: this.authenticator.getTokens(caller).accessToken,
+              },
+            }
+          : {}),
         path: { address: address as never },
         throwOnError: true,
       })
