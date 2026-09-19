@@ -6,6 +6,7 @@ import styled from 'styled-components'
 import { $profile } from '../../model'
 
 import { ProfileViewDescriptionAndSkills } from './profile-view-description-and-skills'
+import { ProfileViewHiddenNotice } from './profile-view-hidden-notice'
 import { ProfileViewLinks } from './profile-view-links'
 import { ProfileViewQrCode } from './profile-view-qr-code'
 
@@ -42,6 +43,7 @@ export const ProfileView = () => {
     return (
       <Root>
         <Stack>
+          <ProfileViewHiddenNotice />
           <ProfileViewQrCode
             onWalletAddressCopy={handleCopyWalletAddress}
             onShareProfile={handleShareProfile}
@@ -58,6 +60,7 @@ export const ProfileView = () => {
 
   return (
     <Root>
+      <HiddenNotice />
       <Grid
         areas={{
           initial: `
@@ -105,6 +108,13 @@ const Root = styled.div`
   ${(p) => p.theme.breakpoints.down('md')} {
     padding: 18px 16px 24px;
   }
+`
+
+/* Lined up with the cards below it: the grid centres a 914px-wide track
+   pair, so the notice takes the same width and centre. */
+const HiddenNotice = styled(ProfileViewHiddenNotice)`
+  max-width: 934px;
+  margin: 0 auto 20px;
 `
 
 const Stack = styled.div`

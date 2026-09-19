@@ -26,7 +26,7 @@ export type ProfileEditFormState = Pick<
   | 'youtube'
   | 'city'
   | 'country'
-> & { skills: string[] }
+> & { skills: string[]; visible: boolean }
 
 type ProfileEditFieldProps<T extends FieldPath<ProfileEditFormState>> = {
   label: string

@@ -97,6 +97,16 @@ const $profile = combine(
   },
 )
 
+/**
+ * The holder looking at their own profile while it is hidden: the page they
+ * see is one nobody else can open, and it says so.
+ */
+const $isOwnProfileHidden = combine(
+  $user,
+  $isAuthenticatedUserProfile,
+  (user, isOwnProfile) => isOwnProfile && user?.visible === false,
+)
+
 const $pending = combine(profileQuery.$pending, $profilePending, (...args) =>
   args.some((arg) => arg),
 )
@@ -144,6 +154,12 @@ sample({
 })
 
 export {
+  PROFILE_VISIBILITY_COPY_KEYS,
+  PROFILE_VISIBILITY_HINT_KEY,
+  profileVisibility,
+  type ProfileVisibility,
+} from './profile-visibility'
+export {
   containsHost,
   normalizeLink,
   SKILLS_SUGGESTIONS,
@@ -151,6 +167,11 @@ export {
   SOCIAL_LINKS,
   type SocialLinkField,
 } from './profile-field'
-export { ProfileGate, $isAuthenticatedUserProfile, $profile }
+export {
+  ProfileGate,
+  $isAuthenticatedUserProfile,
+  $isOwnProfileHidden,
+  $profile,
+}
 
 export { $pending as $profileLoading }

@@ -10,6 +10,7 @@ import { $profileLoading } from '../../model'
 import { ProfileEditDetails } from './profile-edit-details'
 import { type ProfileEditFormState } from './profile-edit-field'
 import { ProfileEditLinks } from './profile-edit-links'
+import { ProfileEditVisibility } from './profile-edit-visibility'
 
 import { $user, saveProfileMutation } from '@/entities/profile'
 import { LocalWalletCard } from '@/features/local-wallet'
@@ -31,6 +32,7 @@ const EMPTY_FORM_VALUES: ProfileEditFormState = {
   youtube: '',
   city: '',
   country: '',
+  visible: true,
 }
 
 export const ProfileEdit = () => {
@@ -132,6 +134,8 @@ export const ProfileEdit = () => {
         youtube: user.youtube || '',
         city: user.city || '',
         country: user.country || '',
+        // A record from before the flag reads as what it was: public.
+        visible: user.visible !== false,
       })
     }
   }, [user, resetForm])
@@ -142,7 +146,7 @@ export const ProfileEdit = () => {
           a submit inside a form would save the profile instead. */}
       <form onSubmit={handleSubmit(onSubmit)}>
         <Grid
-          rows={{ initial: 'auto auto' }}
+          rows={{ initial: 'auto auto auto' }}
           gap={{ initial: '0', md: '20px' }}
         >
           <ProfileEditDetails
@@ -165,6 +169,12 @@ export const ProfileEdit = () => {
             register={register}
             errors={errors}
             setValue={setValue}
+          />
+          <ProfileEditVisibility
+            isDesktop={isDesktop}
+            profileLoading={profileLoading}
+            profileSaving={profileSaving}
+            control={control}
           />
         </Grid>
       </form>
