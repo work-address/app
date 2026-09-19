@@ -20,9 +20,17 @@ const API_ROOT = path.join(__dirname, '../../..')
 @suite()
 export class ExportOpenApiSpecTest {
   private export(output: string): Buffer {
+    // Through `env -u NODE_OPTIONS`: under `pnpm test` nyc preloads itself
+    // into every child through NODE_OPTIONS, re-adding it whatever env is
+    // passed here, and a child transpiled apart from the suite would merge a
+    // second, mismatched map of every file it loads into the coverage report.
+    // Uninstrumented, the export runs as the pnpm script runs it.
     execFileSync(
-      process.execPath,
+      'env',
       [
+        '-u',
+        'NODE_OPTIONS',
+        process.execPath,
         '-r',
         'tsconfig-paths/register',
         '-r',
