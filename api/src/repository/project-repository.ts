@@ -10,6 +10,7 @@ import {
 } from '@/repository/abstract-repository-template'
 import { fromPromise } from '@/service/effect-bridge'
 import { Project } from '@/entity/project'
+import { WalletAddress } from '@/service/wallet-address'
 import { User } from '@/entity/user'
 import AccessException from '@/exception/access-exception'
 import { EProjectState } from '@/model/project'
@@ -230,20 +231,22 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
       }
 
       const users = yield* this.userRepository.findByAddresses(addresses)
+      // Keyed on the canonical form, which is what `isSame` compares: an EVM
+      // entry finds its account whatever its casing, and a Solana entry only
+      // the account spelled exactly that way.
       const usersByAddress = new Map(
-        users.map((u) => [u.address.toLowerCase(), u]),
+        users.map((u) => [WalletAddress.toCanonical(u.address), u]),
       )
+      const resolve = (entries: string[]): User[] =>
+        entries
+          .map((address) =>
+            usersByAddress.get(WalletAddress.toCanonical(address)),
+          )
+          .filter((u): u is User => u !== undefined)
 
       for (const project of projects) {
-        const workerAddresses = project.workerAddresses ?? []
-        const viewerAddresses = project.viewerAddresses ?? []
-
-        project.workers = workerAddresses
-          .map((address) => usersByAddress.get(address.toLowerCase()))
-          .filter((u): u is User => u !== undefined)
-        project.viewers = viewerAddresses
-          .map((address) => usersByAddress.get(address.toLowerCase()))
-          .filter((u): u is User => u !== undefined)
+        project.workers = resolve(project.workerAddresses ?? [])
+        project.viewers = resolve(project.viewerAddresses ?? [])
       }
     })
   }
@@ -259,19 +262,25 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
     ownerAlias: string,
     user: User,
   ): void {
-    const { accessUserId, userAddress } = Project.accessParams(user)
+    const { accessUserId, userAddresses } = Project.accessParams(user)
 
     qb.andWhere(
       new Brackets((subQb) => {
         subQb
           .where(`${ownerAlias}.id = :accessUserId`, { accessUserId })
           .orWhere(
-            `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`,
-            { userAddress },
+            WalletAddress.sqlListContains(
+              'project.workerAddresses',
+              'userAddresses',
+            ),
+            { userAddresses },
           )
           .orWhere(
-            `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.viewerAddresses, '{}')) AS address)`,
-            { userAddress },
+            WalletAddress.sqlListContains(
+              'project.viewerAddresses',
+              'userAddresses',
+            ),
+            { userAddresses },
           )
       }),
     )
@@ -283,15 +292,18 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
     ownerAlias: string,
     user: User,
   ): void {
-    const { accessUserId, userAddress } = Project.accessParams(user)
+    const { accessUserId, userAddresses } = Project.accessParams(user)
 
     qb.andWhere(
       new Brackets((subQb) => {
         subQb
           .where(`${ownerAlias}.id = :accessUserId`, { accessUserId })
           .orWhere(
-            `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`,
-            { userAddress },
+            WalletAddress.sqlListContains(
+              'project.workerAddresses',
+              'userAddresses',
+            ),
+            { userAddresses },
           )
       }),
     )

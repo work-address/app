@@ -22,6 +22,8 @@ import {
 import type { TimeCreateDto as ApiTimeCreateDto } from '@app/api-client'
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
+import { buildSolanaAuthPayload } from '@/test/fixture/solana-auth-fixture'
+import { UserManager } from '@/service/user-manager'
 import { ProjectRepository } from '@/repository/project-repository'
 import { TimeRepository } from '@/repository/time-repository'
 import { EProjectState } from '@/model/project'
@@ -239,6 +241,139 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
 
     if (!axios.isAxiosError(error)) throw error
     expect(error.response?.status).to.be.equal(403)
+  }
+
+  /**
+   * G17 over HTTP: a worker who signed in with Solana - a base58 address,
+   * mixed case - finds the project, records time and reads it back. Someone
+   * whose address differs from theirs only in case is a different account
+   * and gets none of it.
+   */
+  @test
+  async solanaWorker_listsTracksAndReads_caseVariantDoesNot() {
+    const userManager: UserManager = this.container.get('UserManager')
+    const owner = await this.userFixture.createUser()
+    const withAddress = async (address: string): Promise<User> => {
+      const user = await this.userFixture.createUser()
+
+      user.address = address
+
+      return runPromise(userManager.saveSingle(user))
+    }
+    let address = buildSolanaAuthPayload({ nonce: 'g17' }).address
+
+    while (!/[a-z]/.test(address) || !/[A-Z]/.test(address)) {
+      address = buildSolanaAuthPayload({ nonce: 'g17' }).address
+    }
+
+    const lower = address.search(/[a-z]/)
+    const caseVariant = `${address.slice(0, lower)}${address[lower].toUpperCase()}${address.slice(lower + 1)}`
+    const worker = await withAddress(address)
+    const stranger = await withAddress(caseVariant)
+    const project = await this.projectFixture.createPersonal(owner, 60)
+
+    await projectControllerEdit({
+      client: this.apiClient(),
+      path: { id: project.id as never },
+      headers: { Authorization: this.token(owner) },
+      body: {
+        title: project.title,
+        text: project.text,
+        state: project.state,
+        workerAddresses: [address],
+        viewerAddresses: [],
+      },
+      throwOnError: true,
+    })
+
+    const listed = async (user: User) => {
+      const res = await projectControllerSearch({
+        client: this.apiClient(),
+        headers: { Authorization: this.token(user) },
+        body: { filter: {}, sort: { createdAt: 'ASC' }, page: 0 },
+        throwOnError: true,
+      })
+
+      return (res.data[0] as Array<{ id: string }>).map((row) => row.id)
+    }
+    const track = async (user: User) => {
+      const now = moment.utc()
+      const res = await timeControllerCreateOrUpdateMany({
+        client: this.apiClient(),
+        headers: { Authorization: this.token(user) },
+        body: [
+          {
+            fromIndex: 1,
+            toIndex: 2,
+            note: 'solana worker',
+            keyboardKeys: 4,
+            minutesActive: 9,
+            mouseKeys: 2,
+            mouseDistance: 3,
+            fromAt: now.clone().subtract(10, 'minutes').toISOString(),
+            toAt: now.toISOString(),
+            projectId: project.id,
+          },
+        ] as ApiTimeCreateDto[],
+        throwOnError: true,
+      })
+
+      return res.data[0]
+    }
+    const searched = async (user: User) => {
+      const res = await timeControllerSearch({
+        client: this.apiClient(),
+        headers: { Authorization: this.token(user) },
+        body: {
+          filter: { projectId: project.id },
+          sort: { createdAt: 'ASC' },
+          page: 0,
+        },
+        throwOnError: true,
+      })
+
+      return (res.data[0] as Array<{ id: string }>).map((row) => row.id)
+    }
+
+    expect(await listed(worker)).to.include(project.id)
+
+    const stored = await track(worker)
+
+    expect(stored).to.not.have.property('error')
+    expect(stored.id).to.be.a('string')
+    expect(await searched(worker)).to.deep.equal([stored.id])
+
+    const totals = await timeControllerGetTotals({
+      client: this.apiClient(),
+      path: { id: project.id as never },
+      headers: { Authorization: this.token(worker) },
+      throwOnError: true,
+    })
+    const [row] = totals.data as Array<Record<string, unknown>>
+
+    expect(row.projectId).to.equal(project.id)
+    expect(row.minutesActive).to.equal(9)
+
+    // The case variant: not listed, cannot track, reads nothing.
+    expect(await listed(stranger)).to.not.include(project.id)
+    expect((await track(stranger)).error?.name).to.equal('EntityNotFoundError')
+    expect(await searched(stranger)).to.deep.equal([])
+
+    let error: unknown
+
+    try {
+      await timeControllerGetTotals({
+        client: this.apiClient(),
+        path: { id: project.id as never },
+        headers: { Authorization: this.token(stranger) },
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
+    }
+
+    if (!axios.isAxiosError(error)) throw error
+    expect(error.response?.status).to.equal(403)
   }
 
   @test

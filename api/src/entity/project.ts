@@ -149,29 +149,35 @@ export class Project extends AbstractBaseEntity implements IProject {
   }
 
   /**
-   * Mirrors the SQL access filters in ProjectRepository: membership is the
-   * address alone, matched on its canonical form. The owner's plan does not
-   * enter into it - collaborators are free, and premium governs retention
-   * only. Kept in step with those filters deliberately - two different
-   * answers to "who may see this project" is how access bugs start.
+   * Mirrors the SQL access filters in ProjectRepository and TimeRepository:
+   * membership is the address alone, matched with `WalletAddress.isSame`,
+   * whose SQL half (`WalletAddress.sqlListContains`) those filters use. The
+   * owner's plan does not enter into it - collaborators are free, and premium
+   * governs retention only. Kept in step with those filters deliberately -
+   * two different answers to "who may see this project" is how access bugs
+   * start.
    */
   private hasCollaborator(
     addresses: string[] | undefined,
     user: User,
   ): boolean {
-    // Canonical on both sides: the two TON spellings of one account must
-    // compare equal, and lowercasing alone does not achieve that.
-    const target = WalletAddress.toCanonical(user.address ?? '')
-
-    return (addresses ?? []).some(
-      (address) => WalletAddress.toCanonical(address) === target,
+    // Chain-aware on both sides: the two TON spellings of one account must
+    // compare equal, and an EVM address ignores case, but a Solana address
+    // does not - base58 is case-sensitive.
+    return (addresses ?? []).some((address) =>
+      WalletAddress.isSame(address, user.address ?? ''),
     )
   }
 
+  /**
+   * Parameters for the SQL access filters: the user's id for ownership, and
+   * every canonical form a list entry naming them can take
+   * (`WalletAddress.matchForms`) for membership.
+   */
   public static accessParams(user: User) {
     return {
       accessUserId: user.id,
-      userAddress: WalletAddress.toCanonical(user.address),
+      userAddresses: WalletAddress.matchForms(user.address),
     }
   }
 }

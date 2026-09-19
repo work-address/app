@@ -157,6 +157,14 @@ their own record of money owed to them.
 There is no mechanism for granting an outsider access to a single invoice. An
 invoice leaves the product as a PDF, sent by the issuer.
 
+**An address on a list names one account, by that account's chain rules.**
+An EVM address matches whatever its casing, and a TON address in either
+spelling (raw or friendly). A Solana address matches only exactly: base58 is
+case-sensitive, so two addresses that differ only in case are two accounts.
+`WalletAddress.isSame` is the rule. The SQL access filters and the
+worker/viewer resolution use its SQL form (`WalletAddress.sqlListContains`),
+so a query and `Project.isWorker` always give the same answer.
+
 ## What premium governs
 
 **Collaborators are free.** Adding a worker or a viewer costs nothing and is

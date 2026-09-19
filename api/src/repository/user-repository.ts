@@ -10,6 +10,7 @@ import {
 } from '@/repository/abstract-repository-template'
 import { fromPromise } from '@/service/effect-bridge'
 import { UserSearchDto } from '@/model/dto/user'
+import { WalletAddress } from '@/service/wallet-address'
 
 @injectable()
 export class UserRepository extends AbstractRepositoryTemplate<User> {
@@ -96,14 +97,7 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
       return Effect.succeed(0)
     }
 
-    return fromPromise(() =>
-      this.getRepo()
-        .createQueryBuilder('user')
-        .andWhere('lower(user.address) IN (:...addresses)', {
-          addresses: addresses.map((address) => address.toLowerCase()),
-        })
-        .getCount(),
-    )
+    return fromPromise(() => this.whereAddressIsOneOf(addresses).getCount())
   }
 
   public findByAddresses(addresses: string[]): RepoEffect<User[]> {
@@ -111,13 +105,27 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
       return Effect.succeed([])
     }
 
-    return fromPromise(() =>
-      this.getRepo()
-        .createQueryBuilder('user')
-        .where('lower(user.address) IN (:...addresses)', {
-          addresses: addresses.map((address) => address.toLowerCase()),
-        })
-        .getMany(),
-    )
+    return fromPromise(() => this.whereAddressIsOneOf(addresses).getMany())
+  }
+
+  /**
+   * Accounts whose address `WalletAddress.isSame` counts as one of these.
+   *
+   * Not `lower()` on both sides: that merged two Solana accounts whose
+   * base58 addresses differ only in case, so a collaborator entry resolved to
+   * someone it does not name.
+   */
+  private whereAddressIsOneOf(addresses: string[]): SelectQueryBuilder<User> {
+    const forms = [
+      ...new Set(
+        addresses.flatMap((address) => WalletAddress.matchForms(address)),
+      ),
+    ]
+
+    return this.getRepo()
+      .createQueryBuilder('user')
+      .where(`${WalletAddress.canonicalSql('user.address')} = ANY(:forms)`, {
+        forms,
+      })
   }
 }

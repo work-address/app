@@ -11,6 +11,7 @@ import { fromPromise } from '@/service/effect-bridge'
 import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
+import { WalletAddress } from '@/service/wallet-address'
 import { Invoice } from '@/entity/invoice'
 import { EProjectState } from '@/model/project'
 import {
@@ -718,19 +719,25 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     ownerAlias: string,
     user: User,
   ): void {
-    const { accessUserId, userAddress } = Project.accessParams(user)
+    const { accessUserId, userAddresses } = Project.accessParams(user)
 
     qb.andWhere(
       new Brackets((subQb) => {
         subQb
           .where(`${ownerAlias}.id = :accessUserId`, { accessUserId })
           .orWhere(
-            `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`,
-            { userAddress },
+            WalletAddress.sqlListContains(
+              'project.workerAddresses',
+              'userAddresses',
+            ),
+            { userAddresses },
           )
           .orWhere(
-            `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.viewerAddresses, '{}')) AS address)`,
-            { userAddress },
+            WalletAddress.sqlListContains(
+              'project.viewerAddresses',
+              'userAddresses',
+            ),
+            { userAddresses },
           )
       }),
     )
