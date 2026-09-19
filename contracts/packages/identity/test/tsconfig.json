@@ -1,0 +1,13 @@
+{
+  "extends": "../tsconfig.json",
+  "compilerOptions": {
+    "types": ["node", "mocha"],
+    "rootDir": "..",
+    "noEmit": true,
+    "resolveJsonModule": true
+  },
+  "include": ["../src", "."],
+  "ts-node": {
+    "transpileOnly": true
+  }
+}

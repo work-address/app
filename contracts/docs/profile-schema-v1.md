@@ -12,6 +12,9 @@ against a published commitment with this document and an RPC endpoint alone.
   encoding the contract cannot express.
 - **Vectors:** `test/fixtures/profile-schema-v1.vectors.json`, checked by
   `test/profile-schema-v1.test.ts`.
+- **Library:** [`packages/identity`](../packages/identity/README.md)
+  (`@work-address/identity`) builds, exports, presents and verifies exactly
+  this, and reproduces every vector byte for byte.
 - **Not a standard.** The subject is named with `did:pkh`, but no DID method,
   resolver or DID Core conformance is claimed, and a presentation is not a
   Verifiable Credential. It is a person describing themselves: nothing here is

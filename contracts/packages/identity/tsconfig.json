@@ -1,0 +1,16 @@
+{
+  "compilerOptions": {
+    "target": "es2020",
+    "module": "commonjs",
+    "lib": ["es2022", "dom"],
+    "types": [],
+    "strict": true,
+    "declaration": true,
+    "rootDir": "src",
+    "outDir": "dist/cjs",
+    "esModuleInterop": true,
+    "skipLibCheck": true,
+    "forceConsistentCasingInFileNames": true
+  },
+  "include": ["src"]
+}

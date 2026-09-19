@@ -4,10 +4,15 @@
   "private": true,
   "license": "MIT",
   "description": "Open marketplace escrow contract for Work Address. Unaudited; not for real funds.",
+  "workspaces": [
+    "packages/*"
+  ],
   "scripts": {
     "build": "hardhat compile",
     "test": "hardhat test",
     "typecheck": "tsc --noEmit",
+    "test:identity": "npm test -w @work-address/identity",
+    "typecheck:identity": "npm run typecheck -w @work-address/identity",
     "deploy:local": "hardhat run scripts/deploy.ts --network hardhat",
     "node": "hardhat node",
     "deploy:localhost": "hardhat run scripts/deploy.ts --network localhost",
