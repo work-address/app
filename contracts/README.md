@@ -84,9 +84,10 @@ minted and no DID Core conformance is claimed.
 ## Canonical encodings
 
 The escrow stores four hashes it never opens: the allocation and obligation
-ids, `termsHash` and `invoiceCommitment`. A worker who needs to submit an
-invoice while the hosted services are down (SPEC §12), or anyone checking a
-settlement, has to rebuild them byte for byte. This section says how.
+ids, `termsHash` and `invoiceCommitment`. The registry stores a fifth, the
+profile commitment. A worker who needs to submit an invoice while the hosted
+services are down (SPEC §12), or anyone checking a settlement or a profile,
+has to rebuild them byte for byte. This section says how.
 
 ### Funding terms: EIP-712 `Terms`
 
@@ -193,6 +194,27 @@ must reproduce them too. The same test deploys `MarketplaceEscrow` at the
 vectors' escrow address, submits the vector commitments directly and relayed,
 and opens them from chain data. A change that moves one byte of any output is
 a new version with a new domain tag, not an edit.
+
+### Profile commitment (profile schema v1)
+
+`IdentityRegistry` fixes the leaf and commitment formulas. Which field sits in
+which of the 32 leaves, and how each value becomes bytes, is
+[`docs/profile-schema-v1.md`](docs/profile-schema-v1.md). It has slots 0 to 13
+for the fields the public profile shows (PRODUCT.md §4.7: name, title,
+company, bio, hourly rate, skills, city and country, six social handles), each
+read from the app's `User` record. Slots 14 to 31 are reserved and always
+hold fillers. Values are RFC 8785 JCS of the NFC text, and each field has its
+own random salt. Email, phone, roles, premium and the device time zone are
+excluded by rule.
+
+`test/fixtures/profile-schema-v1.vectors.json` holds three cases: full, sparse,
+and non-ASCII input in NFD. They were written by
+`test/fixtures/profile-schema-v1.vectors.py`, a standard-library Python encoder
+that shares no code with the TypeScript here. `test/profile-schema-v1.test.ts`
+recomputes every leaf, root and proof in Solidity, using the registry's own
+typehash and OpenZeppelin's `MerkleProof.verify`. It checks every commitment
+against the deployed registry's `profileCommitment()` and publishes it as
+`Current`. Moving one byte of any output makes a new schema id, not an edit.
 
 ## Develop
 
@@ -344,12 +366,15 @@ variant. How it differs from a standard ERC-20, and what that means here:
 - Uniqueness of an obligation across future contract versions (SC-DEC-03), and
   who publishes and signs the official deployment allowlist — with no on-chain
   reputation, that manifest is the trust root for every settlement receipt.
-- Schema v1's slot table: which public profile fields occupy which of the 32
-  leaves. It must be written fresh rather than reusing the current public
-  profile serialization, which still leaks email, phone and roles (PRODUCT G13).
-- Salt custody, for profile and invoice commitments alike. If the hosted API
-  holds both values and salts, the commitment protects privacy against chain
-  observers but not against us, and the docs must say so. InvoiceCommitment v1
-  fixes the encoding, not who keeps an invoice's salt.
+- Owner confirmation of profile schema v1's adopted defaults
+  ([`docs/profile-schema-v1.md`](docs/profile-schema-v1.md), "Decisions this
+  schema records"). These are: only the PRODUCT.md §4.7 fields, from the app
+  `User` record; per-field salts; JCS values; and profile salts kept on the
+  holder's device, so a hosted service only ever sees the salts of fields the
+  holder shows in public. Changing any of them means a new schema id.
+- Salt custody for invoice commitments. If the hosted API holds both values
+  and salts, the commitment protects privacy against chain observers but not
+  against us, and the docs must say so. InvoiceCommitment v1 fixes the
+  encoding, not who keeps an invoice's salt.
 - Independent review, testnet pilot and a verified, reproducible deployment —
   the SPEC §14 gate, unmet for both contracts.
