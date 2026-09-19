@@ -16,6 +16,7 @@
     "audit:time-author-key": "TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register src/scripts/audit-time-author-key.ts"
   },
   "dependencies": {
+    "@noble/curves": "1.2.0",
     "@sentry/node": "^10.71.0",
     "@ton/core": "^0.63.1",
     "@ton/crypto": "^3.3.0",
@@ -30,6 +31,7 @@
     "cors": "^2.8.6",
     "dotenv": "^17.4.2",
     "effect": "^3.22.1",
+    "ethers": "^6.17.0",
     "express": "^5.2.1",
     "inversify": "^7.11.0",
     "jsonwebtoken": "^9.0.3",

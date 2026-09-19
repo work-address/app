@@ -3,7 +3,15 @@ import tseslint from 'typescript-eslint'
 
 export default tseslint.config(
   {
-    ignores: ['build/**', 'coverage/**', 'dist/**', 'node_modules/**'],
+    // src/vendor holds verbatim copies of other repositories' code, kept in
+    // their own formatting so a diff against the source stays empty.
+    ignores: [
+      'build/**',
+      'coverage/**',
+      'dist/**',
+      'node_modules/**',
+      'src/vendor/**',
+    ],
   },
   ...appBaseConfig,
   {
