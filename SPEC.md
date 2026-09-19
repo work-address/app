@@ -71,6 +71,11 @@ bound on `toAt` would lose that work. This departs from the literal wording
 of REC-09 ("`toAt` at most 5 minutes in the future"); DEC-10, which the rule
 belongs to, is still open, and the values are the development plan's.
 
+A timestamp with no zone is UTC. The desktop tracker sends `fromAt` and
+`toAt` as ISO-8601 text in UTC without an offset (`2026-01-27T12:10:00`), so
+`POST /time` reads them as UTC whatever zone the server runs in; one that
+names its offset or `Z` keeps it.
+
 **An invoice covers exactly one person's hours.** Whoever issued it
 (`Invoice.user`) is the person whose time it bills for — a worker invoices the
 project owner for their own hours, an owner invoices their client for theirs.

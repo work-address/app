@@ -76,8 +76,12 @@ export class TimeManager {
         item: TimeCreateDto,
       ): Effect.Effect<ITimeInsertionResult, unknown> =>
         Effect.gen(this, function* () {
-          const fromAt = moment(item.fromAt).toDate()
-          const toAt = moment(item.toAt).toDate()
+          // UTC, not the server's zone: the desktop tracker sends Qt::ISODate
+          // text in UTC with no zone ("2026-01-27T12:10:00"), and read as
+          // local time every slice moved by the host's offset. A timestamp
+          // that names its offset or Z keeps it.
+          const fromAt = moment.utc(item.fromAt).toDate()
+          const toAt = moment.utc(item.toAt).toDate()
 
           const project =
             yield* this.projectRepository.findProjectForTimeTracking(

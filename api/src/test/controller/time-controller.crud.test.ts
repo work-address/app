@@ -602,6 +602,77 @@ export class TimeControllerCrudTest extends BaseControllerTest {
     expect(times[1].project.id).to.eq(projectA.id)
   }
 
+  /**
+   * The desktop tracker sends each slice as Qt::ISODate text in UTC with no
+   * zone - "2026-01-27T12:10:00" - so a zone-less timestamp is UTC. Read as
+   * the server's local time, every entry moved by the server's offset on any
+   * host not set to UTC: back by nine hours in Tokyo, and forward - into the
+   * future, so refused - in Los Angeles. The process zone is forced here, so
+   * the suite proves it on a UTC host too.
+   */
+  @test
+  async createPersonal_readsAZonelessTimestampAsUtc() {
+    const user = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(user)
+    // One clock read; every slice is derived from it, in whole seconds as
+    // the tracker writes them.
+    const now = moment.utc().startOf('minute')
+    const zoneless = 'YYYY-MM-DDTHH:mm:ss'
+    const previousZone = process.env.TZ
+
+    try {
+      for (const [index, zone] of [
+        'Asia/Tokyo',
+        'America/Los_Angeles',
+      ].entries()) {
+        process.env.TZ = zone
+
+        // Guard the premise: the zone took, so local time is not UTC.
+        expect(now.toDate().getTimezoneOffset(), zone).to.not.eq(0)
+
+        const toAt = now.clone().subtract(20 * index + 10, 'minutes')
+        const fromAt = toAt.clone().subtract(10, 'minutes')
+
+        const res = await timeControllerCreateOrUpdateMany({
+          client: this.apiClient(),
+          headers: {
+            Authorization: this.authenticator.getTokens(user).accessToken,
+          },
+          body: [
+            {
+              fromIndex: index,
+              toIndex: index + 1,
+              note: zone,
+              keyboardKeys: 1,
+              minutesActive: 5,
+              mouseKeys: 1,
+              mouseDistance: 1,
+              fromAt: fromAt.format(zoneless),
+              toAt: toAt.format(zoneless),
+              projectId: project.id,
+            },
+          ] as unknown as ApiTimeCreateDto[],
+          throwOnError: true,
+        })
+
+        expect(res.data[0].error, zone).to.be.undefined
+
+        const stored = await runPromise(
+          this.timeRepository.findOneBy({ where: { id: res.data[0].id } }),
+        )
+
+        expect(stored?.fromAt.toISOString(), zone).to.eq(fromAt.toISOString())
+        expect(stored?.toAt.toISOString(), zone).to.eq(toAt.toISOString())
+      }
+    } finally {
+      if (previousZone === undefined) {
+        delete process.env.TZ
+      } else {
+        process.env.TZ = previousZone
+      }
+    }
+  }
+
   @test()
   async delete_asOwner() {
     const owner = await this.userFixture.createPremiumUser()
