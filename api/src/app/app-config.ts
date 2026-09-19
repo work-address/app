@@ -44,6 +44,14 @@ export class AppConfig {
         .split(',')
         .map((domain) => domain.trim())
         .filter((domain) => domain.length > 0),
+      identity: {
+        chainId: AppConfig.chainId(process.env.APP_IDENTITY_CHAIN_ID),
+        registryAddress: (
+          process.env.APP_IDENTITY_REGISTRY_ADDRESS ?? ''
+        ).trim(),
+        rpcUrl: (process.env.APP_IDENTITY_RPC_URL ?? '').trim(),
+        manifestUrl: (process.env.APP_IDENTITY_MANIFEST_URL ?? '').trim(),
+      },
       database: {
         type: 'postgres',
         host: process.env.APP_DB_HOST as string,
@@ -53,5 +61,22 @@ export class AppConfig {
         database: process.env.APP_DB_NAME as string,
       },
     }
+  }
+
+  /**
+   * A positive decimal chain id, or null. Anything else - empty, zero, a
+   * fraction, text - is null rather than NaN, so a typo disables anchoring
+   * instead of reading some other chain.
+   */
+  private static chainId(raw: string | undefined): number | null {
+    const value = (raw ?? '').trim()
+
+    if (!/^[1-9]\d*$/.test(value)) {
+      return null
+    }
+
+    const chainId = Number(value)
+
+    return Number.isSafeInteger(chainId) ? chainId : null
   }
 }

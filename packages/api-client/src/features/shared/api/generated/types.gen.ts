@@ -677,6 +677,25 @@ export type UserControllerEditResponses = {
 
 export type UserControllerEditResponse = UserControllerEditResponses[keyof UserControllerEditResponses];
 
+export type IdentityControllerConfigData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/identity/config';
+};
+
+export type IdentityControllerConfigResponses = {
+    200: {
+        enabled: boolean;
+        chainId: number | null;
+        registryAddress: string | null;
+        manifestUrl: string | null;
+        schemaIds: Array<number>;
+    };
+};
+
+export type IdentityControllerConfigResponse = IdentityControllerConfigResponses[keyof IdentityControllerConfigResponses];
+
 export type ProjectControllerSearchData = {
     body: ProjectSearchDto;
     path?: never;

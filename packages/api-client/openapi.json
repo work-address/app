@@ -2515,6 +2515,57 @@
         ]
       }
     },
+    "/api/identity/config": {
+      "get": {
+        "operationId": "IdentityController.config",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "enabled",
+                    "chainId",
+                    "registryAddress",
+                    "manifestUrl",
+                    "schemaIds"
+                  ],
+                  "properties": {
+                    "enabled": {
+                      "type": "boolean"
+                    },
+                    "chainId": {
+                      "type": "integer",
+                      "nullable": true
+                    },
+                    "registryAddress": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "manifestUrl": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "schemaIds": {
+                      "type": "array",
+                      "items": {
+                        "type": "integer"
+                      }
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Where this instance anchors profile commitments (public); enabled is false when anchoring is not configured",
+        "tags": [
+          "Identity"
+        ]
+      }
+    },
     "/api/project/search": {
       "post": {
         "operationId": "ProjectController.search",
