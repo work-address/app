@@ -27,6 +27,14 @@ export type Invoice = {
     escrowAddress?: string;
     escrowAllocationId?: string;
     escrowCommitment?: string;
+    settlementKind?: 'MANUAL' | 'ESCROW';
+    escrowState?: 'SUBMITTED' | 'RELEASED' | 'DISPUTED_REFUNDED' | 'EXPIRED_REFUNDED' | 'CANCELLED_REFUNDED';
+    escrowGrossBaseUnits?: string;
+    escrowFeeBaseUnits?: string;
+    escrowNetBaseUnits?: string;
+    escrowRefundedBaseUnits?: string;
+    escrowTxHash?: string;
+    escrowConfirmedAt?: string | string;
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
@@ -501,6 +509,14 @@ export type InvoiceSearch = {
     escrowAddress?: string;
     escrowAllocationId?: string;
     escrowCommitment?: string;
+    settlementKind?: 'MANUAL' | 'ESCROW';
+    escrowState?: 'SUBMITTED' | 'RELEASED' | 'DISPUTED_REFUNDED' | 'EXPIRED_REFUNDED' | 'CANCELLED_REFUNDED';
+    escrowGrossBaseUnits?: string;
+    escrowFeeBaseUnits?: string;
+    escrowNetBaseUnits?: string;
+    escrowRefundedBaseUnits?: string;
+    escrowTxHash?: string;
+    escrowConfirmedAt?: string | string;
 };
 
 export type HelpControllerSwaggerData = {

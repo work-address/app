@@ -1,0 +1,24 @@
+{
+  "note": "Cross-repo contract for the settlement push (app WP-26, web WP-27). This file is duplicated byte-for-byte in work-address/app (api/src/test/fixture) and work-address/web (api/src/test/fixture); they are separate repositories, so each owns a copy. web asserts it PRODUCES these bytes, this header and this signature; app asserts it ACCEPTS them. The body is the allocation's settled state after a confirmed MarketplaceEscrow event, not the event's delta: escrowState is the allocation state (SUBMITTED, RELEASED, DISPUTED_REFUNDED, EXPIRED_REFUNDED or CANCELLED_REFUNDED), grossBaseUnits the bill on chain (0 if none was submitted), feeBaseUnits and netBaseUnits what release paid (0 otherwise), refundedBaseUnits everything returned to the payer so far, all token base units as decimal strings; invoiceCommitment is the bytes32 the allocation holds (null if no bill was submitted); txHash and confirmedAt are the settling transaction (release, dispute, expiry or cancellation) and its block time in unix seconds (both null while SUBMITTED). issuedAt (unix seconds) and nonce are the replay guard, as for the hire. The HMAC-SHA256 hex signature over the exact serialised bytes goes in the header named below, with the shared entitlement secret. Every key is always present, in this order. The example is the release of the first invoice-commitment.v1.json vector: 30 USDT gross, 5% fee. Change both copies in the same pull request or not at all.",
+  "secret": "shared-contract-fixture-secret",
+  "path": "/api/internal/marketplace/settlement",
+  "header": "X-Marketplace-Settlement-Signature",
+  "body": {
+    "invoiceId": "4e61ff62-5642-478f-901b-f7be07550426",
+    "chainId": 31337,
+    "escrow": "0x8bbc3514477d75ec797bbe4e19d7961660bb849c",
+    "allocationId": "0x7d2a37f82ee0232848aace4b0c421193fa05c3f906d79e01f0ccf4dfd1769d1e",
+    "invoiceCommitment": "0x5c1512f0855a790e948e87fc260f374ad20e0139cf2ac1e3d9eec103c3e86617",
+    "escrowState": "RELEASED",
+    "grossBaseUnits": "30000000",
+    "feeBaseUnits": "1500000",
+    "netBaseUnits": "28500000",
+    "refundedBaseUnits": "0",
+    "txHash": "0x563ce726fe6c175a76c81392b24667cd747b87544b74f0e51bc0cbc15fcc02aa",
+    "confirmedAt": 1788865200,
+    "issuedAt": 1788865290,
+    "nonce": "5b0e9f4c-2d7a-4c61-9e3b-8a4f1d6c7e20"
+  },
+  "serialised": "{\"invoiceId\":\"4e61ff62-5642-478f-901b-f7be07550426\",\"chainId\":31337,\"escrow\":\"0x8bbc3514477d75ec797bbe4e19d7961660bb849c\",\"allocationId\":\"0x7d2a37f82ee0232848aace4b0c421193fa05c3f906d79e01f0ccf4dfd1769d1e\",\"invoiceCommitment\":\"0x5c1512f0855a790e948e87fc260f374ad20e0139cf2ac1e3d9eec103c3e86617\",\"escrowState\":\"RELEASED\",\"grossBaseUnits\":\"30000000\",\"feeBaseUnits\":\"1500000\",\"netBaseUnits\":\"28500000\",\"refundedBaseUnits\":\"0\",\"txHash\":\"0x563ce726fe6c175a76c81392b24667cd747b87544b74f0e51bc0cbc15fcc02aa\",\"confirmedAt\":1788865200,\"issuedAt\":1788865290,\"nonce\":\"5b0e9f4c-2d7a-4c61-9e3b-8a4f1d6c7e20\"}",
+  "signature": "21ac18d9068a06b2388f4fb65606dd8159c013d84095edc3bde9f6de29db1254"
+}

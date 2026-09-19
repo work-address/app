@@ -3,6 +3,31 @@ export enum EInvoiceState {
   REQUESTED = 'Requested',
 }
 
+/**
+ * How a paid (or refunded) invoice was settled: marked by its issuer, or
+ * reported from a confirmed MarketplaceEscrow outcome.
+ */
+export enum EInvoiceSettlementKind {
+  MANUAL = 'MANUAL',
+  ESCROW = 'ESCROW',
+}
+
+/**
+ * Where the escrow allocation an invoice is bound to stands, as its confirmed
+ * events leave it - MarketplaceEscrow's own states, named as the marketplace
+ * projection names them. SUBMITTED awaits release or dispute; every other
+ * value is final. RELEASED paid the bill; DISPUTED_REFUNDED returned it to
+ * the payer; EXPIRED_REFUNDED and CANCELLED_REFUNDED returned the budget
+ * before any bill was submitted.
+ */
+export enum EInvoiceEscrowState {
+  SUBMITTED = 'SUBMITTED',
+  RELEASED = 'RELEASED',
+  DISPUTED_REFUNDED = 'DISPUTED_REFUNDED',
+  EXPIRED_REFUNDED = 'EXPIRED_REFUNDED',
+  CANCELLED_REFUNDED = 'CANCELLED_REFUNDED',
+}
+
 /** The only currency an invoice is issued in, named so the record says so. */
 export enum EInvoiceCurrency {
   USD = 'USD',
@@ -120,4 +145,37 @@ export interface IInvoiceEscrowSubmission extends IInvoiceCommitmentBinding {
   amountBaseUnits: string
   invoiceCommitment: string
   salt: string
+}
+
+/**
+ * A confirmed escrow outcome for the allocation an invoice is bound to, as
+ * the marketplace pushes it: the allocation's state and totals after the
+ * event, not the event's own delta, so re-applying it changes nothing.
+ *
+ * Amounts are token base units as decimal strings. `gross` is what the bill
+ * put on chain, `fee` and `net` what release paid the fee recipient and the
+ * payee (0 until released), `refunded` everything returned to the payer from
+ * the allocation so far. `txHash` is the transaction that settled it -
+ * release, dispute, expiry or cancellation - and `confirmedAt` that block's
+ * time in unix seconds; both null while SUBMITTED.
+ */
+export interface IInvoiceEscrowSettlement extends IInvoiceCommitmentBinding {
+  invoiceId: string
+  invoiceCommitment: string | null
+  escrowState: EInvoiceEscrowState
+  grossBaseUnits: string
+  feeBaseUnits: string
+  netBaseUnits: string
+  refundedBaseUnits: string
+  txHash: string | null
+  confirmedAt: number | null
+}
+
+/** What recording a settlement push did. */
+export interface IInvoiceEscrowSettlementResult {
+  /** False when the push was one already recorded, or older than it. */
+  applied: boolean
+  invoiceId: string
+  state: EInvoiceState
+  escrowState: EInvoiceEscrowState
 }

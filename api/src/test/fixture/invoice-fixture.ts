@@ -3,6 +3,8 @@ import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
 
 import { InvoiceRepository } from '@/repository/invoice-repository'
+import { ProjectRepository } from '@/repository/project-repository'
+import { UserRepository } from '@/repository/user-repository'
 import { Invoice } from '@/entity/invoice'
 import {
   EInvoiceCurrency,
@@ -10,6 +12,8 @@ import {
   EInvoiceState,
   IInvoiceRecord,
 } from '@/model/invoice'
+import { EProjectState } from '@/model/project'
+import { EUserRole } from '@/model/user'
 import { InvoiceRecord } from '@/service/invoice-record'
 import { WalletAddress } from '@/service/wallet-address'
 import { runPromise } from '@/service/effect-bridge'
@@ -18,6 +22,10 @@ import { runPromise } from '@/service/effect-bridge'
 export class InvoiceFixture {
   @inject('InvoiceRepository')
   protected invoiceRepository: InvoiceRepository
+  @inject('ProjectRepository')
+  protected projectRepository: ProjectRepository
+  @inject('UserRepository')
+  protected userRepository: UserRepository
 
   /** `amountCents` - whole cents, matching the entity. */
   public create(
@@ -111,5 +119,69 @@ export class InvoiceFixture {
     invoice.paidAt = null
 
     return runPromise(this.invoiceRepository.saveSingle(invoice))
+  }
+
+  /**
+   * The invoice whose record is `record` - a published vector's - with the
+   * issuer, owner and project its ids and addresses name, all created on
+   * first use and reused after: the ids are fixed, and the test database
+   * lives for the whole run, so every suite asking for one vector shares it.
+   */
+  public async ensureForRecord(record: IInvoiceRecord): Promise<Invoice> {
+    const existing = await runPromise(
+      this.invoiceRepository.findOneBy({
+        where: { id: record.invoiceId },
+        relations: { project: true, user: true },
+      }),
+    )
+
+    if (existing) {
+      return existing
+    }
+
+    const issuer =
+      (await runPromise(
+        this.userRepository.findOneBy({ where: { id: record.issuerId } }),
+      )) ?? (await this.userAt(record.issuerAddress, record.issuerId))
+    const project =
+      (await runPromise(
+        this.projectRepository.findOneBy({ where: { id: record.projectId } }),
+      )) ?? (await this.projectFor(record, issuer))
+
+    return this.createFromRecord(record, project, issuer)
+  }
+
+  private userAt(address: string, id?: string): Promise<User> {
+    const user = new User()
+
+    if (id) {
+      user.id = id
+    }
+
+    user.address = address
+    user.tz = 'UTC'
+    user.roles = [EUserRole.ROLE_USER]
+
+    return runPromise(this.userRepository.saveSingle(user))
+  }
+
+  private async projectFor(
+    record: IInvoiceRecord,
+    issuer: User,
+  ): Promise<Project> {
+    const project = new Project()
+
+    project.id = record.projectId
+    project.title = 'Invoice commitment vector'
+    project.text = 'Invoice commitment vector'
+    project.user = await this.userAt(record.ownerAddress)
+    project.rateHour = record.rateHourCents / 100
+    project.state = EProjectState.ACTIVE
+    project.workerAddresses = [issuer.address]
+    project.viewerAddresses = []
+    project.trackScreenshots = false
+    project.trackProcesses = false
+
+    return runPromise(this.projectRepository.saveSingle(project))
   }
 }

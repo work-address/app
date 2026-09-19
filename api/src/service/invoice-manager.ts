@@ -14,9 +14,13 @@ import { TimeRepository } from '@/repository/time-repository'
 import { User } from '@/entity/user'
 import {
   EInvoiceCurrency,
+  EInvoiceEscrowState,
+  EInvoiceSettlementKind,
   EInvoiceSnapshotVersion,
   EInvoiceState,
   IInvoiceCommitmentBinding,
+  IInvoiceEscrowSettlement,
+  IInvoiceEscrowSettlementResult,
   IInvoiceEscrowSubmission,
   IInvoiceLine,
   IInvoiceRecord,
@@ -569,6 +573,9 @@ export class InvoiceManager {
    * Only the issuer may do this. The person owed the money is the one who
    * knows whether it arrived, and letting the payer self-certify would make
    * the record worth less than the wallet history it is meant to summarise.
+   *
+   * Not on an invoice submitted to escrow (409): there the chain settles it,
+   * and a hand mark could call paid what the escrow refunded.
    */
   public markPaid(invoice: Invoice, actor: User): RepoEffect<Invoice> {
     return this.setPaid(invoice, actor, true)
@@ -602,8 +609,19 @@ export class InvoiceManager {
             .within(manager)
             .findOneForUpdate(invoice)
 
+          // Read from the locked row: a submission that bound the invoice
+          // after this request loaded it must still stop the hand mark.
+          if (InvoiceEscrow.isBound(current)) {
+            return yield* Effect.fail(
+              new InvoiceEscrowException(
+                `Invoice ${current.id} is submitted to escrow allocation ${current.escrowAllocationId}; only the escrow's confirmed outcome settles it`,
+              ),
+            )
+          }
+
           invoice.state = current.state
           invoice.paidAt = current.paidAt
+          invoice.settlementKind = current.settlementKind
 
           if ((invoice.state === EInvoiceState.PAID) === isPaid) {
             return invoice
@@ -615,6 +633,7 @@ export class InvoiceManager {
 
           invoice.state = isPaid ? EInvoiceState.PAID : EInvoiceState.REQUESTED
           invoice.paidAt = isPaid ? new Date() : null
+          invoice.settlementKind = isPaid ? EInvoiceSettlementKind.MANUAL : null
 
           return yield* this.invoiceRepository
             .within(manager)
@@ -622,6 +641,137 @@ export class InvoiceManager {
         }),
       )
     })
+  }
+
+  /**
+   * Records a confirmed escrow outcome on the invoice its allocation bills -
+   * the one path to PAID that is not the issuer's hand (SPEC.md).
+   *
+   * The push must describe what MarketplaceEscrow can report (400
+   * otherwise), for an invoice this instance knows and bound to exactly that
+   * allocation, whose on-chain bill is this invoice's commitment (409
+   * otherwise). It carries the allocation's absolute state, so it is
+   * idempotent: the same push again, or one a later push has overtaken,
+   * changes nothing and answers `applied: false`.
+   *
+   * A release makes the invoice PAID at the block's time and marks its hours
+   * paid, in one transaction with the invoice row locked. A refund records
+   * the refund and leaves the invoice and its hours unpaid; being bound, it
+   * cannot be marked paid by hand either.
+   */
+  public recordEscrowSettlement(
+    settlement: IInvoiceEscrowSettlement,
+  ): RepoEffect<IInvoiceEscrowSettlementResult> {
+    return Effect.gen(this, function* () {
+      const problem = InvoiceEscrow.settlementProblem(settlement)
+
+      if (problem) {
+        return yield* Effect.fail(new BadRequestError(problem))
+      }
+
+      const found = yield* this.invoiceRepository.findOneBy({
+        where: { id: settlement.invoiceId },
+      })
+
+      if (!found) {
+        return yield* Effect.fail(
+          new InvoiceEscrowException(
+            `Invoice ${settlement.invoiceId} is not known to this instance`,
+          ),
+        )
+      }
+
+      return yield* this.unitOfWork.run((manager) =>
+        Effect.gen(this, function* () {
+          const current = yield* this.invoiceRepository
+            .within(manager)
+            .findOneForUpdate(found)
+
+          if (!InvoiceEscrow.isBound(current)) {
+            return yield* Effect.fail(
+              new InvoiceEscrowException(
+                `Invoice ${current.id} was never submitted to escrow`,
+              ),
+            )
+          }
+
+          if (!InvoiceEscrow.isBoundTo(current, settlement)) {
+            return yield* Effect.fail(
+              new InvoiceEscrowException(
+                `Invoice ${current.id} is submitted to allocation ${current.escrowAllocationId}, not ${settlement.allocationId.toLowerCase()}`,
+              ),
+            )
+          }
+
+          if (
+            settlement.invoiceCommitment !== null &&
+            settlement.invoiceCommitment.toLowerCase() !==
+              current.escrowCommitment
+          ) {
+            return yield* Effect.fail(
+              new InvoiceEscrowException(
+                `Allocation ${current.escrowAllocationId} holds a bill that is not invoice ${current.id}'s commitment`,
+              ),
+            )
+          }
+
+          const progress = InvoiceEscrow.progress(current, settlement)
+
+          if (progress.outcome === 'conflict') {
+            return yield* Effect.fail(
+              new InvoiceEscrowException(progress.reason),
+            )
+          }
+
+          if (progress.outcome !== 'apply') {
+            return InvoiceManager.settlementResult(current, false)
+          }
+
+          const releasing =
+            settlement.escrowState === EInvoiceEscrowState.RELEASED &&
+            current.escrowState !== EInvoiceEscrowState.RELEASED
+
+          current.settlementKind = EInvoiceSettlementKind.ESCROW
+          current.escrowState = settlement.escrowState
+          current.escrowGrossBaseUnits = settlement.grossBaseUnits
+          current.escrowFeeBaseUnits = settlement.feeBaseUnits
+          current.escrowNetBaseUnits = settlement.netBaseUnits
+          current.escrowRefundedBaseUnits = settlement.refundedBaseUnits
+          current.escrowTxHash = settlement.txHash?.toLowerCase() ?? null
+          current.escrowConfirmedAt =
+            settlement.confirmedAt === null
+              ? null
+              : new Date(settlement.confirmedAt * 1000)
+
+          if (releasing) {
+            yield* this.timeRepository
+              .within(manager)
+              .setPaidForInvoice(current, true)
+
+            current.state = EInvoiceState.PAID
+            current.paidAt = current.escrowConfirmedAt
+          }
+
+          const saved = yield* this.invoiceRepository
+            .within(manager)
+            .saveSingle(current)
+
+          return InvoiceManager.settlementResult(saved, true)
+        }),
+      )
+    })
+  }
+
+  private static settlementResult(
+    invoice: Invoice,
+    applied: boolean,
+  ): IInvoiceEscrowSettlementResult {
+    return {
+      applied,
+      invoiceId: invoice.id,
+      state: invoice.state,
+      escrowState: invoice.escrowState as EInvoiceEscrowState,
+    }
   }
 
   private assertIssuer(invoice: Invoice, actor: User): void {

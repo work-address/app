@@ -13,21 +13,17 @@ import {
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { Invoice } from '@/entity/invoice'
-import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
 import {
   EInvoiceState,
   IInvoiceCommitmentBinding,
   IInvoiceRecord,
 } from '@/model/invoice'
-import { EUserRole } from '@/model/user'
-import { EProjectState } from '@/model/project'
 import { InvoiceCommitment } from '@/service/invoice-commitment'
 import { InvoiceEscrow } from '@/service/invoice-escrow'
 import { InvoiceRecord } from '@/service/invoice-record'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { ProjectRepository } from '@/repository/project-repository'
-import { UserRepository } from '@/repository/user-repository'
 import { runPromise } from '@/service/effect-bridge'
 
 type Vector = IInvoiceCommitmentBinding & {
@@ -47,7 +43,6 @@ type Vector = IInvoiceCommitmentBinding & {
 export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
   protected invoiceRepository: InvoiceRepository
   protected projectRepository: ProjectRepository
-  protected userRepository: UserRepository
   protected invoiceRecord: InvoiceRecord
   protected invoiceCommitment: InvoiceCommitment
 
@@ -56,7 +51,6 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
 
     this.invoiceRepository = this.container.get('InvoiceRepository')
     this.projectRepository = this.container.get('ProjectRepository')
-    this.userRepository = this.container.get('UserRepository')
     this.invoiceRecord = this.container.get('InvoiceRecord')
     this.invoiceCommitment = this.container.get('InvoiceCommitment')
   }
@@ -141,67 +135,6 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
   }
 
   /**
-   * The users, project and invoice whose InvoiceRecord v1 is exactly the
-   * vector's record: its ids, its addresses, its snapshot.
-   */
-  private async seedVector(vector: Vector): Promise<{
-    issuer: User
-    invoice: Invoice
-  }> {
-    const { record } = vector
-    const issuer =
-      (await runPromise(
-        this.userRepository.findOneBy({ where: { id: record.issuerId } }),
-      )) ?? (await this.vectorUser(record.issuerAddress, record.issuerId))
-    const project =
-      (await runPromise(
-        this.projectRepository.findOneBy({ where: { id: record.projectId } }),
-      )) ?? (await this.vectorProject(record, issuer))
-    const invoice = await this.invoiceFixture.createFromRecord(
-      record,
-      project,
-      issuer,
-    )
-
-    return { issuer, invoice }
-  }
-
-  private vectorUser(address: string, id?: string): Promise<User> {
-    const user = new User()
-
-    if (id) {
-      user.id = id
-    }
-
-    user.address = address
-    user.tz = 'UTC'
-    user.roles = [EUserRole.ROLE_USER]
-
-    return runPromise(this.userRepository.saveSingle(user))
-  }
-
-  private async vectorProject(
-    record: IInvoiceRecord,
-    issuer: User,
-  ): Promise<Project> {
-    const owner = await this.vectorUser(record.ownerAddress)
-    const project = new Project()
-
-    project.id = record.projectId
-    project.title = 'Vector project'
-    project.text = 'Vector project'
-    project.user = owner
-    project.rateHour = record.rateHourCents / 100
-    project.state = EProjectState.ACTIVE
-    project.workerAddresses = [issuer.address]
-    project.viewerAddresses = []
-    project.trackScreenshots = false
-    project.trackProcesses = false
-
-    return runPromise(this.projectRepository.saveSingle(project))
-  }
-
-  /**
    * The acceptance case: an invoice whose record is a WP-17 vector, submitted
    * to the vector's allocation under the vector's salt, yields exactly the
    * vector's commitment and on-chain amount - the bytes the contracts
@@ -223,7 +156,8 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
     expect(vectors).to.have.length.greaterThan(1)
 
     for (const vector of vectors) {
-      const { issuer, invoice } = await this.seedVector(vector)
+      const invoice = await this.invoiceFixture.ensureForRecord(vector.record)
+      const issuer = invoice.user!
 
       InvoiceEscrow.drawSalt = () => vector.salt
 

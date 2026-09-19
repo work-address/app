@@ -124,6 +124,50 @@
           "escrowCommitment": {
             "type": "string"
           },
+          "settlementKind": {
+            "enum": [
+              "MANUAL",
+              "ESCROW"
+            ],
+            "type": "string"
+          },
+          "escrowState": {
+            "enum": [
+              "SUBMITTED",
+              "RELEASED",
+              "DISPUTED_REFUNDED",
+              "EXPIRED_REFUNDED",
+              "CANCELLED_REFUNDED"
+            ],
+            "type": "string"
+          },
+          "escrowGrossBaseUnits": {
+            "type": "string"
+          },
+          "escrowFeeBaseUnits": {
+            "type": "string"
+          },
+          "escrowNetBaseUnits": {
+            "type": "string"
+          },
+          "escrowRefundedBaseUnits": {
+            "type": "string"
+          },
+          "escrowTxHash": {
+            "type": "string"
+          },
+          "escrowConfirmedAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
           "id": {
             "minLength": 1,
             "type": "string",
@@ -1963,6 +2007,50 @@
           },
           "escrowCommitment": {
             "type": "string"
+          },
+          "settlementKind": {
+            "enum": [
+              "MANUAL",
+              "ESCROW"
+            ],
+            "type": "string"
+          },
+          "escrowState": {
+            "enum": [
+              "SUBMITTED",
+              "RELEASED",
+              "DISPUTED_REFUNDED",
+              "EXPIRED_REFUNDED",
+              "CANCELLED_REFUNDED"
+            ],
+            "type": "string"
+          },
+          "escrowGrossBaseUnits": {
+            "type": "string"
+          },
+          "escrowFeeBaseUnits": {
+            "type": "string"
+          },
+          "escrowNetBaseUnits": {
+            "type": "string"
+          },
+          "escrowRefundedBaseUnits": {
+            "type": "string"
+          },
+          "escrowTxHash": {
+            "type": "string"
+          },
+          "escrowConfirmedAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
           }
         }
       }

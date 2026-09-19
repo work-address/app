@@ -78,7 +78,8 @@ One invoice never sums several contributors together, because the resulting
 record would name nobody and leave the contributors with nothing of their own.
 
 **`Time.isPaid` is owned by `Invoice`.** `InvoiceManager.markPaid` sets it and
-`markUnpaid` clears it, on exactly the entries linked to that invoice. An
+`markUnpaid` clears it, on exactly the entries linked to that invoice; for an
+invoice submitted to escrow, a confirmed release sets it instead (see below). An
 author may also set it by hand — one entry in the time dialog
 (`PUT /time/:id`), or in bulk through `POST /time/paid` and `/time/unpaid` —
 but only on entries no invoice covers. A request that would change it on an
@@ -90,7 +91,8 @@ This is what stops the work record and the money record from drifting.
 
 **Only the issuer may mark an invoice paid.** The person owed the money is the
 one who knows whether it arrived; letting the payer self-certify would make the
-record worth less than the wallet history it summarises.
+record worth less than the wallet history it summarises. An invoice submitted
+to escrow is not marked by anyone: the chain's confirmed outcome settles it.
 
 **An hour is billed once.** Every way of raising an invoice — a selection, a
 range, or everything outstanding — considers only time that is unpaid *and*
@@ -190,6 +192,47 @@ record it commits to and can open every commitment the hosted service drew.
 An issuer who needs the operator unable to open their commitment has to draw
 and keep the salt themselves and compute the commitment outside the hosted
 service, from the exported record and the published encoding.
+
+**An escrow-bound invoice is settled by the chain, not by hand.** Once an
+invoice is bound to an allocation, `POST /invoice/:id/paid` and `/unpaid`
+refuse it (409): a hand mark could call paid a bill the escrow refunded, or
+unpaid one it released. The marketplace's escrow indexer (`web/api`) reports
+each confirmed outcome of the allocation to
+`POST /api/internal/marketplace/settlement`, a service-to-service route
+authenticated exactly like the marketplace hire — HMAC with the shared secret
+over the body, a replay window and a one-time nonce — under its own header
+(`X-Marketplace-Settlement-Signature`), and left out of the public API spec
+and both generated clients. The push names the invoice and carries the
+allocation's state after the event, not the event's delta: `escrowState`
+(MarketplaceEscrow's own states: `SUBMITTED`, `RELEASED`,
+`DISPUTED_REFUNDED`, `EXPIRED_REFUNDED`, `CANCELLED_REFUNDED`), the bill's
+gross, the fee and net release paid, everything refunded to the payer, the
+settling transaction and its block time. It is accepted only for an invoice
+bound to exactly that allocation whose on-chain commitment is the invoice's
+own (409 otherwise), and only if the escrow's arithmetic could have produced
+it — release pays gross exactly as net plus fee, a dispute refunds at least
+the bill, nothing else pays out (400 otherwise). Because it is absolute, it is
+idempotent: the same outcome again, or one a later push has overtaken, changes
+nothing; a second final state, or the same state settled differently, is a
+409.
+
+- A **release** makes the invoice `PAID` with `paidAt` the release block's
+  time, and marks every entry it bills `isPaid`, in one transaction with the
+  invoice row locked — the same cascade as a hand mark, so `Time.isPaid` keeps
+  one owner.
+- A **dispute refund** records the refund and leaves the invoice and its
+  entries unpaid. Nobody can mark it paid by hand afterwards: the payer
+  disputed the bill on chain, and the record keeps saying so.
+- The record is columns on `Invoice` — `settlementKind` (`MANUAL` when the
+  issuer marked it, `ESCROW` once a confirmed outcome is recorded),
+  `escrowState`, `escrowGrossBaseUnits`, `escrowFeeBaseUnits`,
+  `escrowNetBaseUnits`, `escrowRefundedBaseUnits` (token base units, exact
+  integers), `escrowTxHash` and `escrowConfirmedAt` — read by the issuer and
+  the owner like the rest of the invoice. There is **no Settlement or
+  Allocation entity** in this service: how an invoice was paid is part of the
+  money record, and the allocation itself is the marketplace's and the
+  chain's. This service never holds or moves the funds; it records what the
+  chain confirmed.
 
 **Retention never destroys an invoice's evidence.** The free-tier purge skips
 entries covered by an invoice from the same issuer, so a financial record

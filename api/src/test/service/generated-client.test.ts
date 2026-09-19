@@ -26,7 +26,9 @@ export class GeneratedClientTest {
       const source = fs.readFileSync(path.join(REPO_ROOT, file), 'utf8')
 
       expect(source, file).to.not.contain('/api/internal/')
-      expect(source, file).to.not.match(/EntitlementPush|MarketplaceHire/)
+      expect(source, file).to.not.match(
+        /EntitlementPush|MarketplaceHire|MarketplaceSettlement/,
+      )
     }
   }
 }

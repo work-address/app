@@ -9,7 +9,8 @@ import { applyBearerAuthSecurity } from '@/decorator/openapi/apply-bearer-auth-s
 
 /**
  * Where the service-to-service controllers live (`@JsonController('/internal')`
- * under the `/api` prefix): the entitlement push and the marketplace hire.
+ * under the `/api` prefix): the entitlement push, the marketplace hire and
+ * the marketplace settlement.
  */
 const INTERNAL_PATH_PREFIX = '/api/internal/'
 

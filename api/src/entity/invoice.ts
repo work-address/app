@@ -17,6 +17,8 @@ import {
 } from 'class-validator'
 import {
   EInvoiceCurrency,
+  EInvoiceEscrowState,
+  EInvoiceSettlementKind,
   EInvoiceSnapshotVersion,
   EInvoiceState,
   IInvoiceLine,
@@ -167,8 +169,10 @@ export class Invoice extends AbstractBaseEntity {
   state: EInvoiceState
 
   /**
-   * When the issuer recorded payment. Set alongside the PAID state and cleared
-   * when it is reverted, so a mistaken mark leaves no stale timestamp.
+   * When the invoice was paid: when the issuer recorded payment, or - for an
+   * invoice settled through escrow - the time of the block that released it.
+   * Set alongside the PAID state and cleared when a hand mark is reverted, so
+   * a mistaken mark leaves no stale timestamp.
    */
   @Expose({ groups: ['search'] })
   @Column('timestamptz', { nullable: true })
@@ -230,6 +234,75 @@ export class Invoice extends AbstractBaseEntity {
    */
   @Column('text', { nullable: true })
   escrowSalt?: string | null
+
+  /**
+   * How the invoice was settled: MANUAL when its issuer marked it paid,
+   * ESCROW once a confirmed escrow outcome was recorded on it (paid by a
+   * release, or refunded). Null while unsettled - and on invoices marked paid
+   * before the kind was recorded, which were all manual.
+   */
+  @Expose({ groups: ['search'] })
+  @Column('text', { nullable: true })
+  @IsEnum(EInvoiceSettlementKind)
+  @IsOptional()
+  settlementKind?: EInvoiceSettlementKind | null
+
+  /*
+   * The confirmed outcome of the bound allocation, as the marketplace's escrow
+   * indexer pushes it (POST /api/internal/marketplace/settlement): its state
+   * and totals, in token base units. Written only by that push, never by a
+   * person, and only forward - a push older than what is recorded changes
+   * nothing. Columns rather than an entity, for the same reason as the
+   * binding: how the invoice was settled is part of the invoice.
+   */
+
+  @Expose({ groups: ['search'] })
+  @Column('text', { nullable: true })
+  @IsEnum(EInvoiceEscrowState)
+  @IsOptional()
+  escrowState?: EInvoiceEscrowState | null
+
+  /** What the bill put on chain. */
+  @Expose({ groups: ['search'] })
+  @Column('numeric', { precision: 78, scale: 0, nullable: true })
+  @IsString()
+  @IsOptional()
+  escrowGrossBaseUnits?: string | null
+
+  /** The platform fee release paid (5% of gross); 0 unless released. */
+  @Expose({ groups: ['search'] })
+  @Column('numeric', { precision: 78, scale: 0, nullable: true })
+  @IsString()
+  @IsOptional()
+  escrowFeeBaseUnits?: string | null
+
+  /** What release paid the payee (gross less the fee); 0 unless released. */
+  @Expose({ groups: ['search'] })
+  @Column('numeric', { precision: 78, scale: 0, nullable: true })
+  @IsString()
+  @IsOptional()
+  escrowNetBaseUnits?: string | null
+
+  /** Everything the allocation returned to the payer. */
+  @Expose({ groups: ['search'] })
+  @Column('numeric', { precision: 78, scale: 0, nullable: true })
+  @IsString()
+  @IsOptional()
+  escrowRefundedBaseUnits?: string | null
+
+  /** The settling transaction: release, dispute, expiry or cancellation. */
+  @Expose({ groups: ['search'] })
+  @Column('text', { nullable: true })
+  @IsString()
+  @IsOptional()
+  escrowTxHash?: string | null
+
+  /** The settling block's time. A release sets `paidAt` to it. */
+  @Expose({ groups: ['search'] })
+  @Column('timestamptz', { nullable: true })
+  @IsDate()
+  @IsOptional()
+  escrowConfirmedAt?: Date | null
 
   /**
    * The entries this invoice bills, and their roll-up.
