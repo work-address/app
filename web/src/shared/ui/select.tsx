@@ -22,6 +22,8 @@ import type { InputProps } from './input'
 export type SelectOption = {
   value: string
   label: string
+  /** Listed but not choosable: the reason belongs beside the field. */
+  disabled?: boolean
 }
 
 type SelectProps = {
@@ -122,7 +124,9 @@ export const Select = ({
               type="button"
               role="option"
               aria-selected={checked}
+              aria-disabled={o.disabled || undefined}
               data-selected={checked || undefined}
+              disabled={o.disabled}
               onClick={() => toggle(o.value)}
             >
               {isDesktop && multi && <Checkbox checked={checked} />}
@@ -266,6 +270,12 @@ const MenuItem = styled.button`
   &[data-selected] {
     background: var(--ds-accent-3);
     color: var(--ds-accent-11);
+  }
+
+  &:disabled {
+    background: transparent;
+    color: var(--gray-a8);
+    cursor: not-allowed;
   }
 
   ${(p) => p.theme.breakpoints.up('md')} {

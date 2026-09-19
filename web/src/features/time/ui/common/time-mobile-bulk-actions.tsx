@@ -4,15 +4,21 @@ import { useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
+  isTimeBulkActionAvailable,
+  TIME_BULK_ACTIONS,
+  type TimeBulkAction,
+} from '../../model'
+
+import {
   removeTimeProcessesMutation,
   removeTimeScreenshotMutation,
 } from '@/entities/time'
 import { Button, Select, Text, useConfirm } from '@/shared'
 
-type BulkAction = 'delete' | 'removeScreenshots' | 'removeProcesses'
-
 type TimeMobileBulkActionsProps = {
   selectedIds: string[]
+  /** Whether a selected entry is on an invoice, which rules out delete. */
+  hasInvoiced: boolean
   isPending: boolean
   onDelete: (ids: string[]) => void
   onClearSelection: () => void
@@ -20,13 +26,19 @@ type TimeMobileBulkActionsProps = {
 
 export const TimeMobileBulkActions = ({
   selectedIds,
+  hasInvoiced,
   isPending,
   onDelete,
   onClearSelection,
 }: TimeMobileBulkActionsProps) => {
   const { t } = useTranslation()
   const { confirm } = useConfirm()
-  const [action, setAction] = useState<BulkAction | ''>('')
+  const [picked, setPicked] = useState<TimeBulkAction | ''>('')
+  // What Apply runs: the pick, unless the selection has since ruled it out -
+  // delete picked, then an invoiced entry selected - so a refused action is
+  // never the one applied.
+  const action =
+    picked && isTimeBulkActionAvailable(picked, { hasInvoiced }) ? picked : ''
 
   const {
     removeScreenshots,
@@ -49,28 +61,28 @@ export const TimeMobileBulkActions = ({
     removeScreenshotStatus === 'pending' ||
     removeProcessesStatus === 'pending'
 
-  const actionOptions = useMemo(
-    () => [
-      {
-        value: 'delete' satisfies BulkAction,
-        label: t('dashboard.worklogsTable.bulk.delete'),
-      },
-      {
-        value: 'removeScreenshots' satisfies BulkAction,
-        label: t('dashboard.worklogsTable.removeScreenshot'),
-      },
-      {
-        value: 'removeProcesses' satisfies BulkAction,
-        label: t('dashboard.worklogsTable.removeProcesses'),
-      },
-    ],
-    [t],
-  )
+  // An invoice keeps the hours it bills, and the API refuses the whole
+  // delete (409) if one selected entry is on an invoice - so, as on the
+  // desktop bar, delete is listed but not offered, and the reason is shown
+  // under the field: a phone has no hover for a tooltip.
+  const actionOptions = useMemo(() => {
+    const labels: Record<TimeBulkAction, string> = {
+      delete: t('dashboard.worklogsTable.bulk.delete'),
+      removeScreenshots: t('dashboard.worklogsTable.removeScreenshot'),
+      removeProcesses: t('dashboard.worklogsTable.removeProcesses'),
+    }
+
+    return TIME_BULK_ACTIONS.map((value) => ({
+      value,
+      label: labels[value],
+      disabled: !isTimeBulkActionAvailable(value, { hasInvoiced }),
+    }))
+  }, [t, hasInvoiced])
 
   useEffect(() => {
     if (removeScreenshotStatus === 'done') {
       resetRemoveScreenshot()
-      setAction('')
+      setPicked('')
       onClearSelection()
     }
   }, [removeScreenshotStatus, resetRemoveScreenshot, onClearSelection])
@@ -78,14 +90,14 @@ export const TimeMobileBulkActions = ({
   useEffect(() => {
     if (removeProcessesStatus === 'done') {
       resetRemoveProcesses()
-      setAction('')
+      setPicked('')
       onClearSelection()
     }
   }, [removeProcessesStatus, resetRemoveProcesses, onClearSelection])
 
   useEffect(() => {
     if (selectedIds.length === 0) {
-      setAction('')
+      setPicked('')
     }
   }, [selectedIds.length])
 
@@ -144,10 +156,15 @@ export const TimeMobileBulkActions = ({
             return
           }
 
-          setAction(value as BulkAction)
+          setPicked(value as TimeBulkAction)
         }}
         placeholder={t('dashboard.worklogsTable.bulk.actionPlaceholder')}
       />
+      {hasInvoiced && (
+        <Text size="1" color="gray">
+          {t('dashboard.worklogsTable.bulk.deleteInvoicedHint')}
+        </Text>
+      )}
       <Button
         stretch
         size="l"

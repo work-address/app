@@ -8,6 +8,7 @@ import {
   $selectedTimeCount,
   $selectedTimeEntry,
   $selectedTimeIds,
+  $selectionHasInvoicedTime,
   $timeDialogNavigation,
   $timeFiltersOpen,
   $timeView,
@@ -57,6 +58,7 @@ export const TimeWorklogs = () => {
     setFiltersOpen,
     selectedCount,
     selectedIds,
+    selectionHasInvoiced,
     selectedEntry,
     isDialogOpen,
     setDialogOpen,
@@ -74,6 +76,7 @@ export const TimeWorklogs = () => {
     setFiltersOpen: timeFiltersOpenChanged,
     selectedCount: $selectedTimeCount,
     selectedIds: $selectedTimeIds,
+    selectionHasInvoiced: $selectionHasInvoicedTime,
     selectedEntry: $selectedTimeEntry,
     isDialogOpen: $isTimeDialogOpen,
     setDialogOpen: timeDialogOpenChanged,
@@ -152,6 +155,7 @@ export const TimeWorklogs = () => {
           {isMobile && selectedCount > 0 && (
             <TimeMobileBulkActions
               selectedIds={selectedIds}
+              hasInvoiced={selectionHasInvoiced}
               isPending={isBulkPending}
               onDelete={requestBulkDelete}
               onClearSelection={clearSelection}

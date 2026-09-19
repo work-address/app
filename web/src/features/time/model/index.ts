@@ -48,6 +48,11 @@ export {
   type TimeSortField,
   type TimeSortOrder,
 } from './time-sort'
+export {
+  isTimeBulkActionAvailable,
+  TIME_BULK_ACTIONS,
+  type TimeBulkAction,
+} from './time-bulk-actions'
 export { hasInvoicedTime, isTimeInvoiced } from './time-invoiced'
 export { getSelectedTimeProjects } from './time-selection'
 export { $timeView, timeViewChanged } from './time-view.model'
