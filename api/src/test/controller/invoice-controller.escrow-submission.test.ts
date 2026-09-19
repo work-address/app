@@ -1,3 +1,4 @@
+import { randomUUID } from 'crypto'
 import { expect } from 'chai'
 import axios from 'axios'
 import * as fs from 'fs'
@@ -13,10 +14,12 @@ import {
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { Invoice } from '@/entity/invoice'
+import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
 import {
   EInvoiceState,
   IInvoiceCommitmentBinding,
+  IInvoiceEscrowSubmissionRequest,
   IInvoiceRecord,
 } from '@/model/invoice'
 import { InvoiceCommitment } from '@/service/invoice-commitment'
@@ -25,6 +28,9 @@ import { InvoiceRecord } from '@/service/invoice-record'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { ProjectRepository } from '@/repository/project-repository'
 import { runPromise } from '@/service/effect-bridge'
+import { InvoiceFixture } from '@/test/fixture/invoice-fixture'
+
+type Period = { workStart: number; workEnd: number }
 
 type Vector = IInvoiceCommitmentBinding & {
   name: string
@@ -34,10 +40,16 @@ type Vector = IInvoiceCommitmentBinding & {
   amount: string
 }
 
+const DAY = 86400
+
+/** Where the local chain's escrow is deployed in the vectors. */
+const ESCROW = '0x8bbc3514477d75ec797bbe4e19d7961660bb849c'
+
 /**
  * GET /invoice/:id/escrow-submission: what the issuer hands MarketplaceEscrow
  * for an invoice - the amount in USDT base units and the InvoiceCommitment v1
- * - and the binding of the invoice to that allocation.
+ * - and the binding of the invoice to that allocation, which must be the one
+ * funding the invoice's own marketplace contract.
  */
 @suite()
 export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
@@ -68,26 +80,55 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
     return { Authorization: this.authenticator.getTokens(user).accessToken }
   }
 
-  /** A random allocation on the local chain's escrow. */
-  private allocation(): IInvoiceCommitmentBinding {
+  /**
+   * The request for the allocation the marketplace funds for `contractId`
+   * over `period`, on the local chain's escrow unless told otherwise.
+   */
+  private requestFor(
+    contractId: string,
+    period: Period,
+    chainId = 31337,
+    escrow = ESCROW,
+  ): IInvoiceEscrowSubmissionRequest {
+    const request = { chainId, escrow, ...period, allocationId: '' }
+
     return {
-      chainId: 31337,
-      escrow: '0x8bbc3514477d75ec797bbe4e19d7961660bb849c',
-      allocationId: `0x${Buffer.from(
-        Array.from({ length: 32 }, () => Math.floor(Math.random() * 256)),
-      ).toString('hex')}`,
+      ...request,
+      allocationId: InvoiceEscrow.contractPeriodAllocationId(
+        contractId,
+        request,
+      ),
     }
+  }
+
+  /** A work period around the invoice's own, a day wider at each end. */
+  private periodAround(invoice: Invoice): Period {
+    return {
+      workStart: Math.floor(new Date(invoice.fromAt).getTime() / 1000) - DAY,
+      workEnd: Math.ceil(new Date(invoice.toAt).getTime() / 1000) + DAY,
+    }
+  }
+
+  /** What the hired worker sends for `invoice` on `project`. */
+  private request(
+    invoice: Invoice,
+    project: Project,
+  ): IInvoiceEscrowSubmissionRequest {
+    return this.requestFor(
+      project.marketplaceContractId!,
+      this.periodAround(invoice),
+    )
   }
 
   private submit(
     invoice: Invoice,
     user: User,
-    binding: IInvoiceCommitmentBinding,
+    request: IInvoiceEscrowSubmissionRequest,
   ) {
     return invoiceControllerEscrowSubmission({
       client: this.apiClient(),
       path: { id: invoice.id as never },
-      query: binding,
+      query: request,
       headers: this.auth(user),
       throwOnError: true,
     })
@@ -116,15 +157,14 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
     return invoice!
   }
 
-  /** An owner, a worker on their project, and an invoice the worker issued. */
+  /**
+   * A client, the worker they hired on the marketplace, the project the hire
+   * made, and an invoice the worker issued on it.
+   */
   private async issued(amountCents = 3000) {
     const owner = await this.userFixture.createUser()
     const worker = await this.userFixture.createUser()
-    const project = await this.projectFixture.createPersonal(owner, 20)
-
-    project.workerAddresses = [worker.address]
-    await runPromise(this.projectRepository.saveSingle(project))
-
+    const project = await this.projectFixture.createHired(owner, worker, 20)
     const invoice = await this.invoiceFixture.createIssued(
       project,
       worker,
@@ -141,7 +181,11 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
    * repository proves MarketplaceEscrow takes.
    *
    * The salt is the one thing the service draws at random, so it is pinned
-   * for this call only; everything else is the live path.
+   * for this call only. So is the allocation's derivation: the vectors'
+   * allocation ids predate it, so no contract and period derive them. The
+   * pin still has to be asked about the vectors' contract and the period
+   * sent, and the derivation itself is pinned to the marketplace's in
+   * InvoiceEscrowTest; everything else is the live path.
    */
   @test()
   async issuer_getsTheVectorAmountAndCommitment() {
@@ -152,14 +196,28 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
         ) === index,
     )
     const drawSalt = InvoiceEscrow.drawSalt
+    const derive = InvoiceEscrow.contractPeriodAllocationId
 
     expect(vectors).to.have.length.greaterThan(1)
 
     for (const vector of vectors) {
       const invoice = await this.invoiceFixture.ensureForRecord(vector.record)
       const issuer = invoice.user!
+      const period = {
+        workStart: Date.parse(vector.record.periodStart) / 1000,
+        workEnd: Date.parse(vector.record.periodEnd) / 1000 + 7 * DAY,
+      }
+      const asked: [string, Period][] = []
 
       InvoiceEscrow.drawSalt = () => vector.salt
+      InvoiceEscrow.contractPeriodAllocationId = (contractId, request) => {
+        asked.push([
+          contractId,
+          { workStart: request.workStart, workEnd: request.workEnd },
+        ])
+
+        return vector.allocationId
+      }
 
       try {
         // Checksum-style casing in, lowercase committed: one allocation.
@@ -167,6 +225,7 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
           chainId: vector.chainId,
           escrow: vector.escrow.toUpperCase().replace('0X', '0x'),
           allocationId: vector.allocationId.toUpperCase().replace('0X', '0x'),
+          ...period,
         })
 
         expect(res.status, vector.name).to.be.eq(200)
@@ -179,8 +238,10 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
           invoiceCommitment: vector.commitment,
           salt: vector.salt,
         })
+        expect(asked).to.deep.eq([[InvoiceFixture.VECTOR_CONTRACT_ID, period]])
       } finally {
         InvoiceEscrow.drawSalt = drawSalt
+        InvoiceEscrow.contractPeriodAllocationId = derive
       }
 
       const bound = await this.stored(invoice.id)
@@ -200,10 +261,15 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
    */
   @test()
   async issuer_getsTheCommitmentToTheInvoicesRecord() {
-    const { worker, invoice } = await this.issued()
-    const binding = this.allocation()
+    const { worker, project, invoice } = await this.issued()
+    const request = this.request(invoice, project)
+    const binding: IInvoiceCommitmentBinding = {
+      chainId: request.chainId,
+      escrow: request.escrow,
+      allocationId: request.allocationId,
+    }
 
-    const res = await this.submit(invoice, worker, binding)
+    const res = await this.submit(invoice, worker, request)
     const record = this.invoiceRecord.document(
       (await runPromise(
         this.invoiceRepository.findOneBy({
@@ -237,8 +303,12 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
     ]
 
     for (const [amountCents, expected] of cases) {
-      const { worker, invoice } = await this.issued(amountCents)
-      const res = await this.submit(invoice, worker, this.allocation())
+      const { worker, project, invoice } = await this.issued(amountCents)
+      const res = await this.submit(
+        invoice,
+        worker,
+        this.request(invoice, project),
+      )
 
       expect(res.status).to.be.eq(200)
       expect(res.data?.amountBaseUnits, `${amountCents} cents`).to.equal(
@@ -254,18 +324,12 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
    */
   @test()
   async nonIssuer_isRefused403AndNothingIsBound() {
-    const { owner, invoice } = await this.issued()
+    const { owner, project, invoice } = await this.issued()
     const outsider = await this.userFixture.createUser()
 
     for (const user of [owner, outsider]) {
       const status = await this.statusOf(
-        invoiceControllerEscrowSubmission({
-          client: this.apiClient(),
-          path: { id: invoice.id as never },
-          query: this.allocation(),
-          headers: this.auth(user),
-          throwOnError: true,
-        }),
+        this.submit(invoice, user, this.request(invoice, project)),
       )
 
       expect(status).to.be.eq(403)
@@ -282,23 +346,15 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
   async secondInvoiceOnTheSameAllocation_is409() {
     const { worker, project, invoice: first } = await this.issued()
     const second = await this.invoiceFixture.createIssued(project, worker, 900)
-    const binding = this.allocation()
+    const request = this.request(first, project)
 
-    const bound = await this.submit(first, worker, binding)
-    const status = await this.statusOf(
-      invoiceControllerEscrowSubmission({
-        client: this.apiClient(),
-        path: { id: second.id as never },
-        query: binding,
-        headers: this.auth(worker),
-        throwOnError: true,
-      }),
-    )
+    const bound = await this.submit(first, worker, request)
+    const status = await this.statusOf(this.submit(second, worker, request))
 
     expect(bound.status).to.be.eq(200)
     expect(status).to.be.eq(409)
     expect((await this.stored(first.id)).escrowAllocationId).to.be.eq(
-      binding.allocationId,
+      request.allocationId,
     )
     expect((await this.stored(second.id)).escrowAllocationId).to.be.null
   }
@@ -311,24 +367,16 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
   async racingInvoicesForOneAllocation_bindExactlyOne() {
     const { worker, project, invoice: first } = await this.issued()
     const second = await this.invoiceFixture.createIssued(project, worker, 900)
-    const binding = this.allocation()
+    const request = this.request(first, project)
 
     const statuses = await Promise.all(
       [first, second].map((invoice) =>
-        this.statusOf(
-          invoiceControllerEscrowSubmission({
-            client: this.apiClient(),
-            path: { id: invoice.id as never },
-            query: binding,
-            headers: this.auth(worker),
-            throwOnError: true,
-          }),
-        ),
+        this.statusOf(this.submit(invoice, worker, request)),
       ),
     )
     const holders = await runPromise(
       this.invoiceRepository.findBy({
-        where: { escrowAllocationId: binding.allocationId },
+        where: { escrowAllocationId: request.allocationId },
       }),
     )
 
@@ -345,7 +393,7 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
   async uniqueIndex_refusesASecondInvoiceOnOneAllocation() {
     const { worker, project, invoice: first } = await this.issued()
     const second = await this.invoiceFixture.createIssued(project, worker, 900)
-    const binding = this.allocation()
+    const binding = this.request(first, project)
 
     await this.submit(first, worker, binding)
 
@@ -370,31 +418,29 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
   /**
    * Asking again for the same allocation returns the same submission - the
    * same salt and commitment - rather than a second commitment the chain
-   * could be handed. Asking for another allocation is a 409: the invoice
-   * may already be billed through the first.
+   * could be handed. Asking for another allocation is a 409, even one
+   * funding the same contract over a period that also covers the invoice:
+   * the invoice may already be billed through the first.
    */
   @test()
   async repeatSubmission_isStableAndTheBindingNeverMoves() {
-    const { worker, invoice } = await this.issued()
-    const binding = this.allocation()
+    const { worker, project, invoice } = await this.issued()
+    const request = this.request(invoice, project)
+    const wider = this.requestFor(project.marketplaceContractId!, {
+      workStart: request.workStart - DAY,
+      workEnd: request.workEnd,
+    })
 
-    const first = await this.submit(invoice, worker, binding)
-    const again = await this.submit(invoice, worker, binding)
-    const elsewhere = await this.statusOf(
-      invoiceControllerEscrowSubmission({
-        client: this.apiClient(),
-        path: { id: invoice.id as never },
-        query: this.allocation(),
-        headers: this.auth(worker),
-        throwOnError: true,
-      }),
-    )
+    const first = await this.submit(invoice, worker, request)
+    const again = await this.submit(invoice, worker, request)
+    const elsewhere = await this.statusOf(this.submit(invoice, worker, wider))
 
     expect(first.status).to.be.eq(200)
     expect(again.data).to.deep.eq(first.data)
+    expect(wider.allocationId).to.not.eq(request.allocationId)
     expect(elsewhere).to.be.eq(409)
     expect((await this.stored(invoice.id)).escrowAllocationId).to.be.eq(
-      binding.allocationId,
+      request.allocationId,
     )
   }
 
@@ -404,14 +450,14 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
    */
   @test()
   async legacyAndPaidInvoices_are409() {
-    const { owner, worker, project, invoice: paid } = await this.issued()
+    const { worker, project, invoice: paid } = await this.issued()
     const legacy = await this.invoiceFixture.create(
       project,
       5000,
       EInvoiceState.REQUESTED,
     )
 
-    legacy.user = owner
+    legacy.user = worker
     await runPromise(this.invoiceRepository.saveSingle(legacy))
 
     await invoiceControllerMarkPaid({
@@ -421,18 +467,9 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    for (const [invoice, issuer] of [
-      [legacy, owner],
-      [paid, worker],
-    ] as [Invoice, User][]) {
+    for (const invoice of [legacy, paid]) {
       const status = await this.statusOf(
-        invoiceControllerEscrowSubmission({
-          client: this.apiClient(),
-          path: { id: invoice.id as never },
-          query: this.allocation(),
-          headers: this.auth(issuer),
-          throwOnError: true,
-        }),
+        this.submit(invoice, worker, this.request(invoice, project)),
       )
 
       expect(status).to.be.eq(409)
@@ -448,32 +485,45 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
    */
   @test()
   async zeroAmountInvoice_is409AndStaysUnbound() {
-    const { worker, invoice } = await this.issued(0)
+    const { worker, project, invoice } = await this.issued(0)
 
     const status = await this.statusOf(
-      this.submit(invoice, worker, this.allocation()),
+      this.submit(invoice, worker, this.request(invoice, project)),
     )
 
     expect(status).to.be.eq(409)
     expect((await this.stored(invoice.id)).escrowAllocationId).to.be.null
   }
 
-  /** A malformed allocation or escrow is a 400, before anything is bound. */
+  /**
+   * A malformed allocation, escrow or work period - including none at all,
+   * which the allocation cannot be checked without - is a 400, before
+   * anything is bound.
+   */
   @test()
   async malformedAllocation_is400() {
-    const { worker, invoice } = await this.issued()
-    const valid = this.allocation()
+    const { worker, project, invoice } = await this.issued()
+    const valid = this.request(invoice, project)
 
     for (const query of [
       { ...valid, allocationId: '0x1234' },
       { ...valid, escrow: 'not-an-address' },
       { ...valid, chainId: 0 },
+      { ...valid, workStart: undefined },
+      { ...valid, workEnd: undefined },
+      { ...valid, workStart: -1 },
+      { ...valid, workEnd: valid.workEnd + 0.5 },
+      // Derived as sent, so only the order of the ends is wrong.
+      this.requestFor(project.marketplaceContractId!, {
+        workStart: valid.workEnd,
+        workEnd: valid.workStart,
+      }),
     ]) {
       const status = await this.statusOf(
         invoiceControllerEscrowSubmission({
           client: this.apiClient(),
           path: { id: invoice.id as never },
-          query,
+          query: query as IInvoiceEscrowSubmissionRequest,
           headers: this.auth(worker),
           throwOnError: true,
         }),
@@ -494,7 +544,7 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
   @test()
   async binding_isVisibleToBothPartiesAndTheSaltToNeither() {
     const { owner, worker, project, invoice } = await this.issued()
-    const binding = this.allocation()
+    const binding = this.request(invoice, project)
     const submitted = await this.submit(invoice, worker, binding)
 
     for (const reader of [owner, worker]) {
@@ -529,5 +579,196 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
         expect(JSON.stringify(body)).to.not.contain(submitted.data!.salt)
       }
     }
+  }
+
+  /**
+   * The squat review found: someone with no part in a contract asks to bind
+   * an invoice of their own to the allocation funding the hired worker's
+   * work, whose id and period are public once it is funded - first from a
+   * personal project, then from a contract of their own they were hired on.
+   * Both are 409 and bind nothing, and the hired worker's invoice still
+   * binds to it.
+   */
+  @test()
+  async outsider_cannotBindTheHiredWorkersAllocation() {
+    const { worker, project, invoice } = await this.issued()
+    const allocation = this.request(invoice, project)
+    const outsider = await this.userFixture.createUser()
+    const client = await this.userFixture.createUser()
+    const personal = await this.projectFixture.createPersonal(outsider, 1)
+    const hired = await this.projectFixture.createHired(client, outsider, 1)
+    const squats = [
+      await this.invoiceFixture.createIssued(personal, outsider, 1),
+      await this.invoiceFixture.createIssued(hired, outsider, 1),
+    ]
+
+    for (const squat of squats) {
+      const status = await this.statusOf(
+        this.submit(squat, outsider, allocation),
+      )
+
+      expect(status).to.be.eq(409)
+      expect((await this.stored(squat.id)).escrowAllocationId).to.be.null
+    }
+
+    const res = await this.submit(invoice, worker, allocation)
+
+    expect(res.status).to.be.eq(200)
+    expect((await this.stored(invoice.id)).escrowAllocationId).to.be.eq(
+      allocation.allocationId,
+    )
+  }
+
+  /**
+   * The owner may invoice their own hours on the project they hired for,
+   * but on its contract they are the payer: their invoice may not take the
+   * allocation they funded (403), and the hired worker's still binds.
+   */
+  @test()
+  async ownersInvoiceOnTheHiredProject_is403() {
+    const { owner, worker, project, invoice } = await this.issued()
+    const own = await this.invoiceFixture.createIssued(project, owner, 100)
+    const allocation = this.request(invoice, project)
+
+    const status = await this.statusOf(this.submit(own, owner, allocation))
+
+    expect(status).to.be.eq(403)
+    expect((await this.stored(own.id)).escrowAllocationId).to.be.null
+    expect((await this.submit(invoice, worker, allocation)).status).to.be.eq(
+      200,
+    )
+  }
+
+  /**
+   * Hired is a present fact: a worker taken off the project cannot submit
+   * the invoices they issued while on it (403).
+   */
+  @test()
+  async workerNoLongerOnTheProject_is403() {
+    const { worker, project, invoice } = await this.issued()
+    const allocation = this.request(invoice, project)
+
+    project.workerAddresses = []
+    await runPromise(this.projectRepository.saveSingle(project))
+
+    const status = await this.statusOf(this.submit(invoice, worker, allocation))
+
+    expect(status).to.be.eq(403)
+    expect((await this.stored(invoice.id)).escrowAllocationId).to.be.null
+  }
+
+  /**
+   * An allocation that funds anything but this contract's work over the
+   * period sent is refused (409) and binds nothing: another contract's over
+   * the same period, this contract's over another period, this one's on
+   * another escrow or chain than the request names, or none at all. The
+   * one it does fund still binds.
+   */
+  @test()
+  async allocationOfAnotherContractOrPeriod_is409() {
+    const { worker, project, invoice } = await this.issued()
+    const allocation = this.request(invoice, project)
+    const contractId = project.marketplaceContractId!
+    const period = {
+      workStart: allocation.workStart,
+      workEnd: allocation.workEnd,
+    }
+    const others: [string, string][] = [
+      ['contract', this.requestFor(randomUUID(), period).allocationId],
+      [
+        'period',
+        this.requestFor(contractId, {
+          ...period,
+          workStart: period.workStart - DAY,
+        }).allocationId,
+      ],
+      [
+        'escrow',
+        this.requestFor(contractId, period, 31337, `0x${'11'.repeat(20)}`)
+          .allocationId,
+      ],
+      ['chain', this.requestFor(contractId, period, 1).allocationId],
+      ['random', `0x${'ab'.repeat(32)}`],
+    ]
+
+    for (const [other, allocationId] of others) {
+      const status = await this.statusOf(
+        this.submit(invoice, worker, { ...allocation, allocationId }),
+      )
+
+      expect(allocationId, other).to.not.eq(allocation.allocationId)
+      expect(status, other).to.be.eq(409)
+    }
+
+    expect((await this.stored(invoice.id)).escrowAllocationId).to.be.null
+    expect((await this.submit(invoice, worker, allocation)).status).to.be.eq(
+      200,
+    )
+  }
+
+  /**
+   * An allocation pays for its own period's work: an invoice whose period
+   * is not inside the work period is refused (409), though the allocation
+   * is the contract's for that period. Both ends count as inside.
+   */
+  @test()
+  async invoiceOutsideTheWorkPeriod_is409AndItsEndsAreInside() {
+    const { worker, project, invoice } = await this.issued()
+    const contractId = project.marketplaceContractId!
+    // Whole minutes, so whole seconds.
+    const fromAt = new Date(invoice.fromAt).getTime() / 1000
+    const toAt = new Date(invoice.toAt).getTime() / 1000
+
+    for (const period of [
+      { workStart: toAt, workEnd: toAt + 7 * DAY },
+      { workStart: fromAt - 7 * DAY, workEnd: fromAt },
+      { workStart: fromAt + 60, workEnd: toAt + DAY },
+      { workStart: fromAt - DAY, workEnd: toAt - 60 },
+    ]) {
+      const status = await this.statusOf(
+        this.submit(invoice, worker, this.requestFor(contractId, period)),
+      )
+
+      expect(status, JSON.stringify(period)).to.be.eq(409)
+    }
+
+    expect((await this.stored(invoice.id)).escrowAllocationId).to.be.null
+
+    const exact = this.requestFor(contractId, {
+      workStart: fromAt,
+      workEnd: toAt,
+    })
+
+    expect((await this.submit(invoice, worker, exact)).status).to.be.eq(200)
+    expect((await this.stored(invoice.id)).escrowAllocationId).to.be.eq(
+      exact.allocationId,
+    )
+  }
+
+  /**
+   * A project made here directly - the issuer a worker on it - was hired
+   * for no marketplace contract, so no allocation funds its invoices: 409,
+   * whatever allocation and period the request names.
+   */
+  @test()
+  async invoiceOnAProjectNoContractHiredFor_is409() {
+    const owner = await this.userFixture.createUser()
+    const worker = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner, 20)
+
+    project.workerAddresses = [worker.address]
+    await runPromise(this.projectRepository.saveSingle(project))
+
+    const invoice = await this.invoiceFixture.createIssued(project, worker, 900)
+    const status = await this.statusOf(
+      this.submit(
+        invoice,
+        worker,
+        this.requestFor(randomUUID(), this.periodAround(invoice)),
+      ),
+    )
+
+    expect(status).to.be.eq(409)
+    expect((await this.stored(invoice.id)).escrowAllocationId).to.be.null
   }
 }

@@ -237,12 +237,16 @@ export class InvoiceController {
 
   @OpenAPIExtended({
     summary:
-      'Get the amount and InvoiceCommitment v1 to submit this invoice to an escrow allocation (issuer only); the first call binds the invoice to that allocation',
+      "Get the amount and InvoiceCommitment v1 to submit this invoice to the escrow allocation funding its marketplace contract's work period (the hired worker who issued it only); the first call binds the invoice to that allocation",
     operation: {
       responses: {
+        403: {
+          description:
+            'The caller did not issue the invoice, or is not the worker hired on its project',
+        },
         409: {
           description:
-            'The invoice is legacy, already paid, or bound to another allocation, or the allocation already bills another invoice',
+            "The invoice is legacy, already paid, for nothing, outside the work period, on a project no marketplace contract hired for, or bound to another allocation; the allocation does not derive from the invoice's contract and that period; or the allocation already bills another invoice",
         },
       },
     },

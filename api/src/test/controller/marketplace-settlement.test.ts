@@ -150,17 +150,15 @@ export class MarketplaceSettlementControllerTest extends BaseControllerTest {
   }
 
   /**
-   * A worker's invoice for three half-hour entries of 30 active minutes at
-   * $20/h - 3000 cents - raised through the API, and submitted to a fresh
-   * allocation through the API. One clock read for every bound.
+   * A hired worker's invoice for three half-hour entries of 30 active
+   * minutes at $20/h - 3000 cents - raised through the API, and submitted
+   * through the API to the allocation funding their contract's work that
+   * day. One clock read for every bound.
    */
   private async bound(): Promise<Bound> {
     const owner = await this.userFixture.createUser()
     const worker = await this.userFixture.createUser()
-    const project = await this.projectFixture.createPersonal(owner, 20)
-
-    project.workerAddresses = [worker.address]
-    await runPromise(this.projectRepository.saveSingle(project))
+    const project = await this.projectFixture.createHired(owner, worker, 20)
 
     const start = moment.utc().startOf('minute').subtract(150, 'minutes')
 
@@ -186,15 +184,24 @@ export class MarketplaceSettlementControllerTest extends BaseControllerTest {
       body: {},
       throwOnError: true,
     })
-    const binding = {
+    const request = {
       chainId: 31337,
       escrow: '0x8bbc3514477d75ec797bbe4e19d7961660bb849c',
-      allocationId: this.bytes32(),
+      workStart: start.clone().subtract(1, 'day').unix(),
+      workEnd: start.clone().add(1, 'day').unix(),
+    }
+    const binding = {
+      chainId: request.chainId,
+      escrow: request.escrow,
+      allocationId: InvoiceEscrow.contractPeriodAllocationId(
+        project.marketplaceContractId!,
+        { ...request, allocationId: '' },
+      ),
     }
     const submission = await invoiceControllerEscrowSubmission({
       client: this.apiClient(),
       path: { id: created.data.id as never },
-      query: binding,
+      query: { ...request, ...binding },
       headers: this.auth(worker),
       throwOnError: true,
     })
@@ -664,7 +671,8 @@ export class MarketplaceSettlementControllerTest extends BaseControllerTest {
    * its invoice - the first commitment vector's, bound under the vector's
    * salt so the commitments agree - is paid at the fixture's block time.
    * Only the replay guard is renewed, in place, so the bytes keep their
-   * order.
+   * order. The vector's allocation id predates the contract-period
+   * derivation, so the derivation is pinned to it for the binding call.
    */
   @test()
   async contractFixture_isAcceptedAndPaysItsInvoice() {
@@ -680,8 +688,10 @@ export class MarketplaceSettlementControllerTest extends BaseControllerTest {
     }
     const invoice = await this.invoiceFixture.ensureForRecord(vector.record)
     const drawSalt = InvoiceEscrow.drawSalt
+    const derive = InvoiceEscrow.contractPeriodAllocationId
 
     InvoiceEscrow.drawSalt = () => vector.salt
+    InvoiceEscrow.contractPeriodAllocationId = () => vector.allocationId
 
     try {
       await invoiceControllerEscrowSubmission({
@@ -691,12 +701,15 @@ export class MarketplaceSettlementControllerTest extends BaseControllerTest {
           chainId: vector.chainId,
           escrow: vector.escrow,
           allocationId: vector.allocationId,
+          workStart: Date.parse(vector.record.periodStart) / 1000,
+          workEnd: Date.parse(vector.record.periodEnd) / 1000,
         },
         headers: this.auth(invoice.user!),
         throwOnError: true,
       })
     } finally {
       InvoiceEscrow.drawSalt = drawSalt
+      InvoiceEscrow.contractPeriodAllocationId = derive
     }
 
     const push = this.fresh(fixture.body)

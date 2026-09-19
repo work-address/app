@@ -18,10 +18,10 @@ import {
   EInvoiceSettlementKind,
   EInvoiceSnapshotVersion,
   EInvoiceState,
-  IInvoiceCommitmentBinding,
   IInvoiceEscrowSettlement,
   IInvoiceEscrowSettlementResult,
   IInvoiceEscrowSubmission,
+  IInvoiceEscrowSubmissionRequest,
   IInvoiceLine,
   IInvoiceRecord,
   IInvoiceReport,
@@ -137,14 +137,26 @@ export class InvoiceManager {
    * invoice could bill it twice. An allocation already billing another
    * invoice is refused too - it takes one bill.
    *
-   * Issuer only (403 to the owner, who can read the invoice but is the
-   * payer, and to everyone else). A legacy invoice has no record to commit
-   * to (409), and a paid one or one for nothing has nothing to bill (409).
+   * Only an allocation that funds this invoice's own contract binds it. The
+   * marketplace derives every allocation id from its contract and work
+   * period, so the id is recomputed here from the project's
+   * `marketplaceContractId` and the period the request names, and anything
+   * else is refused (409) - as is an invoice whose period lies outside that
+   * work period, or one on a project no marketplace contract hired for. An
+   * allocation id is public once funded, and a binding never moves, so
+   * without this anyone able to issue an invoice anywhere could bind the
+   * allocation first and leave the hired worker's invoice unbillable.
+   *
+   * Issuer only, and the issuer must be the worker hired on the project
+   * (403 otherwise): the owner is the payer, even on an invoice of their
+   * own, and nobody else can read the invoice. A legacy invoice has no
+   * record to commit to (409), and a paid one or one for nothing has
+   * nothing to bill (409).
    */
   public escrowSubmission(
     invoice: Invoice,
     actor: User,
-    binding: IInvoiceCommitmentBinding,
+    request: IInvoiceEscrowSubmissionRequest,
   ): RepoEffect<IInvoiceEscrowSubmission> {
     return Effect.gen(this, function* () {
       const found = yield* this.invoiceRepository.findOneConfirmUser(
@@ -168,7 +180,57 @@ export class InvoiceManager {
         )
       }
 
-      const target = InvoiceEscrow.binding(binding)
+      const contractId = found.project?.marketplaceContractId
+
+      if (!contractId) {
+        return yield* Effect.fail(
+          new InvoiceEscrowException(
+            `Invoice ${found.id} is on a project no marketplace contract hired for, so no escrow allocation funds it`,
+          ),
+        )
+      }
+
+      const project = yield* this.projectRepository.findProjectWithAccess(
+        found.project,
+        actor,
+      )
+
+      // isWorker counts the owner too; the owner is the payer.
+      if (!project || project.isOwner(actor) || !project.isWorker(actor)) {
+        return yield* Effect.fail(
+          new AccessException(
+            'Only the worker hired on a marketplace contract can submit its invoices to escrow',
+          ),
+        )
+      }
+
+      if (request.workEnd <= request.workStart) {
+        return yield* Effect.fail(
+          new BadRequestError('The work period ends before it starts'),
+        )
+      }
+
+      const target = InvoiceEscrow.binding(request)
+
+      if (
+        InvoiceEscrow.contractPeriodAllocationId(contractId, request) !==
+        target.allocationId
+      ) {
+        return yield* Effect.fail(
+          new InvoiceEscrowException(
+            `Allocation ${target.allocationId} does not fund contract ${contractId}'s work from ${request.workStart} to ${request.workEnd} on escrow ${target.escrow}`,
+          ),
+        )
+      }
+
+      if (!InvoiceEscrow.withinPeriod(found, request)) {
+        return yield* Effect.fail(
+          new InvoiceEscrowException(
+            `Invoice ${found.id} bills time outside the work period ${request.workStart} to ${request.workEnd} that allocation ${target.allocationId} funds`,
+          ),
+        )
+      }
+
       const record = this.invoiceRecord.document(found)
 
       return yield* this.unitOfWork.run((manager) =>

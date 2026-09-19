@@ -9,6 +9,7 @@ import {
   IsOptional,
   IsUUID,
   Matches,
+  Max,
   Min,
   ValidateIf,
   ValidateNested,
@@ -108,4 +109,20 @@ export class InvoiceEscrowSubmissionQueryDto {
   /** The allocation, as a 0x-prefixed bytes32 in any casing. */
   @Matches(/^0x[\dA-Fa-f]{64}$/)
   allocationId: string
+
+  /**
+   * The start of the work period the allocation funds, in unix seconds - the
+   * `workStart` of its escrow terms. With `workEnd` and the invoice's
+   * marketplace contract it derives the allocation id.
+   */
+  @IsInt()
+  @Min(0)
+  @Max(Number.MAX_SAFE_INTEGER)
+  workStart: number
+
+  /** The end of that work period, in unix seconds (`workEnd`). */
+  @IsInt()
+  @Min(1)
+  @Max(Number.MAX_SAFE_INTEGER)
+  workEnd: number
 }

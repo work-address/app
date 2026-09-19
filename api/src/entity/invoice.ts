@@ -39,7 +39,9 @@ import type { Time } from '@/entity/time'
 // An escrow allocation takes one bill (MarketplaceEscrow moves it from Funded
 // to Submitted once), so it bills one invoice. The index is what makes that
 // hold when two submissions race; rows never submitted are all null, which a
-// unique index does not compare.
+// unique index does not compare. Being global, it would let anyone squat an
+// allocation, so InvoiceManager binds one only to an invoice its own
+// contract's hired worker issued, for the allocation that contract derives.
 @Index(
   'UQ_invoice_escrow_allocation',
   ['escrowChainId', 'escrowAddress', 'escrowAllocationId'],

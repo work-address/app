@@ -318,6 +318,8 @@ export type InvoiceEscrowSubmissionQueryDto = {
     chainId: number;
     escrow: string;
     allocationId: string;
+    workStart: number;
+    workEnd: number;
 };
 
 /**
@@ -1143,11 +1145,17 @@ export type InvoiceControllerEscrowSubmissionData = {
         chainId: number;
         escrow: string;
         allocationId: string;
+        workStart: number;
+        workEnd: number;
     };
     url: '/api/invoice/{id}/escrow-submission';
 };
 
 export type InvoiceControllerEscrowSubmissionErrors = {
+    /**
+     * The caller did not issue the invoice, or is not the worker hired on its project
+     */
+    403: unknown;
     /**
      * Invoice does not exist
      */
@@ -1156,7 +1164,7 @@ export type InvoiceControllerEscrowSubmissionErrors = {
         message?: string;
     };
     /**
-     * The invoice is legacy, already paid, or bound to another allocation, or the allocation already bills another invoice
+     * The invoice is legacy, already paid, for nothing, outside the work period, on a project no marketplace contract hired for, or bound to another allocation; the allocation does not derive from the invoice's contract and that period; or the allocation already bills another invoice
      */
     409: unknown;
 };

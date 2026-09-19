@@ -20,6 +20,15 @@ import { runPromise } from '@/service/effect-bridge'
 
 @injectable()
 export class InvoiceFixture {
+  /**
+   * The marketplace contract the commitment vectors' project was hired
+   * under: the contract id `invoice-commitment.v1.json` names. The vectors'
+   * allocation ids are not derived from it - they predate the derivation -
+   * so a test submitting a vector pins the derivation for that call.
+   */
+  public static readonly VECTOR_CONTRACT_ID =
+    '6b0f5c52-3f0e-4d4e-9a53-2f7f1f0a9c11'
+
   @inject('InvoiceRepository')
   protected invoiceRepository: InvoiceRepository
   @inject('ProjectRepository')
@@ -126,6 +135,8 @@ export class InvoiceFixture {
    * issuer, owner and project its ids and addresses name, all created on
    * first use and reused after: the ids are fixed, and the test database
    * lives for the whole run, so every suite asking for one vector shares it.
+   * The project is a marketplace hire under VECTOR_CONTRACT_ID, the issuer
+   * its worker, as escrow submission requires.
    */
   public async ensureForRecord(record: IInvoiceRecord): Promise<Invoice> {
     const existing = await runPromise(
@@ -181,6 +192,7 @@ export class InvoiceFixture {
     project.viewerAddresses = []
     project.trackScreenshots = false
     project.trackProcesses = false
+    project.marketplaceContractId = InvoiceFixture.VECTOR_CONTRACT_ID
 
     return runPromise(this.projectRepository.saveSingle(project))
   }

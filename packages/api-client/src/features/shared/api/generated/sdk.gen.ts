@@ -391,7 +391,7 @@ export const invoiceControllerRecord = <ThrowOnError extends boolean = false>(op
 });
 
 /**
- * Get the amount and InvoiceCommitment v1 to submit this invoice to an escrow allocation (issuer only); the first call binds the invoice to that allocation
+ * Get the amount and InvoiceCommitment v1 to submit this invoice to the escrow allocation funding its marketplace contract's work period (the hired worker who issued it only); the first call binds the invoice to that allocation
  */
 export const invoiceControllerEscrowSubmission = <ThrowOnError extends boolean = false>(options: Options<InvoiceControllerEscrowSubmissionData, ThrowOnError>) => (options.client ?? client).get<InvoiceControllerEscrowSubmissionResponses, InvoiceControllerEscrowSubmissionErrors, ThrowOnError>({
     responseType: 'json',

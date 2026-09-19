@@ -161,9 +161,9 @@ contracts repository's `test/fixtures` copy, which is checked against
 `MarketplaceEscrow` itself, and the contracts README specifies the encoding.
 
 **Submitting an invoice to escrow binds it to one allocation.**
-`GET /invoice/:id/escrow-submission?chainId=&escrow=&allocationId=` gives the
-issuer — nobody else, the paying owner included (403) — what they hand
-`MarketplaceEscrow`: `amountBaseUnits`, the invoice's `amountCents` in USDT
+`GET /invoice/:id/escrow-submission?chainId=&escrow=&allocationId=&workStart=&workEnd=`
+gives the issuer — nobody else, the paying owner included (403) — what they
+hand `MarketplaceEscrow`: `amountBaseUnits`, the invoice's `amountCents` in USDT
 base units (6 decimals, so cents × 10^4, in integer arithmetic and as a
 decimal string), and `invoiceCommitment`, the InvoiceCommitment v1 of the
 invoice's record for that allocation. The first call stores the binding on
@@ -179,6 +179,26 @@ one for 0 cents has nothing to bill — MarketplaceEscrow reverts an amount of 0
 (all 409). The binding is columns on `Invoice`: there
 is no Allocation entity here — the allocation itself is the marketplace's
 (`web/api`) and the chain's.
+
+**Only the allocation funding the invoice's own contract binds it.** An
+allocation id is public once funded (`AllocationFunded`), and a binding never
+moves, so an invoice that could take any allocation could squat one and
+leave the hired worker's invoice unbillable for good. The request therefore
+names the allocation's work period too — `workStart` and `workEnd`, the unix
+seconds of its escrow terms — and the service recomputes the id the way the
+marketplace derives it (`web/api` `EscrowManager`):
+`obligationId = keccak256(abi.encodePacked(string "work-address:contract-period",
+string marketplaceContractId, uint64 workStart, uint64 workEnd))` and
+`allocationId = keccak256(abi.encodePacked(uint256 chainId, address escrow,
+bytes32 obligationId))`, with `marketplaceContractId` the invoice's project's.
+It binds only when that equals the requested `allocationId`, and only an
+invoice whose period lies inside `[workStart, workEnd]` (both ends included),
+since an allocation pays for its own period's work; otherwise 409, as is an
+invoice on a project no marketplace contract hired for. The issuer must also
+be the worker hired on the project — their address among its workers, and
+not its owner, who is the payer even on an invoice of their own (403). The
+marketplace's submit flow (WP-25) sends the period it funded along with the
+allocation.
 
 **Salt custody (adopted default; the owner decision is still open).** The
 hosted API draws a fresh random 32-byte salt for each submission, stores it
