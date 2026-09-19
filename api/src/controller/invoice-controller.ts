@@ -77,9 +77,11 @@ export class InvoiceController {
     body: {
       schema: InvoiceCreateDto,
       options: {
+        // Fixed, not the clock, so the exported spec is the same on every
+        // export: the day before 2024-01-21T09:00Z.
         example: {
-          fromUnix: Date.now() - 86400000,
-          toUnix: Date.now(),
+          fromUnix: 1705741200000,
+          toUnix: 1705827600000,
         },
       },
     },
