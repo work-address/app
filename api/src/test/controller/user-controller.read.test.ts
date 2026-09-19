@@ -1,7 +1,11 @@
 import { expect } from 'chai'
 import axios from 'axios'
+import bs58 from 'bs58'
+import { randomBytes } from 'crypto'
 import * as web3 from 'web3'
+import { Address } from '@ton/core'
 import { faker } from '@faker-js/faker'
+import { sign } from 'tweetnacl'
 import { suite, test } from '@testdeck/mocha'
 
 import {
@@ -304,5 +308,126 @@ export class UserControllerReadTest extends BaseControllerTest {
       this.userRepository.findByAddressPublicOrFail(user.address),
     )
     expect(stored.premium).to.be.eq(false)
+  }
+
+  /**
+   * G17. The profile used to be found by LOWER() of both sides. Base58 is
+   * case-sensitive, so /profile/<a Solana address> could open the profile
+   * of a different account whose address differs only in case. Each address
+   * now opens its own account, and a case variant with no account is a 404.
+   */
+  @test()
+  async read_solanaAddressResolvesOnlyExactly() {
+    const { address, caseVariant } = UserControllerReadTest.solanaPair()
+    const holder = await this.userWithAddress(address)
+
+    expect(await this.readStatusFor(caseVariant)).to.be.eq(404)
+
+    const variantHolder = await this.userWithAddress(caseVariant)
+
+    for (const user of [holder, variantHolder]) {
+      const res = await userControllerRead({
+        client: this.apiClient(),
+        path: { address: user.address as never },
+        throwOnError: true,
+      })
+
+      expect(res.data!.address).to.be.eq(user.address)
+      expect(res.data!.name).to.be.eq(user.name)
+    }
+  }
+
+  /**
+   * The other chains keep resolving by their own rule: EVM in any case, TON
+   * in either spelling - including a friendly spelling saved before
+   * addresses were canonicalised on write.
+   */
+  @test()
+  async read_evmAndTonResolveByTheirOwnRules() {
+    const evm = await this.userFixture.createUser()
+    const tonAccount = new Address(0, randomBytes(32))
+    const ton = await this.userWithAddress(tonAccount.toRawString())
+    const legacyAccount = new Address(0, randomBytes(32))
+    const legacyFriendly = legacyAccount.toString({ bounceable: false })
+    // Written past the managers, so the row holds the friendly spelling as
+    // it did before canonicalise-on-write.
+    const legacy = await this.userWithAddress(legacyFriendly)
+
+    expect(legacy.address).to.be.eq(legacyFriendly)
+
+    const cases: [string, User][] = [
+      [evm.address.toLowerCase(), evm],
+      [evm.address.toUpperCase().replace('0X', '0x'), evm],
+      [tonAccount.toString({ bounceable: false }), ton],
+      [tonAccount.toString({ bounceable: true }), ton],
+      [legacyAccount.toRawString(), legacy],
+    ]
+
+    expect(evm.address).to.match(/^0x[\dA-Fa-f]{40}$/)
+
+    for (const [lookup, user] of cases) {
+      const res = await userControllerRead({
+        client: this.apiClient(),
+        path: { address: lookup as never },
+        throwOnError: true,
+      })
+
+      expect(res.data!.name, lookup).to.be.eq(user.name)
+    }
+  }
+
+  /**
+   * A base58 Solana address with both lowercase and uppercase letters, and
+   * the same string with one letter's case flipped.
+   */
+  private static solanaPair(): { address: string; caseVariant: string } {
+    for (;;) {
+      const address = bs58.encode(sign.keyPair().publicKey)
+      const at = address.search(/[a-km-zA-HJ-NP-Z]/)
+
+      if (at < 0 || !/[a-z]/.test(address) || !/[A-Z]/.test(address)) {
+        continue
+      }
+
+      const letter = address[at]
+      const flipped =
+        letter === letter.toLowerCase()
+          ? letter.toUpperCase()
+          : letter.toLowerCase()
+
+      if (!/[1-9A-HJ-NP-Za-km-z]/.test(flipped)) {
+        continue
+      }
+
+      return {
+        address,
+        caseVariant: `${address.slice(0, at)}${flipped}${address.slice(at + 1)}`,
+      }
+    }
+  }
+
+  private async userWithAddress(address: string): Promise<User> {
+    const user = await this.userFixture.createUser()
+
+    user.address = address
+    user.name = faker.person.fullName()
+
+    return runPromise(this.userRepository.saveSingle(user))
+  }
+
+  private async readStatusFor(address: string): Promise<number | undefined> {
+    try {
+      const res = await userControllerRead({
+        client: this.apiClient(),
+        path: { address: address as never },
+        throwOnError: true,
+      })
+
+      return res.status
+    } catch (error: unknown) {
+      if (!axios.isAxiosError(error)) throw error
+
+      return error.response?.status
+    }
   }
 }

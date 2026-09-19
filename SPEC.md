@@ -180,9 +180,11 @@ invoice leaves the product as a PDF, sent by the issuer.
 An EVM address matches whatever its casing, and a TON address in either
 spelling (raw or friendly). A Solana address matches only exactly: base58 is
 case-sensitive, so two addresses that differ only in case are two accounts.
-`WalletAddress.isSame` is the rule. The SQL access filters and the
-worker/viewer resolution use its SQL form (`WalletAddress.sqlListContains`),
-so a query and `Project.isWorker` always give the same answer.
+`WalletAddress.isSame` is the rule. The SQL access filters, the
+worker/viewer resolution and the public profile lookup by address
+(`GET /user/:address/address`) use its SQL form (`WalletAddress.canonicalSql`
+and `sqlListContains`), so a query and `Project.isWorker` always give the
+same answer.
 
 ## What premium governs
 

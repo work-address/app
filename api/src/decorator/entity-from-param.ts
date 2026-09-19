@@ -97,10 +97,11 @@ async function entityTransform(
   if (value === null || value === undefined) return Promise.resolve(value)
 
   // A wallet address in a URL is whatever the user copied out of their wallet,
-  // which for TON is the friendly form while the column holds the raw one. So
-  // TON is collapsed to raw, and the comparison is case-insensitive because an
-  // EVM address is stored with its EIP-55 checksum casing but may be typed in
-  // any case - /profile/UQBKXR… and /profile/0xABC… both resolve.
+  // which for TON is the friendly form while the column holds the raw one, and
+  // for EVM may be in any case while the column keeps the EIP-55 checksum
+  // casing. So /profile/UQBKXR… and /profile/0xabc… both resolve - but only by
+  // each chain's own rule (WalletAddress.isSame): a Solana address is base58,
+  // where case is part of the address, so it resolves only exactly.
   const isAddressLookup = lookupField === 'address' && typeof value === 'string'
   const lookupValue = isAddressLookup
     ? WalletAddress.toStorage(value as string)
@@ -119,14 +120,16 @@ async function entityTransform(
     )
   } else {
     res = await repository.findOne({
-      // Case-insensitive for an address: an EVM address is stored with its
-      // EIP-55 checksum casing but may legitimately be typed in any case, and
-      // the checksum is advisory rather than part of the identity.
+      // Not LOWER() on both sides: that let /profile/<a Solana address> open
+      // the account of another address differing only in case (G17). The
+      // stored address is put in canonical form and compared with every form
+      // isSame counts as this one - the same predicate the access filters use.
       where: (isAddressLookup
         ? {
             [lookupField]: Raw(
-              (alias) => `LOWER(${alias}) = LOWER(:addressValue)`,
-              { addressValue: lookupValue },
+              (alias) =>
+                `${WalletAddress.canonicalSql(alias)} = ANY(:addressForms)`,
+              { addressForms: WalletAddress.matchForms(value as string) },
             ),
           }
         : { [lookupField]: lookupValue }) as FindOptionsWhere<object>,
