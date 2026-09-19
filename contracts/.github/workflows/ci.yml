@@ -39,3 +39,14 @@ jobs:
 
       - name: Typecheck
         run: npx tsc --noEmit
+
+      # packages/identity is pure computation: its tests trap every network
+      # call, and its typecheck runs without Node types so it stays browser-safe.
+      - name: Identity library tests
+        run: npm run test:identity
+
+      - name: Identity library typecheck
+        run: npm run typecheck:identity
+
+      - name: Identity library build
+        run: npm run build -w @work-address/identity

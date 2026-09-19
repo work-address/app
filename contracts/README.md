@@ -9,6 +9,12 @@ Both are immutable deployments with no owner, no pause and no upgrade hook.
 Nothing here depends on the dashboard, the website or a hosted API: a verifier
 needs an RPC endpoint and nothing else.
 
+[`packages/identity`](packages/identity/README.md) (`@work-address/identity`)
+is the open library for the profile side: it builds the salted Merkle tree,
+the commitment the registry stores, the holder's private export, and
+presentations of chosen fields, and verifies them offline. It makes no
+network calls.
+
 > **Unaudited. Not for real funds.** The release gate in SPEC §14 — independent
 > security review, testnet pilot, reproducible verified deployment — has not
 > been met. The Hardhat config has no public network on purpose.
@@ -207,14 +213,25 @@ hold fillers. Values are RFC 8785 JCS of the NFC text, and each field has its
 own random salt. Email, phone, roles, premium and the device time zone are
 excluded by rule.
 
-`test/fixtures/profile-schema-v1.vectors.json` holds three cases: full, sparse,
-and non-ASCII input in NFD. They were written by
+`test/fixtures/profile-schema-v1.vectors.json` holds three anchored cases
+(full, sparse, and non-ASCII input in NFD) and two self-signed ones (an EVM
+wallet with EIP-191, a Solana wallet with Ed25519). Each also carries the JCS
+text of its private export and of one presentation. They were written by
 `test/fixtures/profile-schema-v1.vectors.py`, a standard-library Python encoder
 that shares no code with the TypeScript here. `test/profile-schema-v1.test.ts`
 recomputes every leaf, root and proof in Solidity, using the registry's own
-typehash and OpenZeppelin's `MerkleProof.verify`. It checks every commitment
-against the deployed registry's `profileCommitment()` and publishes it as
-`Current`. Moving one byte of any output makes a new schema id, not an edit.
+typehash and OpenZeppelin's `MerkleProof.verify`. It opens every presentation
+disclosure on chain, rebuilds every root from the export alone, checks every
+anchored commitment against the deployed registry's `profileCommitment()`,
+and publishes it as `Current`. Moving one byte of any output makes a new
+schema id, not an edit.
+
+`packages/identity` reproduces every one of those vectors byte for byte,
+signatures included. `test/identity-library.test.ts` then holds the library to
+the deployed registry on a tree it built with real random salts: its
+commitment is `profileCommitment()`, its disclosures pass
+`MerkleProof.verify`, and `checkPresentation` reads them as `Current`, then
+`Superseded` and `Deactivated`.
 
 ## Develop
 
@@ -222,14 +239,17 @@ against the deployed registry's `profileCommitment()` and publishes it as
 npm install
 npm test
 npm run typecheck
+npm run test:identity        # packages/identity: vectors, tampering, no network
+npm run typecheck:identity   # the library without Node types, then its tests
 npm run deploy:local   # in-process smoke deploy; nothing outlives the command
 ```
 
 CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm run build`, `npm test` and
-`npx tsc --noEmit` on every push to `main` and every pull request, all on
-Hardhat's in-process network. Run the same four before opening one. `tsc` is
-not redundant with the tests: Hardhat loads TypeScript transpile-only, so a
-type error in a test or script shows up nowhere else.
+`npx tsc --noEmit`, then the identity library's tests, typecheck and build, on
+every push to `main` and every pull request, all on Hardhat's in-process
+network. Run the same before opening one. `tsc` is not redundant with the
+tests: Hardhat and mocha load TypeScript transpile-only, so a type error in a
+test or script shows up nowhere else.
 
 Two fixtures are byte-identical copies of files in other repositories, so
 both sides are held to the same bytes (see "Canonical encodings"):
@@ -372,6 +392,10 @@ variant. How it differs from a standard ERC-20, and what that means here:
   `User` record; per-field salts; JCS values; and profile salts kept on the
   holder's device, so a hosted service only ever sees the salts of fields the
   holder shows in public. Changing any of them means a new schema id.
+- Owner confirmation of the self-signed defaults in `packages/identity`: a
+  Solana subject's leaves bind the low 20 bytes of `keccak256(did)`, EVM
+  self-signatures are EIP-191 from an EOA (ERC-1271 needs a chain call), and
+  TON is not supported yet.
 - Salt custody for invoice commitments. If the hosted API holds both values
   and salts, the commitment protects privacy against chain observers but not
   against us, and the docs must say so. InvoiceCommitment v1 fixes the
