@@ -226,6 +226,81 @@ export class UserControllerIdentityNodeTest extends BaseControllerTest {
     ])
   }
 
+  /**
+   * WP-119's local-node run, end to end: v1, v2, a withdrawal from the
+   * holder's own wallet, then v3. At every step the API hosts the version the
+   * registry calls current and no other, and the history it shows is the
+   * registry's own events rather than anything stored here.
+   */
+  @test
+  @timeout(120000)
+  async node_runsThroughV1ThenV2ThenWithdrawalThenV3() {
+    const holder = await this.holder()
+
+    const first = await this.publishOnChain(holder)
+    const hostedV1 = await this.host(holder, first)
+
+    expect(hostedV1.version).to.equal(1)
+    expect(hostedV1.status.result).to.equal('Current')
+    expect(hostedV1.status.subjectDeactivated).to.equal(false)
+
+    const second = await this.publishOnChain(holder, {
+      ...FIELDS,
+      title: 'Commodore',
+    })
+    const hostedV2 = await this.host(holder, second)
+
+    expect(hostedV2.version).to.equal(2)
+    expect(hostedV2.status.result).to.equal('Current')
+    expect(UserControllerIdentityNodeTest.events(hostedV2.history)).to.deep.equal(
+      [
+        { kind: 'PUBLISHED', version: 1 },
+        { kind: 'PUBLISHED', version: 2 },
+      ],
+    )
+
+    // The withdrawal is the holder's own transaction; this service cannot
+    // send it and does not learn about it until it reads the chain again.
+    await (await this.registry(holder.wallet).deactivate(2)).wait()
+
+    const withdrawn = await this.read(holder)
+
+    expect(withdrawn.version).to.equal(2)
+    expect(withdrawn.status.result).to.equal('Deactivated')
+    expect(withdrawn.status.subjectDeactivated).to.equal(true)
+    expect(
+      UserControllerIdentityNodeTest.events(withdrawn.history),
+    ).to.deep.equal([
+      { kind: 'PUBLISHED', version: 1 },
+      { kind: 'PUBLISHED', version: 2 },
+      { kind: 'DEACTIVATED', version: 2 },
+    ])
+
+    // Republishing after a withdrawal appends a version rather than undoing
+    // the withdrawal: the chain keeps both, and the record is active again.
+    const third = await this.publishOnChain(holder, {
+      ...FIELDS,
+      title: 'Rear Admiral, retired',
+    })
+    const hostedV3 = await this.host(holder, third)
+
+    expect(hostedV3.version).to.equal(3)
+    expect(hostedV3.status.result).to.equal('Current')
+    expect(hostedV3.status.subjectDeactivated).to.equal(false)
+    expect(UserControllerIdentityNodeTest.events(hostedV3.history)).to.deep.equal(
+      [
+        { kind: 'PUBLISHED', version: 1 },
+        { kind: 'PUBLISHED', version: 2 },
+        { kind: 'DEACTIVATED', version: 2 },
+        { kind: 'PUBLISHED', version: 3 },
+      ],
+    )
+
+    // And the superseded versions are refused as such, one run later.
+    expect((await this.publishFails(holder.user, first)).status).to.equal(409)
+    expect((await this.publishFails(holder.user, second)).status).to.equal(409)
+  }
+
   /** ID-05 case 4: after a chain withdrawal, never Current. */
   @test
   @timeout(60000)
@@ -342,6 +417,36 @@ export class UserControllerIdentityNodeTest extends BaseControllerTest {
     expect(Number(version)).to.equal(1)
     expect(Number(status)).to.equal(1) // Active
     expect(onChain).to.equal(commitment)
+  }
+
+  /** PUT /user/identity, expecting it to be hosted. */
+  private async host(holder: IHolder, body: IdentityPublishDto) {
+    return (
+      await userControllerPublishIdentity({
+        client: this.apiClient(),
+        headers: this.auth(holder.user),
+        body,
+        throwOnError: true,
+      })
+    ).data
+  }
+
+  /** GET /user/:address/identity, anonymously, as any reader would. */
+  private async read(holder: IHolder) {
+    return (
+      await userControllerReadIdentity({
+        client: this.apiClient(),
+        path: { address: holder.user.address as never },
+        throwOnError: true,
+      })
+    ).data
+  }
+
+  /** The history as the run cares about it: what happened, and to which version. */
+  private static events(
+    history: { kind: string; version: number }[] | null | undefined,
+  ) {
+    return history?.map(({ kind, version }) => ({ kind, version }))
   }
 
   /** A fresh wallet with gas, and an app account for it. */
