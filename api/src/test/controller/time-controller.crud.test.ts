@@ -3,6 +3,7 @@ import { faker } from '@faker-js/faker'
 import { suite, test } from '@testdeck/mocha'
 import moment from 'moment'
 import fs from 'fs'
+import sharp from 'sharp'
 
 import {
   invoiceControllerCreate,
@@ -34,339 +35,155 @@ export class TimeControllerCrudTest extends BaseControllerTest {
     this.projectManager = this.container.get('ProjectManager')
   }
 
-  @test.skip
-  async _skipped() {
-    // const file = join(__dirname, '../fixture/media/screenshot.webp');
-    const file = join(__dirname, '../fixture/media/screenshot.base64')
-    const stream = fs.readFileSync(file)
+  /**
+   * The media path, end to end: a screenshot the tracker sends is resized
+   * before it is stored - 600px wide, grayscale, webp - and the response
+   * never carries it back, so a tracker reconciling a batch is not handed
+   * the image it just uploaded.
+   */
+  @test
+  async createMany_storesAResizedScreenshot_andNeverEchoesItBack() {
+    const original = fs.readFileSync(
+      join(__dirname, '../fixture/media/screenshot.webp'),
+    )
+    const user = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(user, 0, true, true)
+    const processes = [
+      { name: 'Qtcreator', description: 'Editing', timeMin: 7 },
+      { name: 'Dolphin', description: 'Files', timeMin: 3 },
+    ]
+    const toAt = moment.utc()
+    const entry = {
+      fromIndex: 3000,
+      toIndex: 3001,
+      note: faker.string.uuid(),
+      keyboardKeys: 4,
+      minutesActive: 5,
+      mouseKeys: 3,
+      mouseDistance: 2,
+      fromAt: toAt.clone().subtract(10, 'minutes').toISOString(),
+      toAt: toAt.toISOString(),
+      projectId: project.id,
+      screenshot: original.toString('base64'),
+      processes,
+    }
 
-    // console.log(stream.length)
-
-    const client = this.apiClient()
     const res = await timeControllerCreateOrUpdateMany({
-      client,
+      client: this.apiClient(),
       headers: {
-        'Content-Type': 'application/json',
-        // Authorization: this.authenticator.getTokens(user).accessToken,
-        Authorization:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjBhZmRjZGYzLTQyZmYtNGEzNS05MWZhLWVkOGE1Mzc2YzFlYyIsImFkZHJlc3MiOiJVUUJLWFJrakpFc0toRnA3WFlvcF9XVkxXaXA2QXpIT1dYNUVXNWpkSTZ0QUpRWkoiLCJlbWFpbE9yUGhvbmUiOm51bGwsImlhdCI6MTc2NTE4NzEwOSwiZXhwIjoxNzY2OTE1MTA5fQ.AtXIVuwaBs-1iABXAHKHbfcIRuLWj5Rp0Dgog5Ja7RU',
+        Authorization: this.authenticator.getTokens(user).accessToken,
       },
-      body: [
-        {
-          fromIndex: 1000,
-          toIndex: 1001,
-          note: 'SCREENSHOT TEST',
-          keyboardKeys: faker.number.int(9),
-          minutesActive: faker.number.int(9),
-          mouseKeys: faker.number.int(9),
-          mouseDistance: faker.number.int(9),
-          fromAt: moment.utc().subtract(10, 'minutes').toISOString(),
-          toAt: moment.utc().toISOString(),
-          projectId: 'd650ad83-eab3-4200-9bf2-479a47c59892',
-          // TODO: use image from the test assets
-          screenshot: stream.toString(),
-          processes: [
-            {
-              name: faker.string.uuid(),
-              description: faker.string.uuid(),
-              timeMin: faker.number.int(9),
-            },
-          ],
+      body: [entry] as unknown as ApiTimeCreateDto[],
+      throwOnError: true,
+    })
+
+    expect(res.status).to.be.equal(200)
+    expect(res.data[0].id).to.be.a('string')
+    expect(res.data[0].screenshot).to.be.equal(undefined)
+    expect(res.data[0].processes).to.be.equal(undefined)
+
+    const stored = await runPromise(
+      this.timeRepository.findOneByOrFail({
+        where: { project: { id: project.id } },
+      }),
+    )
+
+    expect(stored.processes).to.be.deep.equal(processes)
+    expect(stored.screenshot).to.be.a('string')
+
+    const image = await sharp(
+      Buffer.from(stored.screenshot as string, 'base64'),
+    ).metadata()
+
+    expect(image.format).to.be.equal('webp')
+    expect(image.width).to.be.equal(600)
+    expect(Buffer.from(stored.screenshot as string, 'base64').length).to.be.lessThan(
+      original.length,
+    )
+  }
+
+  /**
+   * The same slice sent again is the same row, screenshot included: a tracker
+   * that retries an upload must not leave the first image behind, and must
+   * not create a second row for one period of work.
+   */
+  @test
+  async createMany_replacesTheStoredScreenshotWhenTheSliceIsSentAgain() {
+    const first = fs.readFileSync(
+      join(__dirname, '../fixture/media/screenshot.webp'),
+    )
+    const second = fs.readFileSync(
+      join(__dirname, '../fixture/media/screenshot_20260127_184X00.webp'),
+    )
+    const user = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(user, 0, true, true)
+    const toAt = moment.utc()
+    const slice = {
+      fromIndex: 4000,
+      toIndex: 4001,
+      note: 'retried',
+      keyboardKeys: 1,
+      minutesActive: 5,
+      mouseKeys: 1,
+      mouseDistance: 1,
+      fromAt: toAt.clone().subtract(10, 'minutes').toISOString(),
+      toAt: toAt.toISOString(),
+      projectId: project.id,
+    }
+
+    const send = (screenshot: string) =>
+      timeControllerCreateOrUpdateMany({
+        client: this.apiClient(),
+        headers: {
+          Authorization: this.authenticator.getTokens(user).accessToken,
         },
-      ] as ApiTimeCreateDto[],
-      throwOnError: true,
-    })
+        body: [{ ...slice, screenshot }] as unknown as ApiTimeCreateDto[],
+        throwOnError: true,
+      })
 
-    console.log(res.data)
+    const created = await send(first.toString('base64'))
+    const storedFirst = await runPromise(
+      this.timeRepository.findOneByOrFail({
+        where: { project: { id: project.id } },
+      }),
+    )
+
+    const updated = await send(second.toString('base64'))
+    const rows = await runPromise(
+      this.timeRepository.findBy({ where: { project: { id: project.id } } }),
+    )
+
+    expect(updated.data[0].id).to.be.equal(created.data[0].id)
+    expect(rows).to.have.lengthOf(1)
+    expect(rows[0].screenshot).to.be.a('string')
+    expect(rows[0].screenshot).to.not.be.equal(storedFirst.screenshot)
   }
 
-  @test.skip
-  async createPersonalManyWebp() {
-    // const file = join(__dirname, '../fixture/media/screenshot.webp');
-    // const file = join(__dirname, '../fixture/media/screenshor-a.webp');
-    // const file = join(__dirname, '../fixture/media/screenshot.base64');
-    const file = join(__dirname, '../fixture/media/screenshot.webp')
-    const stream = fs.readFileSync(file)
-
+  /**
+   * A projectId the database cannot even parse fails in its own slot, naming
+   * the row it came from, while the valid row beside it is stored.
+   */
+  @test
+  async createPersonalMalformedProjectId_isRefusedInItsOwnSlot() {
     const user = await this.userFixture.createUser()
-    // const projectA = await this.projectFixture.createPersonal(user);
-    // const projectB = await this.projectFixture.createPersonal(user);
-    const projectC = await this.projectFixture.createPersonal(
-      user,
-      0,
-      true,
-      true,
-    )
-
-    const data: TimeCreateDto[] = [
-      // {
-      //   fromIndex: 1000,
-      //   toIndex: 1001,
-      //   note: faker.string.uuid(),
-      //   keyboardKeys: faker.number.int(9),
-      //   minutesActive: faker.number.int(9),
-      //   mouseKeys: faker.number.int(9),
-      //   mouseDistance: faker.number.int(9),
-      //   fromAt: moment.utc().subtract(10, 'minutes').toISOString(),
-      //   toAt: moment.utc().toISOString(),
-      //   projectId: projectA.id,
-      // },
-      // {
-      //   fromIndex: 2000,
-      //   toIndex: 2001,
-      //   note: faker.string.uuid(),
-      //   keyboardKeys: faker.number.int(9),
-      //   minutesActive: faker.number.int(9),
-      //   mouseKeys: faker.number.int(9),
-      //   mouseDistance: faker.number.int(9),
-      //   fromAt: moment.utc().subtract(10, 'minutes').toISOString(),
-      //   toAt: moment.utc().toISOString(),
-      //   projectId: projectB.id,
-      // },
-      {
-        fromIndex: 3000,
-        toIndex: 3001,
-        note: faker.string.uuid(),
-        keyboardKeys: faker.number.int(9),
-        minutesActive: faker.number.int(9),
-        mouseKeys: faker.number.int(9),
-        mouseDistance: faker.number.int(9),
-        fromAt: moment.utc().subtract(10, 'minutes').toISOString(),
-        toAt: moment.utc().toISOString(),
-        projectId: projectC.id,
-        // TODO: use image from the test assets
-        screenshot: stream.toString('base64'),
-        processes: [
-          {
-            name: faker.string.uuid(),
-            description: faker.string.uuid(),
-            timeMin: faker.number.int(9),
-          },
-        ],
-      },
-    ]
-
-    const client = this.apiClient()
-    const res = await timeControllerCreateOrUpdateMany({
-      client,
-      headers: {
-        Authorization: this.authenticator.getTokens(user).accessToken,
-      },
-      body: data as unknown as ApiTimeCreateDto[],
-      throwOnError: true,
+    const project = await this.projectFixture.createPersonal(user)
+    const toAt = moment.utc()
+    const row = (projectId: string, fromIndex: number) => ({
+      fromIndex,
+      toIndex: fromIndex + 1,
+      note: faker.string.uuid(),
+      keyboardKeys: 1,
+      minutesActive: 5,
+      mouseKeys: 1,
+      mouseDistance: 1,
+      fromAt: toAt.clone().subtract(10, 'minutes').toISOString(),
+      toAt: toAt.toISOString(),
+      projectId,
     })
+    const data = [row(project.id, 1000), row('', 2000)]
 
-    console.log('>>>>>', res.data)
-
-    // const timeA = await runPromise(this.timeRepository.findOneByOrFail({
-    //   where: {
-    //     project: projectA,
-    //   },
-    // }));
-    // const timeB = await runPromise(this.timeRepository.findOneByOrFail({
-    //   where: {
-    //     project: projectB,
-    //   },
-    // }));
-    // const timeC = await runPromise(this.timeRepository.findOneByOrFail({
-    //   where: {
-    //     project: projectC,
-    //   },
-    // }));
-
-    // const fromAtA = moment(timeA.fromAt).toISOString();
-    // const fromAtB = moment(timeB.fromAt).toISOString();
-    // const fromAtC = moment(timeC.fromAt).toISOString();
-
-    // expect(fromAtA).to.be.equal(data[0].fromAt);
-    // expect(fromAtB).to.be.equal(data[1].fromAt);
-    // expect(fromAtC).to.be.equal(data[2].fromAt);
-
-    // expect(timeA.screenshot).to.be.null;
-    // expect(timeA.processes).to.be.null;
-    // expect(timeB.screenshot).to.be.null;
-    // expect(timeB.processes).to.be.null;
-    // expect(timeC.screenshot).to.be.not.null;
-    // expect(timeC.processes).to.be.deep.eq(data[2].processes);
-
-    // expect(res.status).to.be.equal(200);
-    // expect(res.data).to.be.deep.equal(data);
-  }
-
-  @test.skip
-  async createRemote() {
-    const file = join(
-      __dirname,
-      '../fixture/media/screenshot_20260127_184X00.webp',
-    )
-    const stream = fs.readFileSync(file)
-    const projectId = '7ec869da-edb9-4ffa-ab96-f749454172ba'
-    const screenshotData = stream.toString('base64')
-
-    console.log('>>>>', screenshotData)
-
-    // const data: TimeCreateDto[] = [
-    const data = [
-      {
-        projectId,
-        fromIndex: 3000,
-        toIndex: 3001,
-        note: 'Test 123',
-        fromAt: '2026-01-27T15:40:00',
-        toAt: '2026-01-27T15:40:00',
-        keyboardKeys: 0,
-        minutesActive: 0,
-        mouseDistance: 0,
-        mouseKeys: 0,
-        procQueryId: 30,
-        processes: [
-          {
-            name: 'Kded6',
-            timeMin: 10,
-          },
-          {
-            name: 'Plasmashell',
-            timeMin: 10,
-          },
-          {
-            name: 'Kdeconnectd',
-            timeMin: 10,
-          },
-          {
-            name: 'Pamac-Tray-Plasma',
-            timeMin: 10,
-          },
-          {
-            name: 'AmneziaVPN',
-            timeMin: 10,
-          },
-          {
-            name: 'Xdg-Desktop-Portal-Kde',
-            timeMin: 10,
-          },
-          {
-            name: 'Qtcreator',
-            timeMin: 10,
-          },
-          {
-            name: 'Dolphin',
-            timeMin: 10,
-          },
-          {
-            name: 'Assistant',
-            timeMin: 10,
-          },
-          {
-            name: 'Time-Tracker',
-            timeMin: 10,
-          },
-        ],
-        screenshot: screenshotData,
-      },
-    ]
-
-    const client = this.apiClient()
     const res = await timeControllerCreateOrUpdateMany({
-      client,
-      headers: {
-        Authorization:
-          'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpZCI6IjBhZmRjZGYzLTQyZmYtNGEzNS05MWZhLWVkOGE1Mzc2YzFlYyIsImFkZHJlc3MiOiJVUUJLWFJrakpFc0toRnA3WFlvcF9XVkxXaXA2QXpIT1dYNUVXNWpkSTZ0QUpRWkoiLCJlbWFpbE9yUGhvbmUiOm51bGwsImlhdCI6MTc2OTQ0ODg4MywiZXhwIjoxNzcxMTc2ODgzfQ.BIc63S3ZqsUkV3nzl6kE5pbaChoZeJtnW2lufuuXx7Y',
-      },
-      body: data as unknown as ApiTimeCreateDto[],
-      throwOnError: true,
-    })
-
-    console.log('>>>>>', res.data)
-  }
-
-  @test.skip
-  async createLocal() {
-    const file = join(
-      __dirname,
-      '../fixture/media/screenshot_20260127_184X00.webp',
-    )
-    const stream = fs.readFileSync(file)
-
-    const user = await this.userFixture.createUser()
-    const projectC = await this.projectFixture.createPersonal(
-      user,
-      0,
-      true,
-      true,
-    )
-
-    const data: TimeCreateDto[] = [
-      {
-        fromIndex: 3000,
-        toIndex: 3001,
-        note: faker.string.uuid(),
-        keyboardKeys: faker.number.int(9),
-        minutesActive: faker.number.int(9),
-        mouseKeys: faker.number.int(9),
-        mouseDistance: faker.number.int(9),
-        fromAt: moment.utc().subtract(10, 'minutes').toISOString(),
-        toAt: moment.utc().toISOString(),
-        projectId: projectC.id,
-        // TODO: use image from the test assets
-        screenshot: stream.toString('base64'),
-        processes: [
-          {
-            name: faker.string.uuid(),
-            description: faker.string.uuid(),
-            timeMin: faker.number.int(9),
-          },
-        ],
-      },
-    ]
-
-    const client = this.apiClient()
-    const res = await timeControllerCreateOrUpdateMany({
-      client,
-      headers: {
-        Authorization: this.authenticator.getTokens(user).accessToken,
-      },
-      body: data as unknown as ApiTimeCreateDto[],
-      throwOnError: true,
-    })
-
-    console.log('>>>>>', res.data)
-  }
-
-  @test.skip
-  async createPersonalInputValidationErrorA() {
-    const user = await this.userFixture.createUser()
-    const projectA = await this.projectFixture.createPersonal(user)
-    const unix = moment().utc()
-    const data: TimeCreateDto[] = [
-      {
-        fromIndex: 1000,
-        toIndex: 1001,
-        note: faker.string.uuid(),
-        keyboardKeys: faker.number.int(9),
-        minutesActive: faker.number.int(9),
-        mouseKeys: faker.number.int(9),
-        mouseDistance: faker.number.int(9),
-        fromAt: moment(unix).subtract(10, 'minutes').toISOString(),
-        toAt: moment(unix).toISOString(),
-        projectId: projectA.id,
-      },
-      {
-        fromIndex: 2000,
-        toIndex: 2001,
-        note: faker.string.uuid(),
-        keyboardKeys: faker.number.int(9),
-        minutesActive: faker.number.int(9),
-        mouseKeys: faker.number.int(9),
-        mouseDistance: faker.number.int(9),
-        fromAt: moment(unix).subtract(10, 'minutes').toISOString(),
-        toAt: moment(unix).toISOString(),
-        projectId: '',
-      },
-    ]
-
-    const client = this.apiClient()
-    const res = await timeControllerCreateOrUpdateMany({
-      client,
+      client: this.apiClient(),
       headers: {
         Authorization: this.authenticator.getTokens(user).accessToken,
       },
@@ -375,16 +192,16 @@ export class TimeControllerCrudTest extends BaseControllerTest {
     })
 
     expect(res.status).to.be.equal(200)
-    expect(res.data).to.be.deep.equal([
-      data[0],
-      {
-        ...data[1],
-        error: {
-          name: 'QueryFailedError',
-          message: 'invalid input syntax for type uuid: ""',
-        },
-      },
-    ])
+    expect(res.data[0].id).to.be.a('string')
+    expect(res.data[1].id).to.be.equal(undefined)
+    expect(res.data[1].error?.name).to.be.equal('QueryFailedError')
+    expect(res.data[1].note).to.be.equal(data[1].note)
+
+    const stored = await runPromise(
+      this.timeRepository.findBy({ where: { project: { id: project.id } } }),
+    )
+
+    expect(stored.map((time) => time.note)).to.be.deep.equal([data[0].note])
   }
 
   @test

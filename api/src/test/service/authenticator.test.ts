@@ -196,14 +196,27 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     expect(error!.message).to.be.eq('jwt malformed')
   }
 
-  @test.skip()
+  /**
+   * The token is signed here rather than pasted in: the literal one this test
+   * used to carry was signed with another secret and had expired in 2023, so
+   * it could only ever have failed as `invalid signature`. It was skipped for
+   * that reason. A token this instance signed, dated an hour into the past,
+   * is expired for the reason the test is about.
+   */
+  @test()
   getEmailFromJwtOrThrowError_errorExpired() {
+    // One clock read, so `iat` and `expiresIn` describe the same hour rather
+    // than two instants that could straddle a second boundary.
+    const issuedAt = Math.floor(Date.now() / 1000) - 60 * 60
+    const expiredToken = jwt.sign(
+      { emailOrPhone: faker.internet.email(), iat: issuedAt },
+      this.parameters.jwtSecret,
+      { expiresIn: 60 * 30 },
+    )
     let error: Error | undefined
-    const oldToken =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbE9yUGhvbmUiOiJPbGdhNTBAeWFob28uY29tIiwiaWF0IjoxNzAzNTg5NzE4LCJleHAiOjE3MDM2MDA1MTh9.Y2De_m7g_ZLmugywlDseKLmPPnJqek_CJl1VIfJe-2o'
 
     try {
-      this.authenticator.getEmailOrPhoneOrThrowError(oldToken)
+      this.authenticator.getEmailOrPhoneOrThrowError(expiredToken)
     } catch (e: unknown) {
       error = e as Error
     }
