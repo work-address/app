@@ -163,6 +163,20 @@ export interface IIdentityStatus {
   unavailable: EIdentityUnavailable | null
 }
 
+/**
+ * The chain half of a view: everything one anonymous read costs the registry,
+ * kept together because it is cached together (IdentityReadCache).
+ */
+export interface IIdentityChainRead {
+  status: IIdentityStatus
+  /**
+   * The subject's events on the registry, oldest first. Null when the chain
+   * could not be read - which is never cached, because a missing history is
+   * an absent fact rather than an answer.
+   */
+  history: IIdentityChainEvent[] | null
+}
+
 /** A holder's hosted presentation, and what the chain says about it now. */
 export interface IIdentityView {
   /** The account's address, as stored. */

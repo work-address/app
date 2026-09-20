@@ -19,6 +19,7 @@ import {
   IIdentityChain,
   IIdentityChainCheck,
   IIdentityChainEvent,
+  IIdentityChainRead,
   IIdentityConfig,
   IIdentityPresentationRef,
   IIdentityPublication,
@@ -30,6 +31,7 @@ import { EWalletChain } from '@/model/user'
 import { UserRepository } from '@/repository/user-repository'
 import { fromPromise } from '@/service/effect-bridge'
 import { IdentityChainFactory } from '@/service/identity-chain-factory'
+import { IdentityReadCache } from '@/service/identity-read-cache'
 import { UserManager } from '@/service/user-manager'
 import { WalletAddress } from '@/service/wallet-address'
 import {
@@ -95,6 +97,8 @@ export class IdentityManager {
   protected userManager: UserManager
   @inject('IdentityChainFactory')
   protected chainFactory: IdentityChainFactory
+  @inject('IdentityReadCache')
+  protected readCache: IdentityReadCache
 
   /**
    * Read on every call rather than cached, so the answer is always the
@@ -190,6 +194,10 @@ export class IdentityManager {
       }
 
       yield* this.userRepository.saveHostedIdentity(user, hosted)
+      // Before the read below, not after: what this instance hosts has just
+      // changed, so anything remembered about the old version is wrong now
+      // rather than merely old.
+      this.readCache.invalidate(hosted.presentation.subject)
 
       const view = yield* fromPromise(() =>
         this.viewOf(user, hosted, chain, answer),
@@ -231,10 +239,23 @@ export class IdentityManager {
         )
       }
 
+      const ref = IdentityManager.refOfHosted(hosted)
+      // The holder's own read always asks the chain. The cache exists for the
+      // anonymous reads a public profile page makes, and the one change this
+      // instance cannot see coming is the holder's own `deactivate` - so the
+      // person who sent it is the one person who must never be told an answer
+      // from before it.
+      const cached =
+        viewer?.id === user.id
+          ? null
+          : this.readCache.get(hosted.presentation.subject, ref)
+
+      if (cached) {
+        return IdentityManager.viewFrom(user, hosted, cached)
+      }
+
       const chain = this.chain()
-      const answer = yield* fromPromise(() =>
-        this.ask(chain, IdentityManager.refOfHosted(hosted)),
-      )
+      const answer = yield* fromPromise(() => this.ask(chain, ref))
 
       return yield* fromPromise(() => this.viewOf(user, hosted, chain, answer))
     })
@@ -251,6 +272,10 @@ export class IdentityManager {
       const hosted = yield* this.userRepository.findHostedIdentity(user)
 
       yield* this.userRepository.removeHostedIdentity(user)
+
+      if (hosted) {
+        this.readCache.invalidate(hosted.presentation.subject)
+      }
 
       return {
         removed: hosted !== undefined,
@@ -431,10 +456,29 @@ export class IdentityManager {
     chain: IIdentityChain,
     answer: ChainAnswer,
   ): Promise<IIdentityView> {
+    return IdentityManager.viewFrom(
+      user,
+      hosted,
+      await this.chainRead(hosted, chain, answer),
+    )
+  }
+
+  /**
+   * The six RPC calls of one read, as one answer. A complete answer is put in
+   * the cache; an unavailable chain and a history that could not be served
+   * are not, because remembering either would keep the registry hidden for
+   * the whole window after it came back.
+   */
+  private async chainRead(
+    hosted: IHostedIdentity,
+    chain: IIdentityChain,
+    answer: ChainAnswer,
+  ): Promise<IIdentityChainRead> {
     if ('unavailable' in answer) {
-      return IdentityManager.viewWithout(user, hosted, answer.unavailable)
+      return IdentityManager.unavailableRead(answer.unavailable)
     }
 
+    const ref = IdentityManager.refOfHosted(hosted)
     const status: IIdentityStatus = {
       result: answer.check.result,
       subjectDeactivated: answer.check.subjectDeactivated,
@@ -446,7 +490,7 @@ export class IdentityManager {
 
     try {
       history = await chain.history(
-        IdentityManager.refOfHosted(hosted),
+        ref,
         this.parameters.identity.deployBlock,
         answer.block,
       )
@@ -456,26 +500,34 @@ export class IdentityManager {
       history = null
     }
 
-    return {
-      address: user.address,
-      subject: hosted.presentation.subject,
-      version: hosted.version,
-      presentation: hosted.presentation,
-      status,
-      history,
+    const read: IIdentityChainRead = { status, history }
+
+    if (history !== null) {
+      this.readCache.set(hosted.presentation.subject, ref, read)
     }
+
+    return read
   }
 
-  private static viewWithout(
+  private static viewFrom(
     user: User,
     hosted: IHostedIdentity,
-    unavailable: EIdentityUnavailable,
+    read: IIdentityChainRead,
   ): IIdentityView {
     return {
       address: user.address,
       subject: hosted.presentation.subject,
       version: hosted.version,
       presentation: hosted.presentation,
+      status: read.status,
+      history: read.history,
+    }
+  }
+
+  private static unavailableRead(
+    unavailable: EIdentityUnavailable,
+  ): IIdentityChainRead {
+    return {
       status: {
         result: null,
         subjectDeactivated: null,
@@ -485,6 +537,18 @@ export class IdentityManager {
       },
       history: null,
     }
+  }
+
+  private static viewWithout(
+    user: User,
+    hosted: IHostedIdentity,
+    unavailable: EIdentityUnavailable,
+  ): IIdentityView {
+    return IdentityManager.viewFrom(
+      user,
+      hosted,
+      IdentityManager.unavailableRead(unavailable),
+    )
   }
 
   private chain(): IIdentityChain {

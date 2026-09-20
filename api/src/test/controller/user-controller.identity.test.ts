@@ -24,6 +24,7 @@ import { IConfigParameters } from '@/model/config'
 import { UserRepository } from '@/repository/user-repository'
 import { runPromise } from '@/service/effect-bridge'
 import { IdentityChainFactory } from '@/service/identity-chain-factory'
+import { IdentityReadCache } from '@/service/identity-read-cache'
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { IdentityRegistryFake } from '@/test/fixture/identity-registry-fake'
 import {
@@ -93,6 +94,13 @@ export class UserControllerIdentityTest extends BaseControllerTest {
   @timeout(10000)
   async before() {
     await super.before()
+
+    // The identity read cache is off for this suite: every case here is about
+    // what the chain says at a given moment, and several change the registry
+    // from outside this instance - which is exactly the change a cache is
+    // allowed to answer late. user-controller.identity-cache.test covers the
+    // cache itself.
+    this.container.get<IdentityReadCache>('IdentityReadCache').ttlMs = 0
 
     this.savedIdentity = { ...this.parameters.identity }
     Object.assign(this.parameters.identity, {

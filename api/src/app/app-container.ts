@@ -16,6 +16,7 @@ import { EntitlementSignature } from '@/service/entitlement-signature'
 import { UserManager } from '@/service/user-manager'
 import { IdentityManager } from '@/service/identity-manager'
 import { IdentityChainFactory } from '@/service/identity-chain-factory'
+import { IdentityReadCache } from '@/service/identity-read-cache'
 import { Mailer } from '@/service/mailer'
 import { Faker } from '@/service/faker'
 import { Authenticator } from '@/service/auth/authenticator'
@@ -90,6 +91,12 @@ export class AppContainer {
     container
       .bind<IdentityChainFactory>('IdentityChainFactory')
       .to(IdentityChainFactory)
+      .inSingletonScope()
+    // One cache for the process, like the chain client above it: a cache per
+    // request would never be read twice and would save nothing.
+    container
+      .bind<IdentityReadCache>('IdentityReadCache')
+      .to(IdentityReadCache)
       .inSingletonScope()
     container.bind<TimeManager>('TimeManager').to(TimeManager)
     container.bind<InvoiceManager>('InvoiceManager').to(InvoiceManager)
