@@ -14,6 +14,9 @@ export default tseslint.config(
       'storybook-static/**',
       'coverage/**',
       'src/shared/api/generated',
+      // Verbatim copy of the identity library, kept in the source repository's
+      // formatting so a diff against api/src/vendor/identity stays empty.
+      'src/shared/vendor/identity/**',
     ],
   },
   ...appBaseConfig,
