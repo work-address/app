@@ -16,6 +16,7 @@ import {
 import { ProfileViewInfoRow } from './profile-view-info-row'
 import { ProfileViewCard } from './profile-view-styles'
 
+import { IdentityProfileChip } from '@/features/identity'
 import { LocalWalletRevealButton } from '@/features/local-wallet'
 import { routes } from '@/routes'
 import {
@@ -140,7 +141,7 @@ export const ProfileViewLinks = ({
                     </Text>
                   )
                 )}
-                <Flex gap={'2'} align={'center'}>
+                <Flex gap={'2'} align={'center'} wrap={'wrap'}>
                   {profileLoading ? (
                     <Skeleton width={'150px'} height={'20px'} loading />
                   ) : (
@@ -161,6 +162,9 @@ export const ProfileViewLinks = ({
                       </Button>
                     )
                   )}
+                  {/* Beside the address it anchors, which is what the chip is
+                      about: the registry keys its records by that address. */}
+                  <IdentityProfileChip address={user?.address} />
                 </Flex>
               </Flex>
               <Flex gap={'2'} align={'center'}>

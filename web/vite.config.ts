@@ -103,6 +103,28 @@ export default defineConfig(({ command, mode }) => {
         },
         {
           extends: true,
+          test: {
+            // Layout, which only a real browser can measure: a jsdom run
+            // reports every width as zero, so a card that scrolled sideways
+            // on a phone would pass. Kept out of `unit` because that project
+            // must stay runnable without playwright installed.
+            name: 'browser',
+            include: ['src/**/*.browser-test.{ts,tsx}'],
+            browser: {
+              enabled: true,
+              headless: true,
+              provider: playwright({}),
+              instances: [
+                {
+                  browser: 'chromium',
+                  viewport: { width: 375, height: 812 },
+                },
+              ],
+            },
+          },
+        },
+        {
+          extends: true,
           plugins: [
             // The plugin will run tests for the stories defined in your Storybook config
             // See options at: https://storybook.js.org/docs/next/writing-tests/integrations/vitest-addon#storybooktest

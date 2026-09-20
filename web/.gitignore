@@ -25,3 +25,6 @@ dist-ssr
 
 *storybook.log
 storybook-static
+
+# Screenshots vitest browser mode writes for a failing assertion.
+.vitest-attachments

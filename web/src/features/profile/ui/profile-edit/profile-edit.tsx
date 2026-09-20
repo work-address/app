@@ -13,6 +13,7 @@ import { ProfileEditLinks } from './profile-edit-links'
 import { ProfileEditVisibility } from './profile-edit-visibility'
 
 import { $user, saveProfileMutation } from '@/entities/profile'
+import { IdentityCard } from '@/features/identity'
 import { LocalWalletCard } from '@/features/local-wallet'
 import { useLeaveConfirm, useConfirm, useBreakpoint } from '@/shared'
 
@@ -178,6 +179,9 @@ export const ProfileEdit = () => {
           />
         </Grid>
       </form>
+      {/* Outside the form for the same reason the wallet card is: both open
+          dialogs whose submit would otherwise save the profile. */}
+      <IdentityCard />
       <LocalWalletCard />
     </Root>
   )
