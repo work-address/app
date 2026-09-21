@@ -416,10 +416,21 @@ where a worker invoices exactly as on the hosted service.
 
 Premium governs **how long recorded time is kept**, and nothing else. On the
 hosted service an unpaid workspace rotates timelogs at 14 days; paying converts
-the whole workspace so nothing rotates. The retention check in `TimeManager` is
-the only code that asks `Entitlement` whether an account is premium. A
-self-hosted instance is unconditionally entitled — unlimited seats, no rotation
-(see `service/entitlement.ts`).
+the whole workspace so nothing rotates. Retention (`TimeManager` on upload,
+`RetentionJob` daily) is the only code that asks `Entitlement` whether an
+account is premium. A self-hosted instance is unconditionally entitled —
+unlimited seats, no rotation, and the retention job is never armed (see
+`service/entitlement.ts`).
+
+Rotation follows DEC-05: an entry is **removed from view and not restorable**
+(a soft delete), and **never before the owner is told**. The dashboard lists
+what will rotate within three days; the first daily run that finds a free
+owner with history due starts their notice and removes nothing, and entries
+rotate only once that notice has run three days. Invoice evidence (entries
+overlapping the same issuer's invoice) never rotates, and neither do a
+marketplace project's hours while its contract runs — they are escrow
+evidence invoiced at the end of a period that can outlast the free window.
+Premium is the pushed flag until the validity the last push carried runs out.
 
 Retention is a property of the workspace, never of one person: `ProjectStatistics`
 and invoice reports aggregate across contributors, so a project whose
