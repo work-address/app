@@ -3,10 +3,13 @@ import {
   IsBoolean,
   IsEnum,
   IsIn,
+  IsInt,
   IsNumber,
   IsOptional,
   IsString,
   IsUUID,
+  Max,
+  Min,
   ValidateNested,
 } from 'class-validator'
 
@@ -93,4 +96,56 @@ export class ProjectSearchDto extends SearchDto {
 export type ProjectAccessAddresses = {
   workerAddresses: string[]
   viewerAddresses: string[]
+}
+
+/**
+ * A new version of the project's invoicing cadence.
+ *
+ * Every field is required: a cadence half-stated is a cadence nobody can
+ * predict, and the one thing this rule has to be is predictable. The shape
+ * alone is checked here - that the zone exists, and that the time of day
+ * parses, is `InvoiceCadence.problems`, so the reasons come back in one
+ * answer rather than as whichever decorator fired first.
+ */
+export class ProjectCadenceDto {
+  /** 0 is Sunday and 6 is Saturday, as `moment().day()` numbers them. */
+  @IsInt()
+  @Min(0)
+  @Max(6)
+  weekday: number
+
+  /** An IANA zone name, e.g. `Europe/Berlin`. */
+  @IsString()
+  timezone: string
+
+  /** The local wall-clock cutoff, `HH:mm`. */
+  @IsString()
+  cutoffLocal: string
+
+  /**
+   * When this version starts governing, in unix milliseconds. Omitted means
+   * "from now", which is what an owner editing the rule today means.
+   */
+  @IsNumber()
+  @IsOptional()
+  effectiveFromUnix?: number
+
+  /**
+   * Hours between a period's cutoff and its invoice. Omitted takes
+   * `InvoiceCadence.DEFAULT_FINALIZATION_DELAY_HOURS`.
+   */
+  @IsInt()
+  @Min(0)
+  @IsOptional()
+  finalizationDelayHours?: number
+}
+
+/**
+ * One worker's answer to automatic issuance. A bare boolean rather than a
+ * bodyless route per answer, so withdrawing consent is the same call as
+ * giving it and cannot be reached by accident.
+ */
+export class ProjectCadenceConsentDto {
+  @IsBoolean()
+  consented: boolean
 }

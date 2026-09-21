@@ -418,6 +418,16 @@
           "marketplaceContractId": {
             "type": "string"
           },
+          "invoiceCadence": {
+            "items": {},
+            "maxItems": 100,
+            "type": "array"
+          },
+          "invoiceCadenceConsent": {
+            "items": {},
+            "maxItems": 100,
+            "type": "array"
+          },
           "id": {
             "minLength": 1,
             "type": "string",
@@ -913,6 +923,45 @@
           "sort",
           "filter",
           "page"
+        ]
+      },
+      "ProjectCadenceDto": {
+        "properties": {
+          "weekday": {
+            "maximum": 6,
+            "type": "integer",
+            "minimum": 0
+          },
+          "timezone": {
+            "type": "string"
+          },
+          "cutoffLocal": {
+            "type": "string"
+          },
+          "effectiveFromUnix": {
+            "type": "number"
+          },
+          "finalizationDelayHours": {
+            "minimum": 0,
+            "type": "integer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "weekday",
+          "timezone",
+          "cutoffLocal"
+        ]
+      },
+      "ProjectCadenceConsentDto": {
+        "properties": {
+          "consented": {
+            "type": "boolean"
+          }
+        },
+        "type": "object",
+        "required": [
+          "consented"
         ]
       },
       "TimeSearchSortDto": {
@@ -1665,6 +1714,16 @@
           },
           "marketplaceContractId": {
             "type": "string"
+          },
+          "invoiceCadence": {
+            "items": {},
+            "maxItems": 100,
+            "type": "array"
+          },
+          "invoiceCadenceConsent": {
+            "items": {},
+            "maxItems": 100,
+            "type": "array"
           },
           "invoices": {
             "$ref": "#/components/schemas/Invoice_search"
@@ -3364,6 +3423,441 @@
           }
         },
         "summary": "Get project statistics for project owner, workers, and viewers",
+        "tags": [
+          "Project"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/project/{id}/cadence": {
+      "get": {
+        "operationId": "ProjectController.readCadence",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Project"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "versions",
+                    "canEdit"
+                  ],
+                  "properties": {
+                    "current": {
+                      "type": "object",
+                      "required": [
+                        "weekday",
+                        "timezone",
+                        "cutoffLocal",
+                        "effectiveFrom",
+                        "finalizationDelayHours"
+                      ],
+                      "properties": {
+                        "weekday": {
+                          "type": "integer"
+                        },
+                        "timezone": {
+                          "type": "string"
+                        },
+                        "cutoffLocal": {
+                          "type": "string"
+                        },
+                        "effectiveFrom": {
+                          "type": "string"
+                        },
+                        "finalizationDelayHours": {
+                          "type": "integer"
+                        }
+                      },
+                      "nullable": true
+                    },
+                    "versions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "weekday",
+                          "timezone",
+                          "cutoffLocal",
+                          "effectiveFrom",
+                          "finalizationDelayHours"
+                        ],
+                        "properties": {
+                          "weekday": {
+                            "type": "integer"
+                          },
+                          "timezone": {
+                            "type": "string"
+                          },
+                          "cutoffLocal": {
+                            "type": "string"
+                          },
+                          "effectiveFrom": {
+                            "type": "string"
+                          },
+                          "finalizationDelayHours": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "nextCutoff": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "nextIssueAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "consented": {
+                      "type": "boolean",
+                      "nullable": true
+                    },
+                    "canEdit": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "Project does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "NotFoundError"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Project does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Read the project's invoicing cadence, the next cutoff, and your own consent",
+        "tags": [
+          "Project"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "ProjectController.setCadence",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Project"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectCadenceDto"
+              },
+              "example": {
+                "weekday": 1,
+                "timezone": "Europe/Berlin",
+                "cutoffLocal": "09:00",
+                "effectiveFromUnix": 1704067200000,
+                "finalizationDelayHours": 24
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "versions",
+                    "canEdit"
+                  ],
+                  "properties": {
+                    "current": {
+                      "type": "object",
+                      "required": [
+                        "weekday",
+                        "timezone",
+                        "cutoffLocal",
+                        "effectiveFrom",
+                        "finalizationDelayHours"
+                      ],
+                      "properties": {
+                        "weekday": {
+                          "type": "integer"
+                        },
+                        "timezone": {
+                          "type": "string"
+                        },
+                        "cutoffLocal": {
+                          "type": "string"
+                        },
+                        "effectiveFrom": {
+                          "type": "string"
+                        },
+                        "finalizationDelayHours": {
+                          "type": "integer"
+                        }
+                      },
+                      "nullable": true
+                    },
+                    "versions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "weekday",
+                          "timezone",
+                          "cutoffLocal",
+                          "effectiveFrom",
+                          "finalizationDelayHours"
+                        ],
+                        "properties": {
+                          "weekday": {
+                            "type": "integer"
+                          },
+                          "timezone": {
+                            "type": "string"
+                          },
+                          "cutoffLocal": {
+                            "type": "string"
+                          },
+                          "effectiveFrom": {
+                            "type": "string"
+                          },
+                          "finalizationDelayHours": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "nextCutoff": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "nextIssueAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "consented": {
+                      "type": "boolean",
+                      "nullable": true
+                    },
+                    "canEdit": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "Project does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "NotFoundError"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Project does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Add a version to the project invoicing cadence (owner only)",
+        "tags": [
+          "Project"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/project/{id}/cadence/consent": {
+      "put": {
+        "operationId": "ProjectController.setCadenceConsent",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Project"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ProjectCadenceConsentDto"
+              },
+              "example": {
+                "consented": true
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "versions",
+                    "canEdit"
+                  ],
+                  "properties": {
+                    "current": {
+                      "type": "object",
+                      "required": [
+                        "weekday",
+                        "timezone",
+                        "cutoffLocal",
+                        "effectiveFrom",
+                        "finalizationDelayHours"
+                      ],
+                      "properties": {
+                        "weekday": {
+                          "type": "integer"
+                        },
+                        "timezone": {
+                          "type": "string"
+                        },
+                        "cutoffLocal": {
+                          "type": "string"
+                        },
+                        "effectiveFrom": {
+                          "type": "string"
+                        },
+                        "finalizationDelayHours": {
+                          "type": "integer"
+                        }
+                      },
+                      "nullable": true
+                    },
+                    "versions": {
+                      "type": "array",
+                      "items": {
+                        "type": "object",
+                        "required": [
+                          "weekday",
+                          "timezone",
+                          "cutoffLocal",
+                          "effectiveFrom",
+                          "finalizationDelayHours"
+                        ],
+                        "properties": {
+                          "weekday": {
+                            "type": "integer"
+                          },
+                          "timezone": {
+                            "type": "string"
+                          },
+                          "cutoffLocal": {
+                            "type": "string"
+                          },
+                          "effectiveFrom": {
+                            "type": "string"
+                          },
+                          "finalizationDelayHours": {
+                            "type": "integer"
+                          }
+                        }
+                      }
+                    },
+                    "nextCutoff": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "nextIssueAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "consented": {
+                      "type": "boolean",
+                      "nullable": true
+                    },
+                    "canEdit": {
+                      "type": "boolean"
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "Project does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "NotFoundError"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Project does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Record your own consent to automatic invoice issuance",
         "tags": [
           "Project"
         ],

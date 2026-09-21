@@ -19,7 +19,12 @@ import { EProjectState } from '@/model/project'
 import { Invoice } from '@/entity/invoice'
 import { ProjectStatistics } from '@/entity/project-statistics'
 import { Time } from '@/entity/time'
-import { IProject } from '@/model/project'
+import {
+  IInvoiceCadenceConsent,
+  IInvoiceCadenceVersion,
+  IProject,
+} from '@/model/project'
+import { InvoiceCadence } from '@/service/invoice-cadence'
 
 // Access lists are unnested on every access check, so they stay bounded.
 // Addresses are free-form strings (a wallet may not have an account yet),
@@ -117,6 +122,42 @@ export class Project extends AbstractBaseEntity implements IProject {
   @IsString()
   @IsOptional()
   marketplaceContractId?: string | null
+
+  /**
+   * The project's invoicing cadence, every version of it, oldest first.
+   *
+   * A jsonb array on the project rather than a table of its own: a cadence is
+   * a property of a project the way its rate is, and app has exactly five
+   * domains (SPEC.md, "No new domains"). Versioned rather than overwritten so
+   * that an invoice the schedule already issued keeps the rule it was issued
+   * under - see `IInvoiceCadenceVersion` and `InvoiceCadence`.
+   *
+   * Null on every project that never set one, which is what "no automatic
+   * invoicing" means. Only the owner may write it (ProjectController).
+   */
+  @Expose({ groups: ['search'] })
+  @Column('jsonb', { nullable: true })
+  @IsArray()
+  @ArrayMaxSize(InvoiceCadence.MAX_VERSIONS)
+  @IsOptional()
+  invoiceCadence?: IInvoiceCadenceVersion[] | null
+
+  /**
+   * Who has agreed to have their hours invoiced for them, one entry per
+   * person who has answered.
+   *
+   * Consent is to the automatic issuance of a financial document in your own
+   * name, so it is recorded per project and per worker and nobody is enrolled
+   * by default: a project with a cadence and no consent issues nothing.
+   * Alongside the cadence rather than on User for the same reason the cadence
+   * is here - it is a fact about this project, not about the account.
+   */
+  @Expose({ groups: ['search'] })
+  @Column('jsonb', { nullable: true })
+  @IsArray()
+  @ArrayMaxSize(MAX_COLLABORATORS)
+  @IsOptional()
+  invoiceCadenceConsent?: IInvoiceCadenceConsent[] | null
 
   @Expose({ groups: ['search'] })
   @Type(() => Invoice)

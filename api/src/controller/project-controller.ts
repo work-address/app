@@ -12,6 +12,7 @@ import {
 } from 'routing-controllers'
 import { OpenAPIExtended } from '@/decorator/openapi/openapi-extended'
 import express from 'express'
+import { SchemaObject } from 'openapi3-ts'
 import { App } from '@/app/app'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
@@ -20,13 +21,55 @@ import { EUserRole } from '@/model/user'
 import { CurrentUser } from '@/decorator/current-user'
 import { ProjectRepository } from '@/repository/project-repository'
 import { ProjectStatistics } from '@/entity/project-statistics'
-import { ProjectSearchDto } from '@/model/dto/project'
+import {
+  ProjectCadenceConsentDto,
+  ProjectCadenceDto,
+  ProjectSearchDto,
+} from '@/model/dto/project'
+import { IInvoiceCadenceView } from '@/model/project'
 import { ProjectManager } from '@/service/project-manager'
 import { ProjectStatisticsManager } from '@/service/project-statistics-manager'
 import { EProjectStatisticsPeriod } from '@/model/project-statistics'
 import AccessException from '@/exception/access-exception'
 import { Effect } from 'effect'
 import { runPromise } from '@/service/effect-bridge'
+
+// Module scope, not static fields: decorator arguments are evaluated before
+// static initializers run, so a schema held on the class reads as undefined
+// from the decorators below it.
+
+/** One stored cadence version (`IInvoiceCadenceVersion`). */
+const CADENCE_VERSION_SCHEMA: SchemaObject = {
+  type: 'object',
+  required: [
+    'weekday',
+    'timezone',
+    'cutoffLocal',
+    'effectiveFrom',
+    'finalizationDelayHours',
+  ],
+  properties: {
+    weekday: { type: 'integer' },
+    timezone: { type: 'string' },
+    cutoffLocal: { type: 'string' },
+    effectiveFrom: { type: 'string' },
+    finalizationDelayHours: { type: 'integer' },
+  },
+}
+
+/** What every cadence route answers with (`IInvoiceCadenceView`). */
+const CADENCE_VIEW_SCHEMA: SchemaObject = {
+  type: 'object',
+  required: ['versions', 'canEdit'],
+  properties: {
+    current: { ...CADENCE_VERSION_SCHEMA, nullable: true },
+    versions: { type: 'array', items: CADENCE_VERSION_SCHEMA },
+    nextCutoff: { type: 'string', nullable: true },
+    nextIssueAt: { type: 'string', nullable: true },
+    consented: { type: 'boolean', nullable: true },
+    canEdit: { type: 'boolean' },
+  },
+}
 
 @Authorized([EUserRole.ROLE_USER])
 @JsonController('/project')
@@ -154,6 +197,85 @@ export class ProjectController {
             ),
           ),
         ),
+    )
+  }
+
+  @OpenAPIExtended({
+    summary:
+      "Read the project's invoicing cadence, the next cutoff, and your own consent",
+    response: {
+      schema: null,
+      options: { inlineSchema: CADENCE_VIEW_SCHEMA },
+    },
+  })
+  @Get('/:id/cadence')
+  @HttpCode(200)
+  public readCadence(
+    @EntityFromParam({ paramName: 'id' }) project: Project,
+    @CurrentUser() currentUser: User,
+  ): Promise<IInvoiceCadenceView> {
+    return runPromise(this.projectManager.readCadence(project, currentUser))
+  }
+
+  @OpenAPIExtended({
+    summary: 'Add a version to the project invoicing cadence (owner only)',
+    body: {
+      schema: ProjectCadenceDto,
+      options: {
+        // Fixed, not the clock, so the exported spec is the same on every
+        // export: Mondays at 09:00 Berlin time, from 2024-01-01T00:00Z.
+        example: {
+          weekday: 1,
+          timezone: 'Europe/Berlin',
+          cutoffLocal: '09:00',
+          effectiveFromUnix: 1704067200000,
+          finalizationDelayHours: 24,
+        },
+      },
+    },
+    response: {
+      schema: null,
+      options: { inlineSchema: CADENCE_VIEW_SCHEMA },
+    },
+  })
+  @Put('/:id/cadence')
+  @HttpCode(200)
+  @Authorized([EUserRole.ROLE_USER])
+  public setCadence(
+    @CurrentUser() currentUser: User,
+    @EntityFromParam({ paramName: 'id' }) project: Project,
+    @Body() data: ProjectCadenceDto,
+  ): Promise<IInvoiceCadenceView> {
+    return runPromise(
+      this.projectManager.setCadence(project, currentUser, data),
+    )
+  }
+
+  @OpenAPIExtended({
+    summary: 'Record your own consent to automatic invoice issuance',
+    body: {
+      schema: ProjectCadenceConsentDto,
+      options: { example: { consented: true } },
+    },
+    response: {
+      schema: null,
+      options: { inlineSchema: CADENCE_VIEW_SCHEMA },
+    },
+  })
+  @Put('/:id/cadence/consent')
+  @HttpCode(200)
+  @Authorized([EUserRole.ROLE_USER])
+  public setCadenceConsent(
+    @CurrentUser() currentUser: User,
+    @EntityFromParam({ paramName: 'id' }) project: Project,
+    @Body() data: ProjectCadenceConsentDto,
+  ): Promise<IInvoiceCadenceView> {
+    return runPromise(
+      this.projectManager.setCadenceConsent(
+        project,
+        currentUser,
+        data.consented,
+      ),
     )
   }
 
