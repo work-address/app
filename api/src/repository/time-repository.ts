@@ -611,6 +611,32 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
   }
 
   /**
+   * Everything of the author's on this project that no invoice covers and
+   * that ended by `until`.
+   *
+   * No lower bound, and that is the whole point: a desktop tracker can sync a
+   * Tuesday bucket on the following Monday, after the schedule has already
+   * billed that week. With a lower bound at the period's own start the late
+   * row would fall between two invoices and never be billed at all; with only
+   * an upper bound it is swept into the next period, which is what the
+   * product promises. Periods are processed oldest first, so each one takes
+   * the rows that existed by the time it closed and no more.
+   */
+  public findUninvoicedUnpaidTimeForAuthorUntil(
+    project: Project,
+    author: User,
+    until: Date,
+    options: ITimeReadOptions = {},
+  ): RepoEffect<Time[]> {
+    const qb = this.invoiceableQuery(project, author).andWhere(
+      'time.toAt <= :until',
+      { until },
+    )
+
+    return fromPromise(() => this.lockIf(qb, options).getMany())
+  }
+
+  /**
    * Specific entries, restricted to ones the author may still invoice.
    *
    * Filtered rather than fetched-then-checked so an id belonging to someone

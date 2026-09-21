@@ -1,4 +1,4 @@
-import { Column, Entity, Index, JoinColumn, ManyToOne } from 'typeorm'
+import { Column, Entity, Index, JoinColumn, ManyToOne, Unique } from 'typeorm'
 import { faker } from '@faker-js/faker'
 import { Exclude, Expose, Type } from 'class-transformer'
 import { JSONSchema } from 'class-validator-jsonschema'
@@ -18,6 +18,7 @@ import {
 import {
   EInvoiceCurrency,
   EInvoiceEscrowState,
+  EInvoiceIssuanceKind,
   EInvoiceSettlementKind,
   EInvoiceSnapshotVersion,
   EInvoiceState,
@@ -47,6 +48,20 @@ import type { Time } from '@/entity/time'
   ['escrowChainId', 'escrowAddress', 'escrowAllocationId'],
   { unique: true },
 )
+// A cadence period takes one invoice per issuer, and the database is what
+// makes that true: a scheduler run that overlaps another, or one that is
+// simply run twice, inserts the second row and Postgres refuses it. Manual
+// invoices carry no period, and a unique constraint does not compare rows
+// with nulls in it, so they are all distinct from each other and from every
+// scheduled one - which is exactly the policy: pressing the button is always
+// allowed, and never collides with the schedule.
+@Unique('UQ_INVOICE_SCHEDULED_PERIOD', [
+  'project',
+  'user',
+  'periodStart',
+  'periodEnd',
+  'issuanceKind',
+])
 export class Invoice extends AbstractBaseEntity {
   @Expose({ groups: ['search'] })
   @Type(() => Project)
@@ -76,6 +91,40 @@ export class Invoice extends AbstractBaseEntity {
   @Column('timestamptz')
   @IsDate()
   toAt: Date
+
+  /*
+   * How this invoice came to exist, and - when the schedule raised it - which
+   * cadence period it bills.
+   *
+   * `fromAt`/`toAt` above span the entries actually billed, which is not the
+   * period: a week in which somebody worked one afternoon has a one-afternoon
+   * span and a full week's period. The period is what the schedule promised
+   * to bill once, so it is what the unique key above is drawn on.
+   *
+   * All null on a manual invoice, and on every invoice issued before the
+   * schedule existed. Written once with the rest of the snapshot and never
+   * moved: an invoice cannot be reassigned to another period.
+   */
+
+  @Expose({ groups: ['search'] })
+  @Column({ type: 'text', nullable: true, update: false })
+  @IsEnum(EInvoiceIssuanceKind)
+  @IsOptional()
+  issuanceKind?: EInvoiceIssuanceKind | null
+
+  /** The cutoff that opened the period, exactly as the cadence computed it. */
+  @Expose({ groups: ['search'] })
+  @Column({ type: 'timestamptz', nullable: true, update: false })
+  @IsDate()
+  @IsOptional()
+  periodStart?: Date | null
+
+  /** The cutoff that closed it. */
+  @Expose({ groups: ['search'] })
+  @Column({ type: 'timestamptz', nullable: true, update: false })
+  @IsDate()
+  @IsOptional()
+  periodEnd?: Date | null
 
   /**
    * Whole cents, never dollars.

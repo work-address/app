@@ -90,6 +90,27 @@ export class InvoiceController {
       options: { serializationGroup: 'search' },
     },
   })
+  /**
+   * The manual route, and the policy it keeps now that a schedule exists
+   * (WP-97).
+   *
+   * It stays, unchanged and always available. Somebody who needs to bill
+   * before the week closes - a contract ending mid-week, a client who asks
+   * for it - presses the button, and nothing about the project's cadence
+   * stops them. The two cannot double-bill, for two separate reasons:
+   *
+   * - both only ever bill time no invoice already covers, so whichever comes
+   *   first takes the hours out of the other's reach;
+   * - a manual invoice records no cadence period, and the unique key that
+   *   holds the schedule to one invoice per period never compares rows
+   *   carrying nulls, so a manual invoice neither blocks a scheduled one nor
+   *   is blocked by it.
+   *
+   * What a manual invoice does *not* do is satisfy the period: if work is
+   * logged afterwards, the schedule still raises that period's invoice for
+   * what is left, which is the intended behaviour - the schedule bills what
+   * is outstanding, not "once per week whatever happens".
+   */
   @Post('/project/:projectId')
   public create(
     @CurrentUser() currentUser: User,

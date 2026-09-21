@@ -61,6 +61,37 @@
               }
             ]
           },
+          "issuanceKind": {
+            "enum": [
+              "MANUAL",
+              "SCHEDULED"
+            ],
+            "type": "string"
+          },
+          "periodStart": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "periodEnd": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
           "amountCents": {
             "type": "string",
             "minLength": 1
@@ -2036,6 +2067,37 @@
             ]
           },
           "toAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "issuanceKind": {
+            "enum": [
+              "MANUAL",
+              "SCHEDULED"
+            ],
+            "type": "string"
+          },
+          "periodStart": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "periodEnd": {
             "oneOf": [
               {
                 "format": "date",

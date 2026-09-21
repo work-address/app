@@ -15,6 +15,7 @@ import { User } from '@/entity/user'
 import {
   EInvoiceCurrency,
   EInvoiceEscrowState,
+  EInvoiceIssuanceKind,
   EInvoiceSettlementKind,
   EInvoiceSnapshotVersion,
   EInvoiceState,
@@ -27,6 +28,7 @@ import {
   IInvoiceReport,
 } from '@/model/invoice'
 import { InvoiceCreateDto } from '@/model/dto/invoice'
+import { IInvoiceCadencePeriod } from '@/model/project'
 import { Calc } from '@/service/calc'
 import { InvoiceCommitment } from '@/service/invoice-commitment'
 import { InvoiceEscrow } from '@/service/invoice-escrow'
@@ -37,6 +39,18 @@ import AccessException from '@/exception/access-exception'
 import InvoiceEscrowException from '@/exception/invoice-escrow-exception'
 import InvoicedTimeException from '@/exception/invoiced-time-exception'
 import LegacyInvoiceException from '@/exception/legacy-invoice-exception'
+
+/**
+ * What one scheduled period came to.
+ *
+ * `created` separates "this call raised it" from "it was already there",
+ * which a bare invoice cannot: both are successes, and only the first is an
+ * event. A period with nothing to bill has no invoice at all.
+ */
+export interface IInvoiceIssueOutcome {
+  invoice: Invoice | null
+  created: boolean
+}
 
 /**
  * Invoices are the money record; `Time` is the work record. Nothing else
@@ -534,6 +548,7 @@ export class InvoiceManager {
     author: User,
     times: Time[],
     period: { fromAt: Date; toAt: Date },
+    cadencePeriod?: { start: Date; end: Date },
   ): RepoEffect<Invoice> {
     return Effect.gen(this, function* () {
       const invoice = new Invoice()
@@ -558,6 +573,14 @@ export class InvoiceManager {
       invoice.amountCents = Calc.amountCents(minutesActive, rateHourCents)
       invoice.state = EInvoiceState.REQUESTED
       invoice.paidAt = null
+      // A manual invoice records that it was manual and carries no period, so
+      // the unique key never compares it with anything: pressing the button
+      // is always allowed and never collides with the schedule.
+      invoice.issuanceKind = cadencePeriod
+        ? EInvoiceIssuanceKind.SCHEDULED
+        : EInvoiceIssuanceKind.MANUAL
+      invoice.periodStart = cadencePeriod?.start ?? null
+      invoice.periodEnd = cadencePeriod?.end ?? null
 
       const saved = yield* this.invoiceRepository
         .within(manager)
@@ -842,6 +865,93 @@ export class InvoiceManager {
         'Only whoever issued an invoice can change whether it is paid',
       )
     }
+  }
+
+  /**
+   * Issues one cadence period's invoice for one issuer, or nothing.
+   *
+   * The unit the scheduler works in, and everything that makes the schedule
+   * safe lives here rather than in the loop above it:
+   *
+   * - **Nothing to bill issues nothing.** An empty period leaves no row at
+   *   all, not an invoice for zero. A period with nothing in it is not an
+   *   event.
+   * - **A rerun is idempotent.** The period is looked up inside the
+   *   transaction and the invoice the first run raised is returned unchanged;
+   *   two runs racing are caught by the unique key on the entity, and the
+   *   loser reads the winner's row instead of failing.
+   * - **Late time moves forward.** The entries billed are the issuer's
+   *   uninvoiced hours that *ended by this period's close*, with no lower
+   *   bound, so a Tuesday bucket that syncs a week late is billed by the next
+   *   period rather than falling between two invoices.
+   * - **The rate is the rate at issuance.** The snapshot is written from the
+   *   project as it stands, exactly as a manual invoice's is (DEC-04), so an
+   *   owner who changes the rate changes only periods issued after the
+   *   change - the invoice already raised keeps what it froze.
+   *
+   * The issuer must still be a worker on the project: consent persists, but
+   * somebody taken off the project is no longer billing for it.
+   */
+  public issueForPeriod(
+    project: Project,
+    issuer: User,
+    period: IInvoiceCadencePeriod,
+  ): RepoEffect<IInvoiceIssueOutcome> {
+    return Effect.gen(this, function* () {
+      const accessible = yield* this.assertCanInvoice(project, issuer)
+      const bounds = {
+        start: new Date(period.start),
+        end: new Date(period.end),
+      }
+
+      return yield* this.unitOfWork
+        .run((manager) =>
+          Effect.gen(this, function* () {
+            const already = yield* this.invoiceRepository
+              .within(manager)
+              .findScheduledForPeriod(accessible, issuer, bounds)
+
+            if (already) {
+              return { invoice: already, created: false }
+            }
+
+            const times = yield* this.timeRepository
+              .within(manager)
+              .findUninvoicedUnpaidTimeForAuthorUntil(
+                accessible,
+                issuer,
+                bounds.end,
+                { forUpdate: true },
+              )
+
+            if (times.length === 0) {
+              return { invoice: null, created: false }
+            }
+
+            const invoice = yield* this.issue(
+              manager,
+              accessible,
+              issuer,
+              times,
+              InvoiceManager.spanOf(times),
+              bounds,
+            )
+
+            return { invoice, created: true }
+          }),
+        )
+        .pipe(
+          // The unique key refusing the row means another run got there
+          // first, which is the answer, not a failure.
+          Effect.catchAll((error) =>
+            InvoiceRepository.isDuplicatePeriod(error)
+              ? this.invoiceRepository
+                  .findScheduledForPeriod(project, issuer, bounds)
+                  .pipe(Effect.map((invoice) => ({ invoice, created: false })))
+              : Effect.fail(error),
+          ),
+        )
+    })
   }
 
   /**

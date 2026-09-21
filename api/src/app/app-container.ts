@@ -30,6 +30,7 @@ import { TimeRepository } from '@/repository/time-repository'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { TimeManager } from '@/service/time-manager'
 import { InvoiceManager } from '@/service/invoice-manager'
+import { InvoiceScheduler } from '@/service/invoice-scheduler'
 import { UnitOfWork } from '@/service/unit-of-work'
 import { AuthenticatorTimeTracker } from '@/service/auth/authenticator-time-tracker'
 import { TonProofService } from '@/service/auth/ton-proof-service'
@@ -100,6 +101,12 @@ export class AppContainer {
       .inSingletonScope()
     container.bind<TimeManager>('TimeManager').to(TimeManager)
     container.bind<InvoiceManager>('InvoiceManager').to(InvoiceManager)
+    // One scheduler for the process: it owns a timer, and a second instance
+    // would arm a second one and issue everything twice over.
+    container
+      .bind<InvoiceScheduler>('InvoiceScheduler')
+      .to(InvoiceScheduler)
+      .inSingletonScope()
     container.bind<Mailer>('Mailer').to(Mailer)
     container.bind<ImageResizer>('ImageResizer').to(ImageResizer)
     container.bind<ProjectManager>('ProjectManager').to(ProjectManager)

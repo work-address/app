@@ -28,6 +28,22 @@ export enum EInvoiceEscrowState {
   CANCELLED_REFUNDED = 'CANCELLED_REFUNDED',
 }
 
+/**
+ * How an invoice came to exist.
+ *
+ * `MANUAL` is somebody pressing the button - the route in InvoiceController,
+ * which stays exactly as it was. `SCHEDULED` is the project's own cadence
+ * issuing it, and only a scheduled invoice carries the period it bills, which
+ * is what makes "one invoice per project, issuer and period" enforceable in
+ * the database (see `Invoice`'s unique key).
+ *
+ * Null on invoices issued before this was recorded; they were all manual.
+ */
+export enum EInvoiceIssuanceKind {
+  MANUAL = 'MANUAL',
+  SCHEDULED = 'SCHEDULED',
+}
+
 /** The only currency an invoice is issued in, named so the record says so. */
 export enum EInvoiceCurrency {
   USD = 'USD',

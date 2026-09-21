@@ -110,6 +110,28 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
     )
   }
 
+  /**
+   * Every live project that has stated an invoicing cadence.
+   *
+   * The scheduler's entry point, so it reads the whole set rather than one
+   * person's: a project with no cadence has nothing to issue, and a closed or
+   * deleted one has nobody left to bill. The owner is joined because issuing
+   * needs their address for the invoice's snapshot.
+   */
+  public findWithInvoiceCadence(): RepoEffect<Project[]> {
+    return fromPromise(() =>
+      this.getRepo()
+        .createQueryBuilder('project')
+        .innerJoinAndSelect('project.user', 'owner')
+        .andWhere('project.deletedAt IS NULL')
+        .andWhere('project.state = :state', { state: EProjectState.ACTIVE })
+        .andWhere('project."invoiceCadence" IS NOT NULL')
+        .andWhere(`jsonb_array_length(project."invoiceCadence") > 0`)
+        .orderBy('project.createdAt', 'ASC')
+        .getMany(),
+    )
+  }
+
   public findAndCountAccessibleBy(
     search: ProjectSearchDto,
     user: User,

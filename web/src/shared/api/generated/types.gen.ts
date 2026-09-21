@@ -13,6 +13,9 @@ export type AbstractBaseEntity = {
 export type Invoice = {
     fromAt: string | string;
     toAt: string | string;
+    issuanceKind?: 'MANUAL' | 'SCHEDULED';
+    periodStart?: string | string;
+    periodEnd?: string | string;
     amountCents: string;
     snapshotVersion?: 'LEGACY' | 'V1' | 0 | 1;
     issuerAddress?: string;
@@ -526,6 +529,9 @@ export type InvoiceSearch = {
     user?: UserSearch;
     fromAt?: string | string;
     toAt?: string | string;
+    issuanceKind?: 'MANUAL' | 'SCHEDULED';
+    periodStart?: string | string;
+    periodEnd?: string | string;
     amountCents?: string;
     snapshotVersion?: 'LEGACY' | 'V1' | 0 | 1;
     issuerAddress?: string;

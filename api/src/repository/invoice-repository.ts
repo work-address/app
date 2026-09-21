@@ -18,6 +18,7 @@ import AccessException from '@/exception/access-exception'
 import InvoiceEscrowException from '@/exception/invoice-escrow-exception'
 import { InvoiceSearchDto } from '@/model/dto/invoice'
 import {
+  EInvoiceIssuanceKind,
   EInvoiceSnapshotVersion,
   IInvoiceCommitmentBinding,
 } from '@/model/invoice'
@@ -214,6 +215,42 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
         throw error
       }
     })
+  }
+
+  /**
+   * The scheduled invoice this project's cadence already raised for one
+   * issuer and one period, if it has.
+   *
+   * Read inside the issuing transaction so a rerun answers with the invoice
+   * the first run made rather than trying to insert a second; the unique key
+   * on the entity is what catches two runs that read at the same moment.
+   * Soft-deleted rows count, exactly as they do for the escrow binding: the
+   * constraint compares them too.
+   */
+  public findScheduledForPeriod(
+    project: Project,
+    issuer: User,
+    period: { start: Date; end: Date },
+  ): RepoEffect<Invoice | null> {
+    return fromPromise(() =>
+      this.getRepo().findOne({
+        where: {
+          project: { id: project.id },
+          user: { id: issuer.id },
+          periodStart: period.start,
+          periodEnd: period.end,
+          issuanceKind: EInvoiceIssuanceKind.SCHEDULED,
+        },
+        withDeleted: true,
+      }),
+    )
+  }
+
+  /** Whether an error is the unique key above refusing a duplicate row. */
+  public static isDuplicatePeriod(error: unknown): boolean {
+    return (
+      (error as { code?: string }).code === InvoiceRepository.UNIQUE_VIOLATION
+    )
   }
 
   public findAndCount(

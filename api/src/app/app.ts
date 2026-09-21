@@ -13,6 +13,8 @@ import { HelpController } from '@/controller/help-controller'
 import { ErrorHandler } from '@/middleware/error-handler'
 import { PayloadLogger } from '@/middleware/payload-logger'
 import { IConfigParameters } from '@/model/config'
+import { AppConfig } from '@/app/app-config'
+import { InvoiceScheduler } from '@/service/invoice-scheduler'
 
 import { AuthController } from '@/controller/auth-controller'
 import { ValidateRoles } from '@/middleware/validate-roles'
@@ -70,6 +72,7 @@ export class App {
     )
 
     this.initControllers()
+    this.startInvoiceScheduler()
 
     // Must come after the routes so it sees errors they raise. Sentry.init()
     // itself runs in src/instrument.ts, before any instrumented module loads.
@@ -109,7 +112,27 @@ export class App {
     return this.parameters.port
   }
 
+  /**
+   * Arms the weekly invoice schedule, once the container and the database are
+   * up.
+   *
+   * Not in test: the suite drives the scheduler directly with a fixed clock,
+   * and a timer firing between cases would raise invoices no test asked for
+   * against the same database.
+   */
+  private startInvoiceScheduler() {
+    if (AppConfig.isTest()) {
+      return
+    }
+
+    App.container.get<InvoiceScheduler>('InvoiceScheduler').start()
+  }
+
   public async stop() {
+    if (App.container?.isBound('InvoiceScheduler')) {
+      App.container.get<InvoiceScheduler>('InvoiceScheduler').stop()
+    }
+
     if (App.conn?.isInitialized) {
       await App.conn.destroy()
     }
