@@ -11,10 +11,12 @@ import { Effect } from 'effect'
 
 import { App } from '@/app/app'
 import { Project } from '@/entity/project'
+import { MarketplaceEndDto } from '@/model/dto/marketplace-end'
 import { MarketplaceHireDto } from '@/model/dto/marketplace-hire'
 import { EProjectState } from '@/model/project'
 import { ProjectRepository } from '@/repository/project-repository'
 import { UserRepository } from '@/repository/user-repository'
+import { ProjectManager } from '@/service/project-manager'
 import { EntitlementSignature } from '@/service/entitlement-signature'
 import { WalletAddress } from '@/service/wallet-address'
 import { runPromise } from '@/service/effect-bridge'
@@ -23,6 +25,13 @@ import AuthenticationException from '@/exception/authentication-exception'
 export interface IMarketplaceHireResult {
   projectId: string | null
   created: boolean
+}
+
+export interface IMarketplaceEndResult {
+  /** The project the contract opened; null when it never opened one. */
+  projectId: string | null
+  /** Whether this call is the one that closed it. */
+  closed: boolean
 }
 
 /**
@@ -41,14 +50,22 @@ export class MarketplaceHireController {
   /** Its own header, so a hire and an entitlement push cannot be confused. */
   public static readonly SIGNATURE_HEADER = 'X-Marketplace-Signature'
 
+  /**
+   * The end call's own header, for the same reason: a captured hire must not
+   * be replayable as an end, nor the other way round.
+   */
+  public static readonly END_SIGNATURE_HEADER = 'X-Marketplace-End-Signature'
+
   protected signature: EntitlementSignature
   protected projectRepository: ProjectRepository
   protected userRepository: UserRepository
+  protected projectManager: ProjectManager
 
   constructor() {
     this.signature = App.container.get('EntitlementSignature')
     this.projectRepository = App.container.get('ProjectRepository')
     this.userRepository = App.container.get('UserRepository')
+    this.projectManager = App.container.get('ProjectManager')
   }
 
   @HttpCode(200)
@@ -140,6 +157,56 @@ export class MarketplaceHireController {
         return { projectId: outcome.saved.id, created: outcome.created }
       }),
     )
+  }
+
+  /**
+   * The contract ended on the marketplace, so its project stops taking new
+   * time. Closing it is all this does: `findProjectForTimeTracking` only
+   * matches an ACTIVE project, so a `POST /time` row for it is refused on
+   * its own while every other row in the batch still lands, and the
+   * project's hours and invoices stay readable to everyone who could read
+   * them before.
+   *
+   * Idempotent, and deliberately not a 404 for a contract with no project:
+   * a hire that never opened one has nothing left to stop, and answering an
+   * error would leave the marketplace retrying an end it can never complete.
+   */
+  @HttpCode(200)
+  @Post('/marketplace/end')
+  public async end(
+    @Body() data: MarketplaceEndDto,
+    @Req() request: express.Request,
+  ): Promise<IMarketplaceEndResult> {
+    const signature =
+      request.header(MarketplaceHireController.END_SIGNATURE_HEADER) ?? ''
+
+    if (!this.signature.verify(JSON.stringify(data), signature)) {
+      throw new AuthenticationException('Invalid marketplace signature')
+    }
+
+    if (!this.signature.isWithinReplayWindow(data.issuedAt)) {
+      throw new AuthenticationException(
+        'Marketplace end outside the replay window',
+      )
+    }
+
+    if (!(await this.signature.consumeNonce(data.nonce))) {
+      throw new AuthenticationException('Marketplace end nonce already used')
+    }
+
+    const project = await this.findForContract(data.contractId)
+
+    if (!project) {
+      return { projectId: null, closed: false }
+    }
+
+    if (project.state !== EProjectState.ACTIVE) {
+      return { projectId: project.id, closed: false }
+    }
+
+    await runPromise(this.projectManager.close(project))
+
+    return { projectId: project.id, closed: true }
   }
 
   private findForContract(contractId: string): Promise<Project | null> {
