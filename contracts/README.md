@@ -235,29 +235,32 @@ commitment is `profileCommitment()`, its disclosures pass
 
 ## Develop
 
+This package and `packages/identity` are members of the repository's pnpm
+workspace, so one `pnpm install` at the repository root installs them with the
+API and the dashboard. From `contracts/`:
+
 ```bash
-npm install
-npm test
-npm run typecheck
-npm run test:identity        # packages/identity: vectors, tampering, no network
-npm run typecheck:identity   # the library without Node types, then its tests
-npm run deploy:local   # in-process smoke deploy; nothing outlives the command
+pnpm test
+pnpm run typecheck
+pnpm run test:identity        # packages/identity: vectors, tampering, no network
+pnpm run typecheck:identity   # the library without Node types, then its tests
+pnpm run deploy:local   # in-process smoke deploy; nothing outlives the command
 ```
 
-CI (`.github/workflows/ci.yml`) runs `npm ci`, `npm run build`, `npm test` and
-`npx tsc --noEmit`, then the identity library's tests, typecheck and build, on
-every push to `main` and every pull request, all on Hardhat's in-process
-network. Run the same before opening one. `tsc` is not redundant with the
+CI (the `contracts` job in the repository's `.github/workflows/ci.yml`) runs
+`pnpm install --frozen-lockfile`, compiles, tests and typechecks, then the
+identity library's tests, typecheck and build, on every push and pull request,
+all on Hardhat's in-process network. Run the same before opening one. `tsc` is not redundant with the
 tests: Hardhat and mocha load TypeScript transpile-only, so a type error in a
 test or script shows up nowhere else.
 
-Two fixtures are byte-identical copies of files in other repositories, so
-both sides are held to the same bytes (see "Canonical encodings"):
+Two fixtures are byte-identical copies of files elsewhere, so both sides are
+held to the same bytes (see "Canonical encodings"):
 
 | Fixture | Other copy | What it pins |
 | --- | --- | --- |
-| `test/fixtures/escrow-terms.contract.json` | `web/api/src/test/fixture` | The EIP-712 `Terms` digest the marketplace API signs |
-| `test/fixtures/invoice-commitment.v1.json` | `app/api/src/test/fixture` | InvoiceCommitment v1, which the app computes and the escrow stores |
+| `test/fixtures/escrow-terms.contract.json` | `api/src/test/fixture` in the web repository | The EIP-712 `Terms` digest the marketplace API signs |
+| `test/fixtures/invoice-commitment.v1.json` | `api/src/test/fixture` in this repository | InvoiceCommitment v1, which the app computes and the escrow stores |
 
 Change a shared fixture in both places or in neither.
 `invoice-commitment.v1.json` is also pinned by its SHA-256 in the test on each
@@ -277,7 +280,7 @@ any other; chain id 1 is refused by name.
    timestamp as "now".
 
    ```bash
-   npm run node
+   pnpm run node
    ```
 
    From the web repository, `docker compose -f docker-compose-dev.yml up chain`
@@ -286,7 +289,7 @@ any other; chain id 1 is refused by name.
 2. **Deploy** the test USDT, `MarketplaceEscrow` and `IdentityRegistry`:
 
    ```bash
-   npm run deploy:localhost
+   pnpm run deploy:localhost
    ```
 
    The token is `TetherLikeUSDT`, so the mainnet approve-reset rule applies
@@ -308,14 +311,14 @@ any other; chain id 1 is refused by name.
    than 1 ETH is topped up to 10 ETH for gas:
 
    ```bash
-   npm run mint:localhost -- 0xYourWallet 1000
+   pnpm run mint:localhost -- 0xYourWallet 1000
    ```
 
 4. **Move time.** This calls `evm_increaseTime` and mines one block, so the new
    time is on chain. It takes seconds, or a number ending in `s`, `m`, `h` or `d`:
 
    ```bash
-   npm run time:advance -- 8d
+   pnpm run time:advance -- 8d
    ```
 
 ### Walkthrough: fund, advance, submit, advance, release
@@ -326,7 +329,7 @@ past the 7-day dispute window, releases the bill and refunds the unbilled
 remainder:
 
 ```bash
-npm run walkthrough:localhost
+pnpm run walkthrough:localhost
 ```
 
 ```text
@@ -346,9 +349,9 @@ The same steps through the site:
    key. If the wallet does not know chain 31337, connecting offers to add
    "Hardhat Local" at `http://127.0.0.1:8545`.
 3. As the client, prepare a period that starts soon, then fund it.
-4. `npm run time:advance -- <seconds until work end>`, then submit the invoice
+4. `pnpm run time:advance -- <seconds until work end>`, then submit the invoice
    as the freelancer.
-5. `npm run time:advance -- 7d`, then release. The freelancer receives 95% and
+5. `pnpm run time:advance -- 7d`, then release. The freelancer receives 95% and
    account #1 receives 5%. Refund-remainder returns any unbilled budget.
 
 Two things to know:

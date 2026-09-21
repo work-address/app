@@ -100,14 +100,14 @@ if (check.ok && check.mode === 'anchored') {
 
 ## Develop
 
-From the contracts root, which holds this package as an npm workspace:
+This package is a member of the repository's pnpm workspace; `pnpm install` at
+the repository root installs it. From `contracts/`:
 
 ```bash
-npm ci
-npm run test:identity        # mocha: vectors, tampering, trees, documents, no network
-npm run typecheck:identity   # the library with no Node types, then the tests
-npm run build -w @work-address/identity   # dist/cjs and dist/esm
-npx hardhat test test/identity-library.test.ts   # against the deployed registry
+pnpm run test:identity        # mocha: vectors, tampering, trees, documents, no network
+pnpm run typecheck:identity   # the library with no Node types, then the tests
+pnpm run build:identity       # dist/cjs and dist/esm
+pnpm exec hardhat test test/identity-library.test.ts   # against the deployed registry
 ```
 
 The library's `tsconfig.json` has no Node types, so a Node-only API in `src/`
