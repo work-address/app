@@ -2,6 +2,7 @@ import { injectable } from 'inversify'
 
 import { Invoice } from '@/entity/invoice'
 import {
+  EInvoiceBasis,
   EInvoiceSnapshotVersion,
   IInvoiceLine,
   IInvoiceRecord,
@@ -35,6 +36,13 @@ import LegacyInvoiceException from '@/exception/legacy-invoice-exception'
  * refusals are 409s: they describe the invoice, not a fault in the server,
  * so whichever endpoint asked answers with that instead of a 500.
  *
+ * A FIXED invoice (an agreed sum, `EInvoiceBasis`) adds three keys the
+ * hourly record never carries - `basis`, `milestoneRef` and `description` -
+ * because its lines are empty and its rate zero, and a record of a sum with
+ * nothing saying what it is for would commit to a number and not to a bill.
+ * They are added only on that basis, so every hourly record is the same bytes
+ * it always was and no published vector moves.
+ *
  * `api/src/test/fixture/invoice-record.v1.json` holds the vectors; a change
  * that moves one byte of their output needs a new version, not an edit.
  */
@@ -56,7 +64,7 @@ export class InvoiceRecord {
     const required = <T>(value: T | null | undefined, field: string): T =>
       InvoiceRecord.required(invoice, value, field)
 
-    return {
+    const record: IInvoiceRecord = {
       version: InvoiceRecord.VERSION,
       invoiceId: invoice.id,
       projectId: invoice.project.id,
@@ -80,6 +88,14 @@ export class InvoiceRecord {
         }),
       ),
     }
+
+    if (invoice.basis === EInvoiceBasis.FIXED) {
+      record.basis = EInvoiceBasis.FIXED
+      record.milestoneRef = required(invoice.milestoneRef, 'milestoneRef')
+      record.description = required(invoice.description, 'description')
+    }
+
+    return record
   }
 
   /**

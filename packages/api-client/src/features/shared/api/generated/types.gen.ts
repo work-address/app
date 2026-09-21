@@ -13,9 +13,12 @@ export type AbstractBaseEntity = {
 export type Invoice = {
     fromAt: string | string;
     toAt: string | string;
-    issuanceKind?: 'MANUAL' | 'SCHEDULED';
+    issuanceKind?: 'MANUAL' | 'SCHEDULED' | 'MILESTONE';
     periodStart?: string | string;
     periodEnd?: string | string;
+    basis: 'HOURLY' | 'FIXED';
+    milestoneRef?: string;
+    description?: string;
     amountCents: string;
     snapshotVersion?: 'LEGACY' | 'V1' | 0 | 1;
     issuerAddress?: string;
@@ -542,9 +545,12 @@ export type InvoiceSearch = {
     user?: UserSearch;
     fromAt?: string | string;
     toAt?: string | string;
-    issuanceKind?: 'MANUAL' | 'SCHEDULED';
+    issuanceKind?: 'MANUAL' | 'SCHEDULED' | 'MILESTONE';
     periodStart?: string | string;
     periodEnd?: string | string;
+    basis?: 'HOURLY' | 'FIXED';
+    milestoneRef?: string;
+    description?: string;
     amountCents?: string;
     snapshotVersion?: 'LEGACY' | 'V1' | 0 | 1;
     issuerAddress?: string;
@@ -1485,6 +1491,9 @@ export type InvoiceControllerRecordResponses = {
             toAt: string;
             minutesActive: number;
         }>;
+        basis?: 'FIXED';
+        milestoneRef?: string;
+        description?: string;
     };
 };
 

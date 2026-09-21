@@ -375,7 +375,7 @@ export const timeControllerRemoveProcesses = <ThrowOnError extends boolean = fal
 });
 
 /**
- * Aggregated time totals for project owner, workers, and viewers
+ * Aggregated time totals for project owner, workers, and viewers, optionally inside one window (fromAt/toAt, unix seconds) such as a contract week
  */
 export const timeControllerGetTotals = <ThrowOnError extends boolean = false>(options: Options<TimeControllerGetTotalsData, ThrowOnError>) => (options.client ?? client).get<TimeControllerGetTotalsResponses, TimeControllerGetTotalsErrors, ThrowOnError>({
     responseType: 'json',

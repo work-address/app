@@ -7,6 +7,7 @@ import { Invoice } from '@/entity/invoice'
 import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
 import {
+  EInvoiceBasis,
   EInvoiceCurrency,
   EInvoiceSnapshotVersion,
   EInvoiceState,
@@ -29,6 +30,9 @@ type Snapshot = {
   fromAt: string
   toAt: string
   lines: IInvoiceLine[]
+  basis?: EInvoiceBasis
+  milestoneRef?: string
+  description?: string
 }
 
 type Vector = { name: string; invoice: Snapshot; record: string }
@@ -76,8 +80,23 @@ export class InvoiceRecordTest {
     invoice.toAt = new Date(snapshot.toAt)
     invoice.lines = snapshot.lines.map((line) => ({ ...line }))
     invoice.state = EInvoiceState.REQUESTED
+    // What a read loads: the column is never null, and every row before
+    // FIXED existed defaulted to HOURLY.
+    invoice.basis = snapshot.basis ?? EInvoiceBasis.HOURLY
+    invoice.milestoneRef = snapshot.milestoneRef ?? null
+    invoice.description = snapshot.description ?? null
 
     return invoice
+  }
+
+  private fixedVector(): Vector {
+    const vector = this.vectors().find(
+      (candidate) => candidate.invoice.basis === EInvoiceBasis.FIXED,
+    )
+
+    expect(vector, 'a FIXED vector').to.not.eq(undefined)
+
+    return vector as Vector
   }
 
   @test()
@@ -167,6 +186,64 @@ export class InvoiceRecordTest {
       expect(this.service.serialise(invoice), `mutation ${index}`).not.to.equal(
         vector.record,
       )
+    }
+  }
+
+  /**
+   * A FIXED invoice has no lines and no rate, so its record says what the sum
+   * is for - its basis, milestone and description - and a change to any of
+   * them is a different record. An hourly record never carries those keys,
+   * which is why the hourly vectors did not move when FIXED arrived.
+   */
+  @test()
+  serialise_ofAFixedInvoiceCommitsToWhatItBillsFor() {
+    const vector = this.fixedVector()
+    const record = JSON.parse(vector.record)
+
+    expect(record).to.deep.include({
+      basis: 'FIXED',
+      milestoneRef: vector.invoice.milestoneRef,
+      description: vector.invoice.description,
+      amountCents: 250000,
+      rateHourCents: 0,
+      minutesActive: 0,
+      lines: [],
+    })
+
+    for (const mutate of [
+      (invoice: Invoice) => (invoice.description = `${invoice.description}.`),
+      (invoice: Invoice) => (invoice.milestoneRef = `${invoice.milestoneRef}0`),
+      (invoice: Invoice) => (invoice.basis = EInvoiceBasis.HOURLY),
+    ]) {
+      const invoice = this.invoiceOf(vector.invoice)
+
+      mutate(invoice)
+
+      expect(this.service.serialise(invoice)).not.to.equal(vector.record)
+    }
+
+    const [hourly] = this.vectors()
+
+    expect(Object.keys(JSON.parse(hourly.record))).to.not.include.members([
+      'basis',
+      'milestoneRef',
+      'description',
+    ])
+  }
+
+  /** A FIXED snapshot that lost what it bills for has no record. */
+  @test()
+  serialise_refusesAFixedSnapshotWithoutItsDescription() {
+    const vector = this.fixedVector()
+
+    for (const field of ['description', 'milestoneRef'] as const) {
+      const invoice = this.invoiceOf(vector.invoice)
+
+      invoice[field] = null
+
+      expect(() => this.service.serialise(invoice))
+        .to.throw(IncompleteInvoiceSnapshotException, field)
+        .with.property('httpCode', 409)
     }
   }
 

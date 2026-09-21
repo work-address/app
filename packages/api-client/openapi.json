@@ -64,7 +64,8 @@
           "issuanceKind": {
             "enum": [
               "MANUAL",
-              "SCHEDULED"
+              "SCHEDULED",
+              "MILESTONE"
             ],
             "type": "string"
           },
@@ -91,6 +92,19 @@
                 "type": "string"
               }
             ]
+          },
+          "basis": {
+            "enum": [
+              "HOURLY",
+              "FIXED"
+            ],
+            "type": "string"
+          },
+          "milestoneRef": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
           },
           "amountCents": {
             "type": "string",
@@ -233,6 +247,7 @@
         "required": [
           "fromAt",
           "toAt",
+          "basis",
           "amountCents",
           "state"
         ],
@@ -2160,7 +2175,8 @@
           "issuanceKind": {
             "enum": [
               "MANUAL",
-              "SCHEDULED"
+              "SCHEDULED",
+              "MILESTONE"
             ],
             "type": "string"
           },
@@ -2187,6 +2203,19 @@
                 "type": "string"
               }
             ]
+          },
+          "basis": {
+            "enum": [
+              "HOURLY",
+              "FIXED"
+            ],
+            "type": "string"
+          },
+          "milestoneRef": {
+            "type": "string"
+          },
+          "description": {
+            "type": "string"
           },
           "amountCents": {
             "type": "string",
@@ -4950,6 +4979,18 @@
                           }
                         }
                       }
+                    },
+                    "basis": {
+                      "type": "string",
+                      "enum": [
+                        "FIXED"
+                      ]
+                    },
+                    "milestoneRef": {
+                      "type": "string"
+                    },
+                    "description": {
+                      "type": "string"
                     }
                   }
                 }

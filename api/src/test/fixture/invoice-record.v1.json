@@ -74,6 +74,27 @@
         ]
       },
       "record": "{\"amountCents\":389,\"currency\":\"USD\",\"invoiceId\":\"52845a7d-9cea-4ef3-b0eb-75f2fe9b71db\",\"issuerAddress\":\"0:4a5d1e2f3c4b5a69788796a5b4c3d2e1f0a9b8c7d6e5f4a3b2c1d0e9f8a7b6c5\",\"issuerId\":\"0bf83702-a16a-420d-a97c-6867c45cdc4f\",\"lines\":[{\"fromAt\":\"2026-09-02T09:00:00.000Z\",\"minutesActive\":4,\"timeId\":\"11f4d191-7d0a-40c8-8310-06fc7bac0ad2\",\"toAt\":\"2026-09-02T09:10:00.000Z\"},{\"fromAt\":\"2026-09-02T09:00:00.000Z\",\"minutesActive\":3,\"timeId\":\"80605015-144a-4599-b57e-1e315fe79d8a\",\"toAt\":\"2026-09-02T09:10:00.000Z\"},{\"fromAt\":\"2026-09-02T09:10:00.000Z\",\"minutesActive\":0,\"timeId\":\"c9d40afd-1121-44d2-9994-af5358caa831\",\"toAt\":\"2026-09-02T09:20:00.000Z\"}],\"minutesActive\":7,\"ownerAddress\":\"7EcDhSYGxXyscszYEp35KHN8vvw3svAuLKTzXwCFLtV\",\"periodEnd\":\"2026-09-02T09:20:00.500Z\",\"periodStart\":\"2026-09-02T09:00:00.000Z\",\"projectId\":\"b173e456-2f6c-40e0-a136-41468a6bbbc2\",\"rateHourCents\":3333,\"version\":1}"
+    },
+    {
+      "name": "a FIXED milestone bills an agreed 250000 cents with no lines, and says what for",
+      "invoice": {
+        "id": "9b0f3c2e-5d1a-4e7b-8c6f-2a4d9e1b7c35",
+        "projectId": "c3a1e8f4-7b2d-4c9e-a5f6-1d8b3e7a9c02",
+        "issuerId": "5e2d8a1c-9f4b-4a7e-b3c6-8d1f2e9a4b70",
+        "issuerAddress": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+        "ownerAddress": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+        "currency": "USD",
+        "rateHourCents": 0,
+        "minutesActive": 0,
+        "amountCents": 250000,
+        "fromAt": "2026-09-07T00:00:00.000Z",
+        "toAt": "2026-09-14T00:00:00.000Z",
+        "lines": [],
+        "basis": "FIXED",
+        "milestoneRef": "0d7c6b5a-4e3f-4a2b-9c1d-8e7f6a5b4c3d",
+        "description": "Milestone 2 — payroll export\nDelivered and accepted: CSV and XLSX, café-style \"quotes\" too"
+      },
+      "record": "{\"amountCents\":250000,\"basis\":\"FIXED\",\"currency\":\"USD\",\"description\":\"Milestone 2 — payroll export\\nDelivered and accepted: CSV and XLSX, café-style \\\"quotes\\\" too\",\"invoiceId\":\"9b0f3c2e-5d1a-4e7b-8c6f-2a4d9e1b7c35\",\"issuerAddress\":\"0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc\",\"issuerId\":\"5e2d8a1c-9f4b-4a7e-b3c6-8d1f2e9a4b70\",\"lines\":[],\"milestoneRef\":\"0d7c6b5a-4e3f-4a2b-9c1d-8e7f6a5b4c3d\",\"minutesActive\":0,\"ownerAddress\":\"0x70997970c51812dc3a010c7d01b50e0d17dc79c8\",\"periodEnd\":\"2026-09-14T00:00:00.000Z\",\"periodStart\":\"2026-09-07T00:00:00.000Z\",\"projectId\":\"c3a1e8f4-7b2d-4c9e-a5f6-1d8b3e7a9c02\",\"rateHourCents\":0,\"version\":1}"
     }
   ]
 }

@@ -17,7 +17,11 @@ import { Invoice } from '@/entity/invoice'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
 import { EUserRole } from '@/model/user'
-import { IInvoiceEscrowSubmission, IInvoiceRecord } from '@/model/invoice'
+import {
+  EInvoiceBasis,
+  IInvoiceEscrowSubmission,
+  IInvoiceRecord,
+} from '@/model/invoice'
 import { InvoiceManager } from '@/service/invoice-manager'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import {
@@ -245,6 +249,10 @@ export class InvoiceController {
             periodStart: { type: 'string' },
             periodEnd: { type: 'string' },
             lines: { type: 'array', items: InvoiceController.LINE_SCHEMA },
+            // A FIXED invoice's record only: what the agreed sum is for.
+            basis: { type: 'string', enum: [EInvoiceBasis.FIXED] },
+            milestoneRef: { type: 'string' },
+            description: { type: 'string' },
           },
         },
       },
