@@ -31,7 +31,9 @@ const MAX_AMOUNT_CENTS = 2147483647
  *
  * Every field is required and typed, because the controller verifies the HMAC
  * over its own re-serialisation of the parsed DTO: a field the DTO drops is a
- * field the signature no longer covers.
+ * field the signature no longer covers. The wire format is pinned to
+ * test/fixture/marketplace-milestone-invoice.contract.json, which the
+ * marketplace holds a byte-identical copy of and asserts it produces.
  */
 export class MarketplaceMilestoneInvoiceDto {
   /** The marketplace contract, the same id the hire opened the project under. */

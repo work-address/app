@@ -1,0 +1,19 @@
+{
+  "note": "Cross-repo contract for billing an approved marketplace milestone (web WP-93, app MS-03). This file is duplicated byte-for-byte in work-address/web (api/src/test/fixture) and work-address/app (api/src/test/fixture); they are separate repositories, so each owns a copy. web asserts MilestoneInvoiceClient PRODUCES these bytes, this header and this signature; app asserts its MarketplaceMilestoneInvoiceDto re-serialises to exactly them and that the controller ACCEPTS them. milestoneRef is the marketplace's milestone id and the app's idempotency key: the same reference pushed again answers with the first invoice, and pushed again for another contract, freelancer or amountCents it is a 409, so everything but issuedAt and nonce must be the same on every retry. amountCents is whole cents (a milestone agreed for 400 USDT is 40000). workStart and workEnd are unix seconds and workEnd is after workStart. issuedAt (unix seconds) and nonce are the replay guard. The HMAC-SHA256 hex signature over the exact serialised bytes goes in the header named below, with the shared entitlement secret. Every key is always present, in this order. Change both copies in the same pull request or not at all.",
+  "secret": "shared-contract-fixture-secret",
+  "path": "/api/internal/marketplace/milestone-invoice",
+  "header": "X-Marketplace-Milestone-Signature",
+  "body": {
+    "contractId": "9f3d2c41-77b5-4a0e-9a2c-1d5e6b7c8a90",
+    "milestoneRef": "5b8e0c64-2f1a-4d37-9c05-7a61e3f4b2d8",
+    "freelancerId": "c2a7f5d1-8e34-4b60-a9d2-0f6b1e7c3a45",
+    "amountCents": 40000,
+    "description": "Design handoff",
+    "workStart": 1789430400,
+    "workEnd": 1789516800,
+    "issuedAt": 1789517000,
+    "nonce": "3e9a6d12-b47f-4c80-95e1-d2f08a7b6c34"
+  },
+  "serialised": "{\"contractId\":\"9f3d2c41-77b5-4a0e-9a2c-1d5e6b7c8a90\",\"milestoneRef\":\"5b8e0c64-2f1a-4d37-9c05-7a61e3f4b2d8\",\"freelancerId\":\"c2a7f5d1-8e34-4b60-a9d2-0f6b1e7c3a45\",\"amountCents\":40000,\"description\":\"Design handoff\",\"workStart\":1789430400,\"workEnd\":1789516800,\"issuedAt\":1789517000,\"nonce\":\"3e9a6d12-b47f-4c80-95e1-d2f08a7b6c34\"}",
+  "signature": "a7a8fa5155361243dd7c49ce7c8aef79426ee04d3ba84246dabe891f3665d7cc"
+}
