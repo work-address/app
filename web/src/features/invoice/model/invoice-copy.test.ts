@@ -33,6 +33,12 @@ const KEYS = [
   'invoice.document.milestone',
   'invoice.document.corrects',
   'invoice.document.unnamed',
+  // Adjustments (DEC-04).
+  'invoice.adjustment.action',
+  'invoice.adjustment.hint',
+  'invoice.adjustment.issued',
+  'invoice.adjustment.nothingToBill',
+  'invoice.adjustment.failed',
 ]
 
 describe('invoice document copy', () => {

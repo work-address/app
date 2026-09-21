@@ -11,6 +11,7 @@ import {
   type ProjectInvoice,
 } from '../model'
 
+import { InvoiceAdjustmentAction } from './invoice-adjustment-action'
 import { InvoiceDescription } from './invoice-description'
 import { InvoiceDocumentHeader } from './invoice-document-header'
 import { InvoiceEscrowSettlement } from './invoice-escrow-settlement'
@@ -97,6 +98,7 @@ export const InvoiceSheetDesktop = ({
                 compact={false}
               />
             ) : null}
+            <InvoiceAdjustmentAction invoice={invoice} viewerId={viewerId} />
             <Button onClick={saveInvoicePdf}>
               {t('invoice.actions.savePdf')}
             </Button>

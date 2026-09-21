@@ -258,6 +258,8 @@ describe.each([
   })
 
   it('leaves the buttons off the paper', () => {
+    expect(buttonNamed('Bill hours not on this invoice')).toBeDefined()
+    expect(isShown(buttonNamed('Bill hours not on this invoice'))).toBe(false)
     expect(isShown(buttonNamed('Save PDF'))).toBe(false)
     expect(buttonNamed('Mark as unpaid')).toBeDefined()
     expect(isShown(buttonNamed('Mark as unpaid'))).toBe(false)
@@ -295,5 +297,25 @@ describe.each([
     await render(layout, width, unpaid, OWNER_ID)
     expect(buttonNamed('Mark as paid')).toBeUndefined()
     expect(isShown(buttonNamed('Save PDF'))).toBe(true)
+  })
+
+  /**
+   * So is the adjustment (DEC-04): a correction is the issuer's next bill,
+   * and the owner billed cannot raise one against themselves.
+   */
+  it('offers the issuer alone an adjustment for hours not on the invoice', async () => {
+    await render(layout, width, INVOICE, ISSUER_ID)
+    expect(isShown(buttonNamed('Bill hours not on this invoice'))).toBe(true)
+
+    await render(layout, width, INVOICE, OWNER_ID)
+    expect(buttonNamed('Bill hours not on this invoice')).toBeUndefined()
+  })
+
+  /** An adjustment prints which invoice it corrects. */
+  it('names the invoice an adjustment corrects', async () => {
+    const original = 'a0000000-0000-4000-8000-000000000000'
+
+    await render(layout, width, { ...INVOICE, correctsInvoiceId: original })
+    expect(textOf("dl [data-field='corrects']")).toContain(original)
   })
 })

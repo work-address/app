@@ -1,6 +1,7 @@
 import { sample } from 'effector'
 
 import { fetchInvoice, resetInvoice } from './events'
+import { adjustmentFailureMessageKey } from './invoice-adjustment'
 import {
   $hasMoreInvoices,
   $invoicePage,
@@ -14,6 +15,7 @@ import {
 import {
   ensureInvoiceMutation,
   invoiceSelectedTimeMutation,
+  issueInvoiceAdjustmentMutation,
   markInvoicePaidMutation,
   markInvoiceUnpaidMutation,
 } from './mutations'
@@ -131,6 +133,10 @@ export {
 } from './list.stores'
 export * from './format'
 export {
+  adjustmentFailureMessageKey,
+  canAdjustInvoice,
+} from './invoice-adjustment'
+export {
   getInvoiceDocumentFields,
   type InvoiceDocumentField,
   type InvoiceDocumentFieldId,
@@ -176,6 +182,7 @@ sample({
   clock: [
     ensureInvoiceMutation.finished.success,
     invoiceSelectedTimeMutation.finished.success,
+    issueInvoiceAdjustmentMutation.finished.success,
   ],
   filter: ({ result }: { result: EnsuredInvoice }) => Boolean(result?.id),
   fn: ({ result }: { result: EnsuredInvoice }) => ({
@@ -194,5 +201,36 @@ sample({
     messageKey: 'invoice.open.nothingToInvoice',
     position: 'top-center' as const,
   }),
+  target: showToastFx,
+})
+
+/**
+ * An adjustment lands on its own page (above) and says what it is; one the
+ * server refused says whether there was nothing left to bill or it failed.
+ */
+sample({
+  clock: issueInvoiceAdjustmentMutation.finished.success,
+  fn: () => ({
+    type: 'success' as const,
+    messageKey: 'invoice.adjustment.issued',
+    position: 'top-center' as const,
+  }),
+  target: showToastFx,
+})
+
+sample({
+  clock: issueInvoiceAdjustmentMutation.finished.failure,
+  fn: ({ error }) => {
+    const messageKey = adjustmentFailureMessageKey(error)
+
+    return {
+      type:
+        messageKey === 'invoice.adjustment.nothingToBill'
+          ? ('info' as const)
+          : ('error' as const),
+      messageKey,
+      position: 'top-center' as const,
+    }
+  },
   target: showToastFx,
 })

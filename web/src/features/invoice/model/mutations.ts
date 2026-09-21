@@ -61,3 +61,18 @@ export const invoiceSelectedTimeMutation = createMutation({
       }),
     ) as Promise<baseApi.InvoiceSearch | null>,
 })
+
+/**
+ * Issues an adjustment to an invoice (DEC-04): a new invoice, naming this
+ * one, for the issuer's time on its project that no invoice covers and
+ * nobody has marked paid. The invoice it corrects is never changed.
+ */
+export const issueInvoiceAdjustmentMutation = createMutation({
+  handler: async (invoiceId: string) =>
+    runApiData(() =>
+      baseApi.invoiceControllerAdjust({
+        path: { id: invoiceId as never },
+        body: {},
+      }),
+    ) as Promise<baseApi.InvoiceSearch | null>,
+})

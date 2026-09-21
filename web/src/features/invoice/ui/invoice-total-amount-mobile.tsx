@@ -11,6 +11,7 @@ import {
   getInvoiceInfoFields,
 } from '../model'
 
+import { InvoiceAdjustmentAction } from './invoice-adjustment-action'
 import { InvoiceDescription } from './invoice-description'
 import { InvoiceDocumentHeader } from './invoice-document-header'
 import { InvoiceEscrowSettlement } from './invoice-escrow-settlement'
@@ -80,6 +81,11 @@ export const InvoiceSheetMobile = ({
             stretch
           />
         ) : null}
+        <InvoiceAdjustmentAction
+          invoice={invoice}
+          viewerId={viewerId}
+          stretch
+        />
         <Button
           variant={canSettle ? 'soft' : 'solid'}
           color={canSettle ? 'neutral' : undefined}
