@@ -2,7 +2,7 @@ import { expect } from 'chai'
 import axios from 'axios'
 import { faker } from '@faker-js/faker'
 import moment from 'moment'
-import { suite, test } from '@testdeck/mocha'
+import { suite, test, timeout } from '@testdeck/mocha'
 import {
   invoiceControllerCreate,
   invoiceControllerMarkPaid,
@@ -28,6 +28,11 @@ type Mark = typeof invoiceControllerMarkPaid
  * knows whether it arrived. The project owner reads the invoice and pays it,
  * but cannot certify their own payment; anyone else cannot read it at all.
  * Every refusal must leave the invoice and its hours exactly as they were.
+ *
+ * Each test declares a 20s budget. They are HTTP round trips that finish in
+ * well under a second alone, and went past mocha's 2s default - a single
+ * unauthenticated request included - when other suites shared the machine.
+ * A budget only ever makes a test less likely to fail.
  */
 @suite()
 export class InvoiceControllerPaymentTest extends BaseControllerTest {
@@ -137,6 +142,7 @@ export class InvoiceControllerPaymentTest extends BaseControllerTest {
 
   /** 200 for the issuer, both ways, with the hours following the invoice. */
   @test()
+  @timeout(20000)
   async issuer_marksPaidAndBack() {
     const { worker, invoiceId, time } = await this.issued()
 
@@ -170,6 +176,7 @@ export class InvoiceControllerPaymentTest extends BaseControllerTest {
 
   /** Pressing it twice is not an error and changes nothing more. */
   @test()
+  @timeout(20000)
   async issuer_markingTwice_isIdempotent() {
     const { worker, invoiceId, time } = await this.issued()
 
@@ -186,6 +193,7 @@ export class InvoiceControllerPaymentTest extends BaseControllerTest {
    * not certify that they did - and for anyone else. Nothing changes.
    */
   @test()
+  @timeout(20000)
   async nonIssuer_isRefusedAndChangesNothing() {
     const { client, worker, invoiceId, time } = await this.issued()
     const stranger = await this.userFixture.createUser()
@@ -215,6 +223,7 @@ export class InvoiceControllerPaymentTest extends BaseControllerTest {
 
   /** 404 for an id no invoice has, either way. */
   @test()
+  @timeout(20000)
   async unknownInvoice_isNotFound() {
     const user = await this.userFixture.createUser()
     const unknown = faker.string.uuid()
@@ -231,6 +240,7 @@ export class InvoiceControllerPaymentTest extends BaseControllerTest {
 
   /** 401 without a session, before anything else is looked at. */
   @test()
+  @timeout(20000)
   async anonymous_isUnauthorized() {
     const { invoiceId, time } = await this.issued()
     const before = await this.state(invoiceId, time)

@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto'
 import axios from 'axios'
 import moment from 'moment'
 import { expect } from 'chai'
-import { suite, test } from '@testdeck/mocha'
+import { suite, test, timeout } from '@testdeck/mocha'
 import {
   invoiceControllerCreate,
   invoiceControllerRead,
@@ -31,6 +31,9 @@ import { runPromise } from '@/service/effect-bridge'
  * invoice carries no lines and no rate, says what it is billing for, and
  * every reader of it has to cope with zero minutes rather than divide by
  * them.
+ *
+ * Each test declares a 20s budget: signed pushes, reads and races that run
+ * in about a second alone, and past mocha's 2s default on a shared machine.
  */
 @suite()
 export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
@@ -118,6 +121,7 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
    * rate and no minutes instead of dividing the sum by zero.
    */
   @test()
+  @timeout(20000)
   async milestone_billsTheAgreedSumWithNoTimeBehindIt() {
     const { freelancer, project } = await this.hired()
     const body = this.body({
@@ -186,6 +190,7 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
 
   /** The period the milestone names is the invoice's own period. */
   @test()
+  @timeout(20000)
   async milestone_takesItsPeriodFromTheMilestone() {
     const { freelancer, project } = await this.hired()
     const body = this.body({
@@ -210,6 +215,7 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
 
   /** The acceptance case: a duplicate milestone gives one invoice. */
   @test()
+  @timeout(20000)
   async milestone_pushedTwice_billsOnce() {
     const { freelancer, project } = await this.hired()
     const body = this.body({
@@ -242,6 +248,7 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
    * row is inserted, the other call reads it, and only one says `created`.
    */
   @test()
+  @timeout(20000)
   async milestone_racingPushes_billOnce() {
     const { freelancer, project } = await this.hired()
     const milestoneRef = randomUUID()
@@ -281,6 +288,7 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
    * rate and reports both.
    */
   @test()
+  @timeout(20000)
   async hourlyInvoices_areUnchangedByTheNewBasis() {
     const owner = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner, 20)
@@ -326,6 +334,7 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
    * column default is the whole migration.
    */
   @test()
+  @timeout(20000)
   async historicalInvoiceRow_readsAsHourlyWithItsFiguresIntact() {
     const owner = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner, 20)
@@ -359,6 +368,7 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
 
   /** The milestone is the hired worker's to bill; the client is the payer. */
   @test()
+  @timeout(20000)
   async milestone_refusesTheClientAsIssuer() {
     const { client, project } = await this.hired()
 
@@ -374,6 +384,7 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
 
   /** Somebody neither hired nor paying cannot be made to bill either. */
   @test()
+  @timeout(20000)
   async milestone_refusesAStrangerAsIssuer() {
     const { project } = await this.hired()
     const stranger = await this.userFixture.createUser()
@@ -394,6 +405,7 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
    * says so; a 200 with no invoice would hide it.
    */
   @test()
+  @timeout(20000)
   async milestone_refusesAnUnknownContractOrFreelancer() {
     const { freelancer, project } = await this.hired()
 
@@ -410,6 +422,7 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
 
   /** A sum has to be a positive whole number of cents, and a period a period. */
   @test()
+  @timeout(20000)
   async milestone_refusesAnImpossibleBill() {
     const { freelancer, project } = await this.hired()
     const base = {
@@ -441,6 +454,7 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
 
   /** The same guard the hire and the end have, under this call's own header. */
   @test()
+  @timeout(20000)
   async milestone_rejectsBadSignatureStaleCallsAndReplays() {
     const { freelancer, project } = await this.hired()
     const base = {
@@ -468,6 +482,7 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
 
   /** A hire's signature is not a bill's: the headers are not interchangeable. */
   @test()
+  @timeout(20000)
   async milestone_refusesASignatureSentInTheHiresHeader() {
     const { freelancer, project } = await this.hired()
     const body = this.body({
