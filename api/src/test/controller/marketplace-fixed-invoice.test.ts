@@ -15,7 +15,11 @@ import { ConcurrentCalls } from '@/test/fixture/concurrent-calls'
 import { Invoice } from '@/entity/invoice'
 import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
-import { EInvoiceBasis, EInvoiceIssuanceKind } from '@/model/invoice'
+import {
+  EInvoiceBasis,
+  EInvoiceIssuanceKind,
+  EInvoiceState,
+} from '@/model/invoice'
 import { EntitlementSignature } from '@/service/entitlement-signature'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { TimeRepository } from '@/repository/time-repository'
@@ -181,6 +185,55 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
 
     // The work record gained nothing: no entry was invented to stand behind
     // the sum.
+    const entries = await this.timeRepository
+      .getRepo()
+      .count({ where: { project: { id: project.id } } })
+
+    expect(entries).to.be.eq(0)
+  }
+
+  /**
+   * Paid by hand like any other invoice. Marking one paid cascades to the
+   * entries it bills, and a fixed invoice bills none: the cascade has
+   * nothing to touch, the invoice still turns PAID and back, and no entry
+   * appears to carry the flag.
+   */
+  @test()
+  @timeout(20000)
+  async milestone_isMarkedPaidAndBackWithNoEntriesToCascadeTo() {
+    const { client, freelancer, project } = await this.hired()
+    const pushed = await this.post(
+      this.body({
+        contractId: project.marketplaceContractId,
+        freelancerId: freelancer.id,
+      }),
+    )
+
+    expect(pushed.status, JSON.stringify(pushed.data)).to.be.eq(200)
+
+    const mark = (route: 'paid' | 'unpaid', user: User) =>
+      axios.post(
+        `${this.url}/api/invoice/${pushed.data.invoiceId}/${route}`,
+        undefined,
+        { headers: this.auth(user), validateStatus: () => true },
+      )
+
+    // The client pays it; only the freelancer owed the money says it came.
+    expect((await mark('paid', client)).status).to.be.eq(403)
+
+    const paid = await mark('paid', freelancer)
+
+    expect(paid.status, JSON.stringify(paid.data)).to.be.eq(200)
+    expect(paid.data.state).to.be.eq(EInvoiceState.PAID)
+    expect(paid.data.basis).to.be.eq(EInvoiceBasis.FIXED)
+    expect(Number(paid.data.amountCents)).to.be.eq(250000)
+
+    const unpaid = await mark('unpaid', freelancer)
+
+    expect(unpaid.status, JSON.stringify(unpaid.data)).to.be.eq(200)
+    expect(unpaid.data.state).to.be.eq(EInvoiceState.REQUESTED)
+    expect(unpaid.data.paidAt ?? null).to.be.eq(null)
+
     const entries = await this.timeRepository
       .getRepo()
       .count({ where: { project: { id: project.id } } })
