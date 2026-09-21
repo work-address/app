@@ -29,11 +29,26 @@ export class Entitlement {
     return this.parameters.entitlementSecret.length > 0
   }
 
-  public isPremium(user: Pick<User, 'premium'> | null | undefined): boolean {
+  /**
+   * On SaaS, the stored flag - until the validity the last push carried runs
+   * out. `premiumValidUntil` is what stops a billing service that went quiet
+   * from leaving an account premium forever; it is null only on accounts no
+   * push has given a validity yet, which keep the flag as it was.
+   */
+  public isPremium(
+    user: Pick<User, 'premium' | 'premiumValidUntil'> | null | undefined,
+    now: Date = new Date(),
+  ): boolean {
     if (!this.isSaaS()) {
       return true
     }
 
-    return Boolean(user?.premium)
+    if (!user?.premium) {
+      return false
+    }
+
+    const validUntil = user.premiumValidUntil
+
+    return !validUntil || new Date(validUntil).getTime() > now.getTime()
   }
 }

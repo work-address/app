@@ -3,8 +3,12 @@ import { expect } from 'chai'
 import * as fs from 'fs'
 import * as path from 'path'
 
+import { plainToInstance } from 'class-transformer'
+import { validateSync } from 'class-validator'
+
 import { EntitlementSignature } from '@/service/entitlement-signature'
 import { IConfigParameters } from '@/model/config'
+import { EntitlementPushDto } from '@/model/dto/entitlement'
 
 /**
  * The consuming half of the cross-repo contract.
@@ -62,6 +66,22 @@ export class EntitlementContractTest {
     const fixture = this.fixture()
 
     expect(JSON.stringify(fixture.body)).to.be.equal(fixture.serialised)
+  }
+
+  /**
+   * What the controller actually signs over: the body after routing-controllers
+   * has turned it into the DTO. A field the DTO drops or reorders would fail
+   * every push in production with a signature error.
+   */
+  @test()
+  theDtoAcceptsTheBodyAndReSerialisesItToTheSignedBytes() {
+    const fixture = this.fixture()
+    const dto = plainToInstance(EntitlementPushDto, fixture.body)
+
+    expect(validateSync(dto)).to.have.length(0)
+    expect(dto.revision).to.be.a('number')
+    expect(dto.validUntil).to.be.a('string')
+    expect(JSON.stringify(dto)).to.be.equal(fixture.serialised)
   }
 
   @test()

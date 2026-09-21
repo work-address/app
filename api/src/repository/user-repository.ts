@@ -57,6 +57,48 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
     )
   }
 
+  /**
+   * Applies an entitlement push unless the account already holds a newer
+   * one, as a single conditional UPDATE.
+   *
+   * The revision test is in the WHERE clause rather than in code after a
+   * read, so two pushes landing together cannot both pass it: the row lock
+   * orders them, and the older one then matches nothing. An equal revision
+   * is applied - that is the sweep re-asserting the same state, and it is
+   * what repairs a premium flag that an ordinary save of a stale User wrote
+   * back over the last push.
+   */
+  public applyEntitlement(
+    userId: string,
+    premium: boolean,
+    revision: number,
+    validUntil: Date | null,
+  ): RepoEffect<'applied' | 'stale' | 'unknown'> {
+    return fromPromise(async () => {
+      // Raw SQL: both entitlement columns are `update: false`, which the
+      // query builder honours by dropping them from the SET list. The table
+      // name comes from entity metadata, never from request data.
+      const table = this.getRepo().metadata.tableName
+      const result: unknown = await this.getRepo().manager.query(
+        `UPDATE "${table}"
+            SET "premium" = $2,
+                "entitlementRevision" = $3,
+                "premiumValidUntil" = $4
+          WHERE "id" = $1 AND "entitlementRevision" <= $3
+          RETURNING "id"`,
+        [userId, premium, revision, validUntil],
+      )
+
+      if (UserRepository.returnedRowCount(result) > 0) {
+        return 'applied'
+      }
+
+      const exists = await this.getRepo().exists({ where: { id: userId } })
+
+      return exists ? 'stale' : 'unknown'
+    })
+  }
+
   /** The user's hosted presentation, or undefined when none is held. */
   public findHostedIdentity(
     user: User,
@@ -204,5 +246,14 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
       .where(`${WalletAddress.canonicalSql('user.address')} = ANY(:forms)`, {
         forms,
       })
+  }
+
+  /** `query` answers an UPDATE ... RETURNING as `[rows, count]` on pg. */
+  private static returnedRowCount(result: unknown): number {
+    if (!Array.isArray(result)) {
+      return 0
+    }
+
+    return Array.isArray(result[0]) ? result[0].length : result.length
   }
 }

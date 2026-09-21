@@ -4,7 +4,6 @@ import express from 'express'
 import { App } from '@/app/app'
 import { EntitlementPushDto } from '@/model/dto/entitlement'
 import { EntitlementSignature } from '@/service/entitlement-signature'
-import { UserManager } from '@/service/user-manager'
 import { UserRepository } from '@/repository/user-repository'
 import AuthenticationException from '@/exception/authentication-exception'
 import { Effect } from 'effect'
@@ -22,12 +21,10 @@ import { runPromise } from '@/service/effect-bridge'
 @JsonController('/internal')
 export class EntitlementController {
   protected entitlementSignature: EntitlementSignature
-  protected userManager: UserManager
   protected userRepository: UserRepository
 
   constructor() {
     this.entitlementSignature = App.container.get('EntitlementSignature')
-    this.userManager = App.container.get('UserManager')
     this.userRepository = App.container.get('UserRepository')
   }
 
@@ -56,24 +53,21 @@ export class EntitlementController {
 
     return runPromise(
       Effect.gen(this, function* () {
-        const user = yield* this.userRepository.findOneBy({
-          where: { id: data.userId },
-        })
+        const outcome = yield* this.userRepository.applyEntitlement(
+          data.userId,
+          data.premium,
+          data.revision,
+          data.validUntil ? new Date(data.validUntil) : null,
+        )
 
-        // A push for an account this instance has never seen is not an error
-        // the caller can act on - the sweep re-asserts everything
-        // periodically, and failing here would make one stale row poison a
-        // whole reconciliation run.
-        if (!user) {
-          return { applied: false }
-        }
-
-        // Idempotent by construction: the push carries absolute state, so
-        // re-applying it costs one write and changes nothing.
-        user.premium = data.premium
-        yield* this.userManager.saveSingle(user)
-
-        return { applied: true }
+        // 'unknown': a push for an account this instance has never seen is
+        // not an error the caller can act on - the sweep re-asserts
+        // everything periodically, and failing here would make one stale row
+        // poison a whole reconciliation run.
+        // 'stale': the account already holds a newer revision, so this push
+        // was overtaken in flight. Applying it would re-grant after a revoke,
+        // or revoke a paying customer because an old `false` arrived late.
+        return { applied: outcome === 'applied' }
       }),
     )
   }

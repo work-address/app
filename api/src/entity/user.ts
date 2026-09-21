@@ -189,6 +189,25 @@ export class User extends AbstractBaseEntity implements IUser {
   premium?: boolean | null
 
   /**
+   * When the last entitlement push said the grant lapses. After it, a SaaS
+   * instance stops treating the account as premium even if no revoke ever
+   * arrives. Null on accounts no push has reached with a validity yet, which
+   * keeps the flag as it was.
+   *
+   * `update: false` here and on the revision: only UserRepository's
+   * conditional UPDATE writes them, so an ordinary save of a User loaded
+   * before a push landed cannot put an older revision back. No validators
+   * either, for the same reason: nothing a request carries ever reaches
+   * them, and they stay out of the published User schema.
+   */
+  @Column({ type: 'timestamptz', nullable: true, update: false })
+  premiumValidUntil?: Date | null
+
+  /** The highest entitlement revision applied; a lower one is ignored. */
+  @Column({ type: 'integer', default: 0, update: false })
+  entitlementRevision?: number
+
+  /**
    * Whether the profile is public. A hidden one answers 404 to everyone but
    * its holder at GET /user/:address/address and /user/:address/identity,
    * and is left out of other people's /user/search. Only the holder reads or sets it: nobody else is
