@@ -38,6 +38,9 @@ export interface IMarketplaceHireResult {
  */
 @JsonController('/internal')
 export class MarketplaceHireController {
+  /** Its own header, so a hire and an entitlement push cannot be confused. */
+  public static readonly SIGNATURE_HEADER = 'X-Marketplace-Signature'
+
   protected signature: EntitlementSignature
   protected projectRepository: ProjectRepository
   protected userRepository: UserRepository
@@ -54,7 +57,8 @@ export class MarketplaceHireController {
     @Body() data: MarketplaceHireDto,
     @Req() request: express.Request,
   ): Promise<IMarketplaceHireResult> {
-    const signature = request.header('X-Marketplace-Signature') ?? ''
+    const signature =
+      request.header(MarketplaceHireController.SIGNATURE_HEADER) ?? ''
 
     if (!this.signature.verify(JSON.stringify(data), signature)) {
       throw new AuthenticationException('Invalid marketplace signature')
@@ -108,8 +112,13 @@ export class MarketplaceHireController {
           ? [WalletAddress.toCanonical(address)]
           : []
         project.viewerAddresses = []
-        project.trackScreenshots = false
-        project.trackProcesses = false
+        // The terms the freelancer accepted, not this service's defaults: the
+        // offer disclosed what would be recorded and how many hours a week,
+        // and the project is where that agreement takes effect. Absent flags
+        // mean off - a hire that says nothing never turns monitoring on.
+        project.trackScreenshots = data.trackScreenshots ?? false
+        project.trackProcesses = data.trackProcesses ?? false
+        project.weeklyLimit = data.weeklyLimit ?? null
         project.marketplaceContractId = data.contractId
 
         const outcome = yield* this.projectRepository.saveSingle(project).pipe(

@@ -10,10 +10,13 @@ import {
   ArrayMaxSize,
   IsArray,
   IsBoolean,
+  IsInt,
   IsNotEmpty,
   IsOptional,
   IsString,
+  Max,
   MaxLength,
+  Min,
 } from 'class-validator'
 import { EProjectState } from '@/model/project'
 import { Invoice } from '@/entity/invoice'
@@ -32,6 +35,10 @@ import { InvoiceCadence } from '@/service/invoice-cadence'
 // decorator arguments are evaluated before static initializers run.
 export const MAX_COLLABORATORS = 100
 export const MAX_ADDRESS_LENGTH = 128
+
+// A week has 168 hours, so a cap above it caps nothing. Same ceiling as the
+// marketplace offer's, which is where every hired project's cap comes from.
+export const MAX_WEEKLY_LIMIT_HOURS = 168
 
 @JSONSchema({
   example: {
@@ -86,6 +93,22 @@ export class Project extends AbstractBaseEntity implements IProject {
   @IsBoolean()
   @IsOptional()
   trackProcesses?: boolean | null
+
+  /**
+   * Hours a week this project's worker may record, or null for no cap.
+   *
+   * A term of the agreement rather than a tracker setting: a marketplace
+   * hire carries the cap the freelancer accepted, and `TimeManager` measures
+   * every contract week against it. Kept on the project for the same reason
+   * the rate is - it describes this piece of work, not the account doing it.
+   */
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @Column('integer', { nullable: true })
+  @IsInt()
+  @Min(1)
+  @Max(MAX_WEEKLY_LIMIT_HOURS)
+  @IsOptional()
+  weeklyLimit?: number | null
 
   @IsNotEmpty()
   @Expose({ groups: ['search', 'create', 'edit'] })

@@ -41,6 +41,9 @@ export class MarketplaceHireControllerTest extends BaseControllerTest {
       title: 'Payroll dashboard',
       text: 'Build the payroll table',
       rateHour: 45,
+      weeklyLimit: null,
+      trackScreenshots: false,
+      trackProcesses: false,
       issuedAt: Math.floor(Date.now() / 1000),
       nonce: randomUUID(),
       ...overrides,
@@ -72,6 +75,68 @@ export class MarketplaceHireControllerTest extends BaseControllerTest {
     expect(project?.workerAddresses).to.deep.eq([
       WalletAddress.toCanonical(freelancer.address),
     ])
+  }
+
+  /**
+   * The offer disclosed what would be recorded and how many hours a week,
+   * and the project is where that agreement takes effect - not this
+   * service's defaults, which used to open every hired project with
+   * monitoring off whatever the freelancer had accepted (WP-38).
+   */
+  @test
+  async hire_appliesTheAcceptedMonitoringAndWeeklyCap() {
+    const client = await this.userFixture.createUser()
+    const freelancer = await this.userFixture.createUser()
+    const body = this.body({
+      clientId: client.id,
+      freelancerId: freelancer.id,
+      trackScreenshots: true,
+      trackProcesses: true,
+      weeklyLimit: 20,
+    })
+
+    const res = await this.post(body)
+    const project = await this.projectRepository
+      .getRepo()
+      .findOne({ where: { id: res.data.projectId } })
+
+    expect(res.status).to.be.eq(200)
+    expect(project?.trackScreenshots).to.be.true
+    expect(project?.trackProcesses).to.be.true
+    expect(project?.weeklyLimit).to.be.eq(20)
+  }
+
+  /**
+   * A hire that names none of them agrees to none of them: monitoring stays
+   * off and the hours are uncapped, rather than a missing field being read
+   * as consent.
+   */
+  @test
+  async hire_leavesMonitoringOffAndUncappedWhenTheTermsSaidNothing() {
+    const client = await this.userFixture.createUser()
+    const res = await this.post(this.body({ clientId: client.id }))
+    const project = await this.projectRepository
+      .getRepo()
+      .findOne({ where: { id: res.data.projectId } })
+
+    expect(project?.trackScreenshots).to.not.be.ok
+    expect(project?.trackProcesses).to.not.be.ok
+    expect(project?.weeklyLimit ?? null).to.be.null
+  }
+
+  /** A cap nobody could work is a mistake in the terms, not a project. */
+  @test
+  async hire_refusesAWeeklyCapAWeekCannotHold() {
+    const client = await this.userFixture.createUser()
+    const body = this.body({ clientId: client.id, weeklyLimit: 200 })
+
+    const res = await this.post(body)
+    const projects = await this.projectRepository
+      .getRepo()
+      .count({ where: { marketplaceContractId: body.contractId } })
+
+    expect(res.status).to.be.eq(400)
+    expect(projects).to.be.eq(0)
   }
 
   @test

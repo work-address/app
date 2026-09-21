@@ -98,6 +98,7 @@ export interface IProject {
   state: EProjectState
   trackScreenshots?: boolean | null
   trackProcesses?: boolean | null
+  weeklyLimit?: number | null
   workerAddresses?: string[]
   viewerAddresses?: string[]
   invoiceCadence?: IInvoiceCadenceVersion[] | null

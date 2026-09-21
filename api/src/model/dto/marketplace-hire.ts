@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsInt,
   IsNumber,
   IsOptional,
@@ -45,6 +46,32 @@ export class MarketplaceHireDto {
   @Min(0)
   @Max(9999)
   rateHour: number
+
+  /**
+   * Hours a week the contract caps the freelancer at, as the offer they
+   * accepted names it; null when the offer set none. Stored on the project
+   * and enforced there, so the cap the freelancer agreed to is the cap the
+   * tracker applies rather than one re-entered by hand.
+   */
+  @IsOptional()
+  @IsInt()
+  @Min(1)
+  @Max(168)
+  weeklyLimit?: number | null
+
+  /**
+   * What the tracker is asked to record, as the freelancer accepted it.
+   * Absent on a hire sent before the marketplace carried them, which is why
+   * both are optional and default to off: no flag means no monitoring, never
+   * monitoring nobody agreed to.
+   */
+  @IsOptional()
+  @IsBoolean()
+  trackScreenshots?: boolean
+
+  @IsOptional()
+  @IsBoolean()
+  trackProcesses?: boolean
 
   /** Unix seconds. Outside the replay window the call is refused. */
   @IsInt()
