@@ -246,6 +246,21 @@ pnpm exec hardhat test test/identity-verify.test.ts    # the verifier and bin/ve
 pnpm exec hardhat test test/settlement-receipts.test.ts  # receipts against the deployed escrow (ID-09)
 ```
 
+### Copies in other repositories
+
+The marketplace website builds from its own repository and Docker context, so
+it cannot depend on this package; it carries a byte-for-byte copy in
+`web/packages/identity`, as `api/src/vendor/identity` does here. After a
+change to `src/`, commit it, then:
+
+```bash
+node contracts/packages/identity/scripts/vendor.cjs ../web/packages/identity
+```
+
+That copies `src/*.ts` and the vectors and writes `SOURCE.json` (this
+repository's commit and the SHA-256 of every file), which the website's own
+suite holds its copy to. Never edit a copy.
+
 The library's `tsconfig.json` has no Node types, so a Node-only API in `src/`
 fails the typecheck; the command lives in `cli/`, outside it. `test/no-network.test.ts`
 traps every Node and browser way of opening a connection while the whole
