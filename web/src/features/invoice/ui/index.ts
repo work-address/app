@@ -1,6 +1,7 @@
 export * from './invoice-total-amount-desktop'
 export * from './invoice-total-amount-mobile'
 export * from './invoice-description'
+export * from './invoice-reference-code'
 export * from './invoice-time'
 export * from './invoice-payment-actions'
 export * from './invoice-escrow-settlement'

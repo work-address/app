@@ -1,6 +1,5 @@
 import { Flex, Separator, Grid, Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { QRCodeSVG } from 'qrcode.react'
 import { Fragment } from 'react'
 import { useTranslation } from 'react-i18next'
 
@@ -10,10 +9,11 @@ import { $invoice, $invoiceLoading, canMarkInvoiceByHand } from '../model'
 import { InvoiceDescription } from './invoice-description'
 import { InvoiceEscrowSettlement } from './invoice-escrow-settlement'
 import { InvoicePaymentActions } from './invoice-payment-actions'
+import { InvoiceReferenceCode } from './invoice-reference-code'
 import { InvoiceStatusBadge } from './invoice-status-badge'
 
 import { $user } from '@/entities/profile'
-import { BASE_CURRENCY, formatCurrency, Hint, Text } from '@/shared'
+import { formatCurrency, Hint, Text } from '@/shared'
 
 export const InvoiceTotalAmountMobile = () => {
   const { t } = useTranslation()
@@ -92,22 +92,7 @@ export const InvoiceTotalAmountMobile = () => {
         ))}
       </Grid>
       <Separator size={'4'} />
-      <Flex justify={'center'}>
-        {loading ? (
-          <Skeleton height="194px" width="194px" />
-        ) : (
-          <QRCodeSVG
-            value={invoice?.id || ''}
-            size={194}
-            bgColor="transparent"
-            fgColor="var(--ds-accent-9)"
-            marginSize={1}
-          />
-        )}
-      </Flex>
-      <Text color={'gray'} weight={'regular'} align={'center'}>
-        {t('invoice.qrScan.mobile', { currency: BASE_CURRENCY.code })}
-      </Text>
+      <InvoiceReferenceCode invoiceId={invoice?.id} loading={loading} />
     </Flex>
   )
 }

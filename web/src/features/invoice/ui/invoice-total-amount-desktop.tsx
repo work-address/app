@@ -1,7 +1,6 @@
 import { Flex, Grid, Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { QRCodeSVG } from 'qrcode.react'
-import { Trans, useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { useInvoiceInfoFields } from '../lib'
@@ -10,11 +9,11 @@ import { $invoice, $invoiceLoading, canMarkInvoiceByHand } from '../model'
 import { InvoiceDescription } from './invoice-description'
 import { InvoiceEscrowSettlement } from './invoice-escrow-settlement'
 import { InvoicePaymentActions } from './invoice-payment-actions'
+import { InvoiceReferenceCode } from './invoice-reference-code'
 import { InvoiceStatusBadge } from './invoice-status-badge'
 
 import { $user } from '@/entities/profile'
 import {
-  BASE_CURRENCY,
   Text,
   Button,
   copyToClipboard,
@@ -62,26 +61,7 @@ export const InvoiceTotalAmountDesktop = () => {
 
   return (
     <Grid gap={'5'} columns={'auto 1fr'}>
-      <Flex direction={'column'} align={'center'}>
-        {loading ? (
-          <Skeleton width="194px" height="194px" loading={loading} />
-        ) : (
-          <QRCodeSVG
-            value={invoice?.id || ''}
-            size={194}
-            bgColor="transparent"
-            fgColor="var(--ds-accent-9)"
-            marginSize={1}
-          />
-        )}
-        <Text color={'gray'} align={'center'}>
-          <Trans
-            i18nKey="invoice.qrScan.desktop"
-            values={{ currency: BASE_CURRENCY.code }}
-            components={{ br: <br /> }}
-          />
-        </Text>
-      </Flex>
+      <InvoiceReferenceCode invoiceId={invoice?.id} loading={loading} />
       <Flex gap={'3'} direction={'column'}>
         <Flex justify={'between'} align={'center'} gap={'4'}>
           <Flex align={'end'} gap={'3'} wrap={'wrap'}>
