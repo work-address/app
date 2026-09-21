@@ -1,0 +1,44 @@
+#!/usr/bin/env node
+/*
+ * The Work Address independent verifier. In a checkout it runs the
+ * TypeScript source through ts-node, so it can never be a stale build; a
+ * packaged copy without ts-node runs dist/node (pnpm run build).
+ *
+ *   contracts/packages/identity/bin/verify identity presentation.json \
+ *     --manifest contracts/deployments/localhost.json --rpc http://127.0.0.1:8545
+ */
+const fs = require('node:fs')
+const path = require('node:path')
+
+const root = path.join(__dirname, '..')
+const source = path.join(root, 'cli/verify-cli.ts')
+const built = path.join(root, 'dist/node/cli/verify-cli.js')
+
+function hasTsNode() {
+  try {
+    require.resolve('ts-node/register/transpile-only', { paths: [root] })
+
+    return true
+  } catch {
+    return false
+  }
+}
+
+let cli
+
+if (fs.existsSync(source) && hasTsNode()) {
+  process.env.TS_NODE_PROJECT = path.join(root, 'tsconfig.cli.json')
+  require(require.resolve('ts-node/register/transpile-only', { paths: [root] }))
+  cli = require(source)
+} else if (fs.existsSync(built)) {
+  cli = require(built)
+} else {
+  console.error('Run pnpm install (for ts-node) or pnpm run build in contracts/packages/identity first.')
+  process.exit(2)
+}
+
+cli
+  .run(process.argv.slice(2), { out: (line) => console.log(line), err: (line) => console.error(line) })
+  .then((status) => {
+    process.exitCode = status
+  })

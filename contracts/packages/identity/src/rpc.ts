@@ -1,0 +1,159 @@
+/**
+ * The one way this package reaches a network: JSON-RPC 2.0 over HTTP POST to
+ * the endpoint the caller names. The verifier and the receipt builder take a
+ * `RpcRequest` and nothing else, so what they ask, and of whom, is always the
+ * caller's visible choice: hand them this transport with an endpoint you
+ * trust, or any function of the same shape (a wallet's EIP-1193 `request`, a
+ * test chain running in the same program).
+ *
+ * Nothing here knows a Work Address host. The transport posts to `url` and
+ * nowhere else, follows no redirect to another origin's API, and sends no
+ * cookie or credential.
+ */
+export type RpcRequest = (method: string, params: unknown[]) => Promise<unknown>
+
+/** The shape of the Fetch API this transport needs; the runtime's own by default. */
+export type FetchLike = (
+  url: string,
+  init: { method: 'POST'; headers: Record<string, string>; body: string; credentials: 'omit'; redirect: 'error' },
+) => Promise<{ ok: boolean; status: number; json(): Promise<unknown> }>
+
+/**
+ * The endpoint could not answer: it is down, it refused, it answered
+ * something that is not JSON-RPC, or it returned a JSON-RPC error. It says
+ * nothing about the document being checked, and a verifier must never turn
+ * it into a failed proof.
+ */
+export class RpcUnavailableError extends Error {
+  readonly method: string
+  /**
+   * `refused`: the endpoint answered, with a JSON-RPC error. `unreachable`:
+   * no usable answer came back at all. `foreign`: a caller-supplied
+   * `RpcRequest` threw, and only it knows which of the two that was.
+   */
+  readonly kind: 'refused' | 'unreachable' | 'foreign'
+
+  constructor(method: string, message: string, kind: 'refused' | 'unreachable' | 'foreign' = 'unreachable') {
+    super(message)
+    this.name = 'RpcUnavailableError'
+    this.method = method
+    this.kind = kind
+  }
+}
+
+function isRecord(value: unknown): value is Record<string, unknown> {
+  return typeof value === 'object' && value !== null && !Array.isArray(value)
+}
+
+/**
+ * A JSON-RPC transport over the Fetch API, for browsers and Node 18 or
+ * later. Every failure is an `RpcUnavailableError`.
+ */
+export function jsonRpcTransport(url: string, options: { fetch?: FetchLike } = {}): RpcRequest {
+  let nextId = 1
+
+  return async (method, params) => {
+    const send = options.fetch ?? (globalThis as unknown as { fetch?: FetchLike }).fetch
+
+    if (typeof send !== 'function') {
+      throw new RpcUnavailableError(method, 'This runtime has no fetch; pass one, or another RpcRequest')
+    }
+
+    let answer: unknown
+
+    try {
+      const response = await send(url, {
+        method: 'POST',
+        headers: { 'content-type': 'application/json' },
+        body: JSON.stringify({ jsonrpc: '2.0', id: nextId++, method, params }),
+        credentials: 'omit',
+        redirect: 'error',
+      })
+
+      if (!response.ok) {
+        throw new Error(`HTTP ${response.status}`)
+      }
+
+      answer = await response.json()
+    } catch (error) {
+      throw new RpcUnavailableError(method, `${method} failed: ${error instanceof Error ? error.message : String(error)}`)
+    }
+
+    if (!isRecord(answer) || (!('result' in answer) && !('error' in answer))) {
+      throw new RpcUnavailableError(method, `${method} was not answered with JSON-RPC`)
+    }
+    if (answer.error !== undefined && answer.error !== null) {
+      const message = isRecord(answer.error) && typeof answer.error.message === 'string' ? answer.error.message : 'error'
+
+      throw new RpcUnavailableError(method, `${method} was refused: ${message}`, 'refused')
+    }
+
+    return answer.result
+  }
+}
+
+const QUANTITY = /^0x(0|[1-9a-f][0-9a-f]*)$/
+
+/** A JSON-RPC quantity as a safe integer, or an `RpcUnavailableError` naming what came back instead. */
+export function quantity(method: string, value: unknown): number {
+  if (typeof value !== 'string' || !QUANTITY.test(value) || !Number.isSafeInteger(Number(value))) {
+    throw new RpcUnavailableError(method, `${method} answered ${JSON.stringify(value)}, not a quantity`)
+  }
+
+  return Number(value)
+}
+
+export function toQuantity(value: number): string {
+  return `0x${value.toString(16)}`
+}
+
+/** Runs one request, and wraps whatever a foreign `RpcRequest` throws. */
+export async function ask(rpc: RpcRequest, method: string, params: unknown[]): Promise<unknown> {
+  try {
+    return await rpc(method, params)
+  } catch (error) {
+    if (error instanceof RpcUnavailableError) throw error
+
+    throw new RpcUnavailableError(method, `${method} failed: ${error instanceof Error ? error.message : String(error)}`, 'foreign')
+  }
+}
+
+export async function chainIdOf(rpc: RpcRequest): Promise<number> {
+  return quantity('eth_chainId', await ask(rpc, 'eth_chainId', []))
+}
+
+export type BlockRef = { number: number; hash: string; timestamp: number }
+
+/** The block a tag or number names, or null where the node has none (no `finalized` before the merge). */
+export async function blockOf(rpc: RpcRequest, tag: 'latest' | 'finalized' | number): Promise<BlockRef | null> {
+  const method = 'eth_getBlockByNumber'
+  let block: unknown
+
+  try {
+    block = await ask(rpc, method, [typeof tag === 'number' ? toQuantity(tag) : tag, false])
+  } catch (error) {
+    // A node that does not know the tag refuses it; that is "no finalized block", not an outage.
+    if (tag === 'finalized' && error instanceof RpcUnavailableError && error.kind !== 'unreachable') return null
+
+    throw error
+  }
+
+  if (block === null || block === undefined) return null
+
+  if (!isRecord(block) || typeof block.hash !== 'string') {
+    throw new RpcUnavailableError(method, `${method} answered something that is not a block`)
+  }
+
+  return { number: quantity(method, block.number), hash: block.hash, timestamp: quantity(method, block.timestamp) }
+}
+
+/** `eth_call` at an exact block number, so two reads of one verification see one state. */
+export async function callAt(rpc: RpcRequest, to: string, data: string, block: number): Promise<string> {
+  const result = await ask(rpc, 'eth_call', [{ to, data }, toQuantity(block)])
+
+  if (typeof result !== 'string' || !/^0x([0-9a-fA-F]{2})*$/.test(result)) {
+    throw new RpcUnavailableError('eth_call', 'eth_call answered something that is not bytes')
+  }
+
+  return result
+}

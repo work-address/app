@@ -3,8 +3,12 @@ import { ethers } from 'hardhat'
 import fs from 'node:fs'
 import path from 'node:path'
 
+import { spawnSync } from 'node:child_process'
+import os from 'node:os'
+
 import {
   failuresOf,
+  qualificationsOf,
   termsHashOf,
   verifyOrigin,
   type OriginCertificate,
@@ -415,6 +419,91 @@ describe('origin certificate', () => {
     expect(verifyOrigin(moved).versions[0].sameEngagement).to.be.false
     expect(verifyOrigin(moved).allocations[0].termsHashMatches).to.be.false
     expect(failuresOf(moved, verifyOrigin(moved))).to.have.length(3)
+  })
+
+  /**
+   * The v2 preimage gained its origin block in place, so a hire accepted
+   * under the earlier v2 bytes carries a hash the marketplace can no longer
+   * rebuild. Its certificate declares that itself, with version null, and
+   * discloses the terms as they read today. Those bytes do not open the
+   * hash; the verifier says they are unproven, in words, and does not call
+   * the certificate invalid. A certificate that claims a format and misses
+   * it is still refused.
+   */
+  it('reports a certificate that declares version null as unproven, not invalid', async () => {
+    const { signed, signer } = await certificate()
+    // What the older bytes hashed to: anything but the hash of today's preimage.
+    const acceptedHash = ethers.id('the v2 bytes as they were before the origin block')
+    const [originSigner] = await ethers.getSigners()
+    const { chainId, escrowAddress, signature: _signature, ...terms } = signed.allocations[0]
+    const allocation = {
+      ...signed.allocations[0],
+      termsHash: acceptedHash,
+      signature: await originSigner.signTypedData(
+        { ...signed.domain, chainId, verifyingContract: escrowAddress },
+        signed.types,
+        { ...terms, termsHash: acceptedHash },
+      ),
+    }
+    const legacy: OriginCertificate = {
+      ...signed,
+      version: null,
+      termsHash: acceptedHash,
+      allocations: [allocation],
+    }
+    const verdict = verifyOrigin(legacy)
+
+    expect(verdict.termsHashMatches).to.be.false
+    expect(verdict.disclosure).to.eq('unproven')
+    expect(verdict.versions.map((version) => version.disclosure)).to.deep.eq(['unproven'])
+    expect(verdict.allocations[0].termsDisclosure).to.eq('unproven')
+    // The signature is still the origin signer's, over the hash the chain carries.
+    expect(verdict.allocations[0].signer).to.eq(signer)
+    expect(failuresOf(legacy, verdict, signer)).to.deep.eq([])
+
+    const said = qualificationsOf(verdict).join('\n')
+
+    expect(said).to.contain('unproven, not invalid')
+    expect(said).to.contain('format version null')
+    expect(said).to.contain(acceptedHash)
+
+    // The same bytes under a claimed format are a certificate wrong about itself.
+    const claimed = { ...legacy, version: 2 }
+
+    expect(verifyOrigin(claimed).disclosure).to.eq('mismatch')
+    expect(failuresOf(claimed, verifyOrigin(claimed))).to.have.length(3)
+    expect(qualificationsOf(verifyOrigin(claimed))).to.deep.eq([])
+    // And a wrong signer is a failure whatever the terms are.
+    expect(failuresOf(legacy, verdict, escrowAddress)).to.have.length(1)
+
+    const directory = fs.mkdtempSync(path.join(os.tmpdir(), 'wa-origin-'))
+    const verify = path.join(__dirname, '../packages/identity/bin/verify')
+
+    try {
+      const write = (name: string, value: unknown) => {
+        fs.writeFileSync(path.join(directory, name), JSON.stringify(value))
+
+        return path.join(directory, name)
+      }
+      const run = (file: string, ...rest: string[]) =>
+        spawnSync(process.execPath, [verify, 'origin', file, ...rest], { encoding: 'utf8' })
+
+      const proven = run(write('signed.json', signed), '--signer', signer)
+
+      expect(proven.status, proven.stderr).to.eq(0)
+      expect(proven.stdout).to.contain('Terms version 1: opened')
+
+      const unproven = run(write('legacy.json', legacy), '--signer', signer)
+
+      expect(unproven.status).to.eq(3)
+      expect(unproven.stderr).to.contain('Unproven: Version 1 of the terms is unproven, not invalid')
+      expect(unproven.stderr).to.not.contain('Refuted')
+
+      expect(run(write('claimed.json', claimed)).status).to.eq(1)
+      expect(run(write('signed.json', signed), '--signer', escrowAddress).status).to.eq(1)
+    } finally {
+      fs.rmSync(directory, { recursive: true, force: true })
+    }
   })
 
   /** A proof made for one escrow does not pass as one made for another. */

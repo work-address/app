@@ -22,10 +22,13 @@ import {
   selfSignedMessageFor,
   serializeDocument,
   solanaSubject,
+  verifyOrigin,
+  verifyPresentation,
   verifyPresentationDocument,
 } from '../src'
 
 import { clone, fixture } from './fixture'
+import { scriptedRpc } from './scripted-rpc'
 
 /**
  * The library is pure computation: it never reaches a network, so a holder
@@ -33,6 +36,11 @@ import { clone, fixture } from './fixture'
  * to the registry is always the caller's own, visible choice. Every way Node
  * and the browser globals open a connection is trapped while the whole
  * lifecycle runs, and the source is checked for anything that could.
+ *
+ * The chain-aware verifier keeps the same promise one step out: it asks
+ * through the `RpcRequest` it is handed and through nothing else. `rpc.ts`
+ * holds the one transport in the package, and it is the only file allowed to
+ * name a network API at all.
  */
 
 type Trap = { target: Record<string, unknown>; key: string; original: unknown }
@@ -41,6 +49,9 @@ const SOURCE_DIR = path.join(__dirname, '../src')
 
 /** What `src/` may import: its own files, ethers' hashing and ABI code, and noble's Ed25519. */
 const ALLOWED_IMPORTS = new Set(['ethers', '@noble/curves/ed25519'])
+
+/** The JSON-RPC transport: the one file that may name the Fetch API, and it names nothing else. */
+const TRANSPORT = 'rpc.ts'
 
 describe('no network calls', () => {
   const attempts: string[] = []
@@ -125,6 +136,19 @@ describe('no network calls', () => {
     expect(attempts, 'network calls').to.deep.eq([])
   })
 
+  it('checks a presentation against a chain through the RpcRequest it is handed, and nothing else', async () => {
+    const { rpc, asked } = scriptedRpc({})
+    const report = await verifyPresentation(fixture.cases[0].presentation.text, {
+      manifest: { chainId: fixture.chainId, identityRegistry: { address: fixture.registry } },
+      rpc,
+    })
+
+    expect(report.result).to.eq('Current')
+    expect(asked.length).to.be.greaterThan(0)
+    expect(() => verifyOrigin({ contractId: 'x', version: 2, preimage: {}, termsHash: '0x', domain: { name: 'n', version: '1' }, types: {}, allocations: [] })).to.not.throw()
+    expect(attempts, 'network calls').to.deep.eq([])
+  })
+
   it('imports nothing that can reach a network, and uses no Node-only global', () => {
     const files = fs.readdirSync(SOURCE_DIR).filter((file) => file.endsWith('.ts'))
 
@@ -140,9 +164,24 @@ describe('no network calls', () => {
 
       expect(source, file).to.not.match(/\brequire\s*\(|\bimport\s*\(/)
       expect(source, file).to.not.match(
-        /\b(fetch|XMLHttpRequest|WebSocket|EventSource|sendBeacon|JsonRpcProvider|getDefaultProvider|BrowserProvider|Provider|Contract)\b/,
+        /\b(XMLHttpRequest|WebSocket|EventSource|sendBeacon|JsonRpcProvider|getDefaultProvider|BrowserProvider|Provider|Contract)\b/,
       )
       expect(source, file).to.not.match(/\b(Buffer|process|__dirname|global)\b/)
+
+      if (file !== TRANSPORT) expect(source, file).to.not.match(/\bfetch\b/)
     }
+
+    expect(files).to.include(TRANSPORT)
+  })
+
+  it('keeps the transport to one endpoint: the URL it was given, by POST, with no credentials', () => {
+    const source = fs.readFileSync(path.join(SOURCE_DIR, TRANSPORT), 'utf8')
+
+    expect(source).to.not.match(/https?:\/\//)
+    expect(source).to.not.match(/address\.work/i)
+    expect(source.match(/\bsend\(/g), 'one call site').to.have.length(1)
+    expect(source).to.match(/send\(url,/)
+    expect(source).to.match(/credentials: 'omit'/)
+    expect(source).to.match(/redirect: 'error'/)
   })
 })

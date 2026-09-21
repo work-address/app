@@ -3,20 +3,26 @@
   "version": "0.1.0",
   "private": true,
   "license": "MIT",
-  "description": "Builds, presents and checks Work Address profile commitments (profile schema v1): salted 32-leaf Merkle trees, IdentityRegistry commitments, proofs, private exports, presentations and self-signed mode. Browser-safe, no network calls. Unaudited.",
+  "description": "Builds, presents and checks Work Address profile commitments (profile schema v1), and verifies them, origin certificates and settlement receipts against a chain with nothing but an RPC endpoint. Browser-safe. Unaudited.",
   "main": "dist/cjs/index.js",
   "module": "dist/esm/index.js",
   "types": "dist/cjs/index.d.ts",
+  "bin": {
+    "work-address-verify": "bin/verify"
+  },
   "sideEffects": false,
   "files": [
+    "bin",
+    "cli",
     "dist",
     "src",
     "README.md"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json && tsc -p tsconfig.esm.json",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.esm.json && tsc -p tsconfig.cli.json",
     "test": "mocha",
-    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p test/tsconfig.json --noEmit"
+    "typecheck": "tsc -p tsconfig.json --noEmit && tsc -p tsconfig.cli.json --noEmit && tsc -p test/tsconfig.json --noEmit",
+    "verify": "node bin/verify"
   },
   "dependencies": {
     "@noble/curves": "1.2.0",

@@ -6,11 +6,15 @@ side of `IdentityRegistry`: the contract stores a commitment it cannot open,
 and this package is how a holder produces one and how anyone checks what the
 holder later shows.
 
-- **Pure computation.** No network calls, no RPC, no key custody. Randomness
-  comes from Web Crypto `getRandomValues`. It runs in a browser and in Node 19
-  or later. The one chain call a verifier needs, `checkPresentation`, is
-  returned as arguments for the caller to make with whatever provider it
-  trusts.
+- **Pure computation at the core.** Building, presenting and checking a
+  document offline makes no network call and holds no key. Randomness comes
+  from Web Crypto `getRandomValues`. It runs in a browser and in Node 19 or
+  later.
+- **An independent verifier on top.** `verifyPresentation` makes the one chain
+  call a verifier needs, `checkPresentation`, through an `RpcRequest` the
+  caller hands it: a JSON-RPC endpoint of their choosing and nothing else. No
+  Work Address host is contacted, and none could change the answer. See
+  [Verifying independently](#verifying-independently).
 - **Built on ethers v6** for Keccak-256, ABI encoding, EIP-55 and EIP-191, and
   on `@noble/curves` (the copy ethers already ships) for Ed25519.
 - **Byte-exact with the chain.** Leaves use the registry's
@@ -71,6 +75,85 @@ if (check.ok && check.mode === 'anchored') {
 }
 ```
 
+## Verifying independently
+
+Anyone can check a Work Address identity with three things: the presentation
+the holder handed over, a deployment manifest naming the registry they accept,
+and an RPC endpoint they trust. Nothing else is asked, of anyone.
+
+From a clean checkout of this repository:
+
+```bash
+pnpm install --frozen-lockfile        # at the repository root
+contracts/packages/identity/bin/verify identity presentation.json \
+  --manifest contracts/deployments/localhost.json \
+  --rpc http://127.0.0.1:8545
+```
+
+```
+Result: Current
+This is the subject's current published version, and it stands, as of finalized block 128
+Subject: did:pkh:eip155:31337:0xf39Fd6e51aad88F6F4ce6aB8827279cffFb92266
+Registry: 0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0 on chain 31337, version 1
+  /name = "Margaret Hamilton"
+Block checked: 128 (finalized)
+```
+
+`bin/verify` runs the TypeScript source through ts-node, so in a checkout it is
+never a stale build. `--json` prints the whole report, `--subject <address>`
+refuses a document about any other account, and `--finality latest` reads the
+head alone, for a development chain. `bin/verify origin certificate.json
+[--signer <address>]` opens an origin certificate offline (`src/origin.ts`).
+
+| Exit | Meaning |
+| --- | --- |
+| 0 | Verified: `Current`, or `SelfSignedOnly` (authorship only, and the output says so) |
+| 1 | Refuted or not recognised: every other result |
+| 2 | The command line, a file or the manifest could not be read |
+| 3 | Undetermined: `RpcUnavailable`, `NotFinal`, or a certificate whose terms are unproven. Not a failed proof, and not a pass |
+
+The block checked is printed on every run, whatever the result.
+
+```ts
+import { jsonRpcTransport, verifyPresentation, isWithdrawn } from '@work-address/identity'
+
+const report = await verifyPresentation(presentationText, {
+  manifest,                                   // deployments/<network>.json, or a list of them
+  rpc: jsonRpcTransport('https://your.rpc'),  // or any (method, params) => Promise, e.g. a wallet's request
+  expectedSubject: address,                   // optional
+})
+
+report.result          // 'Current', 'Superseded', ..., see below
+report.checkedAtBlock  // the block the answer is for; null when no chain was read
+isWithdrawn(report)    // Deactivated, or an old version of a profile since withdrawn
+```
+
+What it does, in order: checks the document offline (shape, schema, subject,
+every proof, and the commitment **recomputed** from the root, because the
+registry stores bytes it cannot open); holds the anchor's registry to the
+manifest; asks the endpoint for its chain id, its head and its finalized
+block; and calls `checkPresentation` at both blocks by number. Only an answer
+the finalized block and the head agree on is reported as that answer.
+
+| Result | Meaning |
+| --- | --- |
+| `Current` | The subject's current version, and it stands |
+| `Superseded` | A newer version exists. With `subjectDeactivated`, the profile has since been withdrawn: show it as taken down, not as out of date |
+| `Deactivated` | This was the current version when the subject withdrew the profile |
+| `Unpublished`, `VersionUnknown`, `CommitmentMismatch`, `SchemaMismatch` | The registry does not hold this document as that version. `CommitmentMismatch` is also the offline answer when the document's commitment is not the one its root gives |
+| `RegistryNotInManifest` | The anchor names a registry the manifest does not list. A copy of the registry runs the same scheme and proves nothing; it is never asked |
+| `InvalidProof` | A disclosed value, salt, slot or proof does not open against the root |
+| `MalformedExport`, `UnsupportedSchema`, `UnsupportedSubjectScheme` | Not a document this verifier can read |
+| `SelfSignedOnly` | A valid wallet signature and no anchor: authorship, with no answer about currency or withdrawal |
+| `SignatureInvalid` | The self-signature is not the subject's |
+| `SubjectMismatch` | The document is about another account than `expectedSubject` |
+| `RpcUnavailable` | The endpoint did not answer, answers for another chain, or has no registry at that address. **Not a statement about the document** |
+| `NotFinal` | The head and the finalized block disagree, or the node names no finalized block. Check again later |
+
+`rpc.ts` is the only file in `src/` that names a network API. It posts JSON-RPC
+to the URL it was given, with no credentials and no redirects, and
+`test/no-network.test.ts` holds it to that.
+
 ## Guarantees and limits
 
 - **Every proof has 5 elements.** A tree always has 32 leaves; empty and
@@ -104,13 +187,17 @@ This package is a member of the repository's pnpm workspace; `pnpm install` at
 the repository root installs it. From `contracts/`:
 
 ```bash
-pnpm run test:identity        # mocha: vectors, tampering, trees, documents, no network
-pnpm run typecheck:identity   # the library with no Node types, then the tests
-pnpm run build:identity       # dist/cjs and dist/esm
+pnpm run test:identity        # mocha: vectors, tampering, trees, documents, the verifier on a scripted chain, no network
+pnpm run typecheck:identity   # the library with no Node types, then the command, then the tests
+pnpm run build:identity       # dist/cjs, dist/esm and dist/node (the command)
 pnpm exec hardhat test test/identity-library.test.ts   # against the deployed registry
+pnpm exec hardhat test test/identity-verify.test.ts    # the verifier and bin/verify against the deployed registry
 ```
 
 The library's `tsconfig.json` has no Node types, so a Node-only API in `src/`
-fails the typecheck. `test/no-network.test.ts` traps every Node and browser
-way of opening a connection while the whole lifecycle runs, and checks that
-`src/` imports nothing but ethers and noble's Ed25519.
+fails the typecheck; the command lives in `cli/`, outside it. `test/no-network.test.ts`
+traps every Node and browser way of opening a connection while the whole
+lifecycle runs, and checks that `src/` imports nothing but ethers and noble's
+Ed25519. The Hardhat suites run on the chain inside the test program and serve
+it over a loopback port the system picks, so they never need, or touch, a node
+on 8545.
