@@ -47,7 +47,12 @@ export class TimeControllerCrudTest extends BaseControllerTest {
       join(__dirname, '../fixture/media/screenshot.webp'),
     )
     const user = await this.userFixture.createUser()
-    const project = await this.projectFixture.createPersonal(user, 0, true, true)
+    const project = await this.projectFixture.createPersonal(
+      user,
+      0,
+      true,
+      true,
+    )
     const processes = [
       { name: 'Qtcreator', description: 'Editing', timeMin: 7 },
       { name: 'Dolphin', description: 'Files', timeMin: 3 },
@@ -97,9 +102,9 @@ export class TimeControllerCrudTest extends BaseControllerTest {
 
     expect(image.format).to.be.equal('webp')
     expect(image.width).to.be.equal(600)
-    expect(Buffer.from(stored.screenshot as string, 'base64').length).to.be.lessThan(
-      original.length,
-    )
+    expect(
+      Buffer.from(stored.screenshot as string, 'base64').length,
+    ).to.be.lessThan(original.length)
   }
 
   /**
@@ -116,7 +121,12 @@ export class TimeControllerCrudTest extends BaseControllerTest {
       join(__dirname, '../fixture/media/screenshot_20260127_184X00.webp'),
     )
     const user = await this.userFixture.createUser()
-    const project = await this.projectFixture.createPersonal(user, 0, true, true)
+    const project = await this.projectFixture.createPersonal(
+      user,
+      0,
+      true,
+      true,
+    )
     const toAt = moment.utc()
     const slice = {
       fromIndex: 4000,

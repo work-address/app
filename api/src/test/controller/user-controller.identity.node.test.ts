@@ -260,12 +260,12 @@ export class UserControllerIdentityNodeTest extends BaseControllerTest {
 
     expect(hostedV2.version).to.equal(2)
     expect(hostedV2.status.result).to.equal('Current')
-    expect(UserControllerIdentityNodeTest.events(hostedV2.history)).to.deep.equal(
-      [
-        { kind: 'PUBLISHED', version: 1 },
-        { kind: 'PUBLISHED', version: 2 },
-      ],
-    )
+    expect(
+      UserControllerIdentityNodeTest.events(hostedV2.history),
+    ).to.deep.equal([
+      { kind: 'PUBLISHED', version: 1 },
+      { kind: 'PUBLISHED', version: 2 },
+    ])
 
     // The withdrawal is the holder's own transaction; this service cannot
     // send it and does not learn about it until it reads the chain again.
@@ -295,14 +295,14 @@ export class UserControllerIdentityNodeTest extends BaseControllerTest {
     expect(hostedV3.version).to.equal(3)
     expect(hostedV3.status.result).to.equal('Current')
     expect(hostedV3.status.subjectDeactivated).to.equal(false)
-    expect(UserControllerIdentityNodeTest.events(hostedV3.history)).to.deep.equal(
-      [
-        { kind: 'PUBLISHED', version: 1 },
-        { kind: 'PUBLISHED', version: 2 },
-        { kind: 'DEACTIVATED', version: 2 },
-        { kind: 'PUBLISHED', version: 3 },
-      ],
-    )
+    expect(
+      UserControllerIdentityNodeTest.events(hostedV3.history),
+    ).to.deep.equal([
+      { kind: 'PUBLISHED', version: 1 },
+      { kind: 'PUBLISHED', version: 2 },
+      { kind: 'DEACTIVATED', version: 2 },
+      { kind: 'PUBLISHED', version: 3 },
+    ])
 
     // And the superseded versions are refused as such, one run later.
     expect((await this.publishFails(holder.user, first)).status).to.equal(409)

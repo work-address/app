@@ -191,7 +191,6 @@ export class UserControllerIdentityCacheTest extends BaseControllerTest {
 
     const before = this.registry.calls
 
-
     await this.read(holder)
 
     expect(this.registry.calls - before).to.equal(6)
