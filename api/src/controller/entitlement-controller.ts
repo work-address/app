@@ -3,6 +3,7 @@ import express from 'express'
 
 import { App } from '@/app/app'
 import { EntitlementPushDto } from '@/model/dto/entitlement'
+import { IEntitlementPushResult } from '@/model/user'
 import { EntitlementSignature } from '@/service/entitlement-signature'
 import { InternalRoute } from '@/service/internal-route'
 import { UserRepository } from '@/repository/user-repository'
@@ -34,7 +35,7 @@ export class EntitlementController {
   public async push(
     @Body() data: EntitlementPushDto,
     @Req() request: express.Request,
-  ): Promise<{ applied: boolean }> {
+  ): Promise<IEntitlementPushResult> {
     const signature = request.header(InternalRoute.ENTITLEMENT.header) ?? ''
     const raw = JSON.stringify(data)
 
@@ -60,21 +61,34 @@ export class EntitlementController {
 
     return runPromise(
       Effect.gen(this, function* () {
-        const outcome = yield* this.userRepository.applyEntitlement(
-          data.userId,
-          data.premium,
-          data.revision,
-          data.validUntil ? new Date(data.validUntil) : null,
-        )
+        const { outcome, heldRevision } =
+          yield* this.userRepository.applyEntitlement(
+            data.userId,
+            data.premium,
+            data.revision,
+            data.validUntil ? new Date(data.validUntil) : null,
+          )
 
-        // 'unknown': a push for an account this instance has never seen is
-        // not an error the caller can act on - the sweep re-asserts
-        // everything periodically, and failing here would make one stale row
-        // poison a whole reconciliation run.
-        // 'stale': the account already holds a newer revision, so this push
-        // was overtaken in flight. Applying it would re-grant after a revoke,
-        // or revoke a paying customer because an old `false` arrived late.
-        return { applied: outcome === 'applied' }
+        if (outcome === 'applied') {
+          return { applied: true }
+        }
+
+        // Still a 200, not an error: failing here would make one row the
+        // billing service cannot fix poison a whole reconciliation run.
+        // But `applied: false` is not a delivery, and the billing service
+        // must not book it as one - so it is told why.
+        //
+        // 'unknown': this instance has never seen the account, which means
+        // the two services are pointed at different deployments.
+        // 'stale': the account already holds a newer revision. Usually the
+        // push was overtaken in flight, and applying it would re-grant after
+        // a revoke, or revoke a paying customer because an old `false`
+        // arrived late. When it is not - the billing service's counter has
+        // fallen behind this one - every push is ignored until it catches
+        // up, so the revision held here goes back with the answer.
+        return outcome === 'stale' && heldRevision !== null
+          ? { applied: false, reason: outcome, heldRevision }
+          : { applied: false, reason: outcome }
       }),
     )
   }

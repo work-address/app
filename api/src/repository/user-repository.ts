@@ -11,6 +11,7 @@ import {
 import { fromPromise } from '@/service/effect-bridge'
 import { UserSearchDto } from '@/model/dto/user'
 import { IHostedIdentity } from '@/model/identity'
+import { TEntitlementOutcome } from '@/model/user'
 import { WalletAddress } from '@/service/wallet-address'
 
 @injectable()
@@ -73,7 +74,7 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
     premium: boolean,
     revision: number,
     validUntil: Date | null,
-  ): RepoEffect<'applied' | 'stale' | 'unknown'> {
+  ): RepoEffect<{ outcome: TEntitlementOutcome; heldRevision: number | null }> {
     return fromPromise(async () => {
       // Raw SQL: both entitlement columns are `update: false`, which the
       // query builder honours by dropping them from the SET list. The table
@@ -90,12 +91,24 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
       )
 
       if (UserRepository.returnedRowCount(result) > 0) {
-        return 'applied'
+        return { outcome: 'applied', heldRevision: revision }
       }
 
-      const exists = await this.getRepo().exists({ where: { id: userId } })
+      // Not applied: either there is no such account, or it holds a newer
+      // revision - and then which one, so the caller can be told how far
+      // behind it is rather than only that it was ignored.
+      const held: { entitlementRevision: number }[] =
+        await this.getRepo().manager.query(
+          `SELECT "entitlementRevision" FROM "${table}" WHERE "id" = $1`,
+          [userId],
+        )
 
-      return exists ? 'stale' : 'unknown'
+      return held.length > 0
+        ? {
+            outcome: 'stale',
+            heldRevision: Number(held[0].entitlementRevision),
+          }
+        : { outcome: 'unknown', heldRevision: null }
     })
   }
 

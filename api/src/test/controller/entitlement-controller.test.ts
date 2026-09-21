@@ -94,7 +94,13 @@ export class EntitlementControllerTest extends BaseControllerTest {
     expect(revoke.status).to.be.eq(200)
     expect(revoke.data.applied).to.be.true
     expect(late.status).to.be.eq(200)
-    expect(late.data.applied, 'overtaken, so not applied').to.be.false
+    // Not applied, and the billing service is told why and how far behind
+    // the push was: it must not record this as a delivery.
+    expect(late.data, 'overtaken, so not applied').to.deep.eq({
+      applied: false,
+      reason: 'stale',
+      heldRevision: 5,
+    })
 
     const stored = await this.reload(user)
     expect(stored.premium).to.be.false
@@ -244,6 +250,6 @@ export class EntitlementControllerTest extends BaseControllerTest {
     const response = await this.post(this.body(randomUUID()))
 
     expect(response.status).to.be.eq(200)
-    expect(response.data).to.deep.eq({ applied: false })
+    expect(response.data).to.deep.eq({ applied: false, reason: 'unknown' })
   }
 }
