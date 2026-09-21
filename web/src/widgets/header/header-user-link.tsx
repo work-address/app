@@ -2,6 +2,7 @@ import { QRCodeSVG } from 'qrcode.react'
 import { NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
+import { premiumState } from '@/features/dashboard'
 import { routes } from '@/routes'
 import { NoPremiumBadge, PremiumBadge, formatWalletAddress } from '@/shared'
 
@@ -13,6 +14,8 @@ type Props = {
     title?: string | null
     friendlyWalletAddress?: string | null
     premium?: boolean | null
+    /** False on a self-hosted instance: no plan, so no badge either way. */
+    billing?: boolean | null
   } | null
   userAlt: string
   stretch?: boolean
@@ -25,11 +28,13 @@ export const HeaderUserLink = ({
   onNoPremiumClick,
 }: Props) => {
   const displayName = user?.name || user?.title || ''
-  const badge = user?.premium ? (
-    <PremiumBadge />
-  ) : (
-    <NoPremiumBadge onClick={onNoPremiumClick} />
-  )
+  const state = premiumState(user)
+  const badge =
+    state === 'premium' ? (
+      <PremiumBadge />
+    ) : state === 'free' ? (
+      <NoPremiumBadge onClick={onNoPremiumClick} />
+    ) : null
 
   /**
    * A stretched link rather than an anchor wrapping the card, and a plain

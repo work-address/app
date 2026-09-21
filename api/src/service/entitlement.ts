@@ -24,6 +24,23 @@ export class Entitlement {
   @inject('parameters')
   protected parameters: IConfigParameters
 
+  /**
+   * Puts the entitlement-aware answer on the holder's own payload: `premium`
+   * as this instance decides it (always true on self-host, lapsing after the
+   * pushed validity on SaaS) rather than the raw column, and `billing`
+   * saying whether there is a hosted plan to show at all. Only for a User
+   * about to be serialised for its holder; never saved.
+   */
+  public describeFor<T extends Pick<User, 'premium' | 'premiumValidUntil'>>(
+    user: T,
+    now: Date = new Date(),
+  ): T & { premium: boolean; billing: boolean } {
+    return Object.assign(user, {
+      premium: this.isPremium(user, now),
+      billing: this.isSaaS(),
+    })
+  }
+
   /** True when a billing service is configured to push entitlement here. */
   public isSaaS(): boolean {
     return this.parameters.entitlementSecret.length > 0

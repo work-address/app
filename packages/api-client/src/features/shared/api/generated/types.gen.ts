@@ -117,6 +117,7 @@ export type User = {
     country?: string;
     roles?: Array<'ROLE_USER'>;
     premium?: boolean;
+    billing?: boolean;
     visible?: boolean;
     id?: string;
     createdAt?: string | string;

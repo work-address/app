@@ -189,6 +189,18 @@ export class User extends AbstractBaseEntity implements IUser {
   premium?: boolean | null
 
   /**
+   * Whether hosted billing applies to this account's instance. Not a column:
+   * the holder's own payload (`GET /auth/status`) sets it from Entitlement,
+   * alongside an entitlement-aware `premium`, so a self-hosted instance -
+   * unrestricted, with no plan to buy - shows no premium state, banner or
+   * billing link instead of a 'No premium' it can never change.
+   */
+  @Expose({ groups: ['me'] })
+  @IsBoolean()
+  @IsOptional()
+  billing?: boolean
+
+  /**
    * When the last entitlement push said the grant lapses. After it, a SaaS
    * instance stops treating the account as premium even if no revoke ever
    * arrives. Null on accounts no push has reached with a validity yet, which

@@ -609,6 +609,9 @@
           "premium": {
             "type": "boolean"
           },
+          "billing": {
+            "type": "boolean"
+          },
           "visible": {
             "type": "boolean"
           },

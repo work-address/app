@@ -175,4 +175,73 @@ export class EntitlementControllerTest extends BaseControllerTest {
 
     expect((await this.reload(user)).entitlementRevision).to.be.eq(6)
   }
+
+  /** SUB-11: a valid push is applied to the account it names. */
+  @test
+  async push_aValidPushSetsPremium() {
+    const user = await this.userFixture.createUser()
+
+    const response = await this.post(this.body(user.id, { premium: true }))
+
+    expect(response.status).to.be.eq(200)
+    expect(response.data).to.deep.eq({ applied: true })
+    expect((await this.reload(user)).premium).to.be.true
+  }
+
+  /**
+   * A captured request replayed inside the window: the signature and the
+   * timestamp are still good, so only the nonce stops it.
+   */
+  @test
+  async push_theSameNonceTwiceIsRefused() {
+    const user = await this.userFixture.createUser()
+    const body = this.body(user.id, { premium: true })
+
+    const first = await this.post(body)
+    const replay = await this.post(body)
+
+    expect(first.status).to.be.eq(200)
+    expect(replay.status).to.be.eq(401)
+  }
+
+  @test
+  async push_aBadSignatureIsRefusedAndChangesNothing() {
+    const user = await this.userFixture.createUser()
+
+    const response = await this.post(
+      this.body(user.id, { premium: true }),
+      'f'.repeat(64),
+    )
+
+    expect(response.status).to.be.eq(401)
+    expect((await this.reload(user)).premium).to.not.be.true
+  }
+
+  /** Signed and fresh-nonced, but issued outside the 300-second window. */
+  @test
+  async push_issuedOutsideTheReplayWindowIsRefused() {
+    const user = await this.userFixture.createUser()
+    const now = Math.floor(Date.now() / 1000)
+    const window = EntitlementSignature.replayWindowSeconds
+
+    const old = await this.post(
+      this.body(user.id, { premium: true, issuedAt: now - window - 60 }),
+    )
+    const future = await this.post(
+      this.body(user.id, { premium: true, issuedAt: now + window + 60 }),
+    )
+
+    expect(old.status).to.be.eq(401)
+    expect(future.status).to.be.eq(401)
+    expect((await this.reload(user)).premium).to.not.be.true
+  }
+
+  /** An account this instance has never seen is not an error the sweep can act on. */
+  @test
+  async push_anUnknownAccountIsNotApplied() {
+    const response = await this.post(this.body(randomUUID()))
+
+    expect(response.status).to.be.eq(200)
+    expect(response.data).to.deep.eq({ applied: false })
+  }
 }

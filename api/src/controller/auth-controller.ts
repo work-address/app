@@ -23,6 +23,7 @@ import {
 import { User } from '@/entity/user'
 import { App } from '@/app/app'
 import { Authenticator } from '@/service/auth/authenticator'
+import { Entitlement } from '@/service/entitlement'
 import { UserManager } from '@/service/user-manager'
 import { UserRepository } from '@/repository/user-repository'
 import { IConfigParameters } from '@/model/config'
@@ -53,8 +54,10 @@ export class AuthController {
   protected userManager: UserManager
   protected userRepository: UserRepository
   protected parameters: IConfigParameters
+  protected entitlement: Entitlement
 
   constructor() {
+    this.entitlement = App.container.get('Entitlement')
     this.userManager = App.container.get('UserManager')
     this.userRepository = App.container.get('UserRepository')
     this.authenticator = App.container.get('Authenticator')
@@ -196,6 +199,8 @@ export class AuthController {
     const token = req.headers.authorization as string
     const user = await runPromise(this.authenticator.getUserFromJwtToken(token))
 
-    return user
+    // The holder's own payload carries premium as this instance decides it,
+    // plus whether hosted billing applies here at all (SUB-09).
+    return user ? this.entitlement.describeFor(user) : user
   }
 }

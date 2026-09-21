@@ -7,6 +7,7 @@ import {
   $premiumBannerCollapsed,
   togglePremiumBanner,
 } from '../../model/premium-banner'
+import { premiumState } from '../../model/premium-state'
 
 import { $user } from '@/entities/profile'
 import {
@@ -28,7 +29,9 @@ export const DashboardPremiumBanner = () => {
     toggleCollapsed: togglePremiumBanner,
   })
 
-  if (user?.premium) {
+  // Premium has nothing to upgrade to, and a self-hosted instance has no
+  // hosted plan to sell - nor a rotation to warn about.
+  if (premiumState(user) !== 'free') {
     return null
   }
 
