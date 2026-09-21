@@ -4,21 +4,19 @@
   "private": true,
   "license": "MIT",
   "description": "Open marketplace escrow contract for Work Address. Unaudited; not for real funds.",
-  "workspaces": [
-    "packages/*"
-  ],
   "scripts": {
     "build": "hardhat compile",
     "test": "hardhat test",
     "typecheck": "tsc --noEmit",
-    "test:identity": "npm test -w @work-address/identity",
-    "typecheck:identity": "npm run typecheck -w @work-address/identity",
+    "test:identity": "pnpm --filter @work-address/identity test",
+    "typecheck:identity": "pnpm --filter @work-address/identity typecheck",
     "deploy:local": "hardhat run scripts/deploy.ts --network hardhat",
     "node": "hardhat node",
     "deploy:localhost": "hardhat run scripts/deploy.ts --network localhost",
     "mint:localhost": "hardhat --network localhost mint",
     "time:advance": "hardhat --network localhost time:advance",
-    "walkthrough:localhost": "hardhat --network localhost walkthrough"
+    "walkthrough:localhost": "hardhat --network localhost walkthrough",
+    "build:identity": "pnpm --filter @work-address/identity build"
   },
   "devDependencies": {
     "@nomicfoundation/hardhat-chai-matchers": "^2.1.2",

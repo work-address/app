@@ -2,6 +2,8 @@ packages:
   - api
   - web
   - packages/*
+  - contracts
+  - contracts/packages/*
   - '!**/.next/**'
 
 onlyBuiltDependencies:
