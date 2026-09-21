@@ -99,6 +99,7 @@ export interface IProject {
   trackScreenshots?: boolean | null
   trackProcesses?: boolean | null
   weeklyLimit?: number | null
+  weeklyPeriodStartsAt?: Date | null
   workerAddresses?: string[]
   viewerAddresses?: string[]
   invoiceCadence?: IInvoiceCadenceVersion[] | null

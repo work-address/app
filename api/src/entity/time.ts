@@ -138,6 +138,21 @@ export class Time extends AbstractBaseEntity implements ITime {
   @IsNumber()
   mouseDistance: number
 
+  /**
+   * Whether this entry falls beyond the project's weekly hour cap.
+   *
+   * Flagged rather than refused (SPEC, WP-51): the hours were worked, and
+   * dropping them would destroy the only record of work someone did. Set
+   * when the entry is stored, from the cap and the period it lands in, so
+   * both sides see the same answer without re-deriving it; entries on a
+   * project with no cap are never flagged.
+   */
+  @Expose({ groups: ['search'] })
+  @Column('bool', { nullable: true, default: false })
+  @IsBoolean()
+  @IsOptional()
+  overWeeklyCap?: boolean | null
+
   @Expose({ groups: ['search', 'create'] })
   @Column('timestamptz', { nullable: false })
   @IsDate()

@@ -8,6 +8,7 @@ export interface ITime {
   mouseKeys: number
   mouseDistance: number
   isPaid: boolean
+  overWeeklyCap?: boolean | null
   fromAt: Date
   toAt: Date
   project?: {
@@ -45,6 +46,12 @@ export interface ITimeTotals {
   keyboardKeys: number
   mouseKeys: number
   mouseDistance: number
+  /**
+   * Minutes past the project's weekly cap inside the window asked for;
+   * absent where the project has no cap, or where no window was given - a
+   * cap is a claim about one week and means nothing across all of history.
+   */
+  minutesOverCap?: number
 }
 
 /** One contractor's contribution to one project, for the employer report. */

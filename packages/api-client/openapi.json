@@ -332,6 +332,9 @@
           "mouseDistance": {
             "type": "number"
           },
+          "overWeeklyCap": {
+            "type": "boolean"
+          },
           "fromAt": {
             "oneOf": [
               {
@@ -439,6 +442,18 @@
             "maximum": 168,
             "type": "integer",
             "minimum": 1
+          },
+          "weeklyPeriodStartsAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
           },
           "text": {
             "type": "string",
@@ -1754,6 +1769,18 @@
             "type": "integer",
             "minimum": 1
           },
+          "weeklyPeriodStartsAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
           "text": {
             "type": "string",
             "minLength": 1
@@ -1818,6 +1845,18 @@
             "maximum": 168,
             "type": "integer",
             "minimum": 1
+          },
+          "weeklyPeriodStartsAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
           },
           "text": {
             "type": "string",
@@ -1921,6 +1960,18 @@
             "type": "integer",
             "minimum": 1
           },
+          "weeklyPeriodStartsAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
           "text": {
             "type": "string",
             "minLength": 1
@@ -2001,6 +2052,9 @@
           },
           "mouseDistance": {
             "type": "number"
+          },
+          "overWeeklyCap": {
+            "type": "boolean"
           },
           "fromAt": {
             "oneOf": [

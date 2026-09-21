@@ -45,6 +45,7 @@ export class MarketplaceHireControllerTest extends BaseControllerTest {
       text: 'Build the payroll table',
       rateHour: 45,
       weeklyLimit: null,
+      weekStartsAt: null,
       trackScreenshots: false,
       trackProcesses: false,
       issuedAt: Math.floor(Date.now() / 1000),
@@ -96,6 +97,7 @@ export class MarketplaceHireControllerTest extends BaseControllerTest {
       trackScreenshots: true,
       trackProcesses: true,
       weeklyLimit: 20,
+      weekStartsAt: 1788825600,
     })
 
     const res = await this.post(body)
@@ -107,6 +109,11 @@ export class MarketplaceHireControllerTest extends BaseControllerTest {
     expect(project?.trackScreenshots).to.be.true
     expect(project?.trackProcesses).to.be.true
     expect(project?.weeklyLimit).to.be.eq(20)
+    // The contract's own week, so the cap is measured against the same
+    // seven days the marketplace shows hours for.
+    expect(project?.weeklyPeriodStartsAt?.toISOString()).to.be.eq(
+      new Date(1788825600 * 1000).toISOString(),
+    )
   }
 
   /**
@@ -325,6 +332,7 @@ export class MarketplaceEndControllerTest extends BaseControllerTest {
       text: 'Build the payroll table',
       rateHour: 45,
       weeklyLimit: null,
+      weekStartsAt: null,
       trackScreenshots: false,
       trackProcesses: false,
       issuedAt: Math.floor(Date.now() / 1000),

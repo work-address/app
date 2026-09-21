@@ -11,6 +11,12 @@ import {
 } from 'class-validator'
 
 /**
+ * Highest unix second a start may name. Past it `new Date` loses precision,
+ * and no contract begins in the year 275760.
+ */
+const MAX_UNIX_SECONDS = 8640000000000
+
+/**
  * A client hired a freelancer on the marketplace (the web service): open the
  * project they will track against. Ids are this service's `User.id`, the same
  * ids the marketplace reads from tokens issued here.
@@ -58,6 +64,23 @@ export class MarketplaceHireDto {
   @Min(1)
   @Max(168)
   weeklyLimit?: number | null
+
+  /**
+   * When the contract's first week opens, in unix seconds: the agreed start
+   * date, or the moment the offer was accepted.
+   *
+   * Sent because "up to N hours a week" means the contract's week, not the
+   * calendar's, and only the marketplace knows where that week begins. With
+   * it, the week app measures the cap against and the week the marketplace
+   * shows hours for are the same seven days; without it app would anchor on
+   * its own project row and the two would drift apart for any contract with
+   * a start date in the future.
+   */
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  @Max(MAX_UNIX_SECONDS)
+  weekStartsAt?: number | null
 
   /**
    * What the tracker is asked to record, as the freelancer accepted it.

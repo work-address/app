@@ -136,6 +136,9 @@ export class MarketplaceHireController {
         project.trackScreenshots = data.trackScreenshots ?? false
         project.trackProcesses = data.trackProcesses ?? false
         project.weeklyLimit = data.weeklyLimit ?? null
+        project.weeklyPeriodStartsAt = data.weekStartsAt
+          ? new Date(data.weekStartsAt * 1000)
+          : null
         project.marketplaceContractId = data.contractId
 
         const outcome = yield* this.projectRepository.saveSingle(project).pipe(

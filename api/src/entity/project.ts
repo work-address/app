@@ -10,6 +10,7 @@ import {
   ArrayMaxSize,
   IsArray,
   IsBoolean,
+  IsDate,
   IsInt,
   IsNotEmpty,
   IsOptional,
@@ -109,6 +110,21 @@ export class Project extends AbstractBaseEntity implements IProject {
   @Max(MAX_WEEKLY_LIMIT_HOURS)
   @IsOptional()
   weeklyLimit?: number | null
+
+  /**
+   * When this project's first weekly period opens; the weeks run seven days
+   * at a time from it.
+   *
+   * A marketplace hire sends the contract's own start, so the week the cap
+   * is measured against here is the same seven days the marketplace shows
+   * hours for. Null on a project created here directly, whose weeks then run
+   * from when the project itself was created - the only start it has.
+   */
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @Column('timestamptz', { nullable: true })
+  @IsDate()
+  @IsOptional()
+  weeklyPeriodStartsAt?: Date | null
 
   @IsNotEmpty()
   @Expose({ groups: ['search', 'create', 'edit'] })

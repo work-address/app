@@ -7,6 +7,7 @@ import { Project } from '@/entity/project'
 import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
 import { TimeRepository } from '@/repository/time-repository'
+import { WeeklyCap } from '@/service/weekly-cap'
 import { ProjectRepository } from '@/repository/project-repository'
 import {
   ITimeInsertionResult,
@@ -159,6 +160,13 @@ export class TimeManager {
               Object.assign(time, upload)
               time.fromAt = fromAt
               time.project = project
+              time.overWeeklyCap = yield* TimeManager.beyondWeeklyCap(
+                times,
+                project,
+                time,
+                fromAt,
+                toAt,
+              )
 
               return yield* times.validateAndSave(time)
             }),
@@ -204,6 +212,42 @@ export class TimeManager {
 
       return program
     })
+  }
+
+  /**
+   * Whether this entry falls beyond the project's weekly cap.
+   *
+   * Flagged, never refused: the hours were worked, and a tracker that
+   * dropped them would destroy the only record of work someone did. The
+   * overage is reported to both sides instead (`getTotals`), and they
+   * settle it between them.
+   *
+   * Measured against the week the entry lands in, read under the same lock
+   * the entry is written under, and with this entry's own row excluded from
+   * the week so a re-upload of the same slice is not counted twice. A
+   * project with no cap is never flagged - there is nothing to be beyond.
+   */
+  private static beyondWeeklyCap(
+    times: TimeRepository,
+    project: Project,
+    time: Time,
+    fromAt: Date,
+    toAt: Date,
+  ): Effect.Effect<boolean, unknown> {
+    if (WeeklyCap.minutes(project) === null) {
+      return Effect.succeed(false)
+    }
+
+    const ownMinutes = Math.round((toAt.getTime() - fromAt.getTime()) / 60_000)
+
+    return times
+      .minutesInWindow(project, WeeklyCap.periodAt(project, fromAt), time.id)
+      .pipe(
+        Effect.map(
+          (weekMinutes) =>
+            (WeeklyCap.overage(project, weekMinutes + ownMinutes) ?? 0) > 0,
+        ),
+      )
   }
 
   /**

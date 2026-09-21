@@ -62,6 +62,7 @@ export type Time = {
     minutesActive: number;
     mouseKeys: number;
     mouseDistance: number;
+    overWeeklyCap?: boolean;
     fromAt: string | string;
     toAt: string | string;
     id?: string;
@@ -78,6 +79,7 @@ export type Project = {
     trackScreenshots?: boolean;
     trackProcesses?: boolean;
     weeklyLimit?: number;
+    weeklyPeriodStartsAt?: string | string;
     text: string;
     rateHour?: string;
     state: string;
@@ -443,6 +445,7 @@ export type ProjectSearch = {
     trackScreenshots?: boolean;
     trackProcesses?: boolean;
     weeklyLimit?: number;
+    weeklyPeriodStartsAt?: string | string;
     text?: string;
     rateHour?: string;
     state?: string;
@@ -463,6 +466,7 @@ export type ProjectCreate = {
     trackScreenshots?: boolean;
     trackProcesses?: boolean;
     weeklyLimit?: number;
+    weeklyPeriodStartsAt?: string | string;
     text?: string;
     rateHour?: string;
     state?: string;
@@ -490,6 +494,7 @@ export type ProjectEdit = {
     trackScreenshots?: boolean;
     trackProcesses?: boolean;
     weeklyLimit?: number;
+    weeklyPeriodStartsAt?: string | string;
     text?: string;
     rateHour?: string;
     state?: string;
@@ -513,6 +518,7 @@ export type TimeSearch = {
     minutesActive?: number;
     mouseKeys?: number;
     mouseDistance?: number;
+    overWeeklyCap?: boolean;
     fromAt?: string | string;
     toAt?: string | string;
 };

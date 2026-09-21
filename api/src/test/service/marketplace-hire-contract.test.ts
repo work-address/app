@@ -94,6 +94,7 @@ export class MarketplaceHireContractTest {
     )
 
     expect(dto.weeklyLimit).to.be.eq(fixture.body.weeklyLimit)
+    expect(dto.weekStartsAt).to.be.eq(fixture.body.weekStartsAt)
     expect(dto.trackScreenshots).to.be.eq(fixture.body.trackScreenshots)
     expect(dto.trackProcesses).to.be.eq(fixture.body.trackProcesses)
   }

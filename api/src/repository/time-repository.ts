@@ -88,6 +88,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     qb.select([
       'project.id as projectId',
       'project.rateHour as rateHour',
+      'project.weeklyLimit as weeklyLimit',
       // Wall-clock time covered, summed from each row's own span rather than
       // inferred from the row count: the tracker's interval has changed over
       // time, so a fixed multiplier would misread every row from before the
@@ -119,17 +120,26 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       const result = await qb.getRawMany()
 
       return result.map((r) => {
+        const minutes = Number(r.minutes)
+        // Only inside a window: a cap is a claim about one week, and an
+        // overage across a project's whole history would be meaningless.
+        const overage =
+          window?.fromAt && r.weeklylimit
+            ? Math.max(0, minutes - Number(r.weeklylimit) * 60)
+            : null
+
         return {
           projectId: r.projectid,
           rateHour: r.ratehour,
-          rateTotal: Calc.rateTotal(Number(r.minutes), r.ratehour),
-          minutes: Number(r.minutes),
+          rateTotal: Calc.rateTotal(minutes, r.ratehour),
+          minutes,
           minutesActive: Number(r.minutesactive),
           minutesPaid: Number(r.minutespaid),
           minutesUnpaid: Number(r.minutesunpaid),
           keyboardKeys: Number(r.keyboardkeys),
           mouseKeys: Number(r.mousekeys),
           mouseDistance: Number(r.mousedistance),
+          ...(overage === null ? {} : { minutesOverCap: overage }),
         }
       })
     })
@@ -476,6 +486,48 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     return fromPromise(
       async () => (await this.lockIf(qb, options).getOne()) ?? undefined,
     )
+  }
+
+  /**
+   * Wall-clock minutes the project recorded inside one window, ignoring one
+   * entry by id - the one being written, so re-uploading a slice measures
+   * the week as it will be, not as it was plus the slice twice.
+   *
+   * The whole project's, not one author's: the cap is a term of the work,
+   * and a marketplace hire has one worker. Measured the same way the totals
+   * measure it, from each row's own span, so the flag on a row and the
+   * overage in the totals cannot disagree.
+   */
+  public minutesInWindow(
+    project: Project,
+    window: ITimeWindow,
+    exceptId?: string,
+  ): RepoEffect<number> {
+    const qb = this.getRepo()
+      .createQueryBuilder('time')
+      .select(
+        'COALESCE(ROUND(SUM(EXTRACT(EPOCH FROM (time.toAt - time.fromAt)) / 60)), 0)',
+        'minutes',
+      )
+      .where('time.projectId = :projectId', { projectId: project.id })
+
+    if (window.fromAt) {
+      qb.andWhere('time.fromAt >= :windowFrom', { windowFrom: window.fromAt })
+    }
+
+    if (window.toAt) {
+      qb.andWhere('time.fromAt < :windowTo', { windowTo: window.toAt })
+    }
+
+    if (exceptId) {
+      qb.andWhere('time.id <> :exceptId', { exceptId })
+    }
+
+    return fromPromise(async () => {
+      const row = await qb.getRawOne<{ minutes: string | null }>()
+
+      return Number(row?.minutes ?? 0)
+    })
   }
 
   /**
