@@ -11,7 +11,7 @@ Work Address has **five core domains and no others**:
 | `User` | Identity. A wallet address, a profile, roles, the premium flag. |
 | `Project` | A body of work, its hourly rate, and who may touch it — `workerAddresses` / `viewerAddresses`, resolved to `workers: User[]` / `viewers: User[]`. |
 | `Time` | The work record. Tracked entries with activity data, and `isPaid`. |
-| `Invoice` | The money record. A period of one person's time, an amount, the financial snapshot the amount was computed from, and whether it was paid. |
+| `Invoice` | The money record. A period of one person's time - or one agreed sum for a named piece of work - an amount, the financial snapshot the amount was computed from, and whether it was paid. |
 | `ProjectStatistics` | Derived aggregates over `Time`, for reporting. |
 
 ## No new domains
@@ -82,6 +82,26 @@ project owner for their own hours, an owner invoices their client for theirs.
 One invoice never sums several contributors together, because the resulting
 record would name nobody and leave the contributors with nothing of their own.
 
+**An invoice bills hours or an agreed sum, never both (`Invoice.basis`).**
+`HOURLY` - every invoice issued before the basis existed, which the column
+default makes them - bills tracked entries at the rate, as the rest of this
+section describes. `FIXED` bills a sum both sides agreed for a named piece of
+work: a marketplace milestone, raised only by the marketplace's signed
+internal call `POST /api/internal/marketplace/milestone-invoice` (HMAC over
+the body, a replay window and a one-time nonce, under its own header
+`X-Marketplace-Milestone-Signature`, left out of the public spec). It has
+**no `Time` behind it**: fabricating entries that add up to the sum would put
+hours nobody worked into the only record of work. So a fixed invoice carries
+no lines, zero minutes and a stored rate of zero, reports no rate at all
+rather than one divided out of minutes it does not have, and says in
+`description` what it bills for; `milestoneRef` names the milestone and is
+unique, so a push retried or raced bills once and answers with the first
+invoice. It is issued by the hired worker on the contract's project, never by
+the client who pays it, and is otherwise an ordinary invoice: the same
+snapshot rules, the same paid and escrow paths. There is still no milestone,
+deliverable or allocation entity here - the milestone's workflow is the
+marketplace's, and what it becomes here is one `Invoice` row.
+
 **`Time.isPaid` is owned by `Invoice`.** `InvoiceManager.markPaid` sets it and
 `markUnpaid` clears it, on exactly the entries linked to that invoice; for an
 invoice submitted to escrow, a confirmed release sets it instead (see below). An
@@ -151,7 +171,10 @@ UTC timestamps with milliseconds, lines ordered by start then id, and no
 paid state. It is the document an escrow invoice commitment hashes, so its
 bytes are a published format — `api/src/test/fixture/invoice-record.v1.json`
 holds the vectors, and a change that moves one byte needs a new version. A
-legacy invoice has no record.
+legacy invoice has no record. A FIXED invoice's record adds `basis`,
+`milestoneRef` and `description` - a record of a sum with empty lines would
+otherwise commit to a number rather than to a bill. The hourly record never
+carries those keys, so no published vector moved.
 
 **InvoiceCommitment v1** is what a worker submits to the escrow instead of the
 invoice (`InvoiceCommitment`, `api/src/service/invoice-commitment.ts`):
