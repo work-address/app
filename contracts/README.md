@@ -256,12 +256,13 @@ all on Hardhat's in-process network. Run the same before opening one. `tsc` is n
 tests: Hardhat and mocha load TypeScript transpile-only, so a type error in a
 test or script shows up nowhere else.
 
-Two fixtures are byte-identical copies of files elsewhere, so both sides are
+Three fixtures are byte-identical copies of files elsewhere, so both sides are
 held to the same bytes (see "Canonical encodings"):
 
 | Fixture | Other copy | What it pins |
 | --- | --- | --- |
 | `test/fixtures/escrow-terms.contract.json` | `api/src/test/fixture` in the web repository | The EIP-712 `Terms` digest the marketplace API signs |
+| `test/fixtures/escrow-abi.contract.json` | `api/src/test/fixture` in the web repository | MarketplaceEscrow's ABI, signature for signature, which every hand-written reader in the marketplace is held to |
 | `test/fixtures/invoice-commitment.v1.json` | `api/src/test/fixture` in this repository | InvoiceCommitment v1, which the app computes and the escrow stores |
 
 Change a shared fixture in both places or in neither.

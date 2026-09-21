@@ -20,9 +20,9 @@ import type { ErrorFragment, EventFragment, FunctionFragment } from 'ethers'
  * checks its own copies against it. This test holds the fixture to the
  * contract; the one there holds the readers to the fixture.
  *
- * Regenerate after an intended change (from the repository root):
+ * Regenerate after an intended change (from app/contracts):
  *
- *   npx hardhat compile && node -e "…" > test/fixtures/escrow-abi.contract.json
+ *   pnpm exec hardhat compile && node -e "…" > test/fixtures/escrow-abi.contract.json
  *
  * — but read the diff. Every line of it is a change some other repository has
  * to make too.
