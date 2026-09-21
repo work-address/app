@@ -41,6 +41,7 @@ import { WalletAddress } from '@/service/wallet-address'
 import { UnitOfWork } from '@/service/unit-of-work'
 import AccessException from '@/exception/access-exception'
 import InvoiceAdjustmentException from '@/exception/invoice-adjustment-exception'
+import InvoiceMilestoneException from '@/exception/invoice-milestone-exception'
 import InvoiceEscrowException from '@/exception/invoice-escrow-exception'
 import InvoicedTimeException from '@/exception/invoiced-time-exception'
 import LegacyInvoiceException from '@/exception/legacy-invoice-exception'
@@ -701,6 +702,10 @@ export class InvoiceManager {
    * transaction and the invoice the first push raised is returned unchanged,
    * and two pushes racing are caught by the unique index, where the loser
    * reads the winner's row instead of failing. Neither answers `created`.
+   * A repeat is the same bill or it is refused: a reference already billed,
+   * pushed again for another contract, freelancer or sum, is a 409 rather
+   * than the first invoice's id, which would report as billed a bill that
+   * never was (`repeatedMilestone`).
    *
    * The issuer must be a worker on the project and not its owner: the
    * milestone is the hired freelancer's to bill, and the client is the payer.
@@ -711,6 +716,23 @@ export class InvoiceManager {
     bill: IInvoiceMilestoneBill,
   ): RepoEffect<IInvoiceMilestoneResult> {
     return Effect.gen(this, function* () {
+      // Before anything about who may bill: a reference already billed is
+      // answered from its invoice, so a push that names another freelancer
+      // is told the reference is taken (409) and not merely that this
+      // freelancer cannot bill here.
+      const billed = yield* this.invoiceRepository.findByMilestoneRef(
+        bill.milestoneRef,
+      )
+
+      if (billed) {
+        return yield* InvoiceManager.repeatedMilestone(
+          billed,
+          project,
+          issuer,
+          bill,
+        )
+      }
+
       const accessible = yield* this.assertCanInvoice(project, issuer)
 
       if (accessible.isOwner(issuer)) {
@@ -744,7 +766,12 @@ export class InvoiceManager {
               .findByMilestoneRef(bill.milestoneRef)
 
             if (already) {
-              return { invoiceId: already.id, created: false }
+              return yield* InvoiceManager.repeatedMilestone(
+                already,
+                accessible,
+                issuer,
+                bill,
+              )
             }
 
             const invoice = new Invoice()
@@ -797,10 +824,12 @@ export class InvoiceManager {
                   .pipe(
                     Effect.flatMap((winner) =>
                       winner
-                        ? Effect.succeed({
-                            invoiceId: winner.id,
-                            created: false,
-                          })
+                        ? InvoiceManager.repeatedMilestone(
+                            winner,
+                            accessible,
+                            issuer,
+                            bill,
+                          )
                         : Effect.fail(error),
                     ),
                   )
@@ -808,6 +837,39 @@ export class InvoiceManager {
           ),
         )
     })
+  }
+
+  /**
+   * The answer to a milestone reference that is already billed: the first
+   * invoice, when the push names the same contract, freelancer and sum, and
+   * a 409 otherwise.
+   *
+   * The period and the description are not compared. They describe the
+   * bill and the marketplace may word a retry differently; the three
+   * compared here are what decide who is owed how much by whom, and a push
+   * that disagrees about any of them is not a retry of the first.
+   */
+  private static repeatedMilestone(
+    first: Invoice,
+    project: Project,
+    issuer: User,
+    bill: IInvoiceMilestoneBill,
+  ): Effect.Effect<IInvoiceMilestoneResult, InvoiceMilestoneException> {
+    const differs = [
+      first.project?.id !== project.id ? 'contract' : null,
+      first.user?.id !== issuer.id ? 'freelancer' : null,
+      first.amountCents !== bill.amountCents ? 'amount' : null,
+    ].filter((name): name is string => name !== null)
+
+    if (differs.length > 0) {
+      return Effect.fail(
+        new InvoiceMilestoneException(
+          `Milestone ${bill.milestoneRef} is already billed by invoice ${first.id}, for a different ${differs.join(', ')}`,
+        ),
+      )
+    }
+
+    return Effect.succeed({ invoiceId: first.id, created: false })
   }
 
   /**

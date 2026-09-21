@@ -299,6 +299,76 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
   }
 
   /**
+   * The reference is the idempotency key, and a key only answers for the
+   * bill it was first used for. Pushed again with another sum, for another
+   * contract or for another freelancer, it is refused: answering with the
+   * first invoice's id would tell the marketplace that a bill was raised
+   * which never was. The first invoice is left exactly as it was.
+   */
+  @test()
+  @timeout(20000)
+  async milestone_pushedAgainAsADifferentBill_isRefused() {
+    const { freelancer, project } = await this.hired()
+    const other = await this.hired()
+    const colleague = await this.userFixture.createUser()
+    const body = this.body({
+      contractId: project.marketplaceContractId,
+      freelancerId: freelancer.id,
+    })
+    const again = (overrides: Record<string, unknown>) =>
+      this.post({
+        ...body,
+        nonce: randomUUID(),
+        issuedAt: Math.floor(Date.now() / 1000),
+        ...overrides,
+      })
+
+    const first = await this.post(body)
+
+    expect(first.status).to.be.eq(200)
+
+    const amount = await again({ amountCents: 250001 })
+    const contract = await again({
+      contractId: other.project.marketplaceContractId,
+      freelancerId: other.freelancer.id,
+    })
+    const sameWorkerElsewhere = await again({
+      contractId: other.project.marketplaceContractId,
+    })
+    const issuer = await again({ freelancerId: colleague.id })
+
+    expect(amount.status).to.be.eq(409)
+    expect(amount.data.message).to.contain('amount')
+    expect(amount.data.message).to.contain(first.data.invoiceId)
+    expect(contract.status).to.be.eq(409)
+    expect(contract.data.message).to.contain('contract')
+    expect(contract.data.message).to.contain('freelancer')
+    expect(sameWorkerElsewhere.status).to.be.eq(409)
+    expect(issuer.status).to.be.eq(409)
+    expect(issuer.data.message).to.contain('freelancer')
+
+    // The same bill again is still a repeat, after all those refusals.
+    const retry = await again({})
+
+    expect(retry.status).to.be.eq(200)
+    expect(retry.data).to.be.deep.eq({
+      invoiceId: first.data.invoiceId,
+      created: false,
+    })
+
+    const kept = await this.stored(first.data.invoiceId)
+
+    expect(kept?.amountCents).to.be.eq(250000)
+    expect(kept?.project.id).to.be.eq(project.id)
+    expect(kept?.user?.id).to.be.eq(freelancer.id)
+    expect(
+      await this.invoiceRepository
+        .getRepo()
+        .count({ where: { project: { id: other.project.id } } }),
+    ).to.be.eq(0)
+  }
+
+  /**
    * And when the retry overlaps the first push rather than following it: one
    * row is inserted, the other call reads it, and only one says `created`.
    */

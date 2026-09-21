@@ -96,7 +96,9 @@ no lines, zero minutes and a stored rate of zero, reports no rate at all
 rather than one divided out of minutes it does not have, and says in
 `description` what it bills for; `milestoneRef` names the milestone and is
 unique, so a push retried or raced bills once and answers with the first
-invoice. It is issued by the hired worker on the contract's project, never by
+invoice - when it is the same bill. The same reference pushed for another
+contract, freelancer or sum is a 409 that names the first invoice, never that
+invoice's id as though the different bill had been raised. It is issued by the hired worker on the contract's project, never by
 the client who pays it, and is otherwise an ordinary invoice: the same
 snapshot rules, the same paid and escrow paths. There is still no milestone,
 deliverable or allocation entity here - the milestone's workflow is the
