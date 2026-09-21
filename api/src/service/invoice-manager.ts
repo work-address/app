@@ -1361,7 +1361,7 @@ export class InvoiceManager {
           if (outstanding.length === 0) {
             return yield* this.invoiceRepository
               .within(manager)
-              .findLatestForAuthor(accessible, author)
+              .findLatestHourlyForAuthor(accessible, author)
           }
 
           // Up to the next change of agreed rate: the hours after it are the

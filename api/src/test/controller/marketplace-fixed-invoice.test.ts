@@ -408,6 +408,67 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
   }
 
   /**
+   * "Invoice my hours" with nothing outstanding answers with the worker's
+   * last invoice instead of raising an empty one - and that must be the last
+   * invoice *for hours*. On a fixed-price hire the newest invoice is a
+   * milestone's, and handing that back would present an agreed sum as the
+   * bill for the time just asked about.
+   */
+  @test()
+  @timeout(20000)
+  async invoiceMyHours_withNothingOutstanding_neverAnswersWithAMilestone() {
+    const { freelancer, project } = await this.hired()
+    const create = () =>
+      invoiceControllerCreate({
+        client: this.apiClient(),
+        path: { projectId: project.id as never },
+        headers: this.auth(freelancer),
+        body: {},
+        throwOnError: true,
+      })
+    const bill = () =>
+      this.post(
+        this.body({
+          contractId: project.marketplaceContractId,
+          freelancerId: freelancer.id,
+        }),
+      )
+
+    // Only a milestone billed so far: there is no hourly invoice to answer with.
+    expect((await bill()).status).to.be.eq(200)
+    const nothing = await create()
+
+    // routing-controllers answers a null result with 204 and no body.
+    expect(nothing.status).to.be.eq(204)
+    expect(nothing.data).to.not.have.property('id')
+
+    const start = moment.utc().startOf('minute').subtract(3, 'hours')
+    const time = await this.timeFixture.create(
+      project,
+      start.toDate(),
+      start.clone().add(1, 'hour').toDate(),
+      freelancer,
+    )
+
+    time.minutesActive = 60
+    await runPromise(this.timeRepository.saveSingle(time))
+
+    const hourly = await create()
+
+    expect(hourly.data.basis).to.be.eq(EInvoiceBasis.HOURLY)
+
+    // A second milestone is now the newest invoice of all.
+    const later = await bill()
+
+    expect(later.data.created).to.be.true
+
+    const again = await create()
+
+    expect(again.data.id).to.be.eq(hourly.data.id)
+    expect(again.data.id).to.not.be.eq(later.data.invoiceId)
+  }
+
+  /**
    * The acceptance case: historical hourly invoices are unchanged. An
    * invoice raised the ordinary way still bills its entries at the project's
    * rate and reports both.

@@ -18,6 +18,7 @@ import AccessException from '@/exception/access-exception'
 import InvoiceEscrowException from '@/exception/invoice-escrow-exception'
 import { InvoiceSearchDto } from '@/model/dto/invoice'
 import {
+  EInvoiceBasis,
   EInvoiceIssuanceKind,
   EInvoiceSnapshotVersion,
   IInvoiceCommitmentBinding,
@@ -86,13 +87,18 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
   }
 
   /**
-   * The author's most recent invoice on a project.
+   * The author's most recent hourly invoice on a project.
    *
    * Used when nothing is outstanding: the caller asked for "my invoice for
-   * this project" and there is nothing new to raise, so they get the last one
-   * rather than an error or a duplicate.
+   * this project's time" and there is nothing new to raise, so they get the
+   * last one rather than an error or a duplicate.
+   *
+   * Hourly only. The question is about tracked time, and a FIXED invoice
+   * bills none: on a fixed-price hire the worker's latest invoice is usually
+   * a milestone's, and answering "invoice my hours" with it would present a
+   * milestone's bill as the invoice for the hours just asked about.
    */
-  public findLatestForAuthor(
+  public findLatestHourlyForAuthor(
     project: Project,
     author: User,
   ): RepoEffect<Invoice | null> {
@@ -103,6 +109,7 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
         .leftJoinAndSelect('invoice.user', 'issuer')
         .andWhere('project.id = :projectId', { projectId: project.id })
         .andWhere('issuer.id = :authorId', { authorId: author.id })
+        .andWhere('invoice.basis = :basis', { basis: EInvoiceBasis.HOURLY })
         .orderBy('invoice.createdAt', 'DESC')
         .getOne(),
     )
