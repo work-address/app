@@ -7,6 +7,7 @@ import {
   JsonController,
   Post,
   Put,
+  QueryParams,
   Res,
 } from 'routing-controllers'
 
@@ -23,6 +24,7 @@ import {
   TimeIdsDto,
   TimeInsertionResultDto,
   TimeSearchDto,
+  TimeTotalsQueryDto,
 } from '@/model/dto/time'
 import { Time } from '@/entity/time'
 import { EntityFromParam } from '@/decorator/entity-from-param'
@@ -189,7 +191,8 @@ export class TimeController {
   }
 
   @OpenAPIExtended({
-    summary: 'Aggregated time totals for project owner, workers, and viewers',
+    summary:
+      'Aggregated time totals for project owner, workers, and viewers, optionally inside one window (fromAt/toAt, unix seconds) such as a contract week',
     response: {
       schema: null,
       options: {
@@ -204,16 +207,25 @@ export class TimeController {
   public getTotals(
     @CurrentUser() currentUser: User,
     @EntityFromParam({ paramName: 'id' }) project: Project,
+    @QueryParams() window: TimeTotalsQueryDto,
   ) {
     return runPromise(
       this.projectRepository
         .findProjectWithAccessOrFail(project, currentUser)
         .pipe(
           Effect.flatMap(() =>
-            this.timeRepository.getTotals(currentUser, project.id),
+            this.timeManager.getTotals(currentUser, project, {
+              fromAt: TimeController.instant(window.fromAt),
+              toAt: TimeController.instant(window.toAt),
+            }),
           ),
         ),
     )
+  }
+
+  /** A unix second as a Date; undefined stays undefined (no boundary). */
+  private static instant(seconds?: number): Date | undefined {
+    return seconds === undefined ? undefined : new Date(seconds * 1000)
   }
 
   @OpenAPIExtended({

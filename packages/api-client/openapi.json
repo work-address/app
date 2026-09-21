@@ -435,6 +435,11 @@
           "trackProcesses": {
             "type": "boolean"
           },
+          "weeklyLimit": {
+            "maximum": 168,
+            "type": "integer",
+            "minimum": 1
+          },
           "text": {
             "type": "string",
             "minLength": 1
@@ -1329,6 +1334,21 @@
           "mouseDistance"
         ]
       },
+      "TimeTotalsQueryDto": {
+        "properties": {
+          "fromAt": {
+            "maximum": 8640000000000,
+            "type": "integer",
+            "minimum": 0
+          },
+          "toAt": {
+            "maximum": 8640000000000,
+            "type": "integer",
+            "minimum": 1
+          }
+        },
+        "type": "object"
+      },
       "InvoiceSearchFilterDto": {
         "properties": {
           "projectId": {
@@ -1729,6 +1749,11 @@
           "trackProcesses": {
             "type": "boolean"
           },
+          "weeklyLimit": {
+            "maximum": 168,
+            "type": "integer",
+            "minimum": 1
+          },
           "text": {
             "type": "string",
             "minLength": 1
@@ -1788,6 +1813,11 @@
           },
           "trackProcesses": {
             "type": "boolean"
+          },
+          "weeklyLimit": {
+            "maximum": 168,
+            "type": "integer",
+            "minimum": 1
           },
           "text": {
             "type": "string",
@@ -1885,6 +1915,11 @@
           },
           "trackProcesses": {
             "type": "boolean"
+          },
+          "weeklyLimit": {
+            "maximum": 168,
+            "type": "integer",
+            "minimum": 1
           },
           "text": {
             "type": "string",
@@ -4210,6 +4245,24 @@
             "schema": {
               "$ref": "#/components/schemas/Project"
             }
+          },
+          {
+            "in": "query",
+            "name": "fromAt",
+            "schema": {
+              "maximum": 8640000000000,
+              "type": "integer",
+              "minimum": 0
+            }
+          },
+          {
+            "in": "query",
+            "name": "toAt",
+            "schema": {
+              "maximum": 8640000000000,
+              "type": "integer",
+              "minimum": 1
+            }
           }
         ],
         "responses": {
@@ -4247,7 +4300,7 @@
             }
           }
         },
-        "summary": "Aggregated time totals for project owner, workers, and viewers",
+        "summary": "Aggregated time totals for project owner, workers, and viewers, optionally inside one window (fromAt/toAt, unix seconds) such as a contract week",
         "tags": [
           "Time"
         ],

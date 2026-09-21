@@ -3,11 +3,17 @@ import { inject, injectable } from 'inversify'
 import moment from 'moment'
 import _ from 'lodash'
 
+import { Project } from '@/entity/project'
 import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
 import { TimeRepository } from '@/repository/time-repository'
 import { ProjectRepository } from '@/repository/project-repository'
-import { ITimeInsertionResult, TimeUpload } from '@/model/time'
+import {
+  ITimeInsertionResult,
+  ITimeTotals,
+  ITimeWindow,
+  TimeUpload,
+} from '@/model/time'
 import { ErrorFormatter } from '@/service/error-formatter'
 import { TimeBounds } from '@/service/time-bounds'
 import ConstraintsValidationException from '@/exception/constraints-validation-exception'
@@ -253,6 +259,22 @@ export class TimeManager {
     return Object.entries(same)
       .filter(([, isSame]) => !isSame)
       .map(([field]) => field)
+  }
+
+  /**
+   * Rolled-up time for one project, optionally inside one window - a
+   * contract week, as the marketplace asks for it.
+   *
+   * Here rather than straight on the repository because a total is a
+   * statement about the agreement as well as the rows: what was tracked,
+   * and how it stands against the weekly cap those hours were agreed under.
+   */
+  public getTotals(
+    user: User,
+    project: Project,
+    window?: ITimeWindow,
+  ): RepoEffect<ITimeTotals[]> {
+    return this.timeRepository.getTotals(user, project.id, window)
   }
 
   public save(time: Time): RepoEffect<Time> {

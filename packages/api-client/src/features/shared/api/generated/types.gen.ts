@@ -77,6 +77,7 @@ export type Project = {
     viewers?: Array<unknown>;
     trackScreenshots?: boolean;
     trackProcesses?: boolean;
+    weeklyLimit?: number;
     text: string;
     rateHour?: string;
     state: string;
@@ -318,6 +319,11 @@ export type TimeInsertionResultDto = {
     processes?: Array<unknown>;
 };
 
+export type TimeTotalsQueryDto = {
+    fromAt?: number;
+    toAt?: number;
+};
+
 export type InvoiceSearchFilterDto = {
     projectId?: string;
     fromAt?: string | string;
@@ -436,6 +442,7 @@ export type ProjectSearch = {
     viewers?: Array<UserSearch>;
     trackScreenshots?: boolean;
     trackProcesses?: boolean;
+    weeklyLimit?: number;
     text?: string;
     rateHour?: string;
     state?: string;
@@ -455,6 +462,7 @@ export type ProjectCreate = {
     viewerAddresses?: Array<string>;
     trackScreenshots?: boolean;
     trackProcesses?: boolean;
+    weeklyLimit?: number;
     text?: string;
     rateHour?: string;
     state?: string;
@@ -481,6 +489,7 @@ export type ProjectEdit = {
     viewerAddresses?: Array<string>;
     trackScreenshots?: boolean;
     trackProcesses?: boolean;
+    weeklyLimit?: number;
     text?: string;
     rateHour?: string;
     state?: string;
@@ -1229,7 +1238,10 @@ export type TimeControllerGetTotalsData = {
     path: {
         id: Project;
     };
-    query?: never;
+    query?: {
+        fromAt?: number;
+        toAt?: number;
+    };
     url: '/api/time/totals/{id}/project';
 };
 

@@ -21,7 +21,12 @@ import {
   SelectQueryBuilder,
 } from 'typeorm'
 
-import { ITimeReadOptions, ITimeSliceGroup, ITimeTotals } from '@/model/time'
+import {
+  ITimeReadOptions,
+  ITimeSliceGroup,
+  ITimeTotals,
+  ITimeWindow,
+} from '@/model/time'
 import { Calc } from '@/service/calc'
 import AccessException from '@/exception/access-exception'
 import { TimeSearchDto } from '@/model/dto/time'
@@ -59,9 +64,18 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     })
   }
 
+  /**
+   * Rolled-up time per project, optionally inside one window.
+   *
+   * The window is matched on `fromAt` - where a slice *starts* - so a slice
+   * is counted in exactly one week however long it runs. Matching on overlap
+   * would count a slice spanning midnight on Sunday in two weeks at once,
+   * and two weeks' totals would not add up to the project's.
+   */
   public getTotals(
     user: User,
     projectId: string | undefined,
+    window?: ITimeWindow,
   ): RepoEffect<ITimeTotals[]> {
     const qb = this.getRepo()
       .createQueryBuilder('time')
@@ -91,6 +105,14 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
 
     if (projectId) {
       qb.andWhere('project.id = :projectId', { projectId })
+    }
+
+    if (window?.fromAt) {
+      qb.andWhere('time.fromAt >= :windowFrom', { windowFrom: window.fromAt })
+    }
+
+    if (window?.toAt) {
+      qb.andWhere('time.fromAt < :windowTo', { windowTo: window.toAt })
     }
 
     return fromPromise(async () => {

@@ -23,6 +23,17 @@ export interface ITime {
   screenshot?: string | null
 }
 
+/**
+ * A half-open window of tracked time, matched on where a slice starts. Both
+ * ends are optional; neither is the project's whole history.
+ */
+export interface ITimeWindow {
+  /** Inclusive. */
+  fromAt?: Date
+  /** Exclusive, so consecutive weeks neither overlap nor leave a gap. */
+  toAt?: Date
+}
+
 export interface ITimeTotals {
   projectId: string
   rateHour: number
