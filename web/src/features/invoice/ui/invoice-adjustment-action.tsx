@@ -6,7 +6,11 @@ import { canAdjustInvoice, issueInvoiceAdjustmentMutation } from '../model'
 import { Button, Tooltip } from '@/shared'
 
 type Props = {
-  invoice: { id?: string; user?: { id?: string } | null } | null
+  invoice: {
+    id?: string
+    user?: { id?: string } | null
+    basis?: string | null
+  } | null
   viewerId?: string | null
   stretch?: boolean
 }
@@ -17,7 +21,8 @@ type Props = {
  * invoice covers yet. This invoice is never edited - the tooltip says so,
  * because "correct the invoice" reads like changing it.
  *
- * The issuer's alone, like the API: nothing to draw for anyone else.
+ * The issuer's alone, and only on an hourly invoice, like the API: nothing
+ * to draw for anyone else, or on a fixed-price invoice with no hours on it.
  */
 export const InvoiceAdjustmentAction = ({
   invoice,

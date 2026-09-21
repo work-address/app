@@ -311,6 +311,27 @@ describe.each([
     expect(buttonNamed('Bill hours not on this invoice')).toBeUndefined()
   })
 
+  /**
+   * A fixed-price invoice bills an agreed sum and has no hours on it, so
+   * there are none it could have missed: its issuer is not offered the
+   * adjustment either (the API answers 409), and can still save the PDF.
+   */
+  it('offers no adjustment on a fixed-price invoice', async () => {
+    const fixed = {
+      ...INVOICE,
+      basis: 'FIXED',
+      description: 'Milestone 2: the payroll export, delivered and accepted',
+      rateHourCents: 0,
+      minutesActive: 0,
+      lines: [],
+      time: [],
+    } as ProjectInvoice
+
+    await render(layout, width, fixed, ISSUER_ID)
+    expect(buttonNamed('Bill hours not on this invoice')).toBeUndefined()
+    expect(isShown(buttonNamed('Save PDF'))).toBe(true)
+  })
+
   /** An adjustment prints which invoice it corrects. */
   it('names the invoice an adjustment corrects', async () => {
     const original = 'a0000000-0000-4000-8000-000000000000'

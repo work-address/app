@@ -15,6 +15,17 @@ describe('canAdjustInvoice', () => {
     expect(canAdjustInvoice({ user: null }, 'issuer')).toBe(false)
     expect(canAdjustInvoice(null, 'issuer')).toBe(false)
   })
+
+  it('is not offered on a fixed-price invoice, which has no hours to miss', () => {
+    expect(canAdjustInvoice({ ...invoice, basis: 'FIXED' }, 'issuer')).toBe(
+      false,
+    )
+    expect(canAdjustInvoice({ ...invoice, basis: 'HOURLY' }, 'issuer')).toBe(
+      true,
+    )
+    // An invoice read before the basis existed bills hours.
+    expect(canAdjustInvoice({ ...invoice, basis: null }, 'issuer')).toBe(true)
+  })
 })
 
 describe('adjustmentFailureMessageKey', () => {
