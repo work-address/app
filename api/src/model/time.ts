@@ -120,7 +120,15 @@ export interface ITimeAuthorKeyAudit {
   sharedSlices: ITimeSliceGroup[]
 }
 
-/** What one daily retention run did, for the log and for the tests. */
+/** When the retention job runs; both default to the job's own constants. */
+export interface IRetentionSchedule {
+  /** Between passes. */
+  intervalMs?: number
+  /** From arming to the first pass, so a restart does not reset the wait. */
+  firstRunDelayMs?: number
+}
+
+/** What one retention run did, for the log and for the tests. */
 export interface IRetentionReport {
   /** Free owners with history due to rotate. */
   owners: number

@@ -1,4 +1,5 @@
 import { expect } from 'chai'
+import { Effect } from 'effect'
 import moment from 'moment'
 import { suite, test } from '@testdeck/mocha'
 
@@ -11,6 +12,7 @@ import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
 import { EInvoiceState } from '@/model/invoice'
 import { EProjectState } from '@/model/project'
+import { IRetentionReport } from '@/model/time'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { ProjectRepository } from '@/repository/project-repository'
 import { TimeRepository } from '@/repository/time-repository'
@@ -52,6 +54,8 @@ export class RetentionJobTest extends AbstractDatabaseIntegration {
 
   async after() {
     this.job.stop()
+    // Drops the observer nextPass() put on the instance, back to the class's.
+    delete (this.job as Partial<RetentionJob>).run
 
     if (this.savedSecret !== undefined) {
       this.parameters.entitlementSecret = this.savedSecret
@@ -93,6 +97,22 @@ export class RetentionJobTest extends AbstractDatabaseIntegration {
     return runPromise(
       this.userRepository.findOneByOrFail({ where: { id: user.id } }),
     )
+  }
+
+  /**
+   * Resolves with the report of the next pass the armed job makes by itself.
+   * Nothing here waits out a duration: a schedule that never fires leaves
+   * this pending, and the test fails on its timeout.
+   */
+  private nextPass(): Promise<IRetentionReport> {
+    return new Promise((resolve) => {
+      const run = RetentionJob.prototype.run.bind(this.job)
+
+      this.job.run = (now?: Date) =>
+        run(now).pipe(
+          Effect.tap((report) => Effect.sync(() => resolve(report))),
+        )
+    })
   }
 
   private async freeOwnerWithProject(now: Date, told: boolean = true) {
@@ -281,6 +301,63 @@ export class RetentionJobTest extends AbstractDatabaseIntegration {
   saas_theJobIsArmed() {
     expect(this.job.start(), 'armed').to.be.true
     expect(this.job.running).to.be.true
+  }
+
+  /**
+   * Arming has to lead to a pass without a day of uptime. The production
+   * container restarts on every deploy, a timer counts from boot, and the
+   * upload path rotates only after this job has started the owner's notice:
+   * armed as a bare 24-hour interval, an API deployed daily enforced nothing.
+   * Here the interval is a day and only the first pass is near, so the notice
+   * below can only come from the pass that follows arming.
+   */
+  @test()
+  async saas_anArmedJobMakesItsFirstPassSoonAfterBoot() {
+    const now = new Date()
+    const { owner, project } = await this.freeOwnerWithProject(now, false)
+    const old = await this.entry(project, now, 20)
+    const passed = this.nextPass()
+
+    this.job.start({ firstRunDelayMs: 1, intervalMs: 24 * 60 * 60 * 1000 })
+    const report = await passed
+
+    expect(report.noticed, 'the pass told the owner').to.be.greaterThanOrEqual(
+      1,
+    )
+    expect((await this.reload(owner)).retentionNoticeFrom).to.be.ok
+    expect(await this.live(old), 'told first, nothing removed').to.be.true
+  }
+
+  /** And it keeps going: with the first pass far off, the interval fires. */
+  @test()
+  async saas_anArmedJobPassesAgainOnItsInterval() {
+    const now = new Date()
+    const { owner, project } = await this.freeOwnerWithProject(now, false)
+    await this.entry(project, now, 20)
+    const passed = this.nextPass()
+
+    this.job.start({ firstRunDelayMs: 24 * 60 * 60 * 1000, intervalMs: 1 })
+    await passed
+
+    expect((await this.reload(owner)).retentionNoticeFrom).to.be.ok
+  }
+
+  /**
+   * What app.ts arms with. A first pass or an interval anywhere near a day
+   * brings the restart problem back, whatever the injected schedules prove.
+   */
+  @test()
+  saas_theDefaultScheduleOutlivesNoDeploy() {
+    expect(RetentionJob.FIRST_RUN_DELAY_MS).to.be.at.most(5 * 60 * 1000)
+    expect(RetentionJob.INTERVAL_MS).to.be.at.most(60 * 60 * 1000)
+  }
+
+  @test()
+  saas_aStoppedJobHoldsNoTimer() {
+    this.job.start()
+    this.job.stop()
+
+    expect(this.job.running).to.be.false
   }
 
   /**

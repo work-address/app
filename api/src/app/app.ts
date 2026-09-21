@@ -131,10 +131,11 @@ export class App {
   }
 
   /**
-   * Arms the daily retention run (DEC-05). The job itself declines on a
-   * self-hosted instance, which has no free tier to rotate. Not in test, for
-   * the scheduler's reason: the suite runs the job directly with its own
-   * clock.
+   * Arms the retention schedule (DEC-05): a first pass a minute after boot,
+   * then hourly, so a deploy does not reset a day-long wait. The job itself
+   * declines on a self-hosted instance, which has no free tier to rotate.
+   * Not in test, for the scheduler's reason: the suite runs the job directly
+   * with its own clock, and arms it itself with a short schedule.
    */
   private startRetentionJob() {
     if (AppConfig.isTest()) {
