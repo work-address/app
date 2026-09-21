@@ -131,9 +131,15 @@ export {
 } from './list.stores'
 export * from './format'
 export {
+  getInvoiceInfoFields,
+  type InvoiceFieldId,
+  type InvoiceInfoFieldRow,
+} from './invoice-fields'
+export {
   describeInvoiceRate,
   getInvoiceRateCents,
   getInvoiceTimeRows,
+  isFixedInvoice,
   type InvoiceTimeRow,
 } from './invoice-snapshot'
 export {

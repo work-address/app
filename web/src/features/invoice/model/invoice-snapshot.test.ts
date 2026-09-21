@@ -4,6 +4,7 @@ import {
   describeInvoiceRate,
   getInvoiceRateCents,
   getInvoiceTimeRows,
+  isFixedInvoice,
 } from './invoice-snapshot'
 
 import type { InvoiceRead } from './types'
@@ -59,6 +60,34 @@ const legacy: InvoiceRead = {
   time: [{ id: 'old', minutesActive: 42, note: 'before snapshots' }],
 }
 
+/**
+ * A fixed-price milestone: an agreed sum, no lines, and a stored
+ * `rateHourCents` of zero because there is no hourly rate to store.
+ */
+const fixedPrice: InvoiceRead = {
+  id: 'milestone',
+  basis: 'FIXED',
+  amountCents: '250000',
+  rateHourCents: 0,
+  description: 'Milestone 2: the payroll export',
+  milestoneRef: 'milestone-2',
+  project: { rateHour: '0.00' } as InvoiceRead['project'],
+  report: { rateHour: null, rateTotal: null, minutes: 0, minutesActive: 0 },
+  lines: [],
+  time: [],
+}
+
+describe('isFixedInvoice', () => {
+  it('is the basis the invoice recorded, not a guess from a zero rate', () => {
+    expect(isFixedInvoice(fixedPrice)).toBe(true)
+    expect(isFixedInvoice(issuedAtTwenty)).toBe(false)
+    // A legacy invoice has no basis column filled in on the client type and
+    // is still hourly - every invoice issued before FIXED existed was.
+    expect(isFixedInvoice(legacy)).toBe(false)
+    expect(isFixedInvoice(null)).toBe(false)
+  })
+})
+
 describe('describeInvoiceRate', () => {
   it('shows the rate the invoice was issued at, not the project rate now', () => {
     expect(describeInvoiceRate(issuedAtTwenty, t)).toEqual({
@@ -77,6 +106,16 @@ describe('describeInvoiceRate', () => {
     expect(field.value).not.toContain('60')
   })
 
+  it('says a fixed invoice is fixed rather than printing $0.00 an hour', () => {
+    const field = describeInvoiceRate(fixedPrice, t)
+
+    expect(field).toEqual({
+      value: 'invoice.fields.rateFixed',
+      desc: 'invoice.metricDesc.rateFixed',
+    })
+    expect(field.value).not.toContain('0.00')
+  })
+
   it('is blank while the invoice loads', () => {
     expect(describeInvoiceRate(null, t).value).toBe('')
   })
@@ -91,6 +130,10 @@ describe('getInvoiceRateCents', () => {
 })
 
 describe('getInvoiceTimeRows', () => {
+  it('has no rows for a fixed invoice, which bills no entries', () => {
+    expect(getInvoiceTimeRows(fixedPrice)).toEqual([])
+  })
+
   it('prints the billed lines with what they billed, in snapshot order', () => {
     const rows = getInvoiceTimeRows(issuedAtTwenty)
 

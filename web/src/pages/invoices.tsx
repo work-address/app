@@ -22,6 +22,7 @@ import {
   fetchInvoiceList,
   formatCents,
   getInvoiceRateCents,
+  isFixedInvoice,
   invoiceListQuery,
   invoiceProjectFilterChanged,
   invoiceProjectsQuery,
@@ -341,8 +342,13 @@ export default function InvoicesPage() {
                   {/* The rate the invoice was issued at, frozen with the
                       amount above, so the two always describe the same
                       bill. A legacy invoice never recorded one and shows
-                      none rather than the project's rate today. */}
-                  {rateCents === null ? null : (
+                      none rather than the project's rate today; a fixed
+                      invoice has none to record, and says so. */}
+                  {isFixedInvoice(invoice) ? (
+                    <Text size="1" color="gray">
+                      {t('invoices.item.fixedPrice')}
+                    </Text>
+                  ) : rateCents === null ? null : (
                     <Text size="1" color="gray">
                       {t('invoices.item.perHour', {
                         rate: formatCents(rateCents),

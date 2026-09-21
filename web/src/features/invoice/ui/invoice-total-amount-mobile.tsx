@@ -7,6 +7,7 @@ import { useTranslation } from 'react-i18next'
 import { useInvoiceInfoFields } from '../lib'
 import { $invoice, $invoiceLoading, canMarkInvoiceByHand } from '../model'
 
+import { InvoiceDescription } from './invoice-description'
 import { InvoiceEscrowSettlement } from './invoice-escrow-settlement'
 import { InvoicePaymentActions } from './invoice-payment-actions'
 import { InvoiceStatusBadge } from './invoice-status-badge'
@@ -63,6 +64,9 @@ export const InvoiceTotalAmountMobile = () => {
           stretch
         />
       ) : null}
+      {loading ? null : (
+        <InvoiceDescription description={invoice?.description} />
+      )}
       {loading ? null : <InvoiceEscrowSettlement invoice={invoice} />}
       <Separator size={'4'} />
       <Grid

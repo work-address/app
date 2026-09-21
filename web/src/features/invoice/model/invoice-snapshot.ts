@@ -19,17 +19,33 @@ export const getInvoiceRateCents = (invoice: {
 }): number | null =>
   typeof invoice.rateHourCents === 'number' ? invoice.rateHourCents : null
 
+/** Whether the invoice bills an agreed sum rather than tracked hours. */
+export const isFixedInvoice = (
+  invoice: { basis?: string | null } | null,
+): boolean => invoice?.basis === 'FIXED'
+
 /**
  * The invoice page's rate field: the snapshot rate, or - on a legacy invoice
  * - a plain "not recorded" rather than a figure nobody billed at. Blank while
  * the invoice is loading, so neither flashes up before the record arrives.
+ *
+ * A fixed invoice has no hourly rate to show. Its stored `rateHourCents` is
+ * zero, and printing "$0.00 an hour" beside an agreed sum would describe a
+ * bargain nobody struck, so it says it is fixed-price instead.
  */
 export const describeInvoiceRate = (
-  invoice: { rateHourCents?: number | null } | null,
+  invoice: { rateHourCents?: number | null; basis?: string | null } | null,
   t: Translate,
 ): { value: string; desc: string } => {
   if (!invoice) {
     return { value: '', desc: t('invoice.metricDesc.rateHour') }
+  }
+
+  if (isFixedInvoice(invoice)) {
+    return {
+      value: t('invoice.fields.rateFixed'),
+      desc: t('invoice.metricDesc.rateFixed'),
+    }
   }
 
   const rateCents = getInvoiceRateCents(invoice)

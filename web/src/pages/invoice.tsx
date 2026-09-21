@@ -14,6 +14,7 @@ import {
   InvoiceTotalAmountDesktop,
   InvoiceTotalAmountMobile,
   InvoiceTime,
+  isFixedInvoice,
 } from '@/features/invoice'
 import { routes } from '@/routes'
 import {
@@ -96,7 +97,10 @@ export default function InvoicePage() {
           ) : (
             <InvoiceTotalAmountDesktop />
           )}
-          <InvoiceTime />
+          {/* A fixed-price invoice bills an agreed sum and no tracked
+              entries, so it has no worklog to list: its description says
+              what it bills for. */}
+          {isFixedInvoice(invoice) ? null : <InvoiceTime />}
         </Flex>
       </Root>
     </>

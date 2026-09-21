@@ -7,6 +7,7 @@ import styled from 'styled-components'
 import { useInvoiceInfoFields } from '../lib'
 import { $invoice, $invoiceLoading, canMarkInvoiceByHand } from '../model'
 
+import { InvoiceDescription } from './invoice-description'
 import { InvoiceEscrowSettlement } from './invoice-escrow-settlement'
 import { InvoicePaymentActions } from './invoice-payment-actions'
 import { InvoiceStatusBadge } from './invoice-status-badge'
@@ -124,6 +125,9 @@ export const InvoiceTotalAmountDesktop = () => {
             </Button>
           </InvoiceNoPrint>
         </Flex>
+        {loading ? null : (
+          <InvoiceDescription description={invoice?.description} />
+        )}
         {loading ? null : <InvoiceEscrowSettlement invoice={invoice} />}
         <Text size={'4'} weight={'medium'}>
           {t('invoice.summary.heading')}
