@@ -803,51 +803,26 @@ export type ReceiptSummary = {
   checkedAtBlock: number | null
 }
 
-/** The certificate that discloses this receipt's allocation, if any of them does. */
-function certificateFor(input: unknown, certificates: readonly OriginCertificate[]): OriginCertificate | undefined {
-  const read = readReceipt(input)
-
-  if ('reason' in read) return undefined
-
-  return certificates.find(
-    (certificate) =>
-      Array.isArray(certificate?.allocations) &&
-      certificate.allocations.some((entry) => String(entry?.allocationId).toLowerCase() === read.receipt.source.allocationId),
-  )
-}
-
 /**
- * Checks a list of receipts and adds them up. An allocation counts once,
- * however many receipts name it: the same release shown twice is one
- * payment. Only `Verified` receipts are counted at all. Each receipt is
- * opened with whichever of `certificates` discloses its allocation.
+ * Adds receipts up. An allocation counts once, however many receipts name
+ * it: the same release shown twice is one payment. It adds up what it is
+ * given and checks nothing, so give it only receipts that came out of
+ * `buildReceipts`, or that `verifyReceipt` accepted.
  */
-export async function verifyReceipts(
-  inputs: readonly unknown[],
-  options: ChainOptions & { expectedSubject?: string; certificates?: readonly OriginCertificate[] },
-): Promise<{ reports: (ReceiptReport & { duplicate: boolean })[]; summary: ReceiptSummary }> {
+export function summarizeReceipts(receipts: readonly SettlementReceipt[], checkedAtBlock: number | null = null): ReceiptSummary {
   const seen = new Set<string>()
   const totals = new Map<string, ReceiptSummary['totals'][number]>()
-  const reports: (ReceiptReport & { duplicate: boolean })[] = []
   let duplicates = 0
-  let checkedAtBlock: number | null = null
 
-  for (const input of inputs) {
-    const report = await verifyReceipt(input, { ...options, certificate: certificateFor(input, options.certificates ?? []) })
-    const receipt = report.receipt
-    const key = receipt ? `${receipt.source.chainId}:${receipt.source.contract}:${receipt.source.allocationId}` : ''
-    const duplicate = report.accepted && seen.has(key)
+  for (const receipt of receipts) {
+    const key = receiptKey(receipt)
 
-    reports.push({ ...report, duplicate })
-
-    if (!report.accepted || receipt === null) continue
-    if (duplicate) {
+    if (seen.has(key)) {
       duplicates += 1
       continue
     }
 
     seen.add(key)
-    checkedAtBlock = checkedAtBlock === null ? report.checkedAtBlock : Math.min(checkedAtBlock, report.checkedAtBlock ?? checkedAtBlock)
 
     const line = `${receipt.source.chainId}:${receipt.outcome.token}`
     const total = totals.get(line) ?? {
@@ -869,5 +844,55 @@ export async function verifyReceipts(
     })
   }
 
-  return { reports, summary: { releases: seen.size, duplicates, totals: [...totals.values()], checkedAtBlock } }
+  return { releases: seen.size, duplicates, totals: [...totals.values()], checkedAtBlock }
+}
+
+function receiptKey(receipt: SettlementReceipt): string {
+  return `${receipt.source.chainId}:${receipt.source.contract}:${receipt.source.allocationId}`
+}
+
+/** The certificate that discloses this receipt's allocation, if any of them does. */
+function certificateFor(input: unknown, certificates: readonly OriginCertificate[]): OriginCertificate | undefined {
+  const read = readReceipt(input)
+
+  if ('reason' in read) return undefined
+
+  return certificates.find(
+    (certificate) =>
+      Array.isArray(certificate?.allocations) &&
+      certificate.allocations.some((entry) => String(entry?.allocationId).toLowerCase() === read.receipt.source.allocationId),
+  )
+}
+
+/**
+ * Checks a list of receipts and adds them up. An allocation counts once,
+ * however many receipts name it. Only `Verified` receipts are counted at
+ * all. Each receipt is opened with whichever of `certificates` discloses its
+ * allocation.
+ */
+export async function verifyReceipts(
+  inputs: readonly unknown[],
+  options: ChainOptions & { expectedSubject?: string; certificates?: readonly OriginCertificate[] },
+): Promise<{ reports: (ReceiptReport & { duplicate: boolean })[]; summary: ReceiptSummary }> {
+  const seen = new Set<string>()
+  const counted: SettlementReceipt[] = []
+  const reports: (ReceiptReport & { duplicate: boolean })[] = []
+  let checkedAtBlock: number | null = null
+
+  for (const input of inputs) {
+    const report = await verifyReceipt(input, { ...options, certificate: certificateFor(input, options.certificates ?? []) })
+    const receipt = report.accepted ? report.receipt : null
+    const duplicate = receipt !== null && seen.has(receiptKey(receipt))
+
+    reports.push({ ...report, duplicate })
+
+    if (receipt === null) continue
+
+    seen.add(receiptKey(receipt))
+    counted.push(receipt)
+
+    if (report.checkedAtBlock !== null) checkedAtBlock = checkedAtBlock === null ? report.checkedAtBlock : Math.min(checkedAtBlock, report.checkedAtBlock)
+  }
+
+  return { reports, summary: summarizeReceipts(counted, checkedAtBlock) }
 }

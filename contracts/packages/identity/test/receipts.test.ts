@@ -3,7 +3,7 @@ import { Interface, Wallet } from 'ethers'
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { ESCROW_READ_ABI, ESCROW_STATES, buildReceipts, readReceipt, receiptMessage, presentReceipt, verifyReceipt } from '../src'
+import { ESCROW_READ_ABI, ESCROW_STATES, buildReceipts, presentReceipt, readReceipt, receiptMessage, summarizeReceipts, verifyReceipt } from '../src'
 
 import type { RpcRequest, SettlementReceipt } from '../src'
 
@@ -217,5 +217,22 @@ describe('settlement receipts', () => {
     const edited = { ...presented, outcome: { ...presented.outcome, workerNet: '58000000', fee: '2000000' } }
 
     expect((await verifyReceipt(edited, { manifest: MANIFEST, rpc: chainOf(chain) })).result).to.eq('SignatureInvalid')
+  })
+
+  it('adds up what it is given once per allocation, and keeps tokens apart', async () => {
+    const receipt = await receiptFrom({ latest: 60, finalized: 50, releasedAt: 40 })
+    const another = { ...receipt, source: { ...receipt.source, allocationId: `0x${'ef'.repeat(32)}` } }
+    const otherToken = { ...another, source: { ...another.source, allocationId: `0x${'12'.repeat(32)}` }, outcome: { ...another.outcome, token: PAYER } }
+
+    expect(summarizeReceipts([receipt, another, receipt, otherToken], 50)).to.deep.eq({
+      releases: 3,
+      duplicates: 1,
+      totals: [
+        { chainId: 31337, token: TOKEN, decimals: 6, releases: 2, gross: '120000000', workerNet: '114000000', fee: '6000000' },
+        { chainId: 31337, token: PAYER, decimals: 6, releases: 1, gross: '60000000', workerNet: '57000000', fee: '3000000' },
+      ],
+      checkedAtBlock: 50,
+    })
+    expect(summarizeReceipts([])).to.deep.eq({ releases: 0, duplicates: 0, totals: [], checkedAtBlock: null })
   })
 })
