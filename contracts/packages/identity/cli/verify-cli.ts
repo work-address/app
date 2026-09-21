@@ -1,8 +1,20 @@
 import fs from 'node:fs'
 
-import { ManifestError, failuresOf, isWithdrawn, jsonRpcTransport, qualificationsOf, readManifest, verifyOrigin, verifyPresentation } from '../src'
+import {
+  ManifestError,
+  buildReceipts,
+  failuresOf,
+  findAllocationsPaidTo,
+  isWithdrawn,
+  jsonRpcTransport,
+  qualificationsOf,
+  serializeReceipt,
+  verifyOrigin,
+  verifyPresentation,
+  verifyReceipts,
+} from '../src'
 
-import type { OriginCertificate, VerificationReport } from '../src'
+import type { OriginCertificate, ReceiptReport, VerificationReport } from '../src'
 
 /**
  * The independent verifier as a command. It reads files the holder handed
@@ -12,7 +24,7 @@ import type { OriginCertificate, VerificationReport } from '../src'
  * Exit status, so a script can tell the three apart:
  *
  *   0  verified: an identity that is Current or SelfSignedOnly, a certificate
- *      whose every version opens
+ *      whose every version opens, receipts that are every one Verified
  *   1  refuted, or not recognised: the evidence does not support the claim
  *   2  the command line or a file could not be read
  *   3  undetermined: the endpoint did not answer, the chain has not finalized
@@ -27,6 +39,12 @@ export const USAGE = `Usage:
   verify identity <presentation.json> --manifest <deployment.json> --rpc <url>
                   [--subject <address>] [--finality finalized|latest] [--json]
   verify origin <certificate.json> [--signer <address>] [--json]
+  verify receipt <receipt.json>... --manifest <deployment.json> --rpc <url>
+                  [--subject <address>] [--certificate <certificate.json>]...
+                  [--finality finalized|latest] [--json]
+  verify receipts --subject <address> --manifest <deployment.json> --rpc <url>
+                  [--allocation <id>]... [--escrow <address>] [--out <directory>]
+                  [--finality finalized|latest] [--json]
 
   --manifest   deployment manifest (deployments/<network>.json): the registries and
                escrows you accept. A copy of either contract proves nothing.
@@ -36,18 +54,24 @@ export const USAGE = `Usage:
                "latest" reads the head, for a development chain.
   --signer     the origin signer the deployment publishes; a certificate signed
                by anyone else is refused.
+  --certificate  a hire's origin certificate: opens the terms hash of the receipts
+               it discloses, held to the origin signer the escrow itself names.
+  --allocation   an allocation to build a receipt for; a hint from anywhere.
+               Without any, every funding event of the listed escrows is read.
+  --out        write each receipt there as <allocationId>.json.
 
 Exit status: 0 verified, 1 refuted or not recognised, 2 usage, 3 undetermined.`
 
 class UsageError extends Error {}
 
-type Arguments = { positional: string[]; options: Map<string, string>; flags: Set<string> }
+type Arguments = { positional: string[]; options: Map<string, string>; repeated: Map<string, string[]>; flags: Set<string> }
 
-const VALUE_OPTIONS = new Set(['manifest', 'rpc', 'subject', 'finality', 'signer'])
+const VALUE_OPTIONS = new Set(['manifest', 'rpc', 'subject', 'finality', 'signer', 'escrow', 'out'])
+const REPEATED_OPTIONS = new Set(['allocation', 'certificate'])
 const FLAGS = new Set(['json', 'help'])
 
 function parse(argv: readonly string[]): Arguments {
-  const parsed: Arguments = { positional: [], options: new Map(), flags: new Set() }
+  const parsed: Arguments = { positional: [], options: new Map(), repeated: new Map(), flags: new Set() }
 
   for (let index = 0; index < argv.length; index += 1) {
     const argument = argv[index]
@@ -61,12 +85,13 @@ function parse(argv: readonly string[]): Arguments {
 
     if (FLAGS.has(name)) {
       parsed.flags.add(name)
-    } else if (VALUE_OPTIONS.has(name)) {
+    } else if (VALUE_OPTIONS.has(name) || REPEATED_OPTIONS.has(name)) {
       const value = inline ?? argv[(index += 1)]
 
       if (value === undefined) throw new UsageError(`--${name} needs a value`)
 
-      parsed.options.set(name, value)
+      if (REPEATED_OPTIONS.has(name)) parsed.repeated.set(name, [...(parsed.repeated.get(name) ?? []), value])
+      else parsed.options.set(name, value)
     } else {
       throw new UsageError(`Unknown option --${name}`)
     }
@@ -117,9 +142,7 @@ async function identity(parsed: Arguments, io: CliIo): Promise<number> {
 
   if (!file) throw new UsageError('verify identity needs a presentation file')
 
-  const finality = parsed.options.get('finality') ?? 'finalized'
-
-  if (finality !== 'finalized' && finality !== 'latest') throw new UsageError('--finality is "finalized" or "latest"')
+  const finality = finalityOf(parsed)
 
   // A presentation is handed to the library as text, so a file that is not JSON is its MalformedExport, not a usage error.
   let document: string
@@ -151,6 +174,93 @@ async function identity(parsed: Arguments, io: CliIo): Promise<number> {
   io.out(blockLine(report))
 
   return identityExit(report)
+}
+
+function finalityOf(parsed: Arguments): 'finalized' | 'latest' {
+  const finality = parsed.options.get('finality') ?? 'finalized'
+
+  if (finality !== 'finalized' && finality !== 'latest') throw new UsageError('--finality is "finalized" or "latest"')
+
+  return finality
+}
+
+export function receiptExit(reports: readonly Pick<ReceiptReport, 'result' | 'accepted'>[]): number {
+  if (reports.length > 0 && reports.every((report) => report.accepted)) return EXIT.verified
+
+  const refuted = reports.some((report) => !report.accepted && report.result !== 'RpcUnavailable' && report.result !== 'NotFinal')
+
+  return refuted || reports.length === 0 ? EXIT.refuted : EXIT.undetermined
+}
+
+async function receipt(parsed: Arguments, io: CliIo): Promise<number> {
+  const files = parsed.positional.slice(1)
+
+  if (files.length === 0) throw new UsageError('verify receipt needs at least one receipt file')
+
+  const manifest = readJson(required(parsed, 'manifest'), 'manifest')
+  const rpc = jsonRpcTransport(required(parsed, 'rpc'))
+  const certificates = (parsed.repeated.get('certificate') ?? []).map((file) => readJson(file, 'certificate') as OriginCertificate)
+  const documents = files.map((file) => {
+    try {
+      return fs.readFileSync(file, 'utf8')
+    } catch {
+      throw new UsageError(`Cannot read the receipt at ${file}`)
+    }
+  })
+  const options = { manifest, rpc, finality: finalityOf(parsed), expectedSubject: parsed.options.get('subject') }
+  const { reports, summary } = await verifyReceipts(documents, { ...options, certificates })
+
+  if (parsed.flags.has('json')) {
+    io.out(JSON.stringify({ reports, summary }, null, 2))
+  } else {
+    reports.forEach((report, index) => {
+      io.out(`${files[index]}: ${report.result}${report.duplicate ? ' (the same allocation as one above: counted once)' : ''}`)
+      io.out(`  ${report.detail}`)
+
+      if (report.terms) io.out(`  Terms: ${report.terms.disclosure}, hire ${report.terms.contractId}, signed by ${report.terms.signer}`)
+
+      for (const qualification of report.terms?.qualifications ?? []) io.err(`Unproven: ${qualification}`)
+    })
+
+    for (const total of summary.totals) {
+      io.out(`Paid through escrow: ${total.releases} releases, ${total.workerNet} base units of ${total.token} (${total.decimals} decimals) on chain ${total.chainId}`)
+    }
+  }
+
+  io.out(summary.checkedAtBlock === null ? 'Block checked: none' : `Block checked: ${summary.checkedAtBlock}`)
+
+  return receiptExit(reports)
+}
+
+async function receipts(parsed: Arguments, io: CliIo): Promise<number> {
+  const subject = required(parsed, 'subject')
+  const options = { manifest: readJson(required(parsed, 'manifest'), 'manifest'), rpc: jsonRpcTransport(required(parsed, 'rpc')), finality: finalityOf(parsed) }
+  const escrow = parsed.options.get('escrow')
+  const hinted = parsed.repeated.get('allocation')
+  const allocationIds = hinted ?? (await findAllocationsPaidTo(subject, { ...options, escrow }))
+  const build = await buildReceipts({ subject, allocationIds, escrow }, options)
+  const out = parsed.options.get('out')
+
+  if (out !== undefined) {
+    fs.mkdirSync(out, { recursive: true })
+
+    for (const built of build.receipts) fs.writeFileSync(`${out}/${built.source.allocationId}.json`, serializeReceipt(built))
+  }
+
+  if (parsed.flags.has('json')) {
+    io.out(JSON.stringify(build, null, 2))
+  } else {
+    io.out(`Result: ${build.result}`)
+    io.out(build.detail)
+
+    for (const allocation of build.allocations) io.out(`  ${allocation.allocationId}: ${allocation.outcome}. ${allocation.detail}`)
+  }
+
+  io.out(build.checkedAtBlock === null ? 'Block checked: none' : `Block checked: ${build.checkedAtBlock} (${build.finalized ? 'finalized' : 'not finalized'})`)
+
+  if (build.result === 'Built') return EXIT.verified
+
+  return build.result === 'RegistryNotInManifest' ? EXIT.refuted : EXIT.undetermined
 }
 
 function origin(parsed: Arguments, io: CliIo): number {
@@ -200,6 +310,10 @@ export async function run(argv: readonly string[], io: CliIo): Promise<number> {
         return await identity(parsed, io)
       case 'origin':
         return origin(parsed, io)
+      case 'receipt':
+        return await receipt(parsed, io)
+      case 'receipts':
+        return await receipts(parsed, io)
       default:
         throw new UsageError(`Unknown command ${parsed.positional[0]}`)
     }

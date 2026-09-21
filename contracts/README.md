@@ -235,6 +235,50 @@ commitment is `profileCommitment()`, its disclosures pass
 `MerkleProof.verify`, and `checkPresentation` reads them as `Current`, then
 `Superseded` and `Deactivated`.
 
+## Verify independently
+
+Anyone can check what Work Address says about an identity or a payment with a
+deployment manifest, an RPC endpoint of their own choosing and the documents
+the holder hands over. No Work Address API is asked anything, and none could
+change the answer. The code is [`packages/identity`](packages/identity/README.md),
+open and browser-safe; the command is `packages/identity/bin/verify`:
+
+```bash
+pnpm install --frozen-lockfile     # at the repository root; nothing else to build
+V=contracts/packages/identity/bin/verify
+M=contracts/deployments/localhost.json
+R=http://127.0.0.1:8545
+
+$V identity presentation.json --manifest $M --rpc $R     # is this profile current, superseded, withdrawn?
+$V receipts --subject 0xWorker --manifest $M --rpc $R --out receipts/   # build receipts from the chain alone
+$V receipt receipts/*.json --manifest $M --rpc $R --certificate origin.json
+$V origin origin.json --signer 0xOriginSigner           # offline: are these the terms that were signed?
+```
+
+Every run prints the block it checked. Exit status 0 is verified, 1 refuted
+or not recognised, 2 a usage error, 3 undetermined (the endpoint did not
+answer, the chain has not finalized its answer, or a certificate declares its
+own terms unproven): "could not tell" is never reported as "wrong".
+
+**There is no receipts contract, by decision.** A settlement receipt
+(`work-address/settlement-receipt` v1) is a reference to a `Released` event:
+chain, escrow, allocation, transaction, log index, and what the event and
+`readAllocation` say was paid, to whom, by whom, for which period and under
+which `termsHash`. The verifier re-reads all of it at the node's finalized
+block. A refund, a cancellation, an expiry or a dispute never yields one; an
+allocation listed twice counts once; a payee that is not the subject is
+refused; a release that a reorganisation took back is `NotFound`. An origin
+certificate handed over with a receipt opens its `termsHash`, and its
+signature is held to the `originSigner()` the escrow itself reports.
+
+**The manifest is the trust root.** A copy of the escrow that its own
+deployer funds emits a structurally perfect `Released`, and a copy of the
+registry runs the identical commitment scheme. Either is
+`RegistryNotInManifest`, and is never asked anything.
+
+What a verified receipt does not say: that the work was good, or that payer
+and payee are independent people. A UI must keep that next to the number.
+
 ## Develop
 
 This package and `packages/identity` are members of the repository's pnpm
@@ -244,8 +288,8 @@ API and the dashboard. From `contracts/`:
 ```bash
 pnpm test
 pnpm run typecheck
-pnpm run test:identity        # packages/identity: vectors, tampering, no network
-pnpm run typecheck:identity   # the library without Node types, then its tests
+pnpm run test:identity        # packages/identity: vectors, tampering, the verifier on a scripted chain, no network
+pnpm run typecheck:identity   # the library without Node types, then the command, then its tests
 pnpm run deploy:local   # in-process smoke deploy; nothing outlives the command
 ```
 

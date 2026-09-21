@@ -103,7 +103,9 @@ Block checked: 128 (finalized)
 never a stale build. `--json` prints the whole report, `--subject <address>`
 refuses a document about any other account, and `--finality latest` reads the
 head alone, for a development chain. `bin/verify origin certificate.json
-[--signer <address>]` opens an origin certificate offline (`src/origin.ts`).
+[--signer <address>]` opens an origin certificate offline (`src/origin.ts`);
+`bin/verify receipts` and `bin/verify receipt` build and check settlement
+receipts (below).
 
 | Exit | Meaning |
 | --- | --- |
@@ -150,6 +152,55 @@ the finalized block and the head agree on is reported as that answer.
 | `RpcUnavailable` | The endpoint did not answer, answers for another chain, or has no registry at that address. **Not a statement about the document** |
 | `NotFinal` | The head and the finalized block disagree, or the node names no finalized block. Check again later |
 
+### Settlement receipts
+
+There is no receipts or reputation contract, by decision: the escrow's
+`Released` event already is the only reputation fact a chain can attest. A
+receipt (`work-address/settlement-receipt` v1, claim type `escrow-release`) is
+a reference to that event, and everything in it is re-read from the chain.
+
+```bash
+bin/verify receipts --subject 0xWorker --manifest deployments/localhost.json --rpc http://127.0.0.1:8545 --out receipts/
+bin/verify receipt receipts/*.json --manifest deployments/localhost.json --rpc http://127.0.0.1:8545 \
+  --subject 0xWorker --certificate origin.json
+```
+
+```ts
+import { buildReceipts, findAllocationsPaidTo, verifyReceipts } from '@work-address/identity'
+
+const allocationIds = await findAllocationsPaidTo(worker, { manifest, rpc })   // or hints from anywhere
+const { receipts, allocations } = await buildReceipts({ subject: worker, allocationIds }, { manifest, rpc })
+const { reports, summary } = await verifyReceipts(receipts, { manifest, rpc, expectedSubject: worker })
+```
+
+`buildReceipts` reads `readAllocation` at the finalized block, requires
+`Released` with the subject as payee and another wallet as payer, finds the
+one `Released` log on a manifest-listed escrow, and checks gross = billed,
+workerNet = workerTransferred, fee = feeTransferred. Every other allocation
+is reported with what became of it: `CancelledBeforeWork`, `ExpiredRefunded`,
+`DisputeRefunded`, `Funded`, `Submitted`, `NotFound`, `PayeeMismatch`,
+`SelfPaid`, `OutcomeMismatch`, `NotFinal`. None of those is an earnings
+receipt. Allocation ids are hints: a wrong one can only produce `NotFound`.
+`AllocationFunded` does not index the payee, so `findAllocationsPaidTo` reads
+every funding event since the deployment block; that is the cost of asking
+nobody.
+
+`verifyReceipt` answers `Verified`, `NotFound` (never there, or reorganised
+away), `NotReleased`, `RegistryNotInManifest`, `SubjectMismatch`,
+`OutcomeMismatch`, `TermsMismatch`, `MalformedReceipt`, `SignatureInvalid`,
+`RpcUnavailable` or `NotFinal`. `verifyReceipts` counts an allocation once
+however many receipts name it. With an origin certificate it also opens the
+`termsHash`: the disclosed terms are the ones this payment was made under,
+signed by the `originSigner()` the escrow itself reports. A certificate that
+declares format version null (a hire accepted under the v2 terms as they were
+before they named their origin) leaves the terms `unproven`, said in words,
+and the payment still verifies.
+
+A verified receipt says a wallet was paid an amount by another wallet through
+a listed escrow. It does not say the work was good or that the two wallets
+are independent people; a UI must keep that qualifier next to the number and
+must never fold receipts into a rating.
+
 `rpc.ts` is the only file in `src/` that names a network API. It posts JSON-RPC
 to the URL it was given, with no credentials and no redirects, and
 `test/no-network.test.ts` holds it to that.
@@ -192,6 +243,7 @@ pnpm run typecheck:identity   # the library with no Node types, then the command
 pnpm run build:identity       # dist/cjs, dist/esm and dist/node (the command)
 pnpm exec hardhat test test/identity-library.test.ts   # against the deployed registry
 pnpm exec hardhat test test/identity-verify.test.ts    # the verifier and bin/verify against the deployed registry
+pnpm exec hardhat test test/settlement-receipts.test.ts  # receipts against the deployed escrow (ID-09)
 ```
 
 The library's `tsconfig.json` has no Node types, so a Node-only API in `src/`

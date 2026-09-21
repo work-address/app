@@ -157,3 +157,64 @@ export async function callAt(rpc: RpcRequest, to: string, data: string, block: n
 
   return result
 }
+
+export type RpcLog = {
+  address: string
+  topics: string[]
+  data: string
+  blockNumber: number
+  transactionHash: string
+  logIndex: number
+}
+
+/** Most blocks one `eth_getLogs` request covers here; public endpoints cap the range. */
+export const LOG_BLOCK_RANGE = 2000
+
+/**
+ * Logs of one address between two blocks, inclusive, asked for in ranges a
+ * public endpoint accepts. A log the node marks `removed` was reorganised
+ * away and is left out.
+ */
+export async function logsOf(
+  rpc: RpcRequest,
+  filter: { address: string; topics: (string | string[] | null)[]; fromBlock: number; toBlock: number },
+  range: number = LOG_BLOCK_RANGE,
+): Promise<RpcLog[]> {
+  const method = 'eth_getLogs'
+  const logs: RpcLog[] = []
+
+  for (let from = filter.fromBlock; from <= filter.toBlock; from += range) {
+    const to = Math.min(from + range - 1, filter.toBlock)
+    const page = await ask(rpc, method, [
+      { address: filter.address, topics: filter.topics, fromBlock: toQuantity(from), toBlock: toQuantity(to) },
+    ])
+
+    if (!Array.isArray(page)) throw new RpcUnavailableError(method, `${method} answered something that is not a list of logs`)
+
+    for (const log of page as unknown[]) {
+      if (
+        !isRecord(log) ||
+        typeof log.address !== 'string' ||
+        typeof log.data !== 'string' ||
+        typeof log.transactionHash !== 'string' ||
+        !Array.isArray(log.topics) ||
+        !log.topics.every((topic) => typeof topic === 'string')
+      ) {
+        throw new RpcUnavailableError(method, `${method} answered something that is not a log`)
+      }
+
+      if (log.removed === true) continue
+
+      logs.push({
+        address: log.address,
+        topics: log.topics as string[],
+        data: log.data,
+        blockNumber: quantity(method, log.blockNumber),
+        transactionHash: log.transactionHash.toLowerCase(),
+        logIndex: quantity(method, log.logIndex),
+      })
+    }
+  }
+
+  return logs.sort((a, b) => a.blockNumber - b.blockNumber || a.logIndex - b.logIndex)
+}
