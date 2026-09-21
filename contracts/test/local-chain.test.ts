@@ -9,12 +9,14 @@ import { TASK_NODE_SERVER_READY } from 'hardhat/builtin-tasks/task-names'
 import type { HardhatRuntimeEnvironment } from 'hardhat/types'
 
 import {
+  DEFAULT_LOCAL_RPC_URL,
   DEPLOYMENTS_DIR,
   assertLocalChain,
   deployLocal,
   enableIntervalMining,
   escrowEnvLines,
   localAccountKey,
+  localRpcUrl,
   writeManifest,
 } from '../scripts/local-chain'
 import { mintLocal } from '../scripts/mint'
@@ -165,6 +167,15 @@ describe('local chain tooling', () => {
       }
 
       expect(requests).to.deep.eq([{ method: 'evm_setIntervalMining', params: [5_000] }])
+    })
+
+    it('answers on 8545 unless LOCAL_RPC_URL names another node', () => {
+      expect(localRpcUrl({})).to.eq(DEFAULT_LOCAL_RPC_URL)
+      expect(localRpcUrl({ LOCAL_RPC_URL: '' })).to.eq(DEFAULT_LOCAL_RPC_URL)
+      expect(localRpcUrl({ LOCAL_RPC_URL: '  ' })).to.eq(DEFAULT_LOCAL_RPC_URL)
+      expect(localRpcUrl({ LOCAL_RPC_URL: ' http://127.0.0.1:8546 ' })).to.eq(
+        'http://127.0.0.1:8546',
+      )
     })
   })
 

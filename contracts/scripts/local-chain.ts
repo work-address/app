@@ -11,7 +11,20 @@ import type { HardhatRuntimeEnvironment } from 'hardhat/types'
  */
 export const LOCAL_CHAIN_ID = 31337
 
-export const LOCAL_RPC_URL = 'http://127.0.0.1:8545'
+export const DEFAULT_LOCAL_RPC_URL = 'http://127.0.0.1:8545'
+
+/**
+ * Where `--network localhost` looks for the node. LOCAL_RPC_URL moves it, so a
+ * second node — a journey run's own chain, say — can stand beside the one a
+ * developer already has on 8545 (`hardhat node --port`) without either taking
+ * the other's. The chain id is pinned either way, so a URL that answers as
+ * another chain is still refused.
+ */
+export function localRpcUrl(env: NodeJS.ProcessEnv = process.env): string {
+  return (env.LOCAL_RPC_URL ?? '').trim() || DEFAULT_LOCAL_RPC_URL
+}
+
+export const LOCAL_RPC_URL = localRpcUrl()
 
 export const DEPLOYMENTS_DIR = path.resolve(__dirname, '..', 'deployments')
 
