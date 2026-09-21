@@ -21,20 +21,22 @@ network calls.
 
 ## `MarketplaceEscrow`
 
-One allocation is one worker and one period of accepted work:
+One allocation is one worker and one period of accepted work, or one
+fixed-price milestone (web `docs/adr/milestone-escrow.md`):
 
 | Step | Who | Rule |
 | --- | --- | --- |
 | `fund` | Payer | Exact budget, before work starts, with the platform's EIP-712 origin proof over every term |
 | `cancelBeforeWork` | Payer | Full refund before work starts |
-| `submitInvoice` | Payee | Once, from work end until work end + 72 hours; 0 < amount ≤ budget |
+| `submitInvoice` | Payee | Once, from work end (from work start when the terms say `earlySubmission`, as a milestone's do) until work end + 72 hours; 0 < amount ≤ budget |
 | `refundExpired` | Anyone | No submission by the deadline: full refund |
 | `dispute` | Payer | Before submission + 7 days: the billed amount is refunded |
+| `approveRelease` | Payer | Any time a bill stands: 95% to the payee, 5% to the fixed fee recipient, at once |
 | `release` | Anyone | From submission + 7 days: 95% to the payee, 5% to the fixed fee recipient, atomically |
 | `refundRemainder` | Anyone | Unbilled budget back to the payer, once |
 
 Party actions also have relayed forms — `fundFor`, `cancelBeforeWorkFor`,
-`submitInvoiceFor`, `disputeFor` — taking an EIP-712 `Action` signature bound to
+`submitInvoiceFor`, `disputeFor`, `approveReleaseFor` — taking an EIP-712 `Action` signature bound to
 the operation, allocation, exact payload, the signer's next nonce and a
 deadline. Contract wallets sign through ERC-1271. Nonces are sequential per
 signer, so a party's outstanding authorizations are used in the order signed.
