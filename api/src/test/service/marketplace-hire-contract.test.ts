@@ -130,9 +130,7 @@ export class MarketplaceHireContractTest {
   pathAndHeaderAreTheOnesTheControllerServes() {
     const fixture = this.fixture()
 
-    expect(fixture.header).to.equal(
-      MarketplaceHireController.SIGNATURE_HEADER,
-    )
+    expect(fixture.header).to.equal(MarketplaceHireController.SIGNATURE_HEADER)
     expect(fixture.path).to.equal('/api/internal/marketplace/hire')
   }
 }

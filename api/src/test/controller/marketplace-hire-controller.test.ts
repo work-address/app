@@ -477,13 +477,17 @@ export class MarketplaceEndControllerTest extends BaseControllerTest {
     const body = this.endBody(contractId)
     const raw = JSON.stringify(body)
 
-    const res = await axios.post(`${this.url}/api/internal/marketplace/end`, raw, {
-      headers: {
-        'Content-Type': 'application/json',
-        'X-Marketplace-Signature': this.signature.sign(raw),
+    const res = await axios.post(
+      `${this.url}/api/internal/marketplace/end`,
+      raw,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          'X-Marketplace-Signature': this.signature.sign(raw),
+        },
+        validateStatus: () => true,
       },
-      validateStatus: () => true,
-    })
+    )
     const project = await this.projectRepository
       .getRepo()
       .findOneOrFail({ where: { id: projectId } })

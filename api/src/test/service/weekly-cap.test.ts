@@ -70,8 +70,10 @@ export class WeeklyCapTest {
     const project = this.project({ weeklyLimit: 10 })
 
     expect(
-      WeeklyCap.periodAt(project, new Date('2026-03-04T12:00:00.000Z'))
-        .fromAt?.toISOString(),
+      WeeklyCap.periodAt(
+        project,
+        new Date('2026-03-04T12:00:00.000Z'),
+      ).fromAt?.toISOString(),
     ).to.be.eq('2026-03-02T09:00:00.000Z')
   }
 
@@ -92,8 +94,9 @@ export class WeeklyCapTest {
     )
 
     expect(period.toAt?.getTime()).to.be.eq(startsAt.getTime())
-    expect((period.toAt?.getTime() ?? 0) - (period.fromAt?.getTime() ?? 0))
-      .to.be.eq(WEEK_MS)
+    expect(
+      (period.toAt?.getTime() ?? 0) - (period.fromAt?.getTime() ?? 0),
+    ).to.be.eq(WEEK_MS)
   }
 
   @test()

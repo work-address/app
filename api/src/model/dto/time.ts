@@ -16,15 +16,15 @@ import {
   Min,
   ValidateNested,
 } from 'class-validator'
+import type { OrderByCondition } from 'typeorm'
+
+import { ISearch, SearchDto } from './search'
 
 /**
  * Highest unix second a window boundary may name. Past it `new Date` starts
  * losing precision, and no work period reaches the year 275760 anyway.
  */
 const MAX_UNIX_SECONDS = 8640000000000
-import type { OrderByCondition } from 'typeorm'
-
-import { ISearch, SearchDto } from './search'
 
 type SortDirection = Extract<OrderByCondition[string], 'ASC' | 'DESC'>
 const SORT_DIRECTIONS: SortDirection[] = ['ASC', 'DESC']
