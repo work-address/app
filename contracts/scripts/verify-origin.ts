@@ -20,6 +20,14 @@ import { TypedDataEncoder, keccak256, toUtf8Bytes, verifyTypedData } from 'ether
  *   3. the preimage's `origin` names a specific listing and application —
  *      so the same signature cannot be claimed for a different engagement.
  *
+ * A contract whose terms were amended has more than one such hash: a period
+ * funded before the amendment keeps the hash of the terms it was funded
+ * under, for good. The certificate therefore discloses every version of the
+ * terms (`versions`, oldest first), and each allocation is opened with the
+ * version whose bytes hash to the `termsHash` it carries. An allocation
+ * fails only when no disclosed version opens it; a version fails when its
+ * bytes do not hash to what it claims, or name another engagement.
+ *
  * Nothing here touches a network. Run it against a saved certificate:
  *
  *   npx hardhat run scripts/verify-origin.ts --no-compile -- certificate.json
@@ -54,12 +62,30 @@ export type OriginAllocation = {
   signature: string
 }
 
-export type OriginCertificate = {
-  contractId: string
+/** One version of the contract's terms, as the certificate discloses it. */
+export type OriginTermsVersion = {
+  /** 1 for the terms the hire began on, one more per accepted amendment. */
+  termsVersion: number
+  /** ISO instant these terms applied from; null for the ones hired on. */
+  effectiveFrom: string | null
   /** 2 when `preimage` carries an `origin` block, 1 for a legacy contract. */
   version: number | null
   preimage: Record<string, unknown>
   termsHash: string
+}
+
+export type OriginCertificate = {
+  contractId: string
+  /** 2 when `preimage` carries an `origin` block, 1 for a legacy contract. */
+  version: number | null
+  /** The terms in force: the last of `versions`, where there are any. */
+  preimage: Record<string, unknown>
+  termsHash: string
+  /**
+   * Every version of the terms, oldest first. Absent on a certificate saved
+   * before amendments were disclosed, which is then read as its one preimage.
+   */
+  versions?: OriginTermsVersion[]
   domain: { name: string; version: string }
   types: Record<string, { name: string; type: string }[]>
   allocations: OriginAllocation[]
@@ -71,8 +97,28 @@ export type AllocationVerdict = {
   digest: string
   /** Whoever signed it. Compare with the deployment's published signer. */
   signer: string
-  /** The allocation's own hash is the one the preimage opens. */
+  /** A disclosed preimage hashes to the allocation's own `termsHash`. */
   termsHashMatches: boolean
+  /** Which disclosed version that is; null when none, or on an old certificate. */
+  termsVersion: number | null
+}
+
+export type VersionVerdict = {
+  termsVersion: number | null
+  effectiveFrom: string | null
+  /** keccak256 of this version's preimage, re-serialised here. */
+  termsHash: string
+  /** That hash is the one the certificate claims for this version. */
+  termsHashMatches: boolean
+  /** Where the hire came from; null on a v1 preimage, which names none. */
+  origin: TermsOrigin | null
+  /**
+   * It names the contract the certificate is for and, where it names an
+   * origin at all, the same one as the terms in force: amending the price
+   * does not change who hired whom, so a version that says otherwise is
+   * another engagement's terms slipped in.
+   */
+  sameEngagement: boolean
 }
 
 export type OriginVerdict = {
@@ -83,6 +129,8 @@ export type OriginVerdict = {
   termsHashMatches: boolean
   /** Where the hire came from; null on a v1 certificate, which names none. */
   origin: TermsOrigin | null
+  /** Every disclosed version of the terms, oldest first. */
+  versions: VersionVerdict[]
   allocations: AllocationVerdict[]
 }
 
@@ -107,15 +155,69 @@ export function originOf(preimage: Record<string, unknown>): TermsOrigin | null 
 }
 
 /**
- * The digest and the signer of one allocation. The domain is rebuilt from
- * the allocation's own chain and escrow, so a signature made for one
- * deployment cannot pass as one made for another.
+ * Every version the certificate discloses, oldest first. One that carries no
+ * `versions` is read as the single preimage it has; on one that does, the
+ * certificate's own preimage is a copy of the last version and is checked
+ * separately, as the terms in force.
+ */
+export function disclosedVersions(
+  certificate: OriginCertificate,
+): OriginTermsVersion[] {
+  if (certificate.versions?.length) {
+    return certificate.versions
+  }
+
+  return [
+    {
+      termsVersion: 1,
+      effectiveFrom: null,
+      version: certificate.version,
+      preimage: certificate.preimage,
+      termsHash: certificate.termsHash,
+    },
+  ]
+}
+
+/** One disclosed version: its bytes re-hashed, and whose terms they are. */
+export function verifyVersion(
+  certificate: OriginCertificate,
+  version: OriginTermsVersion,
+): VersionVerdict {
+  const termsHash = termsHashOf(version.preimage)
+  const origin = originOf(version.preimage)
+  const inForce = originOf(certificate.preimage)
+
+  return {
+    termsVersion: version.termsVersion ?? null,
+    effectiveFrom: version.effectiveFrom ?? null,
+    termsHash,
+    termsHashMatches:
+      termsHash.toLowerCase() === version.termsHash.toLowerCase(),
+    origin,
+    sameEngagement:
+      version.preimage.contractId === certificate.contractId &&
+      (origin === null ||
+        inForce === null ||
+        JSON.stringify(origin) === JSON.stringify(inForce)),
+  }
+}
+
+/**
+ * The digest and the signer of one allocation, and which of `versions` opens
+ * the hash it carries. The domain is rebuilt from the allocation's own chain
+ * and escrow, so a signature made for one deployment cannot pass as one made
+ * for another. The match is against the hash computed here from each
+ * version's bytes, never the one the certificate claims for it.
  */
 export function verifyAllocation(
   certificate: OriginCertificate,
   allocation: OriginAllocation,
-  termsHash: string,
+  versions: VersionVerdict[],
 ): AllocationVerdict {
+  const opened = versions.find(
+    (version) =>
+      version.termsHash.toLowerCase() === allocation.termsHash.toLowerCase(),
+  )
   const domain = {
     ...certificate.domain,
     chainId: allocation.chainId,
@@ -142,14 +244,17 @@ export function verifyAllocation(
       terms,
       allocation.signature,
     ),
-    termsHashMatches:
-      allocation.termsHash.toLowerCase() === termsHash.toLowerCase(),
+    termsHashMatches: opened !== undefined,
+    termsVersion: opened?.termsVersion ?? null,
   }
 }
 
 /** Every check the certificate allows, with no network and no trust. */
 export function verifyOrigin(certificate: OriginCertificate): OriginVerdict {
   const termsHash = termsHashOf(certificate.preimage)
+  const versions = disclosedVersions(certificate).map((version) =>
+    verifyVersion(certificate, version),
+  )
 
   return {
     contractId: certificate.contractId,
@@ -157,10 +262,62 @@ export function verifyOrigin(certificate: OriginCertificate): OriginVerdict {
     termsHashMatches:
       termsHash.toLowerCase() === certificate.termsHash.toLowerCase(),
     origin: originOf(certificate.preimage),
+    versions,
     allocations: certificate.allocations.map((allocation) =>
-      verifyAllocation(certificate, allocation, termsHash),
+      verifyAllocation(certificate, allocation, versions),
     ),
   }
+}
+
+/**
+ * Why the certificate does not hold up, one line per failure; empty when it
+ * does. With `expectedSigner`, a recovered address that is not it is one.
+ */
+export function failuresOf(
+  certificate: OriginCertificate,
+  verdict: OriginVerdict,
+  expectedSigner?: string,
+): string[] {
+  const failures: string[] = []
+
+  if (!verdict.termsHashMatches) {
+    failures.push(
+      `The disclosed terms hash to ${verdict.termsHash}, not to the ${certificate.termsHash} the certificate claims was signed`,
+    )
+  }
+
+  for (const version of verdict.versions) {
+    if (!version.termsHashMatches) {
+      failures.push(
+        `Version ${version.termsVersion} of the terms hashes to ${version.termsHash}, not to the hash the certificate claims for it`,
+      )
+    }
+
+    if (!version.sameEngagement) {
+      failures.push(
+        `Version ${version.termsVersion} of the terms names another engagement than the certificate is for`,
+      )
+    }
+  }
+
+  for (const allocation of verdict.allocations) {
+    if (!allocation.termsHashMatches) {
+      failures.push(
+        `Allocation ${allocation.allocationId} was signed over terms the certificate does not disclose`,
+      )
+    }
+
+    if (
+      expectedSigner &&
+      allocation.signer.toLowerCase() !== expectedSigner.toLowerCase()
+    ) {
+      failures.push(
+        `Allocation ${allocation.allocationId} was signed by ${allocation.signer}, not by ${expectedSigner}`,
+      )
+    }
+  }
+
+  return failures
 }
 
 /** The CLI: read a certificate, print the verdict, exit non-zero on a mismatch. */
@@ -176,28 +333,12 @@ async function main(): Promise<void> {
     fs.readFileSync(file, 'utf8'),
   )
   const verdict = verifyOrigin(certificate)
-  const expected = process.env.ORIGIN_SIGNER
+  const failures = failuresOf(certificate, verdict, process.env.ORIGIN_SIGNER)
 
   console.log(JSON.stringify(verdict, null, 2))
 
-  if (!verdict.termsHashMatches) {
-    throw new Error(
-      `The disclosed terms hash to ${verdict.termsHash}, not to the ${certificate.termsHash} the certificate claims was signed`,
-    )
-  }
-
-  for (const allocation of verdict.allocations) {
-    if (!allocation.termsHashMatches) {
-      throw new Error(
-        `Allocation ${allocation.allocationId} was signed over other terms`,
-      )
-    }
-
-    if (expected && allocation.signer.toLowerCase() !== expected.toLowerCase()) {
-      throw new Error(
-        `Allocation ${allocation.allocationId} was signed by ${allocation.signer}, not by ${expected}`,
-      )
-    }
+  if (failures.length > 0) {
+    throw new Error(failures.join('\n'))
   }
 }
 

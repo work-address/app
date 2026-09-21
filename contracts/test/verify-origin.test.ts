@@ -4,6 +4,7 @@ import fs from 'node:fs'
 import path from 'node:path'
 
 import {
+  failuresOf,
   termsHashOf,
   verifyOrigin,
   type OriginCertificate,
@@ -23,7 +24,9 @@ type Any = any
  *
  * `fixtures/terms-origin.contract.json` is byte-identical to
  * web/api/src/test/fixture/terms-origin.contract.json, where the marketplace's
- * own suite holds TermsHash.preimageV2 to these exact bytes.
+ * own suite holds TermsHash.preimageV2 to these exact bytes - and, for its
+ * `amended` case, holds the walk back through an accepted amendment to the
+ * two preimages a certificate of an amended contract discloses.
  */
 describe('origin certificate', () => {
   const fixture = JSON.parse(
@@ -33,9 +36,16 @@ describe('origin certificate', () => {
     ),
   )
 
-  /** A deployment, and one allocation signed over the fixture's terms hash. */
+  /**
+   * A deployment, and one allocation signed over the fixture's terms hash.
+   * With `amended`, the certificate of the same contract after the fixture's
+   * amendment: both versions disclosed, the amended terms in force, and a
+   * second allocation, for the week the amendment applies from, signed over
+   * the amended hash. The first allocation still carries the original one.
+   */
   async function certificate(
     overrides: Partial<OriginCertificate> = {},
+    amended = false,
   ): Promise<{ signed: OriginCertificate; signer: string; escrow: Any }> {
     const [originSigner, feeRecipient, payer, payee] = await ethers.getSigners()
     const token = await (await ethers.getContractFactory('MockUSDT')).deploy()
@@ -87,11 +97,49 @@ describe('origin certificate', () => {
       workEnd: 1790604800,
       originExpiry: 1789990000,
     }
-    const signature = await originSigner.signTypedData(
-      { ...domain, chainId, verifyingContract: escrowAddress },
-      types,
-      terms,
-    )
+    const sign = async (signedTerms: typeof terms) => ({
+      ...signedTerms,
+      chainId,
+      escrowAddress,
+      signature: await originSigner.signTypedData(
+        { ...domain, chainId, verifyingContract: escrowAddress },
+        types,
+        signedTerms,
+      ),
+    })
+    const allocations = [await sign(terms)]
+
+    if (amended) {
+      const workStart = Math.floor(
+        Date.parse(fixture.amended.amendment.effectiveFrom) / 1000,
+      )
+      const laterObligationId = ethers.solidityPackedKeccak256(
+        ['string', 'string', 'uint64', 'uint64'],
+        [
+          'work-address:contract-period',
+          fixture.preimage.contractId,
+          workStart,
+          workStart + 604800,
+        ],
+      )
+
+      allocations.push(
+        await sign({
+          ...terms,
+          allocationId: ethers.solidityPackedKeccak256(
+            ['uint256', 'address', 'bytes32'],
+            [chainId, escrowAddress, laterObligationId],
+          ),
+          obligationId: laterObligationId,
+          termsHash: fixture.amended.termsHash,
+          workStart,
+          workEnd: workStart + 604800,
+          originExpiry: workStart - 3600,
+        }),
+      )
+    }
+
+    const inForce = amended ? fixture.amended : fixture
 
     return {
       signer: originSigner.address,
@@ -99,11 +147,31 @@ describe('origin certificate', () => {
       signed: {
         contractId: fixture.preimage.contractId,
         version: 2,
-        preimage: fixture.preimage,
-        termsHash: fixture.termsHash,
+        preimage: inForce.preimage,
+        termsHash: inForce.termsHash,
+        ...(amended
+          ? {
+              versions: [
+                {
+                  termsVersion: 1,
+                  effectiveFrom: null,
+                  version: 2,
+                  preimage: fixture.preimage,
+                  termsHash: fixture.termsHash,
+                },
+                {
+                  termsVersion: fixture.amended.amendment.version,
+                  effectiveFrom: fixture.amended.amendment.effectiveFrom,
+                  version: 2,
+                  preimage: fixture.amended.preimage,
+                  termsHash: fixture.amended.termsHash,
+                },
+              ],
+            }
+          : {}),
         domain,
         types,
-        allocations: [{ ...terms, chainId, escrowAddress, signature }],
+        allocations,
         ...overrides,
       },
     }
@@ -154,6 +222,110 @@ describe('origin certificate', () => {
     expect(termsHashOf(moved.preimage)).to.not.eq(fixture.termsHash)
     expect(verdict.termsHashMatches).to.be.false
     expect(verdict.allocations[0].termsHashMatches).to.be.false
+  })
+
+  /**
+   * An amended contract has two hashes on chain: the period funded before
+   * the amendment keeps the one it was funded under. Both open - each to its
+   * own version of the terms - both recover the origin signer, the escrow
+   * agrees on both digests, and the run the CLI makes of it finds no fault.
+   */
+  it('opens a period funded before an amendment and one funded after it', async () => {
+    const { signed, signer, escrow } = await certificate({}, true)
+    const verdict = verifyOrigin(signed)
+    const [before, after] = verdict.allocations
+
+    expect(signed.allocations[0].termsHash).to.eq(fixture.termsHash)
+    expect(signed.allocations[1].termsHash).to.eq(fixture.amended.termsHash)
+    expect(fixture.amended.termsHash).to.not.eq(fixture.termsHash)
+
+    expect(verdict.termsHash).to.eq(fixture.amended.termsHash)
+    expect(verdict.termsHashMatches).to.be.true
+    expect(
+      verdict.versions.map((version) => [
+        version.termsVersion,
+        version.termsHash,
+        version.termsHashMatches,
+        version.sameEngagement,
+      ]),
+    ).to.deep.eq([
+      [1, fixture.termsHash, true, true],
+      [2, fixture.amended.termsHash, true, true],
+    ])
+
+    expect(before.termsHashMatches).to.be.true
+    expect(before.termsVersion).to.eq(1)
+    expect(before.signer).to.eq(signer)
+    expect(after.termsHashMatches).to.be.true
+    expect(after.termsVersion).to.eq(2)
+    expect(after.signer).to.eq(signer)
+
+    for (const [index, allocation] of verdict.allocations.entries()) {
+      expect(await escrow.termsDigest(signed.allocations[index])).to.eq(
+        allocation.digest,
+      )
+    }
+
+    expect(failuresOf(signed, verdict, signer)).to.deep.eq([])
+  })
+
+  /**
+   * Disclosing every version is what keeps the earlier period checkable:
+   * with only the terms in force to go on, its hash opens to nothing and
+   * the certificate is refused rather than passed on trust.
+   */
+  it('refuses an allocation none of the disclosed versions opens', async () => {
+    const { signed } = await certificate({}, true)
+    const withheld = { ...signed, versions: signed.versions?.slice(1) }
+    const verdict = verifyOrigin(withheld)
+
+    expect(verdict.allocations.map((a) => a.termsHashMatches)).to.deep.eq([
+      false,
+      true,
+    ])
+    expect(verdict.allocations[0].termsVersion).to.be.null
+    expect(failuresOf(withheld, verdict)).to.deep.eq([
+      `Allocation ${signed.allocations[0].allocationId} was signed over terms the certificate does not disclose`,
+    ])
+  })
+
+  /**
+   * A version is judged by its bytes, not by the hash written next to them,
+   * and an amendment never changes who hired whom: earlier terms that claim
+   * a hash they do not have, or name another proposal, fail the run.
+   */
+  it('refuses a version that lies about its hash or its engagement', async () => {
+    const { signed } = await certificate({}, true)
+    const [first, second] = signed.versions ?? []
+    const relabelled = {
+      ...signed,
+      versions: [{ ...first, termsHash: fixture.amended.termsHash }, second],
+    }
+    const moved = {
+      ...signed,
+      versions: [
+        {
+          ...first,
+          preimage: {
+            ...first.preimage,
+            origin: {
+              ...(first.preimage.origin as Record<string, unknown>),
+              applicationId: '00000000-0000-4000-8000-000000000000',
+            },
+          },
+        },
+        second,
+      ],
+    }
+
+    expect(verifyOrigin(relabelled).versions[0].termsHashMatches).to.be.false
+    // Matched on the bytes: the mislabelled version still opens its period.
+    expect(verifyOrigin(relabelled).allocations[0].termsHashMatches).to.be.true
+    expect(failuresOf(relabelled, verifyOrigin(relabelled))).to.have.length(1)
+
+    expect(verifyOrigin(moved).versions[0].sameEngagement).to.be.false
+    expect(verifyOrigin(moved).allocations[0].termsHashMatches).to.be.false
+    expect(failuresOf(moved, verifyOrigin(moved))).to.have.length(3)
   })
 
   /** A proof made for one escrow does not pass as one made for another. */
