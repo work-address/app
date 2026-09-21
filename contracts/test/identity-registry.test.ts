@@ -440,6 +440,7 @@ describe('IdentityRegistry', () => {
         workStart: now + HOUR,
         workEnd: now + DAY,
         originExpiry: now + DAY,
+        earlySubmission: false,
       }
       const originSignature = await origin.signTypedData(
         {
@@ -459,6 +460,7 @@ describe('IdentityRegistry', () => {
             { name: 'workStart', type: 'uint64' },
             { name: 'workEnd', type: 'uint64' },
             { name: 'originExpiry', type: 'uint64' },
+            { name: 'earlySubmission', type: 'bool' },
           ],
         },
         terms,

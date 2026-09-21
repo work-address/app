@@ -42,10 +42,14 @@
       {
         "name": "originExpiry",
         "type": "uint64"
+      },
+      {
+        "name": "earlySubmission",
+        "type": "bool"
       }
     ]
   },
-  "typeHash": "0x3ac30c5b7ccf2c3a17a2e3ed7721aac80b463c47010b7bedaea80f9042bfca80",
+  "typeHash": "0xa5ab54b950d05fefd33b79b9e361a089bf955b2160a8e99bea694f94aba1b65e",
   "terms": {
     "allocationId": "0xf96f9891e6ddd310141c323b55c40e1ccf0fcb5560f755b3387240dee7f177a1",
     "obligationId": "0x0a66784a7929fc482b41f990949e270b218696f6d23989cfdc58794616115ca7",
@@ -55,7 +59,8 @@
     "budget": "100000000",
     "workStart": 1790000000,
     "workEnd": 1790604800,
-    "originExpiry": 1789990000
+    "originExpiry": 1789990000,
+    "earlySubmission": true
   },
-  "digest": "0x6006db02f1b7aea72416487f2011488234db361712907572801cb16d06090a22"
+  "digest": "0x694f5c870463ea772c04e12d4dd8d41e68540d272086c8d0beb01df960829203"
 }

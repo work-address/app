@@ -15,12 +15,22 @@ import {SignatureChecker} from '@openzeppelin/contracts/utils/cryptography/Signa
  *         and docs/specification/escrow-payments.md (ESC-04/05).
  *
  * The client funds the accepted budget before work starts. After the period
- * the worker submits one invoice for at most the budget. The client can
- * dispute it until the release time, which refunds the billed amount; after
- * that anyone can release it, paying the worker 95% and the fixed platform
- * recipient 5%. Unbilled budget and unsubmitted allocations go back to the
- * client. Nobody — including the deployer and the origin signer — can move
- * funded money anywhere else, change funded terms or pause exits.
+ * — or from work start, when the funded terms said `earlySubmission`, which
+ * is how a fixed-price milestone is billed on delivery rather than on its due
+ * date — the worker submits one invoice for at most the budget. The client
+ * can dispute it until the release time, which refunds the billed amount, or
+ * approve it and pay at once; after the release time anyone can release it.
+ * Either way the worker gets 95% and the fixed platform recipient 5%.
+ * Unbilled budget and unsubmitted allocations go back to the client. Nobody —
+ * including the deployer and the origin signer — can move funded money
+ * anywhere else, change funded terms or pause exits.
+ *
+ * Every allocation has exactly one terminal settlement: each of `_cancel`,
+ * `_submit`, `refundExpired`, `_dispute` and `_release` leaves the state it
+ * requires before it moves a token, so no two of them can run on the same
+ * allocation and none of them can run twice. The remainder refund is the one
+ * transfer outside that chain, and it is guarded by its own flag and can only
+ * ever move budget that was never billed.
  *
  * Every party action can also be relayed: the payer or payee signs an EIP-712
  * `Action` (bound to the operation, allocation, exact payload, a per-signer
@@ -33,12 +43,17 @@ import {SignatureChecker} from '@openzeppelin/contracts/utils/cryptography/Signa
 contract MarketplaceEscrow is EIP712, ReentrancyGuard {
   using SafeERC20 for IERC20;
 
-  /// @notice Party actions that can be authorized by signature and relayed.
+  /**
+   * @notice Party actions that can be authorized by signature and relayed.
+   *         Append only: the value is what a signature binds, so inserting
+   *         one would silently repoint every authorization already signed.
+   */
   enum Operation {
     Fund,
     Cancel,
     Submit,
-    Dispute
+    Dispute,
+    Approve
   }
 
   enum State {
@@ -65,6 +80,15 @@ contract MarketplaceEscrow is EIP712, ReentrancyGuard {
     uint64 workEnd;
     /// The origin proof cannot be used to fund after this time.
     uint64 originExpiry;
+    /**
+     * The payee may bill from `workStart` instead of `workEnd`. The
+     * marketplace signs it for a fixed-price milestone, whose delivery is an
+     * event rather than the end of a period, and never for an hourly week,
+     * whose hours do not exist until the week has run. The submission
+     * deadline is untouched either way: the window opens earlier, it does
+     * not close later. See docs/adr/milestone-escrow.md.
+     */
+    bool earlySubmission;
   }
 
   struct Allocation {
@@ -81,6 +105,15 @@ contract MarketplaceEscrow is EIP712, ReentrancyGuard {
     uint64 releaseAt;
     State state;
     bool remainderRefunded;
+    /**
+     * Copied from the funded terms, and packed into the same slot as the two
+     * above so it costs no extra storage. It is deliberately not an event
+     * field: `AllocationFunded` already carries `workStart`, `workEnd` and
+     * `submissionDeadline`, and a tool that reads only logs and assumes the
+     * later opening is early rather than wrong. One that needs the exact
+     * window reads it here.
+     */
+    bool earlySubmission;
     bytes32 obligationId;
     bytes32 termsHash;
     bytes32 invoiceCommitment;
@@ -88,7 +121,7 @@ contract MarketplaceEscrow is EIP712, ReentrancyGuard {
 
   bytes32 public constant TERMS_TYPEHASH =
     keccak256(
-      'Terms(bytes32 allocationId,bytes32 obligationId,bytes32 termsHash,address payer,address payee,uint256 budget,uint64 workStart,uint64 workEnd,uint64 originExpiry)'
+      'Terms(bytes32 allocationId,bytes32 obligationId,bytes32 termsHash,address payer,address payee,uint256 budget,uint64 workStart,uint64 workEnd,uint64 originExpiry,bool earlySubmission)'
     );
 
   bytes32 public constant ACTION_TYPEHASH =
@@ -242,6 +275,7 @@ contract MarketplaceEscrow is EIP712, ReentrancyGuard {
     allocation.workEnd = terms.workEnd;
     allocation.submissionDeadline = submissionDeadline;
     allocation.state = State.Funded;
+    allocation.earlySubmission = terms.earlySubmission;
     allocation.obligationId = terms.obligationId;
     allocation.termsHash = terms.termsHash;
     obligationFunded[terms.obligationId] = true;
@@ -301,8 +335,11 @@ contract MarketplaceEscrow is EIP712, ReentrancyGuard {
   // ------------------------------------------------------------- submission
 
   /**
-   * @notice The worker bills the period once, between work end and the
-   *         submission deadline, for a positive amount within the budget.
+   * @notice The worker bills the allocation once, for a positive amount
+   *         within the budget, before the submission deadline. The window
+   *         opens at work end, or at work start when the funded terms said
+   *         `earlySubmission` — a fixed-price milestone is billed when it is
+   *         delivered, not when its due date arrives.
    */
   function submitInvoice(
     bytes32 allocationId,
@@ -341,8 +378,12 @@ contract MarketplaceEscrow is EIP712, ReentrancyGuard {
   ) private {
     Allocation storage allocation = _allocation(allocationId, State.Funded);
 
+    uint64 opensAt = allocation.earlySubmission
+      ? allocation.workStart
+      : allocation.workEnd;
+
     if (caller != allocation.payee) revert NotPayee();
-    if (block.timestamp < allocation.workEnd) revert TooEarly(allocation.workEnd);
+    if (block.timestamp < opensAt) revert TooEarly(opensAt);
     if (block.timestamp >= allocation.submissionDeadline) {
       revert TooLate(allocation.submissionDeadline);
     }
@@ -435,6 +476,49 @@ contract MarketplaceEscrow is EIP712, ReentrancyGuard {
 
     if (block.timestamp < allocation.releaseAt) revert TooEarly(allocation.releaseAt);
 
+    _release(allocationId, allocation);
+  }
+
+  /**
+   * @notice The payer pays a submitted bill now, giving up the rest of their
+   *         own dispute window. Same recipients and same 95/5 split as
+   *         `release`; the only difference is who asked for it and when.
+   *
+   * No time bound: it is allowed for as long as the allocation is Submitted,
+   * before or after `releaseAt`. A cut-off at `releaseAt` could only ever be
+   * hit by a payer whose approval was mined a second late, and after that
+   * moment the call is what anyone could do anyway.
+   *
+   * The state leaves Submitted before any token moves, so this cannot pay
+   * twice, cannot race `release`, and a released allocation can no longer be
+   * disputed (`_dispute` needs Submitted).
+   */
+  function approveRelease(bytes32 allocationId) external nonReentrant {
+    _approve(allocationId, msg.sender);
+  }
+
+  /// @notice Relayed approval, authorized by the payer's signature.
+  function approveReleaseFor(
+    bytes32 allocationId,
+    uint64 deadline,
+    bytes calldata payerSignature
+  ) external nonReentrant {
+    address payer = allocations[allocationId].payer;
+
+    _useAuthorization(payer, Operation.Approve, allocationId, bytes32(0), deadline, payerSignature);
+    _approve(allocationId, payer);
+  }
+
+  function _approve(bytes32 allocationId, address caller) private {
+    Allocation storage allocation = _allocation(allocationId, State.Submitted);
+
+    if (caller != allocation.payer) revert NotPayer();
+
+    _release(allocationId, allocation);
+  }
+
+  /// Settles a submitted bill: 95% to the payee, 5% to the fee recipient, once.
+  function _release(bytes32 allocationId, Allocation storage allocation) private {
     uint256 gross = allocation.billed;
     uint256 fee = (gross * FEE_BPS) / BPS;
     uint256 net = gross - fee;
@@ -504,7 +588,8 @@ contract MarketplaceEscrow is EIP712, ReentrancyGuard {
             terms.budget,
             terms.workStart,
             terms.workEnd,
-            terms.originExpiry
+            terms.originExpiry,
+            terms.earlySubmission
           )
         )
       );

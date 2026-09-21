@@ -34,6 +34,7 @@ type Terms = {
   workStart: number
   workEnd: number
   originExpiry: number
+  earlySubmission: boolean
 }
 
 // eslint-disable-next-line @typescript-eslint/no-explicit-any
@@ -85,6 +86,7 @@ describe('MarketplaceEscrow', () => {
       workStart: now + HOUR,
       workEnd: now + HOUR + 7 * DAY,
       originExpiry: now + DAY,
+      earlySubmission: false,
       ...overrides,
     }
   }
@@ -115,6 +117,7 @@ describe('MarketplaceEscrow', () => {
           { name: 'workStart', type: 'uint64' },
           { name: 'workEnd', type: 'uint64' },
           { name: 'originExpiry', type: 'uint64' },
+          { name: 'earlySubmission', type: 'bool' },
         ],
       },
       value,
@@ -472,6 +475,236 @@ describe('MarketplaceEscrow', () => {
     })
   })
 
+  /**
+   * docs/adr/milestone-escrow.md in the web repository. A fixed-price
+   * milestone is billed when it is delivered and paid when the client says
+   * so, without giving up the rule the audit will look for: one terminal
+   * settlement per allocation, no path that pays twice and none that strands
+   * the money.
+   */
+  describe('milestone approval and early submission (ADR-0001)', () => {
+    /** A milestone allocation billed as soon as its work window opens. */
+    async function billedOnDelivery(billed = USDT(100)) {
+      const value = await funded({ earlySubmission: true })
+
+      await time.increaseTo(value.workStart)
+      await escrow
+        .connect(worker)
+        .submitInvoice(value.allocationId, ethers.id('milestone-1'), billed)
+
+      return value
+    }
+
+    it('bills from work start when the terms say so, and only then', async () => {
+      const hourly = await funded()
+      const milestone = await funded({ earlySubmission: true })
+
+      await time.increaseTo(milestone.workStart)
+
+      // The same instant, on two allocations that differ only in the flag.
+      await expect(
+        escrow
+          .connect(worker)
+          .submitInvoice(hourly.allocationId, ethers.id('too-soon'), USDT(10)),
+      )
+        .to.be.revertedWithCustomError(escrow, 'TooEarly')
+        .withArgs(hourly.workEnd)
+      await expect(
+        escrow
+          .connect(worker)
+          .submitInvoice(milestone.allocationId, ethers.id('on-time'), USDT(100)),
+      ).to.emit(escrow, 'InvoiceSubmitted')
+
+      expect(
+        (await escrow.readAllocation(milestone.allocationId)).earlySubmission,
+      ).to.eq(true)
+      expect(
+        (await escrow.readAllocation(hourly.allocationId)).earlySubmission,
+      ).to.eq(false)
+    })
+
+    it('opens the window earlier without moving its end', async () => {
+      const value = await funded({ earlySubmission: true })
+      const deadline = Number(
+        (await escrow.readAllocation(value.allocationId)).submissionDeadline,
+      )
+
+      expect(deadline).to.eq(value.workEnd + 72 * HOUR)
+
+      await time.increaseTo(deadline)
+      await expect(
+        escrow
+          .connect(worker)
+          .submitInvoice(value.allocationId, ethers.id('late'), USDT(100)),
+      )
+        .to.be.revertedWithCustomError(escrow, 'TooLate')
+        .withArgs(deadline)
+    })
+
+    it('a milestone is either cancellable or billable, never both', async () => {
+      const value = await funded({ earlySubmission: true })
+
+      // Before work starts the payer may still take it all back, and the
+      // payee cannot bill; from work start it is the other way round.
+      await expect(
+        escrow
+          .connect(worker)
+          .submitInvoice(value.allocationId, ethers.id('early'), USDT(100)),
+      ).to.be.revertedWithCustomError(escrow, 'TooEarly')
+
+      await time.increaseTo(value.workStart)
+      await expect(
+        escrow.connect(client).cancelBeforeWork(value.allocationId),
+      ).to.be.revertedWithCustomError(escrow, 'TooLate')
+    })
+
+    it('the payer approves and is paid out 95 / 5 at once, long before releaseAt', async () => {
+      const value = await billedOnDelivery()
+      const releaseAt = Number(
+        (await escrow.readAllocation(value.allocationId)).releaseAt,
+      )
+
+      await expect(escrow.connect(client).approveRelease(value.allocationId))
+        .to.emit(escrow, 'Released')
+        .withArgs(value.allocationId, USDT(100), USDT(95), USDT(5))
+
+      expect(await time.latest()).to.be.lessThan(releaseAt)
+      expect(await token.balanceOf(worker.address)).to.eq(USDT(95))
+      expect(await token.balanceOf(platform.address)).to.eq(USDT(5))
+      expect((await escrow.readAllocation(value.allocationId)).state).to.eq(
+        State.Released,
+      )
+      expect(await escrow.heldOf(value.allocationId)).to.eq(0)
+      await expectConservation(value.allocationId)
+    })
+
+    it('only the payer approves', async () => {
+      const value = await billedOnDelivery()
+
+      for (const signer of [worker, stranger, platform, origin]) {
+        await expect(
+          escrow.connect(signer).approveRelease(value.allocationId),
+        ).to.be.revertedWithCustomError(escrow, 'NotPayer')
+      }
+
+      expect(await token.balanceOf(worker.address)).to.eq(0)
+    })
+
+    it('only a submitted bill is approved: no state before or after it is', async () => {
+      const unknown = ethers.id('never funded')
+      const fundedOnly = await funded({ earlySubmission: true })
+      const cancelled = await funded({ earlySubmission: true })
+      await escrow.connect(client).cancelBeforeWork(cancelled.allocationId)
+      const released = await billedOnDelivery()
+      await escrow.connect(client).approveRelease(released.allocationId)
+      const disputed = await billedOnDelivery(USDT(40))
+      await escrow.connect(client).dispute(disputed.allocationId)
+
+      for (const allocationId of [
+        unknown,
+        fundedOnly.allocationId,
+        cancelled.allocationId,
+        released.allocationId,
+        disputed.allocationId,
+      ]) {
+        await expect(
+          escrow.connect(client).approveRelease(allocationId),
+        ).to.be.revertedWithCustomError(escrow, 'WrongState')
+      }
+    })
+
+    it('approve then dispute: a released allocation can no longer be refunded', async () => {
+      const value = await billedOnDelivery()
+
+      await escrow.connect(client).approveRelease(value.allocationId)
+
+      const clientBalance = await token.balanceOf(client.address)
+
+      await expect(
+        escrow.connect(client).dispute(value.allocationId),
+      ).to.be.revertedWithCustomError(escrow, 'WrongState')
+      await expect(
+        escrow.connect(client).approveRelease(value.allocationId),
+      ).to.be.revertedWithCustomError(escrow, 'WrongState')
+      await time.increase(7 * DAY)
+      await expect(
+        escrow.release(value.allocationId),
+      ).to.be.revertedWithCustomError(escrow, 'WrongState')
+
+      expect(await token.balanceOf(client.address)).to.eq(clientBalance)
+      expect(await token.balanceOf(worker.address)).to.eq(USDT(95))
+      await expectConservation(value.allocationId)
+    })
+
+    it('dispute then approve: a refunded allocation cannot be paid after all', async () => {
+      const value = await billedOnDelivery()
+
+      await escrow.connect(client).dispute(value.allocationId)
+      await expect(
+        escrow.connect(client).approveRelease(value.allocationId),
+      ).to.be.revertedWithCustomError(escrow, 'WrongState')
+
+      expect(await token.balanceOf(worker.address)).to.eq(0)
+      expect(await token.balanceOf(client.address)).to.eq(USDT(10_000))
+      await expectConservation(value.allocationId)
+    })
+
+    it('submit then expire: the submission deadline cannot take a live bill back', async () => {
+      const value = await billedOnDelivery()
+
+      await time.increaseTo(value.workEnd + 72 * HOUR)
+      await expect(
+        escrow.refundExpired(value.allocationId),
+      ).to.be.revertedWithCustomError(escrow, 'WrongState')
+
+      // The bill is still the payer's to approve, and still only theirs.
+      await escrow.connect(client).approveRelease(value.allocationId)
+      expect(await token.balanceOf(worker.address)).to.eq(USDT(95))
+      await expectConservation(value.allocationId)
+    })
+
+    it('cancel after approve, and after the bill: neither reopens the money', async () => {
+      const billed = await billedOnDelivery()
+      const approved = await billedOnDelivery()
+      await escrow.connect(client).approveRelease(approved.allocationId)
+
+      for (const allocationId of [billed.allocationId, approved.allocationId]) {
+        await expect(
+          escrow.connect(client).cancelBeforeWork(allocationId),
+        ).to.be.revertedWithCustomError(escrow, 'WrongState')
+      }
+    })
+
+    it('approving part of a budget leaves the rest refundable exactly once', async () => {
+      const value = await billedOnDelivery(USDT(60))
+
+      await escrow.connect(client).approveRelease(value.allocationId)
+      await escrow.connect(stranger).refundRemainder(value.allocationId)
+
+      expect(await token.balanceOf(worker.address)).to.eq(USDT(57))
+      expect(await token.balanceOf(platform.address)).to.eq(USDT(3))
+      expect(await token.balanceOf(client.address)).to.eq(USDT(9_940))
+      await expect(
+        escrow.refundRemainder(value.allocationId),
+      ).to.be.revertedWithCustomError(escrow, 'NothingToRefund')
+      await expectConservation(value.allocationId)
+    })
+
+    it('approving after releaseAt is the same settlement, not a second one', async () => {
+      const value = await billedOnDelivery()
+
+      await time.increase(7 * DAY)
+      await escrow.connect(client).approveRelease(value.allocationId)
+
+      expect(await token.balanceOf(worker.address)).to.eq(USDT(95))
+      expect(await token.balanceOf(platform.address)).to.eq(USDT(5))
+      await expect(
+        escrow.release(value.allocationId),
+      ).to.be.revertedWithCustomError(escrow, 'WrongState')
+      await expectConservation(value.allocationId)
+    })
+  })
+
   describe('fees and accounting (SC-ES-03)', () => {
     it('ESC-A16: the fee floors on tiny amounts and never exceeds 5%', async () => {
       const cases: Array<[bigint, bigint]> = [
@@ -592,6 +825,8 @@ describe('MarketplaceEscrow', () => {
         'SUBMISSION_WINDOW',
         'TERMS_TYPEHASH',
         'actionDigest',
+        'approveRelease',
+        'approveReleaseFor',
         'cancelBeforeWork',
         'cancelBeforeWorkFor',
         'dispute',

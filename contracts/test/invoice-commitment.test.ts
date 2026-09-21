@@ -69,6 +69,7 @@ const TERMS_TYPES = {
     { name: 'workStart', type: 'uint64' },
     { name: 'workEnd', type: 'uint64' },
     { name: 'originExpiry', type: 'uint64' },
+    { name: 'earlySubmission', type: 'bool' },
   ],
 }
 
@@ -231,6 +232,7 @@ describe('invoice commitment v1', () => {
         workStart: now + HOUR,
         workEnd,
         originExpiry: now + HOUR,
+        earlySubmission: false,
       }
       const origin712 = await origin.signTypedData(
         {

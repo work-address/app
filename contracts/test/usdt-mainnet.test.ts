@@ -32,6 +32,7 @@ const TERMS_TYPES = {
     { name: 'workStart', type: 'uint64' },
     { name: 'workEnd', type: 'uint64' },
     { name: 'originExpiry', type: 'uint64' },
+    { name: 'earlySubmission', type: 'bool' },
   ],
 }
 
@@ -71,6 +72,7 @@ describe('MarketplaceEscrow against mainnet USDT behaviour', () => {
       workStart: now + HOUR,
       workEnd: now + DAY,
       originExpiry: now + DAY,
+      earlySubmission: false,
     }
     const signature = await origin.signTypedData(
       {

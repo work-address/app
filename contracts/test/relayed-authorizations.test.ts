@@ -22,6 +22,7 @@ enum Operation {
   Cancel,
   Submit,
   Dispute,
+  Approve,
 }
 
 const TERMS_TYPES = {
@@ -35,6 +36,7 @@ const TERMS_TYPES = {
     { name: 'workStart', type: 'uint64' },
     { name: 'workEnd', type: 'uint64' },
     { name: 'originExpiry', type: 'uint64' },
+    { name: 'earlySubmission', type: 'bool' },
   ],
 }
 
@@ -78,7 +80,11 @@ describe('MarketplaceEscrow relayed authorizations', () => {
     }
   }
 
-  async function terms(payer: string, payee: string = worker.address) {
+  async function terms(
+    payer: string,
+    payee: string = worker.address,
+    earlySubmission = false,
+  ) {
     const now = await time.latest()
     const salt = ethers.hexlify(ethers.randomBytes(32))
 
@@ -92,6 +98,7 @@ describe('MarketplaceEscrow relayed authorizations', () => {
       workStart: now + HOUR,
       workEnd: now + HOUR + 7 * DAY,
       originExpiry: now + DAY,
+      earlySubmission,
     }
 
     return {
@@ -235,6 +242,88 @@ describe('MarketplaceEscrow relayed authorizations', () => {
       escrow.connect(relayer).fundFor(value, originSignature, impostor.deadline, impostor.signature),
     ).to.be.revertedWithCustomError(escrow, 'InvalidAuthorization')
     expect(await escrow.nonces(client.address)).to.eq(0)
+  })
+
+  it('a relayed approval pays the worker, consumes one payer nonce and cannot be replayed', async () => {
+    const { value, origin: originSignature } = await terms(
+      client.address,
+      worker.address,
+      true,
+    )
+    await escrow.connect(client).fund(value, originSignature)
+    await time.increaseTo(value.workStart)
+    await escrow
+      .connect(worker)
+      .submitInvoice(value.allocationId, ethers.id('milestone'), USDT(100))
+
+    const before = await escrow.nonces(client.address)
+    const approve = await authorize(
+      client,
+      Operation.Approve,
+      value.allocationId,
+      ethers.ZeroHash,
+    )
+
+    await escrow
+      .connect(relayer)
+      .approveReleaseFor(value.allocationId, approve.deadline, approve.signature)
+
+    expect(await token.balanceOf(worker.address)).to.eq(USDT(95))
+    expect(await token.balanceOf(platform.address)).to.eq(USDT(5))
+    expect(await token.balanceOf(relayer.address)).to.eq(0)
+    expect(await escrow.nonces(client.address)).to.eq(before + 1n)
+
+    // The nonce is spent, so the same signature buys nothing on a second run.
+    await expect(
+      escrow
+        .connect(relayer)
+        .approveReleaseFor(value.allocationId, approve.deadline, approve.signature),
+    ).to.be.revertedWithCustomError(escrow, 'InvalidAuthorization')
+  })
+
+  it('an approval signed by the payee, or as another operation, is refused', async () => {
+    const { value, origin: originSignature } = await terms(
+      client.address,
+      worker.address,
+      true,
+    )
+    await escrow.connect(client).fund(value, originSignature)
+    await time.increaseTo(value.workStart)
+    await escrow
+      .connect(worker)
+      .submitInvoice(value.allocationId, ethers.id('milestone'), USDT(100))
+
+    // The payee would love to approve their own bill; the nonce they sign is
+    // the payer's, and the signature still has to be the payer's.
+    const payeeSigned = await authorize(
+      worker,
+      Operation.Approve,
+      value.allocationId,
+      ethers.ZeroHash,
+      { forAddress: client.address },
+    )
+    // Signed as a dispute, used as an approval: the same nonce, another meaning.
+    const disputeSigned = await authorize(
+      client,
+      Operation.Dispute,
+      value.allocationId,
+      ethers.ZeroHash,
+    )
+
+    for (const authorization of [payeeSigned, disputeSigned]) {
+      await expect(
+        escrow
+          .connect(relayer)
+          .approveReleaseFor(
+            value.allocationId,
+            authorization.deadline,
+            authorization.signature,
+          ),
+      ).to.be.revertedWithCustomError(escrow, 'InvalidAuthorization')
+    }
+
+    expect(await escrow.nonces(client.address)).to.eq(0)
+    expect(await token.balanceOf(worker.address)).to.eq(0)
   })
 
   it('a relayed call on an unknown allocation has no signer to authorize it', async () => {

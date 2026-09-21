@@ -26,6 +26,7 @@ const TERMS_TYPES = {
     { name: 'workStart', type: 'uint64' },
     { name: 'workEnd', type: 'uint64' },
     { name: 'originExpiry', type: 'uint64' },
+    { name: 'earlySubmission', type: 'bool' },
   ],
 }
 
@@ -89,6 +90,7 @@ export async function runWalkthrough(
     workStart: now + HOUR,
     workEnd: now + HOUR + DAY,
     originExpiry: now + HOUR,
+    earlySubmission: false,
   }
   const signature = await origin.signTypedData(
     {
