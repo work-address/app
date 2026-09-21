@@ -1746,16 +1746,6 @@
           "marketplaceContractId": {
             "type": "string"
           },
-          "invoiceCadence": {
-            "items": {},
-            "maxItems": 100,
-            "type": "array"
-          },
-          "invoiceCadenceConsent": {
-            "items": {},
-            "maxItems": 100,
-            "type": "array"
-          },
           "invoices": {
             "$ref": "#/components/schemas/Invoice_search"
           },

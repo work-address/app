@@ -134,8 +134,15 @@ export class Project extends AbstractBaseEntity implements IProject {
    *
    * Null on every project that never set one, which is what "no automatic
    * invoicing" means. Only the owner may write it (ProjectController).
+   *
+   * Deliberately NOT `@Expose`d: the class is `@Exclude()`d, so leaving the
+   * decorator off keeps this column out of every Project response. It is read
+   * through `GET /project/:id/cadence` alone, which is worker-or-owner - a
+   * viewer gets 403. Exposing it under the `search` group would have handed
+   * the money schedule to every viewer of `GET /project/:id` and
+   * `POST /project/search`, deciding that access rule a second time and
+   * letting the looser answer win.
    */
-  @Expose({ groups: ['search'] })
   @Column('jsonb', { nullable: true })
   @IsArray()
   @ArrayMaxSize(InvoiceCadence.MAX_VERSIONS)
@@ -151,8 +158,13 @@ export class Project extends AbstractBaseEntity implements IProject {
    * by default: a project with a cadence and no consent issues nothing.
    * Alongside the cadence rather than on User for the same reason the cadence
    * is here - it is a fact about this project, not about the account.
+   *
+   * Not `@Expose`d, and for a sharper reason than the cadence above: this is
+   * the whole roster, each entry carrying another person's internal user id,
+   * wallet address and the moment they decided. `ProjectManager.cadenceView`
+   * narrows it to the caller's own `consented` on purpose; serializing the
+   * raw column on the project would have published everyone else's answer.
    */
-  @Expose({ groups: ['search'] })
   @Column('jsonb', { nullable: true })
   @IsArray()
   @ArrayMaxSize(MAX_COLLABORATORS)

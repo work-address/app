@@ -3,6 +3,7 @@ import moment from 'moment-timezone'
 import { suite, test } from '@testdeck/mocha'
 
 import {
+  projectControllerRead,
   projectControllerReadCadence,
   projectControllerSetCadence,
   projectControllerSetCadenceConsent,
@@ -207,6 +208,52 @@ export class ProjectControllerCadenceTest extends BaseControllerTest {
     expect(
       await this.statusOf(() => this.readCadence(project, viewer)),
     ).to.equal(403)
+  }
+
+  /**
+   * The cadence and the consent roster belong to the /cadence route alone. If
+   * the project body carried them too, that route's access rule would be
+   * decided twice and the looser answer would win: a viewer, refused the
+   * cadence above, would read it off `GET /project/:id` anyway, and every
+   * worker would learn the other workers' user ids, wallet addresses and
+   * decision times - the opposite of the per-worker answer `cadenceView`
+   * deliberately narrows to the caller.
+   */
+  @test()
+  async cadenceAndConsent_areNeverSerializedOnTheProjectItself() {
+    const { owner, worker, viewer, project } = await this.projectWithWorker()
+    const otherWorker = await this.userFixture.createUser()
+
+    project.workerAddresses = [
+      ...(project.workerAddresses ?? []),
+      otherWorker.address,
+    ]
+
+    await runPromise(this.projectRepository.saveSingle(project))
+
+    await this.setCadence(project, owner)
+    await this.consent(project, worker, true)
+
+    for (const reader of [viewer, otherWorker, owner]) {
+      const res = await projectControllerRead({
+        client: this.apiClient(),
+        path: { id: project.id as never },
+        headers: this.auth(reader),
+        throwOnError: true,
+      })
+
+      expect(res.status).to.equal(200)
+      expect(res.data).to.not.have.property('invoiceCadence')
+      expect(res.data).to.not.have.property('invoiceCadenceConsent')
+    }
+
+    // The one route that does answer still answers only about its caller.
+    expect(
+      (await this.readCadence(project, otherWorker)).data?.consented,
+    ).to.equal(null)
+    expect((await this.readCadence(project, worker)).data?.consented).to.equal(
+      true,
+    )
   }
 
   @test()

@@ -441,8 +441,6 @@ export type ProjectSearch = {
     state?: string;
     user?: UserSearch;
     marketplaceContractId?: string;
-    invoiceCadence?: Array<unknown>;
-    invoiceCadenceConsent?: Array<unknown>;
     invoices?: InvoiceSearch;
     time?: TimeSearch;
 };
