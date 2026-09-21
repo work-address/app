@@ -106,6 +106,10 @@
           "description": {
             "type": "string"
           },
+          "correctsInvoiceId": {
+            "format": "uuid",
+            "type": "string"
+          },
           "amountCents": {
             "type": "string",
             "minLength": 1
@@ -1468,6 +1472,19 @@
         },
         "type": "object"
       },
+      "InvoiceAdjustmentDto": {
+        "properties": {
+          "timeIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array",
+            "minItems": 1
+          }
+        },
+        "type": "object"
+      },
       "InvoiceEscrowSubmissionQueryDto": {
         "properties": {
           "chainId": {
@@ -2215,6 +2232,10 @@
             "type": "string"
           },
           "description": {
+            "type": "string"
+          },
+          "correctsInvoiceId": {
+            "format": "uuid",
             "type": "string"
           },
           "amountCents": {
@@ -4991,6 +5012,9 @@
                     },
                     "description": {
                       "type": "string"
+                    },
+                    "correctsInvoiceId": {
+                      "type": "string"
                     }
                   }
                 }
@@ -5164,6 +5188,84 @@
           }
         },
         "summary": "Get the amount and InvoiceCommitment v1 to submit this invoice to the escrow allocation funding its marketplace contract's work period (the hired worker who issued it only); the first call binds the invoice to that allocation",
+        "tags": [
+          "Invoice"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/invoice/{id}/adjustment": {
+      "post": {
+        "operationId": "InvoiceController.adjust",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Invoice"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceAdjustmentDto"
+              },
+              "example": {
+                "timeIds": [
+                  "7d3b6f0e-4c1a-4f5e-9b2d-8a6c3e1f0b92"
+                ]
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invoice_search"
+                }
+              }
+            },
+            "description": ""
+          },
+          "400": {
+            "description": "Nothing is left to bill, or a selected entry is not the caller's, is paid, or is already on an invoice"
+          },
+          "403": {
+            "description": "The caller did not issue this invoice, or can no longer invoice its project"
+          },
+          "404": {
+            "description": "Invoice does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "NotFoundError"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Invoice does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Issue an adjustment correcting this invoice (issuer only): a new invoice, naming this one, for the issuer's time on its project that no invoice covers and nobody has marked paid - or for exactly the entries selected. This invoice is never changed",
         "tags": [
           "Invoice"
         ],

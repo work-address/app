@@ -194,6 +194,11 @@ export interface IInvoiceRecord {
   basis?: EInvoiceBasis.FIXED
   milestoneRef?: string
   description?: string
+  /**
+   * Present only on an adjustment: the invoice it corrects, so the bill the
+   * commitment binds says what it is a correction of.
+   */
+  correctsInvoiceId?: string
 }
 
 /**

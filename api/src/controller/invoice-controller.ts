@@ -25,6 +25,7 @@ import {
 import { InvoiceManager } from '@/service/invoice-manager'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import {
+  InvoiceAdjustmentDto,
   InvoiceCreateDto,
   InvoiceEscrowSubmissionQueryDto,
   InvoiceSearchDto,
@@ -253,6 +254,8 @@ export class InvoiceController {
             basis: { type: 'string', enum: [EInvoiceBasis.FIXED] },
             milestoneRef: { type: 'string' },
             description: { type: 'string' },
+            // An adjustment's record only: the invoice it corrects.
+            correctsInvoiceId: { type: 'string' },
           },
         },
       },
@@ -317,6 +320,44 @@ export class InvoiceController {
   ): Promise<IInvoiceEscrowSubmission> {
     return runPromise(
       this.invoiceManager.escrowSubmission(invoice, currentUser, query),
+    )
+  }
+
+  @OpenAPIExtended({
+    summary:
+      "Issue an adjustment correcting this invoice (issuer only): a new invoice, naming this one, for the issuer's time on its project that no invoice covers and nobody has marked paid - or for exactly the entries selected. This invoice is never changed",
+    body: {
+      schema: InvoiceAdjustmentDto,
+      options: {
+        example: { timeIds: ['7d3b6f0e-4c1a-4f5e-9b2d-8a6c3e1f0b92'] },
+      },
+    },
+    operation: {
+      responses: {
+        400: {
+          description:
+            "Nothing is left to bill, or a selected entry is not the caller's, is paid, or is already on an invoice",
+        },
+        403: {
+          description:
+            'The caller did not issue this invoice, or can no longer invoice its project',
+        },
+      },
+    },
+    response: {
+      schema: Invoice,
+      options: { serializationGroup: 'search' },
+    },
+  })
+  @Post('/:id/adjustment')
+  @HttpCode(201)
+  public adjust(
+    @CurrentUser() currentUser: User,
+    @EntityFromParam({ paramName: 'id' }) invoice: Invoice,
+    @Body() data: InvoiceAdjustmentDto,
+  ): Promise<Invoice> {
+    return runPromise(
+      this.invoiceManager.adjust(invoice, currentUser, data?.timeIds),
     )
   }
 

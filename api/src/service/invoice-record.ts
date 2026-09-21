@@ -41,7 +41,8 @@ import LegacyInvoiceException from '@/exception/legacy-invoice-exception'
  * because its lines are empty and its rate zero, and a record of a sum with
  * nothing saying what it is for would commit to a number and not to a bill.
  * They are added only on that basis, so every hourly record is the same bytes
- * it always was and no published vector moves.
+ * it always was and no published vector moves. An adjustment (DEC-04) adds
+ * `correctsInvoiceId` the same way: only when it corrects something.
  *
  * `api/src/test/fixture/invoice-record.v1.json` holds the vectors; a change
  * that moves one byte of their output needs a new version, not an edit.
@@ -93,6 +94,10 @@ export class InvoiceRecord {
       record.basis = EInvoiceBasis.FIXED
       record.milestoneRef = required(invoice.milestoneRef, 'milestoneRef')
       record.description = required(invoice.description, 'description')
+    }
+
+    if (invoice.correctsInvoiceId) {
+      record.correctsInvoiceId = invoice.correctsInvoiceId
     }
 
     return record

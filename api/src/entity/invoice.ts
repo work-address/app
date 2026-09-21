@@ -14,6 +14,7 @@ import {
   IsNotEmpty,
   IsOptional,
   IsString,
+  IsUUID,
 } from 'class-validator'
 import {
   EInvoiceBasis,
@@ -185,6 +186,30 @@ export class Invoice extends AbstractBaseEntity {
   @IsString()
   @IsOptional()
   description?: string | null
+
+  /**
+   * The invoice this one corrects, when it is an adjustment (DEC-04).
+   *
+   * An issued invoice is never edited: its snapshot is the record of what
+   * was billed, and an entry it bills cannot be deleted (409). A correction
+   * is therefore a new invoice that names the one it corrects and bills only
+   * what that one did not - hours that came in late, or were left off. The
+   * original is never written to, so whatever it was paid or refunded stays
+   * exactly as it was. Null on every invoice that corrects nothing.
+   *
+   * Written once. A foreign key to `invoice`, so the reference always
+   * resolves; a column rather than an entity of its own, because what an
+   * invoice corrects is part of the invoice (SPEC.md, "No new domains").
+   */
+  @Expose({ groups: ['search'] })
+  @Column({ type: 'uuid', nullable: true, update: false })
+  @IsUUID()
+  @IsOptional()
+  correctsInvoiceId?: string | null
+
+  @ManyToOne(() => Invoice, { nullable: true, onDelete: 'RESTRICT' })
+  @JoinColumn({ name: 'correctsInvoiceId' })
+  corrects?: Invoice | null
 
   /**
    * Whole cents, never dollars.

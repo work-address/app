@@ -156,10 +156,23 @@ columns on `Invoice`, not a domain of its own.
 - An entry an invoice bills cannot be deleted. `DELETE /time` refuses the
   whole request with a 409 naming the invoice, and the worklogs offer no
   delete for such entries.
-- A mistake is corrected by a new invoice referencing the original, never
-  by editing an issued one or the entries under it. Nothing records that
-  reference yet; how a correction links to what it corrects is still an
-  open policy decision.
+- A mistake is corrected by an **adjustment**: a new invoice naming the one
+  it corrects (`correctsInvoiceId`, a foreign key to `invoice`), never an
+  edit of an issued one or the entries under it (DEC-04, adopted with the
+  development plan's proposal). `POST /invoice/:id/adjustment` - the
+  original's issuer only (403 otherwise) - issues it exactly as any invoice
+  is issued, so it bills only the issuer's entries on that project that no
+  invoice covers and nobody has marked paid (or exactly the ones selected,
+  each of which must be such an entry; 400 when nothing is left). The
+  original is never written to: paid, refunded or bound to an allocation,
+  it stays so, and its entries stay its own. The adjustment cannot take the
+  original's allocation - an allocation takes one bill, and a settled one
+  none - so it is billed by hand or through a new allocation. Its record
+  carries `correctsInvoiceId`; an invoice correcting nothing carries no such
+  key. Typical uses: the final bill for hours tracked before a contract
+  ended, and late work after a refund. Only additions: over-billing is
+  answered by the payer disputing the bill or the issuer not marking it
+  paid, since a negative invoice has no escrow path.
 - Invoices issued before snapshots are **legacy** (`snapshotVersion` 0, set
   by the one-off `backfill:invoice-snapshot` script). They keep their frozen
   amount and report no rate: the rate they were raised at was never

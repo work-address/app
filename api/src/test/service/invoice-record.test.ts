@@ -33,6 +33,7 @@ type Snapshot = {
   basis?: EInvoiceBasis
   milestoneRef?: string
   description?: string
+  correctsInvoiceId?: string
 }
 
 type Vector = { name: string; invoice: Snapshot; record: string }
@@ -85,6 +86,7 @@ export class InvoiceRecordTest {
     invoice.basis = snapshot.basis ?? EInvoiceBasis.HOURLY
     invoice.milestoneRef = snapshot.milestoneRef ?? null
     invoice.description = snapshot.description ?? null
+    invoice.correctsInvoiceId = snapshot.correctsInvoiceId ?? null
 
     return invoice
   }
@@ -229,6 +231,39 @@ export class InvoiceRecordTest {
       'milestoneRef',
       'description',
     ])
+  }
+
+  /**
+   * An adjustment (DEC-04) commits to the invoice it corrects: the same
+   * lines under another invoice's name are a different bill. An invoice
+   * that corrects nothing carries no such key, which is why no earlier
+   * vector moved.
+   */
+  @test()
+  serialise_ofAnAdjustmentNamesTheInvoiceItCorrects() {
+    const vector = this.vectors().find(
+      (candidate) => candidate.invoice.correctsInvoiceId,
+    )
+
+    expect(vector, 'an adjustment vector').to.not.eq(undefined)
+
+    const record = JSON.parse(vector!.record)
+    const [original] = this.vectors()
+
+    expect(record.correctsInvoiceId).to.be.eq(original.invoice.id)
+
+    const invoice = this.invoiceOf(vector!.invoice)
+
+    invoice.correctsInvoiceId = '00000000-0000-4000-8000-000000000000'
+    expect(this.service.serialise(invoice)).not.to.equal(vector!.record)
+
+    for (const other of this.vectors()) {
+      if (!other.invoice.correctsInvoiceId) {
+        expect(Object.keys(JSON.parse(other.record))).to.not.include(
+          'correctsInvoiceId',
+        )
+      }
+    }
   }
 
   /** A FIXED snapshot that lost what it bills for has no record. */

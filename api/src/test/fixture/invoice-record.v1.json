@@ -95,6 +95,32 @@
         "description": "Milestone 2 — payroll export\nDelivered and accepted: CSV and XLSX, café-style \"quotes\" too"
       },
       "record": "{\"amountCents\":250000,\"basis\":\"FIXED\",\"currency\":\"USD\",\"description\":\"Milestone 2 — payroll export\\nDelivered and accepted: CSV and XLSX, café-style \\\"quotes\\\" too\",\"invoiceId\":\"9b0f3c2e-5d1a-4e7b-8c6f-2a4d9e1b7c35\",\"issuerAddress\":\"0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc\",\"issuerId\":\"5e2d8a1c-9f4b-4a7e-b3c6-8d1f2e9a4b70\",\"lines\":[],\"milestoneRef\":\"0d7c6b5a-4e3f-4a2b-9c1d-8e7f6a5b4c3d\",\"minutesActive\":0,\"ownerAddress\":\"0x70997970c51812dc3a010c7d01b50e0d17dc79c8\",\"periodEnd\":\"2026-09-14T00:00:00.000Z\",\"periodStart\":\"2026-09-07T00:00:00.000Z\",\"projectId\":\"c3a1e8f4-7b2d-4c9e-a5f6-1d8b3e7a9c02\",\"rateHourCents\":0,\"version\":1}"
+    },
+    {
+      "name": "an adjustment bills 30 late minutes at $20/h, 1000 cents, and names the invoice it corrects",
+      "invoice": {
+        "id": "b7d2e4a1-6c3f-4e8a-9d1b-2f5c7a9e0d43",
+        "projectId": "8f19e321-6669-4928-8f98-1f61d623bfbd",
+        "issuerId": "e8e8bc72-fae0-4c16-a71f-b6a959b90bc6",
+        "issuerAddress": "0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc",
+        "ownerAddress": "0x70997970c51812dc3a010c7d01b50e0d17dc79c8",
+        "currency": "USD",
+        "rateHourCents": 2000,
+        "minutesActive": 30,
+        "amountCents": 1000,
+        "fromAt": "2026-09-01T16:00:00.000Z",
+        "toAt": "2026-09-01T16:30:00.000Z",
+        "lines": [
+          {
+            "timeId": "c1a2b3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d",
+            "fromAt": "2026-09-01T16:00:00.000Z",
+            "toAt": "2026-09-01T16:30:00.000Z",
+            "minutesActive": 30
+          }
+        ],
+        "correctsInvoiceId": "4e61ff62-5642-478f-901b-f7be07550426"
+      },
+      "record": "{\"amountCents\":1000,\"correctsInvoiceId\":\"4e61ff62-5642-478f-901b-f7be07550426\",\"currency\":\"USD\",\"invoiceId\":\"b7d2e4a1-6c3f-4e8a-9d1b-2f5c7a9e0d43\",\"issuerAddress\":\"0x3c44cdddb6a900fa2b585dd299e03d12fa4293bc\",\"issuerId\":\"e8e8bc72-fae0-4c16-a71f-b6a959b90bc6\",\"lines\":[{\"fromAt\":\"2026-09-01T16:00:00.000Z\",\"minutesActive\":30,\"timeId\":\"c1a2b3d4-e5f6-4a7b-8c9d-0e1f2a3b4c5d\",\"toAt\":\"2026-09-01T16:30:00.000Z\"}],\"minutesActive\":30,\"ownerAddress\":\"0x70997970c51812dc3a010c7d01b50e0d17dc79c8\",\"periodEnd\":\"2026-09-01T16:30:00.000Z\",\"periodStart\":\"2026-09-01T16:00:00.000Z\",\"projectId\":\"8f19e321-6669-4928-8f98-1f61d623bfbd\",\"rateHourCents\":2000,\"version\":1}"
     }
   ]
 }

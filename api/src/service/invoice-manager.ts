@@ -548,6 +548,103 @@ export class InvoiceManager {
   }
 
   /**
+   * Issues an adjustment to an invoice: a new invoice that corrects it by
+   * billing what it did not (DEC-04).
+   *
+   * An issued invoice is never edited - its snapshot is what was billed, and
+   * an entry it bills cannot be deleted. So a correction is a separate
+   * invoice naming the one it corrects (`correctsInvoiceId`), issued exactly
+   * like any other: the same snapshot, the same lock-and-claim, so it bills
+   * only entries no invoice covers and nobody has marked paid - the late
+   * sync after the invoice was raised, the last afternoon before a contract
+   * ended, the hours logged after a refund. With `timeIds` it bills exactly
+   * those, each of which must be such an entry (400 otherwise), as a
+   * selection does.
+   *
+   * The original is never written to. Whatever it was - paid, refunded,
+   * bound to an allocation - it stays that, and its entries stay its own.
+   * Nor can the adjustment take the original's allocation: an allocation
+   * takes one bill, and once it has settled, the escrow will not take
+   * another (the escrow submission refuses it with a 409).
+   *
+   * Only the original's issuer may correct it (403): an invoice covers one
+   * person's hours, and the correction is the same person's bill. They must
+   * still be able to invoice the project; a project a contract's end has
+   * closed still takes invoices for time tracked before it closed.
+   */
+  public adjust(
+    invoice: Invoice,
+    actor: User,
+    timeIds?: string[],
+  ): RepoEffect<Invoice> {
+    return Effect.gen(this, function* () {
+      const original = yield* this.invoiceRepository.findOneConfirmUser(
+        invoice,
+        actor,
+      )
+
+      if (!original.user || original.user.id !== actor.id) {
+        return yield* Effect.fail(
+          new AccessException(
+            'Only whoever issued an invoice can issue an adjustment to it',
+          ),
+        )
+      }
+
+      const accessible = yield* this.assertCanInvoice(original.project, actor)
+      const selection = timeIds ? [...new Set(timeIds)] : undefined
+
+      if (selection && selection.length === 0) {
+        return yield* Effect.fail(
+          new BadRequestError('No time entries were selected'),
+        )
+      }
+
+      return yield* this.unitOfWork.run((manager) =>
+        Effect.gen(this, function* () {
+          const times = selection
+            ? yield* this.timeRepository
+                .within(manager)
+                .findInvoiceableByIds(selection, accessible, actor, {
+                  forUpdate: true,
+                })
+            : yield* this.timeRepository
+                .within(manager)
+                .findUninvoicedUnpaidTimeForAuthor(accessible, actor, {
+                  forUpdate: true,
+                })
+
+          if (selection && times.length !== selection.length) {
+            return yield* Effect.fail(
+              new BadRequestError(
+                'Some of the selected entries are not yours, already paid, or already on an invoice',
+              ),
+            )
+          }
+
+          if (times.length === 0) {
+            return yield* Effect.fail(
+              new BadRequestError(
+                'There is nothing left to bill: every entry of yours on this project is already on an invoice or paid',
+              ),
+            )
+          }
+
+          return yield* this.issue(
+            manager,
+            accessible,
+            actor,
+            times,
+            InvoiceManager.spanOf(times),
+            undefined,
+            original.id,
+          )
+        }),
+      )
+    })
+  }
+
+  /**
    * Bills an agreed milestone: a FIXED invoice for a sum, with no tracked
    * entries behind it (MS-03).
    *
@@ -693,6 +790,7 @@ export class InvoiceManager {
     times: Time[],
     period: { fromAt: Date; toAt: Date },
     cadencePeriod?: { start: Date; end: Date },
+    correctsInvoiceId?: string,
   ): RepoEffect<Invoice> {
     return Effect.gen(this, function* () {
       const invoice = new Invoice()
@@ -728,6 +826,7 @@ export class InvoiceManager {
         : EInvoiceIssuanceKind.MANUAL
       invoice.periodStart = cadencePeriod?.start ?? null
       invoice.periodEnd = cadencePeriod?.end ?? null
+      invoice.correctsInvoiceId = correctsInvoiceId ?? null
 
       const saved = yield* this.invoiceRepository
         .within(manager)

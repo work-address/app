@@ -93,6 +93,24 @@ export class InvoiceCreateDto {
 }
 
 /**
+ * An adjustment to an issued invoice (DEC-04): a new invoice that corrects
+ * it by billing what it did not.
+ *
+ * Without `timeIds` it bills every entry of the issuer's on the invoice's
+ * project that no invoice covers and nobody has marked paid - the hours that
+ * came in after the invoice was raised. With them it bills exactly those,
+ * each of which must be such an entry. An empty list is refused, as on
+ * create: it cannot mean "everything".
+ */
+export class InvoiceAdjustmentDto {
+  @IsArray()
+  @ArrayNotEmpty()
+  @IsUUID('4', { each: true })
+  @IsOptional()
+  timeIds?: string[]
+}
+
+/**
  * The escrow allocation an invoice is being submitted to (see
  * `IInvoiceCommitmentBinding`). Query parameters, so the chain id arrives as
  * text and is converted by its declared type.

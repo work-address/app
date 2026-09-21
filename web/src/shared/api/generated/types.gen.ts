@@ -19,6 +19,7 @@ export type Invoice = {
     basis: 'HOURLY' | 'FIXED';
     milestoneRef?: string;
     description?: string;
+    correctsInvoiceId?: string;
     amountCents: string;
     snapshotVersion?: 'LEGACY' | 'V1' | 0 | 1;
     issuerAddress?: string;
@@ -353,6 +354,10 @@ export type InvoiceCreateDto = {
     timeIds?: Array<string>;
 };
 
+export type InvoiceAdjustmentDto = {
+    timeIds?: Array<string>;
+};
+
 export type InvoiceEscrowSubmissionQueryDto = {
     chainId: number;
     escrow: string;
@@ -551,6 +556,7 @@ export type InvoiceSearch = {
     basis?: 'HOURLY' | 'FIXED';
     milestoneRef?: string;
     description?: string;
+    correctsInvoiceId?: string;
     amountCents?: string;
     snapshotVersion?: 'LEGACY' | 'V1' | 0 | 1;
     issuerAddress?: string;
@@ -1494,6 +1500,7 @@ export type InvoiceControllerRecordResponses = {
         basis?: 'FIXED';
         milestoneRef?: string;
         description?: string;
+        correctsInvoiceId?: string;
     };
 };
 
@@ -1547,6 +1554,41 @@ export type InvoiceControllerEscrowSubmissionResponses = {
 };
 
 export type InvoiceControllerEscrowSubmissionResponse = InvoiceControllerEscrowSubmissionResponses[keyof InvoiceControllerEscrowSubmissionResponses];
+
+export type InvoiceControllerAdjustData = {
+    body: InvoiceAdjustmentDto;
+    path: {
+        id: Invoice;
+    };
+    query?: never;
+    url: '/api/invoice/{id}/adjustment';
+};
+
+export type InvoiceControllerAdjustErrors = {
+    /**
+     * Nothing is left to bill, or a selected entry is not the caller's, is paid, or is already on an invoice
+     */
+    400: unknown;
+    /**
+     * The caller did not issue this invoice, or can no longer invoice its project
+     */
+    403: unknown;
+    /**
+     * Invoice does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type InvoiceControllerAdjustError = InvoiceControllerAdjustErrors[keyof InvoiceControllerAdjustErrors];
+
+export type InvoiceControllerAdjustResponses = {
+    201: InvoiceSearch;
+};
+
+export type InvoiceControllerAdjustResponse = InvoiceControllerAdjustResponses[keyof InvoiceControllerAdjustResponses];
 
 export type InvoiceControllerMarkPaidData = {
     body?: never;
