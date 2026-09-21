@@ -51,3 +51,13 @@ export type ProjectProcessStats = {
   processes: ProjectProcessStat[]
   failed: boolean
 }
+
+/** The cadence as `GET /project/:id/cadence` answers it. */
+export type ProjectCadenceView =
+  baseApi.ProjectControllerReadCadenceResponses[200]
+
+/** One stated version of it. */
+export type ProjectCadenceVersion = ProjectCadenceView['versions'][number]
+
+/** The body `PUT /project/:id/cadence` takes. */
+export type ProjectCadenceInput = baseApi.ProjectCadenceDto

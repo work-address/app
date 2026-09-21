@@ -2,9 +2,14 @@ import { createQuery } from '@farfetched/core'
 
 import { normalizeProcessName } from './utils'
 
-import type { ProjectProcessStats, StatsPeriod, TimeTotalsRow } from './types'
+import type {
+  ProjectCadenceView,
+  ProjectProcessStats,
+  StatsPeriod,
+  TimeTotalsRow,
+} from './types'
 
-import { baseApi, suppressGlobalErrorToast } from '@/shared'
+import { baseApi, runApiData, suppressGlobalErrorToast } from '@/shared'
 
 export const projectsQuery = createQuery({
   handler: async ({
@@ -113,3 +118,21 @@ const fetchProjectProcesses = async (id: string, period: StatsPeriod) => {
     timeMin: stat.timeMin ?? 0,
   }))
 }
+
+/**
+ * One project's invoicing cadence, as its owner or one of its workers sees
+ * it: the rule in force, when the next cutoff falls, and the reader's own
+ * consent.
+ *
+ * Its own query rather than a field on the project list: the next cutoff is
+ * computed against the clock, so it belongs to the drawer that is open, not
+ * to a row that was fetched an hour ago.
+ */
+export const projectCadenceQuery = createQuery({
+  handler: (projectId: string) =>
+    runApiData(() =>
+      baseApi.projectControllerReadCadence({
+        path: { id: projectId as never },
+      }),
+    ) as Promise<ProjectCadenceView>,
+})

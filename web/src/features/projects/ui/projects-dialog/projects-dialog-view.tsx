@@ -6,6 +6,7 @@ import { useTranslation } from 'react-i18next'
 import { mapAddressesToCollaborators } from '../../model'
 import { ProjectsAddCollaborators } from '../projects-add-collaborators'
 
+import { ProjectsDialogCadence } from './projects-dialog-cadence'
 import { ProjectsDialogMetrics } from './projects-dialog-metrics'
 import { ProjectsDialogUsage } from './projects-dialog-usage'
 
@@ -77,6 +78,12 @@ export const ProjectsDialogView = ({ data }: ProjectsDialogViewProps) => {
         </Grid>
         <Separator size="4" />
         <ProjectsDialogMetrics data={data} />
+        {data.id && (
+          <>
+            <Separator size="4" />
+            <ProjectsDialogCadence projectId={data.id} />
+          </>
+        )}
         <Separator size="4" />
         <TextArea
           label={t('dashboard.projectsTable.drawer.section.description')}

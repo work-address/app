@@ -10,8 +10,11 @@ import {
   createProjectMutation,
   deleteProjectMutation,
   editProjectMutation,
+  setProjectCadenceConsentMutation,
+  setProjectCadenceMutation,
 } from './projects.mutations'
 import {
+  projectCadenceQuery,
   projectProcessStatsQuery,
   projectsProcessStatsQuery,
   projectsQuery,
@@ -116,7 +119,22 @@ editProjectMutation.finished.success.watch(() => {
   })
 })
 
+// Stating the rule or answering it changes what the drawer is showing, so the
+// cadence is read again from the API rather than patched in from the reply -
+// the next cutoff is computed against the clock either way.
+sample({
+  clock: [
+    setProjectCadenceMutation.finished.success,
+    setProjectCadenceConsentMutation.finished.success,
+  ],
+  fn: ({ params }) => params.projectId,
+  target: projectCadenceQuery.start,
+})
+
 export {
+  type ProjectCadenceInput,
+  type ProjectCadenceVersion,
+  type ProjectCadenceView,
   type ProjectWithStats,
   type ProjectsFilter,
   type StatsPeriod,
@@ -137,7 +155,11 @@ export {
   createProjectMutation,
   deleteProjectMutation,
   editProjectMutation,
+  setProjectCadenceConsentMutation,
+  setProjectCadenceMutation,
 } from './projects.mutations'
+
+export { projectCadenceQuery } from './projects.queries'
 
 export {
   $projects,

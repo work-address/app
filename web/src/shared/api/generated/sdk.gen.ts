@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AuthControllerCheckProofHandlerData, AuthControllerCheckProofHandlerResponses, AuthControllerLoginEthData, AuthControllerLoginEthResponses, AuthControllerLoginSolanaData, AuthControllerLoginSolanaResponses, AuthControllerNonceData, AuthControllerNonceResponses, AuthControllerRefreshData, AuthControllerRefreshResponses, AuthControllerStatusData, AuthControllerStatusResponses, AuthControllerTonNonceData, AuthControllerTonNonceResponses, AuthTimeTrackerControllerTimeTrackerConnectData, AuthTimeTrackerControllerTimeTrackerConnectResponses, AuthTimeTrackerControllerTimeTrackerLoginData, AuthTimeTrackerControllerTimeTrackerLoginResponses, AuthTimeTrackerControllerTimeTrackerNonceGenerateData, AuthTimeTrackerControllerTimeTrackerNonceGenerateResponses, AuthTimeTrackerControllerTimeTrackerNonceGetData, AuthTimeTrackerControllerTimeTrackerNonceGetResponses, HelpControllerSwaggerData, HelpControllerSwaggerResponses, IdentityControllerConfigData, IdentityControllerConfigResponses, InvoiceControllerCreateData, InvoiceControllerCreateErrors, InvoiceControllerCreateResponses, InvoiceControllerEscrowSubmissionData, InvoiceControllerEscrowSubmissionErrors, InvoiceControllerEscrowSubmissionResponses, InvoiceControllerMarkPaidData, InvoiceControllerMarkPaidErrors, InvoiceControllerMarkPaidResponses, InvoiceControllerMarkUnpaidData, InvoiceControllerMarkUnpaidErrors, InvoiceControllerMarkUnpaidResponses, InvoiceControllerReadData, InvoiceControllerReadErrors, InvoiceControllerReadResponses, InvoiceControllerRecordData, InvoiceControllerRecordErrors, InvoiceControllerRecordResponses, InvoiceControllerSearchData, InvoiceControllerSearchResponses, ProjectControllerCloseData, ProjectControllerCloseErrors, ProjectControllerCloseResponses, ProjectControllerCreateData, ProjectControllerCreateResponses, ProjectControllerDeleteData, ProjectControllerDeleteErrors, ProjectControllerDeleteResponses, ProjectControllerEditData, ProjectControllerEditErrors, ProjectControllerEditResponses, ProjectControllerGetStatsData, ProjectControllerGetStatsErrors, ProjectControllerGetStatsResponses, ProjectControllerReadData, ProjectControllerReadErrors, ProjectControllerReadResponses, ProjectControllerSearchData, ProjectControllerSearchResponses, TimeControllerCreateOrUpdateManyData, TimeControllerCreateOrUpdateManyResponses, TimeControllerDeleteData, TimeControllerDeleteErrors, TimeControllerDeleteResponses, TimeControllerEditData, TimeControllerEditErrors, TimeControllerEditResponses, TimeControllerGetTotalsData, TimeControllerGetTotalsErrors, TimeControllerGetTotalsResponses, TimeControllerMarkPaidData, TimeControllerMarkPaidResponses, TimeControllerMarkUnpaidData, TimeControllerMarkUnpaidResponses, TimeControllerReadData, TimeControllerReadErrors, TimeControllerReadResponses, TimeControllerRemoveProcessesData, TimeControllerRemoveProcessesResponses, TimeControllerRemoveScreenshotsData, TimeControllerRemoveScreenshotsResponses, TimeControllerSearchData, TimeControllerSearchResponses, UserControllerEditData, UserControllerEditResponses, UserControllerIdentityExportData, UserControllerIdentityExportResponses, UserControllerPublishIdentityData, UserControllerPublishIdentityErrors, UserControllerPublishIdentityResponses, UserControllerReadData, UserControllerReadErrors, UserControllerReadIdentityData, UserControllerReadIdentityErrors, UserControllerReadIdentityResponses, UserControllerReadResponses, UserControllerRemoveIdentityData, UserControllerRemoveIdentityResponses, UserControllerSearchData, UserControllerSearchResponses } from './types.gen';
+import type { AuthControllerCheckProofHandlerData, AuthControllerCheckProofHandlerResponses, AuthControllerLoginEthData, AuthControllerLoginEthResponses, AuthControllerLoginSolanaData, AuthControllerLoginSolanaResponses, AuthControllerNonceData, AuthControllerNonceResponses, AuthControllerRefreshData, AuthControllerRefreshResponses, AuthControllerStatusData, AuthControllerStatusResponses, AuthControllerTonNonceData, AuthControllerTonNonceResponses, AuthTimeTrackerControllerTimeTrackerConnectData, AuthTimeTrackerControllerTimeTrackerConnectResponses, AuthTimeTrackerControllerTimeTrackerLoginData, AuthTimeTrackerControllerTimeTrackerLoginResponses, AuthTimeTrackerControllerTimeTrackerNonceGenerateData, AuthTimeTrackerControllerTimeTrackerNonceGenerateResponses, AuthTimeTrackerControllerTimeTrackerNonceGetData, AuthTimeTrackerControllerTimeTrackerNonceGetResponses, HelpControllerSwaggerData, HelpControllerSwaggerResponses, IdentityControllerConfigData, IdentityControllerConfigResponses, InvoiceControllerCreateData, InvoiceControllerCreateErrors, InvoiceControllerCreateResponses, InvoiceControllerEscrowSubmissionData, InvoiceControllerEscrowSubmissionErrors, InvoiceControllerEscrowSubmissionResponses, InvoiceControllerMarkPaidData, InvoiceControllerMarkPaidErrors, InvoiceControllerMarkPaidResponses, InvoiceControllerMarkUnpaidData, InvoiceControllerMarkUnpaidErrors, InvoiceControllerMarkUnpaidResponses, InvoiceControllerReadData, InvoiceControllerReadErrors, InvoiceControllerReadResponses, InvoiceControllerRecordData, InvoiceControllerRecordErrors, InvoiceControllerRecordResponses, InvoiceControllerSearchData, InvoiceControllerSearchResponses, ProjectControllerCloseData, ProjectControllerCloseErrors, ProjectControllerCloseResponses, ProjectControllerCreateData, ProjectControllerCreateResponses, ProjectControllerDeleteData, ProjectControllerDeleteErrors, ProjectControllerDeleteResponses, ProjectControllerEditData, ProjectControllerEditErrors, ProjectControllerEditResponses, ProjectControllerGetStatsData, ProjectControllerGetStatsErrors, ProjectControllerGetStatsResponses, ProjectControllerReadCadenceData, ProjectControllerReadCadenceErrors, ProjectControllerReadCadenceResponses, ProjectControllerReadData, ProjectControllerReadErrors, ProjectControllerReadResponses, ProjectControllerSearchData, ProjectControllerSearchResponses, ProjectControllerSetCadenceConsentData, ProjectControllerSetCadenceConsentErrors, ProjectControllerSetCadenceConsentResponses, ProjectControllerSetCadenceData, ProjectControllerSetCadenceErrors, ProjectControllerSetCadenceResponses, TimeControllerCreateOrUpdateManyData, TimeControllerCreateOrUpdateManyResponses, TimeControllerDeleteData, TimeControllerDeleteErrors, TimeControllerDeleteResponses, TimeControllerEditData, TimeControllerEditErrors, TimeControllerEditResponses, TimeControllerGetTotalsData, TimeControllerGetTotalsErrors, TimeControllerGetTotalsResponses, TimeControllerMarkPaidData, TimeControllerMarkPaidResponses, TimeControllerMarkUnpaidData, TimeControllerMarkUnpaidResponses, TimeControllerReadData, TimeControllerReadErrors, TimeControllerReadResponses, TimeControllerRemoveProcessesData, TimeControllerRemoveProcessesResponses, TimeControllerRemoveScreenshotsData, TimeControllerRemoveScreenshotsResponses, TimeControllerSearchData, TimeControllerSearchResponses, UserControllerEditData, UserControllerEditResponses, UserControllerIdentityExportData, UserControllerIdentityExportResponses, UserControllerPublishIdentityData, UserControllerPublishIdentityErrors, UserControllerPublishIdentityResponses, UserControllerReadData, UserControllerReadErrors, UserControllerReadIdentityData, UserControllerReadIdentityErrors, UserControllerReadIdentityResponses, UserControllerReadResponses, UserControllerRemoveIdentityData, UserControllerRemoveIdentityResponses, UserControllerSearchData, UserControllerSearchResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -259,6 +259,44 @@ export const projectControllerGetStats = <ThrowOnError extends boolean = false>(
     security: [{ scheme: 'bearer', type: 'http' }],
     url: '/api/project/{id}/stats/{period}',
     ...options
+});
+
+/**
+ * Read the project's invoicing cadence, the next cutoff, and your own consent
+ */
+export const projectControllerReadCadence = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerReadCadenceData, ThrowOnError>) => (options.client ?? client).get<ProjectControllerReadCadenceResponses, ProjectControllerReadCadenceErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/project/{id}/cadence',
+    ...options
+});
+
+/**
+ * Add a version to the project invoicing cadence (owner only)
+ */
+export const projectControllerSetCadence = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerSetCadenceData, ThrowOnError>) => (options.client ?? client).put<ProjectControllerSetCadenceResponses, ProjectControllerSetCadenceErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/project/{id}/cadence',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Record your own consent to automatic invoice issuance
+ */
+export const projectControllerSetCadenceConsent = <ThrowOnError extends boolean = false>(options: Options<ProjectControllerSetCadenceConsentData, ThrowOnError>) => (options.client ?? client).put<ProjectControllerSetCadenceConsentResponses, ProjectControllerSetCadenceConsentErrors, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/project/{id}/cadence/consent',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**

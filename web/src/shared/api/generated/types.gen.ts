@@ -78,6 +78,8 @@ export type Project = {
     rateHour?: string;
     state: string;
     marketplaceContractId?: string;
+    invoiceCadence?: Array<unknown>;
+    invoiceCadenceConsent?: Array<unknown>;
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
@@ -217,6 +219,18 @@ export type ProjectSearchDto = {
     filter: ProjectSearchFilterDto;
     page: number;
     limit?: number;
+};
+
+export type ProjectCadenceDto = {
+    weekday: number;
+    timezone: string;
+    cutoffLocal: string;
+    effectiveFromUnix?: number;
+    finalizationDelayHours?: number;
+};
+
+export type ProjectCadenceConsentDto = {
+    consented: boolean;
 };
 
 export type TimeSearchSortDto = {
@@ -424,6 +438,8 @@ export type ProjectSearch = {
     state?: string;
     user?: UserSearch;
     marketplaceContractId?: string;
+    invoiceCadence?: Array<unknown>;
+    invoiceCadenceConsent?: Array<unknown>;
     invoices?: InvoiceSearch;
     time?: TimeSearch;
 };
@@ -983,6 +999,144 @@ export type ProjectControllerGetStatsResponses = {
 };
 
 export type ProjectControllerGetStatsResponse = ProjectControllerGetStatsResponses[keyof ProjectControllerGetStatsResponses];
+
+export type ProjectControllerReadCadenceData = {
+    body?: never;
+    path: {
+        id: Project;
+    };
+    query?: never;
+    url: '/api/project/{id}/cadence';
+};
+
+export type ProjectControllerReadCadenceErrors = {
+    /**
+     * Project does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type ProjectControllerReadCadenceError = ProjectControllerReadCadenceErrors[keyof ProjectControllerReadCadenceErrors];
+
+export type ProjectControllerReadCadenceResponses = {
+    200: {
+        current?: {
+            weekday: number;
+            timezone: string;
+            cutoffLocal: string;
+            effectiveFrom: string;
+            finalizationDelayHours: number;
+        } | null;
+        versions: Array<{
+            weekday: number;
+            timezone: string;
+            cutoffLocal: string;
+            effectiveFrom: string;
+            finalizationDelayHours: number;
+        }>;
+        nextCutoff?: string | null;
+        nextIssueAt?: string | null;
+        consented?: boolean | null;
+        canEdit: boolean;
+    };
+};
+
+export type ProjectControllerReadCadenceResponse = ProjectControllerReadCadenceResponses[keyof ProjectControllerReadCadenceResponses];
+
+export type ProjectControllerSetCadenceData = {
+    body: ProjectCadenceDto;
+    path: {
+        id: Project;
+    };
+    query?: never;
+    url: '/api/project/{id}/cadence';
+};
+
+export type ProjectControllerSetCadenceErrors = {
+    /**
+     * Project does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type ProjectControllerSetCadenceError = ProjectControllerSetCadenceErrors[keyof ProjectControllerSetCadenceErrors];
+
+export type ProjectControllerSetCadenceResponses = {
+    200: {
+        current?: {
+            weekday: number;
+            timezone: string;
+            cutoffLocal: string;
+            effectiveFrom: string;
+            finalizationDelayHours: number;
+        } | null;
+        versions: Array<{
+            weekday: number;
+            timezone: string;
+            cutoffLocal: string;
+            effectiveFrom: string;
+            finalizationDelayHours: number;
+        }>;
+        nextCutoff?: string | null;
+        nextIssueAt?: string | null;
+        consented?: boolean | null;
+        canEdit: boolean;
+    };
+};
+
+export type ProjectControllerSetCadenceResponse = ProjectControllerSetCadenceResponses[keyof ProjectControllerSetCadenceResponses];
+
+export type ProjectControllerSetCadenceConsentData = {
+    body: ProjectCadenceConsentDto;
+    path: {
+        id: Project;
+    };
+    query?: never;
+    url: '/api/project/{id}/cadence/consent';
+};
+
+export type ProjectControllerSetCadenceConsentErrors = {
+    /**
+     * Project does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type ProjectControllerSetCadenceConsentError = ProjectControllerSetCadenceConsentErrors[keyof ProjectControllerSetCadenceConsentErrors];
+
+export type ProjectControllerSetCadenceConsentResponses = {
+    200: {
+        current?: {
+            weekday: number;
+            timezone: string;
+            cutoffLocal: string;
+            effectiveFrom: string;
+            finalizationDelayHours: number;
+        } | null;
+        versions: Array<{
+            weekday: number;
+            timezone: string;
+            cutoffLocal: string;
+            effectiveFrom: string;
+            finalizationDelayHours: number;
+        }>;
+        nextCutoff?: string | null;
+        nextIssueAt?: string | null;
+        consented?: boolean | null;
+        canEdit: boolean;
+    };
+};
+
+export type ProjectControllerSetCadenceConsentResponse = ProjectControllerSetCadenceConsentResponses[keyof ProjectControllerSetCadenceConsentResponses];
 
 export type ProjectControllerCloseData = {
     body?: never;
