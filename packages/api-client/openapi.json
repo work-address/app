@@ -488,6 +488,26 @@
           "marketplaceContractId": {
             "type": "string"
           },
+          "marketplacePauseSequence": {
+            "type": "integer"
+          },
+          "marketplaceEndedAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "marketplaceTerms": {
+            "items": {},
+            "maxItems": 100,
+            "type": "array"
+          },
           "invoiceCadence": {
             "items": {},
             "maxItems": 100,

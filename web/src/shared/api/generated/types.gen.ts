@@ -88,6 +88,9 @@ export type Project = {
     rateHour?: string;
     state: string;
     marketplaceContractId?: string;
+    marketplacePauseSequence?: number;
+    marketplaceEndedAt?: string | string;
+    marketplaceTerms?: Array<unknown>;
     invoiceCadence?: Array<unknown>;
     invoiceCadenceConsent?: Array<unknown>;
     id?: string;
