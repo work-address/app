@@ -39,6 +39,9 @@ export class AppConfig {
       redis: process.env.APP_REDIS as string,
       jwtSecret: process.env.APP_JWT_SECRET as string,
       entitlementSecret: (process.env.APP_ENTITLEMENT_SECRET ?? '').trim(),
+      internalSignatureAcceptLegacy: AppConfig.unlessFalse(
+        process.env.APP_INTERNAL_SIGNATURE_ACCEPT_LEGACY,
+      ),
       loggly: (process.env.APP_LOGGLY ?? '').trim(),
       tonAllowedDomains: (process.env.APP_TON_ALLOWED_DOMAINS ?? '')
         .split(',')
@@ -64,6 +67,17 @@ export class AppConfig {
         database: process.env.APP_DB_NAME as string,
       },
     }
+  }
+
+  /**
+   * A switch that is on unless it is set to `false` (or `0`, `off`, `no`):
+   * for a compatibility window that must hold when nobody has configured
+   * anything, and be closed by one explicit value.
+   */
+  private static unlessFalse(raw: string | undefined): boolean {
+    return !['false', '0', 'off', 'no'].includes(
+      (raw ?? '').trim().toLowerCase(),
+    )
   }
 
   /** A block number in decimal, or 0 (the chain's first block) for anything else. */

@@ -1,6 +1,9 @@
 {
-  "note": "Cross-repo contract for the entitlement push. This file is duplicated byte-for-byte in work-address/app and work-address/web; they are separate repositories, so each owns a copy. `revision` is monotonic per owner and the product ignores a push with a lower one than it holds; `validUntil` is when the grant lapses without further news, after which the product stops treating the account as premium. web asserts it PRODUCES these bytes and this signature; app asserts it ACCEPTS them. Changing one without the other breaks entitlement in production in a way neither suite would otherwise catch, so change both in the same pull request or not at all.",
+  "note": "Cross-repo contract for the entitlement push. This file is duplicated byte-for-byte in work-address/app and work-address/web; they are separate repositories, so each owns a copy. `revision` is monotonic per owner and the product ignores a push with a lower one than it holds; `validUntil` is when the grant lapses without further news, after which the product stops treating the account as premium. web asserts it PRODUCES these bytes and this signature; app asserts it ACCEPTS them. Changing one without the other breaks entitlement in production in a way neither suite would otherwise catch, so change both in the same pull request or not at all. ROUTE BINDING: every internal route shares one secret, so the signature names the route it was made for. `signature` is the header value, `v2=<hex>`: HMAC-SHA256 with the shared secret over `signedBytes` - the version, `method`, `path`, the header name in lower case and then `serialised`, joined by single newlines - so these bytes signed for this route are refused on every other. `legacySignature` is the form used before the binding, the bare hex HMAC of `serialised` alone: app accepts it only while APP_INTERNAL_SIGNATURE_ACCEPT_LEGACY is on, web sends it only as the fallback after a 401 while APP_INTERNAL_SIGNATURE_LEGACY_FALLBACK is on, and both go when that one-release window closes (docs/internal-signature.md in each repository).",
   "secret": "shared-contract-fixture-secret",
+  "method": "POST",
+  "path": "/api/internal/entitlement",
+  "header": "X-Entitlement-Signature",
   "body": {
     "userId": "3f2504e0-4f89-11d3-9a0c-0305e82c3301",
     "premium": true,
@@ -10,5 +13,7 @@
     "nonce": "9c5b94b1-35ad-49bb-b118-8e8fc24abf80"
   },
   "serialised": "{\"userId\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"premium\":true,\"revision\":7,\"validUntil\":\"2025-09-28T00:00:00.000Z\",\"issuedAt\":1756166400,\"nonce\":\"9c5b94b1-35ad-49bb-b118-8e8fc24abf80\"}",
-  "signature": "ab1b82a055721a1c71226095a1bdac90a4ea917f412bb053edbd7124ca0a8c9e"
+  "signedBytes": "v2\nPOST\n/api/internal/entitlement\nx-entitlement-signature\n{\"userId\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"premium\":true,\"revision\":7,\"validUntil\":\"2025-09-28T00:00:00.000Z\",\"issuedAt\":1756166400,\"nonce\":\"9c5b94b1-35ad-49bb-b118-8e8fc24abf80\"}",
+  "signature": "v2=59f5698a5e48c0b76594cc1b3af10c5a01d7fc63b88b3663f2c6b5a134db7e75",
+  "legacySignature": "ab1b82a055721a1c71226095a1bdac90a4ea917f412bb053edbd7124ca0a8c9e"
 }

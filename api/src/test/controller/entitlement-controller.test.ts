@@ -5,6 +5,7 @@ import { suite, test } from '@testdeck/mocha'
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { EntitlementSignature } from '@/service/entitlement-signature'
+import { InternalRoute } from '@/service/internal-route'
 import { Entitlement } from '@/service/entitlement'
 import { UserRepository } from '@/repository/user-repository'
 import { runPromise } from '@/service/effect-bridge'
@@ -61,7 +62,8 @@ export class EntitlementControllerTest extends BaseControllerTest {
     return axios.post(`${this.url}/api/internal/entitlement`, raw, {
       headers: {
         'Content-Type': 'application/json',
-        'X-Entitlement-Signature': signature ?? this.signature.sign(raw),
+        'X-Entitlement-Signature':
+          signature ?? this.signature.sign(InternalRoute.ENTITLEMENT, raw),
       },
       validateStatus: () => true,
     })

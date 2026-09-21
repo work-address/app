@@ -21,6 +21,7 @@ import {
   EInvoiceState,
 } from '@/model/invoice'
 import { EntitlementSignature } from '@/service/entitlement-signature'
+import { InternalRoute } from '@/service/internal-route'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { TimeRepository } from '@/repository/time-repository'
 import { runPromise } from '@/service/effect-bridge'
@@ -67,7 +68,8 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
         headers: {
           'Content-Type': 'application/json',
           'X-Marketplace-Milestone-Signature':
-            signature ?? this.signature.sign(raw),
+            signature ??
+            this.signature.sign(InternalRoute.MILESTONE_INVOICE, raw),
         },
         validateStatus: () => true,
       },
@@ -550,7 +552,10 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
       {
         headers: {
           'Content-Type': 'application/json',
-          'X-Marketplace-Signature': this.signature.sign(raw),
+          'X-Marketplace-Signature': this.signature.sign(
+            InternalRoute.HIRE,
+            raw,
+          ),
         },
         validateStatus: () => true,
       },

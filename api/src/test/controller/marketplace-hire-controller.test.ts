@@ -8,6 +8,7 @@ import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { EInvoiceState } from '@/model/invoice'
 import { EProjectState } from '@/model/project'
 import { EntitlementSignature } from '@/service/entitlement-signature'
+import { InternalRoute } from '@/service/internal-route'
 import { ProjectRepository } from '@/repository/project-repository'
 import { WalletAddress } from '@/service/wallet-address'
 
@@ -29,7 +30,8 @@ export class MarketplaceHireControllerTest extends BaseControllerTest {
     return axios.post(`${this.url}/api/internal/marketplace/hire`, raw, {
       headers: {
         'Content-Type': 'application/json',
-        'X-Marketplace-Signature': signature ?? this.signature.sign(raw),
+        'X-Marketplace-Signature':
+          signature ?? this.signature.sign(InternalRoute.HIRE, raw),
       },
       validateStatus: () => true,
     })
@@ -267,7 +269,7 @@ export class MarketplaceEndControllerTest extends BaseControllerTest {
     return axios.post(`${this.url}/api/internal/marketplace/hire`, raw, {
       headers: {
         'Content-Type': 'application/json',
-        'X-Marketplace-Signature': this.signature.sign(raw),
+        'X-Marketplace-Signature': this.signature.sign(InternalRoute.HIRE, raw),
       },
       validateStatus: () => true,
     })
@@ -279,7 +281,8 @@ export class MarketplaceEndControllerTest extends BaseControllerTest {
     return axios.post(`${this.url}/api/internal/marketplace/end`, raw, {
       headers: {
         'Content-Type': 'application/json',
-        'X-Marketplace-End-Signature': signature ?? this.signature.sign(raw),
+        'X-Marketplace-End-Signature':
+          signature ?? this.signature.sign(InternalRoute.END, raw),
       },
       validateStatus: () => true,
     })
@@ -483,7 +486,10 @@ export class MarketplaceEndControllerTest extends BaseControllerTest {
       {
         headers: {
           'Content-Type': 'application/json',
-          'X-Marketplace-Signature': this.signature.sign(raw),
+          'X-Marketplace-Signature': this.signature.sign(
+            InternalRoute.HIRE,
+            raw,
+          ),
         },
         validateStatus: () => true,
       },

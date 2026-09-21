@@ -9,6 +9,7 @@ import { MarketplaceHireController } from '@/controller/marketplace-hire-control
 import { IConfigParameters } from '@/model/config'
 import { MarketplacePauseDto } from '@/model/dto/marketplace-pause'
 import { EntitlementSignature } from '@/service/entitlement-signature'
+import { InternalRoute } from '@/service/internal-route'
 
 type Fixture = {
   secret: string
@@ -56,12 +57,14 @@ export class MarketplacePauseContractTest {
 
     expect(
       this.service(fixture.secret).verify(
+        InternalRoute.PAUSE,
         fixture.serialised,
         fixture.signature,
       ),
     ).to.be.true
     expect(
       this.service('not-the-secret').verify(
+        InternalRoute.PAUSE,
         fixture.serialised,
         fixture.signature,
       ),

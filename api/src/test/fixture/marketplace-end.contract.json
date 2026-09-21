@@ -1,0 +1,16 @@
+{
+  "note": "Cross-repo contract for the end of a marketplace contract. This file is duplicated byte-for-byte in work-address/web (api/src/test/fixture) and work-address/app (api/src/test/fixture); they are separate repositories, so each owns a copy. web asserts HireClient PRODUCES these bytes, this header and this signature; app asserts its MarketplaceEndDto re-serialises to exactly them and that the controller ACCEPTS them. The body is the contract id alone - the idempotency key the hire used - because ending is not a new agreement and has no terms of its own; issuedAt (unix seconds) and nonce are the replay guard. Every other marketplace body also opens with contractId and closes with issuedAt and nonce, and app's DTOs keep keys they do not declare, so before signatures named their route a captured pause or amendment re-serialised to the very bytes that were signed and was accepted here as an end: this fixture exists to pin that it no longer is. Every key is always present, in this order, because app verifies the signature over its own re-serialisation of the parsed DTO. Change both copies in the same pull request or not at all. ROUTE BINDING: every internal route shares one secret, so the signature names the route it was made for. `signature` is the header value, `v2=<hex>`: HMAC-SHA256 with the shared secret over `signedBytes` - the version, `method`, `path`, the header name in lower case and then `serialised`, joined by single newlines - so these bytes signed for this route are refused on every other. `legacySignature` is the form used before the binding, the bare hex HMAC of `serialised` alone: app accepts it only while APP_INTERNAL_SIGNATURE_ACCEPT_LEGACY is on, web sends it only as the fallback after a 401 while APP_INTERNAL_SIGNATURE_LEGACY_FALLBACK is on, and both go when that one-release window closes (docs/internal-signature.md in each repository).",
+  "secret": "shared-contract-fixture-secret",
+  "method": "POST",
+  "path": "/api/internal/marketplace/end",
+  "header": "X-Marketplace-End-Signature",
+  "body": {
+    "contractId": "9f3d2c41-77b5-4a0e-9a2c-1d5e6b7c8a90",
+    "issuedAt": 1788865290,
+    "nonce": "b7e1c2a4-5d60-4f83-9a17-3c8e5f2d6b09"
+  },
+  "serialised": "{\"contractId\":\"9f3d2c41-77b5-4a0e-9a2c-1d5e6b7c8a90\",\"issuedAt\":1788865290,\"nonce\":\"b7e1c2a4-5d60-4f83-9a17-3c8e5f2d6b09\"}",
+  "signedBytes": "v2\nPOST\n/api/internal/marketplace/end\nx-marketplace-end-signature\n{\"contractId\":\"9f3d2c41-77b5-4a0e-9a2c-1d5e6b7c8a90\",\"issuedAt\":1788865290,\"nonce\":\"b7e1c2a4-5d60-4f83-9a17-3c8e5f2d6b09\"}",
+  "signature": "v2=1175fd0c85c0da95f895d99b3e72ef6bfb2b83feece0f2fe377154edb817104e",
+  "legacySignature": "fc1047c0ff4fabe55859a359d81a445cc1040746c1d03721168e36ec05893580"
+}

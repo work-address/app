@@ -8,6 +8,7 @@ import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { User } from '@/entity/user'
 import { EProjectState } from '@/model/project'
 import { EntitlementSignature } from '@/service/entitlement-signature'
+import { InternalRoute } from '@/service/internal-route'
 import { ProjectRepository } from '@/repository/project-repository'
 
 /**
@@ -27,6 +28,17 @@ export class MarketplacePauseControllerTest extends BaseControllerTest {
     this.projectRepository = this.container.get('ProjectRepository')
   }
 
+  /** The route a header belongs to, so each call is signed for its own. */
+  private route(header: string) {
+    const route = InternalRoute.ALL.find((known) => known.header === header)
+
+    if (!route) {
+      throw new Error(`No internal route signs under ${header}`)
+    }
+
+    return route
+  }
+
   private post(
     path: string,
     header: string,
@@ -38,7 +50,7 @@ export class MarketplacePauseControllerTest extends BaseControllerTest {
     return axios.post(`${this.url}/api/internal/marketplace/${path}`, raw, {
       headers: {
         'Content-Type': 'application/json',
-        [header]: signature ?? this.signature.sign(raw),
+        [header]: signature ?? this.signature.sign(this.route(header), raw),
       },
       validateStatus: () => true,
     })

@@ -9,6 +9,7 @@ import { MarketplaceHireController } from '@/controller/marketplace-hire-control
 import { IConfigParameters } from '@/model/config'
 import { MarketplaceAmendDto } from '@/model/dto/marketplace-amend'
 import { EntitlementSignature } from '@/service/entitlement-signature'
+import { InternalRoute } from '@/service/internal-route'
 
 type Fixture = {
   secret: string
@@ -56,12 +57,14 @@ export class MarketplaceAmendContractTest {
 
     expect(
       this.service(fixture.secret).verify(
+        InternalRoute.AMEND,
         fixture.serialised,
         fixture.signature,
       ),
     ).to.be.true
     expect(
       this.service('not-the-secret').verify(
+        InternalRoute.AMEND,
         fixture.serialised,
         fixture.signature,
       ),

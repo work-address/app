@@ -28,6 +28,7 @@ import {
 } from '@/model/invoice'
 import { MarketplaceSettlementController } from '@/controller/marketplace-settlement-controller'
 import { EntitlementSignature } from '@/service/entitlement-signature'
+import { InternalRoute } from '@/service/internal-route'
 import { InvoiceEscrow } from '@/service/invoice-escrow'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { ProjectRepository } from '@/repository/project-repository'
@@ -94,7 +95,8 @@ export class MarketplaceSettlementControllerTest extends BaseControllerTest {
     return axios.post(`${this.url}/api/internal/marketplace/settlement`, raw, {
       headers: {
         'Content-Type': 'application/json',
-        [header]: signature ?? this.signature.sign(raw),
+        [header]:
+          signature ?? this.signature.sign(InternalRoute.SETTLEMENT, raw),
       },
       validateStatus: () => true,
     })
@@ -717,7 +719,7 @@ export class MarketplaceSettlementControllerTest extends BaseControllerTest {
     const res = await axios.post(`${this.url}${fixture.path}`, raw, {
       headers: {
         'Content-Type': 'application/json',
-        [fixture.header]: this.signature.sign(raw),
+        [fixture.header]: this.signature.sign(InternalRoute.SETTLEMENT, raw),
       },
       validateStatus: () => true,
     })

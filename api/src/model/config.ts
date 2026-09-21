@@ -10,6 +10,13 @@ export interface IConfigParameters {
    * premium, so every account is entitled. See Entitlement.
    */
   entitlementSecret: string
+  /**
+   * Whether an internal call signed the old way - the bare hex HMAC of the
+   * body, with no route in it - is still accepted. On for the one release in
+   * which the marketplace learns to sign `v2`, so the two services can be
+   * deployed in either order; off, only a route-bound signature is accepted.
+   */
+  internalSignatureAcceptLegacy: boolean
   /** Loggly credentials as `subdomain/customer-token`. Empty disables Loggly. */
   loggly: string
   tonAllowedDomains: string[]

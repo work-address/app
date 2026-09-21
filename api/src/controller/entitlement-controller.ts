@@ -4,6 +4,7 @@ import express from 'express'
 import { App } from '@/app/app'
 import { EntitlementPushDto } from '@/model/dto/entitlement'
 import { EntitlementSignature } from '@/service/entitlement-signature'
+import { InternalRoute } from '@/service/internal-route'
 import { UserRepository } from '@/repository/user-repository'
 import AuthenticationException from '@/exception/authentication-exception'
 import { Effect } from 'effect'
@@ -34,10 +35,16 @@ export class EntitlementController {
     @Body() data: EntitlementPushDto,
     @Req() request: express.Request,
   ): Promise<{ applied: boolean }> {
-    const signature = request.header('X-Entitlement-Signature') ?? ''
+    const signature = request.header(InternalRoute.ENTITLEMENT.header) ?? ''
     const raw = JSON.stringify(data)
 
-    if (!this.entitlementSignature.verify(raw, signature)) {
+    if (
+      !this.entitlementSignature.verify(
+        InternalRoute.ENTITLEMENT,
+        raw,
+        signature,
+      )
+    ) {
       throw new AuthenticationException('Invalid entitlement signature')
     }
 

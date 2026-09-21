@@ -9,6 +9,7 @@ import { MarketplaceSettlementController } from '@/controller/marketplace-settle
 import { IConfigParameters } from '@/model/config'
 import { MarketplaceSettlementDto } from '@/model/dto/marketplace-settlement'
 import { EntitlementSignature } from '@/service/entitlement-signature'
+import { InternalRoute } from '@/service/internal-route'
 import { InvoiceEscrow } from '@/service/invoice-escrow'
 
 type Fixture = {
@@ -56,12 +57,14 @@ export class MarketplaceSettlementContractTest {
 
     expect(
       this.service(fixture.secret).verify(
+        InternalRoute.SETTLEMENT,
         fixture.serialised,
         fixture.signature,
       ),
     ).to.be.true
     expect(
       this.service('not-the-secret').verify(
+        InternalRoute.SETTLEMENT,
         fixture.serialised,
         fixture.signature,
       ),

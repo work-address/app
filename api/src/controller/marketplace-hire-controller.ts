@@ -22,6 +22,7 @@ import { UserRepository } from '@/repository/user-repository'
 import { InvoiceManager } from '@/service/invoice-manager'
 import { ProjectManager } from '@/service/project-manager'
 import { EntitlementSignature } from '@/service/entitlement-signature'
+import { InternalRoute } from '@/service/internal-route'
 import { WalletAddress } from '@/service/wallet-address'
 import { runPromise } from '@/service/effect-bridge'
 import AuthenticationException from '@/exception/authentication-exception'
@@ -64,42 +65,42 @@ export interface IMarketplacePauseResult {
  * re-enters the job by hand.
  *
  * Authenticated like the entitlement push — HMAC with the same shared secret
- * over the re-serialised body, a replay window and a one-time nonce — under
- * its own header so the two calls cannot be confused. Repeat-safe: the
+ * over the route and the re-serialised body, a replay window and a one-time
+ * nonce. Every route here shares that secret, so each signature names the
+ * method, path and header it was made for (`InternalRoute`): a body signed
+ * for one route is refused on every other. Repeat-safe: the
  * contract id is unique on the project, so a retry answers with the project
  * the first call created.
  */
 @JsonController('/internal')
 export class MarketplaceHireController {
   /** Its own header, so a hire and an entitlement push cannot be confused. */
-  public static readonly SIGNATURE_HEADER = 'X-Marketplace-Signature'
+  public static readonly SIGNATURE_HEADER = InternalRoute.HIRE.header
 
   /**
    * The end call's own header, for the same reason: a captured hire must not
    * be replayable as an end, nor the other way round.
    */
-  public static readonly END_SIGNATURE_HEADER = 'X-Marketplace-End-Signature'
+  public static readonly END_SIGNATURE_HEADER = InternalRoute.END.header
 
   /**
    * The milestone bill's own header, for the same reason again: a captured
    * hire must not be replayable as a bill.
    */
   public static readonly MILESTONE_SIGNATURE_HEADER =
-    'X-Marketplace-Milestone-Signature'
+    InternalRoute.MILESTONE_INVOICE.header
 
   /**
    * The amendment's own header: a captured hire or end must not be
    * replayable as a change of rate, nor the other way round.
    */
-  public static readonly AMEND_SIGNATURE_HEADER =
-    'X-Marketplace-Amend-Signature'
+  public static readonly AMEND_SIGNATURE_HEADER = InternalRoute.AMEND.header
 
   /**
    * The pause's own header: an end closes a project for good and a pause
    * only until a resume, so a captured one must not stand in for the other.
    */
-  public static readonly PAUSE_SIGNATURE_HEADER =
-    'X-Marketplace-Pause-Signature'
+  public static readonly PAUSE_SIGNATURE_HEADER = InternalRoute.PAUSE.header
 
   protected signature: EntitlementSignature
   protected projectRepository: ProjectRepository
@@ -124,7 +125,13 @@ export class MarketplaceHireController {
     const signature =
       request.header(MarketplaceHireController.SIGNATURE_HEADER) ?? ''
 
-    if (!this.signature.verify(JSON.stringify(data), signature)) {
+    if (
+      !this.signature.verify(
+        InternalRoute.HIRE,
+        JSON.stringify(data),
+        signature,
+      )
+    ) {
       throw new AuthenticationException('Invalid marketplace signature')
     }
 
@@ -230,7 +237,9 @@ export class MarketplaceHireController {
     const signature =
       request.header(MarketplaceHireController.END_SIGNATURE_HEADER) ?? ''
 
-    if (!this.signature.verify(JSON.stringify(data), signature)) {
+    if (
+      !this.signature.verify(InternalRoute.END, JSON.stringify(data), signature)
+    ) {
       throw new AuthenticationException('Invalid marketplace signature')
     }
 
@@ -301,7 +310,13 @@ export class MarketplaceHireController {
     const signature =
       request.header(MarketplaceHireController.MILESTONE_SIGNATURE_HEADER) ?? ''
 
-    if (!this.signature.verify(JSON.stringify(data), signature)) {
+    if (
+      !this.signature.verify(
+        InternalRoute.MILESTONE_INVOICE,
+        JSON.stringify(data),
+        signature,
+      )
+    ) {
       throw new AuthenticationException('Invalid marketplace signature')
     }
 
@@ -375,7 +390,13 @@ export class MarketplaceHireController {
     const signature =
       request.header(MarketplaceHireController.AMEND_SIGNATURE_HEADER) ?? ''
 
-    if (!this.signature.verify(JSON.stringify(data), signature)) {
+    if (
+      !this.signature.verify(
+        InternalRoute.AMEND,
+        JSON.stringify(data),
+        signature,
+      )
+    ) {
       throw new AuthenticationException('Invalid marketplace signature')
     }
 
@@ -460,7 +481,13 @@ export class MarketplaceHireController {
     const signature =
       request.header(MarketplaceHireController.PAUSE_SIGNATURE_HEADER) ?? ''
 
-    if (!this.signature.verify(JSON.stringify(data), signature)) {
+    if (
+      !this.signature.verify(
+        InternalRoute.PAUSE,
+        JSON.stringify(data),
+        signature,
+      )
+    ) {
       throw new AuthenticationException('Invalid marketplace signature')
     }
 

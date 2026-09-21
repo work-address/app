@@ -7,6 +7,7 @@ import { plainToInstance } from 'class-transformer'
 import { validateSync } from 'class-validator'
 
 import { EntitlementSignature } from '@/service/entitlement-signature'
+import { InternalRoute } from '@/service/internal-route'
 import { IConfigParameters } from '@/model/config'
 import { EntitlementPushDto } from '@/model/dto/entitlement'
 
@@ -54,7 +55,13 @@ export class EntitlementContractTest {
     const fixture = this.fixture()
     const service = this.service(fixture.secret)
 
-    expect(service.verify(fixture.serialised, fixture.signature)).to.be.true
+    expect(
+      service.verify(
+        InternalRoute.ENTITLEMENT,
+        fixture.serialised,
+        fixture.signature,
+      ),
+    ).to.be.true
   }
 
   /**
@@ -90,6 +97,7 @@ export class EntitlementContractTest {
 
     expect(
       this.service('not-the-secret').verify(
+        InternalRoute.ENTITLEMENT,
         fixture.serialised,
         fixture.signature,
       ),

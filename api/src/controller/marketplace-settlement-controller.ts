@@ -5,6 +5,7 @@ import { App } from '@/app/app'
 import { IInvoiceEscrowSettlementResult } from '@/model/invoice'
 import { MarketplaceSettlementDto } from '@/model/dto/marketplace-settlement'
 import { EntitlementSignature } from '@/service/entitlement-signature'
+import { InternalRoute } from '@/service/internal-route'
 import { InvoiceManager } from '@/service/invoice-manager'
 import { runPromise } from '@/service/effect-bridge'
 import AuthenticationException from '@/exception/authentication-exception'
@@ -17,15 +18,15 @@ import AuthenticationException from '@/exception/authentication-exception'
  * PAID; nothing else does.
  *
  * Authenticated exactly like the marketplace hire - HMAC with the shared
- * secret over the re-serialised body, a replay window and a one-time nonce -
- * under its own header, so a signed hire cannot be sent here or the other
- * way round. Idempotent: the push carries the allocation's absolute state,
+ * secret over this route and the re-serialised body, a replay window and a
+ * one-time nonce - so a signed hire cannot be sent here or the other way
+ * round. Idempotent: the push carries the allocation's absolute state,
  * so a retry signed afresh answers 200 and changes nothing twice. Under
  * `/internal`, so the public API spec and the browser clients leave it out.
  */
 @JsonController('/internal')
 export class MarketplaceSettlementController {
-  public static readonly SIGNATURE_HEADER = 'X-Marketplace-Settlement-Signature'
+  public static readonly SIGNATURE_HEADER = InternalRoute.SETTLEMENT.header
 
   protected signature: EntitlementSignature
   protected invoiceManager: InvoiceManager
@@ -44,7 +45,13 @@ export class MarketplaceSettlementController {
     const signature =
       request.header(MarketplaceSettlementController.SIGNATURE_HEADER) ?? ''
 
-    if (!this.signature.verify(JSON.stringify(data), signature)) {
+    if (
+      !this.signature.verify(
+        InternalRoute.SETTLEMENT,
+        JSON.stringify(data),
+        signature,
+      )
+    ) {
       throw new AuthenticationException('Invalid marketplace signature')
     }
 

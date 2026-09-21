@@ -23,6 +23,7 @@ import { EProjectState } from '@/model/project'
 import { MarketplaceHireController } from '@/controller/marketplace-hire-controller'
 import { MarketplaceSettlementController } from '@/controller/marketplace-settlement-controller'
 import { EntitlementSignature } from '@/service/entitlement-signature'
+import { InternalRoute } from '@/service/internal-route'
 import { InvoiceEscrow } from '@/service/invoice-escrow'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { ProjectRepository } from '@/repository/project-repository'
@@ -177,8 +178,10 @@ export class InvoiceAdjustmentTest extends BaseControllerTest {
       {
         headers: {
           'Content-Type': 'application/json',
-          [MarketplaceHireController.END_SIGNATURE_HEADER]:
-            this.signature.sign(raw),
+          [MarketplaceHireController.END_SIGNATURE_HEADER]: this.signature.sign(
+            InternalRoute.END,
+            raw,
+          ),
         },
         validateStatus: () => true,
       },
@@ -250,7 +253,7 @@ export class InvoiceAdjustmentTest extends BaseControllerTest {
         headers: {
           'Content-Type': 'application/json',
           [MarketplaceSettlementController.SIGNATURE_HEADER]:
-            this.signature.sign(raw),
+            this.signature.sign(InternalRoute.SETTLEMENT, raw),
         },
         validateStatus: () => true,
       },
@@ -512,7 +515,7 @@ export class InvoiceAdjustmentTest extends BaseControllerTest {
         headers: {
           'Content-Type': 'application/json',
           [MarketplaceHireController.MILESTONE_SIGNATURE_HEADER]:
-            this.signature.sign(raw),
+            this.signature.sign(InternalRoute.MILESTONE_INVOICE, raw),
         },
         validateStatus: () => true,
       },
