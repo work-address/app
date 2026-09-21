@@ -3,13 +3,18 @@ import { Badge, Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 
 import {
   fetchProjects,
+  $focusedProject,
   $projectsLoading,
   $hasProjects,
   $projects,
+  changeProjectStateFilter,
+  FOCUSED_PROJECT_PARAM,
+  readFocusedProjectParam,
 } from '@/entities/projects'
 import { fetchTime, $timeLoading } from '@/entities/time'
 import {
@@ -33,6 +38,7 @@ import { DashboardEmptyStateImage } from '@/shared'
 export default function DashboardPage() {
   const { t, i18n } = useTranslation()
   const [createProjectOpen, setCreateProjectOpen] = useState(false)
+  const [searchParams, setSearchParams] = useSearchParams()
 
   const {
     fetchProjects: fetchProjectsEvent,
@@ -41,6 +47,8 @@ export default function DashboardPage() {
     timeLoading,
     hasProjects,
     projects,
+    focused,
+    changeProjectStateFilterEvent,
   } = useUnit({
     fetchProjects,
     fetchTime,
@@ -48,7 +56,26 @@ export default function DashboardPage() {
     timeLoading: $timeLoading,
     hasProjects: $hasProjects,
     projects: $projects,
+    focused: $focusedProject,
+    changeProjectStateFilterEvent: changeProjectStateFilter,
   })
+
+  // `/?project=<id>` is how the marketplace's "Track time" button arrives:
+  // the dashboard opens on the project that contract's hire created. The
+  // parameter is the source of truth, so going back or editing the URL by
+  // hand changes what is shown, and clearing the focus clears the link too.
+  const focusedParam = readFocusedProjectParam(searchParams)
+
+  useEffect(() => {
+    changeProjectStateFilterEvent({ focusedProjectId: focusedParam })
+  }, [changeProjectStateFilterEvent, focusedParam])
+
+  const showAllProjects = () => {
+    const next = new URLSearchParams(searchParams)
+
+    next.delete(FOCUSED_PROJECT_PARAM)
+    setSearchParams(next, { replace: true })
+  }
 
   // While loading, the projects table and worklogs render as skeletons so the
   // layout does not jump. Once loaded, an account with no projects gets the
@@ -64,6 +91,31 @@ export default function DashboardPage() {
     fetchProjectsEvent()
     fetchTimeEvent()
   }, [fetchProjectsEvent, fetchTimeEvent])
+
+  // A link to a project this account cannot open is answered in its own
+  // right, not by quietly showing the full dashboard: someone who followed
+  // it would otherwise believe they were looking at the project it named.
+  if (focused.kind === 'no-access') {
+    return (
+      <>
+        <PageHelmet
+          htmlAttributes={{ lang: i18n.language }}
+          title={t('dashboard.page.title')}
+        />
+        <Wrapper>
+          <Intro
+            data-testid="focused-project-no-access"
+            imageSrc={DashboardEmptyStateImage}
+            title={t('dashboard.page.focused.title')}
+            description={t('dashboard.page.focused.description')}
+            actionLabel={t('dashboard.page.focused.action')}
+            size="l"
+            onAction={showAllProjects}
+          />
+        </Wrapper>
+      </>
+    )
+  }
 
   return (
     <>
@@ -100,6 +152,15 @@ export default function DashboardPage() {
                       </Text>
                     </Badge>
                   </Flex>
+                  {focused.kind === 'focused' ? (
+                    <ShowAll
+                      type="button"
+                      data-testid="focused-project-show-all"
+                      onClick={showAllProjects}
+                    >
+                      {t('dashboard.page.focused.showAll')}
+                    </ShowAll>
+                  ) : null}
                   <SearchArea>
                     <DashboardProjectsSearchInput />
                   </SearchArea>
@@ -174,6 +235,22 @@ const ProjectsHead = styled(S.SectionTitleRow)`
 
   ${(p) => p.theme.breakpoints.up('md')} {
     gap: var(--space-5);
+  }
+`
+
+/* The way out of a one-project view, beside the count it narrowed. */
+const ShowAll = styled.button`
+  padding: 0;
+  border: 0;
+  background: none;
+  color: var(--accent-11);
+  font: inherit;
+  cursor: pointer;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+
+  &:hover {
+    text-decoration-color: currentColor;
   }
 `
 

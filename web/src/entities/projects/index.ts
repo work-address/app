@@ -144,6 +144,17 @@ export {
 export { OTHER_PROCESS_NAME } from './utils'
 
 export {
+  FOCUSED_PROJECT_PARAM,
+  focusedProject,
+  narrowToFocusedProject,
+  readFocusedProjectParam,
+} from './focused-project'
+export type {
+  FocusedProjectInput,
+  FocusedProjectOutcome,
+} from './focused-project'
+
+export {
   fetchProjects,
   fetchProjectsProcessStats,
   fetchProjectProcessStats,
@@ -166,6 +177,7 @@ export {
   $projectsLoading,
   $hasProjects,
   $filteredProjects,
+  $focusedProject,
   $projectStateFilter,
   $isProjectsFiltering,
   $rawProjects,

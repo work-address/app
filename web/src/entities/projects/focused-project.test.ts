@@ -12,9 +12,9 @@ const SOMEONE_ELSES = 'd4e5f6a7-0000-4000-8000-000000000002'
 describe('readFocusedProjectParam', () => {
   it('reads the project id the marketplace links with', () => {
     expect(readFocusedProjectParam(`?project=${MINE}`)).toBe(MINE)
-    expect(readFocusedProjectParam(new URLSearchParams({ project: MINE }))).toBe(
-      MINE,
-    )
+    expect(
+      readFocusedProjectParam(new URLSearchParams({ project: MINE })),
+    ).toBe(MINE)
   })
 
   it('treats a missing or blank parameter as no link at all', () => {

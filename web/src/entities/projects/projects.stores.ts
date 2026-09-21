@@ -1,5 +1,6 @@
 import { combine, createStore } from 'effector'
 
+import { focusedProject, narrowToFocusedProject } from './focused-project'
 import {
   changeProjectStateFilter,
   setProjectsStateFiltering,
@@ -22,6 +23,7 @@ import type { baseApi } from '@/shared'
 export const $projectStateFilter = createStore<ProjectsFilter>({
   projectState: 'All',
   containsText: '',
+  focusedProjectId: null,
 }).on(changeProjectStateFilter, (state, filter) => ({
   ...state,
   ...filter,
@@ -55,11 +57,33 @@ export const $projects = combine(
     mapProjectsAndStats(projects?.items, stats ?? undefined),
 )
 
+/**
+ * What to do about a `/?project=<id>` link: show the whole dashboard, narrow
+ * it to that project, or say it cannot be opened. Judged against the
+ * projects this account can actually see, and never while they are still
+ * loading - see `focusedProject`.
+ */
+export const $focusedProject = combine(
+  $projectStateFilter,
+  $projects,
+  $projectsLoading,
+  (filter, projects, loading) =>
+    focusedProject({
+      param: filter.focusedProjectId,
+      visibleProjectIds: loading
+        ? null
+        : projects
+            .map((project) => project.id)
+            .filter((id): id is string => Boolean(id)),
+    }),
+)
+
 export const $filteredProjects = combine(
   $projects,
   $projectStateFilter,
-  (projects, filter): ProjectWithStats[] => {
-    let filteredProjects = [...projects]
+  $focusedProject,
+  (projects, filter, focused): ProjectWithStats[] => {
+    let filteredProjects = narrowToFocusedProject([...projects], focused)
 
     if (filter.projectState !== 'All') {
       filteredProjects = filteredProjects.filter(

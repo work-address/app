@@ -3,6 +3,13 @@ import type { baseApi } from '@/shared'
 export type ProjectsFilter = {
   projectState: 'All' | 'Active' | 'Inactive'
   containsText: string
+  /**
+   * One project the dashboard was opened on, from `/?project=<id>`: the
+   * marketplace links here with the project a hire opened, so "Track time"
+   * lands on that work instead of on a list to search. Null is the ordinary
+   * dashboard.
+   */
+  focusedProjectId: string | null
 }
 
 export type TimeTotalsRow = {
