@@ -74,3 +74,21 @@ jobs:
 
       - name: Web unit tests
         run: pnpm --filter ./web test
+
+      # The browser project measures layout in a real browser - a jsdom run
+      # reports every width as zero, so a card that scrolled sideways on a
+      # phone would pass. Only chromium, which is the single instance the
+      # project declares.
+      - name: Install Playwright chromium
+        run: pnpm --filter ./web exec playwright install --with-deps chromium
+
+      # `web test` is `--project unit`, so this step is what actually runs the
+      # 375px acceptance tests; without it they only ever ran on a laptop.
+      #
+      # The `storybook` project is deliberately not run here. Its build fails
+      # before any test does: vite-plugin-node-polyfills shims `node:process`
+      # without `stdout`/`stdin`, which storybook's own node chunk imports, so
+      # esbuild refuses the bundle. Wiring it in would make CI red for a
+      # dependency conflict rather than for anything in this repository.
+      - name: Web browser tests
+        run: pnpm --filter ./web run test:browser

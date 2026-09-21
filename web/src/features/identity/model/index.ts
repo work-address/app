@@ -6,6 +6,10 @@ import {
   identityChainTarget,
   identityWalletFailure,
 } from './identity-chain'
+import {
+  identityExportInvalidated,
+  identityExportReceived,
+} from './identity-export'
 import { identityDisclosure, identityPreview } from './identity-slots'
 import {
   identityActionState,
@@ -237,9 +241,22 @@ export const $identityView = createStore<IdentityView | null>(null)
   .on(publishIdentityFx.doneData, (_, view) => view)
   .on([readIdentityFx.fail, removeIdentityFx.done], () => null)
 
-export const $identityExport = createStore<ProfileExport | null>(null)
-  .on(loadIdentityExportFx.doneData, (_, document) => document)
-  .reset(removeIdentityFx.done, publishIdentityFx.done)
+/*
+ * The private export's lifetime lives in `identity-export`; here it is only
+ * connected to the calls that fill and invalidate it. It is dropped the
+ * moment the dialog closes, not only on publish or removal: it carries every
+ * field's salt, so leaving it in the store kept the secrets in memory for the
+ * rest of the session.
+ */
+sample({
+  clock: loadIdentityExportFx.doneData,
+  target: identityExportReceived,
+})
+
+sample({
+  clock: [removeIdentityFx.done, publishIdentityFx.done],
+  target: identityExportInvalidated,
+})
 
 const outcome = createEvent<IdentityActionOutcome>()
 
@@ -345,6 +362,12 @@ sample({
   target: readIdentityFx,
 })
 
+export {
+  $identityExport,
+  identityExportDismissed,
+  identityExportInvalidated,
+  identityExportReceived,
+} from './identity-export'
 export { IDENTITY_COPY_KEYS, IDENTITY_FIELD_LABEL_KEY } from './identity-copy'
 export {
   IDENTITY_REGISTRY_ABI,

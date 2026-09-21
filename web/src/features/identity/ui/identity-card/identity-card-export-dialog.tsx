@@ -1,8 +1,13 @@
 import { useUnit } from 'effector-react'
+import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { $identityExport, loadIdentityExportFx } from '../../model'
+import {
+  $identityExport,
+  identityExportDismissed,
+  loadIdentityExportFx,
+} from '../../model'
 
 import {
   AdaptiveDialog,
@@ -28,11 +33,23 @@ type Props = {
 export const IdentityCardExportDialog = ({ open, onOpenChange }: Props) => {
   const { t } = useTranslation()
 
-  const { document, load, pending } = useUnit({
+  const { document, load, pending, dismiss } = useUnit({
     document: $identityExport,
     load: loadIdentityExportFx,
     pending: loadIdentityExportFx.pending,
+    dismiss: identityExportDismissed,
   })
+
+  // The document holds every field's salt, so it is dropped the moment the
+  // holder is done looking at it - when the dialog closes by any route, and
+  // when the card unmounts with it still open.
+  useEffect(() => {
+    if (!open) {
+      return
+    }
+
+    return () => dismiss()
+  }, [open, dismiss])
 
   const text = document ? serializeDocument(document) : ''
 
