@@ -1,0 +1,15 @@
+{
+  "note": "Cross-repo contract for pausing and resuming a running marketplace contract (web WP-86, app WP-86). This file is duplicated byte-for-byte in work-address/web (api/src/test/fixture) and work-address/app (api/src/test/fixture); they are separate repositories, so each owns a copy. web asserts HireClient PRODUCES these bytes, this header and this signature; app asserts its MarketplacePauseDto re-serialises to exactly them and that the controller ACCEPTS them. The body says what the contract is now, never what happened: paused is true while the client has it paused (and after it ended), false once resumed, and the project takes no new time while it is true - the way it takes none once a contract ends - and takes time again when it is false. sequence counts the contract's pauses and resumes; app ignores a sequence it has already passed, so a retry that arrives after a later move cannot undo it, and a resume never reopens a project whose contract has ended. issuedAt (unix seconds) and nonce are the replay guard. The HMAC-SHA256 hex signature over the exact serialised bytes goes in the header named below, with the shared entitlement secret. Every key is always present, in this order. Change both copies in the same pull request or not at all.",
+  "secret": "shared-contract-fixture-secret",
+  "path": "/api/internal/marketplace/pause",
+  "header": "X-Marketplace-Pause-Signature",
+  "body": {
+    "contractId": "9f3d2c41-77b5-4a0e-9a2c-1d5e6b7c8a90",
+    "paused": true,
+    "sequence": 3,
+    "issuedAt": 1789517000,
+    "nonce": "8d4f1e27-6b93-4c05-a1d8-3e7f9b2c6a41"
+  },
+  "serialised": "{\"contractId\":\"9f3d2c41-77b5-4a0e-9a2c-1d5e6b7c8a90\",\"paused\":true,\"sequence\":3,\"issuedAt\":1789517000,\"nonce\":\"8d4f1e27-6b93-4c05-a1d8-3e7f9b2c6a41\"}",
+  "signature": "0fd93bb165f4d63582e0367bd0c9139e16fad110b8fa9e5b01ebf30a90b35283"
+}

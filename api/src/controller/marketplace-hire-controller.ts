@@ -15,6 +15,7 @@ import { MarketplaceEndDto } from '@/model/dto/marketplace-end'
 import { MarketplaceHireDto } from '@/model/dto/marketplace-hire'
 import { MarketplaceMilestoneInvoiceDto } from '@/model/dto/marketplace-milestone'
 import { IInvoiceMilestoneResult } from '@/model/invoice'
+import { MarketplacePauseDto } from '@/model/dto/marketplace-pause'
 import { EProjectState } from '@/model/project'
 import { ProjectRepository } from '@/repository/project-repository'
 import { UserRepository } from '@/repository/user-repository'
@@ -46,6 +47,15 @@ export interface IMarketplaceAmendResult {
   version: number
   /** Whether this call recorded it; false for a repeat of one already there. */
   applied: boolean
+}
+
+export interface IMarketplacePauseResult {
+  /** The project the contract opened; null when it never opened one. */
+  projectId: string | null
+  /** Whether the project takes no new time now. */
+  paused: boolean
+  /** Whether this call is the one that changed it. */
+  changed: boolean
 }
 
 /**
@@ -83,6 +93,13 @@ export class MarketplaceHireController {
    */
   public static readonly AMEND_SIGNATURE_HEADER =
     'X-Marketplace-Amend-Signature'
+
+  /**
+   * The pause's own header: an end closes a project for good and a pause
+   * only until a resume, so a captured one must not stand in for the other.
+   */
+  public static readonly PAUSE_SIGNATURE_HEADER =
+    'X-Marketplace-Pause-Signature'
 
   protected signature: EntitlementSignature
   protected projectRepository: ProjectRepository
@@ -233,7 +250,19 @@ export class MarketplaceHireController {
       return { projectId: null, closed: false }
     }
 
+    // Remembered even for a project a pause already closed, so a resume
+    // that was owed before the end and arrives after it reopens nothing.
+    const firstEnd = !project.marketplaceEndedAt
+
+    if (firstEnd) {
+      project.marketplaceEndedAt = new Date()
+    }
+
     if (project.state !== EProjectState.ACTIVE) {
+      if (firstEnd) {
+        await runPromise(this.projectRepository.saveSingle(project))
+      }
+
       return { projectId: project.id, closed: false }
     }
 
@@ -405,6 +434,78 @@ export class MarketplaceHireController {
       await repository.save(project)
 
       return { projectId: project.id, version: data.version, applied: true }
+    })
+  }
+
+  /**
+   * The client paused the contract, or resumed it. Paused, the project
+   * takes no new time exactly as it takes none once the contract ends -
+   * `findProjectForTimeTracking` only matches an ACTIVE project, so a
+   * `POST /time` row for it is refused on its own while every other row in
+   * the batch still lands. Resumed, it takes time again. Nothing already
+   * recorded is touched either way.
+   *
+   * Ordered by `sequence`: one this project has already passed is a 200
+   * that changes nothing, so a retry cannot undo a later move. A resume of
+   * a contract the marketplace has ended reopens nothing. Like the end, a
+   * contract with no project is a 200 with nothing to change - answering an
+   * error would leave the marketplace retrying for ever.
+   */
+  @HttpCode(200)
+  @Post('/marketplace/pause')
+  public async pause(
+    @Body() data: MarketplacePauseDto,
+    @Req() request: express.Request,
+  ): Promise<IMarketplacePauseResult> {
+    const signature =
+      request.header(MarketplaceHireController.PAUSE_SIGNATURE_HEADER) ?? ''
+
+    if (!this.signature.verify(JSON.stringify(data), signature)) {
+      throw new AuthenticationException('Invalid marketplace signature')
+    }
+
+    if (!this.signature.isWithinReplayWindow(data.issuedAt)) {
+      throw new AuthenticationException(
+        'Marketplace pause outside the replay window',
+      )
+    }
+
+    if (!(await this.signature.consumeNonce(data.nonce))) {
+      throw new AuthenticationException('Marketplace pause nonce already used')
+    }
+
+    // Under the project's row lock, so two moves arriving at once are
+    // ordered by their sequence rather than by which write lands last.
+    return getDataSource().transaction(async (manager) => {
+      const repository = manager.getRepository(Project)
+      const project = await repository.findOne({
+        where: { marketplaceContractId: data.contractId },
+        lock: { mode: 'pessimistic_write' },
+        loadEagerRelations: false,
+      })
+
+      if (!project) {
+        return { projectId: null, paused: data.paused, changed: false }
+      }
+
+      const paused = () => project.state !== EProjectState.ACTIVE
+
+      if ((project.marketplacePauseSequence ?? 0) >= data.sequence) {
+        return { projectId: project.id, paused: paused(), changed: false }
+      }
+
+      project.marketplacePauseSequence = data.sequence
+
+      const target =
+        data.paused || project.marketplaceEndedAt
+          ? EProjectState.INACTIVE
+          : EProjectState.ACTIVE
+      const changed = project.state !== target
+
+      project.state = target
+      await repository.save(project)
+
+      return { projectId: project.id, paused: paused(), changed }
     })
   }
 

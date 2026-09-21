@@ -165,6 +165,27 @@ export class Project extends AbstractBaseEntity implements IProject {
   marketplaceContractId?: string | null
 
   /**
+   * The last pause or resume of the marketplace contract this project
+   * applied, by the contract's own count of them; null until the first.
+   * A pause or resume with a number at or below it is one this project has
+   * already moved past, and changes nothing.
+   */
+  @Column('integer', { nullable: true })
+  @IsInt()
+  @IsOptional()
+  marketplacePauseSequence?: number | null
+
+  /**
+   * When the marketplace said the contract ended. A resume never reopens a
+   * project once this is set: a paused contract that was then ended stays
+   * closed, however late a resume that was owed before arrives.
+   */
+  @Column('timestamptz', { nullable: true })
+  @IsDate()
+  @IsOptional()
+  marketplaceEndedAt?: Date | null
+
+  /**
    * Every version of the marketplace contract's terms this project was told
    * about, oldest first; null for a project never amended, and for every
    * project created here directly.
