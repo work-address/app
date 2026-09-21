@@ -168,6 +168,31 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
   }
 
   /**
+   * The invoice billing a marketplace milestone, if one exists - soft-deleted
+   * ones included, since the unique index counts them too.
+   *
+   * Read inside the billing transaction so a retried push answers with the
+   * invoice the first push raised rather than inserting a second; the unique
+   * index on the entity is what catches two pushes that read at the same
+   * moment.
+   */
+  public findByMilestoneRef(milestoneRef: string): RepoEffect<Invoice | null> {
+    return fromPromise(() =>
+      this.getRepo().findOne({
+        where: { milestoneRef },
+        withDeleted: true,
+      }),
+    )
+  }
+
+  /** Whether an error is a unique index refusing a duplicate row. */
+  public static isUniqueViolation(error: unknown): boolean {
+    return (
+      (error as { code?: string }).code === InvoiceRepository.UNIQUE_VIOLATION
+    )
+  }
+
+  /**
    * Binds the invoice to an escrow allocation under a commitment, writing
    * only those columns.
    *
@@ -248,9 +273,7 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
 
   /** Whether an error is the unique key above refusing a duplicate row. */
   public static isDuplicatePeriod(error: unknown): boolean {
-    return (
-      (error as { code?: string }).code === InvoiceRepository.UNIQUE_VIOLATION
-    )
+    return InvoiceRepository.isUniqueViolation(error)
   }
 
   public findAndCount(

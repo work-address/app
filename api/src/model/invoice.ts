@@ -37,11 +37,37 @@ export enum EInvoiceEscrowState {
  * is what makes "one invoice per project, issuer and period" enforceable in
  * the database (see `Invoice`'s unique key).
  *
+ * `MILESTONE` is the marketplace's signed internal call billing an agreed
+ * milestone: neither a person here nor this project's cadence raised it, and
+ * it carries a `milestoneRef` rather than a cadence period.
+ *
  * Null on invoices issued before this was recorded; they were all manual.
  */
 export enum EInvoiceIssuanceKind {
   MANUAL = 'MANUAL',
   SCHEDULED = 'SCHEDULED',
+  MILESTONE = 'MILESTONE',
+}
+
+/**
+ * What an invoice charges for.
+ *
+ * `HOURLY` is the original and only basis until now: tracked entries at the
+ * project's rate, and the amount is their active minutes priced by it. Every
+ * invoice issued before this column existed is hourly, which is why the
+ * column defaults to it.
+ *
+ * `FIXED` bills an agreed sum for a named piece of work - a marketplace
+ * milestone - and has no tracked entries behind it at all. The alternative
+ * was to fabricate Time rows adding up to the sum, which would have put
+ * hours nobody worked into the work record and made `Time` lie to keep
+ * `Invoice` simple. A fixed invoice therefore carries no rate and no lines,
+ * and says in `description` what it is billing for; nothing may read an
+ * hourly rate off it.
+ */
+export enum EInvoiceBasis {
+  HOURLY = 'HOURLY',
+  FIXED = 'FIXED',
 }
 
 /** The only currency an invoice is issued in, named so the record says so. */
@@ -92,6 +118,12 @@ export interface IInvoiceLine {
  * null rather than today's project rate; its minutes come from the entries it
  * links, as they always did.
  *
+ * A FIXED invoice has no rate either, and no minutes: it bills an agreed sum
+ * for a named piece of work, so every counter here is zero and `rateHour` and
+ * `rateTotal` are null. Reading a rate off it - `amountCents` divided by the
+ * minutes it does not have - would be a figure nobody agreed to, and on zero
+ * minutes not a figure at all.
+ *
  * Never the amount owed: that is the invoice's stored `amountCents`.
  */
 export interface IInvoiceReport {
@@ -104,6 +136,33 @@ export interface IInvoiceReport {
   keyboardKeys: number
   mouseKeys: number
   mouseDistance: number
+}
+
+/**
+ * An agreed milestone the marketplace is billing, as its signed internal call
+ * pushes it.
+ *
+ * `milestoneRef` is the marketplace's own id for the piece of work and the
+ * idempotency key: the same reference pushed again answers with the invoice
+ * the first push raised. `amountCents` is the sum both sides agreed, in whole
+ * cents, and `description` is what it is for - a fixed invoice has no lines,
+ * so without it the bill would be a number with nothing behind it.
+ * `workStart`/`workEnd` are the milestone's period in unix seconds; they
+ * become the invoice's own period, which is what an escrow allocation for
+ * that period is checked against.
+ */
+export interface IInvoiceMilestoneBill {
+  milestoneRef: string
+  amountCents: number
+  description: string
+  workStart: number
+  workEnd: number
+}
+
+/** What billing a milestone did: the invoice, and whether this call raised it. */
+export interface IInvoiceMilestoneResult {
+  invoiceId: string
+  created: boolean
 }
 
 /**
@@ -128,6 +187,13 @@ export interface IInvoiceRecord {
   periodStart: string
   periodEnd: string
   lines: IInvoiceLine[]
+  /**
+   * Present only on a FIXED invoice, with the two fields that say what it
+   * bills: an hourly record never carries them, so its bytes are unchanged.
+   */
+  basis?: EInvoiceBasis.FIXED
+  milestoneRef?: string
+  description?: string
 }
 
 /**

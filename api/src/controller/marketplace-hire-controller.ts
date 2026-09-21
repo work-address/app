@@ -13,9 +13,12 @@ import { App } from '@/app/app'
 import { Project } from '@/entity/project'
 import { MarketplaceEndDto } from '@/model/dto/marketplace-end'
 import { MarketplaceHireDto } from '@/model/dto/marketplace-hire'
+import { MarketplaceMilestoneInvoiceDto } from '@/model/dto/marketplace-milestone'
+import { IInvoiceMilestoneResult } from '@/model/invoice'
 import { EProjectState } from '@/model/project'
 import { ProjectRepository } from '@/repository/project-repository'
 import { UserRepository } from '@/repository/user-repository'
+import { InvoiceManager } from '@/service/invoice-manager'
 import { ProjectManager } from '@/service/project-manager'
 import { EntitlementSignature } from '@/service/entitlement-signature'
 import { WalletAddress } from '@/service/wallet-address'
@@ -56,16 +59,25 @@ export class MarketplaceHireController {
    */
   public static readonly END_SIGNATURE_HEADER = 'X-Marketplace-End-Signature'
 
+  /**
+   * The milestone bill's own header, for the same reason again: a captured
+   * hire must not be replayable as a bill.
+   */
+  public static readonly MILESTONE_SIGNATURE_HEADER =
+    'X-Marketplace-Milestone-Signature'
+
   protected signature: EntitlementSignature
   protected projectRepository: ProjectRepository
   protected userRepository: UserRepository
   protected projectManager: ProjectManager
+  protected invoiceManager: InvoiceManager
 
   constructor() {
     this.signature = App.container.get('EntitlementSignature')
     this.projectRepository = App.container.get('ProjectRepository')
     this.userRepository = App.container.get('UserRepository')
     this.projectManager = App.container.get('ProjectManager')
+    this.invoiceManager = App.container.get('InvoiceManager')
   }
 
   @HttpCode(200)
@@ -210,6 +222,83 @@ export class MarketplaceHireController {
     await runPromise(this.projectManager.close(project))
 
     return { projectId: project.id, closed: true }
+  }
+
+  /**
+   * A milestone both sides agreed was delivered: raise the FIXED invoice that
+   * bills it, on the project the contract opened (MS-03).
+   *
+   * There is no Settlement and no Allocation entity here, and this call
+   * creates neither: app has five domains, and what it writes is an
+   * `Invoice` row and nothing else. Paying it is the escrow's business, as it
+   * is for an hourly invoice - the worker submits a commitment and the
+   * marketplace pushes the confirmed outcome back to
+   * `/internal/marketplace/settlement`.
+   *
+   * Authenticated exactly like the hire and the end, under its own header.
+   * Idempotent twice over: the nonce refuses a replayed call, and beneath
+   * that `milestoneRef` refuses a second invoice for the same milestone, so a
+   * push signed afresh after a timeout answers with the first invoice rather
+   * than billing the sum again.
+   *
+   * A contract with no project here, or a freelancer this instance does not
+   * know, is a 409 rather than a quiet non-result: the two services are
+   * misconfigured, and no retry will help.
+   */
+  @HttpCode(200)
+  @Post('/marketplace/milestone-invoice')
+  public async milestoneInvoice(
+    @Body() data: MarketplaceMilestoneInvoiceDto,
+    @Req() request: express.Request,
+  ): Promise<IInvoiceMilestoneResult> {
+    const signature =
+      request.header(MarketplaceHireController.MILESTONE_SIGNATURE_HEADER) ?? ''
+
+    if (!this.signature.verify(JSON.stringify(data), signature)) {
+      throw new AuthenticationException('Invalid marketplace signature')
+    }
+
+    if (!this.signature.isWithinReplayWindow(data.issuedAt)) {
+      throw new AuthenticationException(
+        'Marketplace milestone outside the replay window',
+      )
+    }
+
+    if (!(await this.signature.consumeNonce(data.nonce))) {
+      throw new AuthenticationException(
+        'Marketplace milestone nonce already used',
+      )
+    }
+
+    const project = await this.findForContract(data.contractId)
+
+    if (!project) {
+      throw new HttpError(
+        409,
+        `No project on this instance was opened for contract ${data.contractId}`,
+      )
+    }
+
+    const freelancer = await runPromise(
+      this.userRepository.findOneBy({ where: { id: data.freelancerId } }),
+    )
+
+    if (!freelancer) {
+      throw new HttpError(
+        409,
+        'The freelancer account is not known to this instance',
+      )
+    }
+
+    return runPromise(
+      this.invoiceManager.billMilestone(project, freelancer, {
+        milestoneRef: data.milestoneRef,
+        amountCents: data.amountCents,
+        description: data.description,
+        workStart: data.workStart,
+        workEnd: data.workEnd,
+      }),
+    )
   }
 
   private findForContract(contractId: string): Promise<Project | null> {

@@ -16,6 +16,7 @@ import {
   IsString,
 } from 'class-validator'
 import {
+  EInvoiceBasis,
   EInvoiceCurrency,
   EInvoiceEscrowState,
   EInvoiceIssuanceKind,
@@ -62,6 +63,16 @@ import type { Time } from '@/entity/time'
   'periodEnd',
   'issuanceKind',
 ])
+// A marketplace milestone is billed once. The reference is the marketplace's
+// own id for the agreed piece of work, so it is unique across this instance
+// and the index is global, exactly like the escrow allocation's above: a
+// retried push, or two pushes racing, insert the second row and Postgres
+// refuses it. Every invoice that is not a milestone carries null here, and a
+// unique index does not compare nulls, so they are all distinct from each
+// other and from every milestone invoice. Squatting is not a risk the way it
+// is for an allocation id: only the signed internal route ever writes this
+// column, and a person cannot reach it.
+@Index('UQ_invoice_milestone_ref', ['milestoneRef'], { unique: true })
 export class Invoice extends AbstractBaseEntity {
   @Expose({ groups: ['search'] })
   @Type(() => Project)
@@ -125,6 +136,55 @@ export class Invoice extends AbstractBaseEntity {
   @IsDate()
   @IsOptional()
   periodEnd?: Date | null
+
+  /**
+   * What this invoice charges for: tracked hours at a rate, or an agreed sum
+   * (`EInvoiceBasis`).
+   *
+   * Not null, and defaulted rather than backfilled: every invoice that
+   * existed before this column did bills tracked hours, so the column's own
+   * `DEFAULT 'HOURLY'` is the whole migration and no row is left undecided.
+   * Written once with the rest of the snapshot - what an invoice bills on is
+   * not something a later edit may change.
+   */
+  @Expose({ groups: ['search'] })
+  @Column({
+    type: 'text',
+    nullable: false,
+    default: EInvoiceBasis.HOURLY,
+    update: false,
+  })
+  @IsEnum(EInvoiceBasis)
+  basis: EInvoiceBasis
+
+  /**
+   * The marketplace milestone this invoice bills, as the marketplace names
+   * it. Null on every invoice that is not a milestone bill, which is what
+   * keeps the unique index above from comparing them.
+   *
+   * Written once: moving a bill to another milestone would let one agreed sum
+   * be billed twice.
+   */
+  @Expose({ groups: ['search'] })
+  @Column({ type: 'text', nullable: true, update: false })
+  @IsString()
+  @IsOptional()
+  milestoneRef?: string | null
+
+  /**
+   * What the invoice is billing for, in the words the parties agreed.
+   *
+   * An hourly invoice answers that with its lines - the entries, their spans
+   * and their notes. A FIXED one has no lines, so without this it would be a
+   * sum with nothing behind it: required at issuance for that basis, and part
+   * of the snapshot, so the deliverable being renamed afterwards does not
+   * rewrite what was billed.
+   */
+  @Expose({ groups: ['search'] })
+  @Column({ type: 'text', nullable: true, update: false })
+  @IsString()
+  @IsOptional()
+  description?: string | null
 
   /**
    * Whole cents, never dollars.

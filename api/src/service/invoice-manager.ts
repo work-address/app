@@ -13,6 +13,7 @@ import { Time } from '@/entity/time'
 import { TimeRepository } from '@/repository/time-repository'
 import { User } from '@/entity/user'
 import {
+  EInvoiceBasis,
   EInvoiceCurrency,
   EInvoiceEscrowState,
   EInvoiceIssuanceKind,
@@ -24,6 +25,8 @@ import {
   IInvoiceEscrowSubmission,
   IInvoiceEscrowSubmissionRequest,
   IInvoiceLine,
+  IInvoiceMilestoneBill,
+  IInvoiceMilestoneResult,
   IInvoiceRecord,
   IInvoiceReport,
 } from '@/model/invoice'
@@ -341,6 +344,22 @@ export class InvoiceManager {
       mouseDistance: sum((time) => time.mouseDistance),
     }
 
+    // A fixed invoice bills an agreed sum, not hours: it has no rate and no
+    // lines, so there is nothing to divide and nothing to total. Reported as
+    // the zeroes and nulls it is, ahead of the snapshot branch below, whose
+    // arithmetic would otherwise read a rate of zero as a rate.
+    if (invoice.basis === EInvoiceBasis.FIXED) {
+      return {
+        rateHour: null,
+        rateTotal: null,
+        minutes: 0,
+        minutesActive: 0,
+        minutesPaid: 0,
+        minutesUnpaid: 0,
+        ...activity,
+      }
+    }
+
     if (
       invoice.snapshotVersion === EInvoiceSnapshotVersion.V1 &&
       invoice.lines
@@ -529,6 +548,131 @@ export class InvoiceManager {
   }
 
   /**
+   * Bills an agreed milestone: a FIXED invoice for a sum, with no tracked
+   * entries behind it (MS-03).
+   *
+   * The alternative was to fabricate Time rows summing to the agreed price.
+   * That would have put hours nobody worked into the work record, and
+   * `Time` is the only record of work (SPEC.md) - so a fixed bill carries no
+   * lines, no rate and no minutes, and says in `description` what it is for.
+   * Every other snapshot rule is unchanged (DEC-04): the addresses, the
+   * currency and the amount are frozen in the insert and never updated, so
+   * the invoice explains its own total.
+   *
+   * Idempotent on `milestoneRef`: the reference is looked up inside the
+   * transaction and the invoice the first push raised is returned unchanged,
+   * and two pushes racing are caught by the unique index, where the loser
+   * reads the winner's row instead of failing. Neither answers `created`.
+   *
+   * The issuer must be a worker on the project and not its owner: the
+   * milestone is the hired freelancer's to bill, and the client is the payer.
+   */
+  public billMilestone(
+    project: Project,
+    issuer: User,
+    bill: IInvoiceMilestoneBill,
+  ): RepoEffect<IInvoiceMilestoneResult> {
+    return Effect.gen(this, function* () {
+      const accessible = yield* this.assertCanInvoice(project, issuer)
+
+      if (accessible.isOwner(issuer)) {
+        return yield* Effect.fail(
+          new AccessException(
+            'A milestone is billed by the hired worker, not by the client who pays it',
+          ),
+        )
+      }
+
+      if (!Number.isSafeInteger(bill.amountCents) || bill.amountCents <= 0) {
+        return yield* Effect.fail(
+          new BadRequestError('A milestone bills a whole number of cents'),
+        )
+      }
+
+      const fromAt = new Date(bill.workStart * 1000)
+      const toAt = new Date(bill.workEnd * 1000)
+
+      if (fromAt >= toAt) {
+        return yield* Effect.fail(
+          new BadRequestError('The milestone period ends before it starts'),
+        )
+      }
+
+      return yield* this.unitOfWork
+        .run((manager) =>
+          Effect.gen(this, function* () {
+            const already = yield* this.invoiceRepository
+              .within(manager)
+              .findByMilestoneRef(bill.milestoneRef)
+
+            if (already) {
+              return { invoiceId: already.id, created: false }
+            }
+
+            const invoice = new Invoice()
+
+            invoice.project = accessible
+            invoice.user = issuer
+            invoice.fromAt = fromAt
+            invoice.toAt = toAt
+            invoice.basis = EInvoiceBasis.FIXED
+            invoice.milestoneRef = bill.milestoneRef
+            invoice.description = bill.description
+            invoice.snapshotVersion = EInvoiceSnapshotVersion.V1
+            invoice.issuerAddress = WalletAddress.toCanonical(issuer.address)
+            invoice.ownerAddress = WalletAddress.toCanonical(
+              accessible.user.address,
+            )
+            invoice.currency = EInvoiceCurrency.USD
+            // No hours behind it: zero minutes, no lines, and a stored rate
+            // of zero - never one derived by dividing the sum by minutes that
+            // do not exist. Zero rather than null because InvoiceRecord v1
+            // carries these as integers; the record says `basis: FIXED`
+            // beside them, and `reportFor` reads the basis and reports no
+            // rate at all.
+            invoice.rateHourCents = 0
+            invoice.minutesActive = 0
+            invoice.lines = []
+            invoice.amountCents = bill.amountCents
+            invoice.state = EInvoiceState.REQUESTED
+            invoice.paidAt = null
+            invoice.issuanceKind = EInvoiceIssuanceKind.MILESTONE
+            // A milestone is not a cadence period, so the scheduled key never
+            // compares it with anything.
+            invoice.periodStart = null
+            invoice.periodEnd = null
+
+            const saved = yield* this.invoiceRepository
+              .within(manager)
+              .validateAndSave(invoice)
+
+            return { invoiceId: saved.id, created: true }
+          }),
+        )
+        .pipe(
+          // The unique index refusing the row means another push got there
+          // first, which is the answer, not a failure.
+          Effect.catchAll((error) =>
+            InvoiceRepository.isUniqueViolation(error)
+              ? this.invoiceRepository
+                  .findByMilestoneRef(bill.milestoneRef)
+                  .pipe(
+                    Effect.flatMap((winner) =>
+                      winner
+                        ? Effect.succeed({
+                            invoiceId: winner.id,
+                            created: false,
+                          })
+                        : Effect.fail(error),
+                    ),
+                  )
+              : Effect.fail(error),
+          ),
+        )
+    })
+  }
+
+  /**
    * Saves the invoice with its financial snapshot and links the entries it
    * bills, inside the caller's transaction.
    *
@@ -563,6 +707,9 @@ export class InvoiceManager {
       invoice.user = author
       invoice.fromAt = period.fromAt
       invoice.toAt = period.toAt
+      // Stated rather than left to the column default: this path prices
+      // tracked entries by the project's rate, which is what HOURLY means.
+      invoice.basis = EInvoiceBasis.HOURLY
       invoice.snapshotVersion = EInvoiceSnapshotVersion.V1
       invoice.issuerAddress = WalletAddress.toCanonical(author.address)
       invoice.ownerAddress = WalletAddress.toCanonical(project.user.address)
