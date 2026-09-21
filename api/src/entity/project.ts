@@ -26,9 +26,11 @@ import { Time } from '@/entity/time'
 import {
   IInvoiceCadenceConsent,
   IInvoiceCadenceVersion,
+  IMarketplaceTermsVersion,
   IProject,
 } from '@/model/project'
 import { InvoiceCadence } from '@/service/invoice-cadence'
+import { MarketplaceTerms } from '@/service/marketplace-terms'
 
 // Access lists are unnested on every access check, so they stay bounded.
 // Addresses are free-form strings (a wallet may not have an account yet),
@@ -161,6 +163,27 @@ export class Project extends AbstractBaseEntity implements IProject {
   @IsString()
   @IsOptional()
   marketplaceContractId?: string | null
+
+  /**
+   * Every version of the marketplace contract's terms this project was told
+   * about, oldest first; null for a project never amended, and for every
+   * project created here directly.
+   *
+   * A jsonb array rather than a table for the reason the cadence below is
+   * one (five domains, SPEC.md). Versioned rather than overwritten because
+   * an amendment changes the rate from a date, not backwards: hours worked
+   * before it keep the rate agreed for them whenever they are invoiced
+   * (`MarketplaceTerms.billable`). The columns above - rate, cap, flags -
+   * always hold the newest version, which is what the tracker applies now.
+   *
+   * Not `@Expose`d: it is the pricing history of a hire, and only the
+   * signed marketplace call writes it.
+   */
+  @Column('jsonb', { nullable: true })
+  @IsArray()
+  @ArrayMaxSize(MarketplaceTerms.MAX_VERSIONS)
+  @IsOptional()
+  marketplaceTerms?: IMarketplaceTermsVersion[] | null
 
   /**
    * The project's invoicing cadence, every version of it, oldest first.

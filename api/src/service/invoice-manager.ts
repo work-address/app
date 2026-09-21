@@ -36,6 +36,7 @@ import { Calc } from '@/service/calc'
 import { InvoiceCommitment } from '@/service/invoice-commitment'
 import { InvoiceEscrow } from '@/service/invoice-escrow'
 import { InvoiceRecord } from '@/service/invoice-record'
+import { MarketplaceTerms } from '@/service/marketplace-terms'
 import { WalletAddress } from '@/service/wallet-address'
 import { UnitOfWork } from '@/service/unit-of-work'
 import AccessException from '@/exception/access-exception'
@@ -484,10 +485,21 @@ export class InvoiceManager {
             )
           }
 
-          return yield* this.issue(manager, accessible, author, times, {
-            fromAt,
-            toAt,
-          })
+          // Hours under a later agreed rate wait for the next invoice, and
+          // the period this one names stops where that rate starts.
+          const billable = MarketplaceTerms.billable(accessible, times)
+
+          return yield* this.issue(
+            manager,
+            accessible,
+            author,
+            billable.times,
+            {
+              fromAt,
+              toAt:
+                billable.until && billable.until < toAt ? billable.until : toAt,
+            },
+          )
         }),
       )
     })
@@ -529,6 +541,18 @@ export class InvoiceManager {
             return yield* Effect.fail(
               new BadRequestError(
                 'Some of the selected entries are not yours, already paid, or already on an invoice',
+              ),
+            )
+          }
+
+          // One invoice, one rate: a hand-picked selection that spans a
+          // change of agreed terms is refused rather than silently split.
+          const billable = MarketplaceTerms.billable(accessible, times)
+
+          if (billable.times.length !== times.length) {
+            return yield* Effect.fail(
+              new BadRequestError(
+                `These entries fall under two agreed rates; the terms changed at ${billable.until?.toISOString()}. Invoice the earlier ones first`,
               ),
             )
           }
@@ -816,7 +840,21 @@ export class InvoiceManager {
         (sum, line) => sum + line.minutesActive,
         0,
       )
-      const rateHourCents = Calc.rateHourCents(project.rateHour)
+      const billable = MarketplaceTerms.billable(project, times)
+
+      // Every caller narrows to one version first; this is the guarantee.
+      if (billable.times.length !== times.length) {
+        return yield* Effect.fail(
+          new BadRequestError(
+            'One invoice cannot bill hours agreed at two different rates',
+          ),
+        )
+      }
+
+      // The rate the hours were agreed at: the project's own, or - on a
+      // marketplace project whose terms were amended - the version in force
+      // when they were worked, even if a later one applies now.
+      const rateHourCents = Calc.rateHourCents(billable.rateHour)
 
       invoice.project = project
       invoice.user = author
@@ -1150,7 +1188,10 @@ export class InvoiceManager {
    * - **The rate is the rate at issuance.** The snapshot is written from the
    *   project as it stands, exactly as a manual invoice's is (DEC-04), so an
    *   owner who changes the rate changes only periods issued after the
-   *   change - the invoice already raised keeps what it froze.
+   *   change - the invoice already raised keeps what it froze. The one
+   *   exception is a marketplace amendment, which is agreed from a date:
+   *   hours worked before it keep the rate agreed for them, and hours on
+   *   either side of it never share an invoice (`MarketplaceTerms`).
    *
    * The issuer must still be a worker on the project: consent persists, but
    * somebody taken off the project is no longer billing for it.
@@ -1191,12 +1232,16 @@ export class InvoiceManager {
               return { invoice: null, created: false }
             }
 
+            // Hours under a later agreed rate move to the next period's
+            // invoice, the way late time already does.
+            const billed = MarketplaceTerms.billable(accessible, times).times
+
             const invoice = yield* this.issue(
               manager,
               accessible,
               issuer,
-              times,
-              InvoiceManager.spanOf(times),
+              billed,
+              InvoiceManager.spanOf(billed),
               bounds,
             )
 
@@ -1224,7 +1269,10 @@ export class InvoiceManager {
    * Idempotent by construction: outstanding time is *unpaid and not already
    * covered by one of the caller's invoices*, so a second call finds nothing
    * left and raises nothing. Existing invoices are never touched or merged -
-   * each one stays the frozen record of the period it was raised for.
+   * each one stays the frozen record of the period it was raised for. On a
+   * marketplace project whose agreed rate changed while hours were
+   * outstanding, one call bills up to the change and the next the rest,
+   * because one invoice has one rate.
    *
    * The period spans the outstanding entries themselves rather than "now minus
    * a month", so an invoice covers exactly what it bills for and the overlap
@@ -1254,12 +1302,19 @@ export class InvoiceManager {
               .findLatestForAuthor(accessible, author)
           }
 
+          // Up to the next change of agreed rate: the hours after it are the
+          // next invoice's, which the next call raises.
+          const billed = MarketplaceTerms.billable(
+            accessible,
+            outstanding,
+          ).times
+
           return yield* this.issue(
             manager,
             accessible,
             author,
-            outstanding,
-            InvoiceManager.spanOf(outstanding),
+            billed,
+            InvoiceManager.spanOf(billed),
           )
         }),
       )

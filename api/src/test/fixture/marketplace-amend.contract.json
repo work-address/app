@@ -1,0 +1,19 @@
+{
+  "note": "Cross-repo contract for an amendment of a running marketplace contract (web WP-85, app WP-85). This file is duplicated byte-for-byte in work-address/web (api/src/test/fixture) and work-address/app (api/src/test/fixture); they are separate repositories, so each owns a copy. web asserts HireClient PRODUCES these bytes, this header and this signature from an accepted JobContractAmendment; app asserts its MarketplaceAmendDto re-serialises to exactly them and that the controller ACCEPTS them. The body is one agreed version of the contract's terms, sent when it takes effect: contractId is the key the hire opened the project under, version the contract's terms version this makes current (2 for the first amendment), effectiveFrom the unix second the new terms apply from - a contract-week boundary, never inside a period escrow already holds money for - and rateHour, weeklyLimit, trackScreenshots and trackProcesses the terms of that version (rateHour 0 and weeklyLimit null for fixed-price work). app keeps every version it is told about on the same project, so hours worked before effectiveFrom are still priced at the rate agreed for them whenever they are invoiced, and an invoice already issued is never touched. issuedAt (unix seconds) and nonce are the replay guard. The HMAC-SHA256 hex signature over the exact serialised bytes goes in the header named below, with the shared entitlement secret. Every key is always present, in this order. Change both copies in the same pull request or not at all.",
+  "secret": "shared-contract-fixture-secret",
+  "path": "/api/internal/marketplace/amend",
+  "header": "X-Marketplace-Amend-Signature",
+  "body": {
+    "contractId": "9f3d2c41-77b5-4a0e-9a2c-1d5e6b7c8a90",
+    "version": 2,
+    "effectiveFrom": 1789430400,
+    "rateHour": 55,
+    "weeklyLimit": 25,
+    "trackScreenshots": false,
+    "trackProcesses": true,
+    "issuedAt": 1789430460,
+    "nonce": "2e7b9c14-5d3a-4f86-b0e1-7a9c3d5f2b68"
+  },
+  "serialised": "{\"contractId\":\"9f3d2c41-77b5-4a0e-9a2c-1d5e6b7c8a90\",\"version\":2,\"effectiveFrom\":1789430400,\"rateHour\":55,\"weeklyLimit\":25,\"trackScreenshots\":false,\"trackProcesses\":true,\"issuedAt\":1789430460,\"nonce\":\"2e7b9c14-5d3a-4f86-b0e1-7a9c3d5f2b68\"}",
+  "signature": "01a5bf86a9cc9eb1fcb97854770d6b6ec238b8e604bacc5d94c6b5891ba258e1"
+}

@@ -24,6 +24,9 @@ import { EntitlementSignature } from '@/service/entitlement-signature'
 import { WalletAddress } from '@/service/wallet-address'
 import { runPromise } from '@/service/effect-bridge'
 import AuthenticationException from '@/exception/authentication-exception'
+import { getDataSource } from '@/connector/data-source'
+import { MarketplaceAmendDto } from '@/model/dto/marketplace-amend'
+import { MarketplaceTerms } from '@/service/marketplace-terms'
 
 export interface IMarketplaceHireResult {
   projectId: string | null
@@ -35,6 +38,14 @@ export interface IMarketplaceEndResult {
   projectId: string | null
   /** Whether this call is the one that closed it. */
   closed: boolean
+}
+
+export interface IMarketplaceAmendResult {
+  projectId: string
+  /** The terms version the project now knows about. */
+  version: number
+  /** Whether this call recorded it; false for a repeat of one already there. */
+  applied: boolean
 }
 
 /**
@@ -65,6 +76,13 @@ export class MarketplaceHireController {
    */
   public static readonly MILESTONE_SIGNATURE_HEADER =
     'X-Marketplace-Milestone-Signature'
+
+  /**
+   * The amendment's own header: a captured hire or end must not be
+   * replayable as a change of rate, nor the other way round.
+   */
+  public static readonly AMEND_SIGNATURE_HEADER =
+    'X-Marketplace-Amend-Signature'
 
   protected signature: EntitlementSignature
   protected projectRepository: ProjectRepository
@@ -299,6 +317,95 @@ export class MarketplaceHireController {
         workEnd: data.workEnd,
       }),
     )
+  }
+
+  /**
+   * Both sides agreed a new version of the contract's terms and it has
+   * taken effect: the same project takes the new rate, weekly cap and
+   * monitoring from `effectiveFrom`.
+   *
+   * Nothing already recorded is rewritten. An invoice already issued keeps
+   * the rate it froze (DEC-04), and hours worked before `effectiveFrom`
+   * keep the rate agreed for them even when invoiced later, because the
+   * project keeps every version in `marketplaceTerms` and invoicing reads
+   * the one each hour was worked under. The rate, cap and flags on the
+   * project are the newest version's: what the tracker applies from now.
+   *
+   * A repeat of a version already recorded is a 200 that changes nothing
+   * (the marketplace retries after a lost answer); the same version with
+   * other terms, or one that starts out of order, is a 409. A contract with
+   * no project is a 404: the marketplace only sends an amendment once the
+   * hire opened one, so that means the two sides disagree about the hire.
+   */
+  @HttpCode(200)
+  @Post('/marketplace/amend')
+  public async amend(
+    @Body() data: MarketplaceAmendDto,
+    @Req() request: express.Request,
+  ): Promise<IMarketplaceAmendResult> {
+    const signature =
+      request.header(MarketplaceHireController.AMEND_SIGNATURE_HEADER) ?? ''
+
+    if (!this.signature.verify(JSON.stringify(data), signature)) {
+      throw new AuthenticationException('Invalid marketplace signature')
+    }
+
+    if (!this.signature.isWithinReplayWindow(data.issuedAt)) {
+      throw new AuthenticationException(
+        'Marketplace amendment outside the replay window',
+      )
+    }
+
+    if (!(await this.signature.consumeNonce(data.nonce))) {
+      throw new AuthenticationException(
+        'Marketplace amendment nonce already used',
+      )
+    }
+
+    // Under the project's row lock: two versions arriving at once would
+    // otherwise each read the trail without the other and one would be lost.
+    return getDataSource().transaction(async (manager) => {
+      const repository = manager.getRepository(Project)
+      const project = await repository.findOne({
+        where: { marketplaceContractId: data.contractId },
+        lock: { mode: 'pessimistic_write' },
+        loadEagerRelations: false,
+      })
+
+      if (!project) {
+        throw new HttpError(404, 'No project was opened for this contract')
+      }
+
+      const recorded = MarketplaceTerms.record(project, {
+        version: data.version,
+        effectiveFrom: new Date(data.effectiveFrom * 1000).toISOString(),
+        rateHour: data.rateHour,
+        weeklyLimit: data.weeklyLimit ?? null,
+        trackScreenshots: data.trackScreenshots,
+        trackProcesses: data.trackProcesses,
+      })
+
+      if ('conflict' in recorded) {
+        throw new HttpError(409, recorded.conflict)
+      }
+
+      if (!recorded.changed) {
+        return { projectId: project.id, version: data.version, applied: false }
+      }
+
+      project.marketplaceTerms = recorded.versions
+
+      if (recorded.latest) {
+        project.rateHour = data.rateHour
+        project.weeklyLimit = data.weeklyLimit ?? null
+        project.trackScreenshots = data.trackScreenshots
+        project.trackProcesses = data.trackProcesses
+      }
+
+      await repository.save(project)
+
+      return { projectId: project.id, version: data.version, applied: true }
+    })
   }
 
   private findForContract(contractId: string): Promise<Project | null> {

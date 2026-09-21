@@ -90,6 +90,29 @@ export interface IInvoiceCadenceView {
   canEdit: boolean
 }
 
+/**
+ * One agreed version of a marketplace contract's terms, as the marketplace
+ * told this project about it.
+ *
+ * Versioned rather than overwritten, like the invoicing cadence and for the
+ * same reason: hours worked under one version keep that version's rate
+ * whenever they are invoiced. `effectiveFrom` is when the version starts
+ * governing; the one in force at an instant is the latest whose
+ * `effectiveFrom` is at or before it. The first entry, recorded when the
+ * first amendment arrives, is the terms the project was hired on and has
+ * no start (null): it governs everything before the next.
+ */
+export interface IMarketplaceTermsVersion {
+  /** The marketplace contract's terms version. */
+  version: number
+  /** ISO-8601 UTC instant it applies from; null for the terms as hired. */
+  effectiveFrom: string | null
+  rateHour: number
+  weeklyLimit: number | null
+  trackScreenshots: boolean
+  trackProcesses: boolean
+}
+
 export interface IProject {
   id?: string
   title: string
