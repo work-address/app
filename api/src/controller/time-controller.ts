@@ -28,7 +28,8 @@ import {
 } from '@/model/dto/time'
 import { Time } from '@/entity/time'
 import { EntityFromParam } from '@/decorator/entity-from-param'
-import { ITimeInsertionResult } from '@/model/time'
+import { IRetentionNotice, ITimeInsertionResult } from '@/model/time'
+import { RetentionJob } from '@/service/retention-job'
 import { Project } from '@/entity/project'
 import AccessException from '@/exception/access-exception'
 import express from 'express'
@@ -41,8 +42,10 @@ export class TimeController {
   protected timeManager: TimeManager
   protected timeRepository: TimeRepository
   protected projectRepository: ProjectRepository
+  protected retentionJob: RetentionJob
 
   constructor() {
+    this.retentionJob = App.container.get('RetentionJob')
     this.timeManager = App.container.get('TimeManager')
     this.timeRepository = App.container.get('TimeRepository')
     this.projectRepository = App.container.get('ProjectRepository')
@@ -302,6 +305,36 @@ export class TimeController {
 
     res.end()
     return res
+  }
+
+  /**
+   * Declared before `GET /:id`, which would otherwise take
+   * 'retention-notice' for an id.
+   */
+  @OpenAPIExtended({
+    summary:
+      "What rotates out of the caller's free history within the notice lead time, and when the first of it can go (count 0 and rotatesAt null when nothing is due, on premium, and on self-host)",
+    response: {
+      schema: null,
+      options: {
+        inlineSchema: {
+          type: 'object',
+          properties: {
+            count: { type: 'integer' },
+            rotatesAt: { type: 'string', nullable: true },
+            windowDays: { type: 'integer' },
+            noticeDays: { type: 'integer' },
+          },
+          required: ['count', 'rotatesAt', 'windowDays', 'noticeDays'],
+        },
+      },
+    },
+  })
+  @Get('/retention-notice')
+  public retentionNotice(
+    @CurrentUser() currentUser: User,
+  ): Promise<IRetentionNotice> {
+    return runPromise(this.retentionJob.notice(currentUser))
   }
 
   @OpenAPIExtended({

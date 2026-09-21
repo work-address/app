@@ -21,6 +21,7 @@ import {
   DashboardApplicationsUsage,
   DashboardPremiumBanner,
   DashboardProjectsSearchInput,
+  DashboardRetentionNotice,
   DashboardSummary,
 } from '@/features/dashboard'
 import { ProjectsCreateModal, ProjectsTable } from '@/features/projects'
@@ -125,6 +126,7 @@ export default function DashboardPage() {
       />
       <Wrapper>
         <DashboardPremiumBanner />
+        <DashboardRetentionNotice />
         {/* The page reads top-down: the headline figures, then the projects
             they come from beside the app breakdown, then the worklog feed. */}
         {/* The intro's hero already reads "Dashboard", so the page title only

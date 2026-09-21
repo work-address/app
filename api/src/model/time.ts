@@ -119,3 +119,30 @@ export interface ITimeAuthorKeyAudit {
    */
   sharedSlices: ITimeSliceGroup[]
 }
+
+/** What one daily retention run did, for the log and for the tests. */
+export interface IRetentionReport {
+  /** Free owners with history due to rotate. */
+  owners: number
+  /** Owners whose notice this run started; nothing of theirs rotated yet. */
+  noticed: number
+  /** Entries removed from view this run. */
+  rotated: number
+  /** Notices ended because the owner is premium again. */
+  cleared: number
+}
+
+/**
+ * GET /time/retention-notice: what rotates out of the caller's history soon,
+ * shown on the dashboard before it happens (DEC-05).
+ */
+export interface IRetentionNotice {
+  /** Entries that will be old enough to rotate within `noticeDays`. */
+  count: number
+  /** ISO instant the first of them can go; null when nothing is due. */
+  rotatesAt: string | null
+  /** How many days of history the free plan keeps. */
+  windowDays: number
+  /** How far ahead the dashboard lists what is due. */
+  noticeDays: number
+}

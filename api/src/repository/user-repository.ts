@@ -99,6 +99,34 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
     })
   }
 
+  /**
+   * Starts an owner's retention notice at `at`, unless one is already
+   * running: the notice dates from the first run that found them free, and
+   * a later run must not push it back (or forward).
+   */
+  public startRetentionNotice(userId: string, at: Date): RepoEffect<void> {
+    return this.writeRetentionNotice(
+      `"id" = $1 AND "retentionNoticeFrom" IS NULL`,
+      [userId, at],
+    )
+  }
+
+  /** Ends an owner's retention notice: they are premium again. */
+  public clearRetentionNotice(userId: string): RepoEffect<void> {
+    return this.writeRetentionNotice(`"id" = $1`, [userId, null])
+  }
+
+  /** Every account with a retention notice running. */
+  public findWithRetentionNotice(): RepoEffect<User[]> {
+    return fromPromise(() =>
+      this.getRepo()
+        // Not aliased 'user': that is a reserved word in Postgres.
+        .createQueryBuilder('account')
+        .where('account."retentionNoticeFrom" IS NOT NULL')
+        .getMany(),
+    )
+  }
+
   /** The user's hosted presentation, or undefined when none is held. */
   public findHostedIdentity(
     user: User,
@@ -255,5 +283,23 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
     }
 
     return Array.isArray(result[0]) ? result[0].length : result.length
+  }
+
+  /**
+   * Raw SQL: `retentionNoticeFrom` is `update: false`, which the query
+   * builder honours by dropping it from the SET list.
+   */
+  private writeRetentionNotice(
+    where: string,
+    [userId, at]: [string, Date | null],
+  ): RepoEffect<void> {
+    const table = this.getRepo().metadata.tableName
+
+    return fromPromise(async () => {
+      await this.getRepo().manager.query(
+        `UPDATE "${table}" SET "retentionNoticeFrom" = $2 WHERE ${where}`,
+        [userId, at],
+      )
+    })
   }
 }

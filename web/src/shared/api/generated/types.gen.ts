@@ -1367,6 +1367,24 @@ export type TimeControllerEditResponses = {
     200: unknown;
 };
 
+export type TimeControllerRetentionNoticeData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/time/retention-notice';
+};
+
+export type TimeControllerRetentionNoticeResponses = {
+    200: {
+        count: number;
+        rotatesAt: string | null;
+        windowDays: number;
+        noticeDays: number;
+    };
+};
+
+export type TimeControllerRetentionNoticeResponse = TimeControllerRetentionNoticeResponses[keyof TimeControllerRetentionNoticeResponses];
+
 export type InvoiceControllerSearchData = {
     body: InvoiceSearchDto;
     path?: never;

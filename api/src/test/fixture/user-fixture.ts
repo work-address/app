@@ -10,6 +10,7 @@ import { Signer } from '@/service/auth/signer'
 import { UserManager } from '@/service/user-manager'
 import { Faker } from '@/service/faker'
 import { runPromise } from '@/service/effect-bridge'
+import { RetentionJob } from '@/service/retention-job'
 
 @injectable()
 export class UserFixture {
@@ -70,6 +71,23 @@ export class UserFixture {
     user.premium = true
 
     return runPromise(this.userManager.saveSingle(user))
+  }
+
+  /**
+   * Marks the owner as told of rotation `daysAgo` days before `now`: long
+   * enough ago, by default, that their expired history may rotate (DEC-05).
+   */
+  public async tellOfRotation(
+    user: User,
+    now: Date = new Date(),
+    daysAgo: number = RetentionJob.NOTICE_DAYS + 1,
+  ): Promise<void> {
+    await runPromise(
+      this.userRepository.startRetentionNotice(
+        user.id,
+        new Date(now.getTime() - daysAgo * 24 * 60 * 60 * 1000),
+      ),
+    )
   }
 
   public createUserFromKeypair(

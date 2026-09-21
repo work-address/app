@@ -31,6 +31,7 @@ import { InvoiceRepository } from '@/repository/invoice-repository'
 import { TimeManager } from '@/service/time-manager'
 import { InvoiceManager } from '@/service/invoice-manager'
 import { InvoiceScheduler } from '@/service/invoice-scheduler'
+import { RetentionJob } from '@/service/retention-job'
 import { UnitOfWork } from '@/service/unit-of-work'
 import { AuthenticatorTimeTracker } from '@/service/auth/authenticator-time-tracker'
 import { TonProofService } from '@/service/auth/ton-proof-service'
@@ -106,6 +107,11 @@ export class AppContainer {
     container
       .bind<InvoiceScheduler>('InvoiceScheduler')
       .to(InvoiceScheduler)
+      .inSingletonScope()
+    // Singleton for the same reason: it owns the daily retention timer.
+    container
+      .bind<RetentionJob>('RetentionJob')
+      .to(RetentionJob)
       .inSingletonScope()
     container.bind<Mailer>('Mailer').to(Mailer)
     container.bind<ImageResizer>('ImageResizer').to(ImageResizer)

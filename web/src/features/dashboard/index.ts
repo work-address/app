@@ -1,3 +1,5 @@
 export * from './ui'
 export * from './model/premium-banner'
 export * from './model/premium-state'
+export * from './model/retention-notice'
+export * from './model/retention-notice-store'

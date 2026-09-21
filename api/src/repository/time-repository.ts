@@ -362,20 +362,21 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
    * tier. Callers pass the projects they touched, so the purge stays scoped
    * to projects that were actually written to.
    *
-   * Soft-deletes rather than hard-deletes: this runs automatically, without
-   * the user asking for it, so it stays reversible on upgrade. (User-initiated
-   * removal via removeMany still hard-deletes - that one is intentional.)
-   * Entries backing an issued invoice are never purged, so a financial record
-   * always keeps its supporting detail.
+   * Soft-deletes (DEC-05): a rotated entry leaves every read path and
+   * nothing in the product brings it back, but the row is not erased by the
+   * job that no one asked to run. (User-initiated removal via removeMany
+   * still hard-deletes - that one is intentional.) Entries backing an issued
+   * invoice are never purged, so a financial record always keeps its
+   * supporting detail. Returns how many entries rotated.
    */
   public softDeleteExpiredEntriesForProjects(
     projectIds: string[],
     cutoff: Date,
-  ): RepoEffect<void> {
+  ): RepoEffect<number> {
     const uniqueIds = [...new Set(projectIds)]
 
     if (uniqueIds.length === 0) {
-      return Effect.void
+      return Effect.succeed(0)
     }
 
     // Identifiers come from entity metadata, never from request data.
@@ -384,7 +385,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       this.getRepo().manager.connection.getMetadata(Invoice).tableName
 
     return fromPromise(async () => {
-      await this.getRepo()
+      const result = await this.getRepo()
         .createQueryBuilder()
         .softDelete()
         .from(Time)
@@ -393,24 +394,96 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         })
         .andWhere(`"${timeTable}"."fromAt" < :cutoff`, { cutoff })
         .andWhere(`"${timeTable}"."deletedAt" IS NULL`)
-        .andWhere(
-          // Scoped by issuer as well as project: an invoice covers only its
-          // own author's hours, so one contributor's invoice must not pin a
-          // colleague's entries in the same window. Legacy rows have no issuer
-          // and still protect the whole project - the safe direction.
-          `NOT EXISTS (
-          SELECT 1 FROM "${invoiceTable}" invoice
-          WHERE invoice."projectId" = "${timeTable}"."projectId"
-            AND invoice."deletedAt" IS NULL
-            AND (
-              invoice."userId" IS NULL
-              OR invoice."userId" = "${timeTable}"."userId"
-            )
-            AND "${timeTable}"."fromAt" < invoice."toAt"
-            AND "${timeTable}"."toAt" > invoice."fromAt"
-        )`,
-        )
+        .andWhere(this.notInvoiceEvidence(timeTable, invoiceTable))
         .execute()
+
+      return result.affected ?? 0
+    })
+  }
+
+  /**
+   * The owners who have history that is due to rotate by `before` - each
+   * with the projects it sits on - so the daily retention job can decide
+   * per owner, without anyone uploading anything.
+   *
+   * Only rows that rotation would actually remove are counted: live,
+   * uninvoiced (the same invoice-evidence rule as the purge) and on a project
+   * rotation applies to. Premium is not decided here; the job asks
+   * Entitlement, which knows about self-host and the pushed validity.
+   */
+  public findRetentionCandidates(
+    before: Date,
+  ): RepoEffect<{ owner: User; projectIds: string[] }[]> {
+    const timeTable = this.getRepo().metadata.tableName
+    const invoiceTable =
+      this.getRepo().manager.connection.getMetadata(Invoice).tableName
+
+    return fromPromise(async () => {
+      const projects = await this.getRepo()
+        .manager.getRepository(Project)
+        .createQueryBuilder('project')
+        .innerJoinAndSelect('project.user', 'owner')
+        .where(TimeRepository.ROTATING_PROJECT, {
+          activeState: EProjectState.ACTIVE,
+        })
+        .andWhere(
+          `EXISTS (
+            SELECT 1 FROM "${timeTable}"
+            WHERE "${timeTable}"."projectId" = project.id
+              AND "${timeTable}"."deletedAt" IS NULL
+              AND "${timeTable}"."fromAt" < :before
+              AND ${this.notInvoiceEvidence(timeTable, invoiceTable)}
+          )`,
+          { before },
+        )
+        .getMany()
+
+      const byOwner = new Map<string, { owner: User; projectIds: string[] }>()
+
+      for (const project of projects) {
+        const entry = byOwner.get(project.user.id) ?? {
+          owner: project.user,
+          projectIds: [],
+        }
+        entry.projectIds.push(project.id)
+        byOwner.set(project.user.id, entry)
+      }
+
+      return [...byOwner.values()]
+    })
+  }
+
+  /**
+   * What an owner's notice lists: how many entries will be old enough to
+   * rotate by `before`, and the oldest of them. The same rows
+   * `findRetentionCandidates` finds, for one owner.
+   */
+  public findRotatingForOwner(
+    ownerId: string,
+    before: Date,
+  ): RepoEffect<{ count: number; oldestFromAt: Date | null }> {
+    const timeTable = this.getRepo().metadata.tableName
+    const invoiceTable =
+      this.getRepo().manager.connection.getMetadata(Invoice).tableName
+
+    return fromPromise(async () => {
+      const row = await this.getRepo()
+        .createQueryBuilder(timeTable)
+        .innerJoin(`${timeTable}.project`, 'project')
+        .select(`COUNT(${timeTable}.id)`, 'count')
+        .addSelect(`MIN(${timeTable}."fromAt")`, 'oldest')
+        .where('project."userId" = :ownerId', { ownerId })
+        .andWhere(TimeRepository.ROTATING_PROJECT, {
+          activeState: EProjectState.ACTIVE,
+        })
+        .andWhere(`${timeTable}."fromAt" < :before`, { before })
+        .andWhere(this.notInvoiceEvidence(timeTable, invoiceTable))
+        .getRawOne<{ count: string; oldest: Date | null }>()
+
+      return {
+        count: Number(row?.count ?? 0),
+        oldestFromAt: row?.oldest ? new Date(row.oldest) : null,
+      }
     })
   }
 
@@ -932,5 +1005,39 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
           )
       }),
     )
+  }
+
+  /**
+   * Projects rotation applies to. A marketplace project is exempt while its
+   * contract runs (the project stays ACTIVE until the marketplace ends it):
+   * its hours are escrow evidence that can only be invoiced at the end of a
+   * work period that may outlast the free window, so rotating them would
+   * destroy what the payment is released against.
+   */
+  private static readonly ROTATING_PROJECT =
+    '(project."marketplaceContractId" IS NULL OR project.state <> :activeState)'
+
+  /**
+   * Entries that back an issued invoice are never rotated, so a financial
+   * record always keeps its supporting detail.
+   *
+   * Scoped by issuer as well as project: an invoice covers only its own
+   * author's hours, so one contributor's invoice must not pin a colleague's
+   * entries in the same window. Legacy rows have no issuer and still protect
+   * the whole project - the safe direction. Identifiers come from entity
+   * metadata, never from request data.
+   */
+  private notInvoiceEvidence(timeTable: string, invoiceTable: string): string {
+    return `NOT EXISTS (
+          SELECT 1 FROM "${invoiceTable}" invoice
+          WHERE invoice."projectId" = "${timeTable}"."projectId"
+            AND invoice."deletedAt" IS NULL
+            AND (
+              invoice."userId" IS NULL
+              OR invoice."userId" = "${timeTable}"."userId"
+            )
+            AND "${timeTable}"."fromAt" < invoice."toAt"
+            AND "${timeTable}"."toAt" > invoice."fromAt"
+        )`
   }
 }

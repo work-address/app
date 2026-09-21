@@ -15,6 +15,7 @@ import { PayloadLogger } from '@/middleware/payload-logger'
 import { IConfigParameters } from '@/model/config'
 import { AppConfig } from '@/app/app-config'
 import { InvoiceScheduler } from '@/service/invoice-scheduler'
+import { RetentionJob } from '@/service/retention-job'
 
 import { AuthController } from '@/controller/auth-controller'
 import { ValidateRoles } from '@/middleware/validate-roles'
@@ -73,6 +74,7 @@ export class App {
 
     this.initControllers()
     this.startInvoiceScheduler()
+    this.startRetentionJob()
 
     // Must come after the routes so it sees errors they raise. Sentry.init()
     // itself runs in src/instrument.ts, before any instrumented module loads.
@@ -128,9 +130,27 @@ export class App {
     App.container.get<InvoiceScheduler>('InvoiceScheduler').start()
   }
 
+  /**
+   * Arms the daily retention run (DEC-05). The job itself declines on a
+   * self-hosted instance, which has no free tier to rotate. Not in test, for
+   * the scheduler's reason: the suite runs the job directly with its own
+   * clock.
+   */
+  private startRetentionJob() {
+    if (AppConfig.isTest()) {
+      return
+    }
+
+    App.container.get<RetentionJob>('RetentionJob').start()
+  }
+
   public async stop() {
     if (App.container?.isBound('InvoiceScheduler')) {
       App.container.get<InvoiceScheduler>('InvoiceScheduler').stop()
+    }
+
+    if (App.container?.isBound('RetentionJob')) {
+      App.container.get<RetentionJob>('RetentionJob').stop()
     }
 
     if (App.conn?.isInitialized) {

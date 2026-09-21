@@ -26,6 +26,8 @@ import { ImageResizer } from '@/service/image-resizer'
 import { RepoEffect } from '@/repository/abstract-repository-template'
 import { fromPromise } from '@/service/effect-bridge'
 import { UnitOfWork } from '@/service/unit-of-work'
+import { RetentionJob } from '@/service/retention-job'
+import { EProjectState } from '@/model/project'
 
 @injectable()
 export class TimeManager {
@@ -96,8 +98,17 @@ export class TimeManager {
               user,
             )
 
-          if (!this.entitlement.isPremium(project.user)) {
-            projectIdsUnderRetention.add(project.id)
+          if (!this.entitlement.isPremium(project.user, now)) {
+            // Rotates only what the owner has been shown on the dashboard
+            // for the notice lead time (DEC-05), and never a running
+            // marketplace contract's evidence - the same two rules the daily
+            // RetentionJob applies, so an upload cannot delete sooner.
+            if (
+              RetentionJob.mayRotate(project.user, now) &&
+              !TimeManager.isRunningMarketplaceProject(project)
+            ) {
+              projectIdsUnderRetention.add(project.id)
+            }
 
             // Refuse rather than accept-and-purge: saving this row and deleting
             // it moments later would hand the client an id for a row that no
@@ -212,6 +223,14 @@ export class TimeManager {
 
       return program
     })
+  }
+
+  /** A hired project whose marketplace contract has not been ended yet. */
+  private static isRunningMarketplaceProject(project: Project): boolean {
+    return (
+      Boolean(project.marketplaceContractId) &&
+      project.state === EProjectState.ACTIVE
+    )
   }
 
   /**

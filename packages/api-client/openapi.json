@@ -4616,6 +4616,53 @@
         ]
       }
     },
+    "/api/time/retention-notice": {
+      "get": {
+        "operationId": "TimeController.retentionNotice",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "count": {
+                      "type": "integer"
+                    },
+                    "rotatesAt": {
+                      "type": "string",
+                      "nullable": true
+                    },
+                    "windowDays": {
+                      "type": "integer"
+                    },
+                    "noticeDays": {
+                      "type": "integer"
+                    }
+                  },
+                  "required": [
+                    "count",
+                    "rotatesAt",
+                    "windowDays",
+                    "noticeDays"
+                  ]
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "What rotates out of the caller's free history within the notice lead time, and when the first of it can go (count 0 and rotatesAt null when nothing is due, on premium, and on self-host)",
+        "tags": [
+          "Time"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/invoice/search": {
       "post": {
         "operationId": "InvoiceController.search",

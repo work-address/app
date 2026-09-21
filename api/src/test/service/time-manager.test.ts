@@ -20,6 +20,7 @@ import { InvoiceRepository } from '@/repository/invoice-repository'
 import { UserManager } from '@/service/user-manager'
 import { EInvoiceState } from '@/model/invoice'
 import { runPromise } from '@/service/effect-bridge'
+import { RetentionJob } from '@/service/retention-job'
 
 @suite()
 export class TimeManagerTest extends AbstractDatabaseIntegration {
@@ -220,6 +221,9 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
   @test()
   async createOrUpdateMany_effectCarriesNoRetentionStateBetweenRuns() {
     const owner = await this.userFixture.createUser() // free tier
+    // Told long enough ago that the first run does put the project under
+    // retention - otherwise there is no bookkeeping that could leak.
+    await this.userFixture.tellOfRotation(owner)
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -955,6 +959,8 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
   @test()
   async createOrUpdateMany_freeOwner_purgesOwnProjectEntriesOlderThanWindow() {
     const owner = await this.userFixture.createUser()
+    // DEC-05: nothing rotates before the owner has been told.
+    await this.userFixture.tellOfRotation(owner)
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -1134,6 +1140,7 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
     // retention from the next sync onwards.
     owner.premium = false
     await runPromise(this.userManager.saveSingle(owner))
+    await this.userFixture.tellOfRotation(owner)
 
     await runPromise(
       this.timeManager.createOrUpdateMany(
@@ -1198,6 +1205,7 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
   @test()
   async createOrUpdateMany_freeOwner_keepsEntriesCoveredByAnInvoice() {
     const owner = await this.userFixture.createUser()
+    await this.userFixture.tellOfRotation(owner)
     const project = await this.projectFixture.create(
       owner,
       EProjectState.ACTIVE,
@@ -1304,5 +1312,80 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
         expect(stored.isPaid, `round ${round}`).to.be.true
       }
     }
+  }
+
+  /**
+   * DEC-05: an upload does not rotate history the owner has not been told
+   * about for the notice lead time - a plan that lapsed yesterday must not
+   * lose months on the next sync.
+   */
+  @test()
+  async createOrUpdateMany_freeOwnerNotYetTold_keepsEntriesOlderThanWindow() {
+    const owner = await this.userFixture.createUser()
+    await this.userFixture.tellOfRotation(
+      owner,
+      new Date(),
+      RetentionJob.NOTICE_DAYS - 1,
+    )
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
+    const staleFrom = moment
+      .utc()
+      .subtract(TimeManagerTest.staleDays(), 'days')
+      .toDate()
+    const staleEntry = await this.timeFixture.create(
+      project,
+      staleFrom,
+      moment.utc(staleFrom).add(10, 'minutes').toDate(),
+      owner,
+    )
+
+    await runPromise(
+      this.timeManager.createOrUpdateMany(
+        [this.buildTimePayload(project.id, 80)],
+        owner,
+      ),
+    )
+
+    const stale = await runPromise(
+      this.timeRepository.findOneBy({ where: { id: staleEntry.id } }),
+    )
+    expect(stale, 'told too recently to rotate').to.exist
+  }
+
+  /**
+   * A running marketplace contract's hours are escrow evidence: a sync on a
+   * free client's hired project does not rotate them.
+   */
+  @test()
+  async createOrUpdateMany_runningMarketplaceProject_keepsEntriesOlderThanWindow() {
+    const client = await this.userFixture.createUser()
+    const worker = await this.userFixture.createUser()
+    await this.userFixture.tellOfRotation(client)
+    const project = await this.projectFixture.createHired(client, worker)
+    const staleFrom = moment
+      .utc()
+      .subtract(TimeManagerTest.staleDays(), 'days')
+      .toDate()
+    const staleEntry = await this.timeFixture.create(
+      project,
+      staleFrom,
+      moment.utc(staleFrom).add(10, 'minutes').toDate(),
+      worker,
+    )
+
+    await runPromise(
+      this.timeManager.createOrUpdateMany(
+        [this.buildTimePayload(project.id, 81)],
+        worker,
+      ),
+    )
+
+    const stale = await runPromise(
+      this.timeRepository.findOneBy({ where: { id: staleEntry.id } }),
+    )
+    expect(stale, 'escrow evidence').to.exist
   }
 }

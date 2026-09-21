@@ -215,6 +215,18 @@ export class User extends AbstractBaseEntity implements IUser {
   @Column({ type: 'timestamptz', nullable: true, update: false })
   premiumValidUntil?: Date | null
 
+  /**
+   * When this owner's free history started to rotate: the first daily
+   * retention run that found them without premium (DEC-05). Nothing of
+   * theirs is removed until RetentionJob.NOTICE_DAYS after it, so an owner
+   * whose plan just lapsed - or every free owner, the day the job ships - is
+   * shown the notice for the full lead time before anything goes. Cleared
+   * once they are premium again. Written only by UserRepository, like the
+   * two columns around it.
+   */
+  @Column({ type: 'timestamptz', nullable: true, update: false })
+  retentionNoticeFrom?: Date | null
+
   /** The highest entitlement revision applied; a lower one is ignored. */
   @Column({ type: 'integer', default: 0, update: false })
   entitlementRevision?: number
