@@ -39,6 +39,7 @@ import { InvoiceRecord } from '@/service/invoice-record'
 import { WalletAddress } from '@/service/wallet-address'
 import { UnitOfWork } from '@/service/unit-of-work'
 import AccessException from '@/exception/access-exception'
+import InvoiceAdjustmentException from '@/exception/invoice-adjustment-exception'
 import InvoiceEscrowException from '@/exception/invoice-escrow-exception'
 import InvoicedTimeException from '@/exception/invoiced-time-exception'
 import LegacyInvoiceException from '@/exception/legacy-invoice-exception'
@@ -567,6 +568,9 @@ export class InvoiceManager {
    * takes one bill, and once it has settled, the escrow will not take
    * another (the escrow submission refuses it with a 409).
    *
+   * Only an hourly invoice can be corrected this way (409 for a FIXED one):
+   * a fixed-price invoice has no hours on it to have missed.
+   *
    * Only the original's issuer may correct it (403): an invoice covers one
    * person's hours, and the correction is the same person's bill. They must
    * still be able to invoice the project; a project a contract's end has
@@ -587,6 +591,19 @@ export class InvoiceManager {
         return yield* Effect.fail(
           new AccessException(
             'Only whoever issued an invoice can issue an adjustment to it',
+          ),
+        )
+      }
+
+      // An invoice bills hours or an agreed sum, never both. A FIXED one has
+      // no hours on it, so there are none it could have missed: an hourly
+      // bill naming it would pass tracked time off as a correction to a sum
+      // the parties agreed. Another sum is another milestone, and only the
+      // marketplace's signed call raises those.
+      if (original.basis === EInvoiceBasis.FIXED) {
+        return yield* Effect.fail(
+          new InvoiceAdjustmentException(
+            'A fixed-price invoice bills an agreed sum, not hours, so hours cannot correct it; a different sum is agreed in the marketplace',
           ),
         )
       }

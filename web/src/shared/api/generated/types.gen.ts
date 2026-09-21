@@ -1580,6 +1580,10 @@ export type InvoiceControllerAdjustErrors = {
         name?: string;
         message?: string;
     };
+    /**
+     * This invoice bills an agreed sum (basis FIXED), which hours cannot correct
+     */
+    409: unknown;
 };
 
 export type InvoiceControllerAdjustError = InvoiceControllerAdjustErrors[keyof InvoiceControllerAdjustErrors];

@@ -2,7 +2,7 @@ import { randomUUID } from 'crypto'
 import axios from 'axios'
 import moment from 'moment'
 import { expect } from 'chai'
-import { suite, test } from '@testdeck/mocha'
+import { suite, test, timeout } from '@testdeck/mocha'
 import {
   invoiceControllerCreate,
   invoiceControllerEscrowSubmission,
@@ -48,6 +48,11 @@ type Allocation = IInvoiceCommitmentBinding & {
  * refund - with the original compared column for column before and after,
  * and the rules around them: it bills only what no invoice covers, only the
  * issuer may raise it, and it cannot take an allocation that has settled.
+ *
+ * Every test declares a 20s budget: each chains a dozen HTTP calls (issue,
+ * submit, settle, adjust, read back), which is well under mocha's 2s default
+ * on an idle machine and over it when other suites share the machine. A
+ * budget only ever makes a test less likely to fail.
  */
 @suite()
 export class InvoiceAdjustmentTest extends BaseControllerTest {
@@ -276,6 +281,7 @@ export class InvoiceAdjustmentTest extends BaseControllerTest {
    * it corrects, and the original is exactly as it was.
    */
   @test()
+  @timeout(20000)
   async finalAdjustmentAfterTermination_billsTheRestAndLeavesTheOriginal() {
     const hired = await this.hired(20)
     const morning = [await this.entry(hired, 0), await this.entry(hired, 1)]
@@ -333,6 +339,7 @@ export class InvoiceAdjustmentTest extends BaseControllerTest {
    * sent to the allocation that settled it.
    */
   @test()
+  @timeout(20000)
   async lateWorkAfterARefund_isBilledByAnAdjustmentThatCannotTakeTheSettledAllocation() {
     const hired = await this.hired(20)
     const billed = [await this.entry(hired, 0), await this.entry(hired, 1)]
@@ -382,6 +389,7 @@ export class InvoiceAdjustmentTest extends BaseControllerTest {
 
   /** The same holds for an allocation that released: it paid its bill. */
   @test()
+  @timeout(20000)
   async adjustment_cannotTakeTheAllocationThatPaidTheOriginal() {
     const hired = await this.hired(20)
 
@@ -420,6 +428,7 @@ export class InvoiceAdjustmentTest extends BaseControllerTest {
    * be unbilled: one the original already bills is refused, whole.
    */
   @test()
+  @timeout(20000)
   async selection_billsExactlyTheNamedEntries_andNeverAnotherInvoicesEntry() {
     const hired = await this.hired(20)
     const billed = await this.entry(hired, 0)
@@ -455,6 +464,7 @@ export class InvoiceAdjustmentTest extends BaseControllerTest {
    * unknown id is a 404. None of them changes anything.
    */
   @test()
+  @timeout(20000)
   async adjustment_isTheIssuersAlone() {
     const hired = await this.hired(20)
 
@@ -472,11 +482,76 @@ export class InvoiceAdjustmentTest extends BaseControllerTest {
   }
 
   /**
+   * An invoice bills hours or an agreed sum, never both (SPEC.md). A FIXED
+   * invoice has no hours on it, so "the hours it missed" means nothing: an
+   * hourly bill naming it would present tracked time as a correction to a
+   * sum the parties agreed, and only the marketplace's signed call can agree
+   * another. Refused with a 409 that bills nothing - the entry stays free
+   * for an ordinary invoice, and the milestone invoice stays as it was.
+   */
+  @test()
+  @timeout(20000)
+  async fixedInvoice_isNotCorrectedByHours() {
+    const hired = await this.hired(20)
+    const body = {
+      contractId: hired.project.marketplaceContractId,
+      milestoneRef: randomUUID(),
+      freelancerId: hired.worker.id,
+      amountCents: 250000,
+      description: 'Milestone 1: the import, delivered and accepted',
+      workStart: this.start.clone().subtract(7, 'days').unix(),
+      workEnd: this.start.unix(),
+      issuedAt: Math.floor(Date.now() / 1000),
+      nonce: randomUUID(),
+    }
+    const raw = JSON.stringify(body)
+    const pushed = await axios.post(
+      `${this.url}/api/internal/marketplace/milestone-invoice`,
+      raw,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          [MarketplaceHireController.MILESTONE_SIGNATURE_HEADER]:
+            this.signature.sign(raw),
+        },
+        validateStatus: () => true,
+      },
+    )
+
+    expect(pushed.status, JSON.stringify(pushed.data)).to.be.eq(200)
+
+    const fixedId = pushed.data.invoiceId as string
+    const tracked = await this.entry(hired, 0)
+    const before = await this.snapshotOf(fixedId)
+
+    const refused = await this.adjust(fixedId, hired.worker)
+    const selected = await this.adjust(fixedId, hired.worker, {
+      timeIds: [tracked.id],
+    })
+
+    expect(refused.status, JSON.stringify(refused.data)).to.be.eq(409)
+    expect(selected.status, JSON.stringify(selected.data)).to.be.eq(409)
+    expect(await this.snapshotOf(fixedId)).to.deep.eq(before)
+
+    const invoices = await this.invoiceRepository
+      .getRepo()
+      .count({ where: { project: { id: hired.project.id } } })
+
+    expect(invoices).to.be.eq(1)
+
+    // Nothing claimed the entry: an ordinary invoice still bills it.
+    const ordinaryId = await this.invoiceEverything(hired)
+
+    expect(await this.linesOf(ordinaryId)).to.deep.eq([tracked.id])
+  }
+
+  /**
    * DEC-04's other half, which is what makes an adjustment the only way: an
    * entry an invoice bills cannot be deleted (409), so the original's lines
    * stay what it billed.
    */
   @test()
+  @timeout(20000)
   async invoicedEntry_cannotBeDeleted() {
     const hired = await this.hired(20)
     const billed = await this.entry(hired, 0)

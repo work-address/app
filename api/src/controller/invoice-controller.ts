@@ -342,6 +342,10 @@ export class InvoiceController {
           description:
             'The caller did not issue this invoice, or can no longer invoice its project',
         },
+        409: {
+          description:
+            'This invoice bills an agreed sum (basis FIXED), which hours cannot correct',
+        },
       },
     },
     response: {

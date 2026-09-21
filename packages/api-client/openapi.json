@@ -5263,6 +5263,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "This invoice bills an agreed sum (basis FIXED), which hours cannot correct"
           }
         },
         "summary": "Issue an adjustment correcting this invoice (issuer only): a new invoice, naming this one, for the issuer's time on its project that no invoice covers and nobody has marked paid - or for exactly the entries selected. This invoice is never changed",

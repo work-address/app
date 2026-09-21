@@ -172,7 +172,10 @@ columns on `Invoice`, not a domain of its own.
   key. Typical uses: the final bill for hours tracked before a contract
   ended, and late work after a refund. Only additions: over-billing is
   answered by the payer disputing the bill or the issuer not marking it
-  paid, since a negative invoice has no escrow path.
+  paid, since a negative invoice has no escrow path. Only hourly invoices:
+  a FIXED invoice has no hours on it to have missed, so the route answers
+  409 for one and the page does not offer it - a different sum is another
+  milestone, raised by the marketplace's signed call.
 - Invoices issued before snapshots are **legacy** (`snapshotVersion` 0, set
   by the one-off `backfill:invoice-snapshot` script). They keep their frozen
   amount and report no rate: the rate they were raised at was never
