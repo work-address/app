@@ -59,6 +59,13 @@ export type OriginAllocation = {
   workStart: number
   workEnd: number
   originExpiry: number
+  /**
+   * Whether the payee may bill from `workStart` rather than `workEnd`: true
+   * for a fixed-price milestone, false for an hourly period. Part of the
+   * signed terms since the escrow learned milestones; a certificate issued
+   * before that names no such field in its `types` and carries none here.
+   */
+  earlySubmission?: boolean
   signature: string
 }
 
@@ -223,17 +230,7 @@ export function verifyAllocation(
     chainId: allocation.chainId,
     verifyingContract: allocation.escrowAddress,
   }
-  const terms = {
-    allocationId: allocation.allocationId,
-    obligationId: allocation.obligationId,
-    termsHash: allocation.termsHash,
-    payer: allocation.payer,
-    payee: allocation.payee,
-    budget: allocation.budget,
-    workStart: allocation.workStart,
-    workEnd: allocation.workEnd,
-    originExpiry: allocation.originExpiry,
-  }
+  const terms = signedTermsOf(certificate, allocation)
 
   return {
     allocationId: allocation.allocationId,
@@ -247,6 +244,40 @@ export function verifyAllocation(
     termsHashMatches: opened !== undefined,
     termsVersion: opened?.termsVersion ?? null,
   }
+}
+
+/**
+ * The struct the origin signer signed, rebuilt field by field from the
+ * `Terms` type the certificate itself declares. The escrow's terms have
+ * grown a field before (earlySubmission) and may again, so the verifier
+ * follows the certificate rather than a list of its own: a certificate from
+ * either side of such a change opens, and one whose allocation lacks a
+ * field its own type names is refused by name instead of hashing to
+ * something the signer never signed.
+ */
+function signedTermsOf(
+  certificate: OriginCertificate,
+  allocation: OriginAllocation,
+): Record<string, unknown> {
+  const fields = certificate.types.Terms
+
+  if (!fields) {
+    throw new Error('The certificate declares no Terms type to verify against')
+  }
+
+  const carried = allocation as unknown as Record<string, unknown>
+
+  return Object.fromEntries(
+    fields.map(({ name }) => {
+      if (carried[name] === undefined) {
+        throw new Error(
+          `The certificate's Terms type names "${name}", which allocation ${allocation.allocationId} does not carry`,
+        )
+      }
+
+      return [name, carried[name]]
+    }),
+  )
 }
 
 /** Every check the certificate allows, with no network and no trust. */

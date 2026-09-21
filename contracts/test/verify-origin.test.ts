@@ -81,6 +81,7 @@ describe('origin certificate', () => {
         { name: 'workStart', type: 'uint64' },
         { name: 'workEnd', type: 'uint64' },
         { name: 'originExpiry', type: 'uint64' },
+        { name: 'earlySubmission', type: 'bool' },
       ],
     }
     const terms = {
@@ -96,6 +97,8 @@ describe('origin certificate', () => {
       workStart: 1790000000,
       workEnd: 1790604800,
       originExpiry: 1789990000,
+      // An hourly period: billed once it has ended.
+      earlySubmission: false,
     }
     const sign = async (signedTerms: typeof terms) => ({
       ...signedTerms,
@@ -190,6 +193,92 @@ describe('origin certificate', () => {
     expect(await escrow.termsDigest(signed.allocations[0])).to.eq(
       allocation.digest,
     )
+  })
+
+  it('opens a milestone, whose terms let the payee bill before the period ends', async () => {
+    const [originSigner] = await ethers.getSigners()
+    const { signed, signer, escrow } = await certificate()
+    const hourly = signed.allocations[0]
+    // The same period signed as a milestone: one flag apart, so the digest
+    // must differ and the signature over the hourly terms must not open it.
+    const { signature: _hourlySignature, chainId, escrowAddress, ...terms } =
+      hourly
+    const milestoneTerms = { ...terms, earlySubmission: true }
+    const milestone = {
+      ...milestoneTerms,
+      chainId,
+      escrowAddress,
+      signature: await originSigner.signTypedData(
+        { ...signed.domain, chainId, verifyingContract: escrowAddress },
+        signed.types,
+        milestoneTerms,
+      ),
+    }
+    const verdict = verifyOrigin({ ...signed, allocations: [hourly, milestone] })
+
+    expect(verdict.allocations[1].signer).to.eq(signer)
+    expect(verdict.allocations[1].digest).to.not.eq(verdict.allocations[0].digest)
+    expect(await escrow.termsDigest(milestone)).to.eq(
+      verdict.allocations[1].digest,
+    )
+    // The hourly signature over the milestone's terms recovers someone else.
+    const forged = verifyOrigin({
+      ...signed,
+      allocations: [{ ...milestone, signature: hourly.signature }],
+    })
+
+    expect(forged.allocations[0].signer).to.not.eq(signer)
+  })
+
+  it('opens a certificate issued before the terms carried earlySubmission', async () => {
+    // What the API handed out until the escrow learned milestones: a Terms
+    // type of nine fields and allocations without the tenth. The verifier
+    // follows the type the certificate declares, so these still open.
+    const [originSigner] = await ethers.getSigners()
+    const { signed, signer } = await certificate()
+    const legacyTypes = {
+      Terms: signed.types.Terms.filter(
+        ({ name }) => name !== 'earlySubmission',
+      ),
+    }
+    const {
+      signature: _signature,
+      chainId,
+      escrowAddress,
+      earlySubmission: _earlySubmission,
+      ...legacyTerms
+    } = signed.allocations[0]
+    const legacy = {
+      ...legacyTerms,
+      chainId,
+      escrowAddress,
+      signature: await originSigner.signTypedData(
+        { ...signed.domain, chainId, verifyingContract: escrowAddress },
+        legacyTypes,
+        legacyTerms,
+      ),
+    }
+    const verdict = verifyOrigin({
+      ...signed,
+      types: legacyTypes,
+      allocations: [legacy],
+    })
+
+    expect(verdict.allocations[0].signer).to.eq(signer)
+    expect(verdict.allocations[0].termsHashMatches).to.be.true
+  })
+
+  it('refuses an allocation that lacks a field its own certificate names', async () => {
+    // The gap that made every certificate unverifiable: the type named
+    // earlySubmission and the allocations did not carry it. Refused by name,
+    // never hashed to something the signer did not sign.
+    const { signed } = await certificate()
+    const { earlySubmission: _earlySubmission, ...withoutTheFlag } =
+      signed.allocations[0]
+
+    expect(() =>
+      verifyOrigin({ ...signed, allocations: [withoutTheFlag] }),
+    ).to.throw(/names "earlySubmission"/)
   })
 
   it('names the posting and the proposal the settlement belongs to', async () => {
