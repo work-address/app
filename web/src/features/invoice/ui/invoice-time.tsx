@@ -20,13 +20,19 @@ import {
   Text,
 } from '@/shared'
 
-export const InvoiceTime = () => {
+/**
+ * The invoice's lines: what it billed, entry by entry, as frozen at issuance.
+ * Props rather than stores, so the print-layout test renders the same table
+ * the page does.
+ */
+export const InvoiceLines = ({
+  rows,
+  loading,
+}: {
+  rows: InvoiceTimeRow[]
+  loading: boolean
+}) => {
   const { t, i18n } = useTranslation()
-
-  const { timeEntries, loading } = useUnit({
-    timeEntries: $invoiceTime,
-    loading: $invoiceLoading,
-  })
 
   const contextValue = useMemo<InvoiceTimeContextProps>(
     () => ({
@@ -88,17 +94,27 @@ export const InvoiceTime = () => {
       <InvoiceTimeContext value={contextValue}>
         <InvoiceTimeTable
           loading={loading}
-          data={timeEntries}
+          data={rows}
           config={tableConfig}
           getRowId={rowIdGetter}
           verticalAlign={'middle'}
           BodyComponent={Cell}
           nowrap
-          height={timeEntries.length > 0 ? '' : '340px'}
+          height={rows.length > 0 ? '' : '340px'}
         />
       </InvoiceTimeContext>
     </>
   )
+}
+
+/** The lines of the invoice the page has loaded. */
+export const InvoiceTime = () => {
+  const { timeEntries, loading } = useUnit({
+    timeEntries: $invoiceTime,
+    loading: $invoiceLoading,
+  })
+
+  return <InvoiceLines rows={timeEntries} loading={loading} />
 }
 
 const rowIdGetter = (detail: InvoiceTimeRow) => detail.id ?? ''

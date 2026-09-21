@@ -131,6 +131,12 @@ export {
 } from './list.stores'
 export * from './format'
 export {
+  getInvoiceDocumentFields,
+  type InvoiceDocumentField,
+  type InvoiceDocumentFieldId,
+  type InvoiceDocumentSource,
+} from './invoice-document'
+export {
   getInvoiceInfoFields,
   type InvoiceFieldId,
   type InvoiceInfoFieldRow,

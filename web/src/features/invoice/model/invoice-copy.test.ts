@@ -10,17 +10,32 @@ const LOCALES: Record<string, Record<string, string>> = { en, es, ja, ru, zh }
 
 /**
  * The strings the invoice page shows for a fixed-price bill, which none of
- * the hourly copy covers: what it is billing for, and that its price is
- * fixed rather than an hourly rate of zero.
+ * the hourly copy covers - what it is billing for, and that its price is
+ * fixed rather than an hourly rate of zero - and the document header every
+ * printed invoice carries.
  */
 const KEYS = [
   'invoice.billingFor',
   'invoice.fields.rateFixed',
   'invoice.metricDesc.rateFixed',
   'invoices.item.fixedPrice',
+  // The document header every printed invoice carries (WP-99).
+  'invoice.document.heading',
+  'invoice.document.from',
+  'invoice.document.billTo',
+  'invoice.document.reference',
+  'invoice.document.period',
+  'invoice.document.periodRange',
+  'invoice.document.currency',
+  'invoice.document.amount',
+  'invoice.document.status',
+  'invoice.document.paidOn',
+  'invoice.document.milestone',
+  'invoice.document.corrects',
+  'invoice.document.unnamed',
 ]
 
-describe('fixed-price invoice copy', () => {
+describe('invoice document copy', () => {
   it.each(Object.keys(LOCALES))('%s: has every string it shows', (lang) => {
     for (const key of KEYS) {
       expect(LOCALES[lang][key], key).toEqual(expect.any(String))

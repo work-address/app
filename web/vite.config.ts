@@ -9,6 +9,8 @@ import { defineConfig, loadEnv } from 'vite'
 import { nodePolyfills } from 'vite-plugin-node-polyfills'
 import svgr from 'vite-plugin-svgr'
 
+import type { BrowserCommand } from 'vitest/node'
+
 const dirname =
   typeof __dirname === 'undefined'
     ? path.dirname(fileURLToPath(import.meta.url))
@@ -25,6 +27,18 @@ function resolveGitCommit(): string {
   } catch {
     return 'unknown'
   }
+}
+
+/**
+ * Switches the test page between screen and print media, for tests of what
+ * a saved PDF looks like. Only the browser can say how `@media print` lays a
+ * page out, and only the provider - not the page - can switch it.
+ */
+const emulateMedia: BrowserCommand<[media: 'print' | 'screen']> = async (
+  context,
+  media,
+) => {
+  await context.page.emulateMedia({ media })
 }
 
 const gitCommit = resolveGitCommit()
@@ -114,6 +128,7 @@ export default defineConfig(({ command, mode }) => {
               enabled: true,
               headless: true,
               provider: playwright({}),
+              commands: { emulateMedia },
               instances: [
                 {
                   browser: 'chromium',

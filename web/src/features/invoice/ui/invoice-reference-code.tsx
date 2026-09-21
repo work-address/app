@@ -26,7 +26,7 @@ export const InvoiceReferenceCode = ({
   const { t } = useTranslation()
 
   return (
-    <Flex direction={'column'} align={'center'} gap={'2'}>
+    <Root direction={'column'} align={'center'} gap={'2'}>
       {loading ? (
         <Skeleton width="194px" height="194px" />
       ) : (
@@ -52,9 +52,20 @@ export const InvoiceReferenceCode = ({
       <Hint size={'1'} color={'gray'} align={'center'}>
         {t('invoice.reference.hint')}
       </Hint>
-    </Flex>
+    </Root>
   )
 }
+
+/* Paper is narrower than a desktop screen: in print the code shrinks, so
+   the facts printed beside it keep their width. */
+const Root = styled(Flex)`
+  @media print {
+    svg {
+      width: 120px;
+      height: 120px;
+    }
+  }
+`
 
 /* An id has no break opportunities of its own; without this a long one
    pushes the page wider than the phone - or the paper. */
@@ -62,8 +73,16 @@ const Reference = styled(Text)`
   max-width: 194px;
   overflow-wrap: anywhere;
   font-family: var(--code-font-family, monospace);
+
+  @media print {
+    max-width: 120px;
+  }
 `
 
 const Hint = styled(Text)`
   max-width: 194px;
+
+  @media print {
+    max-width: 120px;
+  }
 `
