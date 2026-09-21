@@ -64,7 +64,11 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
     const qb = this.getRepo()
       .createQueryBuilder('invoice')
       .innerJoinAndSelect('invoice.project', 'project')
-      .innerJoin('project.user', 'owner')
+      // Selected, not only joined: the owner is who the invoice is billed to,
+      // and the page and the PDF print their name beside the snapshot's
+      // address. Only the issuer and the owner pass the filter below, and
+      // both already see each other on the project.
+      .innerJoinAndSelect('project.user', 'owner')
       .leftJoinAndSelect('invoice.user', 'issuer')
       .andWhere('invoice.id = :invoiceId', { invoiceId: invoice.id })
 

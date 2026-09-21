@@ -59,6 +59,40 @@ export class InvoiceControllerTest extends BaseControllerTest {
     expect(responseProject.state).to.be.equal(project.state)
   }
 
+  /**
+   * The read names both parties - the issuer and the owner billed - so the
+   * page and its PDF can print who the invoice is from and to. The worker
+   * who issued it sees the owner's name, and nothing the owner's public
+   * profile does not already show.
+   */
+  @test()
+  async read_namesTheIssuerAndTheOwnerBilled() {
+    const client = await this.userFixture.createUser()
+    const worker = await this.userFixture.createUser()
+    const project = await this.projectFixture.createHired(client, worker, 30)
+    const invoice = await this.invoiceFixture.createIssued(
+      project,
+      worker,
+      3000,
+    )
+
+    const res = await invoiceControllerRead({
+      client: this.apiClient(),
+      path: { id: invoice.id as never },
+      headers: {
+        Authorization: this.authenticator.getTokens(worker).accessToken,
+      },
+      throwOnError: true,
+    })
+
+    expect(res.data.user?.id).to.be.eq(worker.id)
+    expect(res.data.user?.name).to.be.eq(worker.name)
+    expect(res.data.project?.user?.id).to.be.eq(client.id)
+    expect(res.data.project?.user?.name).to.be.eq(client.name)
+    expect(res.data.project?.user?.address).to.be.eq(client.address)
+    expect(res.data.project?.user).to.not.have.any.keys('email', 'phone')
+  }
+
   @test()
   async read_requiresAuthorization() {
     const owner = await this.userFixture.createUser()
