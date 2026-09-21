@@ -82,3 +82,4 @@ This runs:
 
 - Generated files under `src/features/shared/api/generated` should not be edited manually.
 - Re-run codegen whenever backend API contracts change.
+- CI runs `scripts/api-client-drift.sh`, which regenerates the client and fails on any difference from what is committed, including a generated file nobody committed. The export is deterministic, so a diff means the API changed without its client.
