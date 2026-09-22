@@ -9,14 +9,18 @@ import { MarketplaceHireController } from '@/controller/marketplace-hire-control
 import { IConfigParameters } from '@/model/config'
 import { MarketplaceMilestoneInvoiceDto } from '@/model/dto/marketplace-milestone'
 import { EntitlementSignature } from '@/service/entitlement-signature'
+import { InternalRoute } from '@/service/internal-route'
 
 type Fixture = {
   secret: string
+  method: string
   path: string
   header: string
   body: Record<string, unknown>
   serialised: string
+  signedBytes: string
   signature: string
+  legacySignature: string
 }
 
 /**
@@ -60,12 +64,14 @@ export class MarketplaceMilestoneInvoiceContractTest {
 
     expect(
       this.service(fixture.secret).verify(
+        InternalRoute.MILESTONE_INVOICE,
         fixture.serialised,
         fixture.signature,
       ),
     ).to.be.true
     expect(
       this.service('not-the-secret').verify(
+        InternalRoute.MILESTONE_INVOICE,
         fixture.serialised,
         fixture.signature,
       ),
@@ -106,6 +112,7 @@ export class MarketplaceMilestoneInvoiceContractTest {
     ] as const) {
       expect(
         service.verify(
+          InternalRoute.MILESTONE_INVOICE,
           JSON.stringify({ ...fixture.body, [field]: value }),
           fixture.signature,
         ),

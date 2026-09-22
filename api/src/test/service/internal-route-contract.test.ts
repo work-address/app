@@ -26,6 +26,10 @@ const CONTRACTS: ReadonlyArray<{ file: string; route: IInternalRoute }> = [
   { file: 'entitlement-push.contract.json', route: InternalRoute.ENTITLEMENT },
   { file: 'marketplace-hire.contract.json', route: InternalRoute.HIRE },
   { file: 'marketplace-end.contract.json', route: InternalRoute.END },
+  {
+    file: 'marketplace-milestone-invoice.contract.json',
+    route: InternalRoute.MILESTONE_INVOICE,
+  },
   { file: 'marketplace-amend.contract.json', route: InternalRoute.AMEND },
   { file: 'marketplace-pause.contract.json', route: InternalRoute.PAUSE },
   {
