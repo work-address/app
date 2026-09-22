@@ -654,6 +654,27 @@ export class UserControllerIdentityRelayTest extends BaseControllerTest {
   }
 
   @test()
+  async relay_refusesASubjectWhoseChecksumIsWrong_with400() {
+    const holder = await this.holder()
+    const body = await this.publication(holder)
+    const lower = holder.wallet.address.toLowerCase()
+    // Upper-case one letter the checksum keeps lower: no longer EIP-55.
+    const index = [...lower].findIndex(
+      (char, at) =>
+        at > 1 && /[a-f]/.test(char) && holder.wallet.address[at] === char,
+    )
+    const broken = `${lower.slice(0, index)}${lower[index].toUpperCase()}${lower.slice(index + 1)}`
+
+    const failure = await this.relayFails(holder.user, {
+      ...body,
+      subject: broken,
+    })
+
+    expect(failure.status).to.equal(400)
+    expect(this.chain.sent).to.have.length(0)
+  }
+
+  @test()
   async relay_refusesAnAccountTheRegistryCannotKey() {
     const holder = await this.holder()
     const body = await this.publication(holder)

@@ -691,9 +691,18 @@ export class IdentityRelayer implements IIdentityRelaySwitch {
       )
     }
 
+    let subject: string
+
+    try {
+      subject = getAddress(dto.subject)
+    } catch {
+      // Mixed case that is not its own checksum: a typo, not an address.
+      throw new BadRequestError('subject is not a valid EVM address')
+    }
+
     return {
       operation: dto.operation,
-      subject: getAddress(dto.subject),
+      subject,
       commitment: publish ? (dto.commitment as string).toLowerCase() : null,
       schemaId: publish ? (dto.schemaId as number) : null,
       expectedVersion: dto.expectedVersion,
