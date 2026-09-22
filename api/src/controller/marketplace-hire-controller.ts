@@ -172,6 +172,7 @@ export class MarketplaceHireController {
         }
 
         const address = freelancer?.address ?? data.freelancerAddress ?? null
+        const canonical = address ? WalletAddress.toCanonical(address) : null
         const project = new Project()
 
         project.title = data.title
@@ -179,9 +180,10 @@ export class MarketplaceHireController {
         project.rateHour = data.rateHour
         project.state = EProjectState.ACTIVE
         project.user = client
-        project.workerAddresses = address
-          ? [WalletAddress.toCanonical(address)]
-          : []
+        project.workerAddresses = canonical ? [canonical] : []
+        // Who was hired, apart from the worker list the owner edits: only
+        // this freelancer may bind the contract's escrow allocations.
+        project.marketplaceFreelancerAddress = canonical
         project.viewerAddresses = []
         // The terms the freelancer accepted, not this service's defaults: the
         // offer disclosed what would be recorded and how many hours a week,

@@ -175,9 +175,13 @@ export class InvoiceManager {
    * without this anyone able to issue an invoice anywhere could bind the
    * allocation first and leave the hired worker's invoice unbillable.
    *
-   * Issuer only, and the issuer must be the worker hired on the project
-   * (403 otherwise): the owner is the payer, even on an invoice of their
-   * own, and nobody else can read the invoice. A legacy invoice has no
+   * Issuer only, and the issuer must be the freelancer the marketplace hire
+   * recorded on the project, still among its workers (403 otherwise): the
+   * owner is the payer, even on an invoice of their own, and a worker the
+   * owner added is not who the contract hired - the owner edits the worker
+   * list, so one added and bound first would leave the freelancer's invoice
+   * refused for good. A project hired before the freelancer was recorded
+   * binds nobody (409). A legacy invoice has no
    * record to commit to (409), and a paid one or one for nothing has
    * nothing to bill (409).
    */
@@ -223,11 +227,26 @@ export class InvoiceManager {
         actor,
       )
 
-      // isWorker counts the owner too; the owner is the payer.
-      if (!project || project.isOwner(actor) || !project.isWorker(actor)) {
+      if (project && !project.marketplaceFreelancerAddress) {
+        return yield* Effect.fail(
+          new InvoiceEscrowException(
+            `Project ${project.id} was hired before it recorded which freelancer the contract hired, so nobody can bind its escrow allocations`,
+          ),
+        )
+      }
+
+      // isWorker counts the owner too; the owner is the payer. A worker is
+      // not enough either: the owner edits that list, and a second worker
+      // bound first would leave the hired freelancer's invoice refused.
+      if (
+        !project ||
+        project.isOwner(actor) ||
+        !project.isWorker(actor) ||
+        !project.isHiredFreelancer(actor)
+      ) {
         return yield* Effect.fail(
           new AccessException(
-            'Only the worker hired on a marketplace contract can submit its invoices to escrow',
+            'Only the freelancer the marketplace contract hired can submit its invoices to escrow',
           ),
         )
       }

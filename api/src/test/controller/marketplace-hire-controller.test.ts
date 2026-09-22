@@ -81,6 +81,10 @@ export class MarketplaceHireControllerTest extends BaseControllerTest {
     expect(project?.workerAddresses).to.deep.eq([
       WalletAddress.toCanonical(freelancer.address),
     ])
+    // Who was hired, kept apart from the worker list the owner edits.
+    expect(project?.marketplaceFreelancerAddress).to.be.eq(
+      WalletAddress.toCanonical(freelancer.address),
+    )
   }
 
   /**
@@ -192,6 +196,9 @@ export class MarketplaceHireControllerTest extends BaseControllerTest {
     expect(project?.workerAddresses).to.deep.eq([
       WalletAddress.toCanonical(address),
     ])
+    expect(project?.marketplaceFreelancerAddress).to.be.eq(
+      WalletAddress.toCanonical(address),
+    )
   }
 
   @test

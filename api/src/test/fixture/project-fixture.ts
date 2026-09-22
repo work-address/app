@@ -48,6 +48,10 @@ export class ProjectFixture {
     project.trackScreenshots = false
     project.trackProcesses = false
     project.marketplaceContractId = randomUUID()
+    // As the signed hire records it.
+    project.marketplaceFreelancerAddress = WalletAddress.toCanonical(
+      worker.address,
+    )
 
     return runPromise(this.projectRepository.saveSingle(project))
   }

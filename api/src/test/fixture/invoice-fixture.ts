@@ -136,7 +136,7 @@ export class InvoiceFixture {
    * first use and reused after: the ids are fixed, and the test database
    * lives for the whole run, so every suite asking for one vector shares it.
    * The project is a marketplace hire under VECTOR_CONTRACT_ID, the issuer
-   * its worker, as escrow submission requires.
+   * its worker and the freelancer it hired, as escrow submission requires.
    */
   public async ensureForRecord(record: IInvoiceRecord): Promise<Invoice> {
     const existing = await runPromise(
@@ -193,6 +193,9 @@ export class InvoiceFixture {
     project.trackScreenshots = false
     project.trackProcesses = false
     project.marketplaceContractId = InvoiceFixture.VECTOR_CONTRACT_ID
+    project.marketplaceFreelancerAddress = WalletAddress.toCanonical(
+      issuer.address,
+    )
 
     return runPromise(this.projectRepository.saveSingle(project))
   }

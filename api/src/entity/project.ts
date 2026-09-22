@@ -165,6 +165,17 @@ export class Project extends AbstractBaseEntity implements IProject {
   marketplaceContractId?: string | null
 
   /**
+   * The freelancer the marketplace hire named, as the canonical form of the
+   * wallet address it put in `workerAddresses`: whom the contract's escrow
+   * allocations pay. Written by the signed hire only - in no serialisation
+   * group, so no create or edit carries it, and the owner, who edits the
+   * worker list, cannot change who was hired. Null on a project not hired on
+   * the marketplace, or hired before it was recorded.
+   */
+  @Column('text', { nullable: true })
+  marketplaceFreelancerAddress?: string | null
+
+  /**
    * The last pause or resume of the marketplace contract this project
    * applied, by the contract's own count of them; null until the first.
    * A pause or resume with a number at or below it is one this project has
@@ -275,6 +286,20 @@ export class Project extends AbstractBaseEntity implements IProject {
   public isWorker(user: User): boolean {
     return (
       this.isOwner(user) || this.hasCollaborator(this.workerAddresses, user)
+    )
+  }
+
+  /**
+   * Whether `user` is the freelancer the marketplace hire recorded on this
+   * project (BINDING-SQUAT). Being a worker is not enough for anything the
+   * contract's escrow pays: the owner edits the worker list, so a second
+   * worker the owner added is a worker too.
+   */
+  public isHiredFreelancer(user: User): boolean {
+    return Boolean(
+      this.marketplaceFreelancerAddress &&
+        user.address &&
+        WalletAddress.isSame(this.marketplaceFreelancerAddress, user.address),
     )
   }
 

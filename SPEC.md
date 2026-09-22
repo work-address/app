@@ -249,8 +249,15 @@ It binds only when that equals the requested `allocationId`, and only an
 invoice whose period lies inside `[workStart, workEnd]` (both ends included),
 since an allocation pays for its own period's work; otherwise 409, as is an
 invoice on a project no marketplace contract hired for. The issuer must also
-be the worker hired on the project — their address among its workers, and
-not its owner, who is the payer even on an invoice of their own (403). The
+be the freelancer the contract hired, as the marketplace hire recorded them
+on the project (`Project.marketplaceFreelancerAddress`, the canonical address
+it put in the worker list, written by the signed hire only and never by a
+project edit), still among its workers, and not its owner, who is the payer
+even on an invoice of their own (403). Being a worker is not enough: the
+owner edits the worker list, so a second worker the owner added could
+otherwise bind the contract's allocation first and leave the freelancer's
+invoice refused for good (BINDING-SQUAT). A project hired before the
+freelancer was recorded binds nobody (409). The
 marketplace's submit flow (WP-25) sends the period it funded along with the
 allocation.
 

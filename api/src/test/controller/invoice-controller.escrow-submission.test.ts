@@ -10,6 +10,7 @@ import {
   invoiceControllerMarkPaid,
   invoiceControllerRead,
   invoiceControllerSearch,
+  projectControllerEdit,
 } from '@app/api-client'
 
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
@@ -28,6 +29,7 @@ import { InvoiceRecord } from '@/service/invoice-record'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { ProjectRepository } from '@/repository/project-repository'
 import { runPromise } from '@/service/effect-bridge'
+import { WalletAddress } from '@/service/wallet-address'
 import { InvoiceFixture } from '@/test/fixture/invoice-fixture'
 
 type Period = { workStart: number; workEnd: number }
@@ -637,6 +639,79 @@ export class InvoiceControllerEscrowSubmissionTest extends BaseControllerTest {
     expect((await this.submit(invoice, worker, allocation)).status).to.be.eq(
       200,
     )
+  }
+
+  /**
+   * BINDING-SQUAT: the owner edits the worker list, so a second worker the
+   * owner adds is a worker too - but not whom the contract hired. Their
+   * invoice for the contract's allocation is refused (403) and binds nothing,
+   * so it cannot leave the freelancer's invoice refused for good, and the
+   * freelancer's still binds. Editing the project cannot change who was
+   * hired, whatever the body says.
+   */
+  @test()
+  async aSecondWorkerTheOwnerAdded_cannotBindTheContractsAllocation() {
+    const { owner, worker, project, invoice } = await this.issued()
+    const allocation = this.request(invoice, project)
+    const second = await this.userFixture.createUser()
+    const secondAddress = WalletAddress.toCanonical(second.address)
+
+    await projectControllerEdit({
+      client: this.apiClient(),
+      path: { id: project.id as never },
+      headers: this.auth(owner),
+      body: {
+        workerAddresses: [...project.workerAddresses, secondAddress],
+        marketplaceFreelancerAddress: secondAddress,
+      } as never,
+      throwOnError: true,
+    })
+
+    const edited = await runPromise(
+      this.projectRepository.findOneByIdOrFail(project.id),
+    )
+    // Issued a moment after the freelancer's, over the same hour: inside
+    // the period the allocation funds, a day wider at each end.
+    const squat = await this.invoiceFixture.createIssued(
+      edited,
+      second,
+      invoice.amountCents,
+    )
+
+    const refused = await this.statusOf(this.submit(squat, second, allocation))
+
+    expect(edited.workerAddresses).to.include(secondAddress)
+    expect(edited.isWorker(second)).to.be.true
+    expect(edited.marketplaceFreelancerAddress).to.be.eq(
+      WalletAddress.toCanonical(worker.address),
+    )
+    expect(refused).to.be.eq(403)
+    expect((await this.stored(squat.id)).escrowAllocationId).to.be.null
+    expect((await this.submit(invoice, worker, allocation)).status).to.be.eq(
+      200,
+    )
+    expect(
+      await this.statusOf(this.submit(squat, second, allocation)),
+    ).to.be.oneOf([403, 409])
+  }
+
+  /**
+   * A project hired before the freelancer was recorded on it cannot say who
+   * the contract hired, so it binds nobody (409) rather than anyone on its
+   * worker list.
+   */
+  @test()
+  async aProjectThatNeverRecordedItsFreelancer_bindsNobody() {
+    const { worker, project, invoice } = await this.issued()
+    const allocation = this.request(invoice, project)
+
+    project.marketplaceFreelancerAddress = null
+    await runPromise(this.projectRepository.saveSingle(project))
+
+    const status = await this.statusOf(this.submit(invoice, worker, allocation))
+
+    expect(status).to.be.eq(409)
+    expect((await this.stored(invoice.id)).escrowAllocationId).to.be.null
   }
 
   /**
