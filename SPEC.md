@@ -98,7 +98,14 @@ rather than one divided out of minutes it does not have, and says in
 unique, so a push retried or raced bills once and answers with the first
 invoice - when it is the same bill. The same reference pushed for another
 contract, freelancer or sum is a 409 that names the first invoice, never that
-invoice's id as though the different bill had been raised. It is issued by the hired worker on the contract's project, never by
+invoice's id as though the different bill had been raised. A milestone the
+marketplace's escrow paid names the allocation whose confirmed release paid
+it, and its invoice is raised **bound to that allocation**: the allocation
+must be the milestone's own (derived from `milestoneRef` as the marketplace
+derives the obligation, 409 otherwise) and named in full or not at all (400),
+and a repeat must name the same one. The settlement push of that release is
+then what marks it PAID, as for an hourly invoice submitted to escrow, and no
+hand can. It is issued by the hired worker on the contract's project, never by
 the client who pays it, and is otherwise an ordinary invoice: the same
 snapshot rules, the same paid and escrow paths. There is still no milestone,
 deliverable or allocation entity here - the milestone's workflow is the

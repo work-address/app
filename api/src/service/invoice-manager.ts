@@ -709,6 +709,13 @@ export class InvoiceManager {
    *
    * The issuer must be a worker on the project and not its owner: the
    * milestone is the hired freelancer's to bill, and the client is the payer.
+   *
+   * A milestone the escrow paid names the allocation whose release paid it,
+   * and the invoice is raised bound to it, under the commitment its bill
+   * carried, so the settlement push of that release marks it PAID and no
+   * hand can (`recordEscrowSettlement`, `setPaid`). The allocation must be
+   * the milestone's own (409 otherwise), bound to no other invoice (409),
+   * and named in full or not at all (400).
    */
   public billMilestone(
     project: Project,
@@ -758,6 +765,34 @@ export class InvoiceManager {
         )
       }
 
+      const payment = InvoiceEscrow.milestonePayment(bill)
+
+      if (payment === 'partial') {
+        return yield* Effect.fail(
+          new BadRequestError(
+            'A milestone paid through escrow names its chain, escrow, allocation and commitment; one approved without escrow names none of them',
+          ),
+        )
+      }
+
+      // The one allocation that can have paid this milestone is its own,
+      // derived from its reference as the marketplace derives it; any other
+      // would let one milestone's release mark another's invoice paid.
+      if (
+        payment &&
+        InvoiceEscrow.milestoneAllocationId(
+          payment.chainId,
+          payment.escrow,
+          bill.milestoneRef,
+        ) !== payment.allocationId
+      ) {
+        return yield* Effect.fail(
+          new InvoiceEscrowException(
+            `Allocation ${payment.allocationId} does not fund milestone ${bill.milestoneRef} on escrow ${payment.escrow}`,
+          ),
+        )
+      }
+
       return yield* this.unitOfWork
         .run((manager) =>
           Effect.gen(this, function* () {
@@ -771,6 +806,19 @@ export class InvoiceManager {
                 accessible,
                 issuer,
                 bill,
+              )
+            }
+
+            if (
+              payment &&
+              (yield* this.invoiceRepository
+                .within(manager)
+                .findByEscrowAllocation(payment))
+            ) {
+              return yield* Effect.fail(
+                new InvoiceEscrowException(
+                  `Allocation ${payment.allocationId} already bills another invoice`,
+                ),
               )
             }
 
@@ -806,6 +854,19 @@ export class InvoiceManager {
             // compares it with anything.
             invoice.periodStart = null
             invoice.periodEnd = null
+
+            // Paid by the escrow: bound to the allocation whose release paid
+            // it, under the commitment its bill carried, so the settlement
+            // push of that release is what marks it PAID. No salt: the
+            // commitment names the milestone, not this invoice's record, and
+            // it was never handed out here to be submitted.
+            if (payment) {
+              invoice.escrowChainId = payment.chainId
+              invoice.escrowAddress = payment.escrow
+              invoice.escrowAllocationId = payment.allocationId
+              invoice.escrowCommitment = payment.invoiceCommitment
+              invoice.escrowSalt = null
+            }
 
             const saved = yield* this.invoiceRepository
               .within(manager)
@@ -845,9 +906,10 @@ export class InvoiceManager {
    * a 409 otherwise.
    *
    * The period and the description are not compared. They describe the
-   * bill and the marketplace may word a retry differently; the three
-   * compared here are what decide who is owed how much by whom, and a push
-   * that disagrees about any of them is not a retry of the first.
+   * bill and the marketplace may word a retry differently; what is compared
+   * here decides who is owed how much by whom, and what pays it: a push
+   * that names another escrow allocation, or one where the first named
+   * none, is not a retry of the first either.
    */
   private static repeatedMilestone(
     first: Invoice,
@@ -855,10 +917,16 @@ export class InvoiceManager {
     issuer: User,
     bill: IInvoiceMilestoneBill,
   ): Effect.Effect<IInvoiceMilestoneResult, InvoiceMilestoneException> {
+    const payment = InvoiceEscrow.milestonePayment(bill)
+    const allocationId =
+      payment === null || payment === 'partial' ? payment : payment.allocationId
     const differs = [
       first.project?.id === project.id ? null : 'contract',
       first.user?.id === issuer.id ? null : 'freelancer',
       first.amountCents === bill.amountCents ? null : 'amount',
+      (first.escrowAllocationId ?? null) === allocationId
+        ? null
+        : 'escrow allocation',
     ].filter((name): name is string => name !== null)
 
     if (differs.length > 0) {

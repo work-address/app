@@ -157,6 +157,14 @@ export interface IInvoiceMilestoneBill {
   description: string
   workStart: number
   workEnd: number
+  /*
+   * The escrow allocation whose release paid it, and the bytes32 its bill
+   * committed to: all four null when escrow did not pay it.
+   */
+  chainId: number | null
+  escrow: string | null
+  allocationId: string | null
+  invoiceCommitment: string | null
 }
 
 /** What billing a milestone did: the invoice, and whether this call raised it. */

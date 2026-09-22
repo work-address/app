@@ -8,6 +8,7 @@ import {
   IInvoiceEscrowSettlement,
   IInvoiceEscrowSubmission,
   IInvoiceEscrowSubmissionRequest,
+  IInvoiceMilestoneBill,
 } from '@/model/invoice'
 
 /**
@@ -81,6 +82,72 @@ export class InvoiceEscrow {
       { type: 'uint64', value: InvoiceEscrow.uint64(workStart) },
       { type: 'uint64', value: InvoiceEscrow.uint64(workEnd) },
     )
+  }
+
+  /**
+   * The tag the marketplace hashes a fixed-price milestone under (web/api
+   * `EscrowManager.prepareMilestone`); a milestone is one obligation,
+   * whatever its dates.
+   */
+  public static readonly MILESTONE_OBLIGATION_TAG = 'work-address:milestone'
+
+  /**
+   * The allocation MarketplaceEscrow funds marketplace milestone
+   * `milestoneRef` under on one chain and escrow: the obligation is
+   * `keccak256(abi.encodePacked(string TAG, string milestoneRef))`, byte for
+   * byte the one web/api signs. The one allocation a milestone's invoice may
+   * be bound to.
+   */
+  public static milestoneAllocationId(
+    chainId: number,
+    escrow: string,
+    milestoneRef: string,
+  ): string {
+    return InvoiceEscrow.allocationId(
+      chainId,
+      escrow,
+      InvoiceEscrow.keccakPacked(
+        { type: 'string', value: InvoiceEscrow.MILESTONE_OBLIGATION_TAG },
+        { type: 'string', value: milestoneRef },
+      ),
+    )
+  }
+
+  /**
+   * The escrow a milestone bill says paid it, lowercase as every binding is
+   * stored: null when it names none, and `partial` when it names only some
+   * of the chain, escrow, allocation and commitment, which no payment is.
+   */
+  public static milestonePayment(
+    bill: IInvoiceMilestoneBill,
+  ):
+    | (IInvoiceCommitmentBinding & { invoiceCommitment: string })
+    | null
+    | 'partial' {
+    const { chainId, escrow, allocationId, invoiceCommitment } = bill
+
+    if (
+      chainId === null &&
+      escrow === null &&
+      allocationId === null &&
+      invoiceCommitment === null
+    ) {
+      return null
+    }
+
+    if (
+      chainId === null ||
+      escrow === null ||
+      allocationId === null ||
+      invoiceCommitment === null
+    ) {
+      return 'partial'
+    }
+
+    return {
+      ...InvoiceEscrow.binding({ chainId, escrow, allocationId }),
+      invoiceCommitment: invoiceCommitment.toLowerCase(),
+    }
   }
 
   /**

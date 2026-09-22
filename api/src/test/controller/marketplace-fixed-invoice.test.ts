@@ -17,11 +17,14 @@ import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
 import {
   EInvoiceBasis,
+  EInvoiceEscrowState,
   EInvoiceIssuanceKind,
+  EInvoiceSettlementKind,
   EInvoiceState,
 } from '@/model/invoice'
 import { EntitlementSignature } from '@/service/entitlement-signature'
 import { InternalRoute } from '@/service/internal-route'
+import { InvoiceEscrow } from '@/service/invoice-escrow'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { TimeRepository } from '@/repository/time-repository'
 import { runPromise } from '@/service/effect-bridge'
@@ -91,6 +94,10 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
       description: 'Milestone 2: the payroll export, delivered and accepted',
       workStart: end.clone().subtract(7, 'days').unix(),
       workEnd: end.unix(),
+      chainId: null,
+      escrow: null,
+      allocationId: null,
+      invoiceCommitment: null,
       issuedAt: Math.floor(Date.now() / 1000),
       nonce: randomUUID(),
       ...overrides,
@@ -110,6 +117,65 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
     const project = await this.projectFixture.createHired(client, freelancer, 0)
 
     return { client, freelancer, project }
+  }
+
+  /**
+   * What the marketplace names for a milestone its escrow paid: the
+   * milestone's own allocation on a local chain, and the bytes32 its bill
+   * committed to.
+   */
+  private paidBy(milestoneRef: string) {
+    const chainId = 31337
+    const escrow = '0xe7f1725e7734ce288f8367e1bb143e90bb3f0512'
+
+    return {
+      chainId,
+      escrow,
+      allocationId: InvoiceEscrow.milestoneAllocationId(
+        chainId,
+        escrow,
+        milestoneRef,
+      ),
+      invoiceCommitment: `0x${'5c'.repeat(32)}`,
+    }
+  }
+
+  /** The escrow indexer's push for `paid` settling in `state`, signed. */
+  private settle(
+    invoiceId: string,
+    paid: ReturnType<MarketplaceFixedInvoiceTest['paidBy']>,
+    state: EInvoiceEscrowState,
+  ) {
+    const gross = BigInt(250000) * InvoiceEscrow.BASE_UNITS_PER_CENT
+    const fee = gross / BigInt(20)
+    const released = state === EInvoiceEscrowState.RELEASED
+    const raw = JSON.stringify({
+      invoiceId,
+      chainId: paid.chainId,
+      escrow: paid.escrow,
+      allocationId: paid.allocationId,
+      invoiceCommitment: paid.invoiceCommitment,
+      escrowState: state,
+      grossBaseUnits: gross.toString(),
+      feeBaseUnits: released ? fee.toString() : '0',
+      netBaseUnits: released ? (gross - fee).toString() : '0',
+      refundedBaseUnits: released ? '0' : gross.toString(),
+      txHash: `0x${'7e'.repeat(32)}`,
+      confirmedAt: 1788865200,
+      issuedAt: Math.floor(Date.now() / 1000),
+      nonce: randomUUID(),
+    })
+
+    return axios.post(`${this.url}/api/internal/marketplace/settlement`, raw, {
+      headers: {
+        'Content-Type': 'application/json',
+        [InternalRoute.SETTLEMENT.header]: this.signature.sign(
+          InternalRoute.SETTLEMENT,
+          raw,
+        ),
+      },
+      validateStatus: () => true,
+    })
   }
 
   private stored(id: string): Promise<Invoice | undefined> {
@@ -693,5 +759,146 @@ export class MarketplaceFixedInvoiceTest extends BaseControllerTest {
     )
 
     expect(sent.status).to.be.eq(401)
+  }
+
+  /**
+   * A milestone the escrow paid is billed bound to the allocation whose
+   * release paid it, so the settlement push of that release is what marks
+   * the invoice PAID - at the block's time, as an escrow settlement - and
+   * no hand can mark it either way meanwhile. Before this, the invoice was
+   * raised as an ordinary outstanding one although the release had already
+   * paid it, and the push had nothing to land on.
+   */
+  @test()
+  @timeout(20000)
+  async milestone_paidThroughEscrow_isBoundAndItsReleaseMarksItPaid() {
+    const { freelancer, project } = await this.hired()
+    const milestoneRef = randomUUID()
+    const paid = this.paidBy(milestoneRef)
+    const pushed = await this.post(
+      this.body({
+        contractId: project.marketplaceContractId,
+        freelancerId: freelancer.id,
+        milestoneRef,
+        ...paid,
+      }),
+    )
+
+    expect(pushed.status, JSON.stringify(pushed.data)).to.be.eq(200)
+
+    const raised = await this.stored(pushed.data.invoiceId)
+
+    expect(raised?.state).to.be.eq(EInvoiceState.REQUESTED)
+    expect(raised?.escrowChainId).to.be.eq(paid.chainId)
+    expect(raised?.escrowAddress).to.be.eq(paid.escrow)
+    expect(raised?.escrowAllocationId).to.be.eq(paid.allocationId)
+    expect(raised?.escrowCommitment).to.be.eq(paid.invoiceCommitment)
+
+    const byHand = await axios.post(
+      `${this.url}/api/invoice/${pushed.data.invoiceId}/paid`,
+      undefined,
+      { headers: this.auth(freelancer), validateStatus: () => true },
+    )
+
+    expect(byHand.status).to.be.eq(409)
+
+    const released = await this.settle(
+      pushed.data.invoiceId,
+      paid,
+      EInvoiceEscrowState.RELEASED,
+    )
+
+    expect(released.status, JSON.stringify(released.data)).to.be.eq(200)
+    expect(released.data).to.include({
+      applied: true,
+      state: EInvoiceState.PAID,
+    })
+
+    const settled = await this.stored(pushed.data.invoiceId)
+
+    expect(settled?.state).to.be.eq(EInvoiceState.PAID)
+    expect(settled?.settlementKind).to.be.eq(EInvoiceSettlementKind.ESCROW)
+    expect(new Date(settled?.paidAt as Date).getTime()).to.be.eq(
+      1788865200 * 1000,
+    )
+  }
+
+  /**
+   * A refund of the allocation a milestone invoice is bound to is recorded
+   * on it and leaves it unpaid: only a release pays.
+   */
+  @test()
+  @timeout(20000)
+  async milestone_paidThroughEscrow_isNotPaidByARefund() {
+    const { freelancer, project } = await this.hired()
+    const milestoneRef = randomUUID()
+    const paid = this.paidBy(milestoneRef)
+    const pushed = await this.post(
+      this.body({
+        contractId: project.marketplaceContractId,
+        freelancerId: freelancer.id,
+        milestoneRef,
+        ...paid,
+      }),
+    )
+
+    expect(pushed.status, JSON.stringify(pushed.data)).to.be.eq(200)
+
+    const refunded = await this.settle(
+      pushed.data.invoiceId,
+      paid,
+      EInvoiceEscrowState.DISPUTED_REFUNDED,
+    )
+
+    expect(refunded.status, JSON.stringify(refunded.data)).to.be.eq(200)
+
+    const stored = await this.stored(pushed.data.invoiceId)
+
+    expect(stored?.state).to.be.eq(EInvoiceState.REQUESTED)
+    expect(stored?.paidAt ?? null).to.be.eq(null)
+    expect(stored?.escrowState).to.be.eq(EInvoiceEscrowState.DISPUTED_REFUNDED)
+  }
+
+  /**
+   * The allocation a milestone invoice is bound to is the milestone's own,
+   * named in full; and a repeat names the same one, or none as the first
+   * did. Anything else would let one milestone's release pay another's
+   * invoice, or turn a hand-marked invoice into an escrow one.
+   */
+  @test()
+  @timeout(20000)
+  async milestone_boundToAnotherAllocationOrPartly_isRefused() {
+    const { freelancer, project } = await this.hired()
+    const milestoneRef = randomUUID()
+    const base = {
+      contractId: project.marketplaceContractId,
+      freelancerId: freelancer.id,
+      milestoneRef,
+    }
+
+    const another = await this.post(
+      this.body({ ...base, ...this.paidBy(randomUUID()) }),
+    )
+    const partly = await this.post(
+      this.body({ ...base, ...this.paidBy(milestoneRef), chainId: null }),
+    )
+
+    expect(another.status).to.be.eq(409)
+    expect(another.data.message).to.contain('does not fund milestone')
+    expect(partly.status).to.be.eq(400)
+
+    const unbound = await this.post(this.body(base))
+
+    expect(unbound.status, JSON.stringify(unbound.data)).to.be.eq(200)
+
+    const rebound = await this.post(
+      this.body({ ...base, ...this.paidBy(milestoneRef) }),
+    )
+
+    expect(rebound.status).to.be.eq(409)
+    expect(rebound.data.message).to.contain('escrow allocation')
+    expect(
+      (await this.stored(unbound.data.invoiceId))?.escrowAllocationId ?? null,
+    ).to.be.eq(null)
   }
 }

@@ -2,11 +2,16 @@ import {
   IsInt,
   IsString,
   IsUUID,
+  Matches,
   Max,
   MaxLength,
   Min,
   MinLength,
+  ValidateIf,
 } from 'class-validator'
+
+const EVM_ADDRESS = /^0x[\dA-Fa-f]{40}$/
+const BYTES32 = /^0x[\dA-Fa-f]{64}$/
 
 /**
  * Highest unix second a milestone period may name. Past it `new Date` loses
@@ -83,6 +88,37 @@ export class MarketplaceMilestoneInvoiceDto {
   @Min(1)
   @Max(MAX_UNIX_SECONDS)
   workEnd: number
+
+  /*
+   * The escrow allocation whose confirmed release paid the milestone, which
+   * the invoice is bound to so that the allocation's settlement push marks it
+   * PAID: its chain, its MarketplaceEscrow deployment and id, and the bytes32
+   * its bill committed to. All four null for a milestone approved without
+   * escrow, whose invoice its issuer marks; never some of them (400). Each is
+   * a key that is always sent, null or not, because the signature covers the
+   * re-serialised DTO.
+   */
+
+  @ValidateIf((dto: MarketplaceMilestoneInvoiceDto) => dto.chainId !== null)
+  @IsInt()
+  @Min(1)
+  chainId: number | null
+
+  @ValidateIf((dto: MarketplaceMilestoneInvoiceDto) => dto.escrow !== null)
+  @Matches(EVM_ADDRESS)
+  escrow: string | null
+
+  @ValidateIf(
+    (dto: MarketplaceMilestoneInvoiceDto) => dto.allocationId !== null,
+  )
+  @Matches(BYTES32)
+  allocationId: string | null
+
+  @ValidateIf(
+    (dto: MarketplaceMilestoneInvoiceDto) => dto.invoiceCommitment !== null,
+  )
+  @Matches(BYTES32)
+  invoiceCommitment: string | null
 
   /** Unix seconds. Outside the replay window the call is refused. */
   @IsInt()

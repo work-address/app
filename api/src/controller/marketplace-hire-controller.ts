@@ -300,6 +300,11 @@ export class MarketplaceHireController {
    * A contract with no project here, or a freelancer this instance does not
    * know, is a 409 rather than a quiet non-result: the two services are
    * misconfigured, and no retry will help.
+   *
+   * A milestone the escrow paid names the allocation whose release paid it,
+   * and the invoice is raised bound to that allocation, so the settlement
+   * push of the release is what marks it PAID - as it does an hourly
+   * invoice submitted to escrow - and nobody marks it by hand.
    */
   @HttpCode(200)
   @Post('/marketplace/milestone-invoice')
@@ -359,6 +364,10 @@ export class MarketplaceHireController {
         description: data.description,
         workStart: data.workStart,
         workEnd: data.workEnd,
+        chainId: data.chainId,
+        escrow: data.escrow,
+        allocationId: data.allocationId,
+        invoiceCommitment: data.invoiceCommitment,
       }),
     )
   }
