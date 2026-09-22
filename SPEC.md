@@ -225,7 +225,8 @@ the invoice — `escrowChainId`, `escrowAddress`, `escrowAllocationId`,
 allocation returns exactly that, so asking twice never mints a second
 commitment. The binding never moves: the chain cannot tell this service
 whether a commitment it handed out was sent, so letting the invoice go to a
-second allocation could bill it twice (409). An allocation takes one bill, so
+second allocation could bill it twice (409) - unless its allocation ended
+without a bill, below. An allocation takes one bill, so
 it binds one invoice, enforced by a unique index over the three binding
 columns (409). A legacy invoice has no record to commit to, and a paid one or
 one for 0 cents has nothing to bill — MarketplaceEscrow reverts an amount of 0
@@ -296,6 +297,24 @@ nothing; a second final state, or the same state settled differently, is a
 - A **dispute refund** records the refund and leaves the invoice and its
   entries unpaid. Nobody can mark it paid by hand afterwards: the payer
   disputed the bill on chain, and the record keeps saying so.
+- An **expiry or cancellation before any bill** releases the binding
+  (adopted default, LAPSED-BINDING; the reviewer judged it safe). Once
+  `EXPIRED_REFUNDED` or `CANCELLED_REFUNDED` is confirmed the allocation takes
+  no bill on chain again, so no commitment handed out for it can ever be
+  paid; left bound, the invoice was refused hand marks and every other
+  allocation for good, and its hours could never be billed. The push records
+  the outcome, and from then on the invoice is still owed (it was never
+  billed against that budget, so it is not "refunded"): its issuer may mark
+  it paid by hand, which takes it out of escrow for good - binding,
+  commitment and recorded outcome cleared - or submit it to another
+  allocation that covers its period, which binds it afresh with a new salt
+  and commitment. The lapsed allocation itself is refused (409). Only the
+  settlement push releases it, and the marketplace sends that push only for
+  a confirmed event, past its confirmation depth; a reorganisation that
+  still takes the lapse back arrives as a reversal (below) and, while the
+  invoice has not left the allocation, puts the binding back in force. A
+  late or repeated push of a lapse for an invoice no longer bound to that
+  allocation records nothing and answers `applied: false`.
 - A **settlement the chain takes back is undone.** Confirmations make a
   reorganisation below the marketplace's confirmed head rare, not impossible.
   When one removes the block a settlement pushed here was confirmed in, the

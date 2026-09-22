@@ -11,6 +11,7 @@ import {
   RepoEffect,
 } from '@/repository/abstract-repository-template'
 import { fromPromise } from '@/service/effect-bridge'
+import { InvoiceEscrow } from '@/service/invoice-escrow'
 import { Invoice } from '@/entity/invoice'
 
 import { User } from '@/entity/user'
@@ -205,11 +206,13 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
 
   /**
    * Binds the invoice to an escrow allocation under a commitment, writing
-   * only those columns.
+   * only those columns and clearing any outcome recorded before.
    *
-   * Only an unbound row is written, so a binding is never moved. A second
-   * invoice racing for the same allocation fails the unique index; that is
-   * reported as the conflict it is rather than a database error.
+   * Only an unbound row is written, or one whose allocation confirmed an end
+   * without a bill (`InvoiceEscrow.LAPSED_STATES`), so a binding that can
+   * still bill is never moved. A second invoice racing for the same
+   * allocation fails the unique index; that is reported as the conflict it
+   * is rather than a database error.
    */
   public bindEscrow(
     invoice: Invoice,
@@ -228,9 +231,21 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
             escrowAllocationId: binding.allocationId,
             escrowCommitment: commitment,
             escrowSalt: salt,
+            // What a lapsed binding recorded goes with it.
+            settlementKind: null,
+            escrowState: null,
+            escrowGrossBaseUnits: null,
+            escrowFeeBaseUnits: null,
+            escrowNetBaseUnits: null,
+            escrowRefundedBaseUnits: null,
+            escrowTxHash: null,
+            escrowConfirmedAt: null,
           })
           .where('id = :id', { id: invoice.id })
-          .andWhere('"escrowAllocationId" IS NULL')
+          .andWhere(
+            '("escrowAllocationId" IS NULL OR "escrowState" IN (:...lapsed))',
+            { lapsed: InvoiceEscrow.LAPSED_STATES },
+          )
           .execute()
 
         if (result.affected !== 1) {

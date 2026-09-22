@@ -77,7 +77,11 @@ export const InvoiceEscrowSettlement = ({
       </Header>
       {isPage ? (
         <Caption size="2" color="gray">
-          {t('invoice.escrow.description')}
+          {t(
+            settlement.lapsed
+              ? 'invoice.escrow.lapsed'
+              : 'invoice.escrow.description',
+          )}
         </Caption>
       ) : null}
       {settlement.figures.length > 0 || settlement.txHash ? (

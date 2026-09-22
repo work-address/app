@@ -284,11 +284,15 @@ export interface IInvoiceEscrowSettlement extends IInvoiceCommitmentBinding {
 
 /** What recording a settlement push did. */
 export interface IInvoiceEscrowSettlementResult {
-  /** False when the push was one already recorded, or older than it. */
+  /**
+   * False when the push was one already recorded, or older than it, or the
+   * unbilled end of an allocation the invoice is no longer bound to.
+   */
   applied: boolean
   invoiceId: string
   state: EInvoiceState
-  escrowState: EInvoiceEscrowState
+  /** What the invoice records of its own allocation; null when nothing. */
+  escrowState: EInvoiceEscrowState | null
 }
 
 /**

@@ -42,6 +42,11 @@ export type InvoiceEscrowFigure = {
 
 export type InvoiceEscrowView = {
   state: InvoiceEscrowState
+  /**
+   * The allocation ended without a bill (expired or cancelled), so escrow no
+   * longer settles the invoice: it is owed as before and marked by hand.
+   */
+  lapsed: boolean
   figures: InvoiceEscrowFigure[]
   txHash: string | null
   /** A block explorer page for the transaction, when the chain has one. */
@@ -73,8 +78,19 @@ const STATES: Record<
   CANCELLED_REFUNDED: 'cancelled',
 }
 
-const REFUNDED_STATES: ReadonlySet<InvoiceEscrowState> = new Set([
-  'disputed',
+/**
+ * Only a dispute refunds the invoice's own bill. An expiry or a cancellation
+ * gave back a budget the invoice was never billed against, so the invoice is
+ * still owed.
+ */
+const REFUNDED_STATES: ReadonlySet<InvoiceEscrowState> = new Set(['disputed'])
+
+/**
+ * The outcomes in which an allocation ended without a bill. The API releases
+ * the binding then (LAPSED-BINDING): the invoice can be marked paid by hand
+ * or submitted to another allocation.
+ */
+const LAPSED_STATES: ReadonlySet<InvoiceEscrowState> = new Set([
   'expired',
   'cancelled',
 ])
@@ -101,20 +117,40 @@ export const isEscrowBound = (
 ): boolean => Boolean(invoice?.escrowAllocationId)
 
 /**
+ * Whether the invoice's allocation ended without a bill - expired unbilled,
+ * or cancelled before work - so its binding no longer holds it.
+ */
+export const hasEscrowLapsed = (
+  invoice:
+    | Pick<InvoiceEscrowFields, 'escrowAllocationId' | 'escrowState'>
+    | null
+    | undefined,
+): boolean =>
+  isEscrowBound(invoice) &&
+  Boolean(
+    invoice?.escrowState && LAPSED_STATES.has(STATES[invoice.escrowState]),
+  )
+
+/**
  * Whether `userId` may mark the invoice paid or unpaid: only its issuer, and
- * never once it is submitted to escrow - the chain's outcome settles it then,
- * and the API refuses a hand mark with a 409.
+ * not while it is submitted to escrow - the chain's outcome settles it then,
+ * and the API refuses a hand mark with a 409 - unless its allocation ended
+ * without a bill, which releases it.
  */
 export const canMarkInvoiceByHand = (
   invoice:
-    | (Pick<InvoiceEscrowFields, 'escrowAllocationId'> & {
+    | (Pick<InvoiceEscrowFields, 'escrowAllocationId' | 'escrowState'> & {
         user?: { id?: string } | null
       })
     | null
     | undefined,
   userId: string | null | undefined,
 ): boolean =>
-  Boolean(userId && invoice?.user?.id === userId && !isEscrowBound(invoice))
+  Boolean(
+    userId &&
+      invoice?.user?.id === userId &&
+      (!isEscrowBound(invoice) || hasEscrowLapsed(invoice)),
+  )
 
 /**
  * Token base units as an exact decimal with the token symbol: at least two
@@ -191,6 +227,7 @@ export const describeInvoiceEscrow = (
 
   return {
     state,
+    lapsed: LAPSED_STATES.has(state),
     figures,
     txHash,
     txUrl: getEscrowTxUrl(invoice.escrowChainId, txHash),
@@ -200,8 +237,9 @@ export const describeInvoiceEscrow = (
 
 /**
  * The invoice's badge. PAID is paid however it got there. An invoice whose
- * escrow gave the money back is not awaiting payment any more - the payer
- * disputed it, or the bill never reached the chain - so it says refunded.
+ * bill the escrow gave back on a dispute is not awaiting payment any more,
+ * so it says refunded. One whose allocation expired or was cancelled before
+ * any bill is still owed: that budget was never its money.
  */
 export const getInvoiceStatus = (
   invoice:

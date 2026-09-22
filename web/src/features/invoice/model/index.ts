@@ -159,6 +159,7 @@ export {
   describeInvoiceEscrow,
   formatTokenAmount,
   getInvoiceStatus,
+  hasEscrowLapsed,
   isEscrowBound,
   type InvoiceEscrowFields,
   type InvoiceEscrowLayout,

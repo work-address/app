@@ -269,6 +269,7 @@
   "invoice.document.unnamed": "No name on the profile",
   "invoice.escrow.heading": "Escrow",
   "invoice.escrow.description": "Settled by the escrow contract: the invoice is paid when its bill is released, so it can’t be marked paid by hand.",
+  "invoice.escrow.lapsed": "The escrow funding for this period ended without this bill and the budget went back to the client, so escrow no longer settles the invoice. Mark it paid by hand once you are paid, or submit it to escrow for another funded period.",
   "invoice.escrow.state.pending": "Not billed yet",
   "invoice.escrow.state.submitted": "Billed, awaiting release",
   "invoice.escrow.state.released": "Released",

@@ -44,6 +44,7 @@ const STATUSES: Record<InvoiceStatus, string> = {
 const KEYS = [
   'invoice.escrow.heading',
   'invoice.escrow.description',
+  'invoice.escrow.lapsed',
   'invoice.escrow.confirmedAt',
   'invoice.escrow.transaction',
   'invoice.escrow.viewTransaction',

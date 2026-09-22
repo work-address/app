@@ -44,6 +44,13 @@ type Bound = {
   binding: IInvoiceCommitmentBinding
   commitment: string
   amountBaseUnits: string
+  /** The escrow and work period the invoice was submitted for. */
+  request: {
+    chainId: number
+    escrow: string
+    workStart: number
+    workEnd: number
+  }
 }
 
 /**
@@ -255,7 +262,60 @@ export class MarketplaceSettlementControllerTest extends BaseControllerTest {
       binding,
       commitment: submission.data.invoiceCommitment,
       amountBaseUnits: submission.data.amountBaseUnits,
+      request,
     }
+  }
+
+  /**
+   * Asks for the escrow submission of `bound`'s invoice for the work period
+   * `period`, on the same escrow; the status, and the submission on a 200.
+   */
+  private async submitFor(
+    bound: Bound,
+    period: { workStart: number; workEnd: number },
+  ): Promise<{ status: number; data: Body }> {
+    const request = { ...bound.request, ...period }
+    const allocationId = InvoiceEscrow.contractPeriodAllocationId(
+      bound.invoice.project.marketplaceContractId!,
+      { ...request, allocationId: '' },
+    )
+    const res = await axios.get(
+      `${this.url}/api/invoice/${bound.invoice.id}/escrow-submission`,
+      {
+        params: { ...request, allocationId },
+        headers: this.auth(bound.worker),
+        validateStatus: () => true,
+      },
+    )
+
+    return { status: res.status, data: res.data }
+  }
+
+  /** The push of an allocation that ended without a bill. */
+  private lapse(
+    bound: Bound,
+    state: EInvoiceEscrowState,
+    overrides: Body = {},
+  ) {
+    return this.settlement(bound, state, {
+      invoiceCommitment: null,
+      grossBaseUnits: '0',
+      feeBaseUnits: '0',
+      netBaseUnits: '0',
+      refundedBaseUnits: '40000000',
+      ...overrides,
+    })
+  }
+
+  private markByHand(bound: Bound, paid: boolean) {
+    return this.statusOf(
+      (paid ? invoiceControllerMarkPaid : invoiceControllerMarkUnpaid)({
+        client: this.apiClient(),
+        path: { id: bound.invoice.id as never },
+        headers: this.auth(bound.worker),
+        throwOnError: true,
+      }),
+    )
   }
 
   private async stored(id: string): Promise<Invoice> {
@@ -1055,5 +1115,117 @@ export class MarketplaceSettlementControllerTest extends BaseControllerTest {
     expect(spec.components.schemas).to.not.have.property(
       'MarketplaceSettlementReversalDto',
     )
+  }
+  /**
+   * LAPSED-BINDING: an allocation that confirms an end without a bill -
+   * expired unbilled, or cancelled before work - can never pay the invoice,
+   * so the binding is released. Before that push a hand mark is a 409;
+   * after it the invoice is still owed, is marked paid by hand, and leaves
+   * escrow for good: a late repeat of the push records nothing on it.
+   */
+  @test()
+  async lapse_releasesTheBinding_soTheInvoiceIsMarkedPaidByHand() {
+    for (const state of [
+      EInvoiceEscrowState.EXPIRED_REFUNDED,
+      EInvoiceEscrowState.CANCELLED_REFUNDED,
+    ]) {
+      const bound = await this.bound()
+      const before = await this.markByHand(bound, true)
+      const push = this.lapse(bound, state)
+      const lapsed = await this.post(push)
+      const recorded = await this.stored(bound.invoice.id)
+      const marked = await this.markByHand(bound, true)
+      const paid = await this.stored(bound.invoice.id)
+      const late = await this.post(this.fresh(push))
+      const after = await this.stored(bound.invoice.id)
+
+      expect(before, state).to.be.eq(409)
+      expect(lapsed.data, state).to.deep.eq({
+        applied: true,
+        invoiceId: bound.invoice.id,
+        state: EInvoiceState.REQUESTED,
+        escrowState: state,
+      })
+      expect(recorded.state, state).to.be.eq(EInvoiceState.REQUESTED)
+      expect(recorded.escrowState, state).to.be.eq(state)
+      expect(recorded.escrowRefundedBaseUnits, state).to.be.eq('40000000')
+      expect(marked, state).to.be.eq(200)
+      expect(paid.state, state).to.be.eq(EInvoiceState.PAID)
+      expect(paid.settlementKind, state).to.be.eq(EInvoiceSettlementKind.MANUAL)
+      expect(paid.escrowAllocationId ?? null, state).to.be.null
+      expect(paid.escrowCommitment ?? null, state).to.be.null
+      expect(paid.escrowState ?? null, state).to.be.null
+      expect(await this.hoursPaid(paid), state).to.deep.eq([true, true, true])
+      expect(late.status, state).to.be.eq(200)
+      expect(late.data.applied, state).to.be.false
+      expect(after.state, state).to.be.eq(EInvoiceState.PAID)
+      expect(after.settlementKind, state).to.be.eq(
+        EInvoiceSettlementKind.MANUAL,
+      )
+    }
+  }
+
+  /**
+   * A released binding may be taken up again for another allocation -
+   * another period's that still covers the invoice - with a fresh
+   * commitment, but never for the lapsed allocation, which takes no bill.
+   * A lapse is not a refund of the invoice: it is still awaiting payment.
+   */
+  @test()
+  async lapse_letsTheInvoiceBeBoundAfreshButNeverToTheLapsedAllocation() {
+    const bound = await this.bound()
+    const push = this.lapse(bound, EInvoiceEscrowState.CANCELLED_REFUNDED)
+
+    await this.post(push)
+
+    const same = await this.submitFor(bound, bound.request)
+    const other = await this.submitFor(bound, {
+      workStart: bound.request.workStart - 86400,
+      workEnd: bound.request.workEnd,
+    })
+    const again = await this.submitFor(bound, {
+      workStart: bound.request.workStart - 86400,
+      workEnd: bound.request.workEnd,
+    })
+    const rebound = await this.stored(bound.invoice.id)
+    const late = await this.post(this.fresh(push))
+    const handMark = await this.markByHand(bound, true)
+
+    expect(same.status).to.be.eq(409)
+    expect(other.status, JSON.stringify(other.data)).to.be.eq(200)
+    expect(other.data.allocationId).to.not.eq(bound.binding.allocationId)
+    expect(other.data.invoiceCommitment).to.not.eq(bound.commitment)
+    expect(again.data).to.deep.eq(other.data)
+    expect(rebound.escrowAllocationId).to.be.eq(other.data.allocationId)
+    expect(rebound.escrowCommitment).to.be.eq(other.data.invoiceCommitment)
+    expect(rebound.escrowState ?? null).to.be.null
+    expect(rebound.settlementKind ?? null).to.be.null
+    expect(rebound.state).to.be.eq(EInvoiceState.REQUESTED)
+    expect(late.status).to.be.eq(200)
+    expect(late.data.applied).to.be.false
+    expect((await this.stored(bound.invoice.id)).escrowAllocationId).to.be.eq(
+      other.data.allocationId,
+    )
+    // Bound afresh, the new allocation settles it.
+    expect(handMark).to.be.eq(409)
+  }
+
+  /**
+   * A lapse a reorganisation took back puts the binding back in force: the
+   * chain holds a funded allocation again, which may yet take the bill.
+   */
+  @test()
+  async reversal_ofALapse_holdsTheBindingAgain() {
+    const bound = await this.bound()
+    const push = this.lapse(bound, EInvoiceEscrowState.EXPIRED_REFUNDED)
+
+    await this.post(push)
+
+    const res = await this.postReversal(this.reversalOf(push))
+    const invoice = await this.stored(bound.invoice.id)
+
+    expect(res.data).to.include({ applied: true, escrowState: null })
+    expect(invoice.escrowAllocationId).to.be.eq(bound.binding.allocationId)
+    expect(await this.markByHand(bound, true)).to.be.eq(409)
   }
 }

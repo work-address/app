@@ -223,6 +223,68 @@ export class InvoiceEscrow {
     return Boolean(invoice.escrowAllocationId)
   }
 
+  /**
+   * The outcomes in which an allocation ended without a bill: it expired
+   * unbilled, or was cancelled before work. MarketplaceEscrow takes no bill
+   * on it again, so nothing can ever pay an invoice through it.
+   */
+  public static readonly LAPSED_STATES: readonly EInvoiceEscrowState[] = [
+    EInvoiceEscrowState.EXPIRED_REFUNDED,
+    EInvoiceEscrowState.CANCELLED_REFUNDED,
+  ]
+
+  /**
+   * Whether the invoice's allocation has confirmed an end without a bill
+   * (LAPSED-BINDING). The binding no longer holds the invoice then: its
+   * issuer may mark it paid by hand or submit it to another allocation, and
+   * its hours can be billed again. Only a confirmed settlement push sets
+   * the state that says so.
+   */
+  public static hasLapsed(invoice: Invoice): boolean {
+    return (
+      InvoiceEscrow.isBound(invoice) &&
+      InvoiceEscrow.LAPSED_STATES.includes(
+        invoice.escrowState as EInvoiceEscrowState,
+      )
+    )
+  }
+
+  /**
+   * Whether the escrow still settles the invoice: bound, to an allocation
+   * that can still take or has taken its bill. Hand marks and a second
+   * binding are refused while it holds.
+   */
+  public static isHeld(invoice: Invoice): boolean {
+    return InvoiceEscrow.isBound(invoice) && !InvoiceEscrow.hasLapsed(invoice)
+  }
+
+  /** Whether a push reports an allocation ending without a bill. */
+  public static isLapse(settlement: IInvoiceEscrowSettlement): boolean {
+    return InvoiceEscrow.LAPSED_STATES.includes(settlement.escrowState)
+  }
+
+  /** Forgets every outcome recorded from the invoice's allocation. */
+  public static clearSettlement(invoice: Invoice): void {
+    invoice.settlementKind = null
+    invoice.escrowState = null
+    invoice.escrowGrossBaseUnits = null
+    invoice.escrowFeeBaseUnits = null
+    invoice.escrowNetBaseUnits = null
+    invoice.escrowRefundedBaseUnits = null
+    invoice.escrowTxHash = null
+    invoice.escrowConfirmedAt = null
+  }
+
+  /** Takes the invoice out of escrow: no binding, no commitment, no outcome. */
+  public static clearBinding(invoice: Invoice): void {
+    InvoiceEscrow.clearSettlement(invoice)
+    invoice.escrowChainId = null
+    invoice.escrowAddress = null
+    invoice.escrowAllocationId = null
+    invoice.escrowCommitment = null
+    invoice.escrowSalt = null
+  }
+
   /** Whether `invoice` is bound to exactly this allocation. */
   public static isBoundTo(
     invoice: Invoice,

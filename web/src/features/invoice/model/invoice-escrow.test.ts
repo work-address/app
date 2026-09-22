@@ -6,6 +6,7 @@ import {
   formatTokenAmount,
   getEscrowTxUrl,
   getInvoiceStatus,
+  hasEscrowLapsed,
   isEscrowBound,
 } from './invoice-escrow'
 
@@ -82,6 +83,7 @@ describe('describeInvoiceEscrow', () => {
   it('shows gross, fee, net, refund and the transaction of a release', () => {
     expect(describeInvoiceEscrow(released)).toEqual({
       state: 'released',
+      lapsed: false,
       figures: [
         { id: 'gross', amount: '30.00 USDT' },
         { id: 'fee', amount: '1.50 USDT' },
@@ -117,12 +119,14 @@ describe('describeInvoiceEscrow', () => {
     })
 
     expect(expired?.state).toBe('expired')
+    expect(expired?.lapsed).toBe(true)
     expect(expired?.figures).toEqual([{ id: 'refunded', amount: '50.00 USDT' }])
   })
 
   it('is pending, with nothing to show, until the chain confirms the bill', () => {
     expect(describeInvoiceEscrow(bound)).toEqual({
       state: 'pending',
+      lapsed: false,
       figures: [],
       txHash: null,
       txUrl: null,
@@ -163,6 +167,24 @@ describe('canMarkInvoiceByHand', () => {
     expect(canMarkInvoiceByHand(manual, 'owner')).toBe(false)
     expect(canMarkInvoiceByHand(manual, null)).toBe(false)
   })
+
+  it('gives it back once the allocation ended without a bill', () => {
+    for (const escrowState of [
+      'EXPIRED_REFUNDED',
+      'CANCELLED_REFUNDED',
+    ] as const) {
+      const lapsed = { ...bound, escrowState }
+
+      expect(hasEscrowLapsed(lapsed)).toBe(true)
+      expect(canMarkInvoiceByHand(lapsed, 'issuer')).toBe(true)
+      expect(canMarkInvoiceByHand(lapsed, 'owner')).toBe(false)
+    }
+
+    expect(hasEscrowLapsed(disputed)).toBe(false)
+    expect(
+      hasEscrowLapsed({ ...manual, escrowState: 'EXPIRED_REFUNDED' }),
+    ).toBe(false)
+  })
 })
 
 describe('getInvoiceStatus', () => {
@@ -171,11 +193,20 @@ describe('getInvoiceStatus', () => {
     expect(getInvoiceStatus({ state: 'PAID' })).toBe('paid')
   })
 
-  it('is refunded once the escrow gave the money back', () => {
+  it('is refunded once the escrow gave its bill back on a dispute', () => {
     expect(getInvoiceStatus(disputed)).toBe('refunded')
-    expect(
-      getInvoiceStatus({ ...bound, escrowState: 'CANCELLED_REFUNDED' }),
-    ).toBe('refunded')
+  })
+
+  it('is still owed when its allocation ended without a bill', () => {
+    for (const escrowState of [
+      'EXPIRED_REFUNDED',
+      'CANCELLED_REFUNDED',
+    ] as const) {
+      expect(getInvoiceStatus({ ...bound, escrowState })).toBe('requested')
+      expect(getInvoiceStatus({ ...bound, escrowState, state: 'PAID' })).toBe(
+        'paid',
+      )
+    }
   })
 
   it('is still owed while unpaid and not refunded', () => {

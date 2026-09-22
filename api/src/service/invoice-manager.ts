@@ -159,6 +159,12 @@ export class InvoiceManager {
    * invoice could bill it twice. An allocation already billing another
    * invoice is refused too - it takes one bill.
    *
+   * The exception is an allocation that has confirmed an end without a bill
+   * (expired unbilled, or cancelled before work): the chain takes no bill on
+   * it any more, so no commitment handed out for it can ever be paid, and
+   * the invoice may be bound afresh to another allocation - never to that
+   * one again (409).
+   *
    * Only an allocation that funds this invoice's own contract binds it. The
    * marketplace derives every allocation id from its contract and work
    * period, so the id is recomputed here from the project's
@@ -261,16 +267,25 @@ export class InvoiceManager {
             .within(manager)
             .findOneForUpdate(found)
 
-          if (InvoiceEscrow.isBound(current)) {
-            if (!InvoiceEscrow.isBoundTo(current, target)) {
+          if (InvoiceEscrow.isBoundTo(current, target)) {
+            if (InvoiceEscrow.hasLapsed(current)) {
               return yield* Effect.fail(
                 new InvoiceEscrowException(
-                  `Invoice ${current.id} is already submitted to allocation ${current.escrowAllocationId}`,
+                  `Allocation ${target.allocationId} ended ${current.escrowState} without a bill and takes none now; submit invoice ${current.id} to another allocation or mark it paid by hand`,
                 ),
               )
             }
 
             return InvoiceEscrow.submission(current)
+          }
+
+          // Bound elsewhere holds it, unless that allocation lapsed unbilled.
+          if (InvoiceEscrow.isHeld(current)) {
+            return yield* Effect.fail(
+              new InvoiceEscrowException(
+                `Invoice ${current.id} is already submitted to allocation ${current.escrowAllocationId}`,
+              ),
+            )
           }
 
           if (current.state === EInvoiceState.PAID) {
@@ -310,6 +325,8 @@ export class InvoiceManager {
             .within(manager)
             .bindEscrow(current, target, commitment, salt)
 
+          // A binding released by a lapse leaves nothing of it behind.
+          InvoiceEscrow.clearSettlement(current)
           current.escrowChainId = target.chainId
           current.escrowAddress = target.escrow
           current.escrowAllocationId = target.allocationId
@@ -1093,7 +1110,10 @@ export class InvoiceManager {
    * the record worth less than the wallet history it is meant to summarise.
    *
    * Not on an invoice submitted to escrow (409): there the chain settles it,
-   * and a hand mark could call paid what the escrow refunded.
+   * and a hand mark could call paid what the escrow refunded. Unless its
+   * allocation has confirmed an end without the bill - expired unbilled, or
+   * cancelled before work - which no chain can pay any more: then the
+   * binding is released, and marking it paid takes it out of escrow.
    */
   public markPaid(invoice: Invoice, actor: User): RepoEffect<Invoice> {
     return this.setPaid(invoice, actor, true)
@@ -1129,7 +1149,7 @@ export class InvoiceManager {
 
           // Read from the locked row: a submission that bound the invoice
           // after this request loaded it must still stop the hand mark.
-          if (InvoiceEscrow.isBound(current)) {
+          if (InvoiceEscrow.isHeld(current)) {
             return yield* Effect.fail(
               new InvoiceEscrowException(
                 `Invoice ${current.id} is submitted to escrow allocation ${current.escrowAllocationId}; only the escrow's confirmed outcome settles it`,
@@ -1143,6 +1163,13 @@ export class InvoiceManager {
 
           if ((invoice.state === EInvoiceState.PAID) === isPaid) {
             return invoice
+          }
+
+          // Its allocation ended without the bill (LAPSED-BINDING), so it is
+          // paid some other way: marked by hand, it leaves escrow for good,
+          // and nothing that allocation does later can touch it.
+          if (InvoiceEscrow.hasLapsed(current)) {
+            InvoiceEscrow.clearBinding(invoice)
           }
 
           yield* this.timeRepository
@@ -1173,9 +1200,15 @@ export class InvoiceManager {
    * changes nothing and answers `applied: false`.
    *
    * A release makes the invoice PAID at the block's time and marks its hours
-   * paid, in one transaction with the invoice row locked. A refund records
-   * the refund and leaves the invoice and its hours unpaid; being bound, it
-   * cannot be marked paid by hand either.
+   * paid, in one transaction with the invoice row locked. A dispute refund
+   * records the refund and leaves the invoice and its hours unpaid; being
+   * bound, it cannot be marked paid by hand either.
+   *
+   * An expiry or cancellation before any bill (LAPSED-BINDING) is recorded
+   * too, and releases the binding: the allocation takes no bill any more,
+   * so the invoice is owed as before, may be marked paid by hand or bound to
+   * another allocation, and its hours can be billed again. Only this push
+   * does it, and the marketplace sends it only for a confirmed event.
    */
   public recordEscrowSettlement(
     settlement: IInvoiceEscrowSettlement,
@@ -1204,6 +1237,17 @@ export class InvoiceManager {
           const current = yield* this.invoiceRepository
             .within(manager)
             .findOneForUpdate(found)
+
+          // An allocation that ended without a bill holds nothing of the
+          // invoice's money. One the invoice has left since - bound afresh,
+          // or marked paid by hand once the lapse released it - answers a
+          // late or repeated push of that end with nothing to record.
+          if (
+            InvoiceEscrow.isLapse(settlement) &&
+            !InvoiceEscrow.isBoundTo(current, settlement)
+          ) {
+            return InvoiceManager.settlementResult(current, false)
+          }
 
           if (!InvoiceEscrow.isBound(current)) {
             return yield* Effect.fail(
@@ -1288,7 +1332,7 @@ export class InvoiceManager {
       applied,
       invoiceId: invoice.id,
       state: invoice.state,
-      escrowState: invoice.escrowState as EInvoiceEscrowState,
+      escrowState: invoice.escrowState ?? null,
     }
   }
 
@@ -1354,14 +1398,7 @@ export class InvoiceManager {
             current.paidAt = null
           }
 
-          current.settlementKind = null
-          current.escrowState = null
-          current.escrowGrossBaseUnits = null
-          current.escrowFeeBaseUnits = null
-          current.escrowNetBaseUnits = null
-          current.escrowRefundedBaseUnits = null
-          current.escrowTxHash = null
-          current.escrowConfirmedAt = null
+          InvoiceEscrow.clearSettlement(current)
 
           const saved = yield* this.invoiceRepository
             .within(manager)

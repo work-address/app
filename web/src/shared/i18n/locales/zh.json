@@ -267,6 +267,7 @@
   "invoice.document.unnamed": "资料中未填写姓名",
   "invoice.escrow.heading": "托管",
   "invoice.escrow.description": "由托管合约结算：放款后发票即为已支付，因此不能手动标记为已支付。",
+  "invoice.escrow.lapsed": "此周期的托管资金在没有这张账单的情况下结束，预算已退还给客户，因此托管不再结算这张发票。收到付款后请手动标记为已支付，或将其提交到另一个已存入资金周期的托管。",
   "invoice.escrow.state.pending": "尚未开票",
   "invoice.escrow.state.submitted": "已开票，等待放款",
   "invoice.escrow.state.released": "已放款",

@@ -271,6 +271,7 @@
   "invoice.document.unnamed": "Sin nombre en el perfil",
   "invoice.escrow.heading": "Depósito en garantía",
   "invoice.escrow.description": "Lo liquida el contrato de depósito en garantía: la factura se paga cuando se libera, así que no se puede marcar como pagada a mano.",
+  "invoice.escrow.lapsed": "La financiación en garantía de este período terminó sin esta factura y el presupuesto volvió al cliente, así que el depósito en garantía ya no liquida la factura. Márcala como pagada a mano cuando te paguen o envíala al depósito en garantía de otro período financiado.",
   "invoice.escrow.state.pending": "Aún no facturado",
   "invoice.escrow.state.submitted": "Facturado, pendiente de liberación",
   "invoice.escrow.state.released": "Liberado",

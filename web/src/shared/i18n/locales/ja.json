@@ -267,6 +267,7 @@
   "invoice.document.unnamed": "プロフィールに名前がありません",
   "invoice.escrow.heading": "エスクロー",
   "invoice.escrow.description": "エスクロー契約で精算されます。請求が解放された時点で支払い済みになるため、手動で支払い済みにはできません。",
+  "invoice.escrow.lapsed": "この期間のエスクロー資金は請求なしで終了し、予算はクライアントに返金されたため、この請求書はエスクローで精算されなくなりました。支払いを受けたら手動で支払い済みにするか、資金が入った別の期間のエスクローに提出してください。",
   "invoice.escrow.state.pending": "未請求",
   "invoice.escrow.state.submitted": "請求済み・解放待ち",
   "invoice.escrow.state.released": "解放済み",
