@@ -3,9 +3,11 @@ import express from 'express'
 
 import { App } from '@/app/app'
 import {
+  IInvoiceEscrowBindingResult,
   IInvoiceEscrowReversalResult,
   IInvoiceEscrowSettlementResult,
 } from '@/model/invoice'
+import { MarketplaceEscrowBindingDto } from '@/model/dto/marketplace-escrow-binding'
 import { MarketplaceSettlementDto } from '@/model/dto/marketplace-settlement'
 import { MarketplaceSettlementReversalDto } from '@/model/dto/marketplace-settlement-reversal'
 import { EntitlementSignature } from '@/service/entitlement-signature'
@@ -27,8 +29,10 @@ import AuthenticationException from '@/exception/authentication-exception'
  * round. Idempotent: the push carries the allocation's absolute state,
  * so a retry signed afresh answers 200 and changes nothing twice. A
  * settlement the chain takes back in a reorganisation after it was recorded
- * here is undone through the reversal route beside it. Under
- * `/internal`, so the public API spec and the browser clients leave it out.
+ * here is undone through the reversal route beside it, and the invoice an
+ * allocation bills, when the marketplace never recorded it, is asked for
+ * through the binding route. Under `/internal`, so the public API spec and
+ * the browser clients leave it out.
  */
 @JsonController('/internal')
 export class MarketplaceSettlementController {
@@ -40,6 +44,10 @@ export class MarketplaceSettlementController {
    */
   public static readonly REVERSAL_SIGNATURE_HEADER =
     InternalRoute.SETTLEMENT_REVERSAL.header
+
+  /** The binding lookup's own header, like every internal route's. */
+  public static readonly BINDING_SIGNATURE_HEADER =
+    InternalRoute.ESCROW_BINDING.header
 
   protected signature: EntitlementSignature
   protected invoiceManager: InvoiceManager
@@ -124,5 +132,48 @@ export class MarketplaceSettlementController {
     }
 
     return runPromise(this.invoiceManager.reverseEscrowSettlement(data))
+  }
+
+  /**
+   * Which invoice this service bound to an allocation: asked by the
+   * marketplace for an allocation with a settlement to push and no invoice
+   * recorded there, because the payee's recording of the binding never
+   * reached it (`InvoiceManager.escrowBindingOf`). Authenticated like the
+   * push, under its own header; reads only.
+   */
+  @HttpCode(200)
+  @Post('/marketplace/escrow-binding')
+  public async binding(
+    @Body() data: MarketplaceEscrowBindingDto,
+    @Req() request: express.Request,
+  ): Promise<IInvoiceEscrowBindingResult> {
+    const signature =
+      request.header(
+        MarketplaceSettlementController.BINDING_SIGNATURE_HEADER,
+      ) ?? ''
+
+    if (
+      !this.signature.verify(
+        InternalRoute.ESCROW_BINDING,
+        JSON.stringify(data),
+        signature,
+      )
+    ) {
+      throw new AuthenticationException('Invalid marketplace signature')
+    }
+
+    if (!this.signature.isWithinReplayWindow(data.issuedAt)) {
+      throw new AuthenticationException(
+        'Marketplace escrow binding lookup outside the replay window',
+      )
+    }
+
+    if (!(await this.signature.consumeNonce(data.nonce))) {
+      throw new AuthenticationException(
+        'Marketplace escrow binding lookup nonce already used',
+      )
+    }
+
+    return runPromise(this.invoiceManager.escrowBindingOf(data))
   }
 }

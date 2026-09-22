@@ -1,0 +1,21 @@
+{
+  "note": "Cross-repo contract for the escrow binding lookup (ABANDONED-BINDING). This file is duplicated byte-for-byte in work-address/app (api/src/test/fixture) and work-address/web (api/src/test/fixture); they are separate repositories, so each owns a copy. web asserts it PRODUCES these bytes, this header and this signature, and READS `answer`; app asserts it ACCEPTS them and ANSWERS in the shape of `answer`. The app binds an invoice to an escrow allocation when the payee asks it for the amount and commitment to submit (GET /api/invoice/:id/escrow-submission), before the marketplace has recorded which invoice the allocation bills; when that recording fails or is abandoned, the marketplace has nowhere to push the allocation's settlement. So a marketplace holding a settlement for an allocation with no recorded invoice (never a milestone's, whose invoice it records when the product raises it) asks here: the body names the allocation - chainId, escrow (lowercase) and allocationId (lowercase bytes32) - and the answer is the invoice the app has bound to exactly that allocation, `invoiceId` a uuid, or null when none is. The marketplace records it on the allocation and pushes the settlement to the settlement route as usual; with null it records that it asked, and asks again only if the settlement changes. The lookup changes nothing on the app. issuedAt (unix seconds) and nonce are the replay guard, as for the hire. Every key is always present, in this order. The example names the allocation of marketplace-settlement.contract.json and answers its invoice. Change both copies in the same pull request or not at all. ROUTE BINDING: every internal route shares one secret, so the signature names the route it was made for. `signature` is the header value, `v2=<hex>`: HMAC-SHA256 with the shared secret over `signedBytes` - the version, `method`, `path`, the header name in lower case and then `serialised`, joined by single newlines - so these bytes signed for this route are refused on every other. `legacySignature` is the form used before the binding, the bare hex HMAC of `serialised` alone: app accepts it only while APP_INTERNAL_SIGNATURE_ACCEPT_LEGACY is on, web sends it only as the fallback after a 401 while APP_INTERNAL_SIGNATURE_LEGACY_FALLBACK is on, and both go when that one-release window closes (docs/internal-signature.md in each repository).",
+  "secret": "shared-contract-fixture-secret",
+  "method": "POST",
+  "path": "/api/internal/marketplace/escrow-binding",
+  "header": "X-Marketplace-Escrow-Binding-Signature",
+  "body": {
+    "chainId": 31337,
+    "escrow": "0x8bbc3514477d75ec797bbe4e19d7961660bb849c",
+    "allocationId": "0x7d2a37f82ee0232848aace4b0c421193fa05c3f906d79e01f0ccf4dfd1769d1e",
+    "issuedAt": 1788866490,
+    "nonce": "2f6a8c14-93d5-4e7b-b1a0-6c4d9e2f7a35"
+  },
+  "answer": {
+    "invoiceId": "4e61ff62-5642-478f-901b-f7be07550426"
+  },
+  "serialised": "{\"chainId\":31337,\"escrow\":\"0x8bbc3514477d75ec797bbe4e19d7961660bb849c\",\"allocationId\":\"0x7d2a37f82ee0232848aace4b0c421193fa05c3f906d79e01f0ccf4dfd1769d1e\",\"issuedAt\":1788866490,\"nonce\":\"2f6a8c14-93d5-4e7b-b1a0-6c4d9e2f7a35\"}",
+  "signedBytes": "v2\nPOST\n/api/internal/marketplace/escrow-binding\nx-marketplace-escrow-binding-signature\n{\"chainId\":31337,\"escrow\":\"0x8bbc3514477d75ec797bbe4e19d7961660bb849c\",\"allocationId\":\"0x7d2a37f82ee0232848aace4b0c421193fa05c3f906d79e01f0ccf4dfd1769d1e\",\"issuedAt\":1788866490,\"nonce\":\"2f6a8c14-93d5-4e7b-b1a0-6c4d9e2f7a35\"}",
+  "signature": "v2=771d152d13f5e490938c9def7c44ce788f88df74a7e73119099cd1f7d2b96543",
+  "legacySignature": "9d46c6c46edc3dbc3ee4fc59b425377e9322b2085060ff122aa25eb48e0d6789"
+}

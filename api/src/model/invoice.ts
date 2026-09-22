@@ -313,6 +313,14 @@ export interface IInvoiceEscrowReversal extends IInvoiceCommitmentBinding {
   txHash: string | null
 }
 
+/**
+ * The invoice bound to an allocation, as the marketplace asks for it
+ * (POST /api/internal/marketplace/escrow-binding): null when none is.
+ */
+export interface IInvoiceEscrowBindingResult {
+  invoiceId: string | null
+}
+
 /** What recording a settlement reversal did. */
 export interface IInvoiceEscrowReversalResult {
   /**

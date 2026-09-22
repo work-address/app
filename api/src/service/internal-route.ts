@@ -72,6 +72,18 @@ export class InternalRoute {
     header: 'X-Marketplace-Settlement-Reversal-Signature',
   }
 
+  /**
+   * Which invoice this service bound to an allocation, asked by the
+   * marketplace for one that has a settlement to push and no invoice
+   * recorded there: the payee's recording of the binding failed or was
+   * abandoned after the escrow submission bound it (ABANDONED-BINDING).
+   */
+  public static readonly ESCROW_BINDING: IInternalRoute = {
+    method: 'POST',
+    path: '/api/internal/marketplace/escrow-binding',
+    header: 'X-Marketplace-Escrow-Binding-Signature',
+  }
+
   public static readonly ALL: readonly IInternalRoute[] = [
     InternalRoute.ENTITLEMENT,
     InternalRoute.HIRE,
@@ -81,5 +93,6 @@ export class InternalRoute {
     InternalRoute.PAUSE,
     InternalRoute.SETTLEMENT,
     InternalRoute.SETTLEMENT_REVERSAL,
+    InternalRoute.ESCROW_BINDING,
   ]
 }

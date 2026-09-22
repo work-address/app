@@ -16,6 +16,7 @@ one-time `nonce`.
 | `POST /api/internal/marketplace/pause` | `X-Marketplace-Pause-Signature` |
 | `POST /api/internal/marketplace/settlement` | `X-Marketplace-Settlement-Signature` |
 | `POST /api/internal/marketplace/settlement-reversal` | `X-Marketplace-Settlement-Reversal-Signature` |
+| `POST /api/internal/marketplace/escrow-binding` | `X-Marketplace-Escrow-Binding-Signature` |
 
 The table lives in code as `InternalRoute` (`api/src/service/internal-route.ts`)
 and, on the other side, as web's `InternalRoute`. The contract fixtures under

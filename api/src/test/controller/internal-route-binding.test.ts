@@ -126,6 +126,12 @@ export class InternalRouteBindingTest extends BaseControllerTest {
           ...stamp,
         }
       }
+      case InternalRoute.ESCROW_BINDING: {
+        return {
+          ...this.fixtureBody('marketplace-escrow-binding.contract.json'),
+          ...stamp,
+        }
+      }
       default: {
         throw new Error(`No body for ${route.path}`)
       }
@@ -217,6 +223,12 @@ export class InternalRouteBindingTest extends BaseControllerTest {
     await this.refusesEveryOtherRoutesSignature(
       InternalRoute.SETTLEMENT_REVERSAL,
     )
+  }
+
+  @test
+  @timeout(20000)
+  async escrowBinding_refusesABodySignedForAnotherRoute() {
+    await this.refusesEveryOtherRoutesSignature(InternalRoute.ESCROW_BINDING)
   }
 
   /**

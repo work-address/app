@@ -127,6 +127,34 @@ export class MarketplaceSettlementControllerTest extends BaseControllerTest {
     )
   }
 
+  private postBinding(body: Body, signature?: string) {
+    const raw = JSON.stringify(body)
+
+    return axios.post(
+      `${this.url}/api/internal/marketplace/escrow-binding`,
+      raw,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          [MarketplaceSettlementController.BINDING_SIGNATURE_HEADER]:
+            signature ?? this.signature.sign(InternalRoute.ESCROW_BINDING, raw),
+        },
+        validateStatus: () => true,
+      },
+    )
+  }
+
+  /** The marketplace's lookup of `binding`, in the wire order of the shared fixture. */
+  private bindingLookup(binding: IInvoiceCommitmentBinding): Body {
+    return this.fresh({
+      chainId: binding.chainId,
+      escrow: binding.escrow,
+      allocationId: binding.allocationId,
+      issuedAt: 0,
+      nonce: '',
+    })
+  }
+
   /**
    * The reversal the marketplace sends once the chain no longer holds the
    * settlement `push` carried, in the wire order of the shared fixture.
@@ -1227,5 +1255,129 @@ export class MarketplaceSettlementControllerTest extends BaseControllerTest {
     expect(res.data).to.include({ applied: true, escrowState: null })
     expect(invoice.escrowAllocationId).to.be.eq(bound.binding.allocationId)
     expect(await this.markByHand(bound, true)).to.be.eq(409)
+  }
+
+  /**
+   * ABANDONED-BINDING: the payee's browser asked for the commitment, which
+   * bound the invoice, and never told the marketplace which invoice the
+   * allocation bills. The marketplace asks once the allocation has a
+   * settlement to push, and is told the invoice: the lapse it then pushes
+   * releases the binding, so the invoice can be marked paid by hand -
+   * without the answer it stayed bound to money that had gone back.
+   */
+  @test()
+  async binding_answersTheInvoiceAnUnrecordedSubmissionBound() {
+    const bound = await this.bound()
+    const answer = await this.postBinding(this.bindingLookup(bound.binding))
+    const before = await this.markByHand(bound, true)
+
+    expect(answer.status).to.be.eq(200)
+    expect(answer.data).to.deep.eq({ invoiceId: bound.invoice.id })
+    expect(before).to.be.eq(409)
+
+    const lapsed = await this.post(
+      this.lapse(bound, EInvoiceEscrowState.EXPIRED_REFUNDED, {
+        invoiceId: answer.data.invoiceId,
+      }),
+    )
+
+    expect(lapsed.data.applied).to.be.true
+    expect(await this.markByHand(bound, true)).to.be.eq(200)
+    expect((await this.stored(bound.invoice.id)).state).to.be.eq(
+      EInvoiceState.PAID,
+    )
+
+    // Marked by hand, it left escrow: the allocation binds nothing now.
+    const after = await this.postBinding(this.bindingLookup(bound.binding))
+
+    expect(after.data).to.deep.eq({ invoiceId: null })
+  }
+
+  /**
+   * Casing is not identity: the lookup finds the binding whatever the case
+   * of the escrow and id, as the push does. Nothing bound is null, and the
+   * lookup is signed, fresh and single-use like every internal call.
+   */
+  @test()
+  async binding_answersNullWhereNothingIsBoundAndRefusesAnythingUnsigned() {
+    const bound = await this.bound()
+    const upper = this.bindingLookup({
+      chainId: bound.binding.chainId,
+      escrow: `0x${bound.binding.escrow.slice(2).toUpperCase()}`,
+      allocationId: `0x${bound.binding.allocationId.slice(2).toUpperCase()}`,
+    })
+    const cased = await this.postBinding(upper)
+    const nothing = await this.postBinding(
+      this.bindingLookup({ ...bound.binding, allocationId: this.bytes32() }),
+    )
+    const otherChain = await this.postBinding(
+      this.bindingLookup({ ...bound.binding, chainId: 1 }),
+    )
+    const forged = await this.postBinding(
+      this.bindingLookup(bound.binding),
+      'deadbeef',
+    )
+    const stale = await this.postBinding({
+      ...this.bindingLookup(bound.binding),
+      issuedAt: Math.floor(Date.now() / 1000) - 3600,
+    })
+    const signed = this.bindingLookup(bound.binding)
+    const once = this.signature.sign(
+      InternalRoute.ESCROW_BINDING,
+      JSON.stringify(signed),
+    )
+    const replayed = [
+      await this.postBinding(signed, once),
+      await this.postBinding(signed, once),
+    ]
+    const asPush = this.bindingLookup(bound.binding)
+    const pushSigned = await this.postBinding(
+      asPush,
+      this.signature.sign(InternalRoute.SETTLEMENT, JSON.stringify(asPush)),
+    )
+    const malformed = await this.postBinding({
+      ...this.bindingLookup(bound.binding),
+      allocationId: 'not-an-allocation',
+    })
+
+    expect(cased.data).to.deep.eq({ invoiceId: bound.invoice.id })
+    expect(nothing.status).to.be.eq(200)
+    expect(nothing.data).to.deep.eq({ invoiceId: null })
+    expect(otherChain.data).to.deep.eq({ invoiceId: null })
+    expect(forged.status).to.be.eq(401)
+    expect(stale.status).to.be.eq(401)
+    expect(replayed.map((res) => res.status)).to.deep.eq([200, 401])
+    expect(pushSigned.status).to.be.eq(401)
+    expect(malformed.status).to.be.eq(400)
+  }
+
+  /** Internal like the push: served, and in neither the spec nor a client. */
+  @test()
+  async bindingRoute_isServedButLeftOutOfThePublicSpec() {
+    const unsigned = await axios.post(
+      `${this.url}/api/internal/marketplace/escrow-binding`,
+      this.bindingLookup({
+        chainId: 31337,
+        escrow: '0x8bbc3514477d75ec797bbe4e19d7961660bb849c',
+        allocationId: this.bytes32(),
+      }),
+      { validateStatus: () => true },
+    )
+    const res = await helpControllerSwagger({
+      client: this.apiClient(),
+      throwOnError: true,
+    })
+    const spec = res.data as {
+      paths: Record<string, unknown>
+      components: { schemas: Record<string, unknown> }
+    }
+
+    expect(unsigned.status).to.be.eq(401)
+    expect(spec.paths).to.not.have.property(
+      '/api/internal/marketplace/escrow-binding',
+    )
+    expect(spec.components.schemas).to.not.have.property(
+      'MarketplaceEscrowBindingDto',
+    )
   }
 }

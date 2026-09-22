@@ -341,6 +341,19 @@ nothing; a second final state, or the same state settled differently, is a
   beside the pending bill), so a repeat, a reversal overtaken by the
   settlement that replaced it, or one for an allocation the invoice is no
   longer bound to answers `applied: false`. An unknown invoice is a 409.
+- **A binding the marketplace never recorded is found.** The binding is
+  made here, when the payee asks for the commitment, before the
+  marketplace records which invoice the allocation bills; if that second
+  step fails or is abandoned, no settlement push can name the invoice, and
+  an allocation that lapsed unbilled would hold it for good
+  (ABANDONED-BINDING). So a marketplace holding a settlement for an
+  allocation with no recorded invoice asks
+  `POST /api/internal/marketplace/escrow-binding`, signed under its own
+  header (`X-Marketplace-Escrow-Binding-Signature`), naming the chain,
+  escrow and allocation; the answer is the invoice bound to exactly that
+  allocation (`invoiceId`, or null for none, a soft-deleted invoice
+  counting as none). The marketplace records it and pushes the settlement
+  as usual. The lookup changes nothing here.
 - The record is columns on `Invoice` — `settlementKind` (`MANUAL` when the
   issuer marked it, `ESCROW` once a confirmed outcome is recorded),
   `escrowState`, `escrowGrossBaseUnits`, `escrowFeeBaseUnits`,

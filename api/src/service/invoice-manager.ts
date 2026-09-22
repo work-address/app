@@ -20,6 +20,8 @@ import {
   EInvoiceSettlementKind,
   EInvoiceSnapshotVersion,
   EInvoiceState,
+  IInvoiceCommitmentBinding,
+  IInvoiceEscrowBindingResult,
   IInvoiceEscrowReversal,
   IInvoiceEscrowReversalResult,
   IInvoiceEscrowSettlement,
@@ -1340,6 +1342,33 @@ export class InvoiceManager {
           return InvoiceManager.settlementResult(saved, true)
         }),
       )
+    })
+  }
+
+  /**
+   * The invoice this instance has bound to an escrow allocation, for the
+   * marketplace to record (POST /api/internal/marketplace/escrow-binding).
+   *
+   * `escrowSubmission` binds an invoice before the marketplace records
+   * which invoice the allocation bills: the payee's browser asks here for
+   * the commitment first and tells the marketplace second. When that second
+   * step fails or is abandoned the marketplace has nowhere to push the
+   * allocation's settlement, and an allocation that ended without a bill
+   * would hold the invoice for good - unpayable by hand and bound to money
+   * that is gone. So a marketplace holding a settlement for an allocation
+   * with no recorded invoice asks here, records the answer and pushes as
+   * usual. Reads only; `invoiceId` null when nothing (not deleted) is
+   * bound to the allocation.
+   */
+  public escrowBindingOf(
+    binding: IInvoiceCommitmentBinding,
+  ): RepoEffect<IInvoiceEscrowBindingResult> {
+    return Effect.gen(this, function* () {
+      const bound = yield* this.invoiceRepository.findByEscrowAllocation(
+        InvoiceEscrow.binding(binding),
+      )
+
+      return { invoiceId: bound && !bound.deletedAt ? bound.id : null }
     })
   }
 
