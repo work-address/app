@@ -10,6 +10,14 @@ import {
   identityExportInvalidated,
   identityExportReceived,
 } from './identity-export'
+import {
+  IDENTITY_RELAY_ACTION_TYPES,
+  identityRelayAction,
+  identityRelayBody,
+  identityRelayDeadline,
+  identityRelayDomain,
+  identityRelayPayload,
+} from './identity-relay'
 import { identityDisclosure, identityPreview } from './identity-slots'
 import {
   identityActionState,
@@ -18,6 +26,7 @@ import {
 } from './identity-state'
 
 import type { IdentityChainTarget, IdentityConfig } from './identity-chain'
+import type { IdentityRelayCall } from './identity-relay'
 import type {
   IdentityActionOutcome,
   IdentityActionState,
@@ -102,7 +111,58 @@ export const removeIdentityFx = createEffect(() =>
   runApiData(() => baseApi.userControllerRemoveIdentity()),
 )
 
-type PublishParams = { password: string }
+type PublishParams = {
+  password: string
+  /**
+   * Sign the registry's `Action` here and let the API's relayer send it and
+   * pay the gas, rather than send the transaction from this wallet. Only
+   * asked for when the API says a relayer runs (`relayEnabled`).
+   */
+  relay?: boolean
+}
+
+type Registry = Awaited<ReturnType<typeof registryFor>>
+
+/**
+ * The relayed path of one registry call: sign the typed `Action` over
+ * exactly this call at the subject's current nonce, hand the signature to
+ * the API, and wait for the relayer's transaction through this browser's own
+ * endpoint - the same one a direct send is read back through. A relayed
+ * transaction that reverts is a failure like a direct one that does.
+ */
+const relayRegistryCall = async (
+  { provider, contract }: Registry,
+  target: IdentityChainTarget,
+  wallet: UnlockedLocalWallet,
+  call: IdentityRelayCall,
+): Promise<void> => {
+  const [nonce, latest, payload] = await Promise.all([
+    contract.nonces(call.subject) as Promise<bigint>,
+    provider.getBlock('latest'),
+    identityRelayPayload(call),
+  ])
+  const deadline = identityRelayDeadline(
+    latest?.timestamp ?? Math.floor(Date.now() / 1000),
+  )
+  const signature = await wallet.signTypedData(
+    identityRelayDomain(target),
+    IDENTITY_RELAY_ACTION_TYPES,
+    identityRelayAction(call, payload, nonce, deadline),
+  )
+  const relayed = await runApiData(() =>
+    baseApi.userControllerRelayIdentity({
+      body: identityRelayBody(call, deadline, signature),
+    }),
+  )
+  const receipt = await provider.waitForTransaction(relayed.transactionHash)
+
+  if (receipt?.status !== 1) {
+    throw new IdentityWalletError(
+      'failed',
+      `The relayed transaction ${relayed.transactionHash} did not go through`,
+    )
+  }
+}
 
 /**
  * The whole publish, in the order the documents demand: unlock the key in
@@ -112,7 +172,7 @@ type PublishParams = { password: string }
  * never asked to host a version the registry does not already hold.
  */
 export const publishIdentityFx = createEffect(
-  async ({ password }: PublishParams): Promise<IdentityView> => {
+  async ({ password, relay = false }: PublishParams): Promise<IdentityView> => {
     const config = await runApiData(() => baseApi.identityControllerConfig())
     const target = identityChainTarget(config)
 
@@ -141,7 +201,10 @@ export const publishIdentityFx = createEffect(
       subject: evmSubject(address, target.chainId),
       fields: preview.fields,
     })
-    const { provider, contract } = await registryFor(target, wallet)
+    // Relayed, the wallet only signs: the registry is read with no signer,
+    // so nothing here can send a transaction from it.
+    const registry = await registryFor(target, relay ? undefined : wallet)
+    const { provider, contract } = registry
 
     try {
       const current = Number(await contract.versionCount(address))
@@ -154,9 +217,19 @@ export const publishIdentityFx = createEffect(
         },
       })
 
-      await (
-        await contract.publish(presentation.commitment, SCHEMA_ID_V1, current)
-      ).wait()
+      if (relay) {
+        await relayRegistryCall(registry, target, wallet, {
+          operation: 'Publish',
+          subject: address,
+          commitment: presentation.commitment as string,
+          schemaId: SCHEMA_ID_V1,
+          expectedVersion: current,
+        })
+      } else {
+        await (
+          await contract.publish(presentation.commitment, SCHEMA_ID_V1, current)
+        ).wait()
+      }
 
       return await runApiData(() =>
         baseApi.userControllerPublishIdentity({
@@ -183,7 +256,7 @@ export const publishIdentityFx = createEffect(
  * retire the record on chain.
  */
 export const withdrawIdentityFx = createEffect(
-  async ({ password }: PublishParams): Promise<void> => {
+  async ({ password, relay = false }: PublishParams): Promise<void> => {
     const config = await runApiData(() => baseApi.identityControllerConfig())
     const target = identityChainTarget(config)
 
@@ -201,12 +274,21 @@ export const withdrawIdentityFx = createEffect(
       )
     }
 
-    const { provider, contract } = await registryFor(target, wallet)
+    const registry = await registryFor(target, relay ? undefined : wallet)
+    const { provider, contract } = registry
 
     try {
       const current = Number(await contract.versionCount(address))
 
-      await (await contract.deactivate(current)).wait()
+      if (relay) {
+        await relayRegistryCall(registry, target, wallet, {
+          operation: 'Deactivate',
+          subject: address,
+          expectedVersion: current,
+        })
+      } else {
+        await (await contract.deactivate(current)).wait()
+      }
     } finally {
       provider.destroy()
     }
@@ -369,6 +451,21 @@ export {
   identityExportReceived,
 } from './identity-export'
 export { IDENTITY_COPY_KEYS, IDENTITY_FIELD_LABEL_KEY } from './identity-copy'
+export {
+  IDENTITY_RELAY_ACTION_TYPES,
+  IDENTITY_RELAY_DEADLINE_SECONDS,
+  IDENTITY_RELAY_OPERATIONS,
+  identityRelayAction,
+  identityRelayBody,
+  identityRelayDeadline,
+  identityRelayDomain,
+  identityRelayPayload,
+  isIdentityRelayOffered,
+  type IdentityRelayAction,
+  type IdentityRelayBody,
+  type IdentityRelayCall,
+  type IdentityRelayOperation,
+} from './identity-relay'
 export {
   IDENTITY_REGISTRY_ABI,
   IdentityWalletError,

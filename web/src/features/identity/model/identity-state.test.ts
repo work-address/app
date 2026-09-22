@@ -56,6 +56,22 @@ const REFUSALS = [
   'ExportMismatch',
 ] as const
 
+/**
+ * Every refusal POST /user/identity/relay can carry
+ * (EIdentityRelayRefusal, api/src/model/identity.ts), with its status.
+ */
+const RELAY_REFUSALS: [number, string, IdentityActionState][] = [
+  [503, 'RelayDisabled', 'relayUnavailable'],
+  [503, 'GasCap', 'relayUnavailable'],
+  [503, 'FeeCap', 'relayUnavailable'],
+  [503, 'RelayerUnavailable', 'relayUnavailable'],
+  [429, 'RateLimited', 'rateLimited'],
+  [422, 'InvalidAuthorization', 'relayRefused'],
+  [422, 'AuthorizationExpired', 'relayRefused'],
+  [409, 'AuthorizationInFlight', 'relayInFlight'],
+  [409, 'ChainRefused', 'stale'],
+]
+
 const WALLET_FAILURES = [
   'declined',
   'locked',
@@ -158,6 +174,17 @@ describe('identityActionState', () => {
             : 'unreadable',
       ],
     ),
+    ...RELAY_REFUSALS.map(
+      ([code, reason, state]): [
+        string,
+        IdentityActionOutcome,
+        IdentityActionState,
+      ] => [
+        `the relay refusing as ${reason} (${code})`,
+        api(code, [{ reason }]),
+        state,
+      ],
+    ),
     ['a 503 with no reason at all', api(503), 'unreadable'],
     ['a status nothing documents', api(418), 'failed'],
     ['a request that never reached the API', api(0), 'failed'],
@@ -177,6 +204,17 @@ describe('identityActionState', () => {
         expect.any(String),
       )
     }
+  })
+
+  it('never tells a holder the relay failed when the registry refused the version', () => {
+    expect(
+      identityActionState(
+        api(409, [{ reason: 'ChainRefused', error: 'VersionConflict' }]),
+      ),
+    ).toBe('stale')
+    expect(
+      identityActionState(api(503, [{ reason: 'RelayDisabled' }])),
+    ).not.toBe('notConfigured')
   })
 
   it('never reports a chain that could not be read as a refused document', () => {

@@ -6,6 +6,7 @@ export const IDENTITY_REGISTRY_ABI = [
   'function publish(bytes32 commitment, uint32 schemaId, uint32 expectedVersion)',
   'function deactivate(uint32 expectedVersion)',
   'function versionCount(address subject) view returns (uint32)',
+  'function nonces(address subject) view returns (uint256)',
 ] as const
 
 export type IdentityConfig = baseApi.IdentityControllerConfigResponse

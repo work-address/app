@@ -57,6 +57,8 @@ export const IDENTITY_COPY_KEYS = [
   'identity.withdraw.title',
   'identity.withdraw.description',
   'identity.withdraw.confirm',
+  'identity.relay.label',
+  'identity.relay.hint',
   ...Object.values(IDENTITY_VIEW_MESSAGE_KEY),
   ...Object.values(IDENTITY_ACTION_MESSAGE_KEY),
 ] as const

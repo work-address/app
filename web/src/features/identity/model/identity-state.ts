@@ -64,10 +64,35 @@ export type IdentityActionState =
   | 'notSubject'
   | 'stale'
   | 'refused'
+  | 'rateLimited'
+  | 'relayUnavailable'
+  | 'relayRefused'
+  | 'relayInFlight'
   | 'failed'
 
 /** 422 reasons that are not about the document at all. */
 const NOT_ANCHORABLE = 'UnsupportedSubjectScheme'
+
+/**
+ * 503 reasons POST /user/identity/relay gives when it sent nothing for a
+ * reason of its own: no relayer here, gas or fees over its caps, or a
+ * relayer that cannot pay. The holder's own transaction is still there.
+ */
+const RELAY_UNAVAILABLE: ReadonlySet<string> = new Set([
+  'RelayDisabled',
+  'GasCap',
+  'FeeCap',
+  'RelayerUnavailable',
+])
+
+/** 422 reasons the relay gives about the signature itself. */
+const RELAY_REFUSED: ReadonlySet<string> = new Set([
+  'InvalidAuthorization',
+  'AuthorizationExpired',
+])
+
+/** 409: another action signed at the same nonce is still on its way. */
+const RELAY_IN_FLIGHT = 'AuthorizationInFlight'
 
 /** 503 reasons, as IdentityUnavailableException names them. */
 const UNAVAILABLE_STATE: Record<IdentityUnavailable, IdentityActionState> = {
@@ -97,15 +122,28 @@ const apiState = (
   // superseded, withdrawn, another commitment. The card shows the chain's own
   // word for it beside the one message.
   if (status === 409) {
-    return 'stale'
+    return reason === RELAY_IN_FLIGHT ? 'relayInFlight' : 'stale'
   }
 
   if (status === 422) {
-    return reason === NOT_ANCHORABLE ? 'notAnchorable' : 'refused'
+    if (reason === NOT_ANCHORABLE) {
+      return 'notAnchorable'
+    }
+
+    return RELAY_REFUSED.has(reason ?? '') ? 'relayRefused' : 'refused'
+  }
+
+  // Only the relay rations: a day's relayed publications are spent.
+  if (status === 429) {
+    return 'rateLimited'
   }
 
   // Never a verdict on the presentation: nothing is known about it yet.
   if (status === 503) {
+    if (RELAY_UNAVAILABLE.has(reason ?? '')) {
+      return 'relayUnavailable'
+    }
+
     return UNAVAILABLE_STATE[reason as IdentityUnavailable] ?? 'unreadable'
   }
 
@@ -180,6 +218,10 @@ export const IDENTITY_ACTION_MESSAGE_KEY: Record<IdentityActionState, string> =
     notSubject: 'identity.action.notSubject',
     stale: 'identity.action.stale',
     refused: 'identity.action.refused',
+    rateLimited: 'identity.action.rateLimited',
+    relayUnavailable: 'identity.action.relayUnavailable',
+    relayRefused: 'identity.action.relayRefused',
+    relayInFlight: 'identity.action.relayInFlight',
     failed: 'identity.action.failed',
   }
 
@@ -201,6 +243,10 @@ export const IDENTITY_ACTION_TONE: Record<
   notSubject: 'error',
   stale: 'error',
   refused: 'error',
+  rateLimited: 'error',
+  relayUnavailable: 'error',
+  relayRefused: 'error',
+  relayInFlight: 'error',
   failed: 'error',
 }
 
