@@ -22,6 +22,7 @@ import {
   EInvoiceState,
   IInvoiceCommitmentBinding,
   IInvoiceEscrowBindingResult,
+  IInvoiceEscrowCorrection,
   IInvoiceEscrowReversal,
   IInvoiceEscrowReversalResult,
   IInvoiceEscrowSettlement,
@@ -1447,6 +1448,74 @@ export class InvoiceManager {
           }
 
           InvoiceEscrow.clearSettlement(current)
+
+          const saved = yield* this.invoiceRepository
+            .within(manager)
+            .saveSingle(current)
+
+          return InvoiceManager.reversalResult(saved, true)
+        }),
+      )
+    })
+  }
+
+  /**
+   * Takes back only a refund this service recorded beside a settlement the
+   * chain still holds (POST /api/internal/marketplace/settlement-correction):
+   * a reorganisation removed a RemainderRefunded mined after the release or
+   * dispute refund and kept the settlement itself (PARTIAL-REORG). The
+   * reversal would put the invoice back to before any push - a released
+   * one REQUESTED with its hours unpaid - until the release was pushed
+   * again, for a release the chain never stopped holding.
+   *
+   * The invoice keeps its state, payment, hours and every other recorded
+   * outcome; its refund becomes what the chain holds now. In one
+   * transaction with the invoice row locked. The correction must be one
+   * the escrow's history allows (400 otherwise, `correctionProblem`), and
+   * it is idempotent and never takes back more than it names: it applies
+   * only while the invoice records that settlement with at least that
+   * refund (`InvoiceEscrow.recordsCorrected`). A repeat, one late behind a
+   * settlement that replaced it, or one for an allocation the invoice is
+   * no longer bound to answers `applied: false`. An invoice this instance
+   * does not know is a 409, as for the push.
+   */
+  public correctEscrowSettlement(
+    correction: IInvoiceEscrowCorrection,
+  ): RepoEffect<IInvoiceEscrowReversalResult> {
+    return Effect.gen(this, function* () {
+      const problem = InvoiceEscrow.correctionProblem(correction)
+
+      if (problem) {
+        return yield* Effect.fail(new BadRequestError(problem))
+      }
+
+      const found = yield* this.invoiceRepository.findOneBy({
+        where: { id: correction.invoiceId },
+      })
+
+      if (!found) {
+        return yield* Effect.fail(
+          new InvoiceEscrowException(
+            `Invoice ${correction.invoiceId} is not known to this instance`,
+          ),
+        )
+      }
+
+      return yield* this.unitOfWork.run((manager) =>
+        Effect.gen(this, function* () {
+          const current = yield* this.invoiceRepository
+            .within(manager)
+            .findOneForUpdate(found)
+
+          if (
+            !InvoiceEscrow.isBoundTo(current, correction) ||
+            !InvoiceEscrow.recordsCorrected(current, correction)
+          ) {
+            return InvoiceManager.reversalResult(current, false)
+          }
+
+          current.escrowRefundedBaseUnits =
+            correction.correctedRefundedBaseUnits
 
           const saved = yield* this.invoiceRepository
             .within(manager)

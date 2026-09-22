@@ -127,6 +127,48 @@ export class MarketplaceSettlementControllerTest extends BaseControllerTest {
     )
   }
 
+  private postCorrection(body: Body, signature?: string) {
+    const raw = JSON.stringify(body)
+
+    return axios.post(
+      `${this.url}/api/internal/marketplace/settlement-correction`,
+      raw,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          [MarketplaceSettlementController.CORRECTION_SIGNATURE_HEADER]:
+            signature ??
+            this.signature.sign(InternalRoute.SETTLEMENT_CORRECTION, raw),
+        },
+        validateStatus: () => true,
+      },
+    )
+  }
+
+  /**
+   * The correction the marketplace sends once the chain holds the
+   * settlement `push` carried with only `corrected` refunded, in the wire
+   * order of the shared fixture.
+   */
+  private correctionOf(push: Body, corrected: string, overrides: Body = {}) {
+    return this.fresh({
+      invoiceId: push.invoiceId,
+      chainId: push.chainId,
+      escrow: push.escrow,
+      allocationId: push.allocationId,
+      escrowState: push.escrowState,
+      grossBaseUnits: push.grossBaseUnits,
+      feeBaseUnits: push.feeBaseUnits,
+      netBaseUnits: push.netBaseUnits,
+      refundedBaseUnits: push.refundedBaseUnits,
+      txHash: push.txHash,
+      correctedRefundedBaseUnits: corrected,
+      issuedAt: 0,
+      nonce: '',
+      ...overrides,
+    })
+  }
+
   private postBinding(body: Body, signature?: string) {
     const raw = JSON.stringify(body)
 
@@ -1378,6 +1420,209 @@ export class MarketplaceSettlementControllerTest extends BaseControllerTest {
     )
     expect(spec.components.schemas).to.not.have.property(
       'MarketplaceEscrowBindingDto',
+    )
+  }
+
+  /**
+   * PARTIAL-REORG: the release was pushed again with a remainder refunded
+   * after it, and a reorganisation removed only the remainder's block. The
+   * correction takes the refund back and nothing else: the invoice stays
+   * PAID at the release's time with its hours paid, where a reversal would
+   * have made it REQUESTED with its hours unpaid until the release was
+   * pushed again. Repeated, it changes nothing.
+   */
+  @test()
+  async correction_takesBackOnlyTheRefund_andKeepsTheReleasePaid() {
+    const bound = await this.bound()
+    const release = this.settlement(bound, EInvoiceEscrowState.RELEASED)
+    const withRemainder = this.fresh({
+      ...release,
+      refundedBaseUnits: '10000000',
+    })
+
+    await this.post(release)
+    await this.post(withRemainder)
+
+    const paid = await this.stored(bound.invoice.id)
+    const correction = this.correctionOf(withRemainder, '0')
+    const corrected = await this.postCorrection(correction)
+    const after = await this.stored(bound.invoice.id)
+    const repeated = await this.postCorrection(this.fresh(correction))
+    const unchanged = await this.stored(bound.invoice.id)
+    const pushedAgain = await this.post(this.fresh(release))
+
+    expect(paid.escrowRefundedBaseUnits).to.be.eq('10000000')
+    expect(corrected.status).to.be.eq(200)
+    expect(corrected.data).to.deep.eq({
+      applied: true,
+      invoiceId: bound.invoice.id,
+      state: EInvoiceState.PAID,
+      escrowState: EInvoiceEscrowState.RELEASED,
+    })
+    expect(after.state).to.be.eq(EInvoiceState.PAID)
+    expect(new Date(after.paidAt!).getTime()).to.be.eq(
+      new Date(paid.paidAt!).getTime(),
+    )
+    expect(after.settlementKind).to.be.eq(EInvoiceSettlementKind.ESCROW)
+    expect(after.escrowState).to.be.eq(EInvoiceEscrowState.RELEASED)
+    expect(after.escrowRefundedBaseUnits).to.be.eq('0')
+    expect(after.escrowTxHash).to.be.eq(paid.escrowTxHash)
+    expect(after.escrowNetBaseUnits).to.be.eq(paid.escrowNetBaseUnits)
+    expect(after.escrowAllocationId).to.be.eq(paid.escrowAllocationId)
+    expect(await this.hoursPaid(after)).to.deep.eq([true, true, true])
+    expect(repeated.data.applied).to.be.false
+    expect(unchanged.escrowRefundedBaseUnits).to.be.eq('0')
+    // What the chain holds now is what the invoice records.
+    expect(pushedAgain.data.applied).to.be.false
+  }
+
+  /**
+   * A dispute refund keeps the dispute: only the remainder mined after it
+   * is taken back, down to the bill it refunded, and the invoice stays
+   * unpaid and not payable by hand.
+   */
+  @test()
+  async correction_ofADisputeRefund_keepsTheDispute() {
+    const bound = await this.bound()
+    const dispute = this.settlement(
+      bound,
+      EInvoiceEscrowState.DISPUTED_REFUNDED,
+      { refundedBaseUnits: '40000000' },
+    )
+
+    await this.post(dispute)
+
+    const corrected = await this.postCorrection(
+      this.correctionOf(dispute, '30000000'),
+    )
+    const invoice = await this.stored(bound.invoice.id)
+
+    expect(corrected.data.applied).to.be.true
+    expect(invoice.state).to.be.eq(EInvoiceState.REQUESTED)
+    expect(invoice.escrowState).to.be.eq(EInvoiceEscrowState.DISPUTED_REFUNDED)
+    expect(invoice.escrowRefundedBaseUnits).to.be.eq('30000000')
+    expect(await this.markByHand(bound, true)).to.be.eq(409)
+  }
+
+  /**
+   * It never takes back more than it names and never what the escrow
+   * could not have done: a correction naming another settlement, or less
+   * than the invoice records, changes nothing; one that refunds more, one
+   * for a pending bill, or a dispute below its bill is a 400; an unknown
+   * invoice a 409; and it is signed, fresh and single-use under its own
+   * header - neither a push nor a reversal is accepted as one.
+   */
+  @test()
+  async correction_refusesWhatItCannotCorrectAndAnythingUnsigned() {
+    const bound = await this.bound()
+    const release = this.fresh({
+      ...this.settlement(bound, EInvoiceEscrowState.RELEASED),
+      refundedBaseUnits: '10000000',
+    })
+
+    await this.post(release)
+
+    const unknown = await this.postCorrection(
+      this.correctionOf(release, '0', { invoiceId: randomUUID() }),
+    )
+    const elsewhere = await this.postCorrection(
+      this.correctionOf(release, '0', { allocationId: this.bytes32() }),
+    )
+    const anotherRelease = await this.postCorrection(
+      this.correctionOf(release, '0', { txHash: this.bytes32() }),
+    )
+    const moreThanRecorded = await this.postCorrection(
+      this.correctionOf(release, '0', { refundedBaseUnits: '20000000' }),
+    )
+    const refundsMore = await this.postCorrection(
+      this.correctionOf(release, '20000000'),
+    )
+    const pending = await this.postCorrection(
+      this.correctionOf(release, '0', {
+        escrowState: EInvoiceEscrowState.SUBMITTED,
+      }),
+    )
+    const disputeBelowBill = await this.postCorrection(
+      this.correctionOf(release, '0', {
+        escrowState: EInvoiceEscrowState.DISPUTED_REFUNDED,
+        feeBaseUnits: '0',
+        netBaseUnits: '0',
+      }),
+    )
+    const forged = await this.postCorrection(
+      this.correctionOf(release, '0'),
+      'deadbeef',
+    )
+    const stale = await this.postCorrection({
+      ...this.correctionOf(release, '0'),
+      issuedAt: Math.floor(Date.now() / 1000) - 3600,
+    })
+    const asReversal = this.correctionOf(release, '0')
+    const reversalSigned = await this.postCorrection(
+      asReversal,
+      this.signature.sign(
+        InternalRoute.SETTLEMENT_REVERSAL,
+        JSON.stringify(asReversal),
+      ),
+    )
+    const asPush = this.correctionOf(release, '0')
+    const pushSigned = await this.postCorrection(
+      asPush,
+      this.signature.sign(InternalRoute.SETTLEMENT, JSON.stringify(asPush)),
+    )
+    const untouched = await this.stored(bound.invoice.id)
+    const signed = this.correctionOf(release, '0')
+    const once = this.signature.sign(
+      InternalRoute.SETTLEMENT_CORRECTION,
+      JSON.stringify(signed),
+    )
+    const replayed = [
+      await this.postCorrection(signed, once),
+      await this.postCorrection(signed, once),
+    ]
+
+    expect(unknown.status).to.be.eq(409)
+    expect(elsewhere.data.applied).to.be.false
+    expect(anotherRelease.data.applied).to.be.false
+    expect(moreThanRecorded.data.applied).to.be.false
+    expect(refundsMore.status).to.be.eq(400)
+    expect(pending.status).to.be.eq(400)
+    expect(disputeBelowBill.status).to.be.eq(400)
+    expect(forged.status).to.be.eq(401)
+    expect(stale.status).to.be.eq(401)
+    expect(reversalSigned.status).to.be.eq(401)
+    expect(pushSigned.status).to.be.eq(401)
+    expect(untouched.escrowRefundedBaseUnits).to.be.eq('10000000')
+    expect(replayed.map((res) => res.status)).to.deep.eq([200, 401])
+    expect(replayed[0].data.applied).to.be.true
+    expect((await this.stored(bound.invoice.id)).state).to.be.eq(
+      EInvoiceState.PAID,
+    )
+  }
+
+  /** Internal like the push: served, and in neither the spec nor a client. */
+  @test()
+  async correctionRoute_isServedButLeftOutOfThePublicSpec() {
+    const unsigned = await axios.post(
+      `${this.url}/api/internal/marketplace/settlement-correction`,
+      this.correctionOf(this.fixture().body, '0'),
+      { validateStatus: () => true },
+    )
+    const res = await helpControllerSwagger({
+      client: this.apiClient(),
+      throwOnError: true,
+    })
+    const spec = res.data as {
+      paths: Record<string, unknown>
+      components: { schemas: Record<string, unknown> }
+    }
+
+    expect(unsigned.status).to.be.eq(401)
+    expect(spec.paths).to.not.have.property(
+      '/api/internal/marketplace/settlement-correction',
+    )
+    expect(spec.components.schemas).to.not.have.property(
+      'MarketplaceSettlementCorrectionDto',
     )
   }
 }

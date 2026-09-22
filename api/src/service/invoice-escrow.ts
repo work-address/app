@@ -5,6 +5,7 @@ import { Invoice } from '@/entity/invoice'
 import {
   EInvoiceEscrowState,
   IInvoiceCommitmentBinding,
+  IInvoiceEscrowCorrection,
   IInvoiceEscrowReversal,
   IInvoiceEscrowSettlement,
   IInvoiceEscrowSubmission,
@@ -513,6 +514,79 @@ export class InvoiceEscrow {
       InvoiceEscrow.same(invoice.escrowNetBaseUnits, reversal.netBaseUnits) &&
       (invoice.escrowTxHash ?? null) ===
         (reversal.txHash?.toLowerCase() ?? null)
+    )
+  }
+
+  /**
+   * The settled states a remainder can be refunded beside afterwards, in a
+   * transaction of its own (MarketplaceEscrow.refundRemainder), and so the
+   * ones a reorganisation can take that refund back from alone.
+   */
+  public static readonly CORRECTABLE_STATES: readonly EInvoiceEscrowState[] = [
+    EInvoiceEscrowState.RELEASED,
+    EInvoiceEscrowState.DISPUTED_REFUNDED,
+  ]
+
+  /**
+   * Why a correction cannot be one MarketplaceEscrow's history allows, or
+   * null when it can: a release or dispute refund, with a bill, that takes
+   * a refund back - less refunded than before - and a dispute still
+   * refunding at least the bill.
+   */
+  public static correctionProblem(
+    correction: IInvoiceEscrowCorrection,
+  ): string | null {
+    const gross = BigInt(correction.grossBaseUnits)
+    const refunded = BigInt(correction.refundedBaseUnits)
+    const corrected = BigInt(correction.correctedRefundedBaseUnits)
+
+    if (!InvoiceEscrow.CORRECTABLE_STATES.includes(correction.escrowState)) {
+      return `Only a refund beside a release or a dispute refund is taken back alone, not one of a ${correction.escrowState} allocation`
+    }
+
+    if (gross === BigInt(0) || correction.txHash === null) {
+      return `A ${correction.escrowState} allocation carries its bill and settling transaction`
+    }
+
+    if (corrected >= refunded) {
+      return 'A correction takes a refund back: less refunded than was pushed'
+    }
+
+    if (
+      correction.escrowState === EInvoiceEscrowState.DISPUTED_REFUNDED &&
+      corrected < gross
+    ) {
+      return 'A dispute refunds at least the bill'
+    }
+
+    return null
+  }
+
+  /**
+   * Whether the invoice records the settlement `correction` names, refund
+   * included, so taking that refund back applies: the same state, bill,
+   * payout and settling transaction, and at least the refund named - more
+   * when a later push beside it was recorded, which the reorganisation
+   * took back with it. Anything else is a correction already applied, or
+   * one for a settlement the invoice no longer records, and changes
+   * nothing.
+   */
+  public static recordsCorrected(
+    invoice: Invoice,
+    correction: IInvoiceEscrowCorrection,
+  ): boolean {
+    return (
+      invoice.escrowState === correction.escrowState &&
+      InvoiceEscrow.same(
+        invoice.escrowGrossBaseUnits,
+        correction.grossBaseUnits,
+      ) &&
+      InvoiceEscrow.same(invoice.escrowFeeBaseUnits, correction.feeBaseUnits) &&
+      InvoiceEscrow.same(invoice.escrowNetBaseUnits, correction.netBaseUnits) &&
+      (invoice.escrowTxHash ?? null) ===
+        (correction.txHash?.toLowerCase() ?? null) &&
+      BigInt(invoice.escrowRefundedBaseUnits ?? '0') >=
+        BigInt(correction.refundedBaseUnits)
     )
   }
 

@@ -341,6 +341,23 @@ nothing; a second final state, or the same state settled differently, is a
   beside the pending bill), so a repeat, a reversal overtaken by the
   settlement that replaced it, or one for an allocation the invoice is no
   longer bound to answers `applied: false`. An unknown invoice is a 409.
+- **A refund the chain takes back alone is corrected, not reversed.** A
+  remainder can be refunded beside a release or a dispute refund in a
+  transaction of its own, after it, so a reorganisation can remove that
+  refund and keep the settlement (PARTIAL-REORG). A reversal would make a
+  released invoice `REQUESTED` with its hours unpaid until the release was
+  pushed again - for a release the chain never stopped holding. So the
+  marketplace sends `POST /api/internal/marketplace/settlement-correction`
+  instead, under its own header
+  (`X-Marketplace-Settlement-Correction-Signature`): the settlement as it
+  was pushed, and `correctedRefundedBaseUnits`, what the chain has refunded
+  now. It must be a release or dispute refund, with its bill and settling
+  transaction, refunding less than before and a dispute still at least the
+  bill (400 otherwise). The invoice keeps its state, payment date, hours and
+  binding, and records the corrected refund. Idempotent, and never taking
+  back more than it names: it applies only while the invoice records that
+  settlement with at least that refund, and otherwise answers
+  `applied: false`; an unknown invoice is a 409.
 - **A binding the marketplace never recorded is found.** The binding is
   made here, when the payee asks for the commitment, before the
   marketplace records which invoice the allocation bills; if that second

@@ -73,6 +73,19 @@ export class InternalRoute {
   }
 
   /**
+   * A settlement the app acknowledged whose chain still holds it but not a
+   * refund beside it: a reorganisation removed only a later remainder
+   * refund. Only the refund is taken back (PARTIAL-REORG); a reversal
+   * would unpay the release the chain still holds. Its own header, so
+   * neither a push nor a reversal can be replayed as one.
+   */
+  public static readonly SETTLEMENT_CORRECTION: IInternalRoute = {
+    method: 'POST',
+    path: '/api/internal/marketplace/settlement-correction',
+    header: 'X-Marketplace-Settlement-Correction-Signature',
+  }
+
+  /**
    * Which invoice this service bound to an allocation, asked by the
    * marketplace for one that has a settlement to push and no invoice
    * recorded there: the payee's recording of the binding failed or was
@@ -93,6 +106,7 @@ export class InternalRoute {
     InternalRoute.PAUSE,
     InternalRoute.SETTLEMENT,
     InternalRoute.SETTLEMENT_REVERSAL,
+    InternalRoute.SETTLEMENT_CORRECTION,
     InternalRoute.ESCROW_BINDING,
   ]
 }

@@ -16,6 +16,7 @@ one-time `nonce`.
 | `POST /api/internal/marketplace/pause` | `X-Marketplace-Pause-Signature` |
 | `POST /api/internal/marketplace/settlement` | `X-Marketplace-Settlement-Signature` |
 | `POST /api/internal/marketplace/settlement-reversal` | `X-Marketplace-Settlement-Reversal-Signature` |
+| `POST /api/internal/marketplace/settlement-correction` | `X-Marketplace-Settlement-Correction-Signature` |
 | `POST /api/internal/marketplace/escrow-binding` | `X-Marketplace-Escrow-Binding-Signature` |
 
 The table lives in code as `InternalRoute` (`api/src/service/internal-route.ts`)

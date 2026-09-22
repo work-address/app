@@ -126,6 +126,15 @@ export class InternalRouteBindingTest extends BaseControllerTest {
           ...stamp,
         }
       }
+      case InternalRoute.SETTLEMENT_CORRECTION: {
+        return {
+          ...this.fixtureBody(
+            'marketplace-settlement-correction.contract.json',
+          ),
+          invoiceId: randomUUID(),
+          ...stamp,
+        }
+      }
       case InternalRoute.ESCROW_BINDING: {
         return {
           ...this.fixtureBody('marketplace-escrow-binding.contract.json'),
@@ -222,6 +231,14 @@ export class InternalRouteBindingTest extends BaseControllerTest {
   async settlementReversal_refusesABodySignedForAnotherRoute() {
     await this.refusesEveryOtherRoutesSignature(
       InternalRoute.SETTLEMENT_REVERSAL,
+    )
+  }
+
+  @test
+  @timeout(20000)
+  async settlementCorrection_refusesABodySignedForAnotherRoute() {
+    await this.refusesEveryOtherRoutesSignature(
+      InternalRoute.SETTLEMENT_CORRECTION,
     )
   }
 

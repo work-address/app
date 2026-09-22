@@ -9,6 +9,7 @@ import {
 } from '@/model/invoice'
 import { MarketplaceEscrowBindingDto } from '@/model/dto/marketplace-escrow-binding'
 import { MarketplaceSettlementDto } from '@/model/dto/marketplace-settlement'
+import { MarketplaceSettlementCorrectionDto } from '@/model/dto/marketplace-settlement-correction'
 import { MarketplaceSettlementReversalDto } from '@/model/dto/marketplace-settlement-reversal'
 import { EntitlementSignature } from '@/service/entitlement-signature'
 import { InternalRoute } from '@/service/internal-route'
@@ -29,10 +30,11 @@ import AuthenticationException from '@/exception/authentication-exception'
  * round. Idempotent: the push carries the allocation's absolute state,
  * so a retry signed afresh answers 200 and changes nothing twice. A
  * settlement the chain takes back in a reorganisation after it was recorded
- * here is undone through the reversal route beside it, and the invoice an
- * allocation bills, when the marketplace never recorded it, is asked for
- * through the binding route. Under `/internal`, so the public API spec and
- * the browser clients leave it out.
+ * here is undone through the reversal route beside it - or, when only a
+ * refund beside it was taken back, corrected through the correction route -
+ * and the invoice an allocation bills, when the marketplace never recorded
+ * it, is asked for through the binding route. Under `/internal`, so the
+ * public API spec and the browser clients leave it out.
  */
 @JsonController('/internal')
 export class MarketplaceSettlementController {
@@ -44,6 +46,13 @@ export class MarketplaceSettlementController {
    */
   public static readonly REVERSAL_SIGNATURE_HEADER =
     InternalRoute.SETTLEMENT_REVERSAL.header
+
+  /**
+   * The correction's own header: neither a push nor a reversal can be
+   * replayed as the correction of a refund.
+   */
+  public static readonly CORRECTION_SIGNATURE_HEADER =
+    InternalRoute.SETTLEMENT_CORRECTION.header
 
   /** The binding lookup's own header, like every internal route's. */
   public static readonly BINDING_SIGNATURE_HEADER =
@@ -132,6 +141,48 @@ export class MarketplaceSettlementController {
     }
 
     return runPromise(this.invoiceManager.reverseEscrowSettlement(data))
+  }
+
+  /**
+   * A refund recorded here beside a settlement the chain still holds, which
+   * a reorganisation took back alone: the refund is corrected, and nothing
+   * else - a released invoice stays paid. Authenticated like the push, under
+   * its own header; idempotent (`InvoiceManager.correctEscrowSettlement`).
+   */
+  @HttpCode(200)
+  @Post('/marketplace/settlement-correction')
+  public async correct(
+    @Body() data: MarketplaceSettlementCorrectionDto,
+    @Req() request: express.Request,
+  ): Promise<IInvoiceEscrowReversalResult> {
+    const signature =
+      request.header(
+        MarketplaceSettlementController.CORRECTION_SIGNATURE_HEADER,
+      ) ?? ''
+
+    if (
+      !this.signature.verify(
+        InternalRoute.SETTLEMENT_CORRECTION,
+        JSON.stringify(data),
+        signature,
+      )
+    ) {
+      throw new AuthenticationException('Invalid marketplace signature')
+    }
+
+    if (!this.signature.isWithinReplayWindow(data.issuedAt)) {
+      throw new AuthenticationException(
+        'Marketplace settlement correction outside the replay window',
+      )
+    }
+
+    if (!(await this.signature.consumeNonce(data.nonce))) {
+      throw new AuthenticationException(
+        'Marketplace settlement correction nonce already used',
+      )
+    }
+
+    return runPromise(this.invoiceManager.correctEscrowSettlement(data))
   }
 
   /**

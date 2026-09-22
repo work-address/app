@@ -314,6 +314,18 @@ export interface IInvoiceEscrowReversal extends IInvoiceCommitmentBinding {
 }
 
 /**
+ * A settlement the marketplace pushed and this service acknowledged, which
+ * the chain still holds without a refund recorded beside it: a
+ * reorganisation removed a RemainderRefunded mined after the release or
+ * dispute and kept the settlement itself (PARTIAL-REORG). It names the
+ * settlement as it was pushed, `refundedBaseUnits` included, and
+ * `correctedRefundedBaseUnits` is what the chain has refunded now - less.
+ */
+export interface IInvoiceEscrowCorrection extends IInvoiceEscrowReversal {
+  correctedRefundedBaseUnits: string
+}
+
+/**
  * The invoice bound to an allocation, as the marketplace asks for it
  * (POST /api/internal/marketplace/escrow-binding): null when none is.
  */
@@ -321,11 +333,12 @@ export interface IInvoiceEscrowBindingResult {
   invoiceId: string | null
 }
 
-/** What recording a settlement reversal did. */
+/** What recording a settlement reversal, or a correction, did. */
 export interface IInvoiceEscrowReversalResult {
   /**
-   * False when the invoice records nothing of that settlement: reversed
-   * already, overtaken by the settlement that replaced it, or never there.
+   * False when the invoice records nothing of that settlement: reversed or
+   * corrected already, overtaken by the settlement that replaced it, or
+   * never there.
    */
   applied: boolean
   invoiceId: string
