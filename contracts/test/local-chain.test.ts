@@ -203,10 +203,11 @@ describe('local chain tooling', () => {
       const [, , , holder, spender] = await ethers.getSigners()
       const token = await ethers.getContractAt('TetherLikeUSDT', manifest.token.address, holder)
 
-      expect(manifest.token).to.deep.eq({
+      expect(manifest.token).to.include({
         contract: 'TetherLikeUSDT',
         address: manifest.token.address,
         decimals: 6,
+        mock: true,
       })
       expect(await token.decimals()).to.eq(BigInt(6))
 
@@ -262,8 +263,12 @@ describe('local chain tooling', () => {
 
       expect(validate(written), JSON.stringify(validate.errors)).to.eq(true)
       expect(validate({ ...written, chainId: 1 })).to.eq(false)
-      expect(validate({ ...written, chainId: 11155111 })).to.eq(false)
+      expect(validate({ ...written, chainId: 137 })).to.eq(false)
+      expect(validate({ ...written, chainId: 11155111 }), 'the Sepolia pilot').to.eq(true)
       expect(validate(withoutRegistry)).to.eq(false)
+      expect(validate({ ...written, compiler: undefined })).to.eq(false)
+      expect(validate({ ...written, token: { ...written.token, mock: false } })).to.eq(false)
+      expect(validate({ ...written, escrow: { ...written.escrow, runtimeCodeHash: undefined } })).to.eq(false)
       expect(validate({ ...written, deployBlock: 1.5 })).to.eq(false)
       expect(validate({ ...written, escrow: { ...written.escrow, address: '0x1234' } })).to.eq(
         false,

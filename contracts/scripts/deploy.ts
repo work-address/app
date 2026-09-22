@@ -1,50 +1,19 @@
 import hre from 'hardhat'
 
-import {
-  LOCAL_TOKENS,
-  deployLocal,
-  escrowEnvLines,
-  localAccountKey,
-  manifestPath,
-  writeManifest,
-} from './local-chain'
-
-import type { LocalToken } from './local-chain'
+import { runDeploy } from './deploy-command'
 
 /**
- * Deploys the local test USDT, the escrow and the identity registry to the
- * local Hardhat chain — in process (`deploy:local`) or a running
- * `hardhat node` (`deploy:localhost`), which also gets a manifest in
- * deployments/. Refuses every other chain, mainnet by name: a public
- * deployment waits for the security review (SPEC §14–15).
+ * `hardhat run scripts/deploy.ts`: the local deploy, in process
+ * (`deploy:local`) or to a running `hardhat node` (`deploy:localhost`, which
+ * also writes deployments/localhost.json and prints web/api's escrow lines).
  *
- * LOCAL_TOKEN=MockUSDT swaps the Tether-like token for a plain ERC-20.
+ * A script run through `hardhat run` takes no flags, so it can never carry
+ * the confirmation a public chain needs: pointed at one, it stops before
+ * sending anything. `pnpm run deploy:sepolia` is the only way to a testnet,
+ * and mainnet has none. LOCAL_TOKEN=MockUSDT swaps the Tether-like token for
+ * a plain ERC-20.
  */
-async function main() {
-  const token = (process.env.LOCAL_TOKEN ?? 'TetherLikeUSDT') as LocalToken
-
-  if (!LOCAL_TOKENS.includes(token)) {
-    throw new Error(`LOCAL_TOKEN must be ${LOCAL_TOKENS.join(' or ')}, not ${token}`)
-  }
-
-  const manifest = await deployLocal(hre, { token })
-
-  console.log(JSON.stringify(manifest, null, 2))
-
-  if (hre.network.name === 'hardhat') {
-    console.log('\nIn-process chain: nothing was persisted. Use deploy:localhost against `npm run node`.')
-    return
-  }
-
-  const file = manifestPath(hre.network.name)
-
-  writeManifest(file, manifest)
-  console.log(`\nWrote ${file}`)
-  console.log('\n# web/api/.env — local Hardhat node only; the key is a public Hardhat test key')
-  console.log(escrowEnvLines(manifest, localAccountKey(hre, manifest.originSigner)).join('\n'))
-}
-
-main().catch((error) => {
+runDeploy(hre).catch((error) => {
   console.error(error)
   process.exitCode = 1
 })

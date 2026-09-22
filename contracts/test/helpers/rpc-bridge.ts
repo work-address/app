@@ -32,29 +32,29 @@ export async function startRpcBridge(
   answer: (method: string, params: unknown[]) => Promise<unknown> | unknown = () => undefined,
 ): Promise<RpcBridge> {
   const methods: string[] = []
+  const reply = ({ id, method, params }: { id: number; method: string; params?: unknown[] }) => {
+    methods.push(method)
+
+    return Promise.resolve(answer(method, params ?? []))
+      .then((replaced) => (replaced === undefined ? provider.request({ method, params }) : replaced))
+      .then(
+        (result) => ({ jsonrpc: '2.0', id, result }),
+        (error: Error) => ({ jsonrpc: '2.0', id, error: { code: -32000, message: error.message } }),
+      )
+  }
+  // A fork client may batch its reads; a batch is answered as one, in order.
   const server = http.createServer((request, response) => {
     const chunks: Buffer[] = []
 
     request.on('data', (chunk: Buffer) => chunks.push(chunk))
     request.on('end', () => {
-      const { id, method, params } = JSON.parse(Buffer.concat(chunks).toString('utf8')) as {
-        id: number
-        method: string
-        params: unknown[]
-      }
+      const parsed = JSON.parse(Buffer.concat(chunks).toString('utf8'))
+      const answered = Array.isArray(parsed) ? Promise.all(parsed.map(reply)) : reply(parsed)
 
-      methods.push(method)
-
-      Promise.resolve(answer(method, params))
-        .then((replaced) => (replaced === undefined ? provider.request({ method, params }) : replaced))
-        .then(
-          (result) => ({ jsonrpc: '2.0', id, result }),
-          (error: Error) => ({ jsonrpc: '2.0', id, error: { code: -32000, message: error.message } }),
-        )
-        .then((body) => {
-          response.writeHead(200, { 'content-type': 'application/json' })
-          response.end(JSON.stringify(body))
-        })
+      answered.then((body) => {
+        response.writeHead(200, { 'content-type': 'application/json' })
+        response.end(JSON.stringify(body))
+      })
     })
   })
 

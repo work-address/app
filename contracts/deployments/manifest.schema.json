@@ -1,7 +1,7 @@
 {
   "$schema": "http://json-schema.org/draft-07/schema#",
   "title": "Work Address contract deployment manifest",
-  "description": "Written by scripts/deploy.ts to deployments/<network>.json. Everything a consumer needs to reach one deployment: the chain, where each contract lives, the first block to index from and the two immutable escrow roles. The chain is pinned to the local Hardhat chain until the SPEC §14 gate is met; admitting another chain here is a deliberate decision, not a config change.",
+  "description": "Written by the deploy (scripts/deploy-command.ts) to deployments/<network>.json, and by deploy:dry-run to deployments/<network>.dry-run.json. Everything a consumer needs to reach one deployment: the chain, where each contract lives, the first block to index from, the two immutable escrow roles, and the compiler and code hashes that let anyone hold each address to this source. Only the local Hardhat chain and the Sepolia pilot are admitted; mainnet waits for the SPEC §14 gate, and admitting it here is a deliberate decision, not a config change.",
   "type": "object",
   "additionalProperties": false,
   "required": [
@@ -11,6 +11,7 @@
     "deployer",
     "feeRecipient",
     "originSigner",
+    "compiler",
     "token",
     "escrow",
     "identityRegistry"
@@ -25,9 +26,10 @@
       "minLength": 1
     },
     "chainId": {
-      "description": "EIP-155 chain id. Only the local Hardhat chain.",
+      "description": "EIP-155 chain id: the local Hardhat chain, or Sepolia for the testnet pilot. For a dry run, the chain that was forked.",
       "enum": [
-        31337
+        31337,
+        11155111
       ]
     },
     "deployBlock": {
@@ -46,17 +48,58 @@
       "description": "MarketplaceEscrow.originSigner: the address web/api's APP_ESCROW_ORIGIN_SIGNER_KEY must control.",
       "$ref": "#/definitions/address"
     },
+    "compiler": {
+      "description": "The solc build every code hash below comes from.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "solc",
+        "optimizer",
+        "evmVersion"
+      ],
+      "properties": {
+        "solc": {
+          "description": "solc's long version, commit included.",
+          "type": "string",
+          "pattern": "^\\d+\\.\\d+\\.\\d+\\+commit\\.[0-9a-f]{8}"
+        },
+        "optimizer": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": [
+            "enabled",
+            "runs"
+          ],
+          "properties": {
+            "enabled": {
+              "type": "boolean"
+            },
+            "runs": {
+              "type": "integer",
+              "minimum": 0
+            }
+          }
+        },
+        "evmVersion": {
+          "type": "string",
+          "minLength": 1
+        }
+      }
+    },
     "token": {
       "type": "object",
       "additionalProperties": false,
       "required": [
         "contract",
         "address",
-        "decimals"
+        "decimals",
+        "mock",
+        "creationCodeHash",
+        "runtimeCodeHash"
       ],
       "properties": {
         "contract": {
-          "description": "Local test token. TetherLikeUSDT reproduces mainnet USDT's approve-reset, no-return and sender-blacklist behaviour.",
+          "description": "The test token. TetherLikeUSDT reproduces mainnet USDT's approve-reset, no-return and sender-blacklist behaviour; there is no official Tether on a testnet.",
           "enum": [
             "TetherLikeUSDT",
             "MockUSDT"
@@ -67,6 +110,16 @@
         },
         "decimals": {
           "const": 6
+        },
+        "mock": {
+          "description": "Always true here: an open-mint stand-in, never the settlement asset DEC-09 names.",
+          "const": true
+        },
+        "creationCodeHash": {
+          "$ref": "#/definitions/hash"
+        },
+        "runtimeCodeHash": {
+          "$ref": "#/definitions/hash"
         }
       }
     },
@@ -75,6 +128,30 @@
     },
     "identityRegistry": {
       "$ref": "#/definitions/identityRegistry"
+    },
+    "dryRun": {
+      "description": "Present when the deploy was rehearsed on an in-process fork: none of these contracts exists on the forked chain, and the addresses are the ones a real deploy from `deployer` at its nonce at forkBlock would get.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "forkBlock",
+        "simulatedChainId",
+        "gasSimulated"
+      ],
+      "properties": {
+        "forkBlock": {
+          "type": "integer",
+          "minimum": 0
+        },
+        "simulatedChainId": {
+          "description": "The chain id the in-process fork answered as.",
+          "const": 31337
+        },
+        "gasSimulated": {
+          "description": "The deployer held too little ETH on the forked chain, and the fork gave it some.",
+          "type": "boolean"
+        }
+      }
     }
   },
   "definitions": {
@@ -87,7 +164,9 @@
       "additionalProperties": false,
       "required": [
         "contract",
-        "address"
+        "address",
+        "creationCodeHash",
+        "runtimeCodeHash"
       ],
       "properties": {
         "contract": {
@@ -95,6 +174,14 @@
         },
         "address": {
           "$ref": "#/definitions/address"
+        },
+        "creationCodeHash": {
+          "description": "keccak256 of the compiler's creation bytecode, before constructor arguments.",
+          "$ref": "#/definitions/hash"
+        },
+        "runtimeCodeHash": {
+          "description": "keccak256 of the code at `address` with every immutable zeroed: the compiler's runtime bytecode, which the deploy checked it equals.",
+          "$ref": "#/definitions/hash"
         }
       }
     },
@@ -103,7 +190,9 @@
       "additionalProperties": false,
       "required": [
         "contract",
-        "address"
+        "address",
+        "creationCodeHash",
+        "runtimeCodeHash"
       ],
       "properties": {
         "contract": {
@@ -111,8 +200,20 @@
         },
         "address": {
           "$ref": "#/definitions/address"
+        },
+        "creationCodeHash": {
+          "description": "keccak256 of the compiler's creation bytecode, before constructor arguments.",
+          "$ref": "#/definitions/hash"
+        },
+        "runtimeCodeHash": {
+          "description": "keccak256 of the code at `address` with every immutable zeroed: the compiler's runtime bytecode, which the deploy checked it equals.",
+          "$ref": "#/definitions/hash"
         }
       }
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^0x[0-9a-f]{64}$"
     }
   }
 }

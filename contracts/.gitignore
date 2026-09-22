@@ -2,6 +2,9 @@ node_modules
 artifacts
 cache
 typechain-types
-# Written by deploy:localhost; addresses die with the node.
+# Written by deploy:localhost (addresses die with the node) and by
+# deploy:dry-run (addresses that exist nowhere). A public deploy's manifest
+# outlives both, and is committed.
 deployments/*.json
 !deployments/manifest.schema.json
+!deployments/sepolia.json

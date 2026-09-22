@@ -4,12 +4,16 @@ import { HDNodeWallet, Mnemonic, Wallet, getAddress } from 'ethers'
 
 import type { HardhatRuntimeEnvironment } from 'hardhat/types'
 
+import { LOCAL_CHAIN_ID, TEST_TOKENS, deployContracts } from './deployment'
+
+import type { DeploymentManifest, TestToken } from './deployment'
+
 /**
  * The one chain these scripts may touch: Hardhat's own, in process or as a
  * `hardhat node`. Nothing here is reviewed for real funds (SPEC §14), the
  * test tokens have an open mint, and the time helpers only exist on Hardhat.
  */
-export const LOCAL_CHAIN_ID = 31337
+export { LOCAL_CHAIN_ID }
 
 export const DEFAULT_LOCAL_RPC_URL = 'http://127.0.0.1:8545'
 
@@ -28,24 +32,12 @@ export const LOCAL_RPC_URL = localRpcUrl()
 
 export const DEPLOYMENTS_DIR = path.resolve(__dirname, '..', 'deployments')
 
-export const LOCAL_TOKENS = ['TetherLikeUSDT', 'MockUSDT'] as const
+export const LOCAL_TOKENS = TEST_TOKENS
 
-export type LocalToken = (typeof LOCAL_TOKENS)[number]
+export type LocalToken = TestToken
 
 /** What `deploy:localhost` wrote, validated by deployments/manifest.schema.json. */
-export type LocalDeployment = {
-  $schema: string
-  network: string
-  chainId: number
-  /** First block holding any of these contracts: where an indexer starts. */
-  deployBlock: number
-  deployer: string
-  feeRecipient: string
-  originSigner: string
-  token: { contract: LocalToken; address: string; decimals: number }
-  escrow: { contract: 'MarketplaceEscrow'; address: string }
-  identityRegistry: { contract: 'IdentityRegistry'; address: string }
-}
+export type LocalDeployment = DeploymentManifest
 
 /**
  * Throws unless the chain is the local Hardhat chain. Mainnet gets its own
@@ -89,54 +81,30 @@ export function manifestPath(networkName: string): string {
 /**
  * Deploys the local test USDT (TetherLikeUSDT unless told otherwise, so the
  * mainnet approve-reset rule is exercised), the escrow and the identity
- * registry, in that order. On a fresh node the deployer's nonces 0, 1 and 2
- * make the addresses the ones web/api/.env.example documents.
+ * registry, in that order, from the node's account #0, with #1 as the fee
+ * recipient and #2 as the origin signer. On a fresh node the deployer's
+ * nonces 0, 1 and 2 make the addresses the ones web/api/.env.example
+ * documents.
  */
 export async function deployLocal(
   hre: HardhatRuntimeEnvironment,
   options: { token?: LocalToken } = {},
 ): Promise<LocalDeployment> {
   const chainId = await requireLocalChain(hre)
-  const tokenContract = options.token ?? 'TetherLikeUSDT'
+  const token = options.token ?? 'TetherLikeUSDT'
 
-  if (!LOCAL_TOKENS.includes(tokenContract)) {
-    throw new Error(`Unknown local token ${tokenContract}: use ${LOCAL_TOKENS.join(' or ')}`)
+  if (!LOCAL_TOKENS.includes(token)) {
+    throw new Error(`Unknown local token ${token}: use ${LOCAL_TOKENS.join(' or ')}`)
   }
 
-  const { ethers } = hre
-  const [deployer, feeRecipient, originSigner] = await ethers.getSigners()
+  const [deployer, feeRecipient, originSigner] = await hre.ethers.getSigners()
 
-  const token = await (await ethers.getContractFactory(tokenContract)).deploy()
-  const tokenReceipt = await token.deploymentTransaction()?.wait()
-  const tokenAddress = await token.getAddress()
-
-  const escrow = await (
-    await ethers.getContractFactory('MarketplaceEscrow')
-  ).deploy(tokenAddress, feeRecipient.address, originSigner.address)
-  await escrow.deploymentTransaction()?.wait()
-
-  const registry = await (await ethers.getContractFactory('IdentityRegistry')).deploy()
-  await registry.deploymentTransaction()?.wait()
-
-  if (!tokenReceipt) {
-    throw new Error('The token deployment has no receipt')
-  }
-
-  return {
-    $schema: './manifest.schema.json',
+  return deployContracts(hre.artifacts, deployer, {
     network: hre.network.name,
     chainId,
-    deployBlock: tokenReceipt.blockNumber,
-    deployer: deployer.address,
-    feeRecipient: feeRecipient.address,
-    originSigner: originSigner.address,
-    token: { contract: tokenContract, address: tokenAddress, decimals: 6 },
-    escrow: { contract: 'MarketplaceEscrow', address: await escrow.getAddress() },
-    identityRegistry: {
-      contract: 'IdentityRegistry',
-      address: await registry.getAddress(),
-    },
-  }
+    token,
+    roles: { feeRecipient: feeRecipient.address, originSigner: originSigner.address },
+  })
 }
 
 export function writeManifest(file: string, manifest: LocalDeployment): void {

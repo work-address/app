@@ -3,10 +3,12 @@ import '@nomicfoundation/hardhat-chai-matchers'
 
 import { formatUnits } from 'ethers'
 import { subtask, task } from 'hardhat/config'
+import { HardhatPluginError } from 'hardhat/plugins'
 import { TASK_NODE_SERVER_READY } from 'hardhat/builtin-tasks/task-names'
 
 import type { HardhatUserConfig } from 'hardhat/config'
 
+import { runDeploy, runDryRun, sepoliaNetwork } from './scripts/deploy-command'
 import {
   LOCAL_CHAIN_ID,
   LOCAL_RPC_URL,
@@ -18,13 +20,18 @@ import { advanceTime, parseDuration } from './scripts/time-advance'
 import { runWalkthrough } from './scripts/walkthrough'
 
 /**
- * Local development and tests only. There is deliberately no public network
- * here: nothing in this package is reviewed for real funds, and a testnet
- * pilot adds its network after the chain and asset decisions (DEC-09).
+ * `hardhat` (in process) and `localhost` (a `hardhat node`, `pnpm run node`)
+ * are the local chain, 31337. Their chain id is pinned, so Hardhat refuses
+ * the connection if that URL ever answers as another chain, and every script
+ * in scripts/ checks for 31337 again before sending anything.
  *
- * `localhost` is a `hardhat node` (`npm run node`). Its chain id is pinned, so
- * Hardhat refuses the connection if that URL ever answers as another chain,
- * and every script in scripts/ checks for 31337 again before sending anything.
+ * `sepolia` is the testnet pilot (SPEC §14; DEC-09 settles on Ethereum, and
+ * Sepolia has no official Tether, so its token is the mock). Its URL and
+ * deployer key are read from SEPOLIA_RPC_URL and DEPLOYER_KEY in the
+ * environment of whoever deploys, and nothing in this repository sets
+ * either. Even with both set, `deploy:contracts` refuses it unless the
+ * command also carries `--confirm-chain-id 11155111`. There is no mainnet
+ * entry: chain 1 is refused by every script, with or without a flag.
  */
 const config: HardhatUserConfig = {
   solidity: {
@@ -34,6 +41,7 @@ const config: HardhatUserConfig = {
   networks: {
     hardhat: { chainId: LOCAL_CHAIN_ID },
     localhost: { url: LOCAL_RPC_URL, chainId: LOCAL_CHAIN_ID },
+    sepolia: sepoliaNetwork(process.env),
   },
 }
 
@@ -43,6 +51,32 @@ subtask(TASK_NODE_SERVER_READY).setAction(async (args, _hre, runSuper) => {
   await enableIntervalMining(args.provider)
   console.log('Interval mining: a block every 5 s, so chain time keeps moving while idle.\n')
 })
+
+/** A refusal is the answer, not a crash: Hardhat prints a plugin error's message without a stack. */
+async function refusalsAsMessages(action: () => Promise<unknown>): Promise<void> {
+  try {
+    await action()
+  } catch (error) {
+    throw new HardhatPluginError('@work-address/contracts', (error as Error).message, error as Error)
+  }
+}
+
+task('deploy:contracts', 'Deploys the test USDT, MarketplaceEscrow and IdentityRegistry and writes deployments/<network>.json')
+  .addOptionalParam(
+    'confirmChainId',
+    'Required for any chain but the local one (31337): the chain id the deploy is meant for. Chain 1 is refused regardless.',
+  )
+  .setAction(async ({ confirmChainId }, hre) => {
+    await refusalsAsMessages(() => runDeploy(hre, { confirmChainId }))
+  })
+
+task('deploy:dry-run', 'Rehearses the deploy on an in-process fork of a network; sends that network nothing')
+  .addOptionalParam('forkUrl', 'RPC endpoint of the network to fork (default: DRY_RUN_FORK_URL)')
+  .addOptionalParam('block', 'Block to fork at (default: the latest, recorded in the manifest)')
+  .addOptionalParam('deployer', "The real deployer's address, to predict the addresses (default: DEPLOYER_ADDRESS)")
+  .setAction(async ({ forkUrl, block, deployer }, hre) => {
+    await refusalsAsMessages(() => runDryRun(hre, { forkUrl, block, deployer }))
+  })
 
 task('mint', 'Mints local test USDT to an address, and tops up its gas')
   .addPositionalParam('to', 'Recipient address')

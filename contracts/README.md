@@ -17,7 +17,9 @@ network calls.
 
 > **Unaudited. Not for real funds.** The release gate in SPEC §14 — independent
 > security review, testnet pilot, reproducible verified deployment — has not
-> been met. The Hardhat config has no public network on purpose.
+> been met. The only public network the Hardhat config knows is the Sepolia
+> pilot, which deploys only when the command names its chain id; mainnet is
+> refused by every script, with or without a flag.
 
 ## `MarketplaceEscrow`
 
@@ -293,6 +295,11 @@ pnpm run typecheck:identity   # the library without Node types, then the command
 pnpm run deploy:local   # in-process smoke deploy; nothing outlives the command
 ```
 
+`test/deploy-dry-run.test.ts` also rehearses the testnet deploy on an
+in-process fork of a second local chain, twice, and holds the two manifests
+to be identical and the forked chain to have been sent nothing but reads (see
+"Testnet pilot").
+
 CI (the `contracts` job in the repository's `.github/workflows/ci.yml`) runs
 `pnpm install --frozen-lockfile`, compiles, tests and typechecks, then the
 identity library's tests, typecheck and build, on every push and pull request,
@@ -317,9 +324,9 @@ matches.
 ## Run the whole flow locally
 
 Everything here targets the local Hardhat chain, chain id 31337, and nothing
-else. `hardhat.config.ts` defines no other network. Before sending anything,
-deploy, mint and time-advance each ask the node for its chain id and refuse
-any other; chain id 1 is refused by name.
+else. Before sending anything, deploy, mint and time-advance each ask the
+node for its chain id and refuse any other; chain id 1 is refused by name.
+The one public network in `hardhat.config.ts` is the Sepolia pilot, below.
 
 1. **Start a node** in its own terminal. It keeps its state until you stop it
    with Ctrl-C. While idle it mines a block every 5 seconds, so the latest
@@ -413,6 +420,73 @@ Two things to know:
   which brings back the same addresses. MetaMask also caches nonces for each
   chain, so after a restart clear the account's activity data.
 
+## Testnet pilot (Sepolia)
+
+The pilot SPEC §14 asks for runs on Sepolia. There is no official Tether
+there, so the deploy installs `TetherLikeUSDT`, which reproduces mainnet
+USDT's approve-reset, no-return and sender-blacklist behaviour, and the
+manifest labels it `"mock": true`. Nothing in this repository holds a URL or a
+key for it: `hardhat.config.ts` reads `SEPOLIA_RPC_URL` and `DEPLOYER_KEY` from
+the environment of whoever runs the command, and no test sets either.
+
+**The chain guard.** `deploy:contracts` (behind `deploy:local`,
+`deploy:localhost` and `deploy:sepolia`) asks the endpoint for its chain id
+before anything else. 31337 deploys. Sepolia deploys only when the command
+carries `--confirm-chain-id 11155111`, and a URL that answers as any other
+chain is refused even then. Chain id 1 is refused whatever is passed: the flag
+is not the review. `hardhat run scripts/deploy.ts` cannot take a flag, so it
+never reaches a public chain at all.
+
+**1. Rehearse on a fork.** This forks Sepolia into an in-process Hardhat
+network pinned to one block and deploys there. It needs no key: the deployer
+is impersonated on the fork, so the addresses it prints are the ones a real
+deploy from that account, at its nonce at that block, would get. Sepolia is
+only read.
+
+```bash
+DRY_RUN_FORK_URL=<your Sepolia RPC URL> \
+DEPLOYER_ADDRESS=<the deployer's address> \
+FEE_RECIPIENT=<the fee multisig> \
+ORIGIN_SIGNER_ADDRESS=<the origin signer's address> \
+pnpm run deploy:dry-run
+```
+
+It writes `deployments/sepolia.dry-run.json` (git-ignored) with a `dryRun`
+block naming the fork block. Run it again with `--block <forkBlock>` and the
+manifest is byte for byte the same.
+
+**2. Deploy.** Only after the rehearsal, from a funded deployer:
+
+```bash
+SEPOLIA_RPC_URL=<your Sepolia RPC URL> \
+DEPLOYER_KEY=<the deployer's private key> \
+FEE_RECIPIENT=<the fee multisig> \
+ORIGIN_SIGNER_ADDRESS=<the origin signer's address> \
+pnpm run deploy:sepolia --confirm-chain-id 11155111
+```
+
+It writes `deployments/sepolia.json`, which is committed, and prints the
+`APP_ESCROW_*` lines for `web/api/.env` without any key: the API signs origin
+proofs through its origin signer (`APP_ESCROW_ORIGIN_SIGNER` in
+`web/api/.env.example`), never a key printed here.
+
+**What the manifest records.** Beside the addresses, roles and first block:
+the compiler (`solc` long version, optimizer, EVM version) and, per contract,
+`creationCodeHash` (keccak256 of the creation bytecode before constructor
+arguments) and `runtimeCodeHash` (keccak256 of the code at the address with
+every immutable zeroed). The deploy computes the second from the chain and
+refuses to write a manifest unless it equals the compiler's runtime bytecode,
+so anyone can recompute it with `eth_getCode` and this source. Both hashes are
+the same on every chain and at every address, which is what makes a rerun
+reproduce them. The schema is `deployments/manifest.schema.json`; it admits
+31337 and 11155111 and no other chain.
+
+Not wired: Etherscan source verification. It needs the
+`@nomicfoundation/hardhat-verify` plugin, which this package does not install,
+and an Etherscan key. Until then the compiler record above and the build info
+Hardhat writes to `artifacts/build-info/` (the standard JSON input Etherscan's
+form takes) are what a verification uses.
+
 ## Settlement asset
 
 **Ethereum mainnet, Tether USDT** at `0xdAC17F958D2ee523a2206206994597C13D831ec7`,
@@ -451,4 +525,6 @@ variant. How it differs from a standard ERC-20, and what that means here:
   against us, and the docs must say so. InvoiceCommitment v1 fixes the
   encoding, not who keeps an invoice's salt.
 - Independent review, testnet pilot and a verified, reproducible deployment —
-  the SPEC §14 gate, unmet for both contracts.
+  the SPEC §14 gate, unmet for both contracts. The pilot's deploy, its dry
+  run and the reproducible manifest exist (see "Testnet pilot"); running them
+  on Sepolia, and Etherscan verification, do not yet.

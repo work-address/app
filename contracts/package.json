@@ -13,6 +13,8 @@
     "deploy:local": "hardhat run scripts/deploy.ts --network hardhat",
     "node": "hardhat node",
     "deploy:localhost": "hardhat run scripts/deploy.ts --network localhost",
+    "deploy:dry-run": "hardhat deploy:dry-run",
+    "deploy:sepolia": "hardhat --network sepolia deploy:contracts",
     "mint:localhost": "hardhat --network localhost mint",
     "time:advance": "hardhat --network localhost time:advance",
     "walkthrough:localhost": "hardhat --network localhost walkthrough",
