@@ -70,20 +70,23 @@ export class InternalRouteBindingTest extends BaseControllerTest {
     }
 
     switch (route) {
-      case InternalRoute.ENTITLEMENT:
+      case InternalRoute.ENTITLEMENT: {
         return {
           ...this.fixtureBody('entitlement-push.contract.json'),
           ...stamp,
         }
-      case InternalRoute.HIRE:
+      }
+      case InternalRoute.HIRE: {
         return {
           ...this.fixtureBody('marketplace-hire.contract.json'),
           contractId: randomUUID(),
           ...stamp,
         }
-      case InternalRoute.END:
+      }
+      case InternalRoute.END: {
         return { contractId: randomUUID(), ...stamp }
-      case InternalRoute.MILESTONE_INVOICE:
+      }
+      case InternalRoute.MILESTONE_INVOICE: {
         return {
           contractId: randomUUID(),
           milestoneRef: randomUUID(),
@@ -94,26 +97,31 @@ export class InternalRouteBindingTest extends BaseControllerTest {
           workEnd: stamp.issuedAt - 3600,
           ...stamp,
         }
-      case InternalRoute.AMEND:
+      }
+      case InternalRoute.AMEND: {
         return {
           ...this.fixtureBody('marketplace-amend.contract.json'),
           contractId: randomUUID(),
           ...stamp,
         }
-      case InternalRoute.PAUSE:
+      }
+      case InternalRoute.PAUSE: {
         return {
           ...this.fixtureBody('marketplace-pause.contract.json'),
           contractId: randomUUID(),
           ...stamp,
         }
-      case InternalRoute.SETTLEMENT:
+      }
+      case InternalRoute.SETTLEMENT: {
         return {
           ...this.fixtureBody('marketplace-settlement.contract.json'),
           invoiceId: randomUUID(),
           ...stamp,
         }
-      default:
+      }
+      default: {
         throw new Error(`No body for ${route.path}`)
+      }
     }
   }
 

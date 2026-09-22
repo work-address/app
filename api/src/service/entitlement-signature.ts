@@ -88,17 +88,15 @@ export class EntitlementSignature {
       return false
     }
 
-    const given = signature ?? ''
-
-    if (given.includes('=')) {
-      return this.matches(this.sign(route, body), given)
+    if (signature?.includes('=')) {
+      return this.matches(this.sign(route, body), signature)
     }
 
     if (!this.parameters.internalSignatureAcceptLegacy) {
       return false
     }
 
-    return this.matches(this.signLegacy(body), given)
+    return this.matches(this.signLegacy(body), signature)
   }
 
   public isWithinReplayWindow(
@@ -146,9 +144,9 @@ export class EntitlementSignature {
    * Constant-time compare. A plain `===` on a hex digest leaks a byte at a
    * time under timing analysis, which is enough to forge a signature offline.
    */
-  private matches(expected: string, given: string): boolean {
+  private matches(expected: string, given: string | undefined): boolean {
     const want = Buffer.from(expected, 'utf8')
-    const got = Buffer.from(given, 'utf8')
+    const got = Buffer.from(given ?? '', 'utf8')
 
     if (want.length !== got.length) {
       return false
