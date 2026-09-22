@@ -364,10 +364,10 @@ export class MarketplaceHireController {
         description: data.description,
         workStart: data.workStart,
         workEnd: data.workEnd,
-        chainId: data.chainId,
-        escrow: data.escrow,
-        allocationId: data.allocationId,
-        invoiceCommitment: data.invoiceCommitment,
+        chainId: data.chainId ?? null,
+        escrow: data.escrow ?? null,
+        allocationId: data.allocationId ?? null,
+        invoiceCommitment: data.invoiceCommitment ?? null,
       }),
     )
   }

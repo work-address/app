@@ -1,5 +1,6 @@
 import {
   IsInt,
+  IsOptional,
   IsString,
   IsUUID,
   Matches,
@@ -7,7 +8,6 @@ import {
   MaxLength,
   Min,
   MinLength,
-  ValidateIf,
 } from 'class-validator'
 
 const EVM_ADDRESS = /^0x[\dA-Fa-f]{40}$/
@@ -94,31 +94,29 @@ export class MarketplaceMilestoneInvoiceDto {
    * the invoice is bound to so that the allocation's settlement push marks it
    * PAID: its chain, its MarketplaceEscrow deployment and id, and the bytes32
    * its bill committed to. All four null for a milestone approved without
-   * escrow, whose invoice its issuer marks; never some of them (400). Each is
-   * a key that is always sent, null or not, because the signature covers the
-   * re-serialised DTO.
+   * escrow, whose invoice its issuer marks; never some of them (400). The
+   * marketplace always sends the keys; a body without them - one signed
+   * before they existed - reads as all null, and the signature still covers
+   * exactly what was sent, since the re-serialisation leaves out what the
+   * body left out.
    */
 
-  @ValidateIf((dto: MarketplaceMilestoneInvoiceDto) => dto.chainId !== null)
+  @IsOptional()
   @IsInt()
   @Min(1)
-  chainId: number | null
+  chainId?: number | null
 
-  @ValidateIf((dto: MarketplaceMilestoneInvoiceDto) => dto.escrow !== null)
+  @IsOptional()
   @Matches(EVM_ADDRESS)
-  escrow: string | null
+  escrow?: string | null
 
-  @ValidateIf(
-    (dto: MarketplaceMilestoneInvoiceDto) => dto.allocationId !== null,
-  )
+  @IsOptional()
   @Matches(BYTES32)
-  allocationId: string | null
+  allocationId?: string | null
 
-  @ValidateIf(
-    (dto: MarketplaceMilestoneInvoiceDto) => dto.invoiceCommitment !== null,
-  )
+  @IsOptional()
   @Matches(BYTES32)
-  invoiceCommitment: string | null
+  invoiceCommitment?: string | null
 
   /** Unix seconds. Outside the replay window the call is refused. */
   @IsInt()
