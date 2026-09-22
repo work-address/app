@@ -170,51 +170,81 @@ export type RpcLog = {
 /** Most blocks one `eth_getLogs` request covers here; public endpoints cap the range. */
 export const LOG_BLOCK_RANGE = 2000
 
+type LogFilter = { address: string; topics: (string | string[] | null)[]; fromBlock: number; toBlock: number }
+
 /**
  * Logs of one address between two blocks, inclusive, asked for in ranges a
  * public endpoint accepts. A log the node marks `removed` was reorganised
  * away and is left out.
  */
-export async function logsOf(
-  rpc: RpcRequest,
-  filter: { address: string; topics: (string | string[] | null)[]; fromBlock: number; toBlock: number },
-  range: number = LOG_BLOCK_RANGE,
-): Promise<RpcLog[]> {
-  const method = 'eth_getLogs'
+export async function logsOf(rpc: RpcRequest, filter: LogFilter, range: number = LOG_BLOCK_RANGE): Promise<RpcLog[]> {
   const logs: RpcLog[] = []
 
   for (let from = filter.fromBlock; from <= filter.toBlock; from += range) {
-    const to = Math.min(from + range - 1, filter.toBlock)
-    const page = await ask(rpc, method, [
-      { address: filter.address, topics: filter.topics, fromBlock: toQuantity(from), toBlock: toQuantity(to) },
-    ])
-
-    if (!Array.isArray(page)) throw new RpcUnavailableError(method, `${method} answered something that is not a list of logs`)
-
-    for (const log of page as unknown[]) {
-      if (
-        !isRecord(log) ||
-        typeof log.address !== 'string' ||
-        typeof log.data !== 'string' ||
-        typeof log.transactionHash !== 'string' ||
-        !Array.isArray(log.topics) ||
-        !log.topics.every((topic) => typeof topic === 'string')
-      ) {
-        throw new RpcUnavailableError(method, `${method} answered something that is not a log`)
-      }
-
-      if (log.removed === true) continue
-
-      logs.push({
-        address: log.address,
-        topics: log.topics as string[],
-        data: log.data,
-        blockNumber: quantity(method, log.blockNumber),
-        transactionHash: log.transactionHash.toLowerCase(),
-        logIndex: quantity(method, log.logIndex),
-      })
-    }
+    logs.push(...(await logPage(rpc, filter, from, Math.min(from + range - 1, filter.toBlock))))
   }
 
+  return sortedLogs(logs)
+}
+
+/**
+ * Logs matching a filter selective enough to be asked for in one request -
+ * an event and an indexed id, which match a handful of logs however many
+ * blocks they span - over the whole range at once. Paged in ranges only
+ * when the endpoint refuses that one request (a JSON-RPC error: a range or
+ * result cap); an endpoint that did not answer at all is not asked again.
+ * One request per id instead of one per `range` blocks since the deployment:
+ * a year of mainnet is some 1,300 pages. A caller-supplied `RpcRequest` that
+ * threw may have been refused too (a wallet's provider says so its own
+ * way), so it is paged as well; the first page tells whether it answers.
+ */
+export async function selectiveLogsOf(rpc: RpcRequest, filter: LogFilter, range: number = LOG_BLOCK_RANGE): Promise<RpcLog[]> {
+  if (filter.toBlock - filter.fromBlock < range) return logsOf(rpc, filter, range)
+
+  try {
+    return sortedLogs(await logPage(rpc, filter, filter.fromBlock, filter.toBlock))
+  } catch (error) {
+    if (error instanceof RpcUnavailableError && error.kind !== 'unreachable') return logsOf(rpc, filter, range)
+
+    throw error
+  }
+}
+
+async function logPage(rpc: RpcRequest, filter: LogFilter, from: number, to: number): Promise<RpcLog[]> {
+  const method = 'eth_getLogs'
+  const page = await ask(rpc, method, [{ address: filter.address, topics: filter.topics, fromBlock: toQuantity(from), toBlock: toQuantity(to) }])
+
+  if (!Array.isArray(page)) throw new RpcUnavailableError(method, `${method} answered something that is not a list of logs`)
+
+  const logs: RpcLog[] = []
+
+  for (const log of page as unknown[]) {
+    if (
+      !isRecord(log) ||
+      typeof log.address !== 'string' ||
+      typeof log.data !== 'string' ||
+      typeof log.transactionHash !== 'string' ||
+      !Array.isArray(log.topics) ||
+      !log.topics.every((topic) => typeof topic === 'string')
+    ) {
+      throw new RpcUnavailableError(method, `${method} answered something that is not a log`)
+    }
+
+    if (log.removed === true) continue
+
+    logs.push({
+      address: log.address,
+      topics: log.topics as string[],
+      data: log.data,
+      blockNumber: quantity(method, log.blockNumber),
+      transactionHash: log.transactionHash.toLowerCase(),
+      logIndex: quantity(method, log.logIndex),
+    })
+  }
+
+  return logs
+}
+
+function sortedLogs(logs: RpcLog[]): RpcLog[] {
   return logs.sort((a, b) => a.blockNumber - b.blockNumber || a.logIndex - b.logIndex)
 }

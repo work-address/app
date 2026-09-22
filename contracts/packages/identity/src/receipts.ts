@@ -3,7 +3,7 @@ import { Interface, getAddress, keccak256, toUtf8Bytes, verifyMessage } from 'et
 import { canonicalJson } from './jcs'
 import { escrowDeployment, readManifest } from './manifest'
 import { failuresOf, qualificationsOf, verifyOrigin } from './origin'
-import { RpcUnavailableError, blockOf, callAt, chainIdOf, logsOf } from './rpc'
+import { RpcUnavailableError, blockOf, callAt, chainIdOf, logsOf, selectiveLogsOf } from './rpc'
 import { evmSubject, parseSubject } from './subject'
 import { isBytes32 } from './tree'
 
@@ -192,7 +192,17 @@ type Allocation = {
 
 type View = { chainId: number; latest: BlockRef; at: BlockRef; finalized: boolean }
 
-class NotFinalYet extends Error {}
+/**
+ * The endpoint names no finalized block, so nothing it says is final yet.
+ * Like `RpcUnavailableError`, it says nothing about what was asked; the
+ * builders turn it into `NotFinal`, and `findAllocationsPaidTo` throws it.
+ */
+export class NotFinalYet extends Error {
+  constructor(message: string) {
+    super(message)
+    this.name = 'NotFinalYet'
+  }
+}
 
 function isRecord(value: unknown): value is Record<string, unknown> {
   return typeof value === 'object' && value !== null && Object.getPrototypeOf(value) === Object.prototype
@@ -415,7 +425,9 @@ async function settle(
   if (allocation.payee !== payee) return say('PayeeMismatch', `It was released to ${allocation.payee}, not to ${payee}`)
   if (allocation.payer === allocation.payee) return say('SelfPaid', 'Payer and payee are one wallet. Paying yourself earns no receipt')
 
-  const logs = await logsOf(
+  // The allocation id is an indexed topic, so one request finds its release
+  // however long the escrow has been deployed; paged only if refused.
+  const logs = await selectiveLogsOf(
     options.rpc,
     { address: escrow, topics: [RELEASED_TOPIC, allocationId], fromBlock: deployment.deployBlock, toBlock: view.at.number },
     options.logRange,
@@ -464,6 +476,10 @@ async function settle(
  * payee. `AllocationFunded` does not index the payee, so this reads every
  * funding event since the deployment block: the cost of asking nobody. The
  * marketplace's candidate route is the cheap alternative, and only a hint.
+ *
+ * Throws `RpcUnavailableError` when the endpoint cannot answer and
+ * `NotFinalYet` when it names no finalized block: neither says whether
+ * anything was paid.
  */
 export async function findAllocationsPaidTo(subject: string, options: ChainOptions & { escrow?: string }): Promise<string[]> {
   const manifest = readManifest(options.manifest)

@@ -183,7 +183,16 @@ is reported with what became of it: `CancelledBeforeWork`, `ExpiredRefunded`,
 receipt. Allocation ids are hints: a wrong one can only produce `NotFound`.
 `AllocationFunded` does not index the payee, so `findAllocationsPaidTo` reads
 every funding event since the deployment block; that is the cost of asking
-nobody.
+nobody. It throws `RpcUnavailableError` or `NotFinalYet` when the endpoint
+cannot say, which says nothing about what was paid. The `Released` log of an
+allocation is asked for in one request over the whole range, since the id is
+an indexed topic; it is paged (`logRange` blocks at a time, 2000 by default)
+only when the endpoint refuses that request.
+
+`bin/verify receipts` exits 0 only when it built a receipt: nothing released
+to the subject is exit 1, a release not yet final is exit 3, and so is an
+endpoint that did not answer or named no finalized block, which prints
+`Block checked: none` like every other run that read no block.
 
 `verifyReceipt` answers `Verified`, `NotFound` (never there, or reorganised
 away), `NotReleased`, `RegistryNotInManifest`, `SubjectMismatch`,

@@ -3,7 +3,7 @@ import { Interface, Wallet } from 'ethers'
 import fs from 'node:fs'
 import path from 'node:path'
 
-import { ESCROW_READ_ABI, ESCROW_STATES, buildReceipts, presentReceipt, readReceipt, receiptMessage, summarizeReceipts, verifyReceipt } from '../src'
+import { ESCROW_READ_ABI, ESCROW_STATES, RpcUnavailableError, buildReceipts, presentReceipt, readReceipt, receiptMessage, summarizeReceipts, verifyReceipt } from '../src'
 
 import type { RpcRequest, SettlementReceipt } from '../src'
 
@@ -180,6 +180,51 @@ describe('settlement receipts', () => {
     const listed = [MANIFEST, { ...MANIFEST, chainId: 1 }]
 
     expect((await verifyReceipt(otherChain, { manifest: listed, rpc: chainOf({ latest: 60, finalized: 50, releasedAt: 40 }) })).result).to.eq('RpcUnavailable')
+  })
+
+  it('finds a release with one log request per allocation, however long ago the escrow was deployed', async () => {
+    // A year of mainnet after the deployment: some 2.6 million blocks.
+    const chain: Chain = { latest: 2_600_060, finalized: 2_600_000, releasedAt: 1_300_000 }
+    const asked: { fromBlock: number; toBlock: number }[] = []
+    const counted: RpcRequest = (method, params) => {
+      if (method === 'eth_getLogs') {
+        const { fromBlock, toBlock } = params[0] as { fromBlock: string; toBlock: string }
+
+        asked.push({ fromBlock: Number(fromBlock), toBlock: Number(toBlock) })
+      }
+
+      return chainOf(chain)(method, params)
+    }
+    const build = await buildReceipts({ subject: PAYEE, allocationIds: [ALLOCATION] }, { manifest: MANIFEST, rpc: counted })
+
+    expect(build.receipts.map((receipt) => receipt.source.blockNumber)).to.deep.eq([1_300_000])
+    expect(asked).to.deep.eq([{ fromBlock: 3, toBlock: 2_600_000 }])
+  })
+
+  it('pages the search only when the endpoint refuses the whole range at once', async () => {
+    const chain: Chain = { latest: 60, finalized: 50, releasedAt: 40 }
+    const asked: number[] = []
+    const capped: RpcRequest = (method, params) => {
+      if (method === 'eth_getLogs') {
+        const { fromBlock, toBlock } = params[0] as { fromBlock: string; toBlock: string }
+
+        asked.push(Number(toBlock) - Number(fromBlock) + 1)
+
+        if (Number(toBlock) - Number(fromBlock) + 1 > 10) return Promise.reject(new Error('query exceeds max block range 10'))
+      }
+
+      return chainOf(chain)(method, params)
+    }
+    const build = await buildReceipts({ subject: PAYEE, allocationIds: [ALLOCATION] }, { manifest: MANIFEST, rpc: capped, logRange: 10 })
+
+    expect(build.receipts.map((receipt) => receipt.source.blockNumber)).to.deep.eq([40])
+    // Blocks 3 to 50: refused as one request, then five pages of at most ten.
+    expect(asked).to.deep.eq([48, 10, 10, 10, 10, 8])
+
+    const down: RpcRequest = (method, params) =>
+      method === 'eth_getLogs' ? Promise.reject(new RpcUnavailableError(method, 'connect ECONNREFUSED')) : chainOf(chain)(method, params)
+
+    expect((await buildReceipts({ subject: PAYEE, allocationIds: [ALLOCATION] }, { manifest: MANIFEST, rpc: down })).result).to.eq('RpcUnavailable')
   })
 
   it('reads exactly one shape of receipt', async () => {

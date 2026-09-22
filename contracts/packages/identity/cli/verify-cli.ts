@@ -2,6 +2,8 @@ import fs from 'node:fs'
 
 import {
   ManifestError,
+  NotFinalYet,
+  RpcUnavailableError,
   buildReceipts,
   failuresOf,
   findAllocationsPaidTo,
@@ -16,7 +18,7 @@ import {
   verifyReceipts,
 } from '../src'
 
-import type { OriginCertificate, ReceiptReport, VerificationReport } from '../src'
+import type { OriginCertificate, ReceiptBuild, ReceiptReport, VerificationReport } from '../src'
 
 /**
  * The independent verifier as a command. It reads files the holder handed
@@ -33,6 +35,9 @@ import type { OriginCertificate, ReceiptReport, VerificationReport } from '../sr
  *   3  undetermined: the endpoint did not answer, the chain has not finalized
  *      its answer, or a certificate declares its own terms unproven. Not a
  *      failed proof, and not a pass
+ *
+ * `receipts` passes only when it built a receipt: finding nothing paid to
+ * the subject is exit 1, and a release not yet final is exit 3.
  */
 export const EXIT = { verified: 0, refuted: 1, usage: 2, undetermined: 3 } as const
 
@@ -69,7 +74,8 @@ export const USAGE = `Usage:
                Without any, every funding event of the listed escrows is read.
   --out        write each receipt there as <allocationId>.json.
 
-Exit status: 0 verified, 1 refuted or not recognised, 2 usage, 3 undetermined.`
+Exit status: 0 verified, 1 refuted or not recognised, 2 usage, 3 undetermined.
+receipts exits 0 only when it built a receipt.`
 
 class UsageError extends Error {}
 
@@ -266,13 +272,28 @@ async function receipt(parsed: Arguments, io: CliIo): Promise<number> {
   return receiptExit(reports)
 }
 
+/**
+ * The exit of a `receipts` run: 0 only when a receipt was built. A run that
+ * built none - no allocation was ever funded to the subject, or none was
+ * released to them - has shown nothing paid, which is not a verification;
+ * one whose only releases are not final yet is undetermined, like an
+ * endpoint that did not answer.
+ */
+export function receiptsExit(build: Pick<ReceiptBuild, 'result' | 'receipts' | 'allocations'>): number {
+  if (build.result === 'RegistryNotInManifest') return EXIT.refuted
+  if (build.result !== 'Built') return EXIT.undetermined
+  if (build.receipts.length > 0) return EXIT.verified
+
+  return build.allocations.some((allocation) => allocation.outcome === 'NotFinal') ? EXIT.undetermined : EXIT.refuted
+}
+
 async function receipts(parsed: Arguments, io: CliIo): Promise<number> {
   const subject = required(parsed, 'subject')
   const options = { manifest: manifestOption(parsed), rpc: jsonRpcTransport(required(parsed, 'rpc')), finality: finalityOf(parsed) }
   const escrow = parsed.options.get('escrow')
   const hinted = parsed.repeated.get('allocation')
-  const allocationIds = hinted ?? (await findAllocationsPaidTo(subject, { ...options, escrow }))
-  const build = await buildReceipts({ subject, allocationIds, escrow }, options)
+  const discovered = hinted === undefined ? await discover(subject, { ...options, escrow }) : { allocationIds: hinted }
+  const build = 'allocationIds' in discovered ? await buildReceipts({ subject, allocationIds: discovered.allocationIds, escrow }, options) : discovered.build
   const out = parsed.options.get('out')
 
   if (out !== undefined) {
@@ -292,9 +313,32 @@ async function receipts(parsed: Arguments, io: CliIo): Promise<number> {
 
   io.out(build.checkedAtBlock === null ? 'Block checked: none' : `Block checked: ${build.checkedAtBlock} (${build.finalized ? 'finalized' : 'not finalized'})`)
 
-  if (build.result === 'Built') return EXIT.verified
+  return receiptsExit(build)
+}
 
-  return build.result === 'RegistryNotInManifest' ? EXIT.refuted : EXIT.undetermined
+/**
+ * The allocations funded to `subject`, read from the funding events, or -
+ * when the endpoint could not say - the build that reports why, as the
+ * builder itself would have: an endpoint that did not answer, or a chain
+ * with nothing final, says nothing about what was paid, so it is reported
+ * as such (exit 3) rather than as a command line that could not be read.
+ */
+async function discover(
+  subject: string,
+  options: Parameters<typeof findAllocationsPaidTo>[1],
+): Promise<{ allocationIds: string[] } | { build: ReceiptBuild }> {
+  const unanswered = { detail: '', chainId: null, checkedAtBlock: null, finalized: false, receipts: [], allocations: [] }
+
+  try {
+    return { allocationIds: await findAllocationsPaidTo(subject, options) }
+  } catch (error) {
+    if (error instanceof NotFinalYet) return { build: { ...unanswered, result: 'NotFinal', detail: error.message } }
+    if (error instanceof RpcUnavailableError) {
+      return { build: { ...unanswered, result: 'RpcUnavailable', detail: `${error.message}. This says nothing about the allocations` } }
+    }
+
+    throw error
+  }
 }
 
 /**
