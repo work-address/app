@@ -895,6 +895,51 @@
           "presentation"
         ]
       },
+      "IdentityRelayDto": {
+        "properties": {
+          "operation": {
+            "enum": [
+              "Publish",
+              "Deactivate"
+            ],
+            "type": "string"
+          },
+          "subject": {
+            "type": "string"
+          },
+          "commitment": {
+            "pattern": "^0x[\\dA-Fa-f]{64}$",
+            "type": "string"
+          },
+          "schemaId": {
+            "maximum": 4294967295,
+            "type": "integer",
+            "minimum": 1
+          },
+          "expectedVersion": {
+            "maximum": 4294967295,
+            "type": "integer",
+            "minimum": 0
+          },
+          "deadline": {
+            "maximum": 9007199254740991,
+            "type": "integer",
+            "minimum": 1
+          },
+          "signature": {
+            "pattern": "^0x[\\dA-Fa-f]{130}$",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "operation",
+          "subject",
+          "expectedVersion",
+          "deadline",
+          "signature"
+        ]
+      },
       "ProjectSearchSortDto": {
         "properties": {
           "createdAt": {
@@ -3044,6 +3089,86 @@
         ]
       }
     },
+    "/api/user/identity/relay": {
+      "post": {
+        "operationId": "UserController.relayIdentity",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IdentityRelayDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "202": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "required": [
+                    "operation",
+                    "subject",
+                    "nonce",
+                    "relayer",
+                    "transactionHash"
+                  ],
+                  "properties": {
+                    "operation": {
+                      "type": "string",
+                      "enum": [
+                        "Publish",
+                        "Deactivate"
+                      ]
+                    },
+                    "subject": {
+                      "type": "string"
+                    },
+                    "nonce": {
+                      "type": "string"
+                    },
+                    "relayer": {
+                      "type": "string"
+                    },
+                    "transactionHash": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            },
+            "description": ""
+          },
+          "403": {
+            "description": "The subject is another account"
+          },
+          "409": {
+            "description": "The registry would refuse it (errors[0].error names why), or another action at this nonce is on its way"
+          },
+          "422": {
+            "description": "The signature is not the subject's over exactly this action, nonce and deadline, the deadline has passed, or the account cannot be anchored"
+          },
+          "429": {
+            "description": "The daily ration of relayed publications is spent; Retry-After says when it reopens"
+          },
+          "503": {
+            "description": "No relayer runs here, or it cannot pay for this now: send it from your own wallet"
+          }
+        },
+        "summary": "Send the caller's signed IdentityRegistry publication or withdrawal from the relayer's key, which pays the gas; 202 once the node took it. Publications are rationed per day, withdrawals never",
+        "tags": [
+          "User"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/user/identity/export": {
       "get": {
         "operationId": "UserController.identityExport",
@@ -3264,7 +3389,8 @@
                     "chainId",
                     "registryAddress",
                     "manifestUrl",
-                    "schemaIds"
+                    "schemaIds",
+                    "relayEnabled"
                   ],
                   "properties": {
                     "enabled": {
@@ -3287,6 +3413,9 @@
                       "items": {
                         "type": "integer"
                       }
+                    },
+                    "relayEnabled": {
+                      "type": "boolean"
                     }
                   }
                 }

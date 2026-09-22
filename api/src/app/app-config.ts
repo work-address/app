@@ -58,6 +58,21 @@ export class AppConfig {
           process.env.APP_IDENTITY_DEPLOY_BLOCK,
         ),
       },
+      identityRelayer: {
+        key: (process.env.APP_IDENTITY_RELAYER_KEY ?? '').trim(),
+        gasLimit: AppConfig.positiveInteger(
+          process.env.APP_IDENTITY_RELAYER_GAS_LIMIT,
+          250_000,
+        ),
+        maxFeeGwei: AppConfig.positiveNumber(
+          process.env.APP_IDENTITY_RELAYER_MAX_FEE_GWEI,
+          100,
+        ),
+        publishesPerDay: AppConfig.nonNegativeInteger(
+          process.env.APP_IDENTITY_RELAYER_PUBLISHES_PER_DAY,
+          5,
+        ),
+      },
       database: {
         type: 'postgres',
         host: process.env.APP_DB_HOST as string,
@@ -78,6 +93,52 @@ export class AppConfig {
     return !['false', '0', 'off', 'no'].includes(
       (raw ?? '').trim().toLowerCase(),
     )
+  }
+
+  /** A positive decimal integer, or `fallback` for anything else. */
+  private static positiveInteger(
+    raw: string | undefined,
+    fallback: number,
+  ): number {
+    const value = AppConfig.nonNegativeInteger(raw, fallback)
+
+    return value > 0 ? value : fallback
+  }
+
+  /**
+   * A decimal integer of 0 or more, or `fallback` for anything else - empty,
+   * negative, a fraction, text - so a typo keeps the default rather than
+   * turning a cap into NaN, which compares false with everything.
+   */
+  private static nonNegativeInteger(
+    raw: string | undefined,
+    fallback: number,
+  ): number {
+    const value = (raw ?? '').trim()
+
+    if (!/^(0|[1-9]\d*)$/.test(value)) {
+      return fallback
+    }
+
+    const parsed = Number(value)
+
+    return Number.isSafeInteger(parsed) ? parsed : fallback
+  }
+
+  /** A positive decimal number (a fraction allowed), or `fallback`. */
+  private static positiveNumber(
+    raw: string | undefined,
+    fallback: number,
+  ): number {
+    const value = (raw ?? '').trim()
+
+    if (!/^\d+(\.\d+)?$/.test(value)) {
+      return fallback
+    }
+
+    const parsed = Number(value)
+
+    return parsed > 0 && Number.isFinite(parsed) ? parsed : fallback
   }
 
   /** A block number in decimal, or 0 (the chain's first block) for anything else. */

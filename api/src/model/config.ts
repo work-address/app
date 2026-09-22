@@ -41,6 +41,28 @@ export interface IConfigParameters {
      */
     deployBlock: number
   }
+  /**
+   * The relay for holders whose wallet has no gas (WP-122): a hot key that
+   * sends IdentityRegistry.publishFor and deactivateFor with the subject's
+   * own signed authorization, and pays their gas - nothing else. It is off
+   * until an operator both decides to run it and funds its key, so an empty
+   * key turns it off: GET /identity/config then reports `relayEnabled:
+   * false` and POST /user/identity/relay answers 503. The holder's direct
+   * transaction is always available either way.
+   */
+  identityRelayer: {
+    /** The relayer's private key. Empty, or not a key, turns the relay off. */
+    key: string
+    /** The most gas one relayed transaction may use; a costlier one is not sent. */
+    gasLimit: number
+    /** The most the relayer pays per gas, in gwei; above it nothing is sent. */
+    maxFeeGwei: number
+    /**
+     * Relayed publications one account may ask for per day. Withdrawals are
+     * never counted: a takedown must not be losable to a ration.
+     */
+    publishesPerDay: number
+  }
   database: {
     type: string
     host: string

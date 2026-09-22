@@ -204,6 +204,16 @@ export type IdentityPublishDto = {
     };
 };
 
+export type IdentityRelayDto = {
+    operation: 'Publish' | 'Deactivate';
+    subject: string;
+    commitment?: string;
+    schemaId?: number;
+    expectedVersion: number;
+    deadline: number;
+    signature: string;
+};
+
 export type ProjectSearchSortDto = {
     createdAt?: 'ASC' | 'DESC';
     updatedAt?: 'ASC' | 'DESC';
@@ -818,6 +828,48 @@ export type UserControllerPublishIdentityResponses = {
 
 export type UserControllerPublishIdentityResponse = UserControllerPublishIdentityResponses[keyof UserControllerPublishIdentityResponses];
 
+export type UserControllerRelayIdentityData = {
+    body: IdentityRelayDto;
+    path?: never;
+    query?: never;
+    url: '/api/user/identity/relay';
+};
+
+export type UserControllerRelayIdentityErrors = {
+    /**
+     * The subject is another account
+     */
+    403: unknown;
+    /**
+     * The registry would refuse it (errors[0].error names why), or another action at this nonce is on its way
+     */
+    409: unknown;
+    /**
+     * The signature is not the subject's over exactly this action, nonce and deadline, the deadline has passed, or the account cannot be anchored
+     */
+    422: unknown;
+    /**
+     * The daily ration of relayed publications is spent; Retry-After says when it reopens
+     */
+    429: unknown;
+    /**
+     * No relayer runs here, or it cannot pay for this now: send it from your own wallet
+     */
+    503: unknown;
+};
+
+export type UserControllerRelayIdentityResponses = {
+    202: {
+        operation: 'Publish' | 'Deactivate';
+        subject: string;
+        nonce: string;
+        relayer: string;
+        transactionHash: string;
+    };
+};
+
+export type UserControllerRelayIdentityResponse = UserControllerRelayIdentityResponses[keyof UserControllerRelayIdentityResponses];
+
 export type UserControllerIdentityExportData = {
     body?: never;
     path?: never;
@@ -901,6 +953,7 @@ export type IdentityControllerConfigResponses = {
         registryAddress: string | null;
         manifestUrl: string | null;
         schemaIds: Array<number>;
+        relayEnabled: boolean;
     };
 };
 

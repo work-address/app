@@ -23,6 +23,7 @@ import {
   IIdentityConfig,
   IIdentityPresentationRef,
   IIdentityPublication,
+  IIdentityRelaySwitch,
   IIdentityRemoval,
   IIdentityStatus,
   IIdentityView,
@@ -99,6 +100,8 @@ export class IdentityManager {
   protected chainFactory: IdentityChainFactory
   @inject('IdentityReadCache')
   protected readCache: IdentityReadCache
+  @inject('IdentityRelayer')
+  protected identityRelayer: IIdentityRelaySwitch
 
   /**
    * Read on every call rather than cached, so the answer is always the
@@ -116,6 +119,7 @@ export class IdentityManager {
         : null,
       manifestUrl: enabled && manifestUrl ? manifestUrl : null,
       schemaIds: [...IdentityManager.SCHEMA_IDS],
+      relayEnabled: enabled && this.identityRelayer.isEnabled(),
     }
   }
 
@@ -125,7 +129,14 @@ export class IdentityManager {
    * endpoint cannot be read at all.
    */
   public isEnabled(): boolean {
-    const { chainId, registryAddress, rpcUrl } = this.parameters.identity
+    return IdentityManager.isAnchoringConfigured(this.parameters.identity)
+  }
+
+  /** The rule behind `isEnabled`, for the relayer that sends to the same registry. */
+  public static isAnchoringConfigured(
+    identity: IConfigParameters['identity'],
+  ): boolean {
+    const { chainId, registryAddress, rpcUrl } = identity
 
     return (
       chainId !== null && EVM_ADDRESS.test(registryAddress) && rpcUrl !== ''
@@ -153,7 +164,9 @@ export class IdentityManager {
     dto: IdentityPublishDto,
   ): Effect.Effect<IIdentityPublication, unknown> {
     return Effect.gen(this, function* () {
-      yield* IdentityManager.attempt(() => this.assertAnchorable(user))
+      yield* IdentityManager.attempt(() =>
+        IdentityManager.assertAnchorable(user),
+      )
 
       if (!this.isEnabled()) {
         return yield* Effect.fail(IdentityManager.notConfigured())
@@ -306,9 +319,10 @@ export class IdentityManager {
    * TON and Solana accounts are refused by name, before anything else: the
    * registry is structurally EVM-only, so no document could change the
    * answer. It refuses the hosted anchored copy only; a self-signed export
-   * the holder makes on their own device is untouched by it.
+   * the holder makes on their own device is untouched by it. The relay
+   * refuses those accounts by the same rule.
    */
-  private assertAnchorable(user: User): void {
+  public static assertAnchorable(user: User): void {
     const chain = WalletAddress.chainOf(user.address)
 
     if (chain === EWalletChain.EVM) {

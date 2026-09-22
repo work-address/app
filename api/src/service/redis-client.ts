@@ -39,6 +39,55 @@ export class RedisClient {
     return ''
   }
 
+  /**
+   * Counts one more event in the window `key` opened, atomically: the first
+   * count opens a window of `windowMs`, and later ones add to it without
+   * moving its end. Returns the count including this one and how long the
+   * window has left. Shared by every replica, since they share this Redis.
+   */
+  public async countWithin(
+    key: string,
+    windowMs: number,
+  ): Promise<{ count: number; ttlMs: number }> {
+    const client = await this.getConnectedClient()
+
+    try {
+      const [, count, ttl] = await client
+        .multi()
+        .set(key, '0', { NX: true, PX: windowMs })
+        .incr(key)
+        .pTTL(key)
+        .exec()
+
+      return { count: Number(count), ttlMs: Math.max(0, Number(ttl)) }
+    } finally {
+      await client.disconnect()
+    }
+  }
+
+  /**
+   * Stores `value` under `key` only if nothing is there yet, and says
+   * whether it did: the first of several replicas to ask wins.
+   */
+  public async setIfAbsent(
+    key: string,
+    value: unknown,
+    expiryMilliseconds: number,
+  ): Promise<boolean> {
+    const client = await this.getConnectedClient()
+
+    try {
+      const answer = await client.set(key, JSON.stringify(value), {
+        NX: true,
+        PX: expiryMilliseconds,
+      })
+
+      return answer === 'OK'
+    } finally {
+      await client.disconnect()
+    }
+  }
+
   public async del(key: string): Promise<void> {
     const client = await this.getConnectedClient()
 

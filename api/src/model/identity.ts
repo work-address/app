@@ -14,6 +14,13 @@ export interface IIdentityConfig {
   manifestUrl: string | null
   /** Profile schemas this service can check. */
   schemaIds: number[]
+  /**
+   * Whether POST /user/identity/relay will send a holder's signed
+   * publication or withdrawal and pay its gas. False unless anchoring is on
+   * and an operator configured and funded a relayer key; the holder's own
+   * transaction is offered either way.
+   */
+  relayEnabled: boolean
 }
 
 /**
@@ -217,3 +224,164 @@ export interface IIdentityRemoval {
   chainUnchanged: boolean
   message: string
 }
+
+/**
+ * `IdentityRegistry.Operation`, in the contract's declaration order: the
+ * index is the uint8 a relayed authorization signs, so this list is append
+ * only, exactly as the contract's enum is.
+ */
+export enum EIdentityRelayOperation {
+  PUBLISH = 'Publish',
+  DEACTIVATE = 'Deactivate',
+}
+
+/**
+ * Why POST /user/identity/relay sent nothing. Every one of them is decided
+ * before the relayer spends gas: a request the chain would refuse is refused
+ * here first.
+ */
+export enum EIdentityRelayRefusal {
+  /** No relayer runs here (503): send the transaction from your own wallet. */
+  RELAY_DISABLED = 'RelayDisabled',
+  /** This account used its relayed publications for the day (429). */
+  RATE_LIMITED = 'RateLimited',
+  /**
+   * The signature is not the subject's over exactly this operation, payload,
+   * nonce and deadline (422): forged, made for another subject or payload,
+   * or already used.
+   */
+  INVALID_AUTHORIZATION = 'InvalidAuthorization',
+  /** The authorization's deadline has passed on chain (422). */
+  AUTHORIZATION_EXPIRED = 'AuthorizationExpired',
+  /**
+   * The registry would revert it for its own reason (409), named in
+   * `errors[0].error`: VersionConflict, AlreadyDeactivated, NotPublished...
+   */
+  CHAIN_REFUSED = 'ChainRefused',
+  /** Another relayed action with the same nonce is on its way (409). */
+  AUTHORIZATION_IN_FLIGHT = 'AuthorizationInFlight',
+  /** It needs more gas than the relayer may spend on one call (503). */
+  GAS_CAP = 'GasCap',
+  /** The network's base fee is over what the relayer may pay (503). */
+  FEE_CAP = 'FeeCap',
+  /** The relayer could not send: unfunded, busy, or its RPC failed (503). */
+  RELAYER_UNAVAILABLE = 'RelayerUnavailable',
+}
+
+/**
+ * One relayed registry call, exactly as the subject signed it. The relayer
+ * adds nothing to it: every argument the contract takes is here, and each
+ * is covered by the subject's signature (the payload binds the commitment,
+ * schema and expected version; the action binds the operation, subject,
+ * nonce and deadline).
+ */
+export interface IIdentityRelayCall {
+  operation: EIdentityRelayOperation
+  /** EIP-55. */
+  subject: string
+  /** Publication only; null for a withdrawal. */
+  commitment: string | null
+  /** Publication only; null for a withdrawal. */
+  schemaId: number | null
+  /** For a withdrawal, 0 means whatever version is current. */
+  expectedVersion: number
+  /** Unix seconds; the contract refuses the call once the chain is past it. */
+  deadline: number
+  signature: string
+}
+
+/** What POST /user/identity/relay answers once the transaction is sent. */
+export interface IIdentityRelayReceipt {
+  operation: EIdentityRelayOperation
+  subject: string
+  /** The subject's authorization nonce the transaction consumes, in decimal. */
+  nonce: string
+  /** The address that sent it and pays its gas. */
+  relayer: string
+  transactionHash: string
+}
+
+/** Fee terms the chain quotes, per gas, in wei. */
+export interface IIdentityRelayFees {
+  baseFeePerGas: bigint
+  maxFeePerGas: bigint
+  maxPriorityFeePerGas: bigint
+}
+
+/** What one relayed transaction is sent with. */
+export interface IIdentityRelayGas {
+  nonce: number
+  gasLimit: bigint
+  maxFeePerGas: bigint
+  maxPriorityFeePerGas: bigint
+}
+
+/**
+ * A dry run of the call at the latest block: the gas it needs, or the name
+ * of the registry error it would revert with (null when the revert names
+ * none this service knows).
+ */
+export type TIdentityRelaySimulation =
+  | { gas: bigint }
+  | { revert: string | null }
+
+/** A transaction as the node knows it; `unknown` is dropped or never seen. */
+export type TIdentityRelayTxState = 'pending' | 'mined' | 'reverted' | 'unknown'
+
+/** A sent transaction: mined, reverted, or not mined yet (null). */
+export type TIdentityRelayOutcome = 'mined' | 'reverted' | null
+
+/**
+ * The relayer's last send, as every replica reads it back: the nonce it
+ * used and the transaction that carries it.
+ */
+export interface IIdentityRelayerLastSend {
+  nonce: number
+  txHash: string
+}
+
+/** A relayed authorization already on its way, by the subject nonce it uses. */
+export interface IIdentityRelayInFlight {
+  signature: string
+  txHash: string
+  relayer: string
+}
+
+/**
+ * IdentityRegistry as the relayer sees it: the reads that decide whether a
+ * relay is worth sending, and the one call it makes. Its key pays gas and
+ * nothing else - the contract gives it no power over any record.
+ */
+export interface IIdentityRelayerChain {
+  /** The relayer's own address, derived from its key. */
+  readonly address: string
+  chainId(): Promise<number>
+  /** The latest block's timestamp: the chain's now. */
+  latestTimestamp(): Promise<number>
+  /** `IdentityRegistry.nonces(subject)`: the next authorization nonce. */
+  subjectNonce(subject: string): Promise<bigint>
+  simulate(call: IIdentityRelayCall): Promise<TIdentityRelaySimulation>
+  fees(): Promise<IIdentityRelayFees>
+  /** The relayer's native balance, in wei. */
+  balance(): Promise<bigint>
+  /** The relayer's transaction count including its pending ones. */
+  pendingNonce(): Promise<number>
+  /** What the node says of a transaction: waiting, mined, reverted or unheard of. */
+  transactionState(txHash: string): Promise<TIdentityRelayTxState>
+  /** Signs and broadcasts; resolves with the hash once the node took it. */
+  send(call: IIdentityRelayCall, gas: IIdentityRelayGas): Promise<string>
+  /** Waits up to `waitMs` for one confirmation. */
+  outcome(txHash: string, waitMs: number): Promise<TIdentityRelayOutcome>
+}
+
+/**
+ * Whether the relay runs here, as the identity config reports it. An
+ * interface rather than the relayer's class, so the manager that reports it
+ * does not depend on the service that sends.
+ */
+export interface IIdentityRelaySwitch {
+  isEnabled(): boolean
+}
+
+/** Where a relay failure goes: Sentry in production, a list in a test. */
+export type TIdentityRelayReporter = (error: unknown) => void

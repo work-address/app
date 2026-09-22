@@ -16,16 +16,19 @@ import { User } from '@/entity/user'
 import { EUserRole } from '@/model/user'
 import { UserManager } from '@/service/user-manager'
 import { IdentityManager } from '@/service/identity-manager'
+import { IdentityRelayer } from '@/service/identity-relayer'
 import { CurrentUser, OptionalCurrentUser } from '@/decorator/current-user'
 import { UserRepository } from '@/repository/user-repository'
 import { UserSearchDto } from '@/model/dto/user'
-import { IdentityPublishDto } from '@/model/dto/identity'
+import { IdentityPublishDto, IdentityRelayDto } from '@/model/dto/identity'
 import {
   EIdentityChainEventKind,
   EIdentityChainResult,
+  EIdentityRelayOperation,
   EIdentitySaltCustody,
   EIdentityUnavailable,
   IIdentityPublication,
+  IIdentityRelayReceipt,
   IIdentityRemoval,
   IIdentityView,
 } from '@/model/identity'
@@ -121,15 +124,32 @@ const IDENTITY_REMOVAL_SCHEMA: SchemaObject = {
   },
 }
 
+const IDENTITY_RELAY_RECEIPT_SCHEMA: SchemaObject = {
+  type: 'object',
+  required: ['operation', 'subject', 'nonce', 'relayer', 'transactionHash'],
+  properties: {
+    operation: {
+      type: 'string',
+      enum: Object.values(EIdentityRelayOperation),
+    },
+    subject: { type: 'string' },
+    nonce: { type: 'string' },
+    relayer: { type: 'string' },
+    transactionHash: { type: 'string' },
+  },
+}
+
 @JsonController('/user')
 export class UserController {
   protected userManager: UserManager
   protected identityManager: IdentityManager
+  protected identityRelayer: IdentityRelayer
   protected userRepository: UserRepository
 
   constructor() {
     this.userManager = App.container.get('UserManager')
     this.identityManager = App.container.get('IdentityManager')
+    this.identityRelayer = App.container.get('IdentityRelayer')
     this.userRepository = App.container.get('UserRepository')
   }
 
@@ -252,6 +272,55 @@ export class UserController {
     @Body() body: IdentityPublishDto,
   ): Promise<IIdentityPublication> {
     return runPromise(this.identityManager.publish(currentUser, body))
+  }
+
+  /**
+   * Gasless publish and withdraw (WP-122): the holder signs the registry's
+   * `Action` in their own wallet, and the relayer sends publishFor or
+   * deactivateFor and pays the gas. See IdentityRelayer for every check;
+   * the holder's own transaction stays available whatever this answers.
+   */
+  @OpenAPIExtended({
+    summary:
+      "Send the caller's signed IdentityRegistry publication or withdrawal from the relayer's key, which pays the gas; 202 once the node took it. Publications are rationed per day, withdrawals never",
+    operation: {
+      responses: {
+        403: { description: 'The subject is another account' },
+        409: {
+          description:
+            'The registry would refuse it (errors[0].error names why), or another action at this nonce is on its way',
+        },
+        422: {
+          description:
+            "The signature is not the subject's over exactly this action, nonce and deadline, the deadline has passed, or the account cannot be anchored",
+        },
+        429: {
+          description:
+            'The daily ration of relayed publications is spent; Retry-After says when it reopens',
+        },
+        503: {
+          description:
+            'No relayer runs here, or it cannot pay for this now: send it from your own wallet',
+        },
+      },
+    },
+    body: { schema: IdentityRelayDto },
+    response: {
+      schema: null,
+      options: {
+        inlineSchema: IDENTITY_RELAY_RECEIPT_SCHEMA,
+        statusCode: 202,
+      },
+    },
+  })
+  @Post('/identity/relay')
+  @HttpCode(202)
+  @Authorized([EUserRole.ROLE_USER])
+  public relayIdentity(
+    @CurrentUser() currentUser: User,
+    @Body() body: IdentityRelayDto,
+  ): Promise<IIdentityRelayReceipt> {
+    return runPromise(this.identityRelayer.relay(currentUser, body))
   }
 
   @OpenAPIExtended({

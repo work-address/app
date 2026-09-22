@@ -31,6 +31,7 @@ export class IdentityController {
             'registryAddress',
             'manifestUrl',
             'schemaIds',
+            'relayEnabled',
           ],
           properties: {
             enabled: { type: 'boolean' },
@@ -38,6 +39,7 @@ export class IdentityController {
             registryAddress: { type: 'string', nullable: true },
             manifestUrl: { type: 'string', nullable: true },
             schemaIds: { type: 'array', items: { type: 'integer' } },
+            relayEnabled: { type: 'boolean' },
           },
         },
       },

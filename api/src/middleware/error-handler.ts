@@ -27,6 +27,14 @@ export class ErrorHandler implements ExpressErrorMiddlewareInterface {
 
     this.captureSentry(httpCode, error)
 
+    // A 429 says when to come back; a client that honours it is not refused twice.
+    const retryAfter = (error as { retryAfterSeconds?: unknown })
+      .retryAfterSeconds
+
+    if (typeof retryAfter === 'number') {
+      response.setHeader('Retry-After', String(retryAfter))
+    }
+
     response.status(httpCode)
     response.send(errorFormatted)
   }

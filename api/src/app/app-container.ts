@@ -17,6 +17,9 @@ import { UserManager } from '@/service/user-manager'
 import { IdentityManager } from '@/service/identity-manager'
 import { IdentityChainFactory } from '@/service/identity-chain-factory'
 import { IdentityReadCache } from '@/service/identity-read-cache'
+import { IdentityRelayer } from '@/service/identity-relayer'
+import { IdentityRelayerChainFactory } from '@/service/identity-relayer-chain-factory'
+import { AdvisoryLock } from '@/service/advisory-lock'
 import { Mailer } from '@/service/mailer'
 import { Faker } from '@/service/faker'
 import { Authenticator } from '@/service/auth/authenticator'
@@ -100,6 +103,17 @@ export class AppContainer {
       .bind<IdentityReadCache>('IdentityReadCache')
       .to(IdentityReadCache)
       .inSingletonScope()
+    container
+      .bind<IdentityRelayerChainFactory>('IdentityRelayerChainFactory')
+      .to(IdentityRelayerChainFactory)
+      .inSingletonScope()
+    // One relayer for the process: what it has reported, and the receipts it
+    // is still waiting on, live in it.
+    container
+      .bind<IdentityRelayer>('IdentityRelayer')
+      .to(IdentityRelayer)
+      .inSingletonScope()
+    container.bind<AdvisoryLock>('AdvisoryLock').to(AdvisoryLock)
     container.bind<TimeManager>('TimeManager').to(TimeManager)
     container.bind<InvoiceManager>('InvoiceManager').to(InvoiceManager)
     // One scheduler for the process: it owns a timer, and a second instance

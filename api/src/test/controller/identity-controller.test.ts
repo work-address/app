@@ -60,6 +60,7 @@ export class IdentityControllerTest extends BaseControllerTest {
       registryAddress: null,
       manifestUrl: null,
       schemaIds: [1],
+      relayEnabled: false,
     })
   }
 
@@ -79,6 +80,7 @@ export class IdentityControllerTest extends BaseControllerTest {
       registryAddress: REGISTRY_EIP55,
       manifestUrl: MANIFEST_URL,
       schemaIds: [1],
+      relayEnabled: false,
     })
   }
 
@@ -118,6 +120,7 @@ export class IdentityControllerTest extends BaseControllerTest {
         registryAddress: null,
         manifestUrl: null,
         schemaIds: [1],
+        relayEnabled: false,
       })
     }
   }
