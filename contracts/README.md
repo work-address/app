@@ -575,6 +575,19 @@ variant. How it differs from a standard ERC-20, and what that means here:
 | An issuer transfer fee (currently 0) | Funding fails closed with `IncompleteTransfer`. If switched on after funding, the escrow's books stay exact and recipients receive less by the token's fee |
 | A non-zero allowance must be reset to zero first | The escrow never approves. A client wallet raising a stale allowance must send `approve(0)` first |
 
+`test/usdt-mainnet.test.ts` reproduces these behaviours on `TetherLikeUSDT`.
+`test/usdt-real-fork.test.ts` runs fund, submit and release, with the
+approve-reset rule, on the deployed Tether bytecode, on an in-process fork of
+mainnet that only reads mainnet. It needs an endpoint of your own and is
+skipped without one:
+
+```bash
+MAINNET_RPC_URL=<your mainnet RPC URL> pnpm exec hardhat test test/usdt-real-fork.test.ts
+```
+
+Its flow runs on every `pnpm test` against a fork of a local chain holding
+`TetherLikeUSDT`, so the opt-in case is never untested code.
+
 ## Still open before any deployment
 
 - Whether the registry is deployed on the same chain as the escrow. One chain
