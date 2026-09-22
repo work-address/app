@@ -26,6 +26,8 @@ repo="$work/repo"
 mkdir -p "$repo/packages/api-client/src"
 printf '{"openapi":"3.0.0"}\n' >"$repo/packages/api-client/openapi.json"
 printf 'export const generated = 1\n' >"$repo/packages/api-client/src/sdk.gen.ts"
+mkdir -p "$repo/web/src/shared/api/generated"
+printf 'export const dashboard = 1\n' >"$repo/web/src/shared/api/generated/sdk.gen.ts"
 git -C "$repo" init -q
 git -C "$repo" -c user.name=test -c user.email=test@example.invalid add -A
 git -C "$repo" -c user.name=test -c user.email=test@example.invalid \
@@ -57,6 +59,15 @@ grep -q 'sdk.gen.ts' "$work/run.log" || fail 'the failure must name the file tha
 grep -q 'codegen:api-client' "$work/run.log" || fail 'the failure must say how to fix it'
 reset_repo
 
+# The dashboard compiles against a client of its own, and it drifts too.
+dashboard="printf 'export const dashboard = 2\n' > web/src/shared/api/generated/sdk.gen.ts"
+[ "$(run_with "$dashboard")" = 1 ] ||
+  fail "the dashboard's generated client differing from the committed one must fail"
+grep -q 'web/src/shared/api/generated/sdk.gen.ts' "$work/run.log" ||
+  fail "the failure must name the dashboard's file that drifted"
+grep -q 'codegen:web' "$work/run.log" || fail 'the failure must say how to regenerate the dashboard client'
+reset_repo
+
 added="printf 'export {}\n' > packages/api-client/src/new-route.gen.ts"
 [ "$(run_with "$added")" = 1 ] ||
   fail 'a generated file nobody committed must fail (git diff alone misses it)'
@@ -72,5 +83,22 @@ reset_repo
 elsewhere="printf 'x\n' > unrelated.txt"
 [ "$(run_with "$elsewhere")" = 0 ] ||
   fail 'a change outside packages/api-client is not client drift'
+
+# The generators the check runs by default have to export the spec from the
+# API themselves. pnpm runs no pre-scripts, so a `precodegen` export never
+# ran: both clients were regenerated from the committed spec, and the check
+# could not see an API change at all, only a hand edit to a generated file.
+node - "$root" <<'NODE' || fail 'codegen and codegen:web must export the spec themselves, not in a pre-script pnpm never runs'
+const [root] = process.argv.slice(2)
+const scripts = require(`${root}/packages/api-client/package.json`).scripts ?? {}
+const silent = ['codegen', 'codegen:web'].filter(
+  (name) => !(scripts[name] ?? '').includes('export-openapi'),
+)
+
+if (silent.length > 0) {
+  console.error(`${silent.join(', ')} never export the spec`)
+  process.exit(1)
+}
+NODE
 
 echo 'api-client-drift.sh fails on drift and passes without it.'

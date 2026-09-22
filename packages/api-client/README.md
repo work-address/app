@@ -78,8 +78,15 @@ This runs:
 1. `api` package `export-openapi` script (writes `packages/api-client/openapi.json`)
 2. client generation (`packages/api-client/src/features/shared/api/generated`)
 
+The dashboard compiles against a client of its own, `web/src/shared/api/generated`,
+generated from the same spec by `pnpm --filter @app/api-client codegen:web`.
+
+Both scripts run the export themselves rather than in a `precodegen`: pnpm runs
+no pre-scripts, and one would leave the client regenerated from the stale
+committed spec.
+
 ## Notes
 
 - Generated files under `src/features/shared/api/generated` should not be edited manually.
 - Re-run codegen whenever backend API contracts change.
-- CI runs `scripts/api-client-drift.sh`, which regenerates the client and fails on any difference from what is committed, including a generated file nobody committed. The export is deterministic, so a diff means the API changed without its client.
+- CI runs `scripts/api-client-drift.sh`, which regenerates both clients and fails on any difference from what is committed, including a generated file nobody committed. The export is deterministic, so a diff means the API changed without its clients.

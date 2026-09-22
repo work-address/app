@@ -67,13 +67,14 @@ jobs:
           pnpm --filter ./web exec tsc --noEmit -p tsconfig.app.json
           pnpm --filter ./web exec tsc --noEmit -p tsconfig.node.json
 
-      # WP-128: packages/api-client is generated from the API and committed,
-      # and everything that calls the API compiles against the committed
-      # copy. This regenerates it and fails on any difference, so an API
-      # change cannot merge without the client that matches it. The script's
-      # own test runs first: a drift check that cannot fail is worse than
-      # none.
-      - name: The committed API client is what the API generates
+      # WP-128: packages/api-client and the dashboard's
+      # web/src/shared/api/generated are generated from the API and
+      # committed, and everything that calls the API compiles against the
+      # committed copies. This exports the spec, regenerates both and fails
+      # on any difference, so an API change cannot merge without the clients
+      # that match it. The script's own test runs first: a drift check that
+      # cannot fail is worse than none.
+      - name: The committed API clients are what the API generates
         run: |
           scripts/api-client-drift.test.sh
           scripts/api-client-drift.sh
