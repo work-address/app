@@ -184,13 +184,19 @@ export async function runDryRun(
     )
   }
 
+  const block = options.block === undefined ? undefined : Number(options.block)
+
+  if (block !== undefined && (!Number.isSafeInteger(block) || block < 0)) {
+    throw new Error(`--block is a block number, not ${options.block}. Nothing was run.`)
+  }
+
   const roles = {
     feeRecipient: (env.FEE_RECIPIENT ?? '').trim() || undefined,
     originSigner: (env.ORIGIN_SIGNER_ADDRESS ?? '').trim() || undefined,
   }
   const manifest = await dryRunDeploy(hre.network.provider, hre.artifacts, {
     forkUrl,
-    blockNumber: options.block === undefined ? undefined : Number(options.block),
+    blockNumber: block,
     deployer: (options.deployer ?? env.DEPLOYER_ADDRESS ?? '').trim() || undefined,
     roles,
     token: tokenFrom(env),

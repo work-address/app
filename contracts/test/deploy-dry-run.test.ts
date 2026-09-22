@@ -397,6 +397,9 @@ describe('deploy: public networks and the fork dry run', () => {
       const calls: string[] = []
 
       expect((await rejection(runDryRun(hre, { env: {}, log: quiet }))).message).to.match(/No fork URL: set DRY_RUN_FORK_URL/)
+      expect((await rejection(runDryRun(hre, { forkUrl: bridge.url, block: 'latest', env: {}, log: quiet }))).message).to.match(
+        /--block is a block number, not latest/,
+      )
       expect(
         (await rejection(runDryRun(publicRuntime(SEPOLIA, calls), { forkUrl: bridge.url, env: {}, log: quiet }))).message,
       ).to.match(/in-process network only, not sepolia/)
