@@ -520,8 +520,10 @@ export class UserControllerIdentityRelayNodeTest extends BaseControllerTest {
    * reverts with (null if it would not revert).
    */
   private async revertOnChain(body: IdentityRelayDto): Promise<string | null> {
+    const registry = this.registry(this.funder)
+
     try {
-      await this.registry(this.funder).publishFor.estimateGas(
+      await registry.publishFor.staticCall(
         body.subject,
         body.commitment,
         body.schemaId,
@@ -534,7 +536,11 @@ export class UserControllerIdentityRelayNodeTest extends BaseControllerTest {
     } catch (error: unknown) {
       if (!isError(error, 'CALL_EXCEPTION')) throw error
 
-      return error.revert?.name ?? null
+      return (
+        error.revert?.name ??
+        (error.data ? registry.interface.parseError(error.data)?.name : null) ??
+        null
+      )
     }
   }
 
