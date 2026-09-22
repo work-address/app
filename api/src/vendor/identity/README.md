@@ -11,10 +11,15 @@ for the full API.
 
 **Do not edit these files here.** A change belongs in
 `contracts/packages/identity`, where the library is tested against the
-deployed registry; then copy `contracts/packages/identity/src/*.ts` over this
-directory and `contracts/packages/identity/test/fixtures/profile-schema-v1.vectors.json`
+deployed registry; then copy the pure files of
+`contracts/packages/identity/src/` over this directory and
+`contracts/packages/identity/test/fixtures/profile-schema-v1.vectors.json`
 over `api/src/test/fixture/profile-schema-v1.vectors.json`, and update the
-commit above. `api/src/test/service/identity-library.test.ts` reproduces every
+commit above. This copy is the pure subset only: the independent verifier
+(`rpc.ts`, `manifest.ts`, `verify.ts`, `origin.ts`, `receipts.ts`) reaches a
+chain and is not the API's business, so it is left out and `index.ts` here
+does not export it. The marketplace website carries the whole library
+instead, copied by `contracts/packages/identity/scripts/vendor.cjs`. `api/src/test/service/identity-library.test.ts` reproduces every
 vector in that fixture with this copy, so a drifted or hand-edited copy fails
 the suite instead of computing a different commitment than the chain.
 
