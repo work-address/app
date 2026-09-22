@@ -5,10 +5,12 @@ import {
   buildReceipts,
   failuresOf,
   findAllocationsPaidTo,
+  isOfficialManifest,
   isWithdrawn,
   jsonRpcTransport,
   qualificationsOf,
   serializeReceipt,
+  verifyOfficialManifest,
   verifyOrigin,
   verifyPresentation,
   verifyReceipts,
@@ -24,7 +26,8 @@ import type { OriginCertificate, ReceiptReport, VerificationReport } from '../sr
  * Exit status, so a script can tell the three apart:
  *
  *   0  verified: an identity that is Current or SelfSignedOnly, a certificate
- *      whose every version opens, receipts that are every one Verified
+ *      whose every version opens, receipts that are every one Verified, an
+ *      official manifest signed by the publisher named
  *   1  refuted, or not recognised: the evidence does not support the claim
  *   2  the command line or a file could not be read
  *   3  undetermined: the endpoint did not answer, the chain has not finalized
@@ -37,17 +40,23 @@ export type CliIo = { out: (line: string) => void; err: (line: string) => void }
 
 export const USAGE = `Usage:
   verify identity <presentation.json> --manifest <deployment.json> --rpc <url>
-                  [--subject <address>] [--finality finalized|latest] [--json]
+                  [--publisher <address>] [--subject <address>]
+                  [--finality finalized|latest] [--json]
   verify origin <certificate.json> [--signer <address>] [--json]
   verify receipt <receipt.json>... --manifest <deployment.json> --rpc <url>
-                  [--subject <address>] [--certificate <certificate.json>]...
-                  [--finality finalized|latest] [--json]
+                  [--publisher <address>] [--subject <address>]
+                  [--certificate <certificate.json>]... [--finality finalized|latest] [--json]
   verify receipts --subject <address> --manifest <deployment.json> --rpc <url>
-                  [--allocation <id>]... [--escrow <address>] [--out <directory>]
-                  [--finality finalized|latest] [--json]
+                  [--publisher <address>] [--allocation <id>]... [--escrow <address>]
+                  [--out <directory>] [--finality finalized|latest] [--json]
+  verify manifest <official.json> --publisher <address> [--json]
 
-  --manifest   deployment manifest (deployments/<network>.json): the registries and
+  --manifest   deployment manifest (deployments/<network>.json), or the signed
+               official list (deployments/official.json): the registries and
                escrows you accept. A copy of either contract proves nothing.
+  --publisher  the address you trust to sign the official list. A signed manifest
+               is used only once its signature is shown to be this address's,
+               over every field; it is refused without --publisher.
   --rpc        a JSON-RPC endpoint you trust. The only host this command contacts.
   --subject    refuse a document about any other account.
   --finality   "finalized" (default) accepts only the node's finalized block;
@@ -66,7 +75,7 @@ class UsageError extends Error {}
 
 type Arguments = { positional: string[]; options: Map<string, string>; repeated: Map<string, string[]>; flags: Set<string> }
 
-const VALUE_OPTIONS = new Set(['manifest', 'rpc', 'subject', 'finality', 'signer', 'escrow', 'out'])
+const VALUE_OPTIONS = new Set(['manifest', 'rpc', 'subject', 'finality', 'signer', 'escrow', 'out', 'publisher'])
 const REPEATED_OPTIONS = new Set(['allocation', 'certificate'])
 const FLAGS = new Set(['json', 'help'])
 
@@ -124,6 +133,31 @@ function required(parsed: Arguments, name: string): string {
   return value
 }
 
+/**
+ * The deployments `--manifest` names, as the verifier functions take them. A
+ * signed official list counts only once its signature is shown to be the
+ * `--publisher`'s: a tampered one, or one signed by anyone else, is a
+ * `ManifestError`, and nothing is read from the chain.
+ */
+function manifestOption(parsed: Arguments): unknown {
+  const raw = readJson(required(parsed, 'manifest'), 'manifest')
+  const publisher = parsed.options.get('publisher')
+
+  if (isOfficialManifest(raw)) {
+    if (publisher === undefined) {
+      throw new UsageError('The manifest is a signed official list: name the publisher you trust with --publisher')
+    }
+
+    return verifyOfficialManifest(raw, publisher).manifest
+  }
+
+  if (publisher !== undefined) {
+    throw new UsageError('--publisher checks a signed official manifest, and this manifest is not signed')
+  }
+
+  return raw
+}
+
 /** The block line every identity run prints, whatever the result. */
 export function blockLine(report: Pick<VerificationReport, 'checkedAtBlock' | 'finalized'>): string {
   if (report.checkedAtBlock === null) return 'Block checked: none (the chain was not read)'
@@ -153,7 +187,7 @@ async function identity(parsed: Arguments, io: CliIo): Promise<number> {
     throw new UsageError(`Cannot read the presentation at ${file}`)
   }
 
-  const manifest = parsed.options.has('manifest') ? readJson(required(parsed, 'manifest'), 'manifest') : undefined
+  const manifest = parsed.options.has('manifest') ? manifestOption(parsed) : undefined
   const rpc = parsed.options.has('rpc') ? jsonRpcTransport(required(parsed, 'rpc')) : undefined
   const report = await verifyPresentation(document, { manifest, rpc, finality, expectedSubject: parsed.options.get('subject') })
 
@@ -197,7 +231,7 @@ async function receipt(parsed: Arguments, io: CliIo): Promise<number> {
 
   if (files.length === 0) throw new UsageError('verify receipt needs at least one receipt file')
 
-  const manifest = readJson(required(parsed, 'manifest'), 'manifest')
+  const manifest = manifestOption(parsed)
   const rpc = jsonRpcTransport(required(parsed, 'rpc'))
   const certificates = (parsed.repeated.get('certificate') ?? []).map((file) => readJson(file, 'certificate') as OriginCertificate)
   const documents = files.map((file) => {
@@ -234,7 +268,7 @@ async function receipt(parsed: Arguments, io: CliIo): Promise<number> {
 
 async function receipts(parsed: Arguments, io: CliIo): Promise<number> {
   const subject = required(parsed, 'subject')
-  const options = { manifest: readJson(required(parsed, 'manifest'), 'manifest'), rpc: jsonRpcTransport(required(parsed, 'rpc')), finality: finalityOf(parsed) }
+  const options = { manifest: manifestOption(parsed), rpc: jsonRpcTransport(required(parsed, 'rpc')), finality: finalityOf(parsed) }
   const escrow = parsed.options.get('escrow')
   const hinted = parsed.repeated.get('allocation')
   const allocationIds = hinted ?? (await findAllocationsPaidTo(subject, { ...options, escrow }))
@@ -261,6 +295,46 @@ async function receipts(parsed: Arguments, io: CliIo): Promise<number> {
   if (build.result === 'Built') return EXIT.verified
 
   return build.result === 'RegistryNotInManifest' ? EXIT.refuted : EXIT.undetermined
+}
+
+/**
+ * `verify manifest`: is this the official list the publisher signed? The
+ * manifest is the thing on trial here, so a changed field, another signer
+ * or a shape this verifier does not read is refuted (1), not a usage error.
+ */
+function manifest(parsed: Arguments, io: CliIo): number {
+  const file = parsed.positional[1]
+
+  if (!file) throw new UsageError('verify manifest needs an official manifest file')
+
+  const publisher = required(parsed, 'publisher')
+  const raw = readJson(file, 'official manifest')
+  let verified: ReturnType<typeof verifyOfficialManifest>
+
+  try {
+    verified = verifyOfficialManifest(raw, publisher)
+  } catch (error) {
+    if (!(error instanceof ManifestError)) throw error
+
+    io.err(`Refuted: ${error.message}`)
+
+    return EXIT.refuted
+  }
+
+  if (parsed.flags.has('json')) {
+    io.out(JSON.stringify({ publisher: verified.publisher, issuedAt: verified.issuedAt, deployments: verified.deployments }, null, 2))
+  } else {
+    io.out(`Signed by ${verified.publisher} at ${new Date(verified.issuedAt * 1000).toISOString()}`)
+
+    for (const entry of verified.deployments) {
+      io.out(`Chain ${entry.chainId} (${entry.release}), from block ${entry.deployBlock}`)
+      io.out(`  escrow ${entry.escrow}, token ${entry.token} (${entry.tokenDecimals} decimals)`)
+      io.out(`  registry ${entry.identityRegistry}`)
+      io.out(`  origin signer ${entry.originSigner}, fee recipient ${entry.feeRecipient}`)
+    }
+  }
+
+  return EXIT.verified
 }
 
 function origin(parsed: Arguments, io: CliIo): number {
@@ -314,6 +388,8 @@ export async function run(argv: readonly string[], io: CliIo): Promise<number> {
         return await receipt(parsed, io)
       case 'receipts':
         return await receipts(parsed, io)
+      case 'manifest':
+        return manifest(parsed, io)
       default:
         throw new UsageError(`Unknown command ${parsed.positional[0]}`)
     }

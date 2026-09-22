@@ -19,6 +19,8 @@ export const PROFILE_COMMITMENT_TYPEHASH = id(PROFILE_COMMITMENT_TYPE)
 
 export const PRESENTATION_FORMAT = 'work-address/profile-presentation'
 export const EXPORT_FORMAT = 'work-address/profile-export'
+/** The signed allowlist of official deployments (`official.ts`). */
+export const OFFICIAL_FORMAT = 'work-address/official-deployments'
 export const FORMAT_VERSION = 1
 
 /** The domain line of the message a wallet signs in self-signed mode. */

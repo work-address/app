@@ -1,0 +1,127 @@
+{
+  "$schema": "http://json-schema.org/draft-07/schema#",
+  "title": "Work Address official deployments",
+  "description": "The signed allowlist of Work Address's own escrow and registry deployments: deployments/official.json, written by `pnpm run official:manifest` (scripts/official-manifest.ts) and checked by `verifyOfficialManifest` in packages/identity, by the marketplace API before it signs escrow terms, by the site before it asks a wallet to fund an escrow, and by `verify manifest` on the command line. `signature` is EIP-712 over OfficialDeployments(uint64 issuedAt, OfficialDeployment[] deployments) under the domain {name: 'WorkAddressOfficialDeployments', version: '1'}, by `publisher`. A reader checks it against the publisher address it already trusts, never the one written here. No field outside this schema is allowed: a verifier refuses what it cannot check.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "format",
+    "version",
+    "publisher",
+    "issuedAt",
+    "deployments",
+    "signature"
+  ],
+  "properties": {
+    "$schema": {
+      "type": "string"
+    },
+    "format": {
+      "const": "work-address/official-deployments"
+    },
+    "version": {
+      "const": 1
+    },
+    "publisher": {
+      "description": "The address whose EIP-712 signature this is.",
+      "$ref": "#/definitions/address"
+    },
+    "issuedAt": {
+      "description": "Unix seconds when the publisher signed. Signed.",
+      "type": "integer",
+      "minimum": 0
+    },
+    "deployments": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "#/definitions/deployment"
+      }
+    },
+    "signature": {
+      "description": "65-byte EIP-712 signature by publisher.",
+      "type": "string",
+      "pattern": "^0x[0-9a-fA-F]{130}$"
+    }
+  },
+  "definitions": {
+    "address": {
+      "type": "string",
+      "pattern": "^0x[0-9a-fA-F]{40}$",
+      "not": {
+        "pattern": "^0x0{40}$"
+      }
+    },
+    "hash": {
+      "type": "string",
+      "pattern": "^0x[0-9a-fA-F]{64}$"
+    },
+    "deployment": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": [
+        "chainId",
+        "release",
+        "escrow",
+        "token",
+        "tokenDecimals",
+        "identityRegistry",
+        "originSigner",
+        "feeRecipient",
+        "deployBlock",
+        "escrowCodeHash",
+        "registryCodeHash"
+      ],
+      "properties": {
+        "chainId": {
+          "description": "EIP-155 chain id of this deployment.",
+          "type": "integer",
+          "minimum": 1
+        },
+        "release": {
+          "description": "The contracts release it was built from, e.g. contracts-0.1.0.",
+          "type": "string",
+          "minLength": 1
+        },
+        "escrow": {
+          "description": "MarketplaceEscrow.",
+          "$ref": "#/definitions/address"
+        },
+        "token": {
+          "description": "The token the escrow holds (MarketplaceEscrow.token).",
+          "$ref": "#/definitions/address"
+        },
+        "tokenDecimals": {
+          "type": "integer",
+          "minimum": 0,
+          "maximum": 36
+        },
+        "identityRegistry": {
+          "description": "IdentityRegistry on the same chain.",
+          "$ref": "#/definitions/address"
+        },
+        "originSigner": {
+          "description": "MarketplaceEscrow.originSigner: whose terms signatures the escrow accepts.",
+          "$ref": "#/definitions/address"
+        },
+        "feeRecipient": {
+          "description": "MarketplaceEscrow.feeRecipient: a multisig on any public chain.",
+          "$ref": "#/definitions/address"
+        },
+        "deployBlock": {
+          "description": "First block holding these contracts: where an indexer or a log scan starts.",
+          "type": "integer",
+          "minimum": 0
+        },
+        "escrowCodeHash": {
+          "description": "The deployment manifest's escrow runtimeCodeHash: keccak256 of its code with immutables zeroed.",
+          "$ref": "#/definitions/hash"
+        },
+        "registryCodeHash": {
+          "description": "The same for IdentityRegistry.",
+          "$ref": "#/definitions/hash"
+        }
+      }
+    }
+  }
+}

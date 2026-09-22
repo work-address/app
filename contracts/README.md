@@ -278,6 +278,79 @@ deployer funds emits a structurally perfect `Released`, and a copy of the
 registry runs the identical commitment scheme. Either is
 `RegistryNotInManifest`, and is never asked anything.
 
+`--manifest` takes a deployment manifest you vouch for yourself, or the signed
+official list (`deployments/official.json`, below) with `--publisher <address>`,
+the address you trust to sign it. A signed list is used only once its
+signature is shown to be that address's over every field; a changed or
+foreign-signed list stops the run with status 2 before any chain is asked,
+and a signed list without `--publisher` is refused rather than read unchecked.
+
+```bash
+$V manifest contracts/deployments/official.json --publisher 0xPublisher   # 0 signed by them, 1 not
+$V receipt receipts/*.json --manifest contracts/deployments/official.json --publisher 0xPublisher --rpc $R
+```
+
+## Official deployments
+
+`deployments/official.json` is the publisher's signed statement of which
+escrow and registry addresses are Work Address's own, on every chain it
+names. It is the one thing a copy of this MIT code cannot reproduce, so
+three places check it before trusting an address:
+
+- **the marketplace API** (web `api/`), before it signs funding terms for an
+  escrow: a deployment the list does not name, or names with another origin
+  signer or token, turns escrow off. In production the list is required.
+- **the site**, before it asks a wallet to fund an escrow the API names: it
+  checks the list's signature itself, against a publisher address built into
+  the site, so an API pointed at another contract cannot move a client's
+  funds there.
+- **the verifier command**, with `--publisher`, as above.
+
+Each deployment entry carries the chain, the contracts release, the escrow,
+its token and decimals, the registry, the origin signer, the fee recipient,
+the first block, and the `runtimeCodeHash` of the escrow and the registry
+from the deploy's manifest (`deployments/official.schema.json`). The
+signature is EIP-712 over `OfficialDeployments(uint64 issuedAt,
+OfficialDeployment[] deployments)` under the domain
+`{ name: "WorkAddressOfficialDeployments", version: "1" }`, so a hardware
+wallet shows every field it signs. The type is pinned and unknown fields are
+refused, never ignored: a field an older reader skipped could be the one
+that withdraws a deployment.
+
+To publish, after a deploy wrote `deployments/sepolia.json`:
+
+```bash
+pnpm run official:manifest --publisher <publisher address>
+#   prints the EIP-712 request and its --issued-at; sign it with the publisher's
+#   wallet (eth_signTypedData_v4), then:
+pnpm run official:manifest --publisher <publisher address> --issued-at <printed> --signature <signature>
+pnpm run verify:manifest deployments/official.json --publisher <publisher address>
+```
+
+Nothing is written unless the signature recovers the publisher over exactly
+that list. `--deployments a.json,b.json` lists several deployments; a dry
+run's manifest is refused, since its addresses exist nowhere. For the local
+chain alone, `--sign-locally` lets the node sign as one of its own accounts,
+whose keys Hardhat prints: that is a development list and never an official
+one. `test/fixtures/official-deployments.contract.json` is such a list,
+signed by Hardhat's account #9 through the node's own
+`eth_signTypedData_v4`; the web repository's API holds a byte-identical copy
+and must accept exactly what this package accepts.
+
+### Who holds which key
+
+| Key | What it can do | Held by |
+| --- | --- | --- |
+| Deployer (`DEPLOYER_KEY`) | Pays gas for the three deployments. The contracts give it no power afterwards | A throwaway account funded for the deploy, in the environment of the person running it |
+| Fee recipient (`FEE_RECIPIENT`) | Receives the 5% on release. Fixed at deploy, for good | A multisig on any public chain; its signers are an owner decision |
+| Origin signer (`ORIGIN_SIGNER_ADDRESS`) | Its EIP-712 signature is the escrow's only proof that terms came from the marketplace | The marketplace API, through its origin signer: a KMS key in production, where an environment key is refused; a local key elsewhere |
+| Publisher | Says which deployments are official; every checker above trusts its address | The owner, on a hardware wallet (an EOA: the verifier is offline, so an ERC-1271 contract signature could not be checked) |
+| Keeper (`APP_ESCROW_KEEPER_KEY`, web API) | Pays gas for calls anyone may make once a deadline passes | A hot account holding gas only |
+
+Adopted defaults, pending owner confirmation: the publisher is the owner's
+hardware-wallet account, and its address is set in the site's build, the
+API's environment and every verifier's command line.
+
 What a verified receipt does not say: that the work was good, or that payer
 and payee are independent people. A UI must keep that next to the number.
 
@@ -307,7 +380,7 @@ all on Hardhat's in-process network. Run the same before opening one. `tsc` is n
 tests: Hardhat and mocha load TypeScript transpile-only, so a type error in a
 test or script shows up nowhere else.
 
-Three fixtures are byte-identical copies of files elsewhere, so both sides are
+These fixtures are byte-identical copies of files elsewhere, so both sides are
 held to the same bytes (see "Canonical encodings"):
 
 | Fixture | Other copy | What it pins |
@@ -315,6 +388,7 @@ held to the same bytes (see "Canonical encodings"):
 | `test/fixtures/escrow-terms.contract.json` | `api/src/test/fixture` in the web repository | The EIP-712 `Terms` digest the marketplace API signs |
 | `test/fixtures/escrow-abi.contract.json` | `api/src/test/fixture` in the web repository | MarketplaceEscrow's ABI, signature for signature, which every hand-written reader in the marketplace is held to |
 | `test/fixtures/invoice-commitment.v1.json` | `api/src/test/fixture` in this repository | InvoiceCommitment v1, which the app computes and the escrow stores |
+| `test/fixtures/official-deployments.contract.json` | `api/src/test/fixture` in the web repository | The signed official allowlist, which the marketplace API must accept exactly as `verifyOfficialManifest` does |
 
 Change a shared fixture in both places or in neither.
 `invoice-commitment.v1.json` is also pinned by its SHA-256 in the test on each
@@ -508,8 +582,9 @@ variant. How it differs from a standard ERC-20, and what that means here:
   permanently joins a wallet's profile-edit rhythm to its earnings graph. That
   is a product trade, not an ops convenience.
 - Uniqueness of an obligation across future contract versions (SC-DEC-03), and
-  who publishes and signs the official deployment allowlist — with no on-chain
-  reputation, that manifest is the trust root for every settlement receipt.
+  the publisher's address: the signed allowlist, its tooling and its checks
+  exist ("Official deployments"), but which key signs it is the owner's
+  decision, adopted above as their hardware wallet until confirmed.
 - Owner confirmation of profile schema v1's adopted defaults
   ([`docs/profile-schema-v1.md`](docs/profile-schema-v1.md), "Decisions this
   schema records"). These are: only the PRODUCT.md §4.7 fields, from the app

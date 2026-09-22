@@ -12,7 +12,8 @@
  * certificate offline, and the settlement receipts are built from and
  * checked against the escrow's own events. Those reach a chain only through
  * the `RpcRequest` the caller hands them (`rpc.ts`), never a Work Address
- * host.
+ * host. Which deployments count is the caller's manifest, or the publisher's
+ * signed allowlist checked with `verifyOfficialManifest`.
  *
  * Unaudited. No DID Core conformance is claimed; subjects are named with
  * did:pkh as a convention.
@@ -31,6 +32,7 @@ export * from './documents'
 export * from './verify-document'
 export * from './rpc'
 export * from './manifest'
+export * from './official'
 export * from './verify'
 export * from './origin'
 export * from './receipts'

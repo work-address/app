@@ -1,5 +1,7 @@
 import { getAddress } from 'ethers'
 
+import { OFFICIAL_FORMAT } from './constants'
+
 /**
  * Which deployments a verifier accepts. It is the trust root of every check
  * that touches a chain: a copy of `IdentityRegistry` anyone deployed runs the
@@ -7,9 +9,13 @@ import { getAddress } from 'ethers'
  * emits a structurally perfect `Released`. Neither means anything unless the
  * verifier was told, by someone it trusts, that this address is the one.
  *
- * The shape is the deployment manifest `scripts/deploy.ts` writes
+ * The shape is the deployment manifest the deploy writes
  * (`deployments/manifest.schema.json`); keys a verifier has no use for are
- * ignored. Pass one deployment or a list of them.
+ * ignored. Pass one deployment or a list of them: the caller vouches for
+ * them. A signed official manifest (`official.ts`) is refused here unread:
+ * its signature is only worth something once it is checked, so it goes
+ * through `verifyOfficialManifest` against a publisher the caller trusts,
+ * and what that returns is passed on.
  */
 export type ManifestDeployment = {
   chainId: number
@@ -96,6 +102,13 @@ export function readManifest(input: unknown): VerifierManifest {
     } catch {
       throw new ManifestError('The manifest is not JSON')
     }
+  }
+
+  if (isRecord(parsed) && parsed.format === OFFICIAL_FORMAT) {
+    throw new ManifestError(
+      'This is a signed official manifest: check it against the publisher you trust with ' +
+        'verifyOfficialManifest (on the command line, --publisher), and pass on what that returns',
+    )
   }
 
   if (isRecord(parsed) && Array.isArray(parsed.deployments)) parsed = parsed.deployments

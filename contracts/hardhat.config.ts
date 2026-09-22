@@ -9,6 +9,7 @@ import { TASK_NODE_SERVER_READY } from 'hardhat/builtin-tasks/task-names'
 import type { HardhatUserConfig } from 'hardhat/config'
 
 import { runDeploy, runDryRun, sepoliaNetwork } from './scripts/deploy-command'
+import { runOfficialManifest } from './scripts/official-manifest'
 import {
   LOCAL_CHAIN_ID,
   LOCAL_RPC_URL,
@@ -76,6 +77,25 @@ task('deploy:dry-run', 'Rehearses the deploy on an in-process fork of a network;
   .addOptionalParam('deployer', "The real deployer's address, to predict the addresses (default: DEPLOYER_ADDRESS)")
   .setAction(async ({ forkUrl, block, deployer }, hre) => {
     await refusalsAsMessages(() => runDryRun(hre, { forkUrl, block, deployer }))
+  })
+
+task('official:manifest', 'Builds deployments/official.json, the signed allowlist of official deployments')
+  .addParam('publisher', "The publisher's address. Its key signs in the publisher's own wallet, never here")
+  .addOptionalParam('deployments', 'Comma-separated deployment manifests to vouch for (default: deployments/sepolia.json)')
+  .addOptionalParam('issuedAt', 'Unix seconds, signed with the list; pass the printed value back with --signature')
+  .addOptionalParam('release', 'The contracts release (default: contracts-<package version>)')
+  .addOptionalParam('signature', "The publisher's eth_signTypedData_v4 signature over the printed request")
+  .addOptionalParam('out', 'Where to write it (default: deployments/official.json)')
+  .addFlag('signLocally', 'Local chain only: the node signs as --publisher, one of its own public test accounts')
+  .setAction(async ({ publisher, deployments, issuedAt, release, signature, out, signLocally }, hre) => {
+    const files = ((deployments as string | undefined) ?? manifestPath('sepolia'))
+      .split(',')
+      .map((file) => file.trim())
+      .filter((file) => file !== '')
+
+    await refusalsAsMessages(() =>
+      runOfficialManifest(hre, { deployments: files, publisher, issuedAt, release, signature, out, signLocally }),
+    )
   })
 
 task('mint', 'Mints local test USDT to an address, and tops up its gas')

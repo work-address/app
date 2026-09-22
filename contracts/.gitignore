@@ -8,3 +8,5 @@ typechain-types
 deployments/*.json
 !deployments/manifest.schema.json
 !deployments/sepolia.json
+!deployments/official.schema.json
+!deployments/official.json

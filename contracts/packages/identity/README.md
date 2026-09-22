@@ -201,6 +201,30 @@ a listed escrow. It does not say the work was good or that the two wallets
 are independent people; a UI must keep that qualifier next to the number and
 must never fold receipts into a rating.
 
+### The official deployment list
+
+A manifest you write yourself is your own trust statement. The publisher's
+signed list (`deployments/official.json`, `official.ts`) is theirs, and is
+worth something only once its signature is checked against the publisher
+address you already trust:
+
+```ts
+import { officialEscrow, verifyOfficialManifest, verifyReceipts } from '@work-address/identity'
+
+const official = verifyOfficialManifest(officialJson, PUBLISHER)   // throws ManifestError otherwise
+officialEscrow(official, chainId, escrow)                           // the entry vouching for it, or null
+await verifyReceipts(receipts, { manifest: official.manifest, rpc })
+```
+
+`verifyOfficialManifest` refuses a list whose signed fields were changed, one
+signed by anyone but `PUBLISHER` (whatever the document says about its own
+publisher), and any field it does not know. `readManifest`, and so every
+function taking `manifest`, refuses a signed list handed over unchecked:
+pass `official.manifest` instead. On the command line that is
+`--manifest official.json --publisher <address>`, and `bin/verify manifest
+official.json --publisher <address>` checks the list alone (0 signed by
+them, 1 not, 2 unreadable).
+
 `rpc.ts` is the only file in `src/` that names a network API. It posts JSON-RPC
 to the URL it was given, with no credentials and no redirects, and
 `test/no-network.test.ts` holds it to that.

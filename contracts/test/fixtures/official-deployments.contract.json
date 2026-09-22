@@ -1,0 +1,22 @@
+{
+  "format": "work-address/official-deployments",
+  "version": 1,
+  "publisher": "0xa0Ee7A142d267C1f36714E4a8F75612F20a79720",
+  "issuedAt": 1790000000,
+  "deployments": [
+    {
+      "chainId": 31337,
+      "release": "contracts-0.1.0",
+      "escrow": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512",
+      "token": "0x5FbDB2315678afecb367f032d93F642f64180aa3",
+      "tokenDecimals": 6,
+      "identityRegistry": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0",
+      "originSigner": "0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC",
+      "feeRecipient": "0x70997970C51812dc3A010C7d01b50e0d17dc79C8",
+      "deployBlock": 1,
+      "escrowCodeHash": "0x8e1e26bf3bd7d5b7ff639a3cf0fd845d2242ce7822c631bf9e305db82d6b0e47",
+      "registryCodeHash": "0x35c165abe8fd0009a23f4b22dcb1716570dda4428731064405b00fd652146856"
+    }
+  ],
+  "signature": "0x50200e2c00a6bb5fcfcde20e004245cccf48f27a45d21aa93212599d780c739d18d4a1031f349d320b4748063ab6dee54592083f2b773e0aee63beee132c7fd51b"
+}
