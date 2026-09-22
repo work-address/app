@@ -296,6 +296,25 @@ nothing; a second final state, or the same state settled differently, is a
 - A **dispute refund** records the refund and leaves the invoice and its
   entries unpaid. Nobody can mark it paid by hand afterwards: the payer
   disputed the bill on chain, and the record keeps saying so.
+- A **settlement the chain takes back is undone.** Confirmations make a
+  reorganisation below the marketplace's confirmed head rare, not impossible.
+  When one removes the block a settlement pushed here was confirmed in, the
+  marketplace sends `POST /api/internal/marketplace/settlement-reversal`,
+  signed like the push under its own header
+  (`X-Marketplace-Settlement-Reversal-Signature`), so a captured push can
+  never be replayed to undo the payment it recorded. It names that settlement
+  as it was pushed — state, bill, payout, refunds and settling transaction —
+  and the invoice goes back to how it stood before any push: still bound to
+  the same allocation under the same commitment, since the bill may be mined
+  again, with no outcome recorded; an invoice the reversed release made
+  `PAID` is `REQUESTED` again with its entries unpaid, in one transaction.
+  Whatever the chain holds afterwards arrives as an ordinary push. It is
+  idempotent and never undoes more than it names: it applies only while the
+  invoice records that settlement or one that followed from it on the same
+  chain (more refunded beside it, or a final state after a remainder refunded
+  beside the pending bill), so a repeat, a reversal overtaken by the
+  settlement that replaced it, or one for an allocation the invoice is no
+  longer bound to answers `applied: false`. An unknown invoice is a 409.
 - The record is columns on `Invoice` — `settlementKind` (`MANUAL` when the
   issuer marked it, `ESCROW` once a confirmed outcome is recorded),
   `escrowState`, `escrowGrossBaseUnits`, `escrowFeeBaseUnits`,

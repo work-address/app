@@ -20,6 +20,8 @@ import {
   EInvoiceSettlementKind,
   EInvoiceSnapshotVersion,
   EInvoiceState,
+  IInvoiceEscrowReversal,
+  IInvoiceEscrowReversalResult,
   IInvoiceEscrowSettlement,
   IInvoiceEscrowSettlementResult,
   IInvoiceEscrowSubmission,
@@ -1287,6 +1289,99 @@ export class InvoiceManager {
       invoiceId: invoice.id,
       state: invoice.state,
       escrowState: invoice.escrowState as EInvoiceEscrowState,
+    }
+  }
+
+  /**
+   * Takes back a settlement this service recorded that the chain no longer
+   * holds: a reorganisation removed the block it was confirmed in (POST
+   * /api/internal/marketplace/settlement-reversal). Without it an invoice
+   * stayed PAID, its hours paid, for a release the chain no longer shows.
+   *
+   * The invoice goes back to what it was before any settlement was pushed:
+   * still bound to the same allocation under the same commitment - the bill
+   * may well be mined again - with no outcome recorded, and unpaid with its
+   * hours unpaid if the reversed settlement was the release that paid it. In
+   * one transaction with the invoice row locked, like the release itself.
+   * Whatever the chain holds now is pushed afterwards as an ordinary
+   * settlement, and applies as it would have the first time.
+   *
+   * Idempotent, and never undoes more than it names: it applies only while
+   * the invoice records that settlement, or one that followed from it
+   * (`InvoiceEscrow.recordsReversed`). A reversal repeated, one late behind
+   * the settlement that replaced it, or one for an allocation the invoice is
+   * no longer bound to changes nothing and answers `applied: false`. An
+   * invoice this instance does not know is a 409, as for the push.
+   */
+  public reverseEscrowSettlement(
+    reversal: IInvoiceEscrowReversal,
+  ): RepoEffect<IInvoiceEscrowReversalResult> {
+    return Effect.gen(this, function* () {
+      const found = yield* this.invoiceRepository.findOneBy({
+        where: { id: reversal.invoiceId },
+      })
+
+      if (!found) {
+        return yield* Effect.fail(
+          new InvoiceEscrowException(
+            `Invoice ${reversal.invoiceId} is not known to this instance`,
+          ),
+        )
+      }
+
+      return yield* this.unitOfWork.run((manager) =>
+        Effect.gen(this, function* () {
+          const current = yield* this.invoiceRepository
+            .within(manager)
+            .findOneForUpdate(found)
+
+          if (
+            !InvoiceEscrow.isBoundTo(current, reversal) ||
+            !InvoiceEscrow.recordsReversed(current, reversal)
+          ) {
+            return InvoiceManager.reversalResult(current, false)
+          }
+
+          if (
+            current.state === EInvoiceState.PAID &&
+            current.escrowState === EInvoiceEscrowState.RELEASED
+          ) {
+            yield* this.timeRepository
+              .within(manager)
+              .setPaidForInvoice(current, false)
+
+            current.state = EInvoiceState.REQUESTED
+            current.paidAt = null
+          }
+
+          current.settlementKind = null
+          current.escrowState = null
+          current.escrowGrossBaseUnits = null
+          current.escrowFeeBaseUnits = null
+          current.escrowNetBaseUnits = null
+          current.escrowRefundedBaseUnits = null
+          current.escrowTxHash = null
+          current.escrowConfirmedAt = null
+
+          const saved = yield* this.invoiceRepository
+            .within(manager)
+            .saveSingle(current)
+
+          return InvoiceManager.reversalResult(saved, true)
+        }),
+      )
+    })
+  }
+
+  private static reversalResult(
+    invoice: Invoice,
+    applied: boolean,
+  ): IInvoiceEscrowReversalResult {
+    return {
+      applied,
+      invoiceId: invoice.id,
+      state: invoice.state,
+      escrowState: invoice.escrowState ?? null,
     }
   }
 

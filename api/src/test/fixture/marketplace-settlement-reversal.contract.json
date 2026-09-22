@@ -1,0 +1,25 @@
+{
+  "note": "Cross-repo contract for the settlement reversal (web REORG-COMPENSATION). This file is duplicated byte-for-byte in work-address/app (api/src/test/fixture) and work-address/web (api/src/test/fixture); they are separate repositories, so each owns a copy. web asserts it PRODUCES these bytes, this header and this signature; app asserts it ACCEPTS them. A reversal names a settlement the marketplace pushed to the settlement route and the app acknowledged, which the chain no longer holds because a reorganisation removed the block it was confirmed in. The body names that settlement exactly as it was pushed: escrowState is the state it reported (SUBMITTED, RELEASED, DISPUTED_REFUNDED, EXPIRED_REFUNDED or CANCELLED_REFUNDED), grossBaseUnits, feeBaseUnits, netBaseUnits and refundedBaseUnits its token base units as decimal strings, and txHash its settling transaction (null for a remainder refunded beside a bill still awaiting release). The app undoes it only while the invoice records that settlement or one that followed from it: the invoice keeps its binding, records no outcome, and one the reversed release had made PAID is REQUESTED again with its hours unpaid. Whatever the chain holds afterwards is pushed to the settlement route as usual. issuedAt (unix seconds) and nonce are the replay guard, as for the hire. The HMAC-SHA256 hex signature over the exact serialised bytes goes in the header named below, with the shared entitlement secret. Every key is always present, in this order. The example reverses the release in marketplace-settlement.contract.json. Change both copies in the same pull request or not at all. ROUTE BINDING: every internal route shares one secret, so the signature names the route it was made for. `signature` is the header value, `v2=<hex>`: HMAC-SHA256 with the shared secret over `signedBytes` - the version, `method`, `path`, the header name in lower case and then `serialised`, joined by single newlines - so these bytes signed for this route are refused on every other; a settlement push captured on its own route cannot be replayed here to undo the payment it recorded. `legacySignature` is the form used before the binding, the bare hex HMAC of `serialised` alone: app accepts it only while APP_INTERNAL_SIGNATURE_ACCEPT_LEGACY is on, web sends it only as the fallback after a 401 while APP_INTERNAL_SIGNATURE_LEGACY_FALLBACK is on, and both go when that one-release window closes (docs/internal-signature.md in each repository).",
+  "secret": "shared-contract-fixture-secret",
+  "method": "POST",
+  "path": "/api/internal/marketplace/settlement-reversal",
+  "header": "X-Marketplace-Settlement-Reversal-Signature",
+  "body": {
+    "invoiceId": "4e61ff62-5642-478f-901b-f7be07550426",
+    "chainId": 31337,
+    "escrow": "0x8bbc3514477d75ec797bbe4e19d7961660bb849c",
+    "allocationId": "0x7d2a37f82ee0232848aace4b0c421193fa05c3f906d79e01f0ccf4dfd1769d1e",
+    "escrowState": "RELEASED",
+    "grossBaseUnits": "30000000",
+    "feeBaseUnits": "1500000",
+    "netBaseUnits": "28500000",
+    "refundedBaseUnits": "0",
+    "txHash": "0x563ce726fe6c175a76c81392b24667cd747b87544b74f0e51bc0cbc15fcc02aa",
+    "issuedAt": 1788865890,
+    "nonce": "9c3d2e71-4b8a-4f05-a6d2-3e7b1f9c0a48"
+  },
+  "serialised": "{\"invoiceId\":\"4e61ff62-5642-478f-901b-f7be07550426\",\"chainId\":31337,\"escrow\":\"0x8bbc3514477d75ec797bbe4e19d7961660bb849c\",\"allocationId\":\"0x7d2a37f82ee0232848aace4b0c421193fa05c3f906d79e01f0ccf4dfd1769d1e\",\"escrowState\":\"RELEASED\",\"grossBaseUnits\":\"30000000\",\"feeBaseUnits\":\"1500000\",\"netBaseUnits\":\"28500000\",\"refundedBaseUnits\":\"0\",\"txHash\":\"0x563ce726fe6c175a76c81392b24667cd747b87544b74f0e51bc0cbc15fcc02aa\",\"issuedAt\":1788865890,\"nonce\":\"9c3d2e71-4b8a-4f05-a6d2-3e7b1f9c0a48\"}",
+  "signedBytes": "v2\nPOST\n/api/internal/marketplace/settlement-reversal\nx-marketplace-settlement-reversal-signature\n{\"invoiceId\":\"4e61ff62-5642-478f-901b-f7be07550426\",\"chainId\":31337,\"escrow\":\"0x8bbc3514477d75ec797bbe4e19d7961660bb849c\",\"allocationId\":\"0x7d2a37f82ee0232848aace4b0c421193fa05c3f906d79e01f0ccf4dfd1769d1e\",\"escrowState\":\"RELEASED\",\"grossBaseUnits\":\"30000000\",\"feeBaseUnits\":\"1500000\",\"netBaseUnits\":\"28500000\",\"refundedBaseUnits\":\"0\",\"txHash\":\"0x563ce726fe6c175a76c81392b24667cd747b87544b74f0e51bc0cbc15fcc02aa\",\"issuedAt\":1788865890,\"nonce\":\"9c3d2e71-4b8a-4f05-a6d2-3e7b1f9c0a48\"}",
+  "signature": "v2=02ff4f5b84ee7cd76c132d0dc9e05b2cd0857f1c13b3893ffc23dd0eb77e60b2",
+  "legacySignature": "0b0a6f5cef2d1e7705f6d415a164fde59b82c4279d3e09daa94b00d24f04b691"
+}

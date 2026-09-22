@@ -388,8 +388,11 @@ export class Invoice extends AbstractBaseEntity {
    * indexer pushes it (POST /api/internal/marketplace/settlement): its state
    * and totals, in token base units. Written only by that push, never by a
    * person, and only forward - a push older than what is recorded changes
-   * nothing. Columns rather than an entity, for the same reason as the
-   * binding: how the invoice was settled is part of the invoice.
+   * nothing. The one way back is the chain's: a settlement a reorganisation
+   * took off the chain is cleared again by its reversal
+   * (POST /api/internal/marketplace/settlement-reversal). Columns rather
+   * than an entity, for the same reason as the binding: how the invoice was
+   * settled is part of the invoice.
    */
 
   @Expose({ groups: ['search'] })

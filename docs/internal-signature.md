@@ -1,7 +1,7 @@
 # Internal call signatures
 
 The marketplace and billing service (`work-address/web`, `api/`) calls this
-service on seven routes under `/api/internal`. None of them carries a user
+service on eight routes under `/api/internal`. None of them carries a user
 token: each is authenticated by an HMAC-SHA256 made with one shared secret,
 `APP_ENTITLEMENT_SECRET`, followed by a replay window on `issuedAt` and a
 one-time `nonce`.
@@ -15,6 +15,7 @@ one-time `nonce`.
 | `POST /api/internal/marketplace/amend` | `X-Marketplace-Amend-Signature` |
 | `POST /api/internal/marketplace/pause` | `X-Marketplace-Pause-Signature` |
 | `POST /api/internal/marketplace/settlement` | `X-Marketplace-Settlement-Signature` |
+| `POST /api/internal/marketplace/settlement-reversal` | `X-Marketplace-Settlement-Reversal-Signature` |
 
 The table lives in code as `InternalRoute` (`api/src/service/internal-route.ts`)
 and, on the other side, as web's `InternalRoute`. The contract fixtures under

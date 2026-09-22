@@ -61,6 +61,17 @@ export class InternalRoute {
     header: 'X-Marketplace-Settlement-Signature',
   }
 
+  /**
+   * A settlement the app acknowledged that the chain no longer holds: a
+   * reorganisation took it back. Its own header, so a captured settlement
+   * push can never be sent here to undo the payment it recorded.
+   */
+  public static readonly SETTLEMENT_REVERSAL: IInternalRoute = {
+    method: 'POST',
+    path: '/api/internal/marketplace/settlement-reversal',
+    header: 'X-Marketplace-Settlement-Reversal-Signature',
+  }
+
   public static readonly ALL: readonly IInternalRoute[] = [
     InternalRoute.ENTITLEMENT,
     InternalRoute.HIRE,
@@ -69,5 +80,6 @@ export class InternalRoute {
     InternalRoute.AMEND,
     InternalRoute.PAUSE,
     InternalRoute.SETTLEMENT,
+    InternalRoute.SETTLEMENT_REVERSAL,
   ]
 }

@@ -2,8 +2,12 @@ import { Body, HttpCode, JsonController, Post, Req } from 'routing-controllers'
 import express from 'express'
 
 import { App } from '@/app/app'
-import { IInvoiceEscrowSettlementResult } from '@/model/invoice'
+import {
+  IInvoiceEscrowReversalResult,
+  IInvoiceEscrowSettlementResult,
+} from '@/model/invoice'
 import { MarketplaceSettlementDto } from '@/model/dto/marketplace-settlement'
+import { MarketplaceSettlementReversalDto } from '@/model/dto/marketplace-settlement-reversal'
 import { EntitlementSignature } from '@/service/entitlement-signature'
 import { InternalRoute } from '@/service/internal-route'
 import { InvoiceManager } from '@/service/invoice-manager'
@@ -21,12 +25,21 @@ import AuthenticationException from '@/exception/authentication-exception'
  * secret over this route and the re-serialised body, a replay window and a
  * one-time nonce - so a signed hire cannot be sent here or the other way
  * round. Idempotent: the push carries the allocation's absolute state,
- * so a retry signed afresh answers 200 and changes nothing twice. Under
+ * so a retry signed afresh answers 200 and changes nothing twice. A
+ * settlement the chain takes back in a reorganisation after it was recorded
+ * here is undone through the reversal route beside it. Under
  * `/internal`, so the public API spec and the browser clients leave it out.
  */
 @JsonController('/internal')
 export class MarketplaceSettlementController {
   public static readonly SIGNATURE_HEADER = InternalRoute.SETTLEMENT.header
+
+  /**
+   * The reversal's own header: a captured settlement push must never be
+   * replayable as the reversal of the payment it recorded.
+   */
+  public static readonly REVERSAL_SIGNATURE_HEADER =
+    InternalRoute.SETTLEMENT_REVERSAL.header
 
   protected signature: EntitlementSignature
   protected invoiceManager: InvoiceManager
@@ -68,5 +81,48 @@ export class MarketplaceSettlementController {
     }
 
     return runPromise(this.invoiceManager.recordEscrowSettlement(data))
+  }
+
+  /**
+   * A settlement recorded here that a reorganisation has since taken off the
+   * chain: the invoice stops recording it, and one it had made PAID is
+   * unpaid again with its hours. Authenticated like the push, under its own
+   * header; idempotent, and it only ever undoes the settlement it names
+   * (`InvoiceManager.reverseEscrowSettlement`).
+   */
+  @HttpCode(200)
+  @Post('/marketplace/settlement-reversal')
+  public async reverse(
+    @Body() data: MarketplaceSettlementReversalDto,
+    @Req() request: express.Request,
+  ): Promise<IInvoiceEscrowReversalResult> {
+    const signature =
+      request.header(
+        MarketplaceSettlementController.REVERSAL_SIGNATURE_HEADER,
+      ) ?? ''
+
+    if (
+      !this.signature.verify(
+        InternalRoute.SETTLEMENT_REVERSAL,
+        JSON.stringify(data),
+        signature,
+      )
+    ) {
+      throw new AuthenticationException('Invalid marketplace signature')
+    }
+
+    if (!this.signature.isWithinReplayWindow(data.issuedAt)) {
+      throw new AuthenticationException(
+        'Marketplace settlement reversal outside the replay window',
+      )
+    }
+
+    if (!(await this.signature.consumeNonce(data.nonce))) {
+      throw new AuthenticationException(
+        'Marketplace settlement reversal nonce already used',
+      )
+    }
+
+    return runPromise(this.invoiceManager.reverseEscrowSettlement(data))
   }
 }

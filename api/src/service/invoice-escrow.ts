@@ -5,6 +5,7 @@ import { Invoice } from '@/entity/invoice'
 import {
   EInvoiceEscrowState,
   IInvoiceCommitmentBinding,
+  IInvoiceEscrowReversal,
   IInvoiceEscrowSettlement,
   IInvoiceEscrowSubmission,
   IInvoiceEscrowSubmissionRequest,
@@ -404,6 +405,53 @@ export class InvoiceEscrow {
     }
 
     return pushed > refunded ? { outcome: 'apply' } : { outcome: 'stale' }
+  }
+
+  /**
+   * Whether what the invoice records of its allocation came from the
+   * settlement `reversal` names, so taking that settlement back must take it
+   * back too: the same outcome, or one that followed from it on the same
+   * chain - more refunded beside the same settlement, or a final state after
+   * a remainder refunded beside the pending bill.
+   *
+   * A reorganisation removes a suffix of the chain, so a settlement that
+   * followed the reversed one is gone with it. Anything else is not: the
+   * invoice records nothing, or a settlement that replaced the reversed one
+   * (another transaction, another final state), and a reversal naming the
+   * old one is late and changes nothing.
+   */
+  public static recordsReversed(
+    invoice: Invoice,
+    reversal: IInvoiceEscrowReversal,
+  ): boolean {
+    const recorded = invoice.escrowState
+
+    if (
+      !recorded ||
+      !InvoiceEscrow.same(invoice.escrowGrossBaseUnits, reversal.grossBaseUnits)
+    ) {
+      return false
+    }
+
+    const refunded = BigInt(invoice.escrowRefundedBaseUnits ?? '0')
+
+    if (refunded < BigInt(reversal.refundedBaseUnits)) {
+      return false
+    }
+
+    if (recorded !== reversal.escrowState) {
+      return (
+        reversal.escrowState === EInvoiceEscrowState.SUBMITTED &&
+        InvoiceEscrow.isFinal(recorded)
+      )
+    }
+
+    return (
+      InvoiceEscrow.same(invoice.escrowFeeBaseUnits, reversal.feeBaseUnits) &&
+      InvoiceEscrow.same(invoice.escrowNetBaseUnits, reversal.netBaseUnits) &&
+      (invoice.escrowTxHash ?? null) ===
+        (reversal.txHash?.toLowerCase() ?? null)
+    )
   }
 
   /** A time in unix seconds as a uint64 takes it: a whole, non-negative number. */

@@ -36,6 +36,10 @@ const CONTRACTS: ReadonlyArray<{ file: string; route: IInternalRoute }> = [
     file: 'marketplace-settlement.contract.json',
     route: InternalRoute.SETTLEMENT,
   },
+  {
+    file: 'marketplace-settlement-reversal.contract.json',
+    route: InternalRoute.SETTLEMENT_REVERSAL,
+  },
 ]
 
 /**

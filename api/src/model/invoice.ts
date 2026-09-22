@@ -290,3 +290,34 @@ export interface IInvoiceEscrowSettlementResult {
   state: EInvoiceState
   escrowState: EInvoiceEscrowState
 }
+
+/**
+ * A settlement the marketplace pushed and the app acknowledged, which the
+ * chain no longer holds: a reorganisation took back the block it was
+ * confirmed in. It names that settlement exactly as it was pushed - its
+ * state, the bill, the payout, the refunds and the settling transaction
+ * (null for a remainder refunded beside a bill still awaiting release) - so
+ * the app undoes only what it recorded from it.
+ */
+export interface IInvoiceEscrowReversal extends IInvoiceCommitmentBinding {
+  invoiceId: string
+  escrowState: EInvoiceEscrowState
+  grossBaseUnits: string
+  feeBaseUnits: string
+  netBaseUnits: string
+  refundedBaseUnits: string
+  txHash: string | null
+}
+
+/** What recording a settlement reversal did. */
+export interface IInvoiceEscrowReversalResult {
+  /**
+   * False when the invoice records nothing of that settlement: reversed
+   * already, overtaken by the settlement that replaced it, or never there.
+   */
+  applied: boolean
+  invoiceId: string
+  state: EInvoiceState
+  /** What the invoice records of its allocation now; null once nothing. */
+  escrowState: EInvoiceEscrowState | null
+}

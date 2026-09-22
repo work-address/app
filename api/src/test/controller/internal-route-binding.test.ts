@@ -119,6 +119,13 @@ export class InternalRouteBindingTest extends BaseControllerTest {
           ...stamp,
         }
       }
+      case InternalRoute.SETTLEMENT_REVERSAL: {
+        return {
+          ...this.fixtureBody('marketplace-settlement-reversal.contract.json'),
+          invoiceId: randomUUID(),
+          ...stamp,
+        }
+      }
       default: {
         throw new Error(`No body for ${route.path}`)
       }
@@ -202,6 +209,37 @@ export class InternalRouteBindingTest extends BaseControllerTest {
   @timeout(20000)
   async settlement_refusesABodySignedForAnotherRoute() {
     await this.refusesEveryOtherRoutesSignature(InternalRoute.SETTLEMENT)
+  }
+
+  @test
+  @timeout(20000)
+  async settlementReversal_refusesABodySignedForAnotherRoute() {
+    await this.refusesEveryOtherRoutesSignature(
+      InternalRoute.SETTLEMENT_REVERSAL,
+    )
+  }
+
+  /**
+   * The replay this route's own header closes: a settlement push captured on
+   * its way to the app names every field a reversal of it does, but signed
+   * for the push it can never be sent here to undo the payment it recorded.
+   */
+  @test
+  @timeout(20000)
+  async aCapturedSettlementPush_cannotBeReplayedAsItsReversal() {
+    const push = this.bodyFor(InternalRoute.SETTLEMENT)
+    const captured = this.signature.sign(
+      InternalRoute.SETTLEMENT,
+      JSON.stringify(push),
+    )
+
+    const replayed = await this.send(
+      InternalRoute.SETTLEMENT_REVERSAL,
+      push,
+      captured,
+    )
+
+    expect(replayed.status).to.be.eq(401)
   }
 
   /** A project opened by a real hire, so there is something to close. */

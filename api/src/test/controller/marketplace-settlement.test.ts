@@ -102,6 +102,46 @@ export class MarketplaceSettlementControllerTest extends BaseControllerTest {
     })
   }
 
+  private postReversal(body: Body, signature?: string) {
+    const raw = JSON.stringify(body)
+
+    return axios.post(
+      `${this.url}/api/internal/marketplace/settlement-reversal`,
+      raw,
+      {
+        headers: {
+          'Content-Type': 'application/json',
+          [MarketplaceSettlementController.REVERSAL_SIGNATURE_HEADER]:
+            signature ??
+            this.signature.sign(InternalRoute.SETTLEMENT_REVERSAL, raw),
+        },
+        validateStatus: () => true,
+      },
+    )
+  }
+
+  /**
+   * The reversal the marketplace sends once the chain no longer holds the
+   * settlement `push` carried, in the wire order of the shared fixture.
+   */
+  private reversalOf(push: Body, overrides: Body = {}): Body {
+    return this.fresh({
+      invoiceId: push.invoiceId,
+      chainId: push.chainId,
+      escrow: push.escrow,
+      allocationId: push.allocationId,
+      escrowState: push.escrowState,
+      grossBaseUnits: push.grossBaseUnits,
+      feeBaseUnits: push.feeBaseUnits,
+      netBaseUnits: push.netBaseUnits,
+      refundedBaseUnits: push.refundedBaseUnits,
+      txHash: push.txHash,
+      issuedAt: 0,
+      nonce: '',
+      ...overrides,
+    })
+  }
+
   /** A fresh replay guard, in the same key positions. */
   private fresh(body: Body): Body {
     return {
@@ -762,6 +802,258 @@ export class MarketplaceSettlementControllerTest extends BaseControllerTest {
     )
     expect(spec.components.schemas).to.not.have.property(
       'MarketplaceSettlementDto',
+    )
+  }
+  /**
+   * REORG-COMPENSATION: a release recorded here that a reorganisation takes
+   * off the chain is undone. The invoice is unpaid again with its hours,
+   * records no outcome, keeps its binding and commitment - the bill may be
+   * mined again - and is still not markable by hand. The release mined
+   * again in another transaction then pays it as the first push did.
+   */
+  @test()
+  async reversal_ofARelease_unpaysTheInvoiceAndItsHoursAndKeepsTheBinding() {
+    const bound = await this.bound()
+    const release = this.settlement(bound, EInvoiceEscrowState.RELEASED)
+
+    expect((await this.post(release)).data.applied).to.be.true
+    expect(await this.hoursPaid(bound.invoice)).to.deep.eq([true, true, true])
+
+    const res = await this.postReversal(this.reversalOf(release))
+    const invoice = await this.stored(bound.invoice.id)
+
+    expect(res.status, JSON.stringify(res.data)).to.be.eq(200)
+    expect(res.data).to.deep.eq({
+      applied: true,
+      invoiceId: bound.invoice.id,
+      state: EInvoiceState.REQUESTED,
+      escrowState: null,
+    })
+    expect(invoice.state).to.be.eq(EInvoiceState.REQUESTED)
+    expect(invoice.paidAt ?? null).to.be.null
+    expect(invoice.settlementKind ?? null).to.be.null
+    expect({
+      escrowState: invoice.escrowState ?? null,
+      escrowGrossBaseUnits: invoice.escrowGrossBaseUnits ?? null,
+      escrowFeeBaseUnits: invoice.escrowFeeBaseUnits ?? null,
+      escrowNetBaseUnits: invoice.escrowNetBaseUnits ?? null,
+      escrowRefundedBaseUnits: invoice.escrowRefundedBaseUnits ?? null,
+      escrowTxHash: invoice.escrowTxHash ?? null,
+      escrowConfirmedAt: invoice.escrowConfirmedAt ?? null,
+    }).to.deep.eq({
+      escrowState: null,
+      escrowGrossBaseUnits: null,
+      escrowFeeBaseUnits: null,
+      escrowNetBaseUnits: null,
+      escrowRefundedBaseUnits: null,
+      escrowTxHash: null,
+      escrowConfirmedAt: null,
+    })
+    expect(invoice.escrowAllocationId).to.be.eq(bound.binding.allocationId)
+    expect(invoice.escrowCommitment).to.be.eq(bound.commitment)
+    expect(await this.hoursPaid(invoice)).to.deep.eq([false, false, false])
+
+    const handMark = await this.statusOf(
+      invoiceControllerMarkPaid({
+        client: this.apiClient(),
+        path: { id: bound.invoice.id as never },
+        headers: this.auth(bound.worker),
+        throwOnError: true,
+      }),
+    )
+
+    expect(handMark).to.be.eq(409)
+
+    const again = this.settlement(bound, EInvoiceEscrowState.RELEASED, {
+      confirmedAt: 1788865260,
+    })
+    const repaid = await this.post(again)
+    const after = await this.stored(bound.invoice.id)
+
+    expect(repaid.data).to.include({ applied: true, state: EInvoiceState.PAID })
+    expect(after.escrowTxHash).to.be.eq(again.txHash)
+    expect(after.paidAt?.toISOString()).to.be.eq('2026-09-08T11:01:00.000Z')
+    expect(await this.hoursPaid(after)).to.deep.eq([true, true, true])
+  }
+
+  /**
+   * A reversal undoes only the settlement it names, once. Repeated, it
+   * changes nothing. Late behind the settlement that replaced it - the same
+   * release mined again in another transaction - it changes nothing. One
+   * naming another bill changes nothing. A remainder refund taken back takes
+   * back the release that followed it, which the same reorganisation
+   * removed.
+   */
+  @test()
+  async reversal_isIdempotentAndUndoesOnlyWhatItNames() {
+    const bound = await this.bound()
+    const release = this.settlement(bound, EInvoiceEscrowState.RELEASED)
+
+    await this.post(release)
+
+    const first = await this.postReversal(this.reversalOf(release))
+    const repeated = await this.postReversal(this.reversalOf(release))
+    const replacement = this.settlement(bound, EInvoiceEscrowState.RELEASED)
+
+    await this.post(replacement)
+
+    const late = await this.postReversal(this.reversalOf(release))
+    const anotherBill = await this.postReversal(
+      this.reversalOf(replacement, { grossBaseUnits: '1' }),
+    )
+    const kept = await this.stored(bound.invoice.id)
+
+    expect(first.data.applied).to.be.true
+    expect(repeated.status).to.be.eq(200)
+    expect(repeated.data).to.include({ applied: false, escrowState: null })
+    expect(late.status).to.be.eq(200)
+    expect(late.data).to.include({
+      applied: false,
+      state: EInvoiceState.PAID,
+      escrowState: EInvoiceEscrowState.RELEASED,
+    })
+    expect(anotherBill.data.applied).to.be.false
+    expect(kept.state).to.be.eq(EInvoiceState.PAID)
+    expect(kept.escrowTxHash).to.be.eq(replacement.txHash)
+    expect(await this.hoursPaid(kept)).to.deep.eq([true, true, true])
+
+    const other = await this.bound()
+    const remainder = this.settlement(other, EInvoiceEscrowState.SUBMITTED, {
+      refundedBaseUnits: '5000000',
+    })
+
+    await this.post(remainder)
+    await this.post(
+      this.settlement(other, EInvoiceEscrowState.RELEASED, {
+        refundedBaseUnits: '5000000',
+      }),
+    )
+
+    const followed = await this.postReversal(this.reversalOf(remainder))
+    const reset = await this.stored(other.invoice.id)
+
+    expect(followed.data).to.include({
+      applied: true,
+      state: EInvoiceState.REQUESTED,
+    })
+    expect(reset.escrowState ?? null).to.be.null
+    expect(await this.hoursPaid(reset)).to.deep.eq([false, false, false])
+  }
+
+  /** A dispute refund taken back is no longer recorded as a refund. */
+  @test()
+  async reversal_ofADisputeRefund_clearsTheRefund() {
+    const bound = await this.bound()
+    const dispute = this.settlement(
+      bound,
+      EInvoiceEscrowState.DISPUTED_REFUNDED,
+    )
+
+    await this.post(dispute)
+
+    const res = await this.postReversal(this.reversalOf(dispute))
+    const invoice = await this.stored(bound.invoice.id)
+
+    expect(res.data).to.deep.eq({
+      applied: true,
+      invoiceId: bound.invoice.id,
+      state: EInvoiceState.REQUESTED,
+      escrowState: null,
+    })
+    expect(invoice.escrowRefundedBaseUnits ?? null).to.be.null
+    expect(invoice.settlementKind ?? null).to.be.null
+    expect(invoice.escrowAllocationId).to.be.eq(bound.binding.allocationId)
+  }
+
+  /**
+   * An invoice this instance does not know is a 409, as for the push; one
+   * that records nothing of that allocation - never submitted, or submitted
+   * elsewhere - has nothing to undo. Unsigned, forged, stale, replayed or
+   * signed for the push, a reversal is a 401 and the release stands.
+   */
+  @test()
+  async reversal_refusesWhatItCannotUndoAndAnythingUnsigned() {
+    const bound = await this.bound()
+    const release = this.settlement(bound, EInvoiceEscrowState.RELEASED)
+    const owner = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner, 20)
+    const unbound = await this.invoiceFixture.createIssued(project, owner, 500)
+
+    await this.post(release)
+
+    const unknown = await this.postReversal(
+      this.reversalOf(release, { invoiceId: randomUUID() }),
+    )
+    const neverSubmitted = await this.postReversal(
+      this.reversalOf(release, { invoiceId: unbound.id }),
+    )
+    const elsewhere = await this.postReversal(
+      this.reversalOf(release, { allocationId: this.bytes32() }),
+    )
+    const forged = await this.postReversal(this.reversalOf(release), 'deadbeef')
+    const stale = await this.postReversal({
+      ...this.reversalOf(release),
+      issuedAt: Math.floor(Date.now() / 1000) - 3600,
+    })
+    const signed = this.reversalOf(release)
+    const raw = JSON.stringify(signed)
+    const once = this.signature.sign(InternalRoute.SETTLEMENT_REVERSAL, raw)
+
+    const replayed = [
+      await this.postReversal(signed, once),
+      await this.postReversal(signed, once),
+    ]
+    const invoice = await this.stored(bound.invoice.id)
+
+    expect(unknown.status).to.be.eq(409)
+    expect(neverSubmitted.status).to.be.eq(200)
+    expect(neverSubmitted.data.applied).to.be.false
+    expect(elsewhere.status).to.be.eq(200)
+    expect(elsewhere.data.applied).to.be.false
+    expect(forged.status).to.be.eq(401)
+    expect(stale.status).to.be.eq(401)
+    expect(replayed.map((res) => res.status)).to.deep.eq([200, 401])
+
+    // The one that got through reversed it; nothing else did.
+    expect(invoice.state).to.be.eq(EInvoiceState.REQUESTED)
+
+    await this.post(this.fresh(release))
+
+    const pushSigned = this.fresh(this.reversalOf(release))
+    const asPush = await this.postReversal(
+      pushSigned,
+      this.signature.sign(InternalRoute.SETTLEMENT, JSON.stringify(pushSigned)),
+    )
+
+    expect(asPush.status).to.be.eq(401)
+    expect((await this.stored(bound.invoice.id)).state).to.be.eq(
+      EInvoiceState.PAID,
+    )
+  }
+
+  /** Internal like the push: served, and in neither the spec nor a client. */
+  @test()
+  async reversalRoute_isServedButLeftOutOfThePublicSpec() {
+    const unsigned = await axios.post(
+      `${this.url}/api/internal/marketplace/settlement-reversal`,
+      this.reversalOf(this.fixture().body),
+      { validateStatus: () => true },
+    )
+    const res = await helpControllerSwagger({
+      client: this.apiClient(),
+      throwOnError: true,
+    })
+    const spec = res.data as {
+      paths: Record<string, unknown>
+      components: { schemas: Record<string, unknown> }
+    }
+
+    expect(unsigned.status).to.be.eq(401)
+    expect(spec.paths).to.not.have.property(
+      '/api/internal/marketplace/settlement-reversal',
+    )
+    expect(spec.components.schemas).to.not.have.property(
+      'MarketplaceSettlementReversalDto',
     )
   }
 }

@@ -3,6 +3,7 @@ import { expect } from 'chai'
 import * as web3 from 'web3'
 
 import { Invoice } from '@/entity/invoice'
+import { EInvoiceEscrowState, IInvoiceEscrowReversal } from '@/model/invoice'
 import { InvoiceEscrow } from '@/service/invoice-escrow'
 
 /** `value` as a big-endian unsigned integer of `bytes` bytes. */
@@ -229,5 +230,110 @@ export class InvoiceEscrowTest {
         workEnd: toAt - 1,
       }),
     ).to.be.false
+  }
+  /**
+   * What a reversal may undo: the settlement it names, or one that followed
+   * it on the same chain. Not a settlement that replaced it, another bill,
+   * less refunded than it names, or an invoice that records nothing.
+   */
+  @test()
+  recordsReversed_matchesTheNamedSettlementOrOneThatFollowedIt() {
+    const txA = `0x${'a'.repeat(64)}`
+    const txB = `0x${'b'.repeat(64)}`
+    const released: Partial<Invoice> = {
+      escrowState: EInvoiceEscrowState.RELEASED,
+      escrowGrossBaseUnits: '30000000',
+      escrowFeeBaseUnits: '1500000',
+      escrowNetBaseUnits: '28500000',
+      escrowRefundedBaseUnits: '0',
+      escrowTxHash: txA,
+    }
+    const reversal: IInvoiceEscrowReversal = {
+      invoiceId: 'invoice',
+      chainId: 31337,
+      escrow: `0x${'1'.repeat(40)}`,
+      allocationId: `0x${'2'.repeat(64)}`,
+      escrowState: EInvoiceEscrowState.RELEASED,
+      grossBaseUnits: '30000000',
+      feeBaseUnits: '1500000',
+      netBaseUnits: '28500000',
+      refundedBaseUnits: '0',
+      txHash: txA.toUpperCase().replace('0X', '0x'),
+    }
+    const invoice = (fields: Partial<Invoice>) =>
+      Object.assign(new Invoice(), fields)
+    const remainder: IInvoiceEscrowReversal = {
+      ...reversal,
+      escrowState: EInvoiceEscrowState.SUBMITTED,
+      feeBaseUnits: '0',
+      netBaseUnits: '0',
+      refundedBaseUnits: '5000000',
+      txHash: null,
+    }
+
+    const cases: [string, Partial<Invoice>, IInvoiceEscrowReversal, boolean][] =
+      [
+        ['the same release', released, reversal, true],
+        [
+          'the release with a remainder since',
+          { ...released, escrowRefundedBaseUnits: '7000000' },
+          reversal,
+          true,
+        ],
+        [
+          'a release after the reversed remainder',
+          { ...released, escrowRefundedBaseUnits: '5000000' },
+          remainder,
+          true,
+        ],
+        ['nothing recorded', {}, reversal, false],
+        [
+          'the release in another transaction',
+          { ...released, escrowTxHash: txB },
+          reversal,
+          false,
+        ],
+        [
+          'another bill',
+          { ...released, escrowGrossBaseUnits: '1' },
+          reversal,
+          false,
+        ],
+        [
+          'less refunded than named',
+          { ...released, escrowRefundedBaseUnits: '0' },
+          { ...reversal, refundedBaseUnits: '1' },
+          false,
+        ],
+        [
+          'another final state',
+          {
+            ...released,
+            escrowState: EInvoiceEscrowState.DISPUTED_REFUNDED,
+            escrowFeeBaseUnits: '0',
+            escrowNetBaseUnits: '0',
+            escrowRefundedBaseUnits: '30000000',
+          },
+          reversal,
+          false,
+        ],
+        [
+          'a pending bill for a reversed release',
+          {
+            ...released,
+            escrowState: EInvoiceEscrowState.SUBMITTED,
+            escrowTxHash: null,
+          },
+          reversal,
+          false,
+        ],
+      ]
+
+    for (const [name, fields, named, expected] of cases) {
+      expect(
+        InvoiceEscrow.recordsReversed(invoice(fields), named),
+        name,
+      ).to.equal(expected)
+    }
   }
 }
