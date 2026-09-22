@@ -856,9 +856,9 @@ export class InvoiceManager {
     bill: IInvoiceMilestoneBill,
   ): Effect.Effect<IInvoiceMilestoneResult, InvoiceMilestoneException> {
     const differs = [
-      first.project?.id !== project.id ? 'contract' : null,
-      first.user?.id !== issuer.id ? 'freelancer' : null,
-      first.amountCents !== bill.amountCents ? 'amount' : null,
+      first.project?.id === project.id ? null : 'contract',
+      first.user?.id === issuer.id ? null : 'freelancer',
+      first.amountCents === bill.amountCents ? null : 'amount',
     ].filter((name): name is string => name !== null)
 
     if (differs.length > 0) {
