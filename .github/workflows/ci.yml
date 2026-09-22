@@ -132,8 +132,11 @@ jobs:
       - name: Compile
         run: pnpm --filter @work-address/contracts run build
 
-      # The config names no public network, and no step needs a key or an
-      # RPC URL.
+      # `hardhat test` runs on the in-process `hardhat` network (31337). The
+      # config's one public entry, `sepolia`, takes its URL and deployer key
+      # from SEPOLIA_RPC_URL and DEPLOYER_KEY, which no step here sets, so
+      # nothing in this job can reach it and no step needs a key or an RPC
+      # URL.
       - name: Test
         run: pnpm --filter @work-address/contracts test
 
