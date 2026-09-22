@@ -1,0 +1,115 @@
+{
+  "signer": "0x7CbA493C82cd9a5aB032D6F3dF7c7648BC4CdffB",
+  "identity": {
+    "domain": {
+      "name": "WorkAddressIdentityRegistry",
+      "version": "1",
+      "chainId": 31337,
+      "verifyingContract": "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0"
+    },
+    "types": {
+      "Action": [
+        {
+          "name": "operation",
+          "type": "uint8"
+        },
+        {
+          "name": "subject",
+          "type": "address"
+        },
+        {
+          "name": "payload",
+          "type": "bytes32"
+        },
+        {
+          "name": "nonce",
+          "type": "uint256"
+        },
+        {
+          "name": "deadline",
+          "type": "uint64"
+        }
+      ]
+    },
+    "subject": "0x7CbA493C82cd9a5aB032D6F3dF7c7648BC4CdffB",
+    "actions": [
+      {
+        "operation": 0,
+        "name": "Publish",
+        "commitment": "0x9013503073886f242b63888f70e4dd8f5f312edaba1f409212e27e6425cbf507",
+        "schemaId": 1,
+        "expectedVersion": 2,
+        "nonce": "3",
+        "deadline": 1900003600,
+        "payload": "0x367fd7f418158f7d3a2b6d6e7f28ab8cf5e4df15d1ab116e16e525f87da1fe61",
+        "digest": "0x7d11384f7f442885aa8c1691537c9e59f489df6329f9b48a67c20da50350bcdc",
+        "signature": "0x640141d0de216ac9cdec97af6f5a7fbf21f6952f3d0a5a599be4ddd2156bad4553d20d0b1391b02c1232b50177b183b29b2a49a372c7828548cf56cd62d2e9001b"
+      },
+      {
+        "operation": 1,
+        "name": "Deactivate",
+        "expectedVersion": 0,
+        "nonce": "4",
+        "deadline": 1900003600,
+        "payload": "0x290decd9548b62a8d60345a988386fc84ba6bc95484008f6362f93160ef3e563",
+        "digest": "0x457b2e4bd31328049512e05a0658ffe48ce3172e123cbdf72425d11221e86824",
+        "signature": "0x1a5731dc80006f285c06ca547d1a974ab63d9777be182169918bb5fc6f78437d1dafca4841ced5bd1dfa9eda834f77d99fbb2c39485c68cb5ba1f35c37d9b68a1b"
+      }
+    ]
+  },
+  "escrow": {
+    "domain": {
+      "name": "WorkAddressMarketplaceEscrow",
+      "version": "1",
+      "chainId": 31337,
+      "verifyingContract": "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512"
+    },
+    "types": {
+      "Action": [
+        {
+          "name": "operation",
+          "type": "uint8"
+        },
+        {
+          "name": "allocationId",
+          "type": "bytes32"
+        },
+        {
+          "name": "payload",
+          "type": "bytes32"
+        },
+        {
+          "name": "nonce",
+          "type": "uint256"
+        },
+        {
+          "name": "deadline",
+          "type": "uint64"
+        }
+      ]
+    },
+    "allocationId": "0x2fd2d6e953559c3055905a2c244b2e37f02c8a401ff8c06ce61b743ec63d93e3",
+    "actions": [
+      {
+        "operation": 2,
+        "name": "Submit",
+        "invoiceCommitment": "0x2d301aec9a9034ba12aee52d0616bb0784ee776c155b1494984b4ae629bf465a",
+        "amount": "100000000",
+        "nonce": "0",
+        "deadline": 1900003600,
+        "payload": "0x61ff471fb5e30c6fe649afe95ca0ff6fcd5da65df19f98b2182f15accb7ecebf",
+        "digest": "0x39801d78ac238e6e40f38cf1716bd3db632ebabc09f0151d546788ffd4c447e1",
+        "signature": "0x946ed032eca03b02ae34765d2d0850b581ff52a19625be7baff6e7e62f82fb80242e1dc6f236dabac3f0f8bab54ed8c321e58d47574e8ca5322b18118a1a9df91b"
+      },
+      {
+        "operation": 3,
+        "name": "Dispute",
+        "nonce": "1",
+        "deadline": 1900003600,
+        "payload": "0x0000000000000000000000000000000000000000000000000000000000000000",
+        "digest": "0xe3cad4ffcc4ca2bf96fa1158d591c586921c1aa8e94b8a1fca003cb0ef0eac47",
+        "signature": "0x9672f9c087f6524bc310904fe8cd046b0400c172dae46bd4593bdaec29819680564afad80ce4e675e28c6c5783b9653947d31da366b232243debbb36b3a1b2b71c"
+      }
+    ]
+  }
+}
