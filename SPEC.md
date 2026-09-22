@@ -372,7 +372,27 @@ own: the profile it commits to is the user's profile.
 
 - **Where.** `GET /identity/config` (anonymous) names the chain and registry
   this instance reads (`APP_IDENTITY_*`), or `enabled: false`. The service
-  only reads the chain; the holder's own wallet sends every transaction.
+  only reads the chain; the holder's own wallet sends every transaction -
+  unless a relayer runs (below), and then it still sends nothing the holder
+  did not sign.
+- **Gasless publish and withdraw (optional, off by default).** With
+  `APP_IDENTITY_RELAYER_KEY` set, `relayEnabled` is true and
+  `POST /user/identity/relay` sends the registry's `publishFor` or
+  `deactivateFor` from that key, which pays the gas and nothing else. The
+  holder signs the registry's EIP-712 `Action` in their own wallet; the
+  request carries every argument the contract takes, and before any gas is
+  spent the signature must recover to the caller over exactly those
+  arguments at the subject's current nonce (403 for another subject, 422
+  for a forged, altered, expired or used one), and a dry run must pass
+  (409 names the registry's own refusal). Gas and fees are capped
+  (`APP_IDENTITY_RELAYER_GAS_LIMIT`, `APP_IDENTITY_RELAYER_MAX_FEE_GWEI`).
+  Publications are rationed per account per day
+  (`APP_IDENTITY_RELAYER_PUBLISHES_PER_DAY`, counted in Redis so replicas
+  share it); a withdrawal never is, because a takedown must not be losable.
+  Replicas share the key's nonce through a Postgres advisory lock and the
+  last nonce sent, kept in Redis. Whether to run a relayer, and funding its
+  key, are the operator's decisions; the dashboard offers the relayed path
+  only while it runs, and the direct transaction always.
 - **Only EVM accounts anchor.** The registry keys records by a 20-byte EVM
   address (`did:pkh:eip155`), so a TON or Solana account is refused by name
   (422) - which takes nothing away from a self-signed export made on the
@@ -395,7 +415,8 @@ own: the profile it commits to is the user's profile.
 - **Taking it down.** `DELETE /user/identity` removes the hosted copy and
   the held export, and nothing else: the registry keeps every version the
   holder published and copies others saved remain (SC-A07). Withdrawing on
-  chain is the holder's `deactivate` transaction. Hiding the profile hides
+  chain is the holder's `deactivate` - sent from their wallet, or signed
+  there and relayed. Hiding the profile hides
   the hosted identity from everyone but its holder too.
 
 **Salt custody (adopted default; the owner decision is still open).** Every
