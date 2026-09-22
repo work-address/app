@@ -117,13 +117,29 @@ export async function runDeploy(
     log('\n# web/api/.env — local Hardhat node only; the key is a public Hardhat test key')
     log(escrowEnvLines(manifest, localAccountKey(hre, manifest.originSigner)).join('\n'))
   } else {
-    log(`\n# web/api/.env for ${PUBLIC_TESTNETS[manifest.chainId]}. The origin signer's key is never printed:`)
-    log('# sign through APP_ESCROW_ORIGIN_SIGNER (see web/api/.env.example).')
-    log(escrowEnvLines(manifest, null).join('\n'))
-    log(`APP_ESCROW_DEPLOY_BLOCK=${manifest.deployBlock}`)
+    log(`\n# web/api/.env for ${PUBLIC_TESTNETS[manifest.chainId]}; see web/api/.env.example`)
+    log(publicEscrowEnvLines(manifest).join('\n'))
   }
 
   return manifest
+}
+
+/**
+ * web/api's lines for a public deployment. No key is among them: off a local
+ * chain the origin signer signs through a KMS key the API names, and its key
+ * never passes through this script or a terminal.
+ */
+export function publicEscrowEnvLines(manifest: DeploymentManifest, originTtlSeconds = 86_400): string[] {
+  return [
+    `APP_ESCROW_CHAIN_ID=${manifest.chainId}`,
+    `APP_ESCROW_CONTRACT_ADDRESS=${manifest.escrow.address}`,
+    `APP_ESCROW_TOKEN_ADDRESS=${manifest.token.address}`,
+    'APP_ESCROW_ORIGIN_SIGNER=kms',
+    `APP_ESCROW_ORIGIN_SIGNER_ADDRESS=${manifest.originSigner}`,
+    `APP_ESCROW_ORIGIN_SIGNER_KMS_KEY_ID=<id of the KMS key that controls ${manifest.originSigner}>`,
+    `APP_ESCROW_ORIGIN_TTL_SECONDS=${originTtlSeconds}`,
+    `APP_ESCROW_DEPLOY_BLOCK=${manifest.deployBlock}`,
+  ]
 }
 
 export type DryRunCommandOptions = {

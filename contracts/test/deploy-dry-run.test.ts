@@ -7,7 +7,7 @@ import { createProvider } from 'hardhat/internal/core/providers/construction'
 
 import type { EIP1193Provider, HardhatRuntimeEnvironment } from 'hardhat/types'
 
-import { runDeploy, runDryRun, sepoliaNetwork } from '../scripts/deploy-command'
+import { publicEscrowEnvLines, runDeploy, runDryRun, sepoliaNetwork } from '../scripts/deploy-command'
 import { assertDeployTarget, codeHashes, dryRunDeploy, rolesFromEnv } from '../scripts/deployment'
 import { DEPLOYMENTS_DIR, deployLocal } from '../scripts/local-chain'
 
@@ -354,6 +354,21 @@ describe('deploy: public networks and the fork dry run', () => {
       expect(await escrow.feeRecipient()).to.eq(feeRecipient)
       expect(await escrow.originSigner()).to.eq(originSigner)
       expect(manifest).to.include({ feeRecipient, originSigner })
+    })
+
+    it("prints web/api's lines for a public deployment with the origin signer through a KMS, and no key", () => {
+      const env = Object.fromEntries(publicEscrowEnvLines({ ...first, chainId: SEPOLIA }).map((line) => line.split(/=(.*)/s, 2)))
+
+      expect(env).to.include({
+        APP_ESCROW_CHAIN_ID: '11155111',
+        APP_ESCROW_CONTRACT_ADDRESS: first.escrow.address,
+        APP_ESCROW_TOKEN_ADDRESS: first.token.address,
+        APP_ESCROW_ORIGIN_SIGNER: 'kms',
+        APP_ESCROW_ORIGIN_SIGNER_ADDRESS: first.originSigner,
+        APP_ESCROW_DEPLOY_BLOCK: String(first.deployBlock),
+      })
+      expect(Object.keys(env)).not.to.include('APP_ESCROW_ORIGIN_SIGNER_KEY')
+      expect(Object.values(env).join(' ')).not.to.match(/0x[0-9a-fA-F]{64}/)
     })
 
     it('refuses to rehearse on mainnet, before forking anything', async () => {
