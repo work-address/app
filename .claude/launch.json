@@ -23,6 +23,24 @@
         "api"
       ],
       "port": 4000
+    },
+    {
+      "name": "api-dev-4100",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "APP_PORT=4100 npm run dev --prefix api"
+      ],
+      "port": 4100
+    },
+    {
+      "name": "web-dev-api-4100",
+      "runtimeExecutable": "sh",
+      "runtimeArgs": [
+        "-c",
+        "cd web && VITE_API_PROXY_TARGET=http://localhost:4100 npx vite --port 8100 --strictPort"
+      ],
+      "port": 8100
     }
   ]
 }
