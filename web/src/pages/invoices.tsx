@@ -2,7 +2,7 @@ import { Badge, Flex, Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useEffect, useMemo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
-import { NavLink } from 'react-router-dom'
+import { NavLink, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { $user } from '@/entities/profile'
@@ -34,9 +34,11 @@ import {
 } from '@/shared'
 import {
   Button,
+  LoadFailure,
+  PageHeader,
   PageHelmet,
-  SectionTitle,
   Select,
+  StateNotice,
   StatStrip,
   StatTile,
   TabsList,
@@ -68,6 +70,7 @@ export default function InvoicesPage() {
   const { t } = useTranslation()
   const dateFormatter = useDateFormatter()
   const isDesktop = useBreakpoint('isDesktop')
+  const navigate = useNavigate()
 
   const {
     rows,
@@ -135,30 +138,32 @@ export default function InvoicesPage() {
 
   return (
     <Wrapper>
-      <PageHelmet title={t('invoices.page.title')} />
+      <PageHelmet
+        title={t('invoices.page.title')}
+        description={t('invoices.page.meta')}
+        noindex
+      />
       <Flex direction="column" gap="5" pb="2">
-        <PageHead>
-          <Flex direction="column" gap="1" style={{ minWidth: 0 }}>
-            <PageTitle>{t('invoices.page.title')}</PageTitle>
-            <Text size="3" color="gray">
-              {t('invoices.page.description')}
-            </Text>
-          </Flex>
-          <FilterBar>
-            <Select
-              options={projectOptions}
-              value={projectId}
-              placeholder={t('invoices.filter.allProjects')}
-              onChange={(value) => {
-                if (Array.isArray(value)) {
-                  return
-                }
+        <PageHeader
+          title={t('invoices.page.title')}
+          description={t('invoices.page.description')}
+          actions={
+            <FilterBar>
+              <Select
+                options={projectOptions}
+                value={projectId}
+                placeholder={t('invoices.filter.allProjects')}
+                onChange={(value) => {
+                  if (Array.isArray(value)) {
+                    return
+                  }
 
-                changeProject(value)
-              }}
-            />
-          </FilterBar>
-        </PageHead>
+                  changeProject(value)
+                }}
+              />
+            </FilterBar>
+          }
+        />
         {/* The answer to "what am I owed" before the rows that justify it. */}
         <StatStrip $columns={3}>
           <StatTile
@@ -235,47 +240,47 @@ export default function InvoicesPage() {
               when the truth is "could not load them" sends someone looking for
               an invoice they know exists. */}
           {failed ? (
-            <Notice>
-              <Text size="4" weight="medium">
-                {t('invoices.page.error.title')}
-              </Text>
-              <Text size="3" color="gray">
-                {t('invoices.page.error.description')}
-              </Text>
-              <Button size="l" variant="outline" onClick={() => fetchList()}>
-                {t('invoices.page.error.retry')}
-              </Button>
-            </Notice>
+            <LoadFailure
+              title={t('invoices.page.error.title')}
+              description={t('invoices.page.error.description')}
+              onRetry={() => fetchList()}
+            />
           ) : null}
           {showEmpty ? (
-            <Notice>
-              <Text size="4" weight="medium">
-                {t(
-                  isFiltered
-                    ? 'invoices.page.empty.filtered.title'
-                    : 'invoices.page.empty.title',
-                )}
-              </Text>
-              <Text size="3" color="gray">
-                {t(
-                  isFiltered
-                    ? 'invoices.page.empty.filtered.description'
-                    : 'invoices.page.empty.description',
-                )}
-              </Text>
-              {isFiltered ? (
-                <Button
-                  size="l"
-                  variant="outline"
-                  onClick={() => {
-                    changeProject('')
-                    changeState('')
-                  }}
-                >
-                  {t('invoices.page.empty.filtered.reset')}
-                </Button>
-              ) : null}
-            </Notice>
+            <StateNotice
+              title={t(
+                isFiltered
+                  ? 'invoices.page.empty.filtered.title'
+                  : 'invoices.page.empty.title',
+              )}
+              description={t(
+                isFiltered
+                  ? 'invoices.page.empty.filtered.description'
+                  : 'invoices.page.empty.description',
+              )}
+              actions={
+                isFiltered ? (
+                  <Button
+                    size="l"
+                    variant="outline"
+                    onClick={() => {
+                      changeProject('')
+                      changeState('')
+                    }}
+                  >
+                    {t('invoices.page.empty.filtered.reset')}
+                  </Button>
+                ) : (
+                  <Button
+                    size="l"
+                    variant="outline"
+                    onClick={() => navigate(routes.dashboard.build())}
+                  >
+                    {t('invoices.page.empty.action')}
+                  </Button>
+                )
+              }
+            />
           ) : null}
           {rows.map((invoice) => {
             const isPaid = invoice.state === 'PAID'
@@ -462,34 +467,20 @@ const MOBILE_AREAS = `
   "action action"
 `
 
-const PageTitle = styled(SectionTitle)`
-  ${(p) => p.theme.breakpoints.up('md')} {
-    font-size: var(--font-size-7);
-  }
-`
-
 const List = styled.div`
   display: flex;
   flex-direction: column;
   gap: var(--space-2);
 `
 
-/* Title left, filter right; the filter drops under the title once the row
-   runs out of width rather than squeezing the heading. */
-const PageHead = styled.div`
-  display: flex;
-  align-items: flex-start;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-3);
-`
-
 const FilterBar = styled.div`
-  display: flex;
-  gap: var(--space-2);
-  flex: 0 0 auto;
+  display: grid;
   width: 260px;
   max-width: 100%;
+
+  @container (max-width: 560px) {
+    width: 100%;
+  }
 `
 
 const Toolbar = styled.div`
@@ -575,17 +566,6 @@ const CellLabel = styled.span`
   ${(p) => p.theme.breakpoints.up('md')} {
     display: none;
   }
-`
-
-const Notice = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-8) var(--space-4);
-  text-align: center;
-  border: 1px dashed var(--gray-a6);
-  border-radius: var(--radius-3);
 `
 
 /* One real link for the card. The overlay gives it the row's whole hit area
