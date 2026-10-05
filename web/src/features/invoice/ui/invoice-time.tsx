@@ -1,6 +1,7 @@
 import { Badge, Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { memo, useContext, useMemo } from 'react'
+import { memo, useContext, useEffect, useMemo, useState } from 'react'
+import { flushSync } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import styled, { css } from 'styled-components'
 
@@ -13,12 +14,21 @@ import type { InvoiceRead } from '../model'
 import type { DesktopBodyCellRenderProps, DataTableConfig } from '@/shared'
 
 import {
+  Button,
   DataTable,
+  SectionTitle,
   formatCount,
   formatDurationFromMinutes,
   getTimeActiveColor,
   Text,
 } from '@/shared'
+
+/**
+ * How many entries the screen shows before "Show all". A month of 10-minute
+ * entries runs to hundreds of rows - tens of thousands of pixels of evidence
+ * under a summary that already answers the question.
+ */
+export const INVOICE_TIME_PREVIEW_ROWS = 25
 
 export const InvoiceTime = () => {
   const { t, i18n } = useTranslation()
@@ -27,6 +37,24 @@ export const InvoiceTime = () => {
     timeEntries: $invoiceTime,
     loading: $invoiceLoading,
   })
+
+  const [expanded, setExpanded] = useState(false)
+
+  // Paper gets every entry: an invoice printed with a "show all" button in
+  // place of most of its rows is not a record of anything. flushSync renders
+  // the rest before the browser lays the page out for print.
+  useEffect(() => {
+    const expandForPrint = () => flushSync(() => setExpanded(true))
+
+    window.addEventListener('beforeprint', expandForPrint)
+
+    return () => window.removeEventListener('beforeprint', expandForPrint)
+  }, [])
+
+  const visibleEntries = expanded
+    ? timeEntries
+    : timeEntries.slice(0, INVOICE_TIME_PREVIEW_ROWS)
+  const hiddenCount = timeEntries.length - visibleEntries.length
 
   const contextValue = useMemo<InvoiceTimeContextProps>(
     () => ({
@@ -84,11 +112,18 @@ export const InvoiceTime = () => {
 
   return (
     <>
-      <Text size={'5'}>{t('dashboard.page.worklogs.title')}</Text>
+      <Heading>
+        <SectionTitle>{t('dashboard.page.worklogs.title')}</SectionTitle>
+        {!loading && timeEntries.length > 0 ? (
+          <Text size="2" color="gray">
+            {t('invoice.worklogs.count', { count: timeEntries.length })}
+          </Text>
+        ) : null}
+      </Heading>
       <InvoiceTimeContext value={contextValue}>
         <InvoiceTimeTable
           loading={loading}
-          data={timeEntries}
+          data={visibleEntries}
           config={tableConfig}
           getRowId={rowIdGetter}
           verticalAlign={'middle'}
@@ -97,6 +132,20 @@ export const InvoiceTime = () => {
           height={timeEntries.length > 0 ? '' : '340px'}
         />
       </InvoiceTimeContext>
+      {hiddenCount > 0 ||
+      (expanded && timeEntries.length > INVOICE_TIME_PREVIEW_ROWS) ? (
+        <More>
+          <Button
+            size="l"
+            variant="outline"
+            onClick={() => setExpanded((value) => !value)}
+          >
+            {expanded
+              ? t('invoice.worklogs.showFewer')
+              : t('invoice.worklogs.showAll', { count: timeEntries.length })}
+          </Button>
+        </More>
+      ) : null}
     </>
   )
 }
@@ -157,6 +206,23 @@ const CreatedAtCell = memo(
     )
   },
 )
+
+const Heading = styled.div`
+  display: grid;
+  grid-auto-flow: column;
+  justify-content: start;
+  align-items: baseline;
+  gap: var(--space-3);
+`
+
+const More = styled.div`
+  display: grid;
+  justify-content: center;
+
+  @media print {
+    display: none;
+  }
+`
 
 const NoteText = styled(Text)`
   display: block;

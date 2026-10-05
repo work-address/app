@@ -1,15 +1,17 @@
 import { ArrowLeftIcon } from '@radix-ui/react-icons'
-import { Flex, Skeleton } from '@radix-ui/themes'
+import { Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { NavLink, useParams } from 'react-router-dom'
+import { useLocation, useNavigate, useParams } from 'react-router-dom'
 import styled, { createGlobalStyle } from 'styled-components'
 
 import {
   fetchInvoice,
   $invoice,
+  $invoiceFailure,
   $invoiceLoading,
+  buildInvoiceHead,
   resetInvoice,
   InvoiceTotalAmountDesktop,
   InvoiceTotalAmountMobile,
@@ -17,74 +19,123 @@ import {
 } from '@/features/invoice'
 import { routes } from '@/routes'
 import {
+  Button,
   Card,
+  formatCurrency,
   IconButton,
+  isRecordId,
+  LoadFailure,
   PageHelmet,
-  SectionTitle,
+  PageTitle,
+  StateNotice,
   Text,
   useBreakpoint,
-  WidePageCard,
+  Wrapper,
 } from '@/shared'
 
 export default function InvoicePage() {
   const { id } = useParams<{ id: string }>()
+  // A malformed id cannot name an invoice; say so without asking the API,
+  // which answers one with a 500 rather than a 404.
+  const validId = isRecordId(id)
 
-  const { fetchInvoiceEvent, invoice, loading, resetInvoiceEvent } = useUnit({
-    fetchInvoiceEvent: fetchInvoice,
-    invoice: $invoice,
-    loading: $invoiceLoading,
-    resetInvoiceEvent: resetInvoice,
-  })
+  const { fetchInvoiceEvent, invoice, loading, failure, resetInvoiceEvent } =
+    useUnit({
+      fetchInvoiceEvent: fetchInvoice,
+      invoice: $invoice,
+      loading: $invoiceLoading,
+      failure: $invoiceFailure,
+      resetInvoiceEvent: resetInvoice,
+    })
 
   const { t } = useTranslation()
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const isMobile = useBreakpoint('isMobile')
 
   useEffect(() => {
-    if (id) {
+    if (validId) {
       fetchInvoiceEvent({ id })
     }
 
     return () => {
       resetInvoiceEvent()
     }
-  }, [id, fetchInvoiceEvent, resetInvoiceEvent])
+  }, [id, validId, fetchInvoiceEvent, resetInvoiceEvent])
+
+  const failureKind = validId ? failure : 'not-found'
+  const head = buildInvoiceHead(
+    {
+      project: invoice?.title,
+      amount: invoice ? formatCurrency(invoice.totalAmount) : null,
+      isPaid: invoice?.state === 'PAID',
+      failure: failureKind,
+    },
+    t,
+  )
+
+  // Back goes where the visitor came from - the list, the dashboard, a
+  // project dialog - and only falls back to the list on a fresh tab.
+  const goBack = () => {
+    if (location.key === 'default') {
+      navigate(routes.invoices.build())
+    } else {
+      navigate(-1)
+    }
+  }
 
   return (
-    <>
+    <Root width="document">
       <InvoicePrintGlobalStyle />
-      <PageHelmet title={t('app.documentTitle.invoice')} />
-      <Root shadow={false} as={isMobile ? 'div' : undefined}>
-        <Flex direction={'column'} gap={'20px'}>
+      <PageHelmet title={head.title} description={head.description} noindex />
+      {failureKind === 'not-found' ? (
+        <StateNotice
+          size="page"
+          title={t('invoice.notFound.title')}
+          description={t('invoice.notFound.description')}
+          actions={
+            <Button size="l" onClick={() => navigate(routes.invoices.build())}>
+              {t('invoice.notFound.action')}
+            </Button>
+          }
+        />
+      ) : failureKind === 'failed' ? (
+        <LoadFailure
+          size="page"
+          title={t('invoice.loadFailure.title')}
+          onRetry={() => id && fetchInvoiceEvent({ id })}
+        />
+      ) : (
+        <Body>
           {/* The back arrow shares a row with the title rather than sitting
               alone above it, and the title is set like the other pages'. */}
           {isMobile && (
-            <InvoiceNoPrint gap={'1'} direction={'column'}>
-              <Flex align={'center'} gap={'2'}>
-                <BackLink to={routes.dashboard.build()}>
-                  <IconButton
-                    variant={'ghost'}
-                    radius={'full'}
-                    color={'gray'}
-                    aria-label={t('common.back')}
-                  >
-                    <ArrowLeftIcon />
-                  </IconButton>
-                </BackLink>
+            <MobileHead>
+              <TitleRow>
+                <IconButton
+                  variant={'ghost'}
+                  radius={'full'}
+                  color={'gray'}
+                  aria-label={t('common.back')}
+                  onClick={goBack}
+                >
+                  <ArrowLeftIcon />
+                </IconButton>
                 {loading ? (
                   <Skeleton width="150px" height="24px" />
                 ) : (
-                  <Title>{invoice?.title}</Title>
+                  <PageTitle>{invoice?.title}</PageTitle>
                 )}
-              </Flex>
+              </TitleRow>
               {loading ? (
                 <Skeleton width="200px" height="20px" />
               ) : (
                 <Reference color={'gray'} size={'2'}>
-                  {invoice?.id}
+                  {t('invoices.item.reference')} {invoice?.id}
                 </Reference>
               )}
-            </InvoiceNoPrint>
+            </MobileHead>
           )}
           {isMobile ? (
             <InvoiceCard shadow={false}>
@@ -94,9 +145,9 @@ export default function InvoicePage() {
             <InvoiceTotalAmountDesktop />
           )}
           <InvoiceTime />
-        </Flex>
-      </Root>
-    </>
+        </Body>
+      )}
+    </Root>
   )
 }
 
@@ -117,43 +168,41 @@ const InvoicePrintGlobalStyle = createGlobalStyle`
   }
 `
 
-const Root = styled(WidePageCard)`
-  /* The same inset as the pages that use Wrapper. */
-  ${(p) => p.theme.breakpoints.down('md')} {
-    padding: 18px 16px 24px;
-  }
-
+const Root = styled(Wrapper)`
   @media print {
-    width: 100%;
     max-width: none;
     margin: 0;
     padding: 0;
-    box-shadow: none;
     border-radius: 0;
-    background: var(--white);
   }
+`
+
+const Body = styled.div`
+  display: grid;
+  gap: 20px;
+  min-width: 0;
+`
+
+const MobileHead = styled.div`
+  display: grid;
+  gap: var(--space-1);
+
+  @media print {
+    display: none;
+  }
+`
+
+const TitleRow = styled.div`
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2);
 `
 
 const InvoiceCard = styled(Card)`
   ${(p) => p.theme.breakpoints.down('md')} {
     padding: 12px;
   }
-`
-
-const InvoiceNoPrint = styled(Flex)`
-  @media print {
-    display: none;
-  }
-`
-
-const BackLink = styled(NavLink)`
-  display: inline-flex;
-  flex-shrink: 0;
-`
-
-const Title = styled(SectionTitle)`
-  min-width: 0;
-  overflow-wrap: anywhere;
 `
 
 /* An id has no break opportunities of its own; without this a long one

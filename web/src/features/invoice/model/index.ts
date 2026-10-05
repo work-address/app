@@ -20,7 +20,7 @@ import {
 import { invoiceListQuery, invoiceQuery, invoiceSummaryQuery } from './queries'
 
 import { routes } from '@/routes'
-import { navigateFx, showToastFx } from '@/shared'
+import { navigateFx, showToastFx, suppressGlobalErrorToast } from '@/shared'
 
 // `fetchInvoice` carries an INVOICE id. One request serves the whole page: the
 // invoice is authoritative for the amount, period and state, and carries the
@@ -34,6 +34,12 @@ sample({
 sample({
   clock: resetInvoice,
   target: invoiceQuery.reset,
+})
+
+// The invoice page explains a failed load in place; the generic toast would
+// say the same thing a second time over it.
+invoiceQuery.finished.failure.watch(({ error }) => {
+  suppressGlobalErrorToast(error)
 })
 
 // A first load, and every change of filter, start again from page 0.
@@ -98,7 +104,13 @@ sample({
 })
 
 export { fetchInvoice, resetInvoice } from './events'
-export { $invoice, $invoiceTime, $invoiceLoading } from './stores'
+export {
+  $invoice,
+  $invoiceTime,
+  $invoiceLoading,
+  $invoiceFailure,
+} from './stores'
+export { buildInvoiceHead, type InvoiceHead } from './head'
 export type { InvoiceRead, InvoiceReport, ProjectInvoice } from './types'
 export {
   INVOICE_PAGE_SIZE,

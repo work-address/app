@@ -4,6 +4,8 @@ import { invoiceQuery } from './queries'
 
 import type { InvoiceRead, ProjectInvoice } from './types'
 
+import { getLoadFailureKind, type LoadFailureKind } from '@/shared'
+
 export const $invoice = combine(
   invoiceQuery.$data,
   (record): ProjectInvoice | null => {
@@ -33,3 +35,16 @@ export const $invoiceTime = combine(
 )
 
 export const $invoiceLoading = invoiceQuery.$pending
+
+/**
+ * Why the invoice did not load, or null while it is loading or loaded. A
+ * missing invoice gets a "not found" page with a way back to the list; any
+ * other failure gets a retry. Neither may render the invoice layout, which
+ * would show a payable $0.00 invoice with a QR code and "Save PDF".
+ */
+export const $invoiceFailure = combine(
+  invoiceQuery.$failed,
+  invoiceQuery.$error,
+  (failed, error): LoadFailureKind | null =>
+    failed ? getLoadFailureKind(error) : null,
+)

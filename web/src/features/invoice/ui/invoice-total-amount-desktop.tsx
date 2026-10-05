@@ -17,6 +17,7 @@ import {
   copyToClipboard,
   formatCurrency,
   Hint,
+  PageTitle,
   showToast,
 } from '@/shared'
 
@@ -80,13 +81,11 @@ export const InvoiceTotalAmountDesktop = () => {
       </Flex>
       <Flex gap={'3'} direction={'column'}>
         <Flex justify={'between'} align={'center'} gap={'4'}>
-          <Flex align={'end'} gap={'3'} wrap={'wrap'}>
+          <Flex align={'baseline'} gap={'3'} wrap={'wrap'}>
             {loading ? (
-              <Skeleton width="200px" height="18px" loading={loading} />
+              <Skeleton width="200px" height="35px" loading={loading} />
             ) : (
-              <Text size={'6'} weight={'medium'}>
-                {invoice?.title}
-              </Text>
+              <PageTitle>{invoice?.title}</PageTitle>
             )}
             <Text>{t('invoice.amount.for')}</Text>
             {loading ? (
@@ -137,7 +136,7 @@ export const InvoiceTotalAmountDesktop = () => {
             <Grid
               key={field.id}
               gap={'2'}
-              columns={'200px max-content'}
+              columns={'160px max-content'}
               align="center"
             >
               <Flex align={'center'} gap={'1'}>
