@@ -136,7 +136,17 @@ client.instance.interceptors.response.use(
 
     if (status !== undefined && isGloballyHandledStatus(status)) {
       setTimeout(() => {
-        if (suppressedErrors.has(error)) {
+        // Callers usually see the response body rather than the AxiosError -
+        // the generated client hands that back as the failure - so a body
+        // marked as handled counts too.
+        const body = error.response?.data
+
+        if (
+          suppressedErrors.has(error) ||
+          (body !== null &&
+            typeof body === 'object' &&
+            suppressedErrors.has(body))
+        ) {
           return
         }
 
