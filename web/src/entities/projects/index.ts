@@ -59,6 +59,12 @@ const showProcessStatsError = () => {
   })
 }
 
+// The dashboard says so in place, with a retry; a toast on top of that
+// would report the same failure twice.
+projectsQuery.finished.failure.watch(({ error }) => {
+  suppressGlobalErrorToast(error)
+})
+
 projectsProcessStatsQuery.finished.failure.watch(({ error }) => {
   suppressGlobalErrorToast(error)
   showProcessStatsError()
@@ -142,6 +148,7 @@ export {
 export {
   $projects,
   $projectsLoading,
+  $projectsFailed,
   $hasProjects,
   $filteredProjects,
   $projectStateFilter,

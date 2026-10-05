@@ -1,13 +1,14 @@
 import { PlusIcon } from '@radix-ui/react-icons'
 import { Badge, Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { useEffect, useState } from 'react'
+import { useCallback, useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import {
   fetchProjects,
   $projectsLoading,
+  $projectsFailed,
   $hasProjects,
   $projects,
 } from '@/entities/projects'
@@ -22,10 +23,11 @@ import { ProjectsCreateModal, ProjectsTable } from '@/features/projects'
 import { TimeWorklogs } from '@/features/time'
 import {
   PageHelmet,
-  SectionTitle,
+  PageHeader,
   Text,
   Wrapper,
   DashboardEmptyState,
+  LoadFailure,
   ListPageLayout as S,
 } from '@/shared'
 import { DashboardEmptyStateImage } from '@/shared'
@@ -38,6 +40,7 @@ export default function DashboardPage() {
     fetchProjects: fetchProjectsEvent,
     fetchTime: fetchTimeEvent,
     projectsLoading,
+    projectsFailed,
     timeLoading,
     hasProjects,
     projects,
@@ -45,6 +48,7 @@ export default function DashboardPage() {
     fetchProjects,
     fetchTime,
     projectsLoading: $projectsLoading,
+    projectsFailed: $projectsFailed,
     timeLoading: $timeLoading,
     hasProjects: $hasProjects,
     projects: $projects,
@@ -54,33 +58,50 @@ export default function DashboardPage() {
   // layout does not jump. Once loaded, an account with no projects gets the
   // intro screen instead of an empty table: a new account starts with nothing,
   // and creating the first project is the only thing to do here.
-  const showContent = projectsLoading || timeLoading || hasProjects
+  const showContent =
+    !projectsFailed && (projectsLoading || timeLoading || hasProjects)
   // Reserve the chart column while projects load so the layout does not jump.
   // The card stays up even when nothing tracks processes yet — its empty state
   // is what tells people the feature exists.
   const showCharts = projectsLoading || hasProjects
 
-  useEffect(() => {
+  const load = useCallback(() => {
     fetchProjectsEvent()
     fetchTimeEvent()
   }, [fetchProjectsEvent, fetchTimeEvent])
 
+  useEffect(() => {
+    load()
+  }, [load])
+
   return (
     <>
-      <PageHelmet title={t('dashboard.page.title')} />
+      <PageHelmet
+        title={t('dashboard.page.title')}
+        description={t('dashboard.page.meta')}
+        noindex
+      />
       <Wrapper>
         <DashboardPremiumBanner />
         {/* The page reads top-down: the headline figures, then the projects
             they come from beside the app breakdown, then the worklog feed. */}
         {/* The intro's hero already reads "Dashboard", so the page title only
             comes back once there is something under it. */}
-        {showContent && (
+        {(showContent || projectsFailed) && (
           <Overview>
-            <PageTitle>{t('dashboard.page.title')}</PageTitle>
-            <DashboardSummary />
+            <PageHeader title={t('dashboard.page.title')} />
+            {showContent && <DashboardSummary />}
           </Overview>
         )}
-        {showContent ? (
+        {/* A failed load is not a new account: offering "create your first
+            project" here would duplicate work the account already has. */}
+        {projectsFailed ? (
+          <LoadFailure
+            title={t('dashboard.page.loadFailure.title')}
+            description={t('dashboard.page.loadFailure.description')}
+            onRetry={load}
+          />
+        ) : showContent ? (
           <>
             <S.Content>
               <S.Main>
@@ -89,13 +110,17 @@ export default function DashboardPage() {
                     <S.SectionTitle>
                       {t('dashboard.page.projects.title')}
                     </S.SectionTitle>
-                    <Badge size={'2'} color={'gray'}>
-                      <Text weight={'medium'} size={'1'}>
-                        {t('dashboard.page.projectsCount', {
-                          count: projects.length,
-                        })}
-                      </Text>
-                    </Badge>
+                    {/* No count until there is one: "0 projects" over the
+                        loading rows read as an answer. */}
+                    {!projectsLoading && (
+                      <Badge size={'2'} color={'gray'}>
+                        <Text weight={'medium'} size={'1'}>
+                          {t('dashboard.page.projectsCount', {
+                            count: projects.length,
+                          })}
+                        </Text>
+                      </Badge>
+                    )}
                   </Flex>
                   <SearchArea>
                     <DashboardProjectsSearchInput />
@@ -133,15 +158,8 @@ export default function DashboardPage() {
   )
 }
 
-const PageTitle = styled(SectionTitle).attrs({ as: 'h1' })`
-  ${(p) => p.theme.breakpoints.up('md')} {
-    font-size: var(--font-size-7);
-  }
-`
-
 const Overview = styled.div`
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: var(--space-4);
   margin-bottom: var(--space-6);
 

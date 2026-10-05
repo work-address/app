@@ -33,6 +33,13 @@ export const $projectsLoading = combine(
   (...flags) => flags.some((flag) => flag),
 )
 
+/**
+ * The project list could not be read. Kept apart from "no projects": an
+ * account whose projects failed to load must not be offered the first-project
+ * intro, or it creates a duplicate of work it already has.
+ */
+export const $projectsFailed = projectsQuery.$failed
+
 export const $rawProjects = projectsQuery.$data.map(
   (projects) =>
     projects?.items.reduce(

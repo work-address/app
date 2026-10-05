@@ -4,26 +4,28 @@ import { normalizeProcessName } from './utils'
 
 import type { ProjectProcessStats, StatsPeriod, TimeTotalsRow } from './types'
 
-import { baseApi, suppressGlobalErrorToast } from '@/shared'
+import { baseApi, runApiData, suppressGlobalErrorToast } from '@/shared'
 
 export const projectsQuery = createQuery({
   handler: async ({
     page = 0,
     limit = 50,
   }: { page?: number; limit?: number } = {}) => {
-    const response = await baseApi.projectControllerSearch({
-      body: {
-        filter: {},
-        page,
-        sort: { createdAt: 'DESC' },
-        limit,
-      },
-    })
+    // `runApiData` rejects on failure. Reading `.data?.[0] ?? []` instead
+    // turned a 500 or a dropped connection into an empty list, and the
+    // dashboard then offered a new account's "create your first project".
+    const [items, total] = (await runApiData(() =>
+      baseApi.projectControllerSearch({
+        body: {
+          filter: {},
+          page,
+          sort: { createdAt: 'DESC' },
+          limit,
+        },
+      }),
+    )) as [baseApi.Project[], number]
 
-    return {
-      items: (response.data?.[0] as baseApi.Project[]) ?? [],
-      total: (response.data?.[1] as number) ?? 0,
-    }
+    return { items: items ?? [], total: total ?? 0 }
   },
 })
 
