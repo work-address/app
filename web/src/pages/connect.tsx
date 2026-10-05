@@ -14,7 +14,7 @@ import {
   login,
   type LoginMode,
 } from '@/entities/profile'
-import { AuthStyles as S, AuthProviderButton } from '@/features/auth'
+import { AuthStyles as S, AuthProviders } from '@/features/auth'
 import {
   initTimeTrackerConnect,
   resetTimeTrackerConnect,
@@ -26,15 +26,12 @@ import {
 import { routes } from '@/routes'
 import {
   Button,
-  EthereumLogo,
   IconButton,
   Logo,
   LogoLabel,
   PageHelmet,
-  SolanaLogo,
   Spinner,
   Text,
-  TonLogo,
   useBreakpoint,
 } from '@/shared'
 
@@ -150,27 +147,7 @@ export default function ConnectPage() {
             )}
             {showWalletProviders && (
               <S.Actions>
-                <AuthProviderButton
-                  iconUrl={TonLogo}
-                  iconAlt={t('signIn.alt.ton')}
-                  onClick={() => onSignIn('ton')}
-                >
-                  {t('signIn.providers.ton')}
-                </AuthProviderButton>
-                <AuthProviderButton
-                  iconUrl={SolanaLogo}
-                  iconAlt={t('signIn.alt.solana')}
-                  onClick={() => onSignIn('solana')}
-                >
-                  {t('signIn.providers.solana')}
-                </AuthProviderButton>
-                <AuthProviderButton
-                  iconUrl={EthereumLogo}
-                  iconAlt={t('signIn.alt.ethereum')}
-                  onClick={() => onSignIn('eth')}
-                >
-                  {t('signIn.providers.ethereum')}
-                </AuthProviderButton>
+                <AuthProviders />
               </S.Actions>
             )}
           </>

@@ -1,4 +1,3 @@
-import { LockClosedIcon } from '@radix-ui/react-icons'
 import { useUnit } from 'effector-react'
 import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -6,32 +5,22 @@ import { Navigate } from 'react-router-dom'
 import { useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 
-import type { LoginMode } from '@/entities/profile'
 import type { SignInGuideMode } from '@/features/auth'
 
-import { $authenticated, $pending, login } from '@/entities/profile'
+import { $authenticated, $pending } from '@/entities/profile'
 import {
   AuthStyles as S,
   ETHEREUM_WALLETS,
   AuthHero,
-  AuthProviderButton,
+  AuthProviders,
   AuthSignInGuide,
   AuthSignInGuideMobile,
   SOLANA_WALLETS,
   TON_WALLETS,
   AuthWalletList,
 } from '@/features/auth'
-import { $localWallet, LocalWalletDialog } from '@/features/local-wallet'
 import { routes } from '@/routes'
-import {
-  EthereumLogo,
-  formatWalletAddress,
-  Logo as LogoImage,
-  PageHelmet,
-  SolanaLogo,
-  Spinner,
-  TonLogo,
-} from '@/shared'
+import { Logo as LogoImage, PageHelmet, Spinner } from '@/shared'
 
 const WALLET_LINES = [
   { labelKey: 'signIn.footer.ethereumWallets', wallets: ETHEREUM_WALLETS },
@@ -52,47 +41,15 @@ export default function SignInPage() {
   const authenticated = useUnit($authenticated)
   const [searchParams] = useSearchParams()
   const [guideMode, setGuideMode] = useState<SignInGuideMode>('default')
-  const [localWalletOpen, setLocalWalletOpen] = useState(false)
-  const localWallet = useUnit($localWallet)
   const nonce = searchParams.get('nonce')
 
   if (nonce) {
     return <Navigate to={routes.connect.build({ nonce })} replace />
   }
 
-  const onSignIn = (mode: LoginMode) => {
-    login(mode)
-  }
-
   if (authenticated) {
     return <Navigate to={routes.dashboard.build()} />
   }
-
-  const providers = [
-    {
-      mode: 'ton',
-      iconUrl: TonLogo,
-      iconAlt: t('signIn.alt.ton'),
-      label: t('signIn.providers.ton'),
-    },
-    {
-      mode: 'solana',
-      iconUrl: SolanaLogo,
-      iconAlt: t('signIn.alt.solana'),
-      label: t('signIn.providers.solana'),
-    },
-    {
-      mode: 'eth',
-      iconUrl: EthereumLogo,
-      iconAlt: t('signIn.alt.ethereum'),
-      label: t('signIn.providers.ethereum'),
-    },
-  ] satisfies {
-    mode: LoginMode
-    iconUrl: string
-    iconAlt: string
-    label: string
-  }[]
 
   const showHero = guideMode === 'default'
 
@@ -127,41 +84,8 @@ export default function SignInPage() {
             <Lead>{t('signIn.lead')}</Lead>
             <FieldLabel>{t('signIn.chooseNetwork')}</FieldLabel>
             <Providers>
-              {providers.map((provider) => (
-                <AuthProviderButton
-                  key={provider.mode}
-                  iconUrl={provider.iconUrl}
-                  iconAlt={provider.iconAlt}
-                  onClick={() => onSignIn(provider.mode)}
-                  onMouseEnter={() => setGuideMode(provider.mode)}
-                  onFocus={() => setGuideMode(provider.mode)}
-                >
-                  {provider.label}
-                </AuthProviderButton>
-              ))}
-              <OrRow aria-hidden="true">
-                <span>{t('signIn.local.or')}</span>
-              </OrRow>
-              {/* For people with no wallet app: a key the app keeps for them,
-                  encrypted in this browser behind a password. */}
-              <AuthProviderButton
-                variant="primary"
-                icon={<LockClosedIcon width={16} height={16} />}
-                onClick={() => setLocalWalletOpen(true)}
-                onMouseEnter={() => setGuideMode('local')}
-                onFocus={() => setGuideMode('local')}
-              >
-                {localWallet
-                  ? t('signIn.local.option.continue', {
-                      address: formatWalletAddress(localWallet.address),
-                    })
-                  : t('signIn.local.option.create')}
-              </AuthProviderButton>
+              <AuthProviders onGuideChange={setGuideMode} />
             </Providers>
-            <LocalWalletDialog
-              open={localWalletOpen}
-              onOpenChange={setLocalWalletOpen}
-            />
             <Primer>
               <AuthSignInGuideMobile />
             </Primer>
@@ -408,25 +332,6 @@ const Providers = styled.div`
   display: flex;
   flex-direction: column;
   gap: 10px;
-`
-
-const OrRow = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--space-3);
-  margin: 2px 0;
-  font-size: var(--font-size-1);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
-  color: var(--ds-neutral-11);
-
-  &::before,
-  &::after {
-    content: '';
-    flex: 1;
-    height: 1px;
-    background: var(--ds-neutral-alpha-6);
-  }
 `
 
 const Primer = styled.div`
