@@ -19,6 +19,7 @@ import {
   useBreakpoint,
   Button,
   Modal,
+  PageTitle,
   PremiumBadge,
   Tooltip,
   formatWalletAddress,
@@ -65,11 +66,7 @@ export const ProfileViewQrCode = ({
               {profileLoading ? (
                 <Skeleton width={'180px'} height={'28px'} loading />
               ) : (
-                displayName && (
-                  <Text size={'6'} weight={'medium'}>
-                    {displayName}
-                  </Text>
-                )
+                displayName && <CenteredTitle>{displayName}</CenteredTitle>
               )}
               <Flex gap={'2'} align={'center'}>
                 {profileLoading ? (
@@ -204,4 +201,8 @@ const QrCodeWrapper = styled.div<{ $size: number }>`
     width: 100%;
     height: 100%;
   }
+`
+
+const CenteredTitle = styled(PageTitle)`
+  text-align: center;
 `

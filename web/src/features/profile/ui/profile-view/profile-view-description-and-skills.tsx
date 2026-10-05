@@ -2,14 +2,16 @@ import { Separator, Flex, Badge, Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { $profile } from '../../model'
+import { $isAuthenticatedUserProfile, $profile } from '../../model'
 
 import { ProfileViewCard } from './profile-view-styles'
 
 import { $pending } from '@/entities/profile'
-import { formatCurrency, Text, useBreakpoint } from '@/shared'
+import { routes } from '@/routes'
+import { Button, formatCurrency, Text, useBreakpoint } from '@/shared'
 
 type ProfileViewDescriptionAndSkillsProps = {
   gridArea?: string
@@ -21,10 +23,17 @@ export const ProfileViewDescriptionAndSkills = ({
   const isMobile = useBreakpoint('isMobile')
   const { t } = useTranslation()
 
-  const { user, profileLoading } = useUnit({
+  const navigate = useNavigate()
+
+  const { user, profileLoading, isOwn } = useUnit({
     user: $profile,
     profileLoading: $pending,
+    isOwn: $isAuthenticatedUserProfile,
   })
+
+  // A rate of zero is an unset rate, not a free service: "$0.00 per hour"
+  // on a public profile reads as a broken page.
+  const hasRate = Number(user?.rate ?? 0) > 0
 
   const displayName = user?.name || user?.title
   const jobTitle = user?.title && user.title !== displayName ? user.title : null
@@ -52,18 +61,24 @@ export const ProfileViewDescriptionAndSkills = ({
                 {jobTitle}
               </Text>
             )}
-            <Text color={'blue'} $themeVariant={'primary'}>
-              <Flex gap={'1'} align={'end'}>
-                <Skeleton loading={profileLoading}>
-                  <Text size={isMobile ? '4' : '8'} weight={'medium'}>
-                    {formatCurrency(user?.rate)}
+            {hasRate || profileLoading ? (
+              <Text color={'blue'} $themeVariant={'primary'}>
+                <Flex gap={'1'} align={'end'}>
+                  <Skeleton loading={profileLoading}>
+                    <Text size={isMobile ? '4' : '8'} weight={'medium'}>
+                      {formatCurrency(user?.rate)}
+                    </Text>
+                  </Skeleton>
+                  <Text size={isMobile ? '2' : '5'}>
+                    {t('profile.view.usdtUnit')}
                   </Text>
-                </Skeleton>
-                <Text size={isMobile ? '2' : '5'}>
-                  {t('profile.view.usdtUnit')}
-                </Text>
-              </Flex>
-            </Text>
+                </Flex>
+              </Text>
+            ) : (
+              <Text color={'gray'} size={isMobile ? '3' : '4'}>
+                {t('profile.view.rateUnset')}
+              </Text>
+            )}
           </Flex>
         </div>
         {profileLoading ? (
@@ -105,9 +120,28 @@ export const ProfileViewDescriptionAndSkills = ({
                 </Flex>
               </>
             )}
-            {!hasDetails && (
-              <Text color={'gray'}>{t('profile.view.empty.details')}</Text>
-            )}
+            {!hasDetails &&
+              (isOwn ? (
+                <EmptyOwn>
+                  <Text color={'gray'}>
+                    {t('profile.view.empty.detailsOwn')}
+                  </Text>
+                  <Button
+                    variant="outline"
+                    onClick={() =>
+                      navigate(
+                        routes.profile.children.edit.build({
+                          walletAddress: user?.friendlyWalletAddress ?? '',
+                        }),
+                      )
+                    }
+                  >
+                    {t('profile.view.empty.addDetails')}
+                  </Button>
+                </EmptyOwn>
+              ) : (
+                <Text color={'gray'}>{t('profile.view.empty.details')}</Text>
+              ))}
           </>
         )}
       </Flex>
@@ -123,5 +157,17 @@ const Root = styled(ProfileViewCard)`
 
   ${(p) => p.theme.breakpoints.down('md')} {
     padding: var(--space-5);
+  }
+`
+
+const EmptyOwn = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    grid-template-columns: minmax(0, 1fr);
+    justify-items: start;
   }
 `

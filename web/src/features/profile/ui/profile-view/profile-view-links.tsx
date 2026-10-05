@@ -24,6 +24,7 @@ import {
   FacebookIcon,
   InstagramIcon,
   LinkedinIcon,
+  PageTitle,
   PersonIcon,
   PremiumBadge,
   TelegramIcon,
@@ -135,11 +136,7 @@ export const ProfileViewLinks = ({
                 {profileLoading ? (
                   <Skeleton width={'220px'} height={'32px'} loading />
                 ) : (
-                  displayName && (
-                    <Text size={'7'} weight={'medium'}>
-                      {displayName}
-                    </Text>
-                  )
+                  displayName && <PageTitle>{displayName}</PageTitle>
                 )}
                 <Flex gap={'2'} align={'center'}>
                   {profileLoading ? (

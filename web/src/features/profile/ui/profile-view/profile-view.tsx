@@ -9,12 +9,27 @@ import { ProfileViewDescriptionAndSkills } from './profile-view-description-and-
 import { ProfileViewLinks } from './profile-view-links'
 import { ProfileViewQrCode } from './profile-view-qr-code'
 
-import { showToast, copyToClipboard, useBreakpoint } from '@/shared'
+import {
+  formatWalletAddress,
+  showToast,
+  copyToClipboard,
+  useBreakpoint,
+  Wrapper,
+} from '@/shared'
 
 export const ProfileView = () => {
   const { t } = useTranslation()
   const isDesktop = useBreakpoint('isDesktop')
   const { user } = useUnit({ user: $profile })
+
+  // The cards show the name as the page's h1. A profile without one still
+  // needs a heading for screen readers, and the address is what names it.
+  const unnamedTitle =
+    user && !(user.name || user.title) && user.friendlyWalletAddress ? (
+      <HiddenTitle>
+        {formatWalletAddress(user.friendlyWalletAddress)}
+      </HiddenTitle>
+    ) : null
 
   const handleCopyWalletAddress = () => {
     copyToClipboard(user?.friendlyWalletAddress || '').then(() => {
@@ -41,6 +56,7 @@ export const ProfileView = () => {
   if (!isDesktop) {
     return (
       <Root>
+        {unnamedTitle}
         <Stack>
           <ProfileViewQrCode
             onWalletAddressCopy={handleCopyWalletAddress}
@@ -58,6 +74,7 @@ export const ProfileView = () => {
 
   return (
     <Root>
+      {unnamedTitle}
       <Grid
         areas={{
           initial: `
@@ -65,20 +82,16 @@ export const ProfileView = () => {
           "description description"
         `,
         }}
-        /* Capped, not fixed: 246 + 668 + the gap is 934px, which is wider
-           than a tablet in portrait or a large phone on its side. Fixed
-           tracks there hung the cards off both edges of the screen. */
+        /* The QR card keeps its square; the profile card takes the rest of
+           the reading column every document page shares. */
         columns={{
-          initial: 'minmax(0, 246px) minmax(0, 668px)',
+          initial: 'minmax(0, 246px) minmax(0, 1fr)',
         }}
         rows={{
           initial: `auto auto`,
         }}
         gap={{
           initial: '20px',
-        }}
-        justify={{
-          initial: 'center',
         }}
       >
         <ProfileViewQrCode
@@ -97,18 +110,23 @@ export const ProfileView = () => {
   )
 }
 
-const Root = styled.div`
-  padding: 24px;
-
-  /* The same inset as the other pages' Wrapper, so the cards line up with
-     the dashboard and the invoices list when switching between tabs. */
-  ${(p) => p.theme.breakpoints.down('md')} {
-    padding: 18px 16px 24px;
-  }
-`
+/* The document column every record page shares, so the profile, its edit
+   form and an invoice start at the same place. */
+const Root = styled(Wrapper).attrs({ width: 'document' as const })``
 
 const Stack = styled.div`
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: var(--space-3);
+`
+
+const HiddenTitle = styled.h1`
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+  border: 0;
 `
