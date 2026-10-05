@@ -31,7 +31,7 @@ import {
 import { DashboardEmptyStateImage } from '@/shared'
 
 export default function DashboardPage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const [createProjectOpen, setCreateProjectOpen] = useState(false)
 
   const {
@@ -67,10 +67,7 @@ export default function DashboardPage() {
 
   return (
     <>
-      <PageHelmet
-        htmlAttributes={{ lang: i18n.language }}
-        title={t('dashboard.page.title')}
-      />
+      <PageHelmet title={t('dashboard.page.title')} />
       <Wrapper>
         <DashboardPremiumBanner />
         {/* The page reads top-down: the headline figures, then the projects

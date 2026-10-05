@@ -39,7 +39,7 @@ import {
 } from '@/shared'
 
 export default function ConnectPage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const isDesktop = useBreakpoint('isDesktop')
   const [searchParams] = useSearchParams()
   const nonce = searchParams.get('nonce')
@@ -120,10 +120,7 @@ export default function ConnectPage() {
 
   return (
     <>
-      <PageHelmet
-        htmlAttributes={{ lang: i18n.language }}
-        title={t('connect.title')}
-      />
+      <PageHelmet title={t('connect.title')} />
       <CloseLink to={closeHref}>
         <IconButton variant="ghost" radius="full" color="gray" size="4">
           <Cross1Icon />

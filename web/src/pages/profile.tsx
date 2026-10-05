@@ -6,7 +6,7 @@ import { routes } from '@/routes'
 import { PageHelmet } from '@/shared'
 
 export default function ProfilePage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
 
   const { walletAddress } = useParams<{ walletAddress: string }>()
 
@@ -17,10 +17,7 @@ export default function ProfilePage() {
   return (
     <>
       <ProfileGate friendlyWalletAddress={walletAddress} />
-      <PageHelmet
-        htmlAttributes={{ lang: i18n.language }}
-        title={t('profile.title')}
-      />
+      <PageHelmet title={t('profile.title')} />
       <ProfileView />
     </>
   )

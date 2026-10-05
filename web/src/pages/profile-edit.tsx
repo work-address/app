@@ -8,7 +8,7 @@ import { routes } from '@/routes'
 import { PageHelmet } from '@/shared'
 
 export default function ProfileEditPage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
 
   const { walletAddress } = useParams()
 
@@ -33,10 +33,7 @@ export default function ProfileEditPage() {
   return (
     <>
       <ProfileGate friendlyWalletAddress={walletAddress || ''} />
-      <PageHelmet
-        htmlAttributes={{ lang: i18n.language }}
-        title={t('app.documentTitle.profileEdit')}
-      />
+      <PageHelmet title={t('app.documentTitle.profileEdit')} />
       <ProfileEdit />
     </>
   )

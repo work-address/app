@@ -13,6 +13,9 @@
   "common.duration.minutesOnly": "{{minutes}}分",
   "common.edit": "編集",
   "common.errors.unexpected": "問題が発生しました。もう一度お試しください。",
+  "common.loadFailure.description": "リクエストがサーバーに届きませんでした。接続を確認して、もう一度お試しください。",
+  "common.loadFailure.retry": "再試行",
+  "common.loadFailure.title": "このページを読み込めませんでした",
   "common.metricDesc.keyboard": "記録中に検出されたキー入力の回数",
   "common.metricDesc.mouse": "記録中に検出されたマウスクリックの回数",
   "common.metricDesc.mouseDistance": "記録中にポインターが移動した距離",
@@ -520,5 +523,14 @@
   "ui.motionSelect.placeholder": "選択",
   "ui.search.clear": "検索をクリア",
   "ui.search.placeholderProjects": "プロジェクトを検索",
-  "ui.tagInput.remove": "{{tag}} を削除"
+  "ui.tagInput.remove": "{{tag}} を削除",
+  "crash.description": "データは安全です。再読み込みしてもう一度お試しください。繰り返し起きる場合はヘルプセンターからお知らせください。",
+  "crash.documentTitle": "問題が発生しました",
+  "crash.reload": "ページを再読み込み",
+  "crash.title": "このページで問題が発生しました",
+  "notFound.action.dashboard": "ダッシュボードへ",
+  "notFound.action.signIn": "サインイン",
+  "notFound.description": "リンクが古いか、入力に誤りがある可能性があります。プロジェクト、請求書、プロフィールにはワンクリックで戻れます。",
+  "notFound.documentTitle": "ページが見つかりません",
+  "notFound.title": "このアドレスには何もありません"
 }

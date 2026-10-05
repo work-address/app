@@ -13,6 +13,9 @@
   "common.duration.minutesOnly": "{{minutes}} min",
   "common.edit": "Edit",
   "common.errors.unexpected": "Something went wrong. Please try again.",
+  "common.loadFailure.description": "The request did not reach the server. Check your connection and try again.",
+  "common.loadFailure.retry": "Try again",
+  "common.loadFailure.title": "Could not load this page",
   "common.metricDesc.keyboard": "Keystrokes recorded while tracking",
   "common.metricDesc.mouse": "Mouse clicks recorded while tracking",
   "common.metricDesc.mouseDistance": "How far the pointer moved while tracking",
@@ -522,5 +525,14 @@
   "ui.motionSelect.placeholder": "Select",
   "ui.search.clear": "Clear the search",
   "ui.search.placeholderProjects": "Search projects",
-  "ui.tagInput.remove": "Remove {{tag}}"
+  "ui.tagInput.remove": "Remove {{tag}}",
+  "crash.description": "Your data is safe. Reload to try again, and if it keeps happening, tell us through the Help Center.",
+  "crash.documentTitle": "Something went wrong",
+  "crash.reload": "Reload the page",
+  "crash.title": "Something broke on this page",
+  "notFound.action.dashboard": "Go to the dashboard",
+  "notFound.action.signIn": "Sign in",
+  "notFound.description": "The link may be old or mistyped. Your projects, invoices and profile are all one click away.",
+  "notFound.documentTitle": "Page not found",
+  "notFound.title": "There is nothing at this address"
 }

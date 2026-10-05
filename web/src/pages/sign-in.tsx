@@ -47,7 +47,7 @@ const WALLET_LINES = [
  * steps become the collapsible primer under the buttons.
  */
 export default function SignInPage() {
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
   const loading = useUnit($pending)
   const authenticated = useUnit($authenticated)
   const [searchParams] = useSearchParams()
@@ -111,10 +111,7 @@ export default function SignInPage() {
 
   return (
     <>
-      <PageHelmet
-        htmlAttributes={{ lang: i18n.language }}
-        title={t('signIn.title')}
-      />
+      <PageHelmet title={t('signIn.title')} />
       <Screen>
         <Panel>
           {loading && (

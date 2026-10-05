@@ -20,6 +20,7 @@ const SignInPage = lazy(() => import('@/pages/sign-in'))
 const ConnectPage = lazy(() => import('@/pages/connect'))
 const InvoicePage = lazy(() => import('@/pages/invoice'))
 const InvoicesPage = lazy(() => import('@/pages/invoices'))
+const NotFoundPage = lazy(() => import('@/pages/not-found'))
 
 const router = createBrowserRouter([
   {
@@ -37,6 +38,13 @@ const router = createBrowserRouter([
       {
         path: routes.profile.schema,
         element: <ProfilePage />,
+      },
+      {
+        // Anything unknown, signed in or not. It renders inside the shell so
+        // the navigation is still there; MainLayout would bounce a guest to
+        // sign-in before they learned the link was wrong.
+        path: '*',
+        element: <NotFoundPage />,
       },
     ],
   },
@@ -64,6 +72,12 @@ const router = createBrowserRouter([
         // The list moved from /invoices to /invoice; keep old links working.
         path: '/invoices',
         element: <Navigate to={routes.invoices.build()} replace />,
+      },
+      {
+        // There is no download page in the app; links to it have always
+        // landed on the dashboard, and the catch-all must not change that.
+        path: routes.download.schema,
+        element: <Navigate to={routes.dashboard.build()} replace />,
       },
     ],
   },

@@ -13,6 +13,9 @@
   "common.duration.minutesOnly": "{{minutes}} min",
   "common.edit": "Editar",
   "common.errors.unexpected": "Algo salió mal. Inténtalo de nuevo.",
+  "common.loadFailure.description": "La solicitud no llegó al servidor. Revisa tu conexión e inténtalo de nuevo.",
+  "common.loadFailure.retry": "Reintentar",
+  "common.loadFailure.title": "No se pudo cargar esta página",
   "common.metricDesc.keyboard": "Pulsaciones de teclado registradas durante el seguimiento",
   "common.metricDesc.mouse": "Clics de ratón registrados durante el seguimiento",
   "common.metricDesc.mouseDistance": "Distancia recorrida por el puntero durante el seguimiento",
@@ -524,5 +527,14 @@
   "ui.motionSelect.placeholder": "Seleccionar",
   "ui.search.clear": "Borrar la búsqueda",
   "ui.search.placeholderProjects": "Buscar proyectos",
-  "ui.tagInput.remove": "Quitar {{tag}}"
+  "ui.tagInput.remove": "Quitar {{tag}}",
+  "crash.description": "Tus datos están a salvo. Recarga para intentarlo de nuevo y, si se repite, avísanos desde el Centro de ayuda.",
+  "crash.documentTitle": "Algo salió mal",
+  "crash.reload": "Recargar la página",
+  "crash.title": "Algo falló en esta página",
+  "notFound.action.dashboard": "Ir al panel",
+  "notFound.action.signIn": "Iniciar sesión",
+  "notFound.description": "Puede que el enlace sea antiguo o tenga un error. Tus proyectos, facturas y perfil están a un clic.",
+  "notFound.documentTitle": "Página no encontrada",
+  "notFound.title": "No hay nada en esta dirección"
 }

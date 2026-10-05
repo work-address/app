@@ -13,6 +13,9 @@
   "common.duration.minutesOnly": "{{minutes}} мин",
   "common.edit": "Изменить",
   "common.errors.unexpected": "Что-то пошло не так. Попробуйте еще раз.",
+  "common.loadFailure.description": "Запрос не дошёл до сервера. Проверьте соединение и попробуйте ещё раз.",
+  "common.loadFailure.retry": "Попробовать ещё раз",
+  "common.loadFailure.title": "Не удалось загрузить страницу",
   "common.metricDesc.keyboard": "Количество нажатий клавиш за время записи",
   "common.metricDesc.mouse": "Количество кликов мыши за время записи",
   "common.metricDesc.mouseDistance": "Расстояние, пройденное курсором за время записи",
@@ -528,5 +531,14 @@
   "ui.motionSelect.placeholder": "Выберите",
   "ui.search.clear": "Очистить поиск",
   "ui.search.placeholderProjects": "Поиск проектов",
-  "ui.tagInput.remove": "Удалить {{tag}}"
+  "ui.tagInput.remove": "Удалить {{tag}}",
+  "crash.description": "Ваши данные в порядке. Перезагрузите страницу, а если ошибка повторится, напишите нам через Центр помощи.",
+  "crash.documentTitle": "Что-то пошло не так",
+  "crash.reload": "Перезагрузить страницу",
+  "crash.title": "На этой странице что-то сломалось",
+  "notFound.action.dashboard": "Перейти на дашборд",
+  "notFound.action.signIn": "Войти",
+  "notFound.description": "Возможно, ссылка устарела или в ней опечатка. Проекты, счета и профиль — в одном клике.",
+  "notFound.documentTitle": "Страница не найдена",
+  "notFound.title": "По этому адресу ничего нет"
 }

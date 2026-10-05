@@ -36,7 +36,7 @@ export default function InvoicePage() {
     resetInvoiceEvent: resetInvoice,
   })
 
-  const { t, i18n } = useTranslation()
+  const { t } = useTranslation()
 
   const isMobile = useBreakpoint('isMobile')
 
@@ -53,10 +53,7 @@ export default function InvoicePage() {
   return (
     <>
       <InvoicePrintGlobalStyle />
-      <PageHelmet
-        htmlAttributes={{ lang: i18n.language }}
-        title={t('app.documentTitle.invoice')}
-      />
+      <PageHelmet title={t('app.documentTitle.invoice')} />
       <Root shadow={false} as={isMobile ? 'div' : undefined}>
         <Flex direction={'column'} gap={'20px'}>
           {/* The back arrow shares a row with the title rather than sitting
