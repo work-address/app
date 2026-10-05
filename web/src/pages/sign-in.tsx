@@ -111,7 +111,7 @@ export default function SignInPage() {
 
   return (
     <>
-      <PageHelmet title={t('signIn.title')} />
+      <PageHelmet title={t('signIn.title')} description={t('signIn.meta')} />
       <Screen>
         <Panel>
           {loading && (

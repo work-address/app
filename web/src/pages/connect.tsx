@@ -120,7 +120,11 @@ export default function ConnectPage() {
 
   return (
     <>
-      <PageHelmet title={t('connect.title')} />
+      <PageHelmet
+        title={t('connect.title')}
+        description={t('connect.meta')}
+        noindex
+      />
       <CloseLink to={closeHref}>
         <IconButton variant="ghost" radius="full" color="gray" size="4">
           <Cross1Icon />
@@ -184,24 +188,29 @@ export default function ConnectPage() {
           {t('signIn.continue')}
         </Button>
       </S.ButtonRow>
-      <StatusNote>
-        {t('connect.status.loginState')}: {getLoginStateLabel(phase, nonce)}
-        <br />
-        {t('connect.status.walletState')}:{' '}
-        {authenticated
-          ? t('connect.status.authenticated')
-          : t('connect.status.unauthenticated')}
-        <br />
-        {t('connect.status.address')}: {user?.friendlyWalletAddress ?? ''}
-        <br />
-        {t('connect.status.nonce')}: {nonce ?? ''}
-        {errorMessage && (
-          <>
-            <br />
-            {t('connect.status.error')}: {errorMessage}
-          </>
-        )}
-      </StatusNote>
+      {/* The pairing state stays on the page for support and for the
+          tracker, but folded away: it is diagnostics, not content. */}
+      <StatusDetails>
+        <StatusSummary>{t('connect.status.summary')}</StatusSummary>
+        <StatusNote>
+          {t('connect.status.loginState')}: {getLoginStateLabel(phase, nonce)}
+          <br />
+          {t('connect.status.walletState')}:{' '}
+          {authenticated
+            ? t('connect.status.authenticated')
+            : t('connect.status.unauthenticated')}
+          <br />
+          {t('connect.status.address')}: {user?.friendlyWalletAddress ?? ''}
+          <br />
+          {t('connect.status.nonce')}: {nonce ?? ''}
+          {errorMessage && (
+            <>
+              <br />
+              {t('connect.status.error')}: {errorMessage}
+            </>
+          )}
+        </StatusNote>
+      </StatusDetails>
     </>
   )
 }
@@ -251,8 +260,29 @@ const CloseLink = styled(Link)`
   }
 `
 
-const StatusNote = styled.p`
+const StatusDetails = styled.details`
   margin-top: 20px;
+  text-align: center;
+
+  ${({ theme }) => theme.breakpoints.up('md')} {
+    margin-top: 24px;
+  }
+`
+
+const StatusSummary = styled.summary`
+  cursor: pointer;
+  font-size: var(--font-size-1);
+  color: var(--ds-neutral-11);
+
+  &:focus-visible {
+    outline: 2px solid var(--ds-accent-9);
+    outline-offset: 2px;
+    border-radius: var(--radius-1);
+  }
+`
+
+const StatusNote = styled.p`
+  margin-top: 8px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
   font-size: var(--font-size-0);
   font-weight: 400;
@@ -265,7 +295,6 @@ const StatusNote = styled.p`
   overflow-wrap: anywhere;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
-    margin-top: 24px;
     font-size: var(--font-size-1);
   }
 `

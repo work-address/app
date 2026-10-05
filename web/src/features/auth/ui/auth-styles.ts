@@ -31,20 +31,18 @@ export const SignInCard = styled(Card)`
   }
 `
 
+/* Set like the sign-in page's heading, so the two auth screens a person
+   meets in a row read as one product. */
 export const Title = styled.h1`
-  font-weight: 500;
-  letter-spacing: 0.45px;
-  font-size: var(--font-size-5);
-  margin-bottom: 12px;
-  color: var(--ds-accent-11);
-  line-height: 28px;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.2;
+  letter-spacing: -0.01em;
+  color: var(--ds-neutral-12);
+  margin: 0 0 10px;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
-    font-size: var(--font-size-8);
-    color: var(--ds-neutral-12);
-    line-height: 150%;
-    margin-bottom: 5px;
-    letter-spacing: 1.15px;
+    font-size: 32px;
   }
 `
 
