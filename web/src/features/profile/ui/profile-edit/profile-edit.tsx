@@ -1,19 +1,32 @@
-import { Grid } from '@radix-ui/themes'
+import { ArrowLeftIcon } from '@radix-ui/react-icons'
 import { useUnit } from 'effector-react'
 import { useEffect } from 'react'
 import { type SubmitHandler, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
+import { useLocation, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { $profile, $profileLoading } from '../../model'
 
+import { ProfileEditActions } from './profile-edit-actions'
 import { ProfileEditDetails } from './profile-edit-details'
 import { type ProfileEditFormState } from './profile-edit-field'
 import { ProfileEditLinks } from './profile-edit-links'
 
 import { saveProfileMutation } from '@/entities/profile'
 import { LocalWalletCard } from '@/features/local-wallet'
-import { useLeaveConfirm, useConfirm, useBreakpoint } from '@/shared'
+import { routes } from '@/routes'
+import {
+  IconButton,
+  PageHeader,
+  Tooltip,
+  useLeaveConfirm,
+  useConfirm,
+  useBreakpoint,
+  Wrapper,
+} from '@/shared'
+
+const FORM_ID = 'profile-edit-form'
 
 const EMPTY_FORM_VALUES: ProfileEditFormState = {
   name: '',
@@ -37,6 +50,8 @@ export const ProfileEdit = () => {
   const { t } = useTranslation()
   const isDesktop = useBreakpoint('isDesktop')
   const { confirm } = useConfirm()
+  const navigate = useNavigate()
+  const location = useLocation()
 
   const user = useUnit($profile)
 
@@ -134,22 +149,59 @@ export const ProfileEdit = () => {
     }
   }, [user, resetForm])
 
+  // Back returns to where the visitor came from, normally the profile, and
+  // only falls back to it on a fresh tab. The leave guard still asks first.
+  const goBack = () => {
+    if (location.key === 'default') {
+      navigate(
+        routes.profile.build({
+          walletAddress: user?.friendlyWalletAddress ?? '',
+        }),
+      )
+    } else {
+      navigate(-1)
+    }
+  }
+
   return (
-    <Root>
+    <Root width="document">
+      <PageHeader
+        leading={
+          <Tooltip content={t('profile.aria.back')}>
+            <IconButton
+              radius={'full'}
+              variant={'ghost'}
+              color={'gray'}
+              type={'button'}
+              aria-label={t('profile.aria.back')}
+              onClick={goBack}
+            >
+              <ArrowLeftIcon width={20} height={20} />
+            </IconButton>
+          </Tooltip>
+        }
+        title={t('app.documentTitle.profileEdit')}
+        description={t('profile.form.edit.description')}
+        actions={
+          isDesktop ? (
+            <ProfileEditActions
+              isDirty={isDirty}
+              profileSaving={profileSaving}
+              onReset={onReset}
+              formId={FORM_ID}
+            />
+          ) : null
+        }
+      />
       {/* The wallet card sits outside the form: its own dialogs submit, and
           a submit inside a form would save the profile instead. */}
-      <form onSubmit={handleSubmit(onSubmit)}>
-        <Grid
-          rows={{ initial: 'auto auto' }}
-          gap={{ initial: '0', md: '20px' }}
-        >
+      <form id={FORM_ID} onSubmit={handleSubmit(onSubmit)}>
+        <Sections>
           <ProfileEditDetails
             user={user}
             isDesktop={isDesktop}
             profileLoading={profileLoading}
-            isDirty={isDirty}
             profileSaving={profileSaving}
-            onReset={onReset}
             register={register}
             control={control}
             errors={errors}
@@ -164,28 +216,33 @@ export const ProfileEdit = () => {
             errors={errors}
             setValue={setValue}
           />
-        </Grid>
+        </Sections>
       </form>
       <LocalWalletCard />
     </Root>
   )
 }
 
-const Root = styled.div`
-  display: flex;
-  flex-direction: column;
-  /* No gap on a phone. The sections are full-bleed and carry neither border
-     nor shadow there, so a blank 20px between two white blocks read as one
-     form with a hole in it. Each section rules its own top edge instead. */
-  gap: 0;
+const Root = styled(Wrapper)`
+  display: grid;
+  gap: 20px;
+
   /* Clears the fixed Cancel/Save sheet on phones, so the last field can
      scroll out from under it. */
-  padding-bottom: 96px;
+  ${(p) => p.theme.breakpoints.down('md')} {
+    gap: var(--space-4);
+    padding-bottom: 96px;
+  }
+`
 
-  ${(p) => p.theme.breakpoints.up('md')} {
-    gap: 20px;
-    max-width: 710px;
-    margin: 0 auto;
-    padding: 26px 28px 40px;
+const Sections = styled.div`
+  display: grid;
+  gap: 20px;
+
+  /* No gap on a phone. The sections carry neither border nor shadow there,
+     so a blank band between two white blocks read as one form with a hole
+     in it. Each section rules its own top edge instead. */
+  ${(p) => p.theme.breakpoints.down('md')} {
+    gap: 0;
   }
 `

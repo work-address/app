@@ -1,5 +1,4 @@
-import { ArrowLeftIcon } from '@radix-ui/react-icons'
-import { Flex, IconButton, Separator, Skeleton, Text } from '@radix-ui/themes'
+import { Flex, Separator, Skeleton, Text } from '@radix-ui/themes'
 import {
   Controller,
   type Control,
@@ -7,19 +6,17 @@ import {
   type UseFormRegister,
 } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
-import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { SKILLS_SUGGESTIONS, type $profile } from '../../model'
 
-import { ProfileEditActions } from './profile-edit-actions'
 import {
   ProfileEditField,
   INPUT_LABEL_WIDTH,
   type ProfileEditFormState,
 } from './profile-edit-field'
+import { SectionHeading } from './profile-edit-styles'
 
-import { routes } from '@/routes'
 import {
   Card,
   Input,
@@ -28,7 +25,6 @@ import {
   RichEditor,
   COUNTRY_OPTIONS,
   BASE_CURRENCY,
-  Tooltip,
   type CardProps,
 } from '@/shared'
 
@@ -57,9 +53,7 @@ type Props = {
   user: ReturnType<typeof $profile.getState>
   isDesktop: boolean
   profileLoading: boolean
-  isDirty: boolean
   profileSaving: boolean
-  onReset: () => void
   register: UseFormRegister<ProfileEditFormState>
   control: Control<ProfileEditFormState>
   errors: FieldErrors<ProfileEditFormState>
@@ -69,9 +63,7 @@ export const ProfileEditDetails = ({
   user,
   isDesktop,
   profileLoading,
-  isDirty,
   profileSaving,
-  onReset,
   register,
   control,
   errors,
@@ -80,200 +72,201 @@ export const ProfileEditDetails = ({
 
   return (
     <Root>
-      <Flex gap={'4'} mb={'4'} align={'center'} justify={'between'}>
-        <Flex gap={'4'} align={'center'}>
-          {isDesktop && (
-            <Link
-              to={
-                user?.friendlyWalletAddress
-                  ? routes.profile.build({
-                      walletAddress: user.friendlyWalletAddress,
-                    })
-                  : '#'
-              }
-              viewTransition
-            >
-              <Tooltip content={t('profile.aria.back')}>
-                <IconButton
-                  radius={'full'}
-                  variant={'ghost'}
-                  style={{
-                    width: 40,
-                    height: 40,
-                    boxSizing: 'border-box',
-                    cursor: 'pointer',
-                  }}
-                  color={'gray'}
-                  type={'button'}
-                  aria-label={t('profile.aria.back')}
-                >
-                  <ArrowLeftIcon width={20} height={20} />
-                </IconButton>
-              </Tooltip>
-            </Link>
-          )}
-          <Text size={isDesktop ? '6' : '4'} weight={'medium'}>
-            {t('profile.title')}
-          </Text>
-        </Flex>
-        {isDesktop && (
-          <Flex gap={'4'}>
-            <ProfileEditActions
-              isDirty={isDirty}
-              profileSaving={profileSaving}
-              onReset={onReset}
+      <SectionHeading>{t('profile.form.detailsTitle')}</SectionHeading>
+      <Fields>
+        <Cell data-span="full">
+          <Skeleton loading={profileLoading}>
+            <Input
+              label={t('profile.form.address')}
+              labelWidth={INPUT_LABEL_WIDTH}
+              value={user?.friendlyWalletAddress || ''}
+              disabled
+              id={'friendlyWalletAddress'}
             />
-          </Flex>
-        )}
-      </Flex>
-      {isDesktop && <Separator size={'4'} mb={'5'} />}
-      <Flex direction={'column'} gap={{ initial: '4', md: '5' }}>
-        <Skeleton loading={profileLoading}>
-          <Input
-            label={t('profile.form.address')}
-            labelWidth={INPUT_LABEL_WIDTH}
-            value={user?.friendlyWalletAddress || ''}
-            disabled
-            id={'friendlyWalletAddress'}
-          />
-        </Skeleton>
+          </Skeleton>
+        </Cell>
         {TEXT_FIELDS.map((field) => (
+          <Cell key={field.name}>
+            <ProfileEditField
+              name={field.name}
+              label={t(field.labelKey)}
+              placeholder={t(field.placeholderKey)}
+              register={register}
+              error={Boolean(errors[field.name])}
+              loading={profileLoading}
+              disabled={profileSaving}
+            />
+          </Cell>
+        ))}
+        <Cell>
           <ProfileEditField
-            key={field.name}
-            name={field.name}
-            label={t(field.labelKey)}
-            placeholder={t(field.placeholderKey)}
+            name="email"
+            label={t('profile.form.email')}
+            placeholder={t('profile.form.emailPlaceholder')}
             register={register}
-            error={Boolean(errors[field.name])}
+            rules={{
+              pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+            }}
+            error={Boolean(errors.email)}
+            loading={profileLoading}
+            disabled={profileSaving}
+            inputMode="email"
+          />
+        </Cell>
+        <Cell>
+          <Controller
+            control={control}
+            name="country"
+            render={({ field }) => (
+              <Skeleton loading={profileLoading}>
+                <Select
+                  label={t('profile.form.country')}
+                  placeholder={t('profile.form.countryPlaceholder')}
+                  options={COUNTRY_OPTIONS}
+                  value={field.value || ''}
+                  menuMaxHeight={240}
+                  onChange={(value) => {
+                    if (!Array.isArray(value)) {
+                      field.onChange(value)
+                    }
+                  }}
+                  inputProps={{
+                    labelWidth: INPUT_LABEL_WIDTH,
+                    columns: {
+                      initial: '1',
+                      md: `${INPUT_LABEL_WIDTH} 1fr`,
+                    },
+                    disabled: profileSaving,
+                    id: 'country',
+                  }}
+                />
+              </Skeleton>
+            )}
+          />
+        </Cell>
+        <Cell>
+          <ProfileEditField
+            name="city"
+            label={t('profile.form.city')}
+            placeholder={t('profile.form.cityPlaceholder')}
+            register={register}
+            error={Boolean(errors.city)}
             loading={profileLoading}
             disabled={profileSaving}
           />
-        ))}
-        <ProfileEditField
-          name="email"
-          label={t('profile.form.email')}
-          placeholder={t('profile.form.emailPlaceholder')}
-          register={register}
-          rules={{
-            pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-          }}
-          error={Boolean(errors.email)}
-          loading={profileLoading}
-          disabled={profileSaving}
-          inputMode="email"
-        />
-        <Controller
-          control={control}
-          name="country"
-          render={({ field }) => (
-            <Skeleton loading={profileLoading}>
-              <Select
-                label={t('profile.form.country')}
-                placeholder={t('profile.form.countryPlaceholder')}
-                options={COUNTRY_OPTIONS}
-                value={field.value || ''}
-                menuMaxHeight={240}
-                onChange={(value) => {
-                  if (!Array.isArray(value)) {
-                    field.onChange(value)
-                  }
-                }}
-                inputProps={{
-                  labelWidth: INPUT_LABEL_WIDTH,
-                  columns: {
-                    initial: '1',
-                    md: `${INPUT_LABEL_WIDTH} 1fr`,
-                  },
-                  disabled: profileSaving,
-                  id: 'country',
-                }}
+        </Cell>
+        <Cell data-span="full">
+          <Controller
+            control={control}
+            name="skills"
+            render={({ field }) => (
+              <TagInput
+                label={t('profile.form.skills')}
+                placeholder={t('profile.form.skillsPlaceholder')}
+                labelWidth={INPUT_LABEL_WIDTH}
+                id={'skills'}
+                disabled={profileSaving}
+                showSkeleton={profileLoading}
+                state={errors.skills ? 'error' : undefined}
+                suggestions={SKILLS_SUGGESTIONS}
+                {...field}
               />
-            </Skeleton>
-          )}
-        />
-        <ProfileEditField
-          name="city"
-          label={t('profile.form.city')}
-          placeholder={t('profile.form.cityPlaceholder')}
-          register={register}
-          error={Boolean(errors.city)}
-          loading={profileLoading}
-          disabled={profileSaving}
-        />
-        <Controller
-          control={control}
-          name="skills"
-          render={({ field }) => (
-            <TagInput
-              label={t('profile.form.skills')}
-              placeholder={t('profile.form.skillsPlaceholder')}
-              labelWidth={INPUT_LABEL_WIDTH}
-              id={'skills'}
-              disabled={profileSaving}
-              showSkeleton={profileLoading}
-              state={errors.skills ? 'error' : undefined}
-              suggestions={SKILLS_SUGGESTIONS}
-              {...field}
-            />
-          )}
-        />
-        <Separator size={'4'} />
-        <ProfileEditField
-          name="rate"
-          label={t('profile.form.rate')}
-          placeholder="0"
-          register={register}
-          rules={{
-            pattern: /^\d*([,.]\d{1,2})?$/,
-          }}
-          error={Boolean(errors.rate)}
-          loading={profileLoading}
-          disabled={profileSaving}
-          inputMode="decimal"
-          addonLeft={
-            <Text size={'2'} color={'gray'}>
-              {BASE_CURRENCY.symbol}
-            </Text>
-          }
-        />
-        <Separator size={'4'} />
-        <Controller
-          control={control}
-          render={({ field }) => {
-            return (
-              <Skeleton loading={profileLoading}>
-                <Flex direction={'column'} gap="1">
-                  <Text size={'2'} weight={'medium'} mb={'2'}>
-                    {t('profile.form.bio')}
-                  </Text>
-                  <RichEditor
-                    value={field.value}
-                    onChange={field.onChange}
-                    id={'bio'}
-                    showEditPanel={isDesktop}
-                    disabled={profileSaving}
-                  />
-                </Flex>
-              </Skeleton>
-            )
-          }}
-          name={'bio'}
-        />
-      </Flex>
+            )}
+          />
+        </Cell>
+        <Cell data-span="full">
+          <Separator size={'4'} />
+        </Cell>
+        <Cell>
+          <ProfileEditField
+            name="rate"
+            label={t('profile.form.rate')}
+            placeholder="0"
+            register={register}
+            rules={{
+              pattern: /^\d*([,.]\d{1,2})?$/,
+            }}
+            error={Boolean(errors.rate)}
+            loading={profileLoading}
+            disabled={profileSaving}
+            inputMode="decimal"
+            addonLeft={
+              <Text size={'2'} color={'gray'}>
+                {BASE_CURRENCY.symbol}
+              </Text>
+            }
+          />
+        </Cell>
+        <Cell data-span="full">
+          <Separator size={'4'} />
+        </Cell>
+        <Cell data-span="full">
+          <Controller
+            control={control}
+            render={({ field }) => {
+              return (
+                <Skeleton loading={profileLoading}>
+                  <Flex direction={'column'} gap="1">
+                    <Text size={'2'} weight={'medium'} mb={'2'}>
+                      {t('profile.form.bio')}
+                    </Text>
+                    <RichEditor
+                      value={field.value}
+                      onChange={field.onChange}
+                      id={'bio'}
+                      showEditPanel={isDesktop}
+                      disabled={profileSaving}
+                    />
+                  </Flex>
+                </Skeleton>
+              )
+            }}
+            name={'bio'}
+          />
+        </Cell>
+      </Fields>
     </Root>
   )
 }
 
 const Root = styled(Card)<CardProps>`
   box-shadow: none;
+  display: grid;
+  gap: var(--space-5);
 
   /* See profile-edit-links.tsx: the shadow has to be switched off through
      the same attribute selector Card turns it on with. */
   ${(p) => p.theme.breakpoints.down('md')} {
     border: none;
+    /* The page already insets by the phone gutter; a second inset inside
+       an invisible card would push the fields in twice. */
+    padding: 0 0 var(--space-5);
 
     &[data-shadow] {
       box-shadow: none;
     }
+  }
+`
+
+/* One column until there is room for two: name beside title, company beside
+   email, country beside city. The long fields - address, skills, bio - span
+   both. Halves the height of the form without shrinking any field below a
+   comfortable width. */
+const Fields = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4) var(--space-6);
+
+  ${(p) => p.theme.breakpoints.up('lg')} {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5) var(--space-6);
+  }
+`
+
+const Cell = styled.div`
+  min-width: 0;
+
+  &[data-span='full'] {
+    grid-column: 1 / -1;
   }
 `

@@ -7,6 +7,9 @@ type ProfileEditActionsProps = {
   profileSaving: boolean
   onReset: () => void
   stretch?: boolean
+  /** Ties the submit button to the form when it renders outside it, as in
+   * the page header. */
+  formId?: string
 }
 
 export const ProfileEditActions = ({
@@ -14,6 +17,7 @@ export const ProfileEditActions = ({
   profileSaving,
   onReset,
   stretch,
+  formId,
 }: ProfileEditActionsProps) => {
   const { t } = useTranslation()
   const disabled = !isDirty || profileSaving
@@ -33,6 +37,7 @@ export const ProfileEditActions = ({
       <Button
         disabled={disabled}
         type="submit"
+        form={formId}
         stretch={stretch}
         loading={profileSaving}
       >

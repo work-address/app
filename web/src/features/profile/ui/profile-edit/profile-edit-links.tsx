@@ -1,4 +1,4 @@
-import { Grid, Skeleton, Text } from '@radix-ui/themes'
+import { Grid, Skeleton } from '@radix-ui/themes'
 import {
   type FieldErrors,
   type UseFormRegister,
@@ -20,6 +20,7 @@ import {
   INPUT_LABEL_WIDTH,
   type ProfileEditFormState,
 } from './profile-edit-field'
+import { SectionHeading } from './profile-edit-styles'
 
 import type { ClipboardEvent } from 'react'
 
@@ -77,14 +78,8 @@ export const ProfileEditLinks = ({
 
   return (
     <Root>
-      <Text
-        size={isDesktop ? '6' : '4'}
-        weight={'medium'}
-        mb={{ initial: '3', md: '5' }}
-      >
-        {t('profile.links.title')}
-      </Text>
-      <Grid gap={{ initial: '4', md: '5' }}>
+      <SectionHeading>{t('profile.links.title')}</SectionHeading>
+      <Links>
         {SOCIAL_LINKS.map(({ name, labelKey, domain }) => (
           <Skeleton key={name} loading={profileLoading}>
             <LinkInput
@@ -108,13 +103,15 @@ export const ProfileEditLinks = ({
             />
           </BottomSheet>
         )}
-      </Grid>
+      </Links>
     </Root>
   )
 }
 
 const Root = styled(Card)<CardProps>`
   box-shadow: none;
+  display: grid;
+  gap: var(--space-5);
 
   /* Edge to edge on a phone, so the card is the page and a shadow under it
      reads as a stray band. The attribute selector is what Card's own shadow
@@ -124,10 +121,24 @@ const Root = styled(Card)<CardProps>`
   ${(p) => p.theme.breakpoints.down('md')} {
     border: none;
     border-top: 1px solid var(--ds-neutral-alpha-6);
+    padding: var(--space-5) 0 0;
+    gap: var(--space-3);
 
     &[data-shadow] {
       box-shadow: none;
     }
+  }
+`
+
+/* Two columns of links on a wide screen; each is short. */
+const Links = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4) var(--space-6);
+
+  ${(p) => p.theme.breakpoints.up('lg')} {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-5) var(--space-6);
   }
 `
 

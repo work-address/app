@@ -33,7 +33,11 @@ export default function ProfileEditPage() {
   return (
     <>
       <ProfileGate friendlyWalletAddress={walletAddress || ''} />
-      <PageHelmet title={t('app.documentTitle.profileEdit')} />
+      <PageHelmet
+        title={t('app.documentTitle.profileEdit')}
+        description={t('profile.form.edit.description')}
+        noindex
+      />
       <ProfileEdit />
     </>
   )
