@@ -2,7 +2,12 @@ import { useUnit } from 'effector-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
-import { $hasProjects, $projects, $projectsLoading } from '@/entities/projects'
+import {
+  $hasProjects,
+  $projects,
+  $projectsLoading,
+  $projectsStatsFailed,
+} from '@/entities/projects'
 import {
   formatCurrency,
   formatDurationFromMinutes,
@@ -19,9 +24,10 @@ import {
 export const DashboardSummary = () => {
   const { t } = useTranslation()
 
-  const { projects, loading, hasProjects } = useUnit({
+  const { projects, loading, failed, hasProjects } = useUnit({
     projects: $projects,
     loading: $projectsLoading,
+    failed: $projectsStatsFailed,
     hasProjects: $hasProjects,
   })
 
@@ -54,7 +60,8 @@ export const DashboardSummary = () => {
 
   // Nothing to sum until there is a project; the empty state below the title
   // already says so.
-  if (!loading && !hasProjects) {
+  // The projects panel carries the totals retry; a failure is not zero money.
+  if (failed || (!loading && !hasProjects)) {
     return null
   }
 

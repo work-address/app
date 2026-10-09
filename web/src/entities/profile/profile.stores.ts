@@ -4,6 +4,7 @@ import {
   disconnectEthFx,
   ethDisconnectedPub,
   loginEthFx,
+  openEthModalFx,
   signEthFx,
 } from './eth.model'
 import {
@@ -13,7 +14,7 @@ import {
 } from './profile.effects'
 import { login, logout, setInitialized } from './profile.events'
 import { saveProfileMutation } from './profile.mutations'
-import { loginSolanaFx, signSolanaFx } from './solana.model'
+import { loginSolanaFx, openSolanaModalFx, signSolanaFx } from './solana.model'
 import {
   disconnectTonFx,
   loginTonFx,
@@ -50,6 +51,7 @@ export const $user = createStore<baseApi.User | null>(null)
     // A cleared rate is sent as null to blank the numeric column; on the user
     // shape "unset" is undefined, so it is folded back here.
     rate: user.rate ?? undefined,
+    email: user.email === undefined ? state?.email : user.email,
   }))
   .reset(logout)
 
@@ -68,6 +70,8 @@ export const $initialized = createStore(false).on(setInitialized, () => true)
 export const $pending = combine(
   getNonceFx.pending,
   openTonModalFx.pending,
+  openEthModalFx.pending,
+  openSolanaModalFx.pending,
   signEthFx.pending,
   disconnectEthFx.pending,
   disconnectTonFx.pending,

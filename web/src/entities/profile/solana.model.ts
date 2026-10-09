@@ -19,11 +19,11 @@ export const SolanaWalletGate =
   createGate<SolanaWalletState>('SolanaWalletGate')
 
 export const toggleSolanaModalMounted = createEvent()
+export const solanaWalletLoadFailed = createEvent<Error>()
 
-export const $solanaWalletMounted = createStore(false).on(
-  toggleSolanaModalMounted,
-  () => true,
-)
+export const $solanaWalletMounted = createStore(false)
+  .on(toggleSolanaModalMounted, () => true)
+  .reset(solanaWalletLoadFailed)
 
 export const $solanaWallet = createStore<SolanaWalletState>({
   publicKey: null,
@@ -46,9 +46,36 @@ export const $solanaConnectionStatus = createStore<
   .on(solanaDisconnectedPub, () => 'disconnected')
 
 export const openSolanaModalFx = attach({
-  source: $solanaWallet,
-  effect: (solanaWallet) => {
-    solanaWallet.openModal(true)
+  source: { wallet: $solanaWallet, ready: SolanaWalletGate.status },
+  effect: async ({ wallet, ready }) => {
+    if (ready) {
+      wallet.openModal(true)
+      return
+    }
+
+    // Subscribe before requesting the lazy shell so the first click is kept.
+    const loadedWallet = new Promise<SolanaWalletState>((resolve, reject) => {
+      const cleanup = () => {
+        clearTimeout(timeout)
+        stopReady()
+        stopFailure()
+      }
+      const stopReady = SolanaWalletGate.open.watch((state) => {
+        cleanup()
+        resolve(state)
+      })
+      const stopFailure = solanaWalletLoadFailed.watch((error) => {
+        cleanup()
+        reject(error)
+      })
+      const timeout = setTimeout(() => {
+        cleanup()
+        solanaWalletLoadFailed(new Error('Wallet load timed out'))
+        reject(new Error('Wallet load timed out'))
+      }, 15_000)
+    })
+    toggleSolanaModalMounted()
+    ;(await loadedWallet).openModal(true)
   },
 })
 

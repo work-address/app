@@ -7,6 +7,7 @@ import {
   useState,
   type ReactNode,
 } from 'react'
+import { useTranslation } from 'react-i18next'
 import styled, { keyframes } from 'styled-components'
 
 import { useReachEnd } from '../../hooks/use-reach-end'
@@ -83,6 +84,7 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
     renderGroupHeader,
   } = props
 
+  const { t } = useTranslation()
   const scrollRef = useRef<HTMLDivElement>(null)
 
   const hasReachEndHandler = Boolean(onReachEnd)
@@ -193,6 +195,16 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                 return (
                   <HeaderTd
                     key={key.toString()}
+                    scope="col"
+                    aria-sort={
+                      configEntry.sortable
+                        ? sortParams?.[String(key)] === 'ASC'
+                          ? 'ascending'
+                          : sortParams?.[String(key)] === 'DESC'
+                            ? 'descending'
+                            : 'none'
+                        : undefined
+                    }
                     $width={configEntry.width}
                     $truncate={configEntry.truncate}
                     data-sticky={configEntry.sticky}
@@ -205,6 +217,8 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                       {allowSelection && index === 0 && (
                         <Checkbox
                           checked={rowsSelected}
+                          aria-label={t('ui.table.selectAll')}
+                          disabled={Boolean(loading) && !isDataExists}
                           onCheckedChange={() => handleToggleAllSelected()}
                         />
                       )}
@@ -285,6 +299,9 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                                 >
                                   <Checkbox
                                     checked={selected}
+                                    aria-label={t('ui.table.selectRow', {
+                                      position: rowIndex + 1,
+                                    })}
                                     onCheckedChange={() =>
                                       rowId &&
                                       handleSelectedChange(rowId.toString())
@@ -334,7 +351,9 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                         {allowSelection && index === 0 && (
                           <Checkbox
                             checked={false}
-                            onCheckedChange={() => {}}
+                            disabled
+                            aria-hidden
+                            tabIndex={-1}
                           />
                         )}
                         <Skeleton
@@ -414,6 +433,16 @@ const TableCard = styled(Card)<{
     display: block;
   }
 
+  @media (prefers-reduced-motion: reduce) {
+    &::before {
+      animation: none;
+    }
+
+    &[data-filtering]::before {
+      display: none;
+    }
+  }
+
   /* The scroll cue: a fade over the right edge while columns continue past
      it. Phones only - on a desktop the table fits, and when it does not, a
      scrollbar already says so. */
@@ -459,7 +488,7 @@ const Root = styled.table`
   }
 `
 
-const HeaderTd = styled.td<{ $width?: number; $truncate?: boolean }>`
+const HeaderTd = styled.th<{ $width?: number; $truncate?: boolean }>`
   background: var(--ds-neutral-2);
   padding: 12px var(--space-3);
   font-size: var(--font-size-2);

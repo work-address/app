@@ -17,6 +17,10 @@ import { ISearch, SearchDto, SORT_DIRECTIONS, SortDirection } from './search'
 class ProjectSearchSortDto {
   @IsIn(SORT_DIRECTIONS)
   @IsOptional()
+  id?: SortDirection
+
+  @IsIn(SORT_DIRECTIONS)
+  @IsOptional()
   createdAt?: SortDirection
 
   @IsIn(SORT_DIRECTIONS)

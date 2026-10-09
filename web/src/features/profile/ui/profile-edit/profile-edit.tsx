@@ -6,7 +6,12 @@ import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { $profile, $profileLoading } from '../../model'
+import {
+  $profile,
+  $profileLoading,
+  $profileFailure,
+  retryProfile,
+} from '../../model'
 
 import { ProfileEditActions } from './profile-edit-actions'
 import { ProfileEditDetails } from './profile-edit-details'
@@ -18,6 +23,7 @@ import { LocalWalletCard } from '@/features/local-wallet'
 import { routes } from '@/routes'
 import {
   IconButton,
+  LoadFailure,
   PageHeader,
   Tooltip,
   useLeaveConfirm,
@@ -55,11 +61,14 @@ export const ProfileEdit = () => {
 
   const user = useUnit($profile)
 
-  const { profileSaving, profileLoading, saveProfile } = useUnit({
-    profileSaving: saveProfileMutation.$pending,
-    profileLoading: $profileLoading,
-    saveProfile: saveProfileMutation.start,
-  })
+  const { profileSaving, profileLoading, profileFailure, retry, saveProfile } =
+    useUnit({
+      profileSaving: saveProfileMutation.$pending,
+      profileLoading: $profileLoading,
+      profileFailure: $profileFailure,
+      retry: retryProfile,
+      saveProfile: saveProfileMutation.start,
+    })
 
   const {
     register,
@@ -73,6 +82,10 @@ export const ProfileEdit = () => {
   })
 
   const onSubmit: SubmitHandler<ProfileEditFormState> = async (values) => {
+    if (profileLoading || profileFailure) {
+      return
+    }
+
     const { email, rate, ...rest } = values
     const trimmedEmail = email?.trim()
     const trimmedRate = rate?.trim()
@@ -84,14 +97,11 @@ export const ProfileEdit = () => {
       // Postgres rejects an empty string for it. Null is what "no rate" means
       // on a nullable column, and it reads back as 0.00 like an unset profile.
       rate: trimmedRate || null,
-      // An empty email is dropped rather than sent as '': the column carries a
-      // unique index, and the backend rejects a blank email for an account
-      // that has no phone. Omitting the key leaves the stored value untouched.
-      // An unchanged one is dropped too - the uniqueness check would otherwise
-      // find the account's own row and refuse the save.
-      ...(trimmedEmail && trimmedEmail !== user?.email
-        ? { email: trimmedEmail }
-        : {}),
+      // Nullable email uses the same clear contract as rate. Undefined means
+      // unchanged; null deliberately removes an existing email.
+      ...((trimmedEmail || null) === (user?.email || null)
+        ? {}
+        : { email: trimmedEmail || null }),
     })
   }
 
@@ -183,9 +193,9 @@ export const ProfileEdit = () => {
         title={t('app.documentTitle.profileEdit')}
         description={t('profile.form.edit.description')}
         actions={
-          isDesktop ? (
+          isDesktop && !profileFailure ? (
             <ProfileEditActions
-              isDirty={isDirty}
+              isDirty={isDirty && !profileLoading}
               profileSaving={profileSaving}
               onReset={onReset}
               formId={FORM_ID}
@@ -193,32 +203,42 @@ export const ProfileEdit = () => {
           ) : null
         }
       />
-      {/* The wallet card sits outside the form: its own dialogs submit, and
-          a submit inside a form would save the profile instead. */}
-      <form id={FORM_ID} onSubmit={handleSubmit(onSubmit)}>
-        <Sections>
-          <ProfileEditDetails
-            user={user}
-            isDesktop={isDesktop}
-            profileLoading={profileLoading}
-            profileSaving={profileSaving}
-            register={register}
-            control={control}
-            errors={errors}
-          />
-          <ProfileEditLinks
-            isDesktop={isDesktop}
-            profileLoading={profileLoading}
-            isDirty={isDirty}
-            profileSaving={profileSaving}
-            onReset={onReset}
-            register={register}
-            errors={errors}
-            setValue={setValue}
-          />
-        </Sections>
-      </form>
-      <LocalWalletCard />
+      {profileFailure ? (
+        <LoadFailure title={t('profile.loadFailure.title')} onRetry={retry} />
+      ) : (
+        <>
+          {/* The wallet card sits outside the form: its own dialogs submit, and
+              a submit inside a form would save the profile instead. */}
+          <form
+            id={FORM_ID}
+            onSubmit={handleSubmit(onSubmit)}
+            aria-busy={profileLoading || profileSaving || undefined}
+          >
+            <Sections>
+              <ProfileEditDetails
+                user={user}
+                isDesktop={isDesktop}
+                profileLoading={profileLoading}
+                profileSaving={profileSaving || profileLoading}
+                register={register}
+                control={control}
+                errors={errors}
+              />
+              <ProfileEditLinks
+                isDesktop={isDesktop}
+                profileLoading={profileLoading}
+                isDirty={isDirty && !profileLoading}
+                profileSaving={profileSaving || profileLoading}
+                onReset={onReset}
+                register={register}
+                errors={errors}
+                setValue={setValue}
+              />
+            </Sections>
+          </form>
+          <LocalWalletCard />
+        </>
+      )}
     </Root>
   )
 }

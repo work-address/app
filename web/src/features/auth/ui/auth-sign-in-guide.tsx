@@ -132,6 +132,10 @@ const Root = styled.div`
 
 const MobileRoot = styled.div`
   width: 100%;
+
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    display: none;
+  }
 `
 
 const MobileToggle = styled.button`
@@ -162,6 +166,10 @@ const MobileChevron = styled(ChevronDownIcon)<{ $open: boolean }>`
   height: 16px;
   flex-shrink: 0;
   transition: transform 0.2s ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
   transform: rotate(${({ $open }) => ($open ? 180 : 0)}deg);
 `
 
@@ -172,6 +180,10 @@ const MobileCollapse = styled.div<{ $open: boolean }>`
   transition:
     grid-template-rows 0.25s ease,
     visibility 0.25s;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
 `
 
 const MobileCollapseInner = styled.div`
@@ -191,6 +203,10 @@ const Panel = styled.div<{ $active: boolean }>`
   text-align: left;
   opacity: ${({ $active }) => ($active ? 1 : 0)};
   transition: opacity 0.2s ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
   pointer-events: ${({ $active }) => ($active ? 'auto' : 'none')};
 `
 

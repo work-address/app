@@ -20,7 +20,11 @@ export default function NotFoundPage() {
 
   return (
     <Wrapper width="document">
-      <PageHelmet title={t('notFound.documentTitle')} noindex />
+      <PageHelmet
+        title={t('notFound.documentTitle')}
+        description={t('notFound.description')}
+        noindex
+      />
       <StateNotice
         size="page"
         title={t('notFound.title')}

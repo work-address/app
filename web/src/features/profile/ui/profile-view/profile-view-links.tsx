@@ -95,7 +95,7 @@ export const ProfileViewLinks = ({
   onShareProfile,
 }: ProfileViewLinksProps) => {
   const isDesktop = useBreakpoint('isDesktop')
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   const { user, isAuthenticatedUserProfile, profileLoading } = useUnit({
     user: $profile,
@@ -212,7 +212,13 @@ export const ProfileViewLinks = ({
                 <Flex gap={{ initial: '5px', md: '6px' }}>
                   <Text color={'gray'}>{t('profile.view.location')}</Text>
                   <Text weight={'medium'}>
-                    {[user.city, getCountryLabel(user.country)]
+                    {[
+                      user.city,
+                      getCountryLabel(
+                        user.country,
+                        i18n.resolvedLanguage ?? i18n.language,
+                      ),
+                    ]
                       .filter(Boolean)
                       .join(', ')}
                   </Text>

@@ -1,8 +1,10 @@
-import { createQuery } from '@farfetched/core'
+import { concurrency, createQuery } from '@farfetched/core'
+
+import { readLoadedInvoicePages } from './invoice-feed'
 
 import type { InvoiceRead } from './types'
 
-import { baseApi, runApiData } from '@/shared'
+import { baseApi, collectSearchPages, runApiData } from '@/shared'
 
 /**
  * The whole invoice page in one request: the persisted invoice, the time it
@@ -35,6 +37,8 @@ export type InvoiceListParams = {
   projectId?: string
   state?: 'PAID' | 'Requested'
   page: number
+  /** Preserve the already-loaded prefix after a state change shifts offsets. */
+  reloadThroughPage?: number
 }
 
 export const invoiceListQuery = createQuery({
@@ -42,35 +46,31 @@ export const invoiceListQuery = createQuery({
     projectId,
     state,
     page,
+    reloadThroughPage,
   }: InvoiceListParams): Promise<{
     items: baseApi.InvoiceSearch[]
     total: number
+    page: number
   }> => {
-    // `runApiData` rejects on failure. Reading `.data?.[0] ?? []` instead would
-    // turn a 500 or a dropped session into an empty list, so the page would say
-    // "no invoices yet" when the truth is that it could not ask - the same trap
-    // the activity queries above already call out.
-    const [items, total] = (await runApiData(() =>
-      baseApi.invoiceControllerSearch({
-        body: {
-          // Filtered server-side rather than in the browser: the search
-          // returns one page, so filtering what happened to arrive would hide
-          // invoices that simply fell past the page boundary.
-          filter: {
-            ...(projectId ? { projectId } : {}),
-            ...(state ? { state } : {}),
+    const fetchPage = async (page: number) => {
+      const [items, total] = (await runApiData(() =>
+        baseApi.invoiceControllerSearch({
+          body: {
+            filter: {
+              ...(projectId ? { projectId } : {}),
+              ...(state ? { state } : {}),
+            },
+            sort: { createdAt: 'DESC' },
+            page,
+            limit: INVOICE_PAGE_SIZE,
           },
-          sort: { createdAt: 'DESC' },
-          page,
-          limit: INVOICE_PAGE_SIZE,
-        },
-      }),
-    )) as [baseApi.InvoiceSearch[], number]
-
-    // The count is what tells the list whether another page exists; without it
-    // "load more" could only guess from a full page and would offer one more
-    // click on an exact multiple of the page size.
-    return { items: items ?? [], total: Number(total ?? 0) }
+        }),
+      )) as [baseApi.InvoiceSearch[], number]
+      return { items: items ?? [], total: Number(total ?? 0), page }
+    }
+    return reloadThroughPage === undefined
+      ? fetchPage(page)
+      : readLoadedInvoicePages(fetchPage, reloadThroughPage, INVOICE_PAGE_SIZE)
   },
 })
 
@@ -83,44 +83,46 @@ export const invoiceListQuery = createQuery({
  */
 export const invoiceProjectsQuery = createQuery({
   handler: async (): Promise<baseApi.Project[]> => {
-    const [items] = (await runApiData(() =>
-      baseApi.projectControllerSearch({
-        body: { filter: {}, sort: { title: 'ASC' }, page: 0, limit: 100 },
-      }),
-    )) as [baseApi.Project[], number]
+    const items = await collectSearchPages<baseApi.Project>(
+      async (page, limit) =>
+        (await runApiData(() =>
+          baseApi.projectControllerSearch({
+            body: { filter: {}, sort: { id: 'ASC' }, page, limit },
+          }),
+        )) as [baseApi.Project[], number],
+    )
 
-    return items ?? []
+    return items.sort(
+      (a, b) =>
+        (a.title ?? '').localeCompare(b.title ?? '') ||
+        (a.id ?? '').localeCompare(b.id ?? ''),
+    )
   },
 })
 
-/**
- * How many invoices the summary strip is allowed to add up.
- *
- * The search endpoint pages but does not aggregate, so the strip has to read
- * the rows itself. One page this deep covers years of a freelancer's billing;
- * past it the strip would under-report rather than fail, which is the lesser
- * wrong for a figure that exists to orient, not to reconcile.
- */
-export const INVOICE_SUMMARY_LIMIT = 1000
-
-/** Every visible invoice for the project filter, for the totals strip. */
+/** Every visible invoice for this project filter, collected before summing. */
 export const invoiceSummaryQuery = createQuery({
   handler: async ({
     projectId,
   }: {
     projectId?: string
-  }): Promise<baseApi.InvoiceSearch[]> => {
-    const [items] = (await runApiData(() =>
-      baseApi.invoiceControllerSearch({
-        body: {
-          filter: projectId ? { projectId } : {},
-          sort: { createdAt: 'DESC' },
-          page: 0,
-          limit: INVOICE_SUMMARY_LIMIT,
-        },
-      }),
-    )) as [baseApi.InvoiceSearch[], number]
-
-    return items ?? []
-  },
+  }): Promise<baseApi.InvoiceSearch[]> =>
+    collectSearchPages<baseApi.InvoiceSearch>(
+      async (page, limit) =>
+        (await runApiData(() =>
+          baseApi.invoiceControllerSearch({
+            body: {
+              filter: projectId ? { projectId } : {},
+              sort: { id: 'ASC' },
+              page,
+              limit,
+            },
+          }),
+        )) as [baseApi.InvoiceSearch[], number],
+    ),
 })
+
+// Filters describe independent results; late responses must not mix them.
+concurrency(invoiceListQuery, { strategy: 'TAKE_LATEST' })
+concurrency(invoiceProjectsQuery, { strategy: 'TAKE_LATEST' })
+concurrency(invoiceSummaryQuery, { strategy: 'TAKE_LATEST' })

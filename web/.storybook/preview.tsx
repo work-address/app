@@ -1,4 +1,5 @@
 import { Theme } from '@radix-ui/themes'
+import { MotionConfig } from 'motion/react'
 import { HelmetProvider } from 'react-helmet-async'
 import { ThemeProvider } from 'styled-components'
 
@@ -15,13 +16,15 @@ const preview: Preview = {
     // Mirrors main.tsx: Radix owns the colour and spacing scales the design
     // tokens build on, styled-components' theme owns the breakpoint helper.
     (Story) => (
-      <Theme>
-        <ThemeProvider theme={theme}>
-          <HelmetProvider>
-            <Story />
-          </HelmetProvider>
-        </ThemeProvider>
-      </Theme>
+      <MotionConfig reducedMotion="user">
+        <Theme>
+          <ThemeProvider theme={theme}>
+            <HelmetProvider>
+              <Story />
+            </HelmetProvider>
+          </ThemeProvider>
+        </Theme>
+      </MotionConfig>
     ),
   ],
   parameters: {

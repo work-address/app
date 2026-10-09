@@ -1,5 +1,6 @@
 import { Theme } from '@radix-ui/themes'
 import { attachLogger } from 'effector-logger'
+import { MotionConfig } from 'motion/react'
 import { Fragment, StrictMode } from 'react'
 import { createRoot } from 'react-dom/client'
 import { HelmetProvider } from 'react-helmet-async'
@@ -33,20 +34,22 @@ const AppWrapper = REACT_STRICT_MODE ? StrictMode : Fragment
 
 createRoot(ROOT_ELEMENT).render(
   <AppWrapper>
-    <AuthSolanaWalletMount />
-    <Theme>
-      <ThemeProvider theme={theme}>
-        <Confirm />
-        <BreakpointsWatcher />
-        <ToastStyle />
-        <HelmetProvider>
-          <App />
-        </HelmetProvider>
-      </ThemeProvider>
-    </Theme>
-    <SonnerRadixTheme>
-      <Toaster />
-    </SonnerRadixTheme>
+    <MotionConfig reducedMotion="user">
+      <AuthSolanaWalletMount />
+      <Theme>
+        <ThemeProvider theme={theme}>
+          <Confirm />
+          <BreakpointsWatcher />
+          <ToastStyle />
+          <HelmetProvider>
+            <App />
+          </HelmetProvider>
+        </ThemeProvider>
+      </Theme>
+      <SonnerRadixTheme>
+        <Toaster />
+      </SonnerRadixTheme>
+    </MotionConfig>
   </AppWrapper>,
 )
 

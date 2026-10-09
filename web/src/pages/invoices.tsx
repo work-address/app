@@ -12,11 +12,13 @@ import {
   $invoiceStateFilter,
   $invoiceSummary,
   $invoiceSummaryLoading,
+  $invoiceSummaryFailed,
   $invoices,
   $invoicesTotal,
   $isLoadingMoreInvoices,
   InvoicePaymentActions,
   fetchInvoiceList,
+  retryInvoiceSummary,
   formatCents,
   invoiceListQuery,
   invoiceProjectFilterChanged,
@@ -87,6 +89,9 @@ export default function InvoicesPage() {
     changeState,
     summary,
     summaryLoading,
+    summaryFailed,
+    retrySummary,
+    projectsFailed,
     projects,
     loadProjects,
     user,
@@ -105,6 +110,9 @@ export default function InvoicesPage() {
     changeState: invoiceStateFilterChanged,
     summary: $invoiceSummary,
     summaryLoading: $invoiceSummaryLoading,
+    summaryFailed: $invoiceSummaryFailed,
+    retrySummary: retryInvoiceSummary,
+    projectsFailed: invoiceProjectsQuery.$failed,
     projects: invoiceProjectsQuery.$data,
     loadProjects: invoiceProjectsQuery.start,
     user: $user,
@@ -148,47 +156,62 @@ export default function InvoicesPage() {
           title={t('invoices.page.title')}
           description={t('invoices.page.description')}
           actions={
-            <FilterBar>
-              <Select
-                options={projectOptions}
-                value={projectId}
-                placeholder={t('invoices.filter.allProjects')}
-                onChange={(value) => {
-                  if (Array.isArray(value)) {
-                    return
-                  }
+            projectsFailed ? null : (
+              <FilterBar>
+                <Select
+                  options={projectOptions}
+                  value={projectId}
+                  placeholder={t('invoices.filter.allProjects')}
+                  onChange={(value) => {
+                    if (Array.isArray(value)) {
+                      return
+                    }
 
-                  changeProject(value)
-                }}
-              />
-            </FilterBar>
+                    changeProject(value)
+                  }}
+                />
+              </FilterBar>
+            )
           }
         />
+        {projectsFailed && (
+          <LoadFailure
+            title={t('invoices.filter.projectsFailure.title')}
+            onRetry={() => loadProjects()}
+          />
+        )}
         {/* The answer to "what am I owed" before the rows that justify it. */}
-        <StatStrip $columns={3}>
-          <StatTile
-            tone="amber"
-            label={t('invoices.summary.awaiting')}
-            value={formatCents(summary.requestedCents)}
-            hint={t('invoices.summary.count', {
-              count: summary.requestedCount,
-            })}
-            loading={summaryLoading}
+        {summaryFailed ? (
+          <LoadFailure
+            title={t('invoices.summary.loadFailure.title')}
+            onRetry={retrySummary}
           />
-          <StatTile
-            tone="green"
-            label={t('invoices.summary.paid')}
-            value={formatCents(summary.paidCents)}
-            hint={t('invoices.summary.count', { count: summary.paidCount })}
-            loading={summaryLoading}
-          />
-          <StatTile
-            label={t('invoices.summary.total')}
-            value={formatCents(summary.totalCents)}
-            hint={t('invoices.summary.count', { count: summary.totalCount })}
-            loading={summaryLoading}
-          />
-        </StatStrip>
+        ) : (
+          <StatStrip $columns={3}>
+            <StatTile
+              tone="amber"
+              label={t('invoices.summary.awaiting')}
+              value={formatCents(summary.requestedCents)}
+              hint={t('invoices.summary.count', {
+                count: summary.requestedCount,
+              })}
+              loading={summaryLoading}
+            />
+            <StatTile
+              tone="green"
+              label={t('invoices.summary.paid')}
+              value={formatCents(summary.paidCents)}
+              hint={t('invoices.summary.count', { count: summary.paidCount })}
+              loading={summaryLoading}
+            />
+            <StatTile
+              label={t('invoices.summary.total')}
+              value={formatCents(summary.totalCents)}
+              hint={t('invoices.summary.count', { count: summary.totalCount })}
+              loading={summaryLoading}
+            />
+          </StatStrip>
+        )}
         <Toolbar>
           <TabsRoot
             value={stateFilter || ALL_TAB}
@@ -376,7 +399,7 @@ export default function InvoicesPage() {
             <Button
               size="l"
               variant="outline"
-              disabled={loadingMore}
+              disabled={loadingMore || failed}
               onClick={() => loadMore()}
             >
               {t(

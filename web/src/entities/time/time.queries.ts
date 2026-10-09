@@ -3,7 +3,7 @@ import { endOfDay } from 'date-fns'
 
 import type { Time, TimeSort } from './types'
 
-import { baseApi } from '@/shared'
+import { baseApi, runApiData } from '@/shared'
 
 export type TimeQueryParams = {
   activityId?: string
@@ -44,31 +44,30 @@ const toFilterNumber = (value?: number | null | string) => {
 
 export const timeQuery = createQuery({
   handler: async (params: TimeQueryParams) => {
-    const response = await baseApi.timeControllerSearch({
-      body: {
-        filter: {
-          projectId: params?.activityId,
-          fromAt: toDateTime(params?.fromAt),
-          toAt: toDateTime(params?.toAt, true),
-          note: params.note,
-          minutesActiveFrom: toFilterNumber(params.timeActiveMin),
-          minutesActiveTo: toFilterNumber(params.timeActiveMax),
-          keyboardKeysFrom: toFilterNumber(params.keyboardKeysMin),
-          keyboardKeysTo: toFilterNumber(params.keyboardKeysMax),
-          mouseKeysFrom: toFilterNumber(params.mouseKeysMin),
-          mouseKeysTo: toFilterNumber(params.mouseKeysMax),
-          mouseDistanceFrom: toFilterNumber(params.mouseDistanceMin),
-          mouseDistanceTo: toFilterNumber(params.mouseDistanceMax),
+    const [items, total] = (await runApiData(() =>
+      baseApi.timeControllerSearch({
+        body: {
+          filter: {
+            projectId: params?.activityId,
+            fromAt: toDateTime(params?.fromAt),
+            toAt: toDateTime(params?.toAt, true),
+            note: params.note,
+            minutesActiveFrom: toFilterNumber(params.timeActiveMin),
+            minutesActiveTo: toFilterNumber(params.timeActiveMax),
+            keyboardKeysFrom: toFilterNumber(params.keyboardKeysMin),
+            keyboardKeysTo: toFilterNumber(params.keyboardKeysMax),
+            mouseKeysFrom: toFilterNumber(params.mouseKeysMin),
+            mouseKeysTo: toFilterNumber(params.mouseKeysMax),
+            mouseDistanceFrom: toFilterNumber(params.mouseDistanceMin),
+            mouseDistanceTo: toFilterNumber(params.mouseDistanceMax),
+          },
+          page: params?.page ?? 0,
+          sort: params?.sort ?? {},
         },
-        page: params?.page ?? 0,
-        sort: params?.sort ?? {},
-      },
-    })
+      }),
+    )) as [Time[], number]
 
-    return {
-      items: (response.data?.[0] ?? []) as Time[],
-      total: (response.data?.[1] ?? 0) as number,
-    }
+    return { items: items ?? [], total: Number(total ?? 0) }
   },
 })
 

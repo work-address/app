@@ -48,7 +48,7 @@ export const useInvoiceInfoFields = (): InvoiceInfoFieldRow[] => {
     {
       id: 'rateHour',
       value: formatCurrency(report?.rateHour),
-      desc: t('common.metricDesc.rateHour'),
+      desc: t('invoice.metricDesc.rateHour'),
     },
     {
       id: 'timeTotal',

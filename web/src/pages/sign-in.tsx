@@ -62,13 +62,19 @@ export default function SignInPage() {
           <AuthWalletList wallets={line.wallets} breakAfter={Infinity} />
         </FootLine>
       ))}
-      <Version>Version: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}</Version>
+      <Version>
+        {t('signIn.version')}: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}
+      </Version>
     </>
   )
 
   return (
     <>
-      <PageHelmet title={t('signIn.title')} description={t('signIn.meta')} />
+      <PageHelmet
+        title={t('signIn.title')}
+        description={t('signIn.meta')}
+        noindex
+      />
       <Screen>
         <Panel>
           {loading && (
@@ -79,7 +85,18 @@ export default function SignInPage() {
           <PanelTop>
             <Logo src={LogoImage} alt={t('signIn.logoAlt')} />
           </PanelTop>
-          <Form onMouseLeave={() => setGuideMode('default')}>
+          <Form
+            onMouseLeave={(event) => {
+              if (!event.currentTarget.contains(document.activeElement)) {
+                setGuideMode('default')
+              }
+            }}
+            onBlur={(event) => {
+              if (!event.currentTarget.contains(event.relatedTarget)) {
+                setGuideMode('default')
+              }
+            }}
+          >
             <Heading>{t('signIn.heading')}</Heading>
             <Lead>{t('signIn.lead')}</Lead>
             <FieldLabel>{t('signIn.chooseNetwork')}</FieldLabel>
@@ -104,10 +121,18 @@ export default function SignInPage() {
         </Panel>
         <Brand>
           <BrandInner>
-            <BrandLayer data-visible={showHero || undefined}>
+            <BrandLayer
+              data-visible={showHero || undefined}
+              aria-hidden={!showHero}
+              inert={!showHero}
+            >
               <AuthHero />
             </BrandLayer>
-            <BrandLayer data-visible={!showHero || undefined}>
+            <BrandLayer
+              data-visible={!showHero || undefined}
+              aria-hidden={showHero}
+              inert={showHero}
+            >
               <AuthSignInGuide mode={guideMode} tone="dark" />
             </BrandLayer>
           </BrandInner>
@@ -232,6 +257,10 @@ const BrandLayer = styled.div`
   justify-content: flex-end;
   opacity: 0;
   transition: opacity 0.2s ease;
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
   pointer-events: none;
 
   &[data-visible] {
@@ -336,6 +365,10 @@ const Providers = styled.div`
 
 const Primer = styled.div`
   margin-top: 14px;
+
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    display: none;
+  }
 `
 
 const Divider = styled.hr`

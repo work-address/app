@@ -1,32 +1,16 @@
-import {
-  CalendarIcon,
-  ChevronLeftIcon,
-  ChevronRightIcon,
-  Cross2Icon,
-} from '@radix-ui/react-icons'
-import { IconButton, Popover, Text } from '@radix-ui/themes'
-import {
-  addDays,
-  addMonths,
-  eachDayOfInterval,
-  endOfMonth,
-  endOfWeek,
-  format,
-  isSameDay,
-  isSameMonth,
-  isToday,
-  startOfMonth,
-  startOfWeek,
-  subMonths,
-} from 'date-fns'
-import { enUS, ru } from 'date-fns/locale'
-import { useMemo, useState, type MouseEventHandler } from 'react'
+import { CalendarIcon, Cross2Icon } from '@radix-ui/react-icons'
+import { Popover } from '@radix-ui/themes'
+import { useId, useMemo, useState } from 'react'
+import { DayPicker } from 'react-day-picker'
+import { enUS, es, ja, ru, zhCN } from 'react-day-picker/locale'
+import 'react-day-picker/style.css'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { Button } from './button/ui/button'
-import { Input, type InputProps } from './input'
-import { Tooltip } from './tooltip'
+import { IconButton } from './button/ui/icon-button'
+
+import type { InputProps } from './input'
 
 type DatePickerProps = {
   value?: Date | null
@@ -39,13 +23,7 @@ type DatePickerProps = {
   allowClear?: boolean
 }
 
-function dateFnsLocaleFor(lng: string | undefined) {
-  return lng?.toLowerCase().startsWith('ru') ? ru : enUS
-}
-
-function intlLocaleFor(lng: string | undefined) {
-  return lng?.toLowerCase().startsWith('ru') ? 'ru-RU' : 'en-US'
-}
+const locales = { en: enUS, es, ja, ru, zh: zhCN }
 
 export const DatePickerInput = ({
   value,
@@ -53,249 +31,197 @@ export const DatePickerInput = ({
   label,
   placeholder,
   id,
-  labelWidth,
   inputProps,
   allowClear = true,
 }: DatePickerProps) => {
   const { t, i18n } = useTranslation()
-  const dateFnsLocale = dateFnsLocaleFor(i18n.resolvedLanguage)
-  const resolvedPlaceholder = placeholder ?? t('ui.datePicker.pickDate')
+  const generatedId = useId()
+  const fieldId = id ?? generatedId
   const [open, setOpen] = useState(false)
-  const [viewDate, setViewDate] = useState(value ?? new Date())
+  const [month, setMonth] = useState(value ?? new Date())
   const [pendingDate, setPendingDate] = useState<Date | null>(value ?? null)
+  const language = i18n.resolvedLanguage ?? i18n.language ?? 'en'
+  const locale = locales[language.split('-')[0] as keyof typeof locales] ?? enUS
+  const formatter = useMemo(() => new Intl.DateTimeFormat(language), [language])
+  const disabled = Boolean(inputProps?.disabled || inputProps?.readOnly)
+  const ph = placeholder ?? t('ui.datePicker.pickDate')
 
-  const inputDateFormatter = useMemo(
-    () => new Intl.DateTimeFormat(intlLocaleFor(i18n.resolvedLanguage)),
-    [i18n.resolvedLanguage],
-  )
-
-  const weekDayLabels = useMemo(() => {
-    const ref = startOfWeek(new Date(2025, 0, 15), { locale: dateFnsLocale })
-
-    return Array.from({ length: 7 }, (_, i) =>
-      format(addDays(ref, i), 'EEE', { locale: dateFnsLocale }),
-    )
-  }, [dateFnsLocale])
-
-  const days = eachDayOfInterval({
-    start: startOfWeek(startOfMonth(viewDate), { locale: dateFnsLocale }),
-    end: endOfWeek(endOfMonth(viewDate), { locale: dateFnsLocale }),
-  })
-
-  const handleConfirm = () => {
-    onChange?.(pendingDate)
-    setOpen(false)
-  }
-
-  const handleCancel = () => {
-    setPendingDate(value ?? null)
-    setOpen(false)
-  }
-
-  const handleOpenChange = (next: boolean) => {
-    if (!next) {
-      setPendingDate(value ?? null)
+  const changeOpen = (next: boolean) => {
+    if (next && disabled) {
+      return
     }
-
+    setPendingDate(value ?? null)
+    if (next) {
+      setMonth(value ?? new Date())
+    }
     setOpen(next)
   }
 
-  const handleClear: MouseEventHandler<HTMLButtonElement> = (e) => {
-    e.stopPropagation()
-    onChange?.(null)
-  }
-
   return (
-    <Popover.Root open={open} onOpenChange={handleOpenChange} modal={false}>
-      <Popover.Trigger>
-        <span style={{ width: '100%' }}>
-          <Input
-            id={id}
-            label={label}
-            labelWidth={labelWidth}
-            value={value ? inputDateFormatter.format(value) : ''}
-            placeholder={resolvedPlaceholder}
-            addonLeft={<CalendarIcon />}
-            addonRight={
-              !!value && allowClear ? (
-                <Tooltip content={t('ui.datePicker.clear')}>
-                  <IconButton
-                    variant="ghost"
-                    size="1"
-                    color="gray"
-                    onClick={handleClear}
-                    style={{ cursor: 'pointer' }}
-                    aria-label={t('ui.datePicker.clear')}
-                  >
-                    <Cross2Icon />
-                  </IconButton>
-                </Tooltip>
-              ) : undefined
-            }
-            {...inputProps}
+    <Root>
+      {label ? <Label htmlFor={fieldId}>{label}</Label> : null}
+      <Popover.Root open={open} onOpenChange={changeOpen} modal={false}>
+        <Field>
+          <Popover.Trigger>
+            <Trigger
+              id={fieldId}
+              type="button"
+              disabled={disabled}
+              aria-label={label ? undefined : ph}
+              aria-haspopup="dialog"
+              aria-expanded={open}
+              aria-controls={open ? `${fieldId}-calendar` : undefined}
+              data-placeholder={!value || undefined}
+              style={inputProps?.style}
+            >
+              <CalendarIcon aria-hidden />
+              <Value>{value ? formatter.format(value) : ph}</Value>
+            </Trigger>
+          </Popover.Trigger>
+          {value && allowClear ? (
+            <Clear
+              type="button"
+              variant="ghost"
+              color="gray"
+              size="1"
+              disabled={disabled}
+              aria-label={t('ui.datePicker.clear')}
+              onClick={() => {
+                setPendingDate(null)
+                onChange?.(null)
+                setOpen(false)
+              }}
+            >
+              <Cross2Icon aria-hidden />
+            </Clear>
+          ) : null}
+        </Field>
+        <Content
+          id={`${fieldId}-calendar`}
+          aria-label={label ?? ph}
+          align="start"
+          sideOffset={4}
+        >
+          <Calendar
+            mode="single"
+            selected={pendingDate ?? undefined}
+            onSelect={(date) => setPendingDate(date ?? null)}
+            month={month}
+            onMonthChange={setMonth}
+            locale={locale}
+            autoFocus
           />
-        </span>
-      </Popover.Trigger>
-      <Popover.Content
-        style={{ padding: 0, width: 340, zIndex: 100 }}
-        align="start"
-        sideOffset={4}
-        container={document.body}
-      >
-        <CalendarWrapper>
-          <CalendarHeader>
-            <NavButton
+          <Footer>
+            <Button
               type="button"
-              aria-label={t('ui.datePicker.previousMonth')}
-              onClick={() => setViewDate(subMonths(viewDate, 1))}
+              color="neutral"
+              variant="soft"
+              onClick={() => changeOpen(false)}
             >
-              <ChevronLeftIcon width={18} height={18} />
-            </NavButton>
-            <MonthLabel>
-              <Text size="4" weight="bold">
-                {format(viewDate, 'LLLL yyyy', { locale: dateFnsLocale })}
-              </Text>
-            </MonthLabel>
-            <NavButton
-              type="button"
-              aria-label={t('ui.datePicker.nextMonth')}
-              onClick={() => setViewDate(addMonths(viewDate, 1))}
-            >
-              <ChevronRightIcon width={18} height={18} />
-            </NavButton>
-          </CalendarHeader>
-          <CalendarGrid>
-            {weekDayLabels.map((d, i) => (
-              <WeekDay key={`${d}-${i}`}>
-                <Text size="1" color="gray" weight="medium">
-                  {d}
-                </Text>
-              </WeekDay>
-            ))}
-            {days.map((day) => {
-              const isSelected = pendingDate
-                ? isSameDay(day, pendingDate)
-                : false
-
-              const isCurrentMonth = isSameMonth(day, viewDate)
-              const isTodayDate = isToday(day)
-
-              return (
-                <DayCell
-                  key={day.toISOString()}
-                  data-selected={isSelected || undefined}
-                  data-other-month={!isCurrentMonth || undefined}
-                  data-today={(isTodayDate && !isSelected) || undefined}
-                  onClick={() => setPendingDate(day)}
-                >
-                  <Text size="2" weight={isSelected ? 'bold' : 'regular'}>
-                    {format(day, 'd')}
-                  </Text>
-                </DayCell>
-              )
-            })}
-          </CalendarGrid>
-          <CalendarFooter>
-            <Button color="neutral" variant="soft" onClick={handleCancel}>
               {t('ui.datePicker.cancel')}
             </Button>
-            <Button onClick={handleConfirm}>
+            <Button
+              type="button"
+              onClick={() => {
+                onChange?.(pendingDate)
+                setOpen(false)
+              }}
+            >
               {t('ui.datePicker.confirm')}
             </Button>
-          </CalendarFooter>
-        </CalendarWrapper>
-      </Popover.Content>
-    </Popover.Root>
+          </Footer>
+        </Content>
+      </Popover.Root>
+    </Root>
   )
 }
 
-const CalendarWrapper = styled.div`
-  padding: 20px;
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-`
-
-const CalendarHeader = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-`
-
-const MonthLabel = styled.div`
-  flex: 1;
-  text-align: center;
-`
-
-const NavButton = styled.button`
-  background: none;
-  border: none;
-  cursor: pointer;
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  width: 32px;
-  height: 32px;
-  border-radius: var(--radius-2);
-  color: var(--ds-neutral-11);
-  transition: background 0.15s;
-
-  &:hover {
-    background: var(--ds-neutral-alpha-3);
-  }
-`
-
-const CalendarGrid = styled.div`
+const Root = styled.div`
   display: grid;
-  grid-template-columns: repeat(7, 1fr);
-  gap: 2px 0;
-`
-
-const WeekDay = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 36px;
-`
-
-const DayCell = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  height: 44px;
-  border-radius: 50%;
-  cursor: pointer;
-  transition: background 0.15s;
-  background: transparent;
-  color: var(--ds-neutral-12);
-  outline: none;
-
-  &:hover {
-    background: var(--ds-neutral-alpha-3);
-  }
-
-  &[data-other-month] {
-    opacity: 0.3;
-  }
-
-  &[data-today] {
-    outline: 1.5px solid var(--ds-accent-11);
-  }
-
-  &[data-selected] {
-    background: var(--ds-accent-11);
-    color: var(--white);
-
-    &:hover {
-      background: var(--ds-accent-11);
-    }
-  }
-`
-
-const CalendarFooter = styled.div`
-  display: flex;
-  justify-content: flex-end;
   gap: var(--space-2);
-  padding-top: var(--space-4);
+  width: 100%;
+  min-width: 0;
+`
+const Label = styled.label`
+  font-size: var(--font-size-2);
+  font-weight: 500;
+`
+const Field = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  /* Include the border in the same outside height as Input. */
+  height: var(--space-6);
+  border: 1px solid var(--gray-a7);
+  border-radius: var(--radius-2);
+  background: var(--color-surface);
+  &:focus-within {
+    outline: 2px solid var(--ds-accent-8);
+    outline-offset: 2px;
+  }
+  ${(p) => p.theme.breakpoints.down('md')} {
+    height: var(--space-7);
+  }
+`
+const Trigger = styled.button`
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  gap: var(--space-2);
+  align-items: center;
+  padding: 0 var(--space-2);
+  height: 100%;
+  min-height: 0;
+  min-width: 0;
+  color: var(--gray-12);
+  text-align: left;
+  font: inherit;
+  font-size: var(--font-size-2);
+  line-height: var(--line-height-2);
+  outline: none;
+  &[data-placeholder] {
+    color: var(--gray-a10);
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  ${(p) => p.theme.breakpoints.down('md')} {
+    font-size: var(--font-size-3);
+    line-height: var(--line-height-3);
+  }
+`
+const Value = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
+const Clear = styled(IconButton)`
+  margin-inline-end: var(--space-2);
+`
+const Content = styled(Popover.Content)`
+  width: max-content;
+  max-width: calc(100vw - var(--space-7));
+  padding: var(--space-3);
+  z-index: 100;
+`
+const Calendar = styled(DayPicker)`
+  --rdp-accent-color: var(--ds-accent-11);
+  --rdp-accent-background-color: var(--ds-accent-3);
+  --rdp-day-width: 40px;
+  --rdp-day-height: 40px;
+  --rdp-day_button-width: 40px;
+  --rdp-day_button-height: 40px;
+  --rdp-selected-border: 2px solid var(--ds-accent-11);
+  font-family: inherit;
+  font-size: var(--font-size-2);
+  color: var(--gray-12);
+`
+const Footer = styled.div`
+  display: grid;
+  grid-auto-flow: column;
+  justify-content: end;
+  gap: var(--space-2);
+  padding-block-start: var(--space-3);
+  margin-block-start: var(--space-3);
   border-top: 1px solid var(--ds-neutral-alpha-6);
 `

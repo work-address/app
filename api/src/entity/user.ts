@@ -42,7 +42,8 @@ export class User extends AbstractBaseEntity implements IUser {
   @IsString()
   @IsOptional()
   @IsOptional({ groups: ['edit'] })
-  email: string
+  @JSONSchema(() => ({ type: 'string', nullable: true }))
+  email: string | null
 
   @Expose({ groups: ['search', 'edit'] })
   @Column('text', { nullable: true })

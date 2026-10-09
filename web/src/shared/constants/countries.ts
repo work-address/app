@@ -134,10 +134,36 @@ export const COUNTRY_OPTIONS: { value: string; label: string }[] = [
   { value: 'ZW', label: 'Zimbabwe' },
 ]
 
-export const getCountryLabel = (code?: string | null): string => {
+const getRegionDisplayNames = (locale: string): Intl.DisplayNames | null => {
+  try {
+    return new Intl.DisplayNames([locale], { type: 'region' })
+  } catch {
+    return null
+  }
+}
+
+/** Localize only labels; the profile API continues to receive ISO codes. */
+export const getCountryOptions = (locale = 'en'): typeof COUNTRY_OPTIONS => {
+  const displayNames = getRegionDisplayNames(locale)
+
+  return COUNTRY_OPTIONS.map((option) => ({
+    value: option.value,
+    label: displayNames?.of(option.value) ?? option.label,
+  }))
+}
+
+export const getCountryLabel = (
+  code?: string | null,
+  locale = 'en',
+): string => {
   if (!code) {
     return ''
   }
 
-  return COUNTRY_OPTIONS.find((option) => option.value === code)?.label ?? code
+  const option = COUNTRY_OPTIONS.find((option) => option.value === code)
+  if (!option) {
+    return code
+  }
+
+  return getRegionDisplayNames(locale)?.of(code) ?? option.label
 }

@@ -1,33 +1,39 @@
-import { createQuery } from '@farfetched/core'
+import { concurrency, createQuery } from '@farfetched/core'
 
 import { normalizeProcessName } from './utils'
 
 import type { ProjectProcessStats, StatsPeriod, TimeTotalsRow } from './types'
 
-import { baseApi, runApiData, suppressGlobalErrorToast } from '@/shared'
+import {
+  baseApi,
+  collectSearchPages,
+  runApiData,
+  suppressGlobalErrorToast,
+} from '@/shared'
 
 export const projectsQuery = createQuery({
-  handler: async ({
-    page = 0,
-    limit = 50,
-  }: { page?: number; limit?: number } = {}) => {
-    // `runApiData` rejects on failure. Reading `.data?.[0] ?? []` instead
-    // turned a 500 or a dropped connection into an empty list, and the
-    // dashboard then offered a new account's "create your first project".
-    const [items, total] = (await runApiData(() =>
-      baseApi.projectControllerSearch({
-        body: {
-          filter: {},
-          page,
-          sort: { createdAt: 'DESC' },
-          limit,
-        },
-      }),
-    )) as [baseApi.Project[], number]
+  handler: async () => {
+    // Unique id order keeps tied creation dates stable across every page.
+    const items = await collectSearchPages<baseApi.Project>(
+      async (page, limit) =>
+        (await runApiData(() =>
+          baseApi.projectControllerSearch({
+            body: { filter: {}, page, sort: { id: 'ASC' }, limit },
+          }),
+        )) as [baseApi.Project[], number],
+    )
 
-    return { items: items ?? [], total: total ?? 0 }
+    // Preserve the dashboard's newest-first presentation after collecting.
+    items.sort(
+      (a, b) =>
+        (b.createdAt ?? '').localeCompare(a.createdAt ?? '') ||
+        (a.id ?? '').localeCompare(b.id ?? ''),
+    )
+    return { items, total: items.length }
   },
 })
+
+concurrency(projectsQuery, { strategy: 'TAKE_LATEST' })
 
 export const projectsStatsQuery = createQuery({
   handler: async (projectIds: string[]): Promise<TimeTotalsRow[]> => {
@@ -36,18 +42,25 @@ export const projectsStatsQuery = createQuery({
     }
 
     const responses = await Promise.all(
-      projectIds.map((id) =>
-        baseApi.timeControllerGetTotals({
-          path: { id: id as never },
-        }),
-      ),
+      projectIds.map(async (id) => {
+        try {
+          return (await runApiData(() =>
+            baseApi.timeControllerGetTotals({ path: { id: id as never } }),
+          )) as TimeTotalsRow[]
+        } catch (error) {
+          // Every request belongs to the same inline failure, including
+          // rejections arriving after Promise.all has already failed.
+          suppressGlobalErrorToast(error)
+          throw error
+        }
+      }),
     )
 
-    return responses.flatMap(
-      (response) => (response.data ?? []) as TimeTotalsRow[],
-    )
+    return responses.flat()
   },
 })
+
+concurrency(projectsStatsQuery, { strategy: 'TAKE_LATEST' })
 
 export const projectsProcessStatsQuery = createQuery({
   handler: async ({

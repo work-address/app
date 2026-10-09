@@ -113,7 +113,7 @@ export default function InvoicePage() {
           {isMobile && (
             <MobileHead>
               <TitleRow>
-                <IconButton
+                <BackButton
                   variant={'ghost'}
                   radius={'full'}
                   color={'gray'}
@@ -121,7 +121,7 @@ export default function InvoicePage() {
                   onClick={goBack}
                 >
                   <ArrowLeftIcon />
-                </IconButton>
+                </BackButton>
                 {loading ? (
                   <Skeleton width="150px" height="24px" />
                 ) : (
@@ -165,6 +165,11 @@ const InvoicePrintGlobalStyle = createGlobalStyle`
       overflow: visible;
       background: var(--white);
     }
+
+    header,
+    ol[data-sonner-toaster] {
+      display: none;
+    }
   }
 `
 
@@ -186,10 +191,6 @@ const Body = styled.div`
 const MobileHead = styled.div`
   display: grid;
   gap: var(--space-1);
-
-  @media print {
-    display: none;
-  }
 `
 
 const TitleRow = styled.div`
@@ -197,6 +198,16 @@ const TitleRow = styled.div`
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: var(--space-2);
+
+  @media print {
+    grid-template-columns: minmax(0, 1fr);
+  }
+`
+
+const BackButton = styled(IconButton)`
+  @media print {
+    display: none;
+  }
 `
 
 const InvoiceCard = styled(Card)`

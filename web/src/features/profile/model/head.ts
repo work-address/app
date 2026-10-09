@@ -34,6 +34,14 @@ export function buildProfileHead(
     }
   }
 
+  if (failure === 'failed') {
+    return {
+      title: t('profile.loadFailure.title'),
+      description: t('profile.head.descriptionGeneric'),
+      noindex: true,
+    }
+  }
+
   const who = name?.trim() || address || null
 
   if (isOwn) {

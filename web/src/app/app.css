@@ -9,7 +9,7 @@
 }
 
 body {
-  font-family: "Inter", sans-serif;
+  font-family: 'Inter', sans-serif;
   background-color: var(--ds-neutral-2);
 }
 
@@ -52,4 +52,19 @@ button {
   clip-path: inset(50%);
   white-space: nowrap;
   border: 0;
+}
+
+/* Route view transitions follow the same preference as motion/react. */
+@media (prefers-reduced-motion: reduce) {
+  [data-vaul-drawer][data-state][data-vaul-drawer-direction],
+  [data-vaul-overlay][data-state][data-vaul-snap-points] {
+    animation-duration: 0s;
+    transition-duration: 0s;
+  }
+
+  ::view-transition-group(*),
+  ::view-transition-old(*),
+  ::view-transition-new(*) {
+    animation-duration: 0s;
+  }
 }

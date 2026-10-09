@@ -1,6 +1,6 @@
 import { Grid, type GridProps, type TextProps } from '@radix-ui/themes'
 import { TextField, Text } from '@radix-ui/themes'
-import { forwardRef, type ReactNode } from 'react'
+import { forwardRef, useId, type ReactNode } from 'react'
 import styled from 'styled-components'
 import { match, P } from 'ts-pattern'
 
@@ -19,6 +19,7 @@ export type InputProps = TextField.RootProps & {
   textSize?: TextProps['size']
   textWeight?: TextProps['weight']
   state?: 'error' | 'valid'
+  errorMessage?: string
 }
 
 export const Input = forwardRef(
@@ -35,6 +36,7 @@ export const Input = forwardRef(
       textSize,
       textWeight,
       state,
+      errorMessage,
       size,
       onChange,
       ...props
@@ -42,6 +44,9 @@ export const Input = forwardRef(
     ref: React.Ref<HTMLInputElement>,
   ) => {
     const isDesktop = useBreakpoint('isDesktop')
+    const generatedId = useId()
+    const resolvedId = id ?? generatedId
+    const errorId = `${resolvedId}-error`
 
     // A label above its field sits close to it; a label beside it (the
     // two-column profile form) needs a gutter. Stacked is the norm, so the
@@ -70,7 +75,7 @@ export const Input = forwardRef(
     }
 
     return (
-      <Grid
+      <Root
         columns={columns ?? { initial: '1', md: `${labelWidth} 1fr` }}
         gap={usingGap}
         rows={rows}
@@ -82,16 +87,25 @@ export const Input = forwardRef(
             as={'label'}
             size={textSize || '2'}
             weight={textWeight || 'medium'}
-            htmlFor={id}
+            htmlFor={resolvedId}
           >
             {label}
           </Text>
         )}
-        <TextFieldRoot
-          id={id}
+        <Field
+          id={resolvedId}
           size={size ?? (isDesktop ? undefined : '3')}
           ref={ref}
           {...props}
+          aria-invalid={state === 'error' || props['aria-invalid'] || undefined}
+          aria-describedby={
+            [
+              props['aria-describedby'],
+              state === 'error' && errorMessage ? errorId : undefined,
+            ]
+              .filter(Boolean)
+              .join(' ') || undefined
+          }
           {...errorProps}
           onChange={handleChange}
         >
@@ -101,13 +115,20 @@ export const Input = forwardRef(
           {addonRight && (
             <TextField.Slot side={'right'}>{addonRight}</TextField.Slot>
           )}
-        </TextFieldRoot>
-      </Grid>
+        </Field>
+        {state === 'error' && errorMessage ? (
+          <Error id={errorId} role="alert">
+            {errorMessage}
+          </Error>
+        ) : null}
+      </Root>
     )
   },
 )
 
-const TextFieldRoot = styled(TextField.Root)`
+const Root = styled(Grid)``
+
+const Field = styled(TextField.Root)`
   & .rt-TextFieldInput {
     text-overflow: ellipsis;
     white-space: nowrap;
@@ -117,4 +138,11 @@ const TextFieldRoot = styled(TextField.Root)`
   & :where(.rt-TextFieldInput) {
     min-width: 0;
   }
+`
+
+const Error = styled.p`
+  grid-column: 1 / -1;
+  color: var(--red-11);
+  font-size: var(--font-size-2);
+  line-height: var(--line-height-2);
 `

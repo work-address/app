@@ -1,9 +1,9 @@
 import { Cross1Icon, ExitIcon, HamburgerMenuIcon } from '@radix-ui/react-icons'
 import { useUnit } from 'effector-react'
-import { AnimatePresence, motion } from 'motion/react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useState, useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, NavLink } from 'react-router-dom'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { MobileMenuNav, mobileMenuRowStyles } from '../styled'
@@ -15,7 +15,7 @@ import { MobileMenu, itemVariants } from './mobile-menu'
 import { $authenticated, $user, logout } from '@/entities/profile'
 import { showPremiumBanner } from '@/features/dashboard'
 import { routes } from '@/routes'
-import { Logo, useBreakpoint, Button, navigateFx, Tooltip } from '@/shared'
+import { Logo, useBreakpoint, LinkButton, navigateFx, Tooltip } from '@/shared'
 
 /**
  * The mobile header is one row of equals: the logo, the profile card and the
@@ -37,6 +37,7 @@ const menuVariants = {
 
 export const Header = () => {
   const { t } = useTranslation()
+  const reducedMotion = useReducedMotion()
   const logoutEvent = useUnit(logout)
   const showBanner = useUnit(showPremiumBanner)
 
@@ -122,9 +123,9 @@ export const Header = () => {
               </Tooltip>
             </>
           ) : (
-            <NavLink to={routes.signIn.build()} viewTransition>
-              <Button size="l">{t('signIn.title')}</Button>
-            </NavLink>
+            <LinkButton to={routes.signIn.build()} size="l" viewTransition>
+              {t('signIn.title')}
+            </LinkButton>
           )}
         </Right>
         <MobileRight>
@@ -163,25 +164,28 @@ export const Header = () => {
               initial={{ height: 0, opacity: 0 }}
               animate={{ height: 'auto', opacity: 1 }}
               exit={{ height: 0, opacity: 0 }}
-              transition={{ duration: 0.18, ease: 'easeInOut' }}
+              transition={{
+                duration: reducedMotion ? 0 : 0.18,
+                ease: 'easeInOut',
+              }}
             >
               <MobileMenuInner>
                 {!authenticated && (
                   <>
                     <MobileMenuTop>
-                      <NavLink
+                      <LinkButton
                         to={routes.signIn.build()}
-                        style={{ width: '100%' }}
+                        stretch
                         onClick={() => setMobileMenuOpen(false)}
                       >
-                        <Button stretch>{t('signIn.title')}</Button>
-                      </NavLink>
+                        {t('signIn.title')}
+                      </LinkButton>
                     </MobileMenuTop>
                     <Divider />
                   </>
                 )}
                 <MobileMenuNav
-                  variants={menuVariants}
+                  variants={reducedMotion ? {} : menuVariants}
                   initial="initial"
                   animate="animate"
                   exit="exit"
@@ -195,7 +199,7 @@ export const Header = () => {
                         setMobileMenuOpen(false)
                         logoutEvent()
                       }}
-                      variants={itemVariants}
+                      variants={reducedMotion ? {} : itemVariants}
                     >
                       <ExitIcon width={18} height={18} aria-hidden="true" />
                       <span>{t('header.exit')}</span>

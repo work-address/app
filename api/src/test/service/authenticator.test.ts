@@ -59,7 +59,7 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
 
     // email change
     const userUpdate = await runPromise(
-      this.userRepository.findByEmailPhoneOrFail(user.email),
+      this.userRepository.findByEmailPhoneOrFail(email),
     )
     userUpdate.email = faker.internet.email()
     await runPromise(this.userRepository.saveSingle(userUpdate))

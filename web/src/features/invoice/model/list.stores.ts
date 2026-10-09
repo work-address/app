@@ -1,11 +1,13 @@
 import { combine, createEvent, createStore } from 'effector'
 
-import { markInvoicePaidMutation, markInvoiceUnpaidMutation } from './mutations'
+import { applyInvoiceSettlement } from './invoice-feed'
 import { invoiceListQuery, invoiceSummaryQuery } from './queries'
+import { invoiceSettlementApplied } from './settlement.events'
 
 import type { baseApi } from '@/shared'
 
 export const fetchInvoiceList = createEvent()
+export const retryInvoiceSummary = createEvent()
 export const loadMoreInvoices = createEvent()
 export const invoiceProjectFilterChanged = createEvent<string>()
 
@@ -49,8 +51,11 @@ const emptyFeed: InvoiceFeed = { items: [], endReached: false }
  */
 export const $invoiceFeed = createStore<InvoiceFeed>(emptyFeed)
   .on(invoiceListQuery.finished.success, (feed, { params, result }) => {
-    if (params.page === 0) {
-      return { items: result.items, endReached: result.items.length === 0 }
+    if (params.page === 0 || params.reloadThroughPage !== undefined) {
+      return {
+        items: result.items,
+        endReached: result.items.length >= result.total,
+      }
     }
 
     // Deduplicated by id: rows shift between pages when an invoice is raised
@@ -65,43 +70,24 @@ export const $invoiceFeed = createStore<InvoiceFeed>(emptyFeed)
       endReached: fresh.length === 0,
     }
   })
-  // Settling an invoice patches the row in place. Refetching would drop every
-  // page loaded after the first and jump the reader back to the top.
-  .on(
-    [
-      markInvoicePaidMutation.finished.success,
-      markInvoiceUnpaidMutation.finished.success,
-    ],
-    (feed, { params }) => ({
-      ...feed,
-      items: feed.items.map((item) => {
-        if (item.id !== params) {
-          return item
-        }
-
-        const settled = item.state !== 'PAID'
-
-        return {
-          ...item,
-          state: settled ? 'PAID' : 'Requested',
-          // Cleared rather than set to null: the field is optional in the
-          // response, and a null would render as a date of "1 Jan 1970".
-          paidAt: settled ? new Date().toISOString() : undefined,
-        }
-      }),
-    }),
-  )
+  .on(invoiceSettlementApplied, (feed, { invoice, filter }) => ({
+    ...feed,
+    items: applyInvoiceSettlement(feed.items, invoice, filter),
+  }))
   .reset(invoiceFilterChanged)
 
 export const $invoices = $invoiceFeed.map((feed) => feed.items)
 
 export const $invoicesTotal = createStore(0)
   .on(invoiceListQuery.finished.success, (_, { result }) => result.total)
+  .on(invoiceSettlementApplied, (total, { removed }) =>
+    removed ? Math.max(0, total - 1) : total,
+  )
   .reset(invoiceFilterChanged)
 
 /** The last page the server actually answered for, so the next is page + 1. */
 export const $invoicePage = createStore(0)
-  .on(invoiceListQuery.finished.success, (_, { params }) => params.page)
+  .on(invoiceListQuery.finished.success, (_, { result }) => result.page)
   .reset(invoiceFilterChanged)
 
 export const $hasMoreInvoices = combine(
@@ -114,10 +100,24 @@ export const $hasMoreInvoices = combine(
  * Distinguishes the first load from a later page: the first shows skeletons in
  * place of the list, a later one only disables the button at the bottom.
  */
-export const $isLoadingMoreInvoices = createStore(false)
-  .on(invoiceListQuery.start, (_, params) => params.page > 0)
-  .on(invoiceListQuery.finished.finally, () => false)
+// A failed prefix reload remembers its span, so retry preserves loaded pages.
+export const $invoiceReloadThroughPage = createStore<number | null>(null)
+  .on(invoiceListQuery.start, (_, params) => params.reloadThroughPage ?? null)
+  .on(invoiceListQuery.finished.success, () => null)
   .reset(invoiceFilterChanged)
+
+const $invoiceRequestedPage = createStore({ page: 0, reload: false })
+  .on(invoiceListQuery.start, (_, params) => ({
+    page: params.page,
+    reload: params.reloadThroughPage !== undefined,
+  }))
+  .reset(invoiceFilterChanged)
+
+export const $isLoadingMoreInvoices = combine(
+  invoiceListQuery.$pending,
+  $invoiceRequestedPage,
+  (pending, request) => pending && (request.page > 0 || request.reload),
+)
 
 export type InvoiceSummary = {
   paidCents: number
@@ -163,8 +163,6 @@ export const $invoiceSummary = invoiceSummaryQuery.$data.map(
     }, emptySummary),
 )
 
-export const $invoiceSummaryLoading = combine(
-  invoiceSummaryQuery.$pending,
-  invoiceSummaryQuery.$data,
-  (pending, data) => pending && data === null,
-)
+// Hide an earlier filter's figures during refresh instead of showing stale sums.
+export const $invoiceSummaryLoading = invoiceSummaryQuery.$pending
+export const $invoiceSummaryFailed = invoiceSummaryQuery.$failed

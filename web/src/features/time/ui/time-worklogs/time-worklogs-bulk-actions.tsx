@@ -1,21 +1,17 @@
 import { TrashIcon } from '@radix-ui/react-icons'
 import { useUnit } from 'effector-react'
-import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import {
   $isTimeBulkPending,
   $selectedTimeCount,
-  $selectedTimeIds,
-  timeBulkDeleteRequested,
-  timeBulkPaidStatusRequested,
-  timeSelectionCleared,
+  $selectedTimeProjectId,
+  timeBulkActionRequested,
+  timeBulkSelectionClearRequested,
 } from '../../model'
 
-import { $allTime } from '@/entities/time'
-import { invoiceSelectedTimeMutation } from '@/features/invoice'
-import { Button, ListPageLayout as S, showToast, Tooltip } from '@/shared'
+import { Button, ListPageLayout as S, Tooltip } from '@/shared'
 
 const TRASH_ICON_SIZE = 12
 
@@ -24,59 +20,18 @@ export const TimeWorklogsBulkActions = () => {
   const { t } = useTranslation()
 
   const {
-    entries,
-    selectedIds,
     selectedCount,
+    selectedProjectId,
     isBulkPending,
-    invoicing,
-    invoiceSelected,
-    requestBulkDelete,
-    requestBulkPaidStatus,
+    request,
     clearSelection,
   } = useUnit({
-    entries: $allTime,
-    selectedIds: $selectedTimeIds,
     selectedCount: $selectedTimeCount,
+    selectedProjectId: $selectedTimeProjectId,
     isBulkPending: $isTimeBulkPending,
-    invoicing: invoiceSelectedTimeMutation.$pending,
-    invoiceSelected: invoiceSelectedTimeMutation.start,
-    requestBulkDelete: timeBulkDeleteRequested,
-    requestBulkPaidStatus: timeBulkPaidStatusRequested,
-    clearSelection: timeSelectionCleared,
+    request: timeBulkActionRequested,
+    clearSelection: timeBulkSelectionClearRequested,
   })
-
-  /**
-   * The project the current selection belongs to, or null when it spans more
-   * than one.
-   *
-   * An invoice is per-project by construction - it carries one rate and one
-   * counterparty - so a mixed selection has no single answer and the action is
-   * refused rather than silently splitting into several invoices.
-   */
-  const selectedProjectId = useMemo(() => {
-    const selected = new Set(selectedIds)
-    const projectIds = new Set(
-      entries
-        .filter((row) => row.id && selected.has(row.id))
-        .map((row) => row.project?.id)
-        .filter((id): id is string => Boolean(id)),
-    )
-
-    return projectIds.size === 1 ? [...projectIds][0] : null
-  }, [entries, selectedIds])
-
-  const handleInvoice = () => {
-    if (!selectedProjectId) {
-      showToast('info', {
-        message: t('dashboard.worklogsTable.bulk.invoiceOneProject'),
-        position: 'top-center',
-      })
-
-      return
-    }
-
-    invoiceSelected({ projectId: selectedProjectId, timeIds: selectedIds })
-  }
 
   return (
     <Root>
@@ -89,7 +44,7 @@ export const TimeWorklogsBulkActions = () => {
         size="s"
         type="button"
         disabled={isBulkPending}
-        onClick={() => requestBulkPaidStatus(true)}
+        onClick={() => request('paid')}
       >
         {t('dashboard.worklogsTable.paymentStatus.paid')}
       </Button>
@@ -99,19 +54,24 @@ export const TimeWorklogsBulkActions = () => {
         size="s"
         type="button"
         disabled={isBulkPending}
-        onClick={() => requestBulkPaidStatus(false)}
+        onClick={() => request('unpaid')}
       >
         {t('dashboard.worklogsTable.paymentStatus.unpaid')}
       </Button>
-      <Tooltip content={t('dashboard.worklogsTable.bulk.invoiceHint')}>
+      <Tooltip
+        content={t(
+          selectedProjectId
+            ? 'dashboard.worklogsTable.bulk.invoiceHint'
+            : 'dashboard.worklogsTable.bulk.invoiceOneProject',
+        )}
+      >
         <span>
           <Button
             variant="outline"
             size="s"
             type="button"
-            disabled={isBulkPending || invoicing}
-            loading={invoicing}
-            onClick={handleInvoice}
+            disabled={isBulkPending || !selectedProjectId}
+            onClick={() => request('invoice')}
           >
             {t('dashboard.worklogsTable.bulk.invoice')}
           </Button>
@@ -126,7 +86,7 @@ export const TimeWorklogsBulkActions = () => {
           <TrashIcon width={TRASH_ICON_SIZE} height={TRASH_ICON_SIZE} />
         }
         disabled={isBulkPending}
-        onClick={() => requestBulkDelete(selectedIds)}
+        onClick={() => request('delete')}
       >
         {t('dashboard.worklogsTable.bulk.delete')}
       </Button>

@@ -18,23 +18,15 @@ export {
   timeScreenshotRemoveRequested,
 } from './time-dialog.model'
 export {
-  $isTimeBulkPending,
   $isTimeDialogOpen,
-  $selectedTimeCount,
   $selectedTimeEntry,
   $selectedTimeId,
-  $selectedTimeIds,
   $timeFiltersOpen,
-  $timeSelection,
-  timeBulkDeleteRequested,
-  timeBulkPaidStatusRequested,
   timeDialogClosed,
   timeDialogOpenChanged,
   timeEntryFocused,
   timeFiltersOpenChanged,
   timeRowClicked,
-  timeSelectionChanged,
-  timeSelectionCleared,
 } from './time-table.model'
 export {
   DEFAULT_TIME_SORT_FIELD,
@@ -54,3 +46,20 @@ export type {
   TimeRow,
   TimeView,
 } from './types'
+
+export {
+  $selectedTimeCount,
+  $selectedTimeIds,
+  $timeSelection,
+  timeSelectionChanged,
+  timeSelectionCleared,
+} from './time-selection.model'
+export {
+  $isTimeBulkPending,
+  $selectedTimeProjectId,
+  timeBulkActionRequested,
+  timeBulkDeleteRequested,
+  timeBulkPaidStatusRequested,
+  timeBulkSelectionClearRequested,
+} from './time-bulk.model'
+export type { TimeBulkAction } from './time-bulk'

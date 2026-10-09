@@ -37,6 +37,16 @@ describe('buildProfileHead', () => {
     )
   })
 
+  it('does not publish a named profile preview when its request failed', () => {
+    expect(
+      buildProfileHead({ name: 'Gudrun', isOwn: false, failure: 'failed' }, t),
+    ).toEqual({
+      title: 'profile.loadFailure.title',
+      description: 'profile.head.descriptionGeneric',
+      noindex: true,
+    })
+  })
+
   it('says not found, unindexed, for an address with no account', () => {
     const head = buildProfileHead(
       { address: '0x99…9999', isOwn: false, failure: 'not-found' },

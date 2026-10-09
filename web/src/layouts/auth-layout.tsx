@@ -1,8 +1,9 @@
+import { Suspense } from 'react'
 import { matchPath, Outlet, useLocation } from 'react-router-dom'
 import styled, { css } from 'styled-components'
 
 import { routes } from '@/routes'
-import { SignBg } from '@/shared/icons'
+import { RouteSkeleton, SignBg } from '@/shared'
 
 export const AuthLayout = () => {
   const { pathname } = useLocation()
@@ -13,7 +14,9 @@ export const AuthLayout = () => {
   return (
     <Root $fullScreen={fullScreen}>
       <Stage $fullScreen={fullScreen}>
-        <Outlet />
+        <Suspense fallback={<RouteSkeleton variant="auth" />}>
+          <Outlet />
+        </Suspense>
       </Stage>
     </Root>
   )

@@ -1,6 +1,8 @@
 import { createMutation } from '@farfetched/core'
 
-import { baseApi, runApi, runApiData } from '@/shared'
+import { readInvoiceSettlement } from './invoice-feed'
+
+import { baseApi, runApiData } from '@/shared'
 
 /**
  * Marking an invoice paid is what marks the hours behind it paid - the server
@@ -9,18 +11,22 @@ import { baseApi, runApi, runApiData } from '@/shared'
  * one who knows whether it arrived.
  */
 export const markInvoicePaidMutation = createMutation({
-  handler: async (id: string) =>
-    runApi(() =>
+  handler: async (id: string) => {
+    const invoice = await runApiData(() =>
       baseApi.invoiceControllerMarkPaid({ path: { id: id as never } }),
-    ),
+    )
+    return readInvoiceSettlement(id, invoice as baseApi.InvoiceSearch)
+  },
 })
 
 /** Reverts a mistaken mark, releasing the hours back to unpaid. */
 export const markInvoiceUnpaidMutation = createMutation({
-  handler: async (id: string) =>
-    runApi(() =>
+  handler: async (id: string) => {
+    const invoice = await runApiData(() =>
       baseApi.invoiceControllerMarkUnpaid({ path: { id: id as never } }),
-    ),
+    )
+    return readInvoiceSettlement(id, invoice as baseApi.InvoiceSearch)
+  },
 })
 
 /**
@@ -45,19 +51,5 @@ export const ensureInvoiceMutation = createMutation({
     ) as Promise<baseApi.InvoiceSearch | null>,
 })
 
-/**
- * Bills exactly the entries picked in the time table.
- *
- * The server links each entry to the invoice rather than recording a date
- * range, so a sparse selection - Monday and Friday, say - leaves Wednesday
- * still invoiceable instead of silently swallowing it.
- */
-export const invoiceSelectedTimeMutation = createMutation({
-  handler: async (params: { projectId: string; timeIds: string[] }) =>
-    runApiData(() =>
-      baseApi.invoiceControllerCreate({
-        path: { projectId: params.projectId as never },
-        body: { timeIds: params.timeIds },
-      }),
-    ) as Promise<baseApi.InvoiceSearch | null>,
-})
+// Kept public here for existing invoice consumers and success routing.
+export { invoiceSelectedTimeMutation } from '@/entities/invoice'

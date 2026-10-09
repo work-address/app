@@ -24,7 +24,7 @@ export const Drawer = ({
     >
       {trigger && (
         <Vaul.Drawer.Trigger asChild>
-          <Theme> {trigger} </Theme>
+          <Theme asChild>{trigger}</Theme>
         </Vaul.Drawer.Trigger>
       )}
       <Vaul.Drawer.Portal>

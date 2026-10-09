@@ -370,7 +370,8 @@
             "type": "string"
           },
           "email": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "phone": {
             "type": "string"
@@ -676,6 +677,13 @@
       },
       "ProjectSearchSortDto": {
         "properties": {
+          "id": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
           "createdAt": {
             "type": "string",
             "enum": [
@@ -1283,7 +1291,8 @@
             "type": "string"
           },
           "email": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "phone": {
             "type": "string"
@@ -1352,7 +1361,8 @@
         "description": "Subset of User serialized with class-transformer group \"edit\".",
         "properties": {
           "email": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "phone": {
             "type": "string"

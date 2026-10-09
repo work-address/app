@@ -35,6 +35,7 @@ type ProfileEditFieldProps<T extends FieldPath<ProfileEditFormState>> = {
   register: UseFormRegister<ProfileEditFormState>
   rules?: RegisterOptions<ProfileEditFormState, T>
   error?: boolean
+  errorMessage?: string
   loading: boolean
   disabled: boolean
   addonLeft?: React.ReactNode
@@ -48,6 +49,7 @@ export const ProfileEditField = <T extends FieldPath<ProfileEditFormState>>({
   register,
   rules,
   error,
+  errorMessage,
   loading,
   disabled,
   addonLeft,
@@ -61,6 +63,7 @@ export const ProfileEditField = <T extends FieldPath<ProfileEditFormState>>({
       id={name}
       disabled={disabled}
       state={error ? 'error' : undefined}
+      errorMessage={errorMessage}
       addonLeft={addonLeft}
       inputMode={inputMode}
       {...register(name, rules)}

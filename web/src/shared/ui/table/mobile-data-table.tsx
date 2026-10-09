@@ -1,7 +1,8 @@
 import { ChevronDownIcon, ChevronUpIcon } from '@radix-ui/react-icons'
 import { Flex, Separator, Skeleton } from '@radix-ui/themes'
-import { AnimatePresence, motion } from 'motion/react'
-import { type ReactNode, useEffect, useMemo, useState } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { type ReactNode, useEffect, useId, useMemo, useState } from 'react'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { IconButton } from '../button/ui/icon-button'
@@ -47,6 +48,10 @@ export const MobileDataTable = <T extends AnyRecord>(
     mockDataLength = MOCK_DATA_LENGTH,
     loading,
   } = props
+
+  const { t } = useTranslation()
+  const reducedMotion = useReducedMotion()
+  const tableId = useId()
 
   const selectedIds = 'selectedIds' in props ? props.selectedIds : undefined
 
@@ -106,8 +111,14 @@ export const MobileDataTable = <T extends AnyRecord>(
   return (
     <Root shadow={false}>
       {isDataExists &&
-        data.map((row) => {
+        data.map((row, rowIndex) => {
           const rowId = getRowId(row)
+          const contentId = `${tableId}-${rowId}-details`
+          const toggleExpanded = () =>
+            setExpanded((previous) => ({
+              ...previous,
+              [rowId]: !previous[rowId],
+            }))
 
           return (
             <CardContent key={rowId}>
@@ -116,20 +127,16 @@ export const MobileDataTable = <T extends AnyRecord>(
                   <Selection>
                     <Checkbox
                       checked={selectedIds?.[rowId] ?? false}
+                      aria-label={t('ui.table.selectRow', {
+                        position: rowIndex + 1,
+                      })}
                       onCheckedChange={() =>
                         handleSelectedChange(rowId.toString())
                       }
                     />
                   </Selection>
                 )}
-                <Header
-                  onClick={() =>
-                    setExpanded((expanded) => ({
-                      ...expanded,
-                      [rowId]: !expanded[rowId],
-                    }))
-                  }
-                >
+                <Header onClick={toggleExpanded}>
                   <Flex justify={'between'} align={'center'}>
                     <HeaderComponent
                       data={row}
@@ -151,6 +158,18 @@ export const MobileDataTable = <T extends AnyRecord>(
                         size={'2'}
                         radius={'full'}
                         color={'gray'}
+                        aria-label={t(
+                          expanded[rowId]
+                            ? 'ui.table.collapseRow'
+                            : 'ui.table.expandRow',
+                          { position: rowIndex + 1 },
+                        )}
+                        aria-expanded={Boolean(expanded[rowId])}
+                        aria-controls={contentId}
+                        onClick={(event) => {
+                          event.stopPropagation()
+                          toggleExpanded()
+                        }}
                       >
                         {expanded[rowId] ? (
                           <ChevronUpIcon width={20} height={20} />
@@ -165,10 +184,14 @@ export const MobileDataTable = <T extends AnyRecord>(
               <AnimatePresence initial={false}>
                 {expanded[rowId] && (
                   <motion.div
+                    id={contentId}
                     initial={{ opacity: 0, height: 0 }}
                     animate={{ opacity: 1, height: 'auto' }}
                     exit={{ opacity: 0, height: 0 }}
-                    transition={{ duration: 0.25, ease: 'easeInOut' }}
+                    transition={{
+                      duration: reducedMotion ? 0 : 0.25,
+                      ease: 'easeInOut',
+                    }}
                     style={{ overflow: 'hidden' }}
                   >
                     <Separator size={'4'} />

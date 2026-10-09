@@ -2,7 +2,13 @@ import { createEffect, createEvent, createStore, sample } from 'effector'
 
 import type { AuthorizationHeaders, EthModalResult } from './types'
 
-import { baseApi, getBrowserProvider, getReownProvider, runApi } from '@/shared'
+import {
+  baseApi,
+  getBrowserProvider,
+  getReownProvider,
+  getLoadedReownProvider,
+  runApi,
+} from '@/shared'
 
 export const ethConnected = createEvent<EthModalResult>()
 
@@ -37,6 +43,7 @@ sample({
 
 export const openEthModalFx = createEffect(async () => {
   const reownProvider = await getReownProvider()
+  await subscribeEthEventsFx()
   await reownProvider?.open({ namespace: 'eip155' })
 })
 
@@ -72,40 +79,48 @@ export const loginEthFx = createEffect(
 )
 
 export const disconnectEthFx = createEffect(async () => {
-  return await getReownProvider().then((r) => r.disconnect())
+  await getLoadedReownProvider()?.disconnect()
 })
 
+let subscription: Promise<() => void> | null = null
+
 export const subscribeEthEventsFx = createEffect(async () => {
-  const reown = await getReownProvider()
+  subscription ??= getReownProvider()
+    .then((reown) =>
+      reown.subscribeEvents(async (event) => {
+        if (event.data.event === 'CONNECT_SUCCESS') {
+          const caipAddress = reown.getCaipAddress()
+          const isEvm = caipAddress?.startsWith('eip155:')
 
-  return reown.subscribeEvents(async (event) => {
-    if (event.data.event === 'CONNECT_SUCCESS') {
-      const caipAddress = reown.getCaipAddress()
-      const isEvm = caipAddress?.startsWith('eip155:')
+          if (!isEvm) {
+            return
+          }
 
-      if (!isEvm) {
-        return
-      }
+          const walletProvider = reown.getWalletProvider()
 
-      const walletProvider = reown.getWalletProvider()
+          if (!walletProvider) {
+            // eslint-disable-next-line no-console
+            return console.error(
+              'Wallet is not connected. Check the ethUI resolve status.',
+            )
+          }
 
-      if (!walletProvider) {
-        // eslint-disable-next-line no-console
-        return console.error(
-          'Wallet is not connected. Check the ethUI resolve status.',
-        )
-      }
+          const BrowserProvider = await getBrowserProvider()
+          const ethersProvider = new BrowserProvider(walletProvider as never)
+          const signer = await ethersProvider.getSigner()
+          const address = await signer.getAddress()
 
-      const BrowserProvider = await getBrowserProvider()
-      const ethersProvider = new BrowserProvider(walletProvider as never)
-      const signer = await ethersProvider.getSigner()
-      const address = await signer.getAddress()
-
-      ethConnected({ signer, address, ethersProvider })
-    } else if (event.data.event === 'CONNECT_ERROR') {
-      ethConnectError()
-    } else if (event.data.event === 'DISCONNECT_SUCCESS') {
-      ethDisconnected()
-    }
-  })
+          ethConnected({ signer, address, ethersProvider })
+        } else if (event.data.event === 'CONNECT_ERROR') {
+          ethConnectError()
+        } else if (event.data.event === 'DISCONNECT_SUCCESS') {
+          ethDisconnected()
+        }
+      }),
+    )
+    .catch((error) => {
+      subscription = null
+      throw error
+    })
+  return subscription
 })

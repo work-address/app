@@ -156,6 +156,42 @@ export class UserControllerEditTest extends BaseControllerTest {
   }
 
   @test()
+  async clearEmail() {
+    const user = await this.userFixture.createUser()
+    const response = await userControllerEdit({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
+      body: { email: null },
+      throwOnError: true,
+    })
+    const updated = await runPromise(
+      this.userRepository.findOneByIdOrFail(user.id),
+    )
+    expect(response.status).to.equal(204)
+    expect(updated.email).to.equal(null)
+  }
+
+  @test()
+  async omittedEmailIsPreserved() {
+    const user = await this.userFixture.createUser()
+    await userControllerEdit({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
+      body: { title: 'Updated title' },
+      throwOnError: true,
+    })
+    const updated = await runPromise(
+      this.userRepository.findOneByIdOrFail(user.id),
+    )
+    expect(updated.email).to.equal(user.email)
+    expect(updated.title).to.equal('Updated title')
+  }
+
+  @test()
   async duplicatePhoneException() {
     const phoneA = this.faker.phone()
     const phoneB = this.faker.phone()

@@ -1,6 +1,6 @@
 import { ArrowTopRightIcon } from '@radix-ui/react-icons'
 import { useUnit } from 'effector-react'
-import { motion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import React, { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -26,6 +26,7 @@ const ICON_SIZE = 18
 
 export const MobileMenu = ({ setOpen }: Props) => {
   const { t } = useTranslation()
+  const reducedMotion = useReducedMotion()
   const { pathname } = useLocation()
   const navigate = useNavigate()
   const { user, authenticated } = useUnit({
@@ -100,7 +101,7 @@ export const MobileMenu = ({ setOpen }: Props) => {
                 (url === '/' ? pathname === url : pathname.includes(url)) ||
                 undefined
               }
-              variants={itemVariants}
+              variants={reducedMotion ? {} : itemVariants}
               target={target}
               rel={isExternal ? 'noopener noreferrer' : undefined}
             >

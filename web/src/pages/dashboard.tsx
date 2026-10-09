@@ -7,6 +7,8 @@ import styled from 'styled-components'
 
 import {
   fetchProjects,
+  fetchProjectsStats,
+  $projectsStatsFailed,
   $projectsLoading,
   $projectsFailed,
   $hasProjects,
@@ -41,6 +43,8 @@ export default function DashboardPage() {
     fetchTime: fetchTimeEvent,
     projectsLoading,
     projectsFailed,
+    projectsStatsFailed,
+    retryProjectsStats,
     timeLoading,
     hasProjects,
     projects,
@@ -49,6 +53,8 @@ export default function DashboardPage() {
     fetchTime,
     projectsLoading: $projectsLoading,
     projectsFailed: $projectsFailed,
+    projectsStatsFailed: $projectsStatsFailed,
+    retryProjectsStats: fetchProjectsStats,
     timeLoading: $timeLoading,
     hasProjects: $hasProjects,
     projects: $projects,
@@ -127,7 +133,14 @@ export default function DashboardPage() {
                   </SearchArea>
                 </ProjectsHead>
                 <S.TableArea>
-                  <ProjectsTable />
+                  {projectsStatsFailed ? (
+                    <LoadFailure
+                      title={t('dashboard.projectsTable.totalsFailure.title')}
+                      onRetry={retryProjectsStats}
+                    />
+                  ) : (
+                    <ProjectsTable />
+                  )}
                 </S.TableArea>
               </S.Main>
               {showCharts && (

@@ -5,11 +5,14 @@ import { useTranslation } from 'react-i18next'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { $isAuthenticatedUserProfile, $profile } from '../../model'
+import {
+  $isAuthenticatedUserProfile,
+  $profile,
+  $profileLoading,
+} from '../../model'
 
 import { ProfileViewCard } from './profile-view-styles'
 
-import { $pending } from '@/entities/profile'
 import { routes } from '@/routes'
 import { Button, formatCurrency, Text, useBreakpoint } from '@/shared'
 
@@ -27,7 +30,7 @@ export const ProfileViewDescriptionAndSkills = ({
 
   const { user, profileLoading, isOwn } = useUnit({
     user: $profile,
-    profileLoading: $pending,
+    profileLoading: $profileLoading,
     isOwn: $isAuthenticatedUserProfile,
   })
 

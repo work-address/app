@@ -1,5 +1,5 @@
 import * as RadixTabs from '@radix-ui/react-tabs'
-import { motion } from 'motion/react'
+import { motion, useReducedMotion } from 'motion/react'
 import { useEffect, useRef, useState } from 'react'
 import styled from 'styled-components'
 
@@ -8,6 +8,7 @@ export const TabsRoot = ({ children, ...props }: RadixTabs.TabsProps) => {
 }
 
 export const TabsList = ({ children, ...props }: RadixTabs.TabsListProps) => {
+  const reducedMotion = useReducedMotion()
   const listRef = useRef<HTMLDivElement | null>(null)
   const [indicator, setIndicator] = useState({ x: 0, width: 0, visible: false })
 
@@ -63,7 +64,11 @@ export const TabsList = ({ children, ...props }: RadixTabs.TabsListProps) => {
         <ActiveTabIndicator
           aria-hidden="true"
           animate={{ x: indicator.x, width: indicator.width, opacity: 1 }}
-          transition={{ type: 'spring', stiffness: 380, damping: 34 }}
+          transition={
+            reducedMotion
+              ? { duration: 0 }
+              : { type: 'spring', stiffness: 380, damping: 34 }
+          }
         />
       ) : null}
     </List>

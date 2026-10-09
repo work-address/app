@@ -5,8 +5,10 @@ import {
   $hasMoreInvoices,
   $invoicePage,
   $invoiceProjectFilter,
+  $invoiceReloadThroughPage,
   $invoiceStateFilter,
   fetchInvoiceList,
+  retryInvoiceSummary,
   invoiceFilterChanged,
   invoiceProjectFilterChanged,
   loadMoreInvoices,
@@ -17,7 +19,12 @@ import {
   markInvoicePaidMutation,
   markInvoiceUnpaidMutation,
 } from './mutations'
-import { invoiceListQuery, invoiceQuery, invoiceSummaryQuery } from './queries'
+import {
+  invoiceListQuery,
+  invoiceProjectsQuery,
+  invoiceQuery,
+  invoiceSummaryQuery,
+} from './queries'
 
 import { routes } from '@/routes'
 import { navigateFx, showToastFx, suppressGlobalErrorToast } from '@/shared'
@@ -42,14 +49,30 @@ invoiceQuery.finished.failure.watch(({ error }) => {
   suppressGlobalErrorToast(error)
 })
 
+// Each failed section has its own retry; avoid duplicate global error toasts.
+invoiceListQuery.finished.failure.watch(({ error }) => {
+  suppressGlobalErrorToast(error)
+})
+invoiceSummaryQuery.finished.failure.watch(({ error }) => {
+  suppressGlobalErrorToast(error)
+})
+invoiceProjectsQuery.finished.failure.watch(({ error }) => {
+  suppressGlobalErrorToast(error)
+})
+
 // A first load, and every change of filter, start again from page 0.
 sample({
   clock: [fetchInvoiceList, ...invoiceFilterChanged],
-  source: { projectId: $invoiceProjectFilter, state: $invoiceStateFilter },
-  fn: ({ projectId, state }) => ({
+  source: {
+    projectId: $invoiceProjectFilter,
+    state: $invoiceStateFilter,
+    reloadThroughPage: $invoiceReloadThroughPage,
+  },
+  fn: ({ projectId, state, reloadThroughPage }) => ({
     projectId: projectId || undefined,
     state: state || undefined,
     page: 0,
+    ...(reloadThroughPage === null ? {} : { reloadThroughPage }),
   }),
   target: invoiceListQuery.start,
 })
@@ -62,10 +85,11 @@ sample({
     page: $invoicePage,
     hasMore: $hasMoreInvoices,
     pending: invoiceListQuery.$pending,
+    failed: invoiceListQuery.$failed,
   },
   // Guarded rather than trusted to the button's disabled state: a double click
   // would otherwise fire the same page twice.
-  filter: ({ hasMore, pending }) => hasMore && !pending,
+  filter: ({ hasMore, pending, failed }) => hasMore && !pending && !failed,
   fn: ({ projectId, state, page }) => ({
     projectId: projectId || undefined,
     state: state || undefined,
@@ -80,6 +104,7 @@ sample({
 sample({
   clock: [
     fetchInvoiceList,
+    retryInvoiceSummary,
     invoiceProjectFilterChanged,
     markInvoicePaidMutation.finished.success,
     markInvoiceUnpaidMutation.finished.success,
@@ -126,10 +151,12 @@ export {
   $invoiceStateFilter,
   $invoiceSummary,
   $invoiceSummaryLoading,
+  $invoiceSummaryFailed,
   $invoices,
   $invoicesTotal,
   $isLoadingMoreInvoices,
   fetchInvoiceList,
+  retryInvoiceSummary,
   invoiceProjectFilterChanged,
   invoiceStateFilterChanged,
   loadMoreInvoices,
@@ -138,6 +165,9 @@ export {
 } from './list.stores'
 export * from './format'
 export * from './mutations'
+export * from './settlement.model'
+export { getInvoicePageUrl, type InvoiceActionsLayout } from './invoice-actions'
+export * from './invoice-actions.model'
 
 /**
  * Opening a project's invoice navigates to whatever the server ensured.

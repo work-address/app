@@ -64,7 +64,7 @@ export type Project = {
 
 export type User = {
     address?: string;
-    email?: string;
+    email?: string | null;
     phone?: string;
     name?: string;
     title?: string;
@@ -157,6 +157,7 @@ export type UserSearchDto = {
 };
 
 export type ProjectSearchSortDto = {
+    id?: 'ASC' | 'DESC';
     createdAt?: 'ASC' | 'DESC';
     updatedAt?: 'ASC' | 'DESC';
     title?: 'ASC' | 'DESC';
@@ -309,7 +310,7 @@ export type UserSearch = {
     createdAt?: string | string;
     updatedAt?: string | string;
     address?: string;
-    email?: string;
+    email?: string | null;
     phone?: string;
     name?: string;
     title?: string;
@@ -334,7 +335,7 @@ export type UserSearch = {
  * Subset of User serialized with class-transformer group "edit".
  */
 export type UserEdit = {
-    email?: string;
+    email?: string | null;
     phone?: string;
     name?: string;
     title?: string;

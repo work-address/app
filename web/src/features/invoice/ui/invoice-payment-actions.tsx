@@ -1,11 +1,13 @@
 import { useUnit } from 'effector-react'
-import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { markInvoicePaidMutation, markInvoiceUnpaidMutation } from '../model'
+import {
+  $invoiceSettlementPendingIds,
+  invoiceSettlementRequested,
+} from '../model'
 
-import { Button, Tooltip, showToast } from '@/shared'
+import { Button, Tooltip } from '@/shared'
 
 /**
  * Whether this invoice has been settled, and the control to say so.
@@ -22,14 +24,16 @@ export const InvoicePaymentActions = ({
   invoiceId,
   isPaid,
   canSettle,
-  onChanged,
+  disabled = false,
+  variant,
   compact = true,
   stretch = false,
 }: {
   invoiceId: string
   isPaid: boolean
   canSettle: boolean
-  onChanged?: () => void
+  disabled?: boolean
+  variant?: 'solid' | 'outline' | 'soft'
   /**
    * The list row squeezes the button below the `s`/`m`/`l` scale; the invoice
    * page sits it beside Share and Save PDF, where it takes their size.
@@ -39,27 +43,11 @@ export const InvoicePaymentActions = ({
 }) => {
   const { t } = useTranslation()
 
-  const { markPaid, markUnpaid, paidStatus, unpaidStatus, pending } = useUnit({
-    markPaid: markInvoicePaidMutation.start,
-    markUnpaid: markInvoiceUnpaidMutation.start,
-    paidStatus: markInvoicePaidMutation.$status,
-    unpaidStatus: markInvoiceUnpaidMutation.$status,
-    pending: markInvoicePaidMutation.$pending,
+  const { pendingIds, requestSettlement } = useUnit({
+    pendingIds: $invoiceSettlementPendingIds,
+    requestSettlement: invoiceSettlementRequested,
   })
-
-  useEffect(() => {
-    if (paidStatus === 'done' || unpaidStatus === 'done') {
-      onChanged?.()
-      showToast('success', {
-        message: t(
-          paidStatus === 'done'
-            ? 'invoice.payment.markedPaid'
-            : 'invoice.payment.markedUnpaid',
-        ),
-        position: 'top-center',
-      })
-    }
-  }, [paidStatus, unpaidStatus, onChanged, t])
+  const pending = Boolean(pendingIds[invoiceId])
 
   // Nothing to draw for anyone but the issuer. The status itself is shown by
   // whoever renders this, so a viewer costs no height at all.
@@ -81,11 +69,12 @@ export const InvoicePaymentActions = ({
     >
       <SettleButton
         size={compact ? 'l' : 'm'}
-        variant={isPaid ? 'outline' : 'solid'}
+        variant={variant ?? (isPaid ? 'outline' : 'solid')}
         loading={pending}
+        disabled={disabled}
         stretch={stretch}
         data-compact={compact || undefined}
-        onClick={() => (isPaid ? markUnpaid(invoiceId) : markPaid(invoiceId))}
+        onClick={() => requestSettlement({ id: invoiceId, isPaid: !isPaid })}
       >
         {t(isPaid ? 'invoice.payment.revert' : 'invoice.payment.markPaid')}
       </SettleButton>

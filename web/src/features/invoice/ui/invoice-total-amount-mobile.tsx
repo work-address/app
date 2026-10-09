@@ -5,26 +5,26 @@ import { Fragment } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import { useInvoiceInfoFields } from '../lib'
-import { $invoice, $invoiceLoading } from '../model'
+import { $invoice, $invoiceLoading, getInvoicePageUrl } from '../model'
 
-import { InvoicePaymentActions } from './invoice-payment-actions'
+import { InvoiceActions } from './invoice-actions'
 
-import { $user } from '@/entities/profile'
-import { BASE_CURRENCY, formatCurrency, Hint, Text } from '@/shared'
+import { formatCurrency, Hint, Text } from '@/shared'
 
 export const InvoiceTotalAmountMobile = () => {
   const { t } = useTranslation()
 
   const infoFields = useInvoiceInfoFields()
 
-  const { invoice, loading, user } = useUnit({
+  const { invoice, loading } = useUnit({
     invoice: $invoice,
     loading: $invoiceLoading,
-    user: $user,
   })
 
   const isPaid = invoice?.state === 'PAID'
-  const canSettle = Boolean(user?.id && invoice?.user?.id === user.id)
+  const invoiceUrl = invoice?.id
+    ? getInvoicePageUrl(window.location.origin, invoice.id)
+    : ''
 
   return (
     <Flex gap={'3'} direction={'column'}>
@@ -53,15 +53,7 @@ export const InvoiceTotalAmountMobile = () => {
           </Badge>
         )}
       </Flex>
-      {invoice?.id && canSettle ? (
-        <InvoicePaymentActions
-          invoiceId={invoice.id}
-          isPaid={isPaid}
-          canSettle={canSettle}
-          compact={false}
-          stretch
-        />
-      ) : null}
+      <InvoiceActions layout="mobile" />
       <Separator size={'4'} />
       <Grid
         columns={{ initial: '137px 1fr' }}
@@ -91,7 +83,7 @@ export const InvoiceTotalAmountMobile = () => {
           <Skeleton height="194px" width="194px" />
         ) : (
           <QRCodeSVG
-            value={invoice?.id || ''}
+            value={invoiceUrl}
             size={194}
             bgColor="transparent"
             fgColor="var(--ds-accent-9)"
@@ -100,7 +92,7 @@ export const InvoiceTotalAmountMobile = () => {
         )}
       </Flex>
       <Text color={'gray'} weight={'regular'} align={'center'}>
-        {t('invoice.qrScan.mobile', { currency: BASE_CURRENCY.code })}
+        {t('invoice.qrScan.mobile')}
       </Text>
     </Flex>
   )

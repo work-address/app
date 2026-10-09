@@ -1,14 +1,10 @@
 import './app.css'
 import '@radix-ui/themes/styles.css'
 import { useUnit } from 'effector-react'
-import { lazy, Suspense, useEffect } from 'react'
+import { lazy, useEffect } from 'react'
 import { createBrowserRouter, Navigate, RouterProvider } from 'react-router-dom'
 
-import {
-  initAuth,
-  subscribeEthEventsFx,
-  subscribeTonUiEventsFx,
-} from '@/entities/profile'
+import { initAuth } from '@/entities/profile'
 import * as Layouts from '@/layouts'
 import { routes } from '@/routes'
 import { bindNavigate, ErrorBoundary } from '@/shared'
@@ -90,32 +86,9 @@ bindNavigate(({ to, options }) => router.navigate(to, options))
 export const App = () => {
   const initAuthEvent = useUnit(initAuth)
 
-  const subEthFx = useUnit(subscribeEthEventsFx)
-  const subTonFx = useUnit(subscribeTonUiEventsFx)
-
   useEffect(() => {
     initAuthEvent()
+  }, [initAuthEvent])
 
-    let unsubEth: (() => void) | null = null
-    let unsubTon: (() => void) | null = null
-
-    void subEthFx().then((sub) => {
-      unsubEth = sub
-    })
-
-    void subTonFx().then((sub) => {
-      unsubTon = sub
-    })
-
-    return () => {
-      unsubEth?.()
-      unsubTon?.()
-    }
-  }, [initAuthEvent, subEthFx, subTonFx])
-
-  return (
-    <Suspense>
-      <RouterProvider router={router} />
-    </Suspense>
-  )
+  return <RouterProvider router={router} />
 }

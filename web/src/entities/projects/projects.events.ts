@@ -5,6 +5,8 @@ import { type ProjectsFilter, type StatsPeriod } from './types'
 
 export const fetchProjects = createEvent()
 
+export const fetchProjectsStats = createEvent()
+
 export const fetchProjectsProcessStats = createEvent<StatsPeriod>()
 
 export const fetchProjectProcessStats = createEvent<{

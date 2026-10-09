@@ -1,11 +1,12 @@
-import { AnimatePresence, motion } from 'motion/react'
-import { memo, useEffect, useMemo } from 'react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
+import { memo, Suspense, useEffect, useMemo } from 'react'
 import { Outlet, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 
 import type { MotionProps } from 'motion/react'
 
-import { useBreakpoint, PageIndicator } from '@/shared'
+import { routes } from '@/routes'
+import { useBreakpoint, PageIndicator, RouteSkeleton } from '@/shared'
 import { Header } from '@/widgets'
 
 export const PublicLayout = () => {
@@ -23,9 +24,15 @@ export const PublicLayout = () => {
 const PageContent = memo(() => {
   const { pathname } = useLocation()
   const isDesktop = useBreakpoint('isDesktop')
+  const reducedMotion = useReducedMotion()
+  const skeletonVariant =
+    pathname === routes.dashboard.build() ||
+    pathname === routes.invoices.build()
+      ? 'list'
+      : 'document'
 
   const motionProps = useMemo(() => {
-    if (isDesktop) {
+    if (isDesktop && !reducedMotion) {
       return {
         initial: {
           opacity: 0,
@@ -42,7 +49,7 @@ const PageContent = memo(() => {
         transition: { duration: 0 },
       } satisfies MotionProps
     }
-  }, [isDesktop])
+  }, [isDesktop, reducedMotion])
 
   useEffect(() => {
     document.body.scrollIntoView({
@@ -55,7 +62,9 @@ const PageContent = memo(() => {
     <Content>
       <AnimatePresence mode="wait">
         <motion.div key={pathname} {...motionProps}>
-          <Outlet />
+          <Suspense fallback={<RouteSkeleton variant={skeletonVariant} />}>
+            <Outlet />
+          </Suspense>
         </motion.div>
       </AnimatePresence>
     </Content>

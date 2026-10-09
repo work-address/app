@@ -1,161 +1,117 @@
-import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
 import {
-  removeTimeProcessesMutation,
-  removeTimeScreenshotMutation,
-} from '@/entities/time'
-import { Button, Select, Text, useConfirm } from '@/shared'
+  $isTimeBulkPending,
+  $selectedTimeCount,
+  $selectedTimeProjectId,
+  timeBulkActionRequested,
+  timeBulkSelectionClearRequested,
+  type TimeBulkAction,
+} from '../../model'
 
-type BulkAction = 'delete' | 'removeScreenshots' | 'removeProcesses'
+import { Button, Select, Text } from '@/shared'
 
-type TimeMobileBulkActionsProps = {
-  selectedIds: string[]
-  isPending: boolean
-  onDelete: (ids: string[]) => void
-  onClearSelection: () => void
-}
-
-export const TimeMobileBulkActions = ({
-  selectedIds,
-  isPending,
-  onDelete,
-  onClearSelection,
-}: TimeMobileBulkActionsProps) => {
+/** Every presentation acts on the same selection and model workflow. */
+export const TimeMobileBulkActions = () => {
   const { t } = useTranslation()
-  const { confirm } = useConfirm()
-  const [action, setAction] = useState<BulkAction | ''>('')
-
-  const {
-    removeScreenshots,
-    removeProcesses,
-    removeScreenshotStatus,
-    removeProcessesStatus,
-    resetRemoveScreenshot,
-    resetRemoveProcesses,
-  } = useUnit({
-    removeScreenshots: removeTimeScreenshotMutation.start,
-    removeProcesses: removeTimeProcessesMutation.start,
-    removeScreenshotStatus: removeTimeScreenshotMutation.$status,
-    removeProcessesStatus: removeTimeProcessesMutation.$status,
-    resetRemoveScreenshot: removeTimeScreenshotMutation.reset,
-    resetRemoveProcesses: removeTimeProcessesMutation.reset,
+  const [action, setAction] = useState<TimeBulkAction | ''>('')
+  const { selectedCount, projectId, busy, request, clear } = useUnit({
+    selectedCount: $selectedTimeCount,
+    projectId: $selectedTimeProjectId,
+    busy: $isTimeBulkPending,
+    request: timeBulkActionRequested,
+    clear: timeBulkSelectionClearRequested,
   })
-
-  const isBusy =
-    isPending ||
-    removeScreenshotStatus === 'pending' ||
-    removeProcessesStatus === 'pending'
-
-  const actionOptions = useMemo(
-    () => [
-      {
-        value: 'delete' satisfies BulkAction,
-        label: t('dashboard.worklogsTable.bulk.delete'),
-      },
-      {
-        value: 'removeScreenshots' satisfies BulkAction,
-        label: t('dashboard.worklogsTable.removeScreenshot'),
-      },
-      {
-        value: 'removeProcesses' satisfies BulkAction,
-        label: t('dashboard.worklogsTable.removeProcesses'),
-      },
-    ],
-    [t],
-  )
-
-  useEffect(() => {
-    if (removeScreenshotStatus === 'done') {
-      resetRemoveScreenshot()
-      setAction('')
-      onClearSelection()
-    }
-  }, [removeScreenshotStatus, resetRemoveScreenshot, onClearSelection])
-
-  useEffect(() => {
-    if (removeProcessesStatus === 'done') {
-      resetRemoveProcesses()
-      setAction('')
-      onClearSelection()
-    }
-  }, [removeProcessesStatus, resetRemoveProcesses, onClearSelection])
-
-  useEffect(() => {
-    if (selectedIds.length === 0) {
-      setAction('')
-    }
-  }, [selectedIds.length])
-
-  const handleApply = () => {
-    if (!action || isBusy || selectedIds.length === 0) {
-      return
-    }
-
-    if (action === 'delete') {
-      onDelete(selectedIds)
-      return
-    }
-
-    if (action === 'removeScreenshots') {
-      void confirm({
-        title: t('dashboard.worklogsTable.confirmRemoveScreenshot.title'),
-        description: t(
-          'dashboard.worklogsTable.confirmRemoveScreenshot.description',
-        ),
-        confirmLabel: t(
-          'dashboard.worklogsTable.confirmRemoveScreenshot.confirm',
-        ),
-        cancelLabel: t('common.cancel'),
-        onConfirm: () => {
-          removeScreenshots(selectedIds)
-        },
-      })
-      return
-    }
-
-    void confirm({
-      title: t('dashboard.worklogsTable.confirmRemoveProcesses.title'),
-      description: t(
-        'dashboard.worklogsTable.confirmRemoveProcesses.description',
-      ),
-      confirmLabel: t('dashboard.worklogsTable.confirmRemoveProcesses.confirm'),
-      cancelLabel: t('common.cancel'),
-      onConfirm: () => {
-        removeProcesses(selectedIds)
-      },
-    })
-  }
+  const invalidInvoice = action === 'invoice' && !projectId
+  const options = [
+    { value: 'paid', label: t('dashboard.worklogsTable.paymentStatus.paid') },
+    {
+      value: 'unpaid',
+      label: t('dashboard.worklogsTable.paymentStatus.unpaid'),
+    },
+    { value: 'invoice', label: t('dashboard.worklogsTable.bulk.invoice') },
+    { value: 'delete', label: t('dashboard.worklogsTable.bulk.delete') },
+    {
+      value: 'remove-screenshots',
+      label: t('dashboard.worklogsTable.removeScreenshot'),
+    },
+    {
+      value: 'remove-processes',
+      label: t('dashboard.worklogsTable.removeProcesses'),
+    },
+  ] satisfies { value: TimeBulkAction; label: string }[]
 
   return (
-    <Flex direction="column" gap="2" mb="3" width="100%">
+    <Root aria-busy={busy || undefined}>
       <Text size="2" weight="medium">
         {t('dashboard.worklogsTable.bulk.selectedCount', {
-          count: selectedIds.length,
+          count: selectedCount,
         })}
       </Text>
       <Select
-        options={actionOptions}
+        options={options}
         value={action}
         onChange={(value) => {
-          if (Array.isArray(value) || value === '') {
-            return
+          if (
+            !Array.isArray(value) &&
+            options.some((option) => option.value === value)
+          ) {
+            setAction(value as TimeBulkAction)
           }
-
-          setAction(value as BulkAction)
+        }}
+        inputProps={{
+          disabled: busy,
+          'aria-label': t('dashboard.worklogsTable.bulk.actionPlaceholder'),
         }}
         placeholder={t('dashboard.worklogsTable.bulk.actionPlaceholder')}
       />
-      <Button
-        stretch
-        size="l"
-        disabled={!action || isBusy}
-        onClick={handleApply}
-      >
-        {t('common.apply')}
-      </Button>
-    </Flex>
+      {invalidInvoice && (
+        <Hint role="status">
+          {t('dashboard.worklogsTable.bulk.invoiceOneProject')}
+        </Hint>
+      )}
+      <Actions>
+        <Button
+          stretch
+          size="l"
+          disabled={!action || busy || invalidInvoice || selectedCount === 0}
+          onClick={() => action && request(action)}
+        >
+          {t('common.apply')}
+        </Button>
+        <Button
+          stretch
+          size="l"
+          variant="outline"
+          color="neutral"
+          disabled={busy}
+          onClick={clear}
+        >
+          {t('dashboard.worklogsTable.bulk.clearSelection')}
+        </Button>
+      </Actions>
+    </Root>
   )
 }
+
+const Root = styled.div`
+  display: grid;
+  gap: var(--space-2);
+  width: 100%;
+  margin-bottom: var(--space-3);
+`
+
+const Hint = styled.p`
+  margin: 0;
+  font-size: var(--font-size-2);
+  color: var(--ds-neutral-11);
+`
+
+const Actions = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+`

@@ -2,16 +2,22 @@ import type { ReownProvider } from './reown-provider'
 import type { BrowserProvider } from 'ethers'
 
 let reown: ReownProvider | null = null
+let initialization: Promise<ReownProvider> | null = null
 
 export const getReownProvider = async (): Promise<ReownProvider> => {
-  if (!reown) {
-    reown = (await import('./reown-provider').then(
-      (m) => m.reownProvider,
-    )) as ReownProvider
-  }
-
-  return reown
+  initialization ??= import('./reown-provider')
+    .then((module) => {
+      reown = module.reownProvider
+      return reown
+    })
+    .catch((error) => {
+      initialization = null
+      throw error
+    })
+  return initialization
 }
+
+export const getLoadedReownProvider = () => reown
 
 let browserProvider: typeof BrowserProvider | null = null
 

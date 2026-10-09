@@ -55,7 +55,7 @@ export const DesktopHeaderCellComponent = <T extends AnyRecord>(
               <>
                 <ArrowDownIcon
                   style={{
-                    fill: '#000',
+                    color: 'var(--ds-neutral-11)',
                     transform: sortKey === 'ASC' ? 'rotate(180deg)' : 'none',
                   }}
                 />

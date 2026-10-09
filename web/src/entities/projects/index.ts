@@ -4,6 +4,7 @@ import i18n from 'i18next'
 import {
   fetchProjectProcessStats,
   fetchProjects,
+  fetchProjectsStats,
   fetchProjectsProcessStats,
 } from './projects.events'
 import {
@@ -36,6 +37,16 @@ sample({
 })
 
 sample({
+  clock: fetchProjectsStats,
+  source: projectsQuery.$data,
+  fn: (projects) =>
+    (projects?.items ?? [])
+      .map((project) => project.id)
+      .filter((id): id is string => Boolean(id)),
+  target: projectsStatsQuery.start,
+})
+
+sample({
   clock: fetchProjectsProcessStats,
   source: $projectsWithProcessTracking,
   fn: (projects, period) => ({
@@ -62,6 +73,10 @@ const showProcessStatsError = () => {
 // The dashboard says so in place, with a retry; a toast on top of that
 // would report the same failure twice.
 projectsQuery.finished.failure.watch(({ error }) => {
+  suppressGlobalErrorToast(error)
+})
+
+projectsStatsQuery.finished.failure.watch(({ error }) => {
   suppressGlobalErrorToast(error)
 })
 
@@ -133,6 +148,7 @@ export { OTHER_PROCESS_NAME } from './utils'
 
 export {
   fetchProjects,
+  fetchProjectsStats,
   fetchProjectsProcessStats,
   fetchProjectProcessStats,
   changeProjectStateFilter,
@@ -149,6 +165,7 @@ export {
   $projects,
   $projectsLoading,
   $projectsFailed,
+  $projectsStatsFailed,
   $hasProjects,
   $filteredProjects,
   $projectStateFilter,

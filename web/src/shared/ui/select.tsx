@@ -1,28 +1,22 @@
 import {
+  CheckIcon,
   ChevronDownIcon,
   ChevronUpIcon,
-  CheckIcon,
 } from '@radix-ui/react-icons'
 import { Popover } from '@radix-ui/themes'
-import { AnimatePresence, motion } from 'motion/react'
-import { useMemo, useState } from 'react'
+import { useId, useMemo, useState, type CSSProperties } from 'react'
+import { ListBox, ListBoxItem } from 'react-aria-components'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { useBreakpoint } from '../hooks'
 
 import { Button } from './button/ui/button'
-import { Checkbox } from './checkbox'
 import { Drawer } from './dialogs/ui/drawer'
-import { Input } from './input'
-import { Text } from './text'
 
 import type { InputProps } from './input'
 
-export type SelectOption = {
-  value: string
-  label: string
-}
+export type SelectOption = { value: string; label: string }
 
 type SelectProps = {
   className?: string
@@ -53,281 +47,288 @@ export const Select = ({
 }: SelectProps) => {
   const { t } = useTranslation()
   const isMobile = useBreakpoint('isMobile')
-  const isDesktop = useBreakpoint('isDesktop')
+  const generatedId = useId()
+  const id = inputProps?.id ?? generatedId
+  const listId = `${id}-options`
   const [open, setOpen] = useState(false)
-
+  const disabled = Boolean(inputProps?.disabled || inputProps?.readOnly)
   const ph = placeholder ?? t('ui.motionSelect.placeholder')
-
-  // An empty string is a real choice when the options offer one - "All
-  // projects", say - and only means "nothing chosen" when they do not.
-  const hasEmptyOption = useMemo(
-    () => !multi && options.some((o) => o.value === ''),
-    [multi, options],
+  const selectedKeys = useMemo(
+    () =>
+      new Set(
+        Array.isArray(value)
+          ? value
+          : value || options.some((o) => o.value === '')
+            ? [value]
+            : [],
+      ),
+    [value, options],
   )
+  const selectedLabels = options
+    .filter((o) => selectedKeys.has(o.value))
+    .map((o) => o.label)
+  const buttonText =
+    multi && options.length > 0 && selectedKeys.size === options.length
+      ? (allSelectedText ?? t('ui.motionSelect.allSelected'))
+      : selectedLabels.join(', ')
 
-  const selectedSet = useMemo(() => {
-    const arr = Array.isArray(value)
-      ? value
-      : value || hasEmptyOption
-        ? [value]
-        : []
-    return new Set(arr)
-  }, [value, hasEmptyOption])
-
-  const buttonText = useMemo(() => {
-    if (selectedSet.size === 0) {
-      return null
+  const changeOpen = (next: boolean) => {
+    if (!next || !disabled) {
+      setOpen(next)
     }
-
-    if (multi && selectedSet.size === options.length) {
-      return allSelectedText ?? 'All selected'
-    }
-
-    const labels = options
-      .filter((o) => selectedSet.has(o.value))
-      .map((o) => o.label)
-
-    return labels.length > 0 ? labels.join(', ') : null
-  }, [multi, options, selectedSet, allSelectedText])
-
-  const toggle = (v: string) => {
-    if (!multi) {
-      onChange(v)
-      setOpen(false)
-      return
-    }
-
-    const next = new Set(selectedSet)
-    next.has(v) ? next.delete(v) : next.add(v)
-    onChange([...next])
   }
-
-  const Content = (
+  const content = (
     <>
-      {title && <MenuTitle>{title}</MenuTitle>}
-      <MenuList $maxHeight={menuMaxHeight} role="listbox">
-        {options.map((o) => {
-          const checked = selectedSet.has(o.value)
-
-          return (
-            <MenuItem
-              key={o.value}
-              type="button"
-              role="option"
-              aria-selected={checked}
-              data-selected={checked || undefined}
-              onClick={() => toggle(o.value)}
-            >
-              {isDesktop && multi && <Checkbox checked={checked} />}
-              <ItemLabel size={'3'}>{o.label}</ItemLabel>
-              {/* The current choice is marked in every list, not only the
-                  multi one: a single-select reopened later should show what
-                  it already holds. */}
-              {(!multi || isMobile) && (
-                <ItemCheck
-                  aria-hidden="true"
-                  data-visible={checked || undefined}
-                />
-              )}
-            </MenuItem>
-          )
-        })}
+      {title && !isMobile ? <MenuTitle>{title}</MenuTitle> : null}
+      <MenuList
+        id={listId}
+        aria-label={title ?? label ?? ph}
+        selectionMode={multi ? 'multiple' : 'single'}
+        selectionBehavior="toggle"
+        disallowEmptySelection={!multi}
+        escapeKeyBehavior="none"
+        selectedKeys={selectedKeys}
+        autoFocus="first"
+        style={
+          {
+            '--select-menu-height':
+              typeof menuMaxHeight === 'number'
+                ? `${menuMaxHeight}px`
+                : (menuMaxHeight ?? 'min(50dvh, 360px)'),
+          } as CSSProperties
+        }
+        onSelectionChange={(keys) => {
+          if (disabled) {
+            return
+          }
+          const next =
+            keys === 'all'
+              ? options.map((o) => o.value)
+              : Array.from(keys, String)
+          onChange(multi ? next : (next[0] ?? ''))
+          if (!multi) {
+            setOpen(false)
+          }
+        }}
+      >
+        {options.map((o) => (
+          <MenuItem
+            key={o.value}
+            id={o.value}
+            textValue={o.label}
+            onPress={() => {
+              if (!disabled && !multi) {
+                setOpen(false)
+              }
+            }}
+          >
+            {({ isSelected }) => (
+              <>
+                <ItemLabel>{o.label}</ItemLabel>
+                <ItemCheck aria-hidden data-visible={isSelected || undefined} />
+              </>
+            )}
+          </MenuItem>
+        ))}
       </MenuList>
     </>
   )
-
-  const TriggerEl = (
-    <InputWrapper data-open={open || undefined}>
-      <Input
-        className={className}
-        label={label}
-        addonRight={open ? <ChevronUpIcon /> : <ChevronDownIcon />}
-        value={buttonText ? buttonText : ''}
-        columns={'1fr'}
-        onChange={() => {}}
-        onKeyDown={(e) => e.preventDefault()}
-        placeholder={ph}
-        style={{
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-          caretColor: 'transparent',
-        }}
-        role="combobox"
-        aria-expanded={open}
-        aria-haspopup="listbox"
-        {...inputProps}
-        readOnly
-      />
-    </InputWrapper>
+  const trigger = (
+    <Trigger
+      id={id}
+      type="button"
+      disabled={disabled}
+      name={inputProps?.name}
+      aria-label={
+        inputProps?.['aria-label'] ?? (label ? undefined : (title ?? ph))
+      }
+      aria-haspopup="listbox"
+      aria-expanded={open}
+      aria-controls={open ? listId : undefined}
+      aria-invalid={
+        inputProps?.state === 'error' ||
+        inputProps?.['aria-invalid'] ||
+        undefined
+      }
+      aria-describedby={inputProps?.['aria-describedby']}
+      data-placeholder={!buttonText || undefined}
+      style={inputProps?.style}
+      onKeyDown={(event) => {
+        if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
+          event.preventDefault()
+          changeOpen(true)
+        }
+      }}
+    >
+      <Value>{buttonText || ph}</Value>
+      {open ? <ChevronUpIcon aria-hidden /> : <ChevronDownIcon aria-hidden />}
+    </Trigger>
   )
 
-  if (isMobile) {
-    return (
-      <Drawer
-        open={open}
-        onOpenChange={setOpen}
-        // The sheet is titled by the field it opened from, so "Select" alone
-        // never has to stand in for "Project status".
-        title={title ?? label ?? ph}
-        trigger={TriggerEl}
-        footer={
-          multi ? (
-            <Button stretch onClick={() => setOpen(false)}>
-              {t('common.apply')}
-            </Button>
-          ) : undefined
-        }
-      >
-        {Content}
-      </Drawer>
-    )
-  }
-
   return (
-    <Popover.Root open={open} onOpenChange={setOpen}>
-      <Popover.Trigger>{TriggerEl}</Popover.Trigger>
-      <PopoverContent>
-        <AnimatePresence>
-          {open && (
-            <motion.div
-              initial={{ opacity: 0, y: 6, scale: 0.98 }}
-              animate={{ opacity: 1, y: 0, scale: 1 }}
-              exit={{ opacity: 0, y: 6, scale: 0.98 }}
-              transition={{ duration: 0.14 }}
-            >
-              {Content}
-            </motion.div>
-          )}
-        </AnimatePresence>
-      </PopoverContent>
-    </Popover.Root>
+    <Root
+      className={className}
+      data-inline-label={
+        Boolean(
+          label &&
+            inputProps?.labelWidth &&
+            inputProps?.columns !== '1' &&
+            inputProps?.columns !== '1fr',
+        ) || undefined
+      }
+      style={
+        {
+          '--select-label-width': inputProps?.labelWidth ?? 'auto',
+        } as CSSProperties
+      }
+    >
+      {label ? <Label htmlFor={id}>{label}</Label> : null}
+      {isMobile ? (
+        <Drawer
+          open={open}
+          onOpenChange={changeOpen}
+          title={title ?? label ?? ph}
+          trigger={trigger}
+          footer={
+            multi ? (
+              <Button stretch onClick={() => setOpen(false)}>
+                {t('common.apply')}
+              </Button>
+            ) : undefined
+          }
+        >
+          {content}
+        </Drawer>
+      ) : (
+        <Popover.Root open={open} onOpenChange={changeOpen}>
+          <Popover.Trigger>{trigger}</Popover.Trigger>
+          <PopoverContent>{content}</PopoverContent>
+        </Popover.Root>
+      )}
+    </Root>
   )
 }
 
-const PopoverContent = styled(Popover.Content)`
-  z-index: 60;
-  /* At least as wide as the trigger, wider when an option needs it, so long
-     labels stay on one line instead of folding under themselves. */
-  min-width: var(--radix-popover-trigger-width);
-  max-width: min(360px, calc(100vw - 32px));
-  outline: none;
-  padding: var(--space-1);
-`
-
-const MenuTitle = styled.div`
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--font-size-1);
-  letter-spacing: 0.06em;
-  color: var(--c-rgba-0-5-29-0_55);
-`
-
-const MenuList = styled.div<{ $maxHeight?: string | number }>`
-  display: flex;
-  flex-direction: column;
-  gap: 1px;
-
-  ${(p) =>
-    p.$maxHeight != null &&
-    `
-    max-height: ${typeof p.$maxHeight === 'number' ? `${p.$maxHeight}px` : p.$maxHeight};
-    overflow-y: auto;
-  `}
-`
-
-const MenuItem = styled.button`
+const Root = styled.div`
+  display: grid;
+  gap: var(--space-2);
+  min-width: 0;
   width: 100%;
-  display: flex;
+  align-items: center;
+  ${(p) => p.theme.breakpoints.up('md')} {
+    &[data-inline-label] {
+      grid-template-columns: var(--select-label-width) minmax(0, 1fr);
+      gap: var(--space-5);
+    }
+  }
+`
+const Label = styled.label`
+  font-size: var(--font-size-2);
+  line-height: var(--line-height-2);
+  font-weight: 500;
+`
+const Trigger = styled.button`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-2);
-  background: transparent;
-  border: 0;
-  text-align: left;
-  cursor: pointer;
+  width: 100%;
+  min-width: 0;
+  /* Match Input's size 2; the phone rule uses size 3. */
+  height: var(--space-6);
+  min-height: 0;
+  padding: 0 var(--space-2);
+  border: 1px solid var(--gray-a7);
   border-radius: var(--radius-2);
-  padding: 12px;
+  background: var(--color-surface);
   color: var(--gray-12);
-  transition: background 0.12s ease;
-
-  &:hover,
+  font: inherit;
+  font-size: var(--font-size-2);
+  line-height: var(--line-height-2);
+  text-align: left;
+  &:hover:not(:disabled) {
+    border-color: var(--gray-a9);
+  }
   &:focus-visible {
-    background: var(--ds-neutral-alpha-3);
-    outline: none;
+    outline: 2px solid var(--ds-accent-8);
+    outline-offset: 2px;
   }
-
-  &[data-selected] {
-    background: var(--ds-accent-3);
-    color: var(--ds-accent-11);
+  &[data-placeholder] {
+    color: var(--gray-a10);
   }
-
-  ${(p) => p.theme.breakpoints.up('md')} {
-    padding: 7px 10px;
+  &[aria-invalid='true'] {
+    border-color: var(--red-8);
+  }
+  &:disabled {
+    opacity: 0.6;
+    cursor: not-allowed;
+  }
+  ${(p) => p.theme.breakpoints.down('md')} {
+    height: var(--space-7);
+    padding-inline: var(--space-3);
+    font-size: var(--font-size-3);
+    line-height: var(--line-height-3);
   }
 `
-
-const ItemLabel = styled(Text)`
-  flex: 1;
-  min-width: 0;
-  color: inherit;
+const Value = styled.span`
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-
-  ${(p) => p.theme.breakpoints.up('md')} {
-    font-size: var(--font-size-2);
-    line-height: var(--line-height-2);
+`
+const PopoverContent = styled(Popover.Content)`
+  z-index: 60;
+  min-width: var(--radix-popover-trigger-width);
+  max-width: min(360px, calc(100vw - var(--space-7)));
+  padding: var(--space-1);
+`
+const MenuTitle = styled.div`
+  padding: var(--space-2) var(--space-3);
+  font-size: var(--font-size-1);
+  color: var(--gray-11);
+`
+const MenuList = styled(ListBox)`
+  display: grid;
+  gap: var(--space-1);
+  max-height: var(--select-menu-height);
+  overflow-y: auto;
+  outline: none;
+`
+const MenuItem = styled(ListBoxItem)`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-2);
+  color: var(--gray-12);
+  cursor: pointer;
+  outline: none;
+  &[data-hovered],
+  &[data-focused] {
+    background: var(--ds-neutral-alpha-3);
+  }
+  &[data-focus-visible] {
+    outline: 2px solid var(--ds-accent-8);
+    outline-offset: -2px;
+  }
+  &[aria-selected='true'] {
+    background: var(--ds-accent-3);
+    color: var(--ds-accent-11);
+  }
+  ${(p) => p.theme.breakpoints.down('md')} {
+    min-height: var(--space-8);
   }
 `
-
-/* Always in the layout so labels line up whether or not they are chosen. */
+const ItemLabel = styled.span`
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+`
 const ItemCheck = styled(CheckIcon)`
-  flex-shrink: 0;
-  width: 16px;
-  height: 16px;
+  width: var(--space-4);
+  height: var(--space-4);
   opacity: 0;
-
   &[data-visible] {
     opacity: 1;
-  }
-`
-
-const InputWrapper = styled.span`
-  width: 100%;
-
-  /* The wrapped input has pointer-events disabled, so hover falls through
-     to this element; && doubles our class so the pointer cursor wins over
-     the Radix text field's own default cursor instead of reaching for !important. */
-  && {
-    cursor: pointer;
-  }
-
-  /* Radix paints a read-only field with the disabled gray fill. The trigger
-     is read-only only to keep a caret out of it, so it takes the surface a
-     writable field has and darkens a step on hover like a button would. */
-  && .rt-TextFieldRoot:has(.rt-TextFieldInput:read-only:not(:disabled)) {
-    background-image: none;
-    box-shadow: inset 0 0 0 1px var(--gray-a7);
-    transition: box-shadow 0.12s ease;
-  }
-
-  &:hover .rt-TextFieldRoot:has(.rt-TextFieldInput:read-only:not(:disabled)) {
-    box-shadow: inset 0 0 0 1px var(--gray-a9);
-  }
-
-  & .rt-TextFieldInput {
-    pointer-events: none;
-    caret-color: transparent;
-    /* Radix dims read-only text to the disabled tone; the trigger is read-only
-       only to keep the caret out, so a chosen value stays at full strength. */
-    color: var(--gray-12);
-  }
-
-  & .rt-TextFieldInput:placeholder-shown {
-    color: var(--gray-a10);
-  }
-
-  .rt-TextFieldSlot {
-    cursor: pointer;
-    color: var(--gray-11);
   }
 `

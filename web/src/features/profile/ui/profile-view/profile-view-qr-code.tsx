@@ -7,11 +7,14 @@ import { useTranslation } from 'react-i18next'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
-import { $profile, $isAuthenticatedUserProfile } from '../../model'
+import {
+  $profile,
+  $isAuthenticatedUserProfile,
+  $profileLoading,
+} from '../../model'
 
 import { ProfileViewCard } from './profile-view-styles'
 
-import { $pending } from '@/entities/profile'
 import { LocalWalletRevealButton } from '@/features/local-wallet'
 import { routes } from '@/routes'
 import {
@@ -45,7 +48,7 @@ export const ProfileViewQrCode = ({
   const { user, isAuthenticatedUserProfile, profileLoading } = useUnit({
     user: $profile,
     isAuthenticatedUserProfile: $isAuthenticatedUserProfile,
-    profileLoading: $pending,
+    profileLoading: $profileLoading,
   })
 
   const [qrModalOpened, setQrModalOpened] = useState(false)
@@ -99,8 +102,8 @@ export const ProfileViewQrCode = ({
           <Tooltip content={t('profile.view.qrOpenHint')}>
             <QrCodeWrapper
               $size={qrCodeSize}
-              role="button"
-              tabIndex={0}
+              type="button"
+              disabled={profileLoading || !user?.friendlyWalletAddress}
               aria-label={t('profile.view.qrOpenHint')}
               onClick={() => setQrModalOpened(true)}
             >
@@ -189,13 +192,26 @@ const Root = styled(ProfileViewCard)`
   }
 `
 
-const QrCodeWrapper = styled.div<{ $size: number }>`
+const QrCodeWrapper = styled.button<{ $size: number }>`
   width: ${(p) => p.$size}px;
   height: ${(p) => p.$size}px;
   cursor: pointer;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  border-radius: var(--radius-2);
   display: flex;
   align-items: center;
   justify-content: center;
+
+  &:focus-visible {
+    outline: 2px solid var(--ds-accent-9);
+    outline-offset: 4px;
+  }
+
+  &:disabled {
+    cursor: default;
+  }
 
   svg {
     width: 100%;

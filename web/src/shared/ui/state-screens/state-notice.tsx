@@ -107,8 +107,14 @@ const Title = styled.h2`
   color: var(--ds-neutral-12);
 
   ${Root}[data-size='page'] & {
-    font-size: var(--font-size-6);
-    line-height: var(--line-height-6);
+    font-size: var(--font-size-7);
+    line-height: 125%;
+  }
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    ${Root}[data-size='page'] & {
+      font-size: var(--font-size-5);
+    }
   }
 `
 

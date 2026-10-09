@@ -64,7 +64,7 @@ export const ProfileEditLinks = ({
 
     if (notAllowedTextPasted && randomLinkPasted) {
       showToast('error', {
-        message: 'Invalid link',
+        message: t('profile.form.errors.socialLink'),
         position: isDesktop ? 'top-center' : 'bottom-center',
       })
 
@@ -83,12 +83,14 @@ export const ProfileEditLinks = ({
         {SOCIAL_LINKS.map(({ name, labelKey, domain }) => (
           <Skeleton key={name} loading={profileLoading}>
             <LinkInput
+              id={name}
               label={t(labelKey)}
               addonLeft={`${domain}/`}
               labelWidth={INPUT_LABEL_WIDTH}
               disabled={profileSaving}
               onPaste={(e) => handleSocialPaste(name, e)}
               state={errors[name] ? 'error' : undefined}
+              errorMessage={errors[name]?.message}
               {...register(name)}
             />
           </Skeleton>

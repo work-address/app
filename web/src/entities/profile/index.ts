@@ -5,6 +5,7 @@
  */
 
 import { combine, sample, split } from 'effector'
+import i18n from 'i18next'
 
 import {
   ethConnectedPub,
@@ -214,6 +215,8 @@ sample({
     loginEthFx.fail,
     tonAuthError,
     openTonModalFx.fail,
+    openEthModalFx.fail,
+    openSolanaModalFx.fail,
     loginTonFx.fail,
     signSolanaFx.fail,
     loginSolanaFx.fail,
@@ -263,6 +266,15 @@ loginTonFx.done.watch(() => {
     position: 'top-center',
   })
 })
+
+for (const effect of [openEthModalFx, openSolanaModalFx]) {
+  effect.fail.watch(() => {
+    showToast('error', {
+      message: i18n.t('signIn.walletLoadFailed'),
+      position: 'top-center',
+    })
+  })
+}
 
 openTonModalFx.fail.watch(({ error }) => {
   const message = getErrorMessage(error, 'Ton login error')
@@ -333,7 +345,11 @@ sample({
 ;(window as any)['logout'] = logout
 
 export { type LoginMode, type SolanaWalletState } from './types'
-export { SolanaWalletGate } from './solana.model'
+export {
+  SolanaWalletGate,
+  $solanaWalletMounted,
+  solanaWalletLoadFailed,
+} from './solana.model'
 
 export { initAuth, login, logout } from './profile.events'
 export { clearTokensFx, fetchStatusFx, saveTokensFx } from './profile.effects'

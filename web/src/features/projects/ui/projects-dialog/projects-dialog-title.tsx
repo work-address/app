@@ -52,7 +52,7 @@ export const ProjectsDialogTitle = ({
   return (
     <Flex justify="between" align="center" gap="2" width="100%">
       <Text as="span" style={{ minWidth: 0 }}>
-        {title}
+        {heading}
       </Text>
       <Flex align="center" gap="2" style={{ flexShrink: 0 }}>
         {mode === 'view' && invoiceLink}

@@ -2,7 +2,7 @@ import { createEffect, createEvent } from 'effector'
 
 import type { AuthorizationHeaders, TonAuthSuccessPayload } from './types'
 
-import { baseApi, getTonProvider, runApi } from '@/shared'
+import { baseApi, getTonProvider, getLoadedTonProvider, runApi } from '@/shared'
 
 export const tonAuthSuccess = createEvent<TonAuthSuccessPayload>()
 
@@ -13,6 +13,7 @@ export const tonAuthError = createEvent()
 export const openTonModalFx = createEffect(
   async (params: { nonce: string }) => {
     const tonConnectProvider = await getTonProvider()
+    await subscribeTonUiEventsFx()
 
     tonConnectProvider.setConnectRequestParameters({
       value: {
@@ -41,32 +42,40 @@ export const loginTonFx = createEffect(
 )
 
 export const disconnectTonFx = createEffect(async () => {
-  await getTonProvider().then((ton) => ton.disconnect())
+  await getLoadedTonProvider()?.disconnect()
 })
 
+let subscription: Promise<() => void> | null = null
+
 export const subscribeTonUiEventsFx = createEffect(async () => {
-  const tonConnectProvider = await getTonProvider()
+  subscription ??= getTonProvider()
+    .then((tonConnectProvider) =>
+      tonConnectProvider.onStatusChange((wallet) => {
+        const proofItemReply = wallet?.connectItems?.tonProof
 
-  return tonConnectProvider.onStatusChange((wallet) => {
-    const proofItemReply = wallet?.connectItems?.tonProof
-
-    if (
-      proofItemReply &&
-      'proof' in proofItemReply &&
-      wallet &&
-      wallet.account.publicKey
-    ) {
-      return tonAuthSuccess({
-        address: wallet.account.address,
-        network: wallet.account.chain,
-        public_key: wallet.account.publicKey,
-        proof: {
-          ...proofItemReply.proof,
-          state_init: wallet.account.walletStateInit,
-        },
-      })
-    } else if (!wallet) {
-      tonDisconnected()
-    }
-  })
+        if (
+          proofItemReply &&
+          'proof' in proofItemReply &&
+          wallet &&
+          wallet.account.publicKey
+        ) {
+          return tonAuthSuccess({
+            address: wallet.account.address,
+            network: wallet.account.chain,
+            public_key: wallet.account.publicKey,
+            proof: {
+              ...proofItemReply.proof,
+              state_init: wallet.account.walletStateInit,
+            },
+          })
+        } else if (!wallet) {
+          tonDisconnected()
+        }
+      }),
+    )
+    .catch((error) => {
+      subscription = null
+      throw error
+    })
+  return subscription
 })

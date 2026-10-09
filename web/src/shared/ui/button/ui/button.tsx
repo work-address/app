@@ -118,7 +118,7 @@ const colorAttributeStyles = css`
   )}
 `
 
-const Root = styled.button`
+export const buttonStyles = css`
   ${sizeAttributeStyles}
   ${colorAttributeStyles}
 
@@ -173,4 +173,8 @@ const Root = styled.button`
   &[data-stretch] {
     width: 100%;
   }
+`
+
+const Root = styled.button`
+  ${buttonStyles}
 `

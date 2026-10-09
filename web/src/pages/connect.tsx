@@ -1,23 +1,20 @@
 import { Cross1Icon } from '@radix-ui/react-icons'
+import { Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useEffect } from 'react'
-import { Trans, useTranslation } from 'react-i18next'
-import { Link, useSearchParams } from 'react-router-dom'
+import { useTranslation } from 'react-i18next'
+import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 
 import type { TimeTrackerConnectPhase } from '@/features/time-tracker-connect'
 
-import {
-  $authenticated,
-  $pending,
-  $user,
-  login,
-  type LoginMode,
-} from '@/entities/profile'
+import { $authenticated, $pending, $user } from '@/entities/profile'
 import { AuthStyles as S, AuthProviders } from '@/features/auth'
 import {
   initTimeTrackerConnect,
+  buildTimeTrackerConnectView,
   resetTimeTrackerConnect,
+  retryTimeTrackerConnect,
   $phase,
   $errorMessage,
   $errorName,
@@ -31,12 +28,12 @@ import {
   LogoLabel,
   PageHelmet,
   Spinner,
-  Text,
   useBreakpoint,
 } from '@/shared'
 
 export default function ConnectPage() {
   const { t } = useTranslation()
+  const navigate = useNavigate()
   const isDesktop = useBreakpoint('isDesktop')
   const [searchParams] = useSearchParams()
   const nonce = searchParams.get('nonce')
@@ -44,6 +41,7 @@ export default function ConnectPage() {
   const {
     initConnect,
     resetConnect,
+    retryConnect,
     phase,
     errorMessage,
     errorName,
@@ -53,6 +51,7 @@ export default function ConnectPage() {
   } = useUnit({
     initConnect: initTimeTrackerConnect,
     resetConnect: resetTimeTrackerConnect,
+    retryConnect: retryTimeTrackerConnect,
     phase: $phase,
     errorMessage: $errorMessage,
     errorName: $errorName,
@@ -74,46 +73,25 @@ export default function ConnectPage() {
     }
   }, [nonce, initConnect, resetConnect])
 
-  const onSignIn = (mode: LoginMode) => {
-    login(mode)
-  }
-
-  const isAuthError = errorName === 'AuthenticationException'
-  const isTimeTrackerError = errorName === 'TimeTrackerException'
-  const showError = phase === 'error' && Boolean(errorMessage)
-  const showConnected = phase === 'connected'
-  const showWalletProviders =
-    Boolean(nonce) &&
-    !authenticated &&
-    !showConnected &&
-    !isAuthError &&
-    phase !== 'connecting'
-  const showPairingMessage =
-    Boolean(nonce) &&
-    !showConnected &&
-    (showWalletProviders ||
-      showError ||
-      phase === 'awaiting_pair' ||
-      phase === 'connecting')
-  const showLoading =
-    Boolean(nonce) &&
-    (loading ||
-      (authenticated && (phase === 'loading' || phase === 'connecting')))
-  const closeHref = showConnected
+  const {
+    showError,
+    showConnected,
+    showLoading,
+    showWalletProviders,
+    checkingLink,
+    canRetry,
+    headingKey,
+    descriptionKey,
+  } = buildTimeTrackerConnectView({
+    nonce,
+    phase,
+    authenticated,
+    authPending: loading,
+    errorName,
+  })
+  const closeHref = authenticated
     ? routes.dashboard.build()
     : routes.signIn.build()
-
-  let description = t('connect.description.default')
-
-  if (showError && errorMessage) {
-    description = errorMessage
-  } else if (isTimeTrackerError && errorMessage) {
-    description = errorMessage
-  } else if (showConnected) {
-    description = t('connect.description.connected')
-  } else if (isAuthError && errorMessage) {
-    description = errorMessage
-  }
 
   return (
     <>
@@ -122,49 +100,46 @@ export default function ConnectPage() {
         description={t('connect.meta')}
         noindex
       />
-      <CloseLink to={closeHref}>
-        <IconButton variant="ghost" radius="full" color="gray" size="4">
-          <Cross1Icon />
-        </IconButton>
-      </CloseLink>
+      <IconButton asChild variant="ghost" radius="full" color="gray" size="4">
+        <CloseLink to={closeHref} aria-label={t('connect.close')}>
+          <Cross1Icon aria-hidden="true" />
+        </CloseLink>
+      </IconButton>
       <S.Logo src={isDesktop ? LogoLabel : Logo} alt={t('signIn.logoAlt')} />
-      <S.SignInCard>
+      <S.SignInCard aria-busy={showLoading || undefined}>
+        <S.Title>{t(headingKey)}</S.Title>
+        <S.Desc role={showError ? 'alert' : showLoading ? 'status' : undefined}>
+          {t(descriptionKey)}
+        </S.Desc>
         {showLoading && (
-          <S.Overlay align="center" justify="center">
-            <Spinner size={80} />
-          </S.Overlay>
+          <Progress aria-hidden="true">
+            {checkingLink ? (
+              <>
+                <Skeleton width="100%" height="52px" loading />
+                <Skeleton width="100%" height="52px" loading />
+                <Skeleton width="100%" height="52px" loading />
+              </>
+            ) : (
+              <Spinner size={40} />
+            )}
+          </Progress>
         )}
-        <S.Title>{t('connect.heading')}</S.Title>
-        {nonce ? (
-          <>
-            {showPairingMessage && !showConnected && (
-              <S.Desc>{description}</S.Desc>
-            )}
-            {showConnected && (
-              <Text size="5" as="p" align="center">
-                <i>{t('connect.description.connected')}</i>
-              </Text>
-            )}
-            {showWalletProviders && (
-              <S.Actions>
-                <AuthProviders />
-              </S.Actions>
-            )}
-          </>
-        ) : (
-          <S.Desc>
-            <Trans
-              i18nKey="connect.missingNonce"
-              components={{ mb: <S.MobileBreak /> }}
-            />
-          </S.Desc>
+        {showWalletProviders && (
+          <S.Actions>
+            <AuthProviders />
+          </S.Actions>
+        )}
+        {canRetry && (
+          <Button variant="outline" onClick={retryConnect}>
+            {t('common.loadFailure.retry')}
+          </Button>
+        )}
+        {showConnected && (
+          <Button onClick={() => navigate(routes.dashboard.build())}>
+            {t('notFound.action.dashboard')}
+          </Button>
         )}
       </S.SignInCard>
-      <S.ButtonRow>
-        <Button color="neutral" variant="soft" onClick={() => onSignIn('eth')}>
-          {t('signIn.continue')}
-        </Button>
-      </S.ButtonRow>
       {/* The pairing state stays on the page for support and for the
           tracker, but folded away: it is diagnostics, not content. */}
       <StatusDetails>
@@ -235,6 +210,13 @@ const CloseLink = styled(Link)`
     top: 24px;
     right: 24px;
   }
+`
+
+const Progress = styled.div`
+  display: grid;
+  place-items: center;
+  gap: var(--space-3);
+  padding-bottom: var(--space-4);
 `
 
 const StatusDetails = styled.details`

@@ -74,7 +74,8 @@ sample({
 
 timeQuery.finished.failure.watch(({ params, error }) => {
   if ((params.page ?? 0) === 0) {
-    // Initial-load failures fall through to the global error toast instead.
+    // The worklogs section presents this failure and its retry in place.
+    suppressGlobalErrorToast(error)
     return
   }
 
@@ -118,6 +119,7 @@ export {
   $hasActiveTimeFilters,
   $timeSort,
   $timeLoading,
+  $timeFailed,
   $isTimeFiltering,
   $hasMoreTime,
   $isLoadingMoreTime,

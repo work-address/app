@@ -1,61 +1,30 @@
 import { Badge, Flex, Grid, Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { QRCodeSVG } from 'qrcode.react'
-import { Trans, useTranslation } from 'react-i18next'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { useInvoiceInfoFields } from '../lib'
-import { $invoice, $invoiceLoading } from '../model'
+import { $invoice, $invoiceLoading, getInvoicePageUrl } from '../model'
 
-import { InvoicePaymentActions } from './invoice-payment-actions'
+import { InvoiceActions } from './invoice-actions'
 
-import { $user } from '@/entities/profile'
-import {
-  BASE_CURRENCY,
-  Text,
-  Button,
-  copyToClipboard,
-  formatCurrency,
-  Hint,
-  PageTitle,
-  showToast,
-} from '@/shared'
-
-const handleSavePdf = () => {
-  window.print()
-}
+import { Text, formatCurrency, Hint, PageTitle } from '@/shared'
 
 export const InvoiceTotalAmountDesktop = () => {
   const { t } = useTranslation()
 
   const infoFields = useInvoiceInfoFields()
 
-  const { invoice, loading, user } = useUnit({
+  const { invoice, loading } = useUnit({
     invoice: $invoice,
     loading: $invoiceLoading,
-    user: $user,
   })
 
   const isPaid = invoice?.state === 'PAID'
-  // Only the issuer may settle: the person owed the money is the one who
-  // knows whether it arrived.
-  const canSettle = Boolean(user?.id && invoice?.user?.id === user.id)
-
-  const handleShare = () => {
-    copyToClipboard(window.location.href)
-      .then(() => {
-        showToast('info', {
-          message: t('invoice.actions.linkCopied'),
-          position: 'top-center',
-        })
-      })
-      .catch(() => {
-        showToast('error', {
-          message: t('invoice.actions.linkCopyFailed'),
-          position: 'top-center',
-        })
-      })
-  }
+  const invoiceUrl = invoice?.id
+    ? getInvoicePageUrl(window.location.origin, invoice.id)
+    : ''
 
   return (
     <Grid gap={'5'} columns={'auto 1fr'}>
@@ -64,7 +33,7 @@ export const InvoiceTotalAmountDesktop = () => {
           <Skeleton width="194px" height="194px" loading={loading} />
         ) : (
           <QRCodeSVG
-            value={invoice?.id || ''}
+            value={invoiceUrl}
             size={194}
             bgColor="transparent"
             fgColor="var(--ds-accent-9)"
@@ -72,11 +41,7 @@ export const InvoiceTotalAmountDesktop = () => {
           />
         )}
         <Text color={'gray'} align={'center'}>
-          <Trans
-            i18nKey="invoice.qrScan.desktop"
-            values={{ currency: BASE_CURRENCY.code }}
-            components={{ br: <br /> }}
-          />
+          {t('invoice.qrScan.desktop')}
         </Text>
       </Flex>
       <Flex gap={'3'} direction={'column'}>
@@ -105,23 +70,15 @@ export const InvoiceTotalAmountDesktop = () => {
               </Badge>
             )}
           </Flex>
-          <InvoiceNoPrint gap={'3'} align={'center'}>
-            {invoice?.id ? (
-              <InvoicePaymentActions
-                invoiceId={invoice.id}
-                isPaid={isPaid}
-                canSettle={canSettle}
-                compact={false}
-              />
-            ) : null}
-            <Button color="neutral" variant="soft" onClick={handleShare}>
-              {t('invoice.actions.share')}
-            </Button>
-            <Button onClick={handleSavePdf}>
-              {t('invoice.actions.savePdf')}
-            </Button>
-          </InvoiceNoPrint>
+          <InvoiceActions />
         </Flex>
+        {loading ? (
+          <Skeleton width="290px" height="18px" />
+        ) : (
+          <Reference color="gray" size="2">
+            {t('invoices.item.reference')} {invoice?.id}
+          </Reference>
+        )}
         <Text size={'4'} weight={'medium'}>
           {t('invoice.summary.heading')}
         </Text>
@@ -160,8 +117,6 @@ export const InvoiceTotalAmountDesktop = () => {
   )
 }
 
-const InvoiceNoPrint = styled(Flex)`
-  @media print {
-    display: none;
-  }
+const Reference = styled(Text)`
+  overflow-wrap: anywhere;
 `

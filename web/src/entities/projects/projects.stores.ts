@@ -40,6 +40,13 @@ export const $projectsLoading = combine(
  */
 export const $projectsFailed = projectsQuery.$failed
 
+/** Totals can fail while projects, worklogs and app usage remain available. */
+export const $projectsStatsFailed = combine(
+  projectsStatsQuery.$failed,
+  $projectsLoading,
+  (failed, loading) => failed && !loading,
+)
+
 export const $rawProjects = projectsQuery.$data.map(
   (projects) =>
     projects?.items.reduce(

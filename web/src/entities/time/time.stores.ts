@@ -159,6 +159,16 @@ export const $isTimeFiltering = createStore(false)
   .on([$timeFilters, $timeSort], () => true)
   .on(timeQuery.finished.finally, () => false)
 
+/** First-page failures have an inline retry; later failures keep the feed. */
+export const $timeFailed = createStore(false)
+  .on(timeQuery.start, (failed, params) =>
+    isFirstPage(params) ? false : failed,
+  )
+  .on(timeQuery.finished.failure, (failed, { params }) =>
+    isFirstPage(params) ? true : failed,
+  )
+  .on(timeQuery.finished.success, () => false)
+
 export const $timeLoading = restore(setTimeLoading, false)
   .on(timeQuery.start, (state, params) => (isFirstPage(params) ? true : state))
   .on(timeQuery.finished.finally, (state, { params }) =>

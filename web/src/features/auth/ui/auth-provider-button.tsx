@@ -43,7 +43,7 @@ export const AuthProviderButton = ({
       type={'button'}
     >
       {iconUrl ? (
-        <Icon src={iconUrl} alt={iconAlt ?? ''} />
+        <Icon src={iconUrl} alt={iconAlt ?? ''} aria-hidden="true" />
       ) : (
         <IconSlot aria-hidden="true">{icon}</IconSlot>
       )}

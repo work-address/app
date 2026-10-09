@@ -1,4 +1,5 @@
 import { Flex, Separator, Skeleton, Text } from '@radix-ui/themes'
+import { useMemo } from 'react'
 import {
   Controller,
   type Control,
@@ -23,7 +24,7 @@ import {
   TagInput,
   Select,
   RichEditor,
-  COUNTRY_OPTIONS,
+  getCountryOptions,
   BASE_CURRENCY,
   type CardProps,
 } from '@/shared'
@@ -68,7 +69,9 @@ export const ProfileEditDetails = ({
   control,
   errors,
 }: Props) => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
+  const language = i18n.resolvedLanguage ?? i18n.language
+  const countryOptions = useMemo(() => getCountryOptions(language), [language])
 
   return (
     <Root>
@@ -105,9 +108,13 @@ export const ProfileEditDetails = ({
             placeholder={t('profile.form.emailPlaceholder')}
             register={register}
             rules={{
-              pattern: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+              pattern: {
+                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                message: t('profile.form.errors.email'),
+              },
             }}
             error={Boolean(errors.email)}
+            errorMessage={errors.email?.message}
             loading={profileLoading}
             disabled={profileSaving}
             inputMode="email"
@@ -122,7 +129,7 @@ export const ProfileEditDetails = ({
                 <Select
                   label={t('profile.form.country')}
                   placeholder={t('profile.form.countryPlaceholder')}
-                  options={COUNTRY_OPTIONS}
+                  options={countryOptions}
                   value={field.value || ''}
                   menuMaxHeight={240}
                   onChange={(value) => {
@@ -184,9 +191,13 @@ export const ProfileEditDetails = ({
             placeholder="0"
             register={register}
             rules={{
-              pattern: /^\d*([,.]\d{1,2})?$/,
+              pattern: {
+                value: /^\d*([,.]\d{1,2})?$/,
+                message: t('profile.form.errors.rate'),
+              },
             }}
             error={Boolean(errors.rate)}
+            errorMessage={errors.rate?.message}
             loading={profileLoading}
             disabled={profileSaving}
             inputMode="decimal"

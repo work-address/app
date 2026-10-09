@@ -7,17 +7,13 @@ import {
   $isTimeDialogOpen,
   $selectedTimeCount,
   $selectedTimeEntry,
-  $selectedTimeIds,
   $timeDialogNavigation,
   $timeFiltersOpen,
   $timeView,
-  $isTimeBulkPending,
-  timeBulkDeleteRequested,
   timeDialogNextRequested,
   timeDialogOpenChanged,
   timeDialogPrevRequested,
   timeFiltersOpenChanged,
-  timeSelectionCleared,
 } from '../../model'
 import { TimeMobileBulkActions } from '../common'
 import { TimeContext } from '../time-context'
@@ -31,8 +27,14 @@ import { TimeViewToggle } from '../time-view-toggle'
 
 import { TimeWorklogsBulkActions } from './time-worklogs-bulk-actions'
 
-import { $allTime, $timeLoading, TimeEmptyState } from '@/entities/time'
-import { ListPageLayout as S, useBreakpoint } from '@/shared'
+import {
+  $allTime,
+  $timeLoading,
+  $timeFailed,
+  fetchTime,
+  TimeEmptyState,
+} from '@/entities/time'
+import { ListPageLayout as S, LoadFailure, useBreakpoint } from '@/shared'
 
 const EMPTY_STATE_HEIGHT = 560
 
@@ -52,37 +54,33 @@ export const TimeWorklogs = () => {
   const {
     entries,
     loading,
+    failed,
+    retry,
     view,
     filtersOpen,
     setFiltersOpen,
     selectedCount,
-    selectedIds,
     selectedEntry,
     isDialogOpen,
     setDialogOpen,
     navigation,
     goToPrev,
     goToNext,
-    isBulkPending,
-    requestBulkDelete,
-    clearSelection,
   } = useUnit({
     entries: $allTime,
     loading: $timeLoading,
+    failed: $timeFailed,
+    retry: fetchTime,
     view: $timeView,
     filtersOpen: $timeFiltersOpen,
     setFiltersOpen: timeFiltersOpenChanged,
     selectedCount: $selectedTimeCount,
-    selectedIds: $selectedTimeIds,
     selectedEntry: $selectedTimeEntry,
     isDialogOpen: $isTimeDialogOpen,
     setDialogOpen: timeDialogOpenChanged,
     navigation: $timeDialogNavigation,
     goToPrev: timeDialogPrevRequested,
     goToNext: timeDialogNextRequested,
-    isBulkPending: $isTimeBulkPending,
-    requestBulkDelete: timeBulkDeleteRequested,
-    clearSelection: timeSelectionCleared,
   })
 
   const hasEntries = loading || entries.length > 0
@@ -146,17 +144,15 @@ export const TimeWorklogs = () => {
         </MobileToolbar>
       )}
       {isDesktop && <TimeFilters />}
-      {hasEntries ? (
+      {failed ? (
+        <LoadFailure
+          title={t('dashboard.worklogsTable.loadFailure.title')}
+          onRetry={retry}
+        />
+      ) : hasEntries ? (
         <TimeContext.Provider value={contextValue}>
           {isDesktop && selectedCount > 0 && <TimeWorklogsBulkActions />}
-          {isMobile && selectedCount > 0 && (
-            <TimeMobileBulkActions
-              selectedIds={selectedIds}
-              isPending={isBulkPending}
-              onDelete={requestBulkDelete}
-              onClearSelection={clearSelection}
-            />
-          )}
+          {isMobile && selectedCount > 0 && <TimeMobileBulkActions />}
           {view === 'grid' ? <TimeGrid /> : <TimeTable />}
           <TimeDialog
             open={isDialogOpen}
