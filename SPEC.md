@@ -12,7 +12,7 @@ Work Address has **five core domains and no others**:
 | `Project` | A body of work, its hourly rate, and who may touch it — `workerAddresses` / `viewerAddresses`, resolved to `workers: User[]` / `viewers: User[]` — plus the agents its workers have attached, each with its own rate. |
 | `Time` | The work record, in two tables: human entries with activity data (`time`) and agent runs (`time_agent`). Both carry `isPaid`. |
 | `Invoice` | The money record. A period of one person's work — their own hours and their agents' runs, a line each — an amount, and whether it was paid or rejected. |
-| `ProjectStatistics` | Derived aggregates over `Time`, for reporting. |
+| `Statistics` | What time was spent on. Normalized breakdowns of `Time` records — app usage per human entry, tool usage per agent run — and every report aggregated from them. |
 
 ## No new domains
 
@@ -28,7 +28,7 @@ these five.** That bar is deliberately high, and it has already been applied:
 - **Payout runs** were a separate aggregation over timesheets. Invoices already
   aggregate; an unpaid invoice *is* a payout waiting to happen. Deleted.
 - **Employer contractor reports** were a separate query surface over `Time`.
-  `ProjectStatistics` already covers reporting. Deleted.
+  `Statistics` already covers reporting. Deleted.
 - **Agents as users** were proposed: an AI agent with its own wallet, its own
   login and its own invoices. An agent is a tool its worker runs. It is an entry
   on that worker's `User`, attached on `Project`, and its runs are `Time`.
@@ -101,8 +101,35 @@ Invoice lines and agent rates are integer cents for the same reason.
 
 **Retention never destroys an invoice's evidence.** The free-tier purge skips
 entries and runs covered by an invoice from the same issuer, so a financial
-record always keeps the detail behind it. A rejected invoice is not evidence:
-what it released rotates like anything else.
+record always keeps the detail behind it, usage rows included. A rejected
+invoice is not evidence: what it released rotates like anything else.
+
+## Statistics explains time; it never records it
+
+`Statistics` holds breakdowns of `Time` records: how a human entry's active
+minutes divide among apps, window titles and browser domains, and which tools
+an agent run used. A breakdown of a record lives in `Statistics`; the record's
+own fields — an entry's minutes, a run's tokens and timings — stay on the
+record.
+
+**A breakdown never adds time.** An entry's usage rows never add up to more
+than that entry's active time. A run's tool durations can overlap, because an
+agent can call tools in parallel, so they are shown per tool and as counts and
+never summed into a time total.
+
+**Invoices never read `Statistics`.** It is evidence of what billed time went
+into, not a second ledger of it. Usage rows are deleted along with their entry
+or run, so a report can never show detail for time that no longer exists.
+
+**Missing detail looks missing.** Every entry says whether its app detail was
+recorded and, if not, why — a setting, a missing permission, an unsupported
+desktop, an older desktop app. Reports show those minutes as gaps, never as
+idle time.
+
+Reports are computed on read, from these rows and from `Time`, for any date
+range in the viewer's timezone, and for exactly the entries an invoice covers.
+Nothing is cached, so nothing goes stale. The plan is in
+`docs/app-statistics.md`.
 
 ## A worker's agents are the worker's
 
@@ -124,21 +151,27 @@ The build order and the measurement rules are in `docs/agent-time-tracking.md`.
 
 ## Who can see what
 
-| | Project time and statistics | Agents: runs, prompts, rates | Own invoices | Others' invoices |
-| --- | --- | --- | --- | --- |
-| Project owner | yes | **all workers'** | yes | yes |
-| Project worker | yes | **own only** | yes | **no** |
-| Project viewer | yes | **no** | **no** | **no** |
+| | Project time | App statistics | Window titles and domains | Agents: runs, prompts, rates | Own invoices | Others' invoices |
+| --- | --- | --- | --- | --- | --- | --- |
+| Project owner | yes | **every worker, per worker** | **all workers'** | **all workers'** | yes | yes |
+| Project worker | yes | **own only** | **own only** | **own only** | yes | **no** |
+| Project viewer | yes | **project totals by app name** | **no** | **no** | **no** | **no** |
 
 A worker sees their own invoices only: one contractor's rate and hours are not
 another contractor's business.
+
+**A worker sees only their own app statistics, titles and domains.** Window
+titles and browser domains say far more about how someone works than an app
+name does. Inside time entries they are visible only to the owner and the
+entry's author; screenshots and app names in entries keep the project-wide
+visibility above.
 
 **A worker sees only their own agents.** The same reason covers agents, and
 more: an agent's prompts describe how a contractor works, not only what they
 charge. Project-wide agent totals are the owner's alone.
 
-**A viewer sees no invoices and no agents at all.** The role exists to watch
-progress, not money. The rate-privacy reason given above for workers applies to
+**A viewer sees no invoices, no agents, and no app detail beyond project-wide
+totals by app name.** The role exists to watch progress, not money. The rate-privacy reason given above for workers applies to
 a viewer more strongly, not less: a viewer added to a project with several
 contributors would otherwise read every contributor's rate, and a viewer is
 typically further from those contributors than a fellow worker is.
@@ -157,7 +190,7 @@ unpaid workspace rotates timelogs and agent runs at 14 days; paying converts the
 whole workspace so nothing rotates. A self-hosted instance is unconditionally
 entitled — unlimited seats, no rotation (see `service/entitlement.ts`).
 
-Retention is a property of the workspace, never of one person: `ProjectStatistics`
+Retention is a property of the workspace, never of one person: `Statistics`
 and invoice reports aggregate across contributors, so a project whose
 contributors had different retention would report totals that quietly disagree
 with the work done.

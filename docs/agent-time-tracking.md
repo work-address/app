@@ -163,7 +163,7 @@ A duration without a trustworthy anchor can support a separately labelled durati
 
 ## Fit with the existing application
 
-Paths are relative to the repository root. [SPEC.md](../SPEC.md) defines five domains. Agent runs live in the Time domain in their own table; agents and their attachments live on User and Project; invoice lines live on Invoice. No new domain, no synthetic agent `User`.
+Paths are relative to the repository root. [SPEC.md](../SPEC.md) defines five domains. Agent runs live in the Time domain in their own table; agents and their attachments live on User and Project; invoice lines live on Invoice; per-run tool usage lives in Statistics ([app-statistics.md](app-statistics.md)). No new domain, no synthetic agent `User`.
 
 | Existing path | Current behaviour | Change |
 | --- | --- | --- |
@@ -175,7 +175,7 @@ Paths are relative to the repository root. [SPEC.md](../SPEC.md) defines five do
 | `api/src/middleware/payload-logger.ts` | Logs every request body | Exempt `/api/agent-tracking/events` |
 | `api/src/app/app.ts` | Global 30 MB JSON parser | Enforce ingestion limits before the global parser |
 | `api/src/service/auth/authenticator-time-tracker.ts` | Pairing hands the desktop app an unscoped user JWT | Not reused for the collector. The Qt app may use its JWT once to request a scoped credential |
-| `api/src/service/project-statistics-manager.ts` | Aggregates operating-system processes | Unchanged; agent statistics are separate, role-scoped queries over `time_agent` |
+| `api/src/service/project-statistics-manager.ts` | Lazily cached process totals per period | Replaced by the Statistics domain ([app-statistics.md](app-statistics.md)); agent statistics are role-scoped queries over `time_agent` and `agent_tool_usage` |
 | `web/src/features/dashboard/ui/dashboard-summary/` | Totals and unpaid amounts across projects | Money as human, agent and combined lines; hours never combined |
 | `web/src/features/time/model/time-grid.ts` | Human activity percentages and daily sums | Unchanged; agents get their own view |
 | `api/dockerfile.prod`, `dockerfile.dev`, `docker-compose-dev.yml`, `scripts/installer.sh` | Schema applied by `schema:sync` on every start | Unchanged. Every schema change here is additive |
@@ -244,7 +244,7 @@ One row per run. Subagents and nested product runs are their own rows linked to 
 | `prompt`, `response` | Redacted text, each ≤ 16 KB, with `promptLength`/`responseLength` and SHA-256 hashes of the redacted originals; `textStatus=ok\|truncated\|dropped` |
 | `tokens` | `{input, output, cacheRead, cacheWrite}`, nullable when the source version is not qualified |
 | `model` | Model identifier as reported |
-| `tools` | `[{name, count, durationMs}]`; tool names only |
+| Tool usage | Not a column: one `agent_tool_usage` row per run and tool in the Statistics domain, `{tool, count, durationMs}`, tool names only. Durations may overlap and are never summed into time |
 | `commits`, `filesChanged` | Commit SHAs (≤ 50) and a count of changed files |
 | `manual` | True for manual-timer entries |
 | `isPaid`, `invoiceId` | Same meaning as on `time`; owned by Invoice |
@@ -322,7 +322,7 @@ Normalized types are `run.started`, `run.completed`, `run.failed`, `run.cancelle
 | Wait events | `requestId`, `waitScope={kind:run\|tool\|child,scopeId}`, optional proven `toolCallId`/`childSourceKey`; resolution outcome may be `unknown` |
 | Native timing | Optional `sourceDurationMs`, `durationBasis=source_monotonic\|source_wall`, optional `sourceStartedAt`/`sourceEndedAt`; source clock identity required |
 | Observed activity | `activityKind=model\|tool`, `activityId`, anchored `sourceStartedAt`/`sourceEndedAt` |
-| Run content | `prompt`, `response` (redacted, ≤ 16 KB each, with original lengths and hashes, `textStatus`), `tokens`, `model`, `tools`, `commits`, `filesChanged`; every field optional |
+| Run content | `prompt`, `response` (redacted, ≤ 16 KB each, with original lengths and hashes, `textStatus`), `tokens`, `model`, `tools` (written as `agent_tool_usage` rows), `commits`, `filesChanged`; every field optional |
 | Manual entry | `fromAt`, `toAt`, optional note; always `coverage=manual` |
 | Provenance | Optional `parentSourceKey`, `executionKey`, `sourceCursor`, `outcome`; each with a bounded schema |
 
@@ -448,7 +448,7 @@ No standalone binaries, no Homebrew, no code signing.
 ## User experience
 
 - **My agents** (account settings): the worker's agent list, one per product; add, rename, remove; credentials per machine with expiry and revocation; collector health per machine.
-- **Project page, Agents section:** the worker attaches or detaches their own agents and sets each rate. The owner sees every worker's agents read-only. Other workers see only their own. Viewers see no section.
+- **Project dialog, Agents tab:** the worker attaches or detaches their own agents and sets each rate. The owner sees every worker's agents read-only. Other workers see only their own. Viewers see no tab. The same tab carries the agent charts from [app-statistics.md](app-statistics.md): billed time per day by agent, tokens per day and the runs table. There is no project page; the dialog grows instead.
 - **Agents view:** runs grouped by task, with filters for project, agent, product, date, status and coverage. Shows start/end, billed time with unclassified and manual parts, elapsed, runtime where qualified, known waits, child relationships, tokens, model, tool counts, commits, and the prompt and response for those allowed to read them. Missing runtime reads "Unavailable with this integration", never zero.
 - **Invoices:** a human line and one line per agent with minutes, rate and amount; unclassified and manual minutes flagged. The owner has a **Reject** action with an optional reason; a rejected invoice shows its reason and the worker can issue a new one.
 - **Dashboard and export:** separate human and agent sections; hours never combined; money as human, agent and combined amounts, scoped by role.
@@ -485,7 +485,8 @@ Each phase has a reviewable exit condition. Phase 0 runs alongside Phases 1–3,
 - `api/src/entity/time-agent.ts`, `agent-event.ts`, `agent-credential.ts`, `agent-source-cursor.ts` and their repositories.
 - `api/src/controller/agent-controller.ts`, `agent-tracking-controller.ts`, `agent-tracking-credential-controller.ts`; `model/dto/agent.ts`, `agent-time.ts`; `service/agent-manager.ts`, `agent-time-manager.ts`, `agent-time-normalizer.ts`, `agent-event-worker.ts`; a dedicated collector auth service/decorator.
 - Changes to `entity/invoice.ts`, `model/invoice.ts`, `service/invoice-manager.ts`, `controller/invoice-controller.ts`, `entity/project.ts`, `entity/user.ts`, project read/edit paths, `middleware/payload-logger.ts`, `app/app.ts`, `app/app-container.ts`, generated clients.
-- `web/src/features/agent-tracking/` for My agents, the project Agents section and the Agents view; invoice and dashboard changes in their existing slices.
+- `web/src/features/agent-tracking/` for My agents, the project dialog's Agents tab and the Agents view; invoice and dashboard changes in their existing slices. Agent charts use the shared chart components from [app-statistics.md](app-statistics.md).
+- `api/src/entity/agent-tool-usage.ts` belongs to the Statistics domain and ships with this plan's Phase 3.
 - `time-tracker/` (sibling repo): Agents page, `sync` trigger, credential request, opt-in start at login.
 
 ### Schema and rollout
