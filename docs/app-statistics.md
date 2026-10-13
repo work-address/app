@@ -270,6 +270,8 @@ Use the repository's Effector/Farfetched data flow, Feature-Sliced Design, style
 
 ## Phases
 
+This plan's Phase 1 (the Statistics domain) ships first, before the agent plan's Phase 1 (invoice rejection) and before any agent work. Its later phases run independently of the agent plan, except Phase 4.
+
 | Phase | Work | Exit condition |
 | --- | --- | --- |
 | 0 | Spike on macOS, Windows and X11: foreground app and switch events, titles, browser domains per browser, private-window detection, CPU cost of 5-second title polling | Each mechanism confirmed or marked unavailable, per OS and browser |

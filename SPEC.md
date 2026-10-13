@@ -47,7 +47,7 @@ Everything about work done and money owed resolves to these two:
 
 - **`Time` is the only record of work.** Nothing else stores hours. It keeps
   human entries and agent runs in separate tables because they have different
-  shapes — a keystroke slice is not a run with prompts, tokens and wait states —
+  shapes — a keystroke slice is not a run with tokens, tools and wait states —
   not because they are different kinds of record.
 - **`Invoice` is the only record of money.** Nothing else stores an amount
   owed, and nothing else decides whether an hour has been paid for.
@@ -136,8 +136,17 @@ Nothing is cached, so nothing goes stale. The plan is in
 A worker keeps a list of agents, one per product they run — Claude Code, Codex,
 and so on. They attach their own agents to projects they work on and set each
 agent's hourly rate for that project, from zero. The owner sees every agent,
-rate, run and prompt on the project but cannot add, change or remove any of
-them; the owner's levers are rejecting an invoice and removing the worker.
+rate and run on the project but cannot add, change or remove any of them; the
+owner's levers are rejecting an invoice and removing the worker. Agent runs
+carry timings, tokens, model, tools and commits, never prompt or response
+text.
+
+**An agent's rate is the one in force when the invoice is created.** It prices
+every hour on that agent's line, including hours worked before a change, the
+same rule human hours follow. Every change is logged, and an invoice line shows
+any change that repriced hours worked before it, so the owner decides whether
+to reject with the history in front of them. An agent at zero still appears on
+the invoice, at zero.
 
 **An agent's billing rights never exceed its worker's.** A worker who detaches
 an agent can still invoice its past runs at its last rate. A worker the owner
@@ -151,7 +160,7 @@ The build order and the measurement rules are in `docs/agent-time-tracking.md`.
 
 ## Who can see what
 
-| | Project time | App statistics | Window titles and domains | Agents: runs, prompts, rates | Own invoices | Others' invoices |
+| | Project time | App statistics | Window titles and domains | Agents: runs and rates | Own invoices | Others' invoices |
 | --- | --- | --- | --- | --- | --- | --- |
 | Project owner | yes | **every worker, per worker** | **all workers'** | **all workers'** | yes | yes |
 | Project worker | yes | **own only** | **own only** | **own only** | yes | **no** |
@@ -167,8 +176,7 @@ entry's author; screenshots and app names in entries keep the project-wide
 visibility above.
 
 **A worker sees only their own agents.** The same reason covers agents, and
-more: an agent's prompts describe how a contractor works, not only what they
-charge. Project-wide agent totals are the owner's alone.
+more: an agent's runs show how a contractor works, not only what they charge. Project-wide agent totals are the owner's alone.
 
 **A viewer sees no invoices, no agents, and no app detail beyond project-wide
 totals by app name.** The role exists to watch progress, not money. The rate-privacy reason given above for workers applies to
