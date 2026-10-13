@@ -10,7 +10,7 @@ Related documents: [SPEC.md](../SPEC.md) defines the `Statistics` domain and its
 
 - Statistics are designed around the owner checking billed time. Workers get the same views, limited to their own data.
 - App time is **foreground** time: the app the person was using, not every app that was open.
-- App time splits only **active minutes** (minutes with keyboard or mouse input), so a worker's app time adds up to their active, billed time.
+- App time splits the **active minutes** (minutes with keyboard or mouse input) among apps; the entry's idle minutes appear beside them as an **Idle** line, so apps plus Idle add up to the entry's tracked, billed time. Revised 13 October 2026, when invoices moved to billing every tracked minute ([productivity.md](productivity.md)).
 - The desktop app records the app name, the window title and, for browsers, the full hostname. Never full URLs, paths or page content.
 - The project owner decides, per project, whether apps, titles, domains and screenshots are recorded. The desktop app shows the worker exactly what the project records.
 - Missing data looks missing. A permission gap, an unsupported desktop or an old desktop app shows as a gap with its reason, never as idle time.
@@ -22,7 +22,7 @@ Related documents: [SPEC.md](../SPEC.md) defines the `Statistics` domain and its
 | Area | Decision | Not chosen |
 | --- | --- | --- |
 | Audience | Built for the owner; workers see their own | Worker self-insight first; marketplace signals |
-| What app time means | Foreground time, split over active minutes | Open apps; all foreground time including idle minutes |
+| What app time means | Foreground time split over active minutes, plus an Idle line; apps plus Idle equal billed time | Open apps; idle minutes credited to the foreground app; apps equal active time only |
 | Detail | App name, window title (≤ 200 chars), browser full hostname | Full URLs and file paths; registered domain only |
 | Browser domains | Read natively per OS: Apple Events on macOS, UI Automation on Windows | Browser extensions |
 | Private and local | Private windows recorded as "Private browsing" without a domain; `localhost`, IPs and `*.local` recorded as "local" | Recording them as is |
@@ -31,10 +31,10 @@ Related documents: [SPEC.md](../SPEC.md) defines the `Statistics` domain and its
 | Wayland | Reported as unavailable; X11 and XWayland sessions only | Per-compositor integrations; today's guess |
 | Domain | `Statistics` replaces `ProjectStatistics` and stores normalized usage rows | A sixth domain; a rollup or period cache |
 | Agent tool usage | Normalized rows in `Statistics`; scalar run fields stay on `time_agent` | JSON on the run |
-| Aggregation | SQL on read over normalized rows joined to their entry | Hourly rollups; the lazy period cache |
+| Aggregation | SQL on read over normalized rows joined to their entry; daily rollups for long ranges and large accounts, never for invoice figures ([productivity.md](productivity.md)) | Hourly rollups as the only source; the lazy period cache |
 | Ranges | Any range, presets, "this invoice", viewer timezone | Rolling windows ending now |
 | Old data | Read-only legacy; excluded from charts with a notice | Mixed into charts |
-| Visibility | Owner: all workers with titles and domains. Worker: own. Viewer: project app totals by name | Everyone sees everything |
+| Visibility | Owner: all workers with titles, domains and the day timeline, after the worker's review window. Worker: own. Viewer: project app totals by name | Everyone sees everything; detail before review |
 | Surface | The project dialog, larger, with Overview, Apps and Agents tabs | A new project page |
 | Plan location | This document | Merged into the agent plan |
 
@@ -73,7 +73,7 @@ The tracker follows the foreground window continuously: it records each switch a
 - If the minute was **inactive**, nothing is attributed.
 - If the minute was active but no foreground app was observed (unsupported session, missing permission), it counts as unrecorded and the entry's status reflects it.
 
-Example: a 10-minute entry with 7 active minutes yields app time totalling 420 seconds. Within one active minute, 40 seconds in Code and 20 in Chrome become Code 40 s and Chrome 20 s. A minute spent reading in Chrome with no input adds nothing.
+Example: a 10-minute entry with 7 active minutes yields app time totalling 420 seconds and an Idle line of 180 seconds; the entry bills all 600. Within one active minute, 40 seconds in Code and 20 in Chrome become Code 40 s and Chrome 20 s. A minute spent reading in Chrome with no input adds nothing.
 
 Collection runs only while the human timer runs, as today. Agents are covered by the agent plan and never trigger app collection.
 
@@ -165,7 +165,7 @@ At most 30 apps per entry and 20 titles per app. The desktop keeps the largest b
 | `domain` | Hostname or `local`, nullable |
 | `seconds` | Positive integer |
 
-Unique `(timeId, app, title, domain)` with nulls treated as equal; index `timeId`. An entry's rows never add up to more than its `minutesActive × 60` seconds.
+Unique `(timeId, app, title, domain)` with nulls treated as equal; index `timeId`. An entry's rows never add up to more than its `minutesActive × 60` seconds. Idle is not stored: it is the entry's tracked seconds minus that.
 
 `agent_tool_usage`: one row per agent run and tool, written by the agent normalizer from the run's content event.
 
@@ -191,7 +191,7 @@ On `time`: `appsStatus`, `appsReason` and `appsTruncated`, the entry's own field
 
 ### Aggregation
 
-Reports are SQL `GROUP BY` queries over `app_usage` joined to its `time` entry, filtered by project, `time.fromAt` range, `time.deletedAt IS NULL` and the caller's visibility. The join uses the existing `(projectId, fromAt)` unique index. Nothing is cached, so nothing goes stale.
+Reports are SQL `GROUP BY` queries over `app_usage` joined to its `time` entry, filtered by project, `time.fromAt` range, `time.deletedAt IS NULL` and the caller's visibility. The join uses the existing `(projectId, fromAt)` unique index. Raw queries are never stale. For long ranges and accounts with many workers, a daily rollup at (day, project, user, app, title, domain) serves reports; it is rebuilt from the rows and never used where a figure must match an invoice ([productivity.md](productivity.md)).
 
 - **Range:** `from` and `to` as dates in the viewer's IANA `timeZone`, converted to UTC instants; at most 366 days. Day buckets use the same timezone.
 - **Invoice:** with `invoiceId`, the query selects exactly the entries and runs linked to that invoice, so totals match its lines.
@@ -221,12 +221,13 @@ The agent runs table reuses the agent plan's `POST /api/agent-tracking/search`. 
 
 | | Owner | Worker | Viewer |
 | --- | --- | --- | --- |
-| App statistics | Every worker, per worker | Own only | Project totals by app name |
-| Titles and domains | Every worker | Own only | Never |
+| App statistics | Every worker, per worker, after review | Own only | Project totals by app name |
+| Titles and domains | Every worker, after review | Own only | Never |
+| Day timeline | Every worker, after review | Own | Never |
 | Titles and domains inside time entries | Every entry | Entries they authored | Never |
 | Agent statistics | Every worker's agents | Own agents | Never |
 
-The server enforces these rules on every statistics response and on time search, which strips titles and domains from entries the caller may not see in full. A worker's `userIds` filter is forced to themselves; a viewer's breakdowns stay project-level. Screenshots and app names inside time entries keep today's visibility.
+The server enforces these rules on every statistics response and on time search, which strips titles and domains from entries the caller may not see in full. A worker's `userIds` filter is forced to themselves; a viewer's breakdowns stay project-level. Screenshots and app names inside time entries keep today's visibility. Detail is held from the owner and viewers until the worker publishes it or the project's review window (1–24 hours, default 24) passes; see [productivity.md](productivity.md).
 
 ### Removing the period cache
 
@@ -243,9 +244,10 @@ Three tabs share one range picker:
 - **Overview:** human and agent hours side by side, never added; money as human, agent and combined; gaps.
 - **Apps:**
   - Summary tiles (`StatStrip`): tracked time, active time, apps used, top app, gaps.
-  - Daily active time stacked by app, top 8 plus "Other".
+  - Daily time stacked by app, top 8 plus "Other", with Idle as its own band.
   - Ranked app table: time, share, sparkline; rows expand to titles and domains for those allowed.
   - Per-worker stacked bar, owner only.
+  - Day timeline: one block per entry showing its apps and Idle; time by the owner's categories and labels ([productivity.md](productivity.md)).
 - **Agents:** billed time per day by agent, tokens per day, and the runs table grouped by task. Hidden from viewers; a worker sees their own agents.
 
 **Range picker:** this week, last week, this month, last month, this year, and a custom range. Opened from an invoice, it preselects "this invoice". Days follow the viewer's timezone.
@@ -294,7 +296,7 @@ Verification entry points: `pnpm --filter ./api test`, `pnpm --filter ./api buil
 
 | Scenario | Required result |
 | --- | --- |
-| Entry with 7 active minutes across two apps | App seconds total 420; split by foreground share per minute |
+| Entry with 7 active minutes across two apps | App seconds total 420, split by foreground share per minute; Idle 180; the entry bills 600 |
 | Inactive minute with an app in front | Adds no app time |
 | More than 30 apps or 20 titles in an entry | Largest kept; remainder in "Other"; `appsTruncated` set |
 | Project records apps but not titles or domains | Server stores apps only, whatever the client sent |
@@ -318,4 +320,4 @@ Verification entry points: `pnpm --filter ./api test`, `pnpm --filter ./api buil
 
 ## Later
 
-A per-day app timeline per worker; a weekday × hour heatmap; agent model and tool mix and outcome rates; browser extensions to cover Firefox on macOS, Linux and Wayland; per-compositor Wayland support; whether other workers should keep seeing each other's screenshots.
+A weekday × hour heatmap; agent model and tool mix and outcome rates; browser extensions to cover Firefox on macOS, Linux and Wayland; per-compositor Wayland support; whether other workers should keep seeing each other's screenshots.

@@ -12,7 +12,7 @@ Work Address has **five core domains and no others**:
 | `Project` | A body of work, its hourly rate, and who may touch it — `workerAddresses` / `viewerAddresses`, resolved to `workers: User[]` / `viewers: User[]` — plus the agents its workers have attached, each with its own rate. |
 | `Time` | The work record, in two tables: human entries with activity data (`time`) and agent runs (`time_agent`). Both carry `isPaid`. |
 | `Invoice` | The money record. A period of one person's work — their own hours and their agents' runs, a line each — an amount, and whether it was paid or rejected. |
-| `Statistics` | What time was spent on. Normalized breakdowns of `Time` records — app usage per human entry, tool usage per agent run — and every report aggregated from them. |
+| `Statistics` | What time was spent on. Normalized breakdowns of `Time` records — app usage per human entry, tool usage per agent run — the category sets and goals that classify them, and every report aggregated from them. |
 
 ## No new domains
 
@@ -66,6 +66,12 @@ agent's rate. The lines are frozen when the invoice is created, like its amount.
 One invoice never sums several contributors together, because the resulting
 record would name nobody and leave the contributors with nothing of their own.
 
+**An invoice bills every tracked minute.** A human line prices the minutes its
+entries span, including idle minutes up to the desktop's automatic stop unless
+the worker discarded them. Active minutes — minutes with input — are shown as a
+reference, never as the quantity billed. Manual and web-timer entries are billed
+too, but only where the project allows them, and they are flagged on the line.
+
 **`Time.isPaid` is owned by `Invoice`, in both tables.** `InvoiceManager.markPaid`
 sets it and `markUnpaid` clears it, scoped to the issuer's own entries and runs
 on the invoice. Nothing else writes it except an author correcting their own
@@ -112,8 +118,9 @@ an agent run used. A breakdown of a record lives in `Statistics`; the record's
 own fields — an entry's minutes, a run's tokens and timings — stay on the
 record.
 
-**A breakdown never adds time.** An entry's usage rows never add up to more
-than that entry's active time. A run's tool durations can overlap, because an
+**A breakdown never adds time.** An entry's usage rows divide its active
+minutes among apps; its idle minutes are shown beside them, and the two together
+equal the entry's tracked time. A run's tool durations can overlap, because an
 agent can call tools in parallel, so they are shown per tool and as counts and
 never summed into a time total.
 
@@ -126,10 +133,17 @@ recorded and, if not, why — a setting, a missing permission, an unsupported
 desktop, an older desktop app. Reports show those minutes as gaps, never as
 idle time.
 
-Reports are computed on read, from these rows and from `Time`, for any date
-range in the viewer's timezone, and for exactly the entries an invoice covers.
-Nothing is cached, so nothing goes stale. The plan is in
-`docs/app-statistics.md`.
+**A person's own insights are theirs.** Their categories, productivity labels
+and goals are visible to them alone. An owner classifies their projects' time
+with a category set of their own, published to everyone it is applied to, and
+sees each worker's time by that set. There is no single productivity score and
+no ranking: a number that ranks people hides the time it summarises.
+
+Reports are computed from these rows and from `Time`, for any date range in the
+viewer's timezone, and for exactly the entries an invoice covers. Daily rollups
+may serve long ranges and large accounts; they are derived, rebuilt from the
+rows, and never used where a figure must match an invoice. The plans are in
+`docs/app-statistics.md` and `docs/productivity.md`.
 
 ## A worker's agents are the worker's
 
@@ -160,11 +174,15 @@ The build order and the measurement rules are in `docs/agent-time-tracking.md`.
 
 ## Who can see what
 
-| | Project time | App statistics | Window titles and domains | Agents: runs and rates | Own invoices | Others' invoices |
-| --- | --- | --- | --- | --- | --- | --- |
-| Project owner | yes | **every worker, per worker** | **all workers'** | **all workers'** | yes | yes |
-| Project worker | yes | **own only** | **own only** | **own only** | yes | **no** |
-| Project viewer | yes | **project totals by app name** | **no** | **no** | **no** | **no** |
+| | Project owner | Project worker | Project viewer |
+| --- | --- | --- | --- |
+| Project time, and who is tracking now | yes | yes | yes |
+| Apps, window titles, domains, idle and the day timeline | **every worker, after review** | **own only** | **project totals by app name** |
+| Time by the owner's categories and labels | **every worker, after review** | **own, and the published set** | **project totals by category, no labels** |
+| A person's own categories, labels and goals | **no** | **own only** | **no** |
+| Agents: runs and rates | **all workers'** | **own only** | **no** |
+| Own invoices | yes | yes | **no** |
+| Others' invoices | yes | **no** | **no** |
 
 A worker sees their own invoices only: one contractor's rate and hours are not
 another contractor's business.
@@ -175,14 +193,26 @@ name does. Inside time entries they are visible only to the owner and the
 entry's author; screenshots and app names in entries keep the project-wide
 visibility above.
 
-**A worker sees only their own agents.** The same reason covers agents, and
-more: an agent's runs show how a contractor works, not only what they charge. Project-wide agent totals are the owner's alone.
+**Detail waits for the worker's review.** An entry's apps, titles, domains,
+timeline and screenshot reach the owner and viewers only once its author
+publishes them or the project's review window has passed — one to twenty-four
+hours, set by the owner. The time itself is visible at once, and creating an
+invoice publishes what it bills. The person recorded sees the record first.
 
-**A viewer sees no invoices, no agents, and no app detail beyond project-wide
-totals by app name.** The role exists to watch progress, not money. The rate-privacy reason given above for workers applies to
-a viewer more strongly, not less: a viewer added to a project with several
-contributors would otherwise read every contributor's rate, and a viewer is
-typically further from those contributors than a fellow worker is.
+**Nothing is recorded in secret.** The desktop shows when it is recording and
+what the project records, and a worker sees everything about them that the
+owner sees.
+
+**A worker sees only their own agents.** The same reason covers agents, and
+more: an agent's runs show how a contractor works, not only what they charge.
+Project-wide agent totals are the owner's alone.
+
+**A viewer sees no invoices, no agents, and no detail beyond project totals by
+app name and by the owner's categories.** The role exists to watch progress,
+not money. The rate-privacy reason given above for workers applies to a viewer
+more strongly, not less: a viewer added to a project with several contributors
+would otherwise read every contributor's rate, and a viewer is typically
+further from those contributors than a fellow worker is.
 
 There is no mechanism for granting an outsider access to a single invoice. An
 invoice leaves the product as a PDF, sent by the issuer.
