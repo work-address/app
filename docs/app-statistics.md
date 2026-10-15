@@ -241,14 +241,14 @@ View mode grows to a new `DIALOG_WIDTH_XL`: `min(1200px, 92vw)` wide and 90% of 
 
 Three tabs share one range picker:
 
-- **Overview:** human and agent hours side by side, never added; money as human, agent and combined; gaps.
+- **Overview:** human time, assisted agent time and autonomous agent time as three separate figures, never added; money as human, agent and combined; gaps. Assisted agent time is agent time that ran while the same worker's own timer ran on the project ([agent-time-tracking.md](agent-time-tracking.md)).
 - **Apps:**
   - Summary tiles (`StatStrip`): tracked time, active time, apps used, top app, gaps.
   - Daily time stacked by app, top 8 plus "Other", with Idle as its own band.
   - Ranked app table: time, share, sparkline; rows expand to titles and domains for those allowed.
   - Per-worker stacked bar, owner only.
   - Day timeline: one block per entry showing its apps and Idle; time by the owner's categories and labels ([productivity.md](productivity.md)).
-- **Agents:** billed time per day by agent, tokens per day, and the runs table grouped by task. Hidden from viewers; a worker sees their own agents.
+- **Agents:** billed time per day by agent, stacked into assisted and autonomous, tokens per day, and the runs table grouped by task. Hidden from viewers; a worker sees their own agents.
 
 **Range picker:** this week, last week, this month, last month, this year, and a custom range. Opened from an invoice, it preselects "this invoice". Days follow the viewer's timezone.
 

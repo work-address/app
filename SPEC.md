@@ -62,7 +62,9 @@ work. The money they earn is money, and does add up.
 (`Invoice.user`) is the person whose time it bills for — a worker invoices the
 project owner for their own hours, an owner invoices their client for theirs.
 Their own hours are one line; each agent they run is a line of its own, at that
-agent's rate. The lines are frozen when the invoice is created, like its amount.
+agent's rate, and says how much of its time ran while the worker was also
+billing their own hours on that project, so the client sees when they pay for a
+person and an agent in the same hour. The lines are frozen when the invoice is created, like its amount.
 One invoice never sums several contributors together, because the resulting
 record would name nobody and leave the contributors with nothing of their own.
 
@@ -147,8 +149,9 @@ rows, and never used where a figure must match an invoice. The plans are in
 
 ## A worker's agents are the worker's
 
-A worker keeps a list of agents, one per product they run — Claude Code, Codex,
-and so on. They attach their own agents to projects they work on and set each
+A worker keeps a list of agents — one or more per product they run, such as
+Claude Code on their laptop and Claude Code on a build server — each optionally
+bound to the machines it runs on, with one default per product. They attach their own agents to projects they work on and set each
 agent's hourly rate for that project, from zero. The owner sees every agent,
 rate and run on the project but cannot add, change or remove any of them; the
 owner's levers are rejecting an invoice and removing the worker. Agent runs
