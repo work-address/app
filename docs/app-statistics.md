@@ -10,7 +10,7 @@ Related documents: [SPEC.md](../SPEC.md) defines the `Statistics` domain and its
 
 - Statistics are designed around the owner checking billed time. Workers get the same views, limited to their own data.
 - App time is **foreground** time: the app the person was using, not every app that was open.
-- App time splits the **active minutes** (minutes with keyboard or mouse input) among apps; the entry's idle minutes appear beside them as an **Idle** line, so apps plus Idle add up to the entry's tracked, billed time. Revised 13 October 2026, when invoices moved to billing every tracked minute ([productivity.md](productivity.md)).
+- App time splits the **active minutes** (minutes with keyboard or mouse input) among apps; the entry's idle minutes appear beside them as an **Idle** line, and active minutes with no app data as a gap, so apps, Idle and gaps add up to the entry's tracked, billed time. Manual and web-timer entries have no split and appear as a **Manual** band. Revised 13 and 17 October 2026 ([productivity.md](productivity.md)).
 - The desktop app records the app name, the window title and, for browsers, the full hostname. Never full URLs, paths or page content.
 - The project owner decides, per project, whether apps, titles, domains and screenshots are recorded. The desktop app shows the worker exactly what the project records.
 - Missing data looks missing. A permission gap, an unsupported desktop or an old desktop app shows as a gap with its reason, never as idle time.
@@ -22,7 +22,7 @@ Related documents: [SPEC.md](../SPEC.md) defines the `Statistics` domain and its
 | Area | Decision | Not chosen |
 | --- | --- | --- |
 | Audience | Built for the owner; workers see their own | Worker self-insight first; marketplace signals |
-| What app time means | Foreground time split over active minutes, plus an Idle line; apps plus Idle equal billed time | Open apps; idle minutes credited to the foreground app; apps equal active time only |
+| What app time means | Foreground time split over active minutes, plus an Idle line and a gap for unrecorded minutes; apps, Idle and gaps equal billed time; manual entries form their own band | Open apps; idle minutes credited to the foreground app; apps equal active time only; manual entries counted as idle |
 | Detail | App name, window title (≤ 200 chars), browser full hostname | Full URLs and file paths; registered domain only |
 | Browser domains | Read natively per OS: Apple Events on macOS, UI Automation on Windows | Browser extensions |
 | Private and local | Private windows recorded as "Private browsing" without a domain; `localhost`, IPs and `*.local` recorded as "local" | Recording them as is |
@@ -34,7 +34,7 @@ Related documents: [SPEC.md](../SPEC.md) defines the `Statistics` domain and its
 | Aggregation | SQL on read over normalized rows joined to their entry; daily rollups for long ranges and large accounts, never for invoice figures ([productivity.md](productivity.md)) | Hourly rollups as the only source; the lazy period cache |
 | Ranges | Any range, presets, "this invoice", viewer timezone | Rolling windows ending now |
 | Old data | Read-only legacy; excluded from charts with a notice | Mixed into charts |
-| Visibility | Owner: all workers with titles, domains and the day timeline, after the worker's review window. Worker: own. Viewer: project app totals by name | Everyone sees everything; detail before review |
+| Visibility | Owner: all workers with screenshots, titles, domains and the day timeline, after the worker's review window. Worker: own entries in full, other workers' entries as time only. Viewer: project app totals by name | Everyone sees everything; detail before review; today's project-wide access to any entry |
 | Surface | The project dialog, larger, with Overview, Apps and Agents tabs | A new project page |
 | Plan location | This document | Merged into the agent plan |
 
@@ -165,7 +165,7 @@ At most 30 apps per entry and 20 titles per app. The desktop keeps the largest b
 | `domain` | Hostname or `local`, nullable |
 | `seconds` | Positive integer |
 
-Unique `(timeId, app, title, domain)` with nulls treated as equal; index `timeId`. An entry's rows never add up to more than its `minutesActive × 60` seconds. Idle is not stored: it is the entry's tracked seconds minus that.
+Unique `(timeId, app, title, domain)` with nulls treated as equal; index `timeId`. An entry's rows never add up to more than its `minutesActive × 60` seconds. Idle is not stored: it is the entry's tracked seconds minus `minutesActive × 60`; active seconds not covered by usage rows are the entry's gap. Manual and web-timer entries (`source` other than `desktop`) have no usage rows, no active minutes, no idle and no gap: statistics show them as manual time.
 
 `agent_tool_usage`: one row per agent run and tool, written by the agent normalizer from the run's content event.
 
@@ -183,7 +183,7 @@ On `time`: `appsStatus`, `appsReason` and `appsTruncated`, the entry's own field
 
 ### Writing
 
-- The upload writes an entry's `app_usage` rows in the same transaction as the entry. Re-uploading an entry replaces its rows.
+- The upload writes an entry's `app_usage` rows in the same transaction as the entry. Re-uploading an entry replaces its rows, unless the entry is linked to an invoice or already published: then the upload's app data is ignored and the stored rows stand, so evidence never changes after the owner has seen it.
 - The server applies the project's switches first, then validates. Invalid app data never blocks time: the entry is stored without app rows, with `appsStatus=invalid`.
 - "Remove processes" on an entry, single or bulk, deletes its `app_usage` rows and clears its legacy `processes`.
 - Usage rows follow their entry: unreachable when the entry is soft-deleted by retention or removal, deleted with it on hard delete, and kept with invoiced entries as the invoice's evidence.
@@ -206,14 +206,14 @@ All routes are new contracts with the `/api` prefix. Each takes `{projectIds, fr
 
 | Route | Returns | Access |
 | --- | --- | --- |
-| `POST /api/statistics/overview` | Human tracked and active minutes; agent billed minutes; money as human, agent and combined; gaps | Owner: all. Worker: own. Viewer: human time only |
+| `POST /api/statistics/overview` | Human tracked, active and manual minutes; agent billed minutes split into assisted and autonomous; money as human, agent and combined; gaps | Owner: all. Worker: own. Viewer: human time only |
 | `POST /api/statistics/apps/summary` | Active minutes, apps used, top app, gap minutes by reason | Owner, worker (own), viewer (project) |
 | `POST /api/statistics/apps/daily` | Seconds per day per app, top 8 plus "Other" | Same |
 | `POST /api/statistics/apps/ranking` | Apps with seconds, share and a daily series for sparklines | Same |
 | `POST /api/statistics/apps/titles` | For one app: titles and domains with seconds | Owner; worker for their own entries. Never viewers |
 | `POST /api/statistics/apps/workers` | Seconds per worker per app | Owner only |
 | `POST /api/statistics/apps/projects` | Top apps per project for the dashboard, in one request | Per project, as above |
-| `POST /api/statistics/agents/daily` | Billed minutes per day per agent, tokens per day | Owner: all. Worker: own. Never viewers |
+| `POST /api/statistics/agents/daily` | Billed minutes per day per agent, split into assisted and autonomous; tokens per day | Owner: all. Worker: own. Never viewers |
 
 The agent runs table reuses the agent plan's `POST /api/agent-tracking/search`. `GET /api/project/:id/stats/:period` is removed with the cache.
 
@@ -224,10 +224,10 @@ The agent runs table reuses the agent plan's `POST /api/agent-tracking/search`. 
 | App statistics | Every worker, per worker, after review | Own only | Project totals by app name |
 | Titles and domains | Every worker, after review | Own only | Never |
 | Day timeline | Every worker, after review | Own | Never |
-| Titles and domains inside time entries | Every entry | Entries they authored | Never |
+| Screenshots, app names, titles and domains inside time entries | Every entry, after review | Entries they authored | Never |
 | Agent statistics | Every worker's agents | Own agents | Never |
 
-The server enforces these rules on every statistics response and on time search, which strips titles and domains from entries the caller may not see in full. A worker's `userIds` filter is forced to themselves; a viewer's breakdowns stay project-level. Screenshots and app names inside time entries keep today's visibility. Detail is held from the owner and viewers until the worker publishes it or the project's review window (1–24 hours, default 24) passes; see [productivity.md](productivity.md).
+The server enforces these rules on every statistics response and on time search, which returns another worker's entries with their time only: no screenshot, app names, titles or domains. A worker's `userIds` filter is forced to themselves; a viewer's breakdowns stay project-level and viewers get no per-entry detail. This changes today's behaviour, where anyone on the project can open any entry. Detail is held from the owner and viewers until the worker publishes it or the project's review window (1–24 hours, default 24) passes; see [productivity.md](productivity.md).
 
 ### Removing the period cache
 
@@ -244,7 +244,7 @@ Three tabs share one range picker:
 - **Overview:** human time, assisted agent time and autonomous agent time as three separate figures, never added; money as human, agent and combined; gaps. Assisted agent time is agent time that ran while the same worker's own timer ran on the project ([agent-time-tracking.md](agent-time-tracking.md)).
 - **Apps:**
   - Summary tiles (`StatStrip`): tracked time, active time, apps used, top app, gaps.
-  - Daily time stacked by app, top 8 plus "Other", with Idle as its own band.
+  - Daily time stacked by app, top 8 plus "Other", with Idle, gaps and Manual as their own bands.
   - Ranked app table: time, share, sparkline; rows expand to titles and domains for those allowed.
   - Per-worker stacked bar, owner only.
   - Day timeline: one block per entry showing its apps and Idle; time by the owner's categories and labels ([productivity.md](productivity.md)).
@@ -306,9 +306,11 @@ Verification entry points: `pnpm --filter ./api test`, `pnpm --filter ./api buil
 | Remove processes, single and bulk | Rows deleted and legacy JSON cleared |
 | Retention purges an entry | Its usage no longer counted; invoiced entries keep theirs |
 | Owner, worker and viewer request each statistics route | Owner sees all workers with titles; worker only themselves; viewer project totals by name, no titles, no per-worker, no agents |
-| Worker or viewer searches another worker's time entry | Titles and domains stripped; screenshots and app names as today |
+| Worker or viewer searches another worker's time entry | Time only: no screenshot, app names, titles or domains |
+| Manual or web-timer entry | No usage rows; shown as Manual; outside the active/idle split and the gap count |
+| Re-upload of an invoiced or published entry | App data ignored; stored rows unchanged |
 | Range in a non-UTC timezone, including a half-hour offset | Day buckets follow that timezone exactly at entry granularity |
-| Range covering an invoice | "This invoice" totals equal the invoice's human line |
+| Range covering an invoice | "This invoice" totals equal the invoice's human line; for an older invoice priced on active minutes, the active total matches and the tracked total is shown beside it |
 | Range reaching back before the change | Legacy minutes reported as a gap with the notice |
 | Old desktop app uploads | Accepted; shown as "recorded by an older desktop app" |
 | Concurrent statistics requests | No errors; no shared mutable cache |
@@ -320,4 +322,4 @@ Verification entry points: `pnpm --filter ./api test`, `pnpm --filter ./api buil
 
 ## Later
 
-A weekday × hour heatmap; agent model and tool mix and outcome rates; browser extensions to cover Firefox on macOS, Linux and Wayland; per-compositor Wayland support; whether other workers should keep seeing each other's screenshots.
+A weekday × hour heatmap; agent model and tool mix and outcome rates; browser extensions to cover Firefox on macOS, Linux and Wayland; per-compositor Wayland support.

@@ -4,7 +4,7 @@ Reference for [agent-time-tracking.md](agent-time-tracking.md): what each AI age
 
 **How things were verified.**
 
-- **Seen:** field, record or table names inspected in real local data on a Mac on 15 October 2026. Names only; no prompt, code or other content was read.
+- **Seen:** field, record or table names inspected in real local data on a Mac on 15–17 October 2026. Names only; no prompt, code or other content was read.
 - **Docs:** stated in the vendor's documentation or source code.
 - **Reported:** stated by a third party (for example a competitor's release notes).
 - **Unverified:** expected but not yet confirmed; Phase 0 must check it.
@@ -21,7 +21,7 @@ Read by the Qt log reader on laptops (timer mode). H = hooks, L = local records.
 | **Codex** | JSONL rollout per session, `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl` | Prompt submit, Stop, Interrupt, session start and end, subagent, tool, permission | L: `task_started` / `task_complete` with `started_at`, `completed_at`, `duration_ms`, `time_to_first_token_ms`; per tool `item_completed` start and end in ms | L: input, cached, cache write, output, reasoning, total; plan and rate limits. H: none | L: `session_meta`, `turn_context` | L: `turn_aborted`. H: `Interrupt` | H: `PermissionRequest`. L: `approval_policy` only | L: inter-agent records. H: subagent events | **Logs** | L Seen, H Docs |
 | **Kimi Code** | Per session `~/.kimi-code/sessions/<workDirKey>/<sessionId>/`: `state.json`, `agents/main/wire.jsonl`, one `wire.jsonl` per subagent, `logs/kimi-code.log`; `session_index.jsonl` at the root | `TurnStarted`, Stop, `StopFailure`, `Interrupt`, `PermissionRequest` / `PermissionResult`, subagent events, `SessionHeartbeat`; experimental Server API | L: `turn.prompt` / `turn.ended` with `turnId`, `durationMs`, `wallClockMs`, `llmFirstTokenLatencyMs` | L: `usage.record`, `token_counting.turn_recorded`. H: none | L: `model`, `provider`, `modelAlias`, `thinkingEffort` | L: end `reason`, `turn.steer`, `error`; `lastTurnReason` in `state.json`. H: `Interrupt`, `StopFailure` | **L: `interaction.request` / `interaction.resolved` explicit pairs**, approval results. H: permission events | L: one stream per subagent. H: subagent events | **Logs** | L Seen, H Docs |
 | **MiniMax** (Agent desktop app and its local runtime) | SQLite `~/.minimax/v2/sqlite/runtime-state.sqlite` (WAL); also `~/.minimax/v2/sessions/`, `~/.minimax/background-tasks/` | Undocumented; a local `~/.minimax/v2/plugin-hook-cache` suggests plugin hooks exist | L: `turn_ingress` with `accepted_at_ms`, `completed_at_ms`, `status` | L: input, output, reasoning, cache read, cache write **and `cost_usd`** per turn | L: per token-usage row | L: `terminal_outcome`, `error_code` (values unverified) | L: partial (goal wait reason, queue pauses) | L: `parent_session_id`, agent-to-agent messages | **Local DB** | L Seen, H unverified |
-| **Cursor IDE** | SQLite `state.vscdb` in Cursor's `User/globalStorage`; a transcript file (path in hooks) | Prompt submit, `stop`, session start and end, tool, subagent, compaction, agent response and thought | H: prompt submit and `stop`; `sessionEnd` with `duration_ms` | H: none (context size only before compaction). L: unverified | H: on every event | H: `stop` status `completed` / `aborted` / `error` | H: none | H: subagent events | **Hooks** until the store is verified | H Docs, L unverified |
+| **Cursor IDE** | SQLite `state.vscdb` in Cursor's `User/globalStorage` (3.8 GB here): `composerHeaders` table, `composerData:` and `bubbleId:` records in `cursorDiskKV` | Prompt submit, `stop`, session start and end, tool, subagent, compaction, agent response and thought | L: `createdAt` on every message, `createdAt` / `lastUpdatedAt` per conversation. H: prompt submit and `stop`; `sessionEnd` with `duration_ms` | **None in either.** L: `tokenCount` exists on every message but is empty (3,533 of 3,534 sampled on 3.24.12); `usageData` empty. H: context size only before compaction | L: `modelConfig.modelName`, `modelInfo.modelName`. H: on every event | L: `status` `completed` / `aborted` / `none`, `errorDetails`. H: `stop` status | None | L: `composerHeaders.isSubagent`, `subagentTypeName` (`explore`, `shell`, `generalPurpose`, `bugbot`). H: subagent events | **Logs** for timing; also lines added/removed and files changed | L Seen (3.24.12), H Docs |
 | **Gemini CLI** | `~/.gemini/tmp/<project>/` session files | `BeforeAgent`, `AfterAgent`, `AfterModel`, session events | H and L: turn start and end | H: `AfterModel` usage. L: input, output, cached, thoughts | H and L | H: no end event on user abort | — | — | **About even** | H Docs, L folder Seen, fields unverified |
 | **GitHub Copilot** (CLI and VS Code) | CLI under `~/.copilot`; VS Code chat sessions in its storage | CLI: prompt submitted, agent stop, session end with `abort`. VS Code: prompt submit, Stop (Preview) | H: turn start and end | Only through OTel | Only through OTel | H: CLI `abort` | — | — | **Hooks** for timing | H Docs, L unverified |
 | **Windsurf** | A transcript file written only by its transcript hook | `pre_user_prompt`, asynchronous `post_cascade_response` | H: start, asynchronous end | None | H: `model_name` (may be "Unknown") | None | — | — | **Hooks** | H Docs |
@@ -74,6 +74,15 @@ Names only, as seen on 15 October 2026 unless marked otherwise.
 - **Record types:** `turn.prompt`, `turn.ended`, `turn.steer`, `prompt.accepted`, `task.started`, `task.terminated`, `llm.request`, `usage.record`, `token_counting.measured`, `token_counting.turn_recorded`, `interaction.request`, `interaction.resolved`, `permission.set_mode`, `permission.record_approval_result`, `context.append_loop_event`, `goal.create` / `update` / `clear`, `swarm_mode.enter` / `exit`, `plugin.session_start`.
 - **Fields:** `turnId`, `promptId`, `durationMs`, `wallClockMs`, `model`, `provider`, `modelAlias`, `usage`, `tokens`, `tokensUsed`, `thinkingEffort`, `llmFirstTokenLatencyMs`, `toolName`, `toolCallId`, `status`, `reason`, `error`, `created_at`.
 
+### Cursor
+
+- **Store:** `state.vscdb`, with tables `ItemTable`, `cursorDiskKV` (key/value; 515k rows here) and `composerHeaders`.
+- **`composerHeaders`:** `composerId`, `workspaceId`, `createdAt`, `lastUpdatedAt` (epoch ms), `isArchived`, `isSubagent`, `subagentTypeName`, `checkpointAt`, and a `value` JSON with `filesChangedCount`, `totalLinesAdded`, `totalLinesRemoved`, `contextUsagePercent`, `unifiedMode` (`agent` or `chat`), `workspaceIdentifier`.
+- **`composerData:<id>`:** `createdAt`, `lastUpdatedAt`, `status`, `modelConfig.modelName`, `isAgentic`, `subagentComposerIds`, `generatingBubbleIds`, `stopHookLoopCount`, `filesChangedCount`, `usageData` (empty).
+- **`bubbleId:<composerId>:<bubbleId>`:** `type` (1 user, 2 assistant), `createdAt`, `modelInfo.modelName`, `tokenCount.inputTokens` / `outputTokens` (empty), `errorDetails`, `isRefunded`, `requestId`, `commits`.
+- **Content beside the fields:** the same records hold prompts, responses, code excerpts and file selections. The reader must copy only the fields above out of each row.
+- **Key prefixes seen:** `agentKv:blob`, `bubbleId`, `composerData`, `messageRequestContext`, `checkpointId`, `codeBlockDiff`, `composerDraft`.
+
 ### MiniMax
 
 - **Tables of interest in `runtime-state.sqlite`:**
@@ -115,9 +124,9 @@ Only the macOS locations were seen; the rest follow each tool's conventions and 
 | Kimi Code | Logs | Logs: tokens, time to first token, explicit wait pairs. Hooks: real-time delivery only |
 | MiniMax | Local DB | DB: tokens, cost, scheduled-run origin. Hooks: unknown |
 | Gemini CLI | About even | Both have tokens; hooks miss user aborts |
-| Cursor | Hooks, until its store is verified | Hooks: run status, model on every event, session end reason |
+| Cursor | Logs | Logs: timing, outcome, model, subagents, lines changed, history. Neither source has tokens |
 
-Hooks are better only for real-time delivery, live permission waits, session end reasons, and Cursor. Local records also give history from before installation. That is why the agent plan reads local records on laptops and keeps hooks for servers.
+Hooks are better only for real-time delivery, live permission waits and session end reasons. Local records also give history from before installation. That is why the agent plan reads local records on laptops and keeps hooks for servers.
 
 ## Prior art: Firstlight
 

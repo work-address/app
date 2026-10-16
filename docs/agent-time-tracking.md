@@ -1,12 +1,12 @@
 # Agent time tracking implementation plan
 
-Status: confirmed implementation specification, revised after a design review on 12 October 2026. Vendor research checked 12 October 2026. Repository baseline: `dev` at `1fceeaad`. This revision replaces the earlier proposal (written against `7d559faf` on `feat/0-google-login`), which kept agent time non-billable and out of invoices. The collection model was revised on 13 October 2026: on laptops the Qt desktop tracker receives agent events and counts them only while its timer runs (timer mode); servers track into a configured project (fixed mode). Laptop collection was revised again on 15 October 2026: the Qt app reads each agent's local session logs instead of receiving hook events.
+Status: confirmed implementation specification, revised after a design review on 12 October 2026. Vendor research checked 12 October 2026. Repository baseline: `dev` at `1fceeaad`. This revision replaces the earlier proposal (written against `7d559faf` on `feat/0-google-login`), which kept agent time non-billable and out of invoices. The collection model was revised on 13 October 2026: on laptops the Qt desktop tracker receives agent events and counts them only while its timer runs (timer mode); servers track into a configured project (fixed mode). Laptop collection was revised again on 15 October 2026: the Qt app reads each agent's local session logs instead of receiving hook events. Agent identity, assignment and the assisted/autonomous split were revised on 15 October 2026, and a documentation review on 17 October 2026 removed drift between this plan, SPEC and the other plans.
 
 Work Address tracks the time AI agents spend working on a project, separately from human time, and bills it. A worker keeps a list of agents, one or more per product, attaches them to projects they work on and sets a rate for each. The worker's invoice carries a line for their own hours and a line for each agent. Use deterministic lifecycle signals from the agents' own records (their local session logs on laptops, their hooks and plugins on servers); expose incomplete coverage where they are not available. Do not make the language model responsible for starting or stopping a timer.
 
 In this plan, **worker** means whoever runs the agents: a project worker, or the project owner tracking their own agents.
 
-This plan covers Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot (CLI and VS Code), Windsurf, Cline, Claude Cowork, current Kimi Code, legacy Kimi CLI, OpenClaw, NousResearch Hermes Agent, OpenCode and an extension path for other runtimes. "Hermes" means NousResearch Hermes Agent; consumer Kimi Agent/Work support is a separate capability from its coding tools. Vendor capabilities below are supported by opened primary documentation, but no adapter has been installed or run. All new APIs, fields, package names, limits and phases are proposed Work Address contracts, not existing functionality.
+This plan covers Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot (CLI and VS Code), Windsurf, Cline, MiniMax Agent, Devin Local, Claude Cowork, current Kimi Code, legacy Kimi CLI, OpenClaw, NousResearch Hermes Agent, OpenCode and an extension path for other runtimes. "Hermes" means NousResearch Hermes Agent; consumer Kimi Agent/Work support is a separate capability from its coding tools. Vendor capabilities below are supported by opened primary documentation, but no adapter has been installed or run. All new APIs, fields, package names, limits and phases are proposed Work Address contracts, not existing functionality.
 
 ### Relation to earlier documents
 
@@ -34,7 +34,7 @@ This plan covers Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot (CLI and
 | Area | Decision | Not chosen |
 | --- | --- | --- |
 | Purpose | Agent time is billable work | Observability only; parking the feature |
-| Agent identity | An entry in the worker's agent list; one or more per product, each optionally bound to machines, one default per product. Revised 13 Oct 2026 | Agent as its own `User` (memo); strictly one per product; tagging runs by hand |
+| Agent identity | An entry in the worker's agent list; one or more per product, each optionally bound to machines, one default per product. Revised 15 Oct 2026 | Agent as its own `User` (memo); strictly one per product; tagging runs by hand |
 | Agent assignment | `WORK_ADDRESS_AGENT` in the agent process, then the machine's binding, then the product's default agent; otherwise the run waits. Fixed when the run starts | Assignment by product only |
 | Assisted and autonomous | Assisted = agent time while the same worker's own timer runs on the same project; autonomous = the rest, wherever the agent runs. Computed on read; frozen on invoice lines as `assistedMinutes` | Splitting by laptop versus server; splitting by who started the run |
 | Overlap with human time | Both human and agent time are billed; each agent line states its assisted part | Not billing assisted time by default |
@@ -51,7 +51,7 @@ This plan covers Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot (CLI and
 | Visibility | Owner: everything. Worker: own agents only. Viewer: nothing | SPEC's project-wide time visibility for agents |
 | Content | Tokens, model, timings, outcome, tool names/counts/durations, commit SHAs, changed-file count. No prompt or response text. Revised 13 Oct 2026 | Prompt and response text; paths, tool arguments/results, reasoning |
 | Field allowlist | The log reader (laptops) and the collector (servers) keep only allowlisted fields and drop everything else (prompt and response text, code, tool arguments and output, email addresses, paths) before an event leaves the machine; the server rejects unknown fields | Storing text and redacting it |
-| Products | Laptops, read from local logs, in waves: Claude Code, Codex, Cursor IDE, Gemini CLI, Kimi Code; then Copilot CLI and Copilot in VS Code; then Windsurf and Cline, time only, with OpenCode and Devin Local where their stores qualify. Servers: OpenClaw, Hermes and any tool run headless. Each behind its own flag as it qualifies; Cowork through plugin hooks only | One release for all; organisation-level Cowork OTel; Aider, Roo Code, Cursor CLI in `-p` mode |
+| Products | Laptops, read from local logs, in waves: Claude Code, Codex, Cursor IDE, Gemini CLI, Kimi Code, MiniMax; then Copilot CLI and Copilot in VS Code; then Windsurf and Cline, time only, with OpenCode and Devin Local where their stores qualify. Servers: OpenClaw, Hermes and any tool run headless. Each behind its own flag as it qualifies; Cowork through plugin hooks only | One release for all; organisation-level Cowork OTel; Aider, Roo Code, Cursor CLI in `-p` mode |
 | Collection modes | Laptops with the Qt app: the **Qt log reader** (timer mode). Servers, and machines without the Qt app: the npm collector (**fixed mode**). Revised 15 Oct 2026 | One collector for every environment |
 | Laptop collection | The Qt app reads each tool's local session logs, keeps only allowlisted fields in memory, rebuilds runs, applies the timer gate and uploads. No hooks, no Node and no local socket on laptops. Revised 15 Oct 2026; previously hook → collector → Qt app over a local socket | Hooks and the npm collector on laptops; a Qt socket receiver; a Qt-shipped hook helper |
 | Laptop project | The Qt app's project when the run starts. Revised 13 Oct 2026; replaces folder mappings | Folder mappings; mismatch warnings |
@@ -74,12 +74,13 @@ Every tool's hooks and local records are compared in [agent-data-sources.md](age
 | Codex local CLI and desktop runtime | Lifecycle hooks; app-server notifications; noninteractive JSONL; OTel | Laptops: Qt log reader on `~/.codex/sessions`. Servers: native hooks, or `codex exec --json` for runs our integrator launches | Pin version; prove continuations, interruption and wait coverage from the rollout records; hook trust on servers |
 | Claude Code | Session logs; hooks; optional OTel traces/metrics | Laptops: Qt log reader on `~/.claude/projects`. Servers: native hook adapter, tokens from the transcript at Stop | Interruption and continuation must be recognisable in the records; Stop hooks alone miss interruption |
 | Claude Cowork | Plugin hooks; Team/Enterprise OTel; cloud and legacy local execution | Plugin hooks only, shipped in the Claude Code plugin | Lifecycle coverage and authenticated cloud egress must pass; otherwise the manual timer |
-| Cursor IDE | Hooks: `beforeSubmitPrompt`, `stop` (`completed`/`aborted`/`error`), session and tool events; transcript | Qt log reader on Cursor's local SQLite store; tokens only if a qualified version records them | Store format undocumented; account fields such as email never leave the parser. The Cursor CLI's local records are unverified |
+| Cursor IDE | Local SQLite store (confirmed on 3.24.12: timing, outcome, model, subagents, changed lines; `tokenCount` present but empty); hooks: `beforeSubmitPrompt`, `stop` (`completed`/`aborted`/`error`), session and tool events | Qt log reader on the store, read-only; tokens null | Store undocumented and holds prompts and code beside the fields read, so the allowlist is enforced row by row; the Cursor CLI's records are unverified |
 | Gemini CLI | Hooks: `BeforeAgent`, `AfterAgent`, `AfterModel` with usage; transcript; OTel | Qt log reader on `~/.gemini/tmp` session files, including tokens | An aborted turn has no end record: close it at the next turn, session end or staleness. Whether Antigravity CLI keeps these files is unverified |
 | GitHub Copilot CLI and VS Code | Hooks: `userPromptSubmitted`/`agentStop` (CLI), `UserPromptSubmit`/`Stop` (VS Code); OTel for model and tokens | Qt log reader where a local session record qualifies (the CLI under `~/.copilot`, VS Code chat sessions in its storage); tokens null | Local record formats unverified; tokens appear only in OTel, deferred |
 | Windsurf | Hooks: `pre_user_prompt`, asynchronous `post_cascade_response` | Qt log reader if a local record qualifies, otherwise unsupported on laptops; time only | No documented local session log; its transcript file is written only by a hook |
 | Cline | Hooks per task: `TaskStart`, `TaskComplete`, `TaskCancel` | Qt log reader on its task files in VS Code's storage, one run per task | Task-file format unverified; tokens appear in task files |
-| Current Kimi Code | Hooks and experimental Server API | Laptops: Qt log reader if its local session store qualifies, otherwise unsupported. Servers: hooks first; Server API for qualified richer observation | Current codebase, installed schemas and cross-process visibility |
+| Current Kimi Code | Local session store (`~/.kimi-code/sessions`, fields confirmed); hooks and experimental Server API | Laptops: Qt log reader on the session store, one stream per subagent, with explicit wait pairs. Servers: hooks first; Server API for qualified richer observation | Current codebase, installed schemas and cross-process visibility |
+| MiniMax Agent | Local SQLite runtime store (confirmed: turn timing, tokens, cost, outcome, scheduled runs); hooks undocumented | Laptops: Qt log reader on `~/.minimax/v2/sqlite/runtime-state.sqlite`, read-only; message bodies never read | Store undocumented; whether the `mcode` CLI writes the same store is unverified |
 | Legacy Kimi CLI | Wire JSON-RPC transport | Optional separate adapter for explicitly launched legacy sessions | Archived codebase; separate compatibility package |
 | OpenClaw | Typed plugin observers, diagnostic events, OTLP | Passive plugin/diagnostic adapter | Session attribution, nested-harness correlation, incomplete wait visibility |
 | Hermes Agent | Python observer hooks | Passive observer plugin via a pip shim that hands events to the npm collector | Per-turn end semantics, delayed child callbacks, version-pinned observer contract |
@@ -89,15 +90,17 @@ Every tool's hooks and local records are compared in [agent-data-sources.md](age
 
 ### Local session logs (laptops)
 
-The Qt log reader uses the files each tool already writes. The full findings, including Kimi Code, MiniMax and server runtimes, are in [agent-data-sources.md](agent-data-sources.md). Field names for Claude Code and Codex were confirmed in real logs on macOS on 15 October 2026 (names only, no content); everything else is expected and must be confirmed in Phase 0.
+The Qt log reader uses the files each tool already writes. The full findings, including Kimi Code, MiniMax and server runtimes, are in [agent-data-sources.md](agent-data-sources.md). Field names for Claude Code, Codex, Kimi Code, MiniMax and Cursor were confirmed in real local data on macOS on 15–17 October 2026 (names only, no content); the rest is expected and must be confirmed in Phase 0.
 
 | Tool | Location | What the reader uses |
 | --- | --- | --- |
 | Claude Code | `~/.claude/projects/<project>/<session>.jsonl` on macOS and Linux; `%USERPROFILE%\.claude\projects\` on Windows, or inside WSL | Per record: `timestamp`, `sessionId`, `promptId`, `parentUuid`, `isSidechain` (subagents), `permissionDecision`, `version`. Assistant records: `message.model`, `message.usage` (input, output, cache read and cache creation tokens), `stop_reason` |
 | Codex | `~/.codex/sessions/YYYY/MM/DD/rollout-*.jsonl`; `%USERPROFILE%\.codex\` on Windows, usually inside WSL | `task_started` and `task_complete` (`turn_id`, `started_at`, `completed_at`, `duration_ms`); `token_count` (`total_token_usage`, `last_token_usage`); `session_meta` (`model`, `cli_version`); tool-call names |
 | Gemini CLI | `~/.gemini/tmp/<project>/` session files on every OS | Turn boundaries and token counts; field names unverified |
-| Cursor | SQLite `state.vscdb` under Cursor's `User/globalStorage`: `~/Library/Application Support/Cursor/` (macOS), `~/.config/Cursor/` (Linux), `%APPDATA%\Cursor\` (Windows) | Conversation and generation records; tokens only if a version records them (unverified) |
-| OpenCode, Cline, Copilot, Devin Local, Kimi Code, Windsurf | Their own stores: OpenCode under `~/.local/share/opencode`; Cline task files and Copilot chat sessions in VS Code's storage; the others unverified | Qualified per tool in its phase; unsupported until then |
+| Cursor | SQLite `state.vscdb` under Cursor's `User/globalStorage`: `~/Library/Application Support/Cursor/` (macOS), `~/.config/Cursor/` (Linux), `%APPDATA%\Cursor\` (Windows) | `composerHeaders` (`createdAt`, `lastUpdatedAt`, `isSubagent`, `subagentTypeName`, lines added and removed, files changed); `composerData` records (`status` completed/aborted, `modelConfig.modelName`, `createdAt`, `lastUpdatedAt`); `bubbleId` records (`createdAt` per message, `modelInfo.modelName`, `errorDetails`). `tokenCount` is present but empty on 3.24.12, so tokens are null |
+| Kimi Code | `~/.kimi-code/sessions/<workDirKey>/<sessionId>/` on every OS | `state.json` (`cwd`, `lastTurnReason`); `agents/<agent>/wire.jsonl`: `turn.prompt` / `turn.ended` (`turnId`, `durationMs`), `usage.record`, `model`, `interaction.request` / `interaction.resolved` wait pairs |
+| MiniMax Agent | `~/.minimax/v2/sqlite/runtime-state.sqlite` (macOS; other OSes unverified) | `local_runtime_turn_ingress` (`turn_id`, `accepted_at_ms`, `completed_at_ms`, `status`), `local_runtime_token_usage` (tokens by kind, `model`, `cost_usd`), `local_runtime_session_agent_state` (`terminal_outcome`), cron tables for scheduled runs |
+| OpenCode, Cline, Copilot, Devin Local, Windsurf | Their own stores: OpenCode under `~/.local/share/opencode`; Cline task files and Copilot chat sessions in VS Code's storage; the others unverified | Qualified per tool in its phase; unsupported until then |
 
 **Per OS.**
 
@@ -208,7 +211,7 @@ Model inference, tool execution, network latency and retries are working time. W
 
 **Task example.** A root run 10:00–10:20 starts a subagent 10:05–10:15. Billed time is 20 minutes, not 30. The same holds when the child is a Codex run launched by OpenClaw: the time bills once, on OpenClaw's line.
 
-**Timer example.** On a laptop, a run goes from 10:00 to 10:40. The timer stops automatically at 10:15 after the idle limit, and the worker restarts it at 10:30. Billed time is 25 minutes: 10:00–10:15 and 10:30–10:40. The 10:15–10:30 stretch is `untracked`. The run's stop, response and tokens still arrive, so it closes normally.
+**Timer example.** On a laptop, the worker prompts Claude Code at 10:00 and the run goes to 10:40. The prompt is the worker's last input: the timer stops itself at 10:20 after the idle limit, and the worker restarts it at 10:30. The gate follows the timer as it ran, so the run bills 30 minutes: 10:00–10:20 and 10:30–10:40, with 10:20–10:30 `untracked`. The desktop ends the worker's own tracked time at 10:00, so 10:00–10:20 of the agent's time is autonomous (no human entry overlaps it) and 10:30–10:40 is assisted. The run's stop and tokens still arrive, so it closes normally.
 
 **Coverage example.** A ten-minute run has a known two-minute approval wait. A complete adapter bills 10 minutes, 2 flagged as waiting for a person. An adapter that cannot classify the rest bills 10 minutes, 2 waiting and 8 unclassified, and leaves runtime null. No silent estimate fills the missing classification.
 
@@ -220,7 +223,7 @@ Paths are relative to the repository root. [SPEC.md](../SPEC.md) defines five do
 
 | Existing path | Current behaviour | Change |
 | --- | --- | --- |
-| `api/src/entity/time.ts`, `time-repository.ts`, `time-manager.ts` | Human slices; unique `(project, fromAt)`; totals, search, upsert, purge | **Unchanged.** Agent rows never enter `time`, so no human query needs a filter |
+| `api/src/entity/time.ts`, `time-repository.ts`, `time-manager.ts` | Human slices; unique `(project, fromAt)`; totals, search, upsert, purge | Agent rows never enter `time`, so no human query needs a filter. The only change comes from [productivity.md](productivity.md): uniqueness becomes `(project, user, fromAt)` so two workers can hold the same slice |
 | `api/src/entity/invoice.ts`, `model/invoice.ts` | States `Requested` and `PAID`; `amountCents`; no line items | Add `REJECTED`, `rejectedAt`, `rejectionReason`, `lines` snapshot |
 | `api/src/service/invoice-manager.ts` | `create`, `createFromTimeIds`, `ensureForProject` select the issuer's unpaid `time`; `amountFor` prices `minutesActive × rateHour`; `assertCanInvoice` requires a current worker or owner; `read` reports today's project rate and a total at that rate (`:58-61`) | Also select the issuer's finished, uninvoiced `time_agent` runs; price the human line on all tracked minutes ([productivity.md](productivity.md)) and one line per agent; cascade paid/unpaid to both tables; add owner rejection. `read` shows each line's frozen rate, and older invoices their charged rate. `assertCanInvoice` unchanged, so a removed worker cannot invoice agent lines either |
 | `api/src/entity/project.ts` | `workerAddresses`/`viewerAddresses` are owner-managed `text[]`; `rateHour` is `decimal(6,2)` | Add a worker-managed `agents` attachment list |
@@ -239,9 +242,9 @@ Preexisting issues this plan does not change: collaborator premium gating on `de
 
 ```mermaid
 flowchart LR
-  H[Agent hooks and plugins] --> C[npm collector: allowlist fields]
-  C -->|timer mode| QT[Qt app: timer gate, project, queue, 30 s upload]
-  C -->|fixed mode| Q[Local SQLite queue]
+  L[Agent session logs on the laptop] --> QT[Qt log reader: parsers, allowlist, timer gate, project, queue, 30 s upload]
+  H[Hooks and plugins on servers] --> C[npm collector: allowlist fields]
+  C --> Q[Local SQLite queue]
   Q --> U[Hook-triggered uploader or sync]
   QT --> I[Scoped event ingestion]
   U --> I
@@ -265,7 +268,7 @@ Use the current API and PostgreSQL deployment. Start with a PostgreSQL event inb
 | `id` | UUID, stable |
 | `name` | Worker-chosen label, ≤ 60 characters, plain text |
 | `slug` | Short handle unique per worker, used by `WORK_ADDRESS_AGENT` |
-| `product` | Registry ID: `claude-code`, `codex`, `claude-cowork`, `kimi-code`, `kimi-cli`, `openclaw`, `hermes`, `opencode`, or a registered SDK product |
+| `product` | Registry ID: `claude-code`, `codex`, `cursor`, `gemini-cli`, `copilot`, `windsurf`, `cline`, `minimax`, `devin-local`, `claude-cowork`, `kimi-code`, `kimi-cli`, `openclaw`, `hermes`, `opencode`, or a registered SDK product |
 | `isDefault` | Exactly one default agent per product per worker |
 | `bindings` | Source installs (server collectors, Qt apps) this agent is bound to; a source install can be bound to only one agent of each product |
 | `createdAt`, `removedAt` | `removedAt` set instead of deleting, so invoice lines and runs keep a name |
@@ -318,10 +321,10 @@ A row with `invoiceId` set is frozen: the normalizer never rewrites it. Rejectio
 | --- | --- |
 | `state` | `Requested`, `PAID`, `REJECTED` |
 | `rejectedAt`, `rejectionReason` | Set by the owner; reason optional, ≤ 500 characters, plain text |
-| `lines` | Frozen snapshot: `[{kind: human\|agent, agentId?, name, product?, minutes, assistedMinutes?, waitMinutes?, unclassifiedMinutes?, manualMinutes?, rateHourCents, rateChanges?, amountCents}]` |
+| `lines` | Frozen snapshot: `[{kind: human\|agent, agentId?, name, product?, basis: tracked\|active, minutes, assistedMinutes?, waitMinutes?, unclassifiedMinutes?, manualMinutes?, rateHourCents, rateChanges?, amountCents}]` |
 | `amountCents` | Sum of line amounts; each line rounded once |
 
-Each line's `rateChanges` lists `{at, fromCents, toCents, minutesBefore}` for every rate change between the line's earliest run and the invoice's creation, so the owner sees how many minutes the current rate repriced. An agent at $0.00 still gets a line. Existing invoices have `lines = null` and render as one human line at their charged rate: the stored amount divided by their active hours. The summary no longer recomputes a total at today's project rate. Only the issuer marks an invoice paid; only the owner rejects; only a `Requested` invoice can be rejected. Rejection clears `invoiceId` and `isPaid` on its `time` and `time_agent` rows, keeps the invoice as a record, and lets the issuer issue a new one.
+Each line's `rateChanges` lists `{at, fromCents, toCents, minutesBefore}` for every rate change between the line's earliest run and the invoice's creation, so the owner sees how many minutes the current rate repriced. An agent at $0.00 still gets a line. Lines ship together with the switch to billing every tracked minute ([productivity.md](productivity.md) P1), and each line records its `basis`: `tracked` for human lines from then on, `active` for agent lines, which bill the time inside runs. Invoices from before that change have `lines = null`, were all priced on active minutes, and render as one human line at their charged rate: the stored amount divided by their active hours, shown as unavailable when the active hours are zero. The summary no longer recomputes a total at today's project rate. Only the issuer marks an invoice paid; only the owner rejects; only a `Requested` invoice can be rejected. Rejection clears `invoiceId` and `isPaid` on its `time` and `time_agent` rows, keeps the invoice as a record, and lets the issuer issue a new one.
 
 ### Technical persistence
 
@@ -345,6 +348,7 @@ A versioned Work Address schema shared by collector, server and fixtures. Strict
     "product": "codex",
     "surface": "cli",
     "instanceId": "collector-registered-id",
+    "agent": "openclaw-research",
     "adapterVersion": "0.1.0",
     "runtimeVersion": "qualified-version",
     "epoch": "process-boot-id",
@@ -370,7 +374,7 @@ A versioned Work Address schema shared by collector, server and fixtures. Strict
 }
 ```
 
-The sample is our envelope, not a vendor payload. On laptops the Qt log reader builds these events from the agents' log records, using each record's own timestamp. `agentId` here is the source's agent identity within the run (`root` or a subagent ID), not the worker's agent list entry; the server resolves that from `source.product`. `occurredAt` uses source time when trustworthy, otherwise collection time with the correct basis. The server sets `receivedAt`; clients cannot supply user identity, rates or billing fields. Register capabilities against a qualified adapter version; clients cannot upgrade their own quality classification.
+The sample is our envelope, not a vendor payload. On laptops the Qt log reader builds these events from the agents' log records, using each record's own timestamp. `agentId` here is the source's agent identity within the run (`root` or a subagent ID), not the worker's agent list entry; the server resolves that from `source.agent` (the handle set by `WORK_ADDRESS_AGENT`, optional, fixed mode only), the machine binding of `source.instanceId`, or the product's default agent. `occurredAt` uses source time when trustworthy, otherwise collection time with the correct basis. The server sets `receivedAt`; clients cannot supply user identity, rates or billing fields. Register capabilities against a qualified adapter version; clients cannot upgrade their own quality classification.
 
 Normalized types are `run.started`, `run.completed`, `run.failed`, `run.cancelled`, `wait.started`, `wait.ended`, `run.observed`, `activity.observed`, `run.content`, `manual.entry`, `tracking.paused` and `tracking.resumed`, as a discriminated union with conditional required fields:
 
@@ -382,7 +386,7 @@ Normalized types are `run.started`, `run.completed`, `run.failed`, `run.cancelle
 | Observed activity | `activityKind=model\|tool`, `activityId`, anchored `sourceStartedAt`/`sourceEndedAt` |
 | Run content | `tokens`, `model`, `tools` (written as `agent_tool_usage` rows), `commits`, `filesChanged`; every field optional; no free text |
 | Manual entry | `fromAt`, `toAt`, optional note; always `coverage=manual` |
-| Timer gate | `tracking.paused` and `tracking.resumed`, with `occurredAt` and a reason (`stopped`, `idle`, `suspended`, `started`); timer mode only, emitted by the Qt app for each open run |
+| Timer gate | `tracking.paused` and `tracking.resumed`, with `occurredAt` and a reason (`stopped`, `idle`, `suspended`, `switched`, `started`); timer mode only, emitted by the Qt app for each open run |
 | Provenance | Optional `parentSourceKey`, `executionKey`, `sourceCursor`, `outcome`; each with a bounded schema |
 
 Adapters normalize vendor duration units to milliseconds. Duration-only evidence is not `activity.observed` and cannot place intervals. An activity-only projection uses a deterministic synthetic run key when no native run correlation exists; later proven run evidence enriches or transactionally aliases it.
@@ -533,7 +537,7 @@ No standalone binaries, no Homebrew, no code signing.
 
 - **My agents** (account settings): the worker's agent list, one or more per product, each with a short handle, a default flag per product and optional machine bindings; add, rename, remove; credentials per machine with expiry and revocation; collector health per machine.
 - **Project dialog, Agents tab:** the worker attaches or detaches their own agents and sets each rate. The owner sees every worker's agents read-only, with each agent's rate history (date, old and new rate, who changed it). Other workers see only their own. Viewers see no tab. The same tab carries the agent charts from [app-statistics.md](app-statistics.md): billed time per day by agent, stacked into assisted and autonomous, tokens per day and the runs table. There is no project page; the dialog grows instead.
-- **Agents view:** runs grouped by task, with filters for project, agent, product, date, status and coverage. Shows start/end, billed time with unclassified and manual parts, elapsed, runtime where qualified, known waits, child relationships, tokens, model, tool counts and commits. Missing runtime reads "Unavailable with this integration", never zero. Time-only integrations (Windsurf, Cline, and Copilot until its tokens are supported) carry a label, so a missing token count never reads as zero. Untracked stretches of a laptop run show as gaps marked "timer off".
+- **Agents view:** runs grouped by task, with filters for project, agent, product, date, status and coverage. Shows start/end, billed time with assisted, waiting, unclassified and manual parts, elapsed, runtime where qualified, known waits, child relationships, tokens, model, tool counts and commits. Missing runtime reads "Unavailable with this integration", never zero. Time-only integrations (Windsurf, Cline, and Copilot until its tokens are supported) carry a label, so a missing token count never reads as zero. Untracked stretches of a laptop run show as gaps marked "timer off".
 - **Invoices:** a human line and one line per agent with minutes, rate and amount; each agent line says "of which X h assisted, overlapping the worker's own billed hours"; waiting, unclassified and manual minutes flagged; a line whose rate changed after some of its hours were worked says so ("rate changed on 12 Oct; 31 h of this line were worked before the change, at $5/h"); agents at $0.00 appear at $0.00. Older invoices show their charged rate. The owner has a **Reject** action with an optional reason; a rejected invoice shows its reason and the worker can issue a new one.
 - **Dashboard and export:** separate human and agent sections; hours never combined; money as human, agent and combined amounts, scoped by role.
 - **States:** empty, connecting, held runs waiting for attachment, agents that ran while the timer was off, offline, credential revoked or expired, unsupported version, unqualified integration.
@@ -548,10 +552,10 @@ The Statistics domain ([app-statistics.md](app-statistics.md), its Phase 1) ship
 | --- | --- | --- |
 | 0 | Sanitized lifecycle fixtures for every named product (version, OS/deployment, schema hash, wait/replay coverage, local log location and format, token fields, including whether Cursor's store records usage and whether Antigravity CLI keeps Gemini CLI's files). Log-reader spike on each OS: default paths including WSL, Flatpak and Snap; reading Cursor's SQLite while Cursor runs; watch-plus-poll latency within 60 s; no macOS privacy prompt; inotify behaviour with many files. Fixed-mode background-upload spike for servers, below | Compatibility manifest marks each mode qualified, partial or unsupported; spike results recorded per OS |
 | 1 | Invoice `REJECTED` state and owner rejection, for all invoices; a standalone change | Rejection releases rows; human invoice regression tests pass |
-| 2 | Invoice `lines` snapshot with `rateChanges`; older invoices render at their charged rate instead of today's project rate | Existing invoices, amounts and paid state unchanged; an older invoice's displayed rate no longer moves when the project rate is edited |
+| 2 | Invoice `lines` snapshot with `rateChanges` and `basis`, shipped together with billing every tracked minute ([productivity.md](productivity.md) P1); older invoices render at their charged rate instead of today's project rate | Existing invoices, amounts and paid state unchanged; an older invoice's displayed rate no longer moves when the project rate is edited; no invoice is ever priced on one basis and displayed on another |
 | 3 | `User.agents`, `Project.agents`, credentials, `time_agent`, inbox, normalizer, ingestion and read APIs, agent invoice lines, synthetic adapter, retention, visibility | Replay, crash, ordering, retention, concurrency, tenant isolation and visibility tests pass; agent writes behind `AGENT_TRACKING_ENABLED` |
 | 4 | Qt log reader with Claude Code, Codex and Cursor parsers, timer gate, queue, upload and Agents page; npm collector in fixed mode with the Claude Code and Codex plugins for servers; web setup and Agents UI | Real normal, interrupted, waiting and offline runs, and timer stops, restarts and switches, visible and invoiceable with truthful coverage on macOS, Windows (native and WSL) and Linux; human totals unchanged |
-| 5 | Gemini CLI and Kimi Code parsers; fixed mode on servers with OpenClaw and Hermes; Cowork plugin hooks or the manual timer | Each has a tested mode or an explicit partial/unavailable status |
+| 5 | Gemini CLI, Kimi Code and MiniMax parsers; fixed mode on servers with OpenClaw and Hermes; Cowork plugin hooks or the manual timer | Each has a tested mode or an explicit partial/unavailable status |
 | 6 | Copilot CLI and Copilot in VS Code parsers, where their local records qualify (timing; tokens null) | Both tested, or marked partial with their limitation |
 | 7 | Windsurf and Cline (time only), OpenCode and Devin Local parsers where their stores qualify; OpenCode server plugin, generic emitter SDK, optional OTel, legacy Kimi adapter | Conformance harness reusable without changes to core accounting |
 
@@ -586,7 +590,7 @@ All schema changes are additive (new tables, new nullable columns, a new state v
 
 | Scenario | Required result |
 | --- | --- |
-| Normal start, wait, resume, completion | Correct intervals, outcome and coverage; wait excluded only when proven |
+| Normal start, wait, resume, completion | Correct intervals, outcome and coverage; the wait billed and flagged as waiting when proven, as unclassified otherwise |
 | Duplicate batch and lost acknowledgement | Exactly one event and row effect; conflicting payload rejected |
 | Overlapping runs of one agent on a project; two agents at once | One agent's overlap bills once; each agent bills its own time |
 | One agent on two projects at once | Each project bills its own time |
@@ -620,7 +624,7 @@ All schema changes are additive (new tables, new nullable columns, a new state v
 | Timer switches project mid-run, then back | The run pauses while the timer is on the other project and resumes when it returns |
 | Agent works while the Qt app is closed | Its logs are read on the next start; runs outside recorded timer intervals are not counted |
 | Fixed mode with `WORK_ADDRESS_PROJECT` set per process | Each instance's runs go to its own project |
-| Cursor's local records | Account fields such as email never leave the parser |
+| Cursor's local records | Timing, outcome, model, subagents and changed lines read; tokens null; prompts, code and account fields never leave the parser |
 | Gemini CLI turn aborted by the user | Run closed at the next turn, session end or staleness; no invented completion |
 | Log record or hook payload with prompt text, code, tool output, email or paths | Dropped in the parser or collector; never written to disk by Work Address, queued, uploaded or logged |
 | Oversized ingestion request | Not logged by `PayloadLogger`; limits enforced before the global parser |
@@ -645,7 +649,7 @@ Operational targets: p95 local enqueue below 50 ms, hard capture deadline 250 ms
 
 ## SPEC
 
-[SPEC.md](../SPEC.md) was updated on 12 October 2026, ahead of implementation, with the domain rules this plan builds: `Time` in two tables, invoices with a line per agent, owner rejection, a worker's agents being the worker's, agent visibility, and retention for runs. Until each phase ships, those rules are decided but not built; the code must be brought to SPEC, not the reverse.
+[SPEC.md](../SPEC.md) was updated between 12 and 17 October 2026, ahead of implementation, with the domain rules this plan builds: `Time` in two tables, invoices with a line per agent, owner rejection, a worker's agents being the worker's, agent visibility, and retention for runs. Until each phase ships, those rules are decided but not built; the code must be brought to SPEC, not the reverse.
 
 ## Out of scope
 

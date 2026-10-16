@@ -69,10 +69,17 @@ One invoice never sums several contributors together, because the resulting
 record would name nobody and leave the contributors with nothing of their own.
 
 **An invoice bills every tracked minute.** A human line prices the minutes its
-entries span, including idle minutes up to the desktop's automatic stop unless
-the worker discarded them. Active minutes — minutes with input — are shown as a
-reference, never as the quantity billed. Manual and web-timer entries are billed
-too, but only where the project allows them, and they are flagged on the line.
+entries span. Idle minutes inside a session are billed; when the desktop stops
+itself for idleness, it ends the tracked time at the worker's last input, so
+the idle stretch before an automatic stop is never tracked. Active minutes —
+minutes with input — are shown as a reference, never as the quantity billed.
+Manual and web-timer entries are billed too, but only where the project allows
+them, and they are flagged on the line. An agent line bills the time inside the
+agent's runs, nothing between them.
+
+**Each worker's record is their own.** A human entry is unique per project,
+worker and start, so two workers tracking the same minutes on one project both
+keep their time.
 
 **`Time.isPaid` is owned by `Invoice`, in both tables.** `InvoiceManager.markPaid`
 sets it and `markUnpaid` clears it, scoped to the issuer's own entries and runs
@@ -121,8 +128,10 @@ own fields — an entry's minutes, a run's tokens and timings — stay on the
 record.
 
 **A breakdown never adds time.** An entry's usage rows divide its active
-minutes among apps; its idle minutes are shown beside them, and the two together
-equal the entry's tracked time. A run's tool durations can overlap, because an
+minutes among apps; its idle minutes, and any minutes whose detail went
+unrecorded, are shown beside them, and the three together equal the entry's
+tracked time. Manual and web-timer entries have no breakdown and are shown as
+manual time. A run's tool durations can overlap, because an
 agent can call tools in parallel, so they are shown per tool and as counts and
 never summed into a time total.
 
@@ -180,7 +189,7 @@ The build order and the measurement rules are in `docs/agent-time-tracking.md`.
 | | Project owner | Project worker | Project viewer |
 | --- | --- | --- | --- |
 | Project time, and who is tracking now | yes | yes | yes |
-| Apps, window titles, domains, idle and the day timeline | **every worker, after review** | **own only** | **project totals by app name** |
+| Screenshots, apps, window titles, domains, idle and the day timeline | **every worker, after review** | **own only** | **project totals by app name** |
 | Time by the owner's categories and labels | **every worker, after review** | **own, and the published set** | **project totals by category, no labels** |
 | A person's own categories, labels and goals | **no** | **own only** | **no** |
 | Agents: runs and rates | **all workers'** | **own only** | **no** |
@@ -190,15 +199,16 @@ The build order and the measurement rules are in `docs/agent-time-tracking.md`.
 A worker sees their own invoices only: one contractor's rate and hours are not
 another contractor's business.
 
-**A worker sees only their own app statistics, titles and domains.** Window
-titles and browser domains say far more about how someone works than an app
-name does. Inside time entries they are visible only to the owner and the
-entry's author; screenshots and app names in entries keep the project-wide
-visibility above.
+**A worker sees only their own entries' detail.** Another worker's entries show
+their time and nothing else: no screenshot, app names, window titles or
+domains. A screenshot says more about how someone works than a rate does, and
+the rate is already private. Viewers see project totals by app name and nothing
+per entry.
 
-**Detail waits for the worker's review.** An entry's apps, titles, domains,
-timeline and screenshot reach the owner and viewers only once its author
-publishes them or the project's review window has passed — one to twenty-four
+**Detail waits for the worker's review.** An entry's screenshot, apps, titles,
+domains and timeline reach the owner, and its apps reach the viewers' project
+totals, only once its author publishes them or the project's review window has
+passed — one to twenty-four
 hours, set by the owner. The time itself is visible at once, and creating an
 invoice publishes what it bills. The person recorded sees the record first.
 

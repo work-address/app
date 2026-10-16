@@ -13,7 +13,8 @@ Related documents: [SPEC.md](../SPEC.md) holds the domain rules this plan relies
 - An owner sees, for each worker on their projects: time and presence immediately; apps, window titles, browser hostnames and the day timeline once the worker's review window has passed; and that time broken down by the owner's own category set and productive/neutral/distracting labels, which are published to the workers. Never a single productivity score, never a ranking.
 - A viewer sees project totals by app name and by the owner's categories, without labels and without per-worker detail.
 - The worker always sees exactly what the owner sees about them. Nothing is recorded in secret.
-- Invoices bill every tracked minute. Active minutes (minutes with input) are a reference figure.
+- Invoices bill every tracked minute. Active minutes (minutes with input) are a reference figure. When the desktop stops itself for idleness, tracked time ends at the worker's last input, so the idle stretch before an automatic stop is never tracked.
+- Two workers can track the same minutes on one project: a human entry is unique per project, worker and start.
 - Collaboration stops at visibility: who is tracking on which project, reports and shared projects. No schedules, attendance, leave or chat.
 
 ### Positioning
@@ -37,13 +38,15 @@ Replace the web repository's "without turning time tracking into surveillance" w
 | Review before sharing | Detail is held for a window the owner sets (1–24 h, default 24 h); the worker can publish early and remove items; totals are immediate | No review; nothing uploads until approved |
 | Compliance | Transparent by design: no stealth mode, recording always visible, the worker sees what the owner sees, a screenshot retention limit, a DPIA template and employee notice | Configurable stealth |
 | Billing basis | Invoices bill all tracked minutes; active minutes are a reference | Billing active minutes (today's code) |
-| Idle before auto-stop | Billed by default; the worker can discard it when they return | Discarded by default; never billed |
-| App time | Active minutes split among apps, plus an Idle line; apps plus Idle equal billed time | Idle credited to the foreground app; apps equal active time only |
+| Idle before auto-stop | Never tracked: the desktop ends the tracked time at the worker's last input before upload; no prompt. Revised 17 Oct 2026 | Billing it; a keep/discard prompt; a server-side discard |
+| Entry uniqueness | Human entries unique per project, worker and start, fixing gap G2; prerequisite for the web timer. Decided 17 Oct 2026 | Keeping the project-wide key |
+| Manual entries in statistics | Their own Manual band; no active/idle split. Decided 17 Oct 2026 | Counting them as idle; leaving them out |
+| App time | Active minutes split among apps, plus an Idle line and a gap for unrecorded minutes; apps, Idle and gaps equal billed time | Idle credited to the foreground app; apps equal active time only |
 | Manual time | Off by default; the owner switches it on per project; flagged on invoices. The web timer counts as manual | Always allowed; on by default |
 | Day timeline | Visible to the worker, and to the owner after the review window | Worker only |
 | Viewer | Project totals by app name and owner category, no labels | Nothing; per-worker detail |
 | Identity | Wallet sign-in only; no single sign-on for now | SSO gate; custodial wallets |
-| Scale | Monthly partitions of `time` and app usage; daily rollups for long ranges and large accounts; screenshots stay in `time` for now | Analytics store; moving screenshots now |
+| Scale | Daily rollups for long ranges and large accounts; the storage layout is left to implementation; screenshots stay in `time` for now. Revised 17 Oct 2026 | Analytics store; committing to table partitioning now; moving screenshots now |
 | Account deletion | Delete everything uninvoiced; anonymise invoiced records | Delete everything; block deletion |
 | Documents | This plan, SPEC, app-statistics, and the web repository's positioning, G8 and open decision #10 | This plan only |
 
@@ -81,7 +84,7 @@ Sources and the full matrix are in [Market reference](#market-reference).
 | --- | --- | --- |
 | 1 | Manual time entries | **Now** |
 | 2 | Web timer | **Now** |
-| 3 | Idle return prompt | **Now** |
+| 3 | Idle return prompt | **Never** (the idle stretch before an auto-stop is cut automatically) |
 | 4 | Editor and IDE heartbeats | Later |
 | 5 | Calendar import | Later |
 | 6 | Mobile app | Later |
@@ -103,7 +106,7 @@ Sources and the full matrix are in [Market reference](#market-reference).
 | 22 | MCP server | Later |
 | 23 | Personal API tokens | Later |
 
-Also decided, beyond the feature list: the review window, presence, the owner's category set and per-worker category view, the viewer's category totals, billing all tracked minutes, the Idle line, transparency, the screenshot retention limit, and partitions and rollups.
+Also decided, beyond the feature list: the review window, presence, the owner's category set and per-worker category view, the viewer's category totals, billing all tracked minutes, the automatic cut of idle before an auto-stop, the Idle line and the Manual band, entry uniqueness per worker, transparency, the screenshot retention limit, and daily rollups.
 
 ## Visibility
 
@@ -122,8 +125,9 @@ Also decided, beyond the feature list: the review window, presence, the owner's 
 
 ## Billing changes
 
-- **All tracked minutes.** `InvoiceManager.amountFor` prices the minutes each entry spans (`toAt − fromAt`), not `minutesActive`. Invoice lines and reports show active minutes and the Idle figure as references. Issued invoices keep their frozen amounts. This settles the web repository's gap G8 and open decision #10, and the project totals already price wall-clock minutes.
-- **Idle before auto-stop.** The desktop stops the timer after 20 minutes without input (`src/ActivityCounter.cpp:804-815`), and those minutes stay in the entries. They are billed by default. When the worker returns, the desktop asks "You were idle 20 min before the timer stopped: keep or discard". Discard shortens the affected entries to their last minute with input and deletes entries left with none. Shorter idle stretches never stop the timer and are always billed.
+- **All tracked minutes.** `InvoiceManager.amountFor` prices the minutes each entry spans (`toAt − fromAt`), not `minutesActive`. Invoice lines and reports show active minutes and the Idle figure as references. Issued invoices keep their frozen amounts. This ships together with invoice lines (agent plan Phase 2), and every line records the basis it was priced on. It settles the web repository's gap G8 and open decision #10, and the project totals already price wall-clock minutes.
+- **Idle before auto-stop.** The desktop stops the timer after 20 minutes without input (`src/ActivityCounter.cpp:804-815`); today it keeps those minutes and trims only the excess beyond the threshold. It will instead end the tracked time at the worker's last input before uploading, so the idle stretch before an automatic stop is never tracked or billed. Shorter idle stretches never stop the timer and stay billed, shown as idle. There is no prompt, no discard step and no server endpoint; the entries the desktop uploads are final.
+- **Entries per worker.** `time` becomes unique on `(project, user, fromAt)` instead of `(project, fromAt)`, and the desktop upsert matches on the author too, so two workers' entries starting in the same slot on one project both stand. This fixes gap G2 and precedes the web timer, whose aligned 10-minute entries would otherwise collide between workers.
 - **Manual time.** A project's `allowManualTime` is off by default; the owner switches it on. Manual entries have `source=manual`, carry no activity evidence, and are flagged on the invoice line and in reports.
 - **Web timer.** Starting and stopping the timer in the browser creates entries with `source=web`, treated exactly as manual time: allowed only where manual time is allowed, flagged the same way.
 
@@ -134,7 +138,7 @@ Each feature lists what it does, the work in each component, and its rules. Data
 ### 1. Manual time entries
 
 - **Web:** an "Add time" form on the worklog: project, start, end, note. Edit and delete for the author's own manual entries.
-- **API:** `POST /api/time/manual`, `PUT /api/time/:id/interval` (manual entries only), with validation: no overlap with the author's other entries on the project, not in the future, within retention.
+- **API:** `POST /api/time/manual`, `PUT /api/time/:id/interval` (manual entries only), with validation: no overlap with the author's other entries on the project, not in the future, within retention. Entries are unique per project, worker and start, so another worker's entries never block one.
 - **Rules:** refused when the project's `allowManualTime` is off. Flagged `manual` everywhere. Never carry screenshots or app data.
 
 ### 2. Web timer
@@ -143,11 +147,11 @@ Each feature lists what it does, the work in each component, and its rules. Data
 - **API:** `POST /api/time/timer/start`, `POST /api/time/timer/stop`; the server cuts the interval into entries aligned like desktop entries.
 - **Rules:** `source=web`; same switch and flag as manual time. A running desktop timer and a web timer on the same project cannot overlap.
 
-### 3. Idle return prompt
+### 3. Idle auto-stop cut
 
-- **Desktop:** after an idle auto-stop, the next input shows the prompt with the idle span and **Keep** / **Discard**. If ignored, the time stays billed.
-- **API:** `POST /api/time/idle/discard` with the span; trims or deletes the affected entries of that author.
-- **Rules:** only the idle span before an auto-stop; never another worker's entries; refused for invoiced entries.
+- **Desktop:** when the timer stops itself for idleness, the tracked time ends at the last input. Entries wholly inside the idle stretch are not uploaded; the entry containing the last input ends there.
+- **API:** nothing new; the desktop uploads final entries.
+- **Rules:** applies only to an automatic stop. A manual stop keeps every tracked minute, idle included.
 
 ### 4. Categories with rules
 
@@ -197,7 +201,7 @@ Each feature lists what it does, the work in each component, and its rules. Data
 - **Owner category view:** per-worker time by owner categories and labels in the project dialog; viewers get project totals by category without labels.
 - **Presence:** "tracking now" per project from open timers, visible to everyone who can see the project's time.
 - **Transparency:** desktop recording indicator and read-only policy; screenshot retention; DPIA template and employee notice.
-- **Scale:** monthly partitions; daily rollups.
+- **Scale:** daily rollups; the storage layout is an implementation choice.
 
 ## Data model
 
@@ -205,12 +209,11 @@ All changes are additive and follow the repository's `schema:sync`.
 
 | Where | Change |
 | --- | --- |
-| `time` | `source` (`desktop`, `manual`, `web`; default `desktop`); `publishedAt` (null until published or the window passes). Idle minutes are derived: tracked minutes minus `minutesActive` |
+| `time` | Unique `(project, user, fromAt)` replaces `(project, fromAt)`; `source` (`desktop`, `manual`, `web`; default `desktop`); `publishedAt` (null until published or the window passes); `minutesActive` null for manual and web entries. Idle minutes are derived: tracked minutes minus `minutesActive` |
 | `Project` | `allowManualTime` (default false); `reviewWindowHours` (1–24, default 24); `screenshotRetentionDays` (null = keep) |
 | `User` | Settings: personal redaction rules |
 | `Statistics` | `category_set` (owner user, kind `personal` or `owner`); `category` (set, parent, name, color, label); `category_rule` (category, field, match, pattern); `goal` (user, kind, period, target, project or category) |
-| `Statistics` | `usage_daily` rollup: (day, project, user, app, title, domain) with seconds and idle seconds; rebuilt per day from raw rows; categories applied on read |
-| Partitions | `time` and `app_usage` by month |
+| `Statistics` | `usage_daily` rollup: (day, project, user, app, title, domain) with seconds, idle seconds and manual seconds; rebuilt per day from raw rows; categories applied on read |
 
 Invoices still read raw `time` rows; rollups never feed anything that must match an invoice.
 
@@ -222,7 +225,6 @@ All new contracts under `/api`, scoped by the visibility table.
 | --- | --- |
 | `POST /time/manual`, `PUT /time/:id/interval` | Manual entries |
 | `POST /time/timer/start`, `POST /time/timer/stop` | Web timer |
-| `POST /time/idle/discard` | Discard idle before auto-stop |
 | `POST /time/publish` | Publish reviewed entries early |
 | `GET/POST/PUT/DELETE /statistics/category-sets` and nested categories and rules | Categories |
 | `POST /statistics/categories` | Time by categories for a range; personal or owner set |
@@ -247,22 +249,23 @@ Builds on app-statistics Phase 1 (the Statistics domain) and Phase 2 (foreground
 
 | Phase | Work | Exit condition |
 | --- | --- | --- |
-| P1 | Billing all tracked minutes; Idle line; idle return prompt | New invoices price all minutes; issued invoices unchanged; apps plus Idle equal billed time |
+| P1 | Billing all tracked minutes, shipped with invoice lines (agent plan Phase 2); Idle line and Manual band; desktop auto-stop cut; entries unique per worker | New invoices price all minutes and record their basis; issued invoices unchanged; apps, Idle and gaps equal billed time; no idle minute before an auto-stop reaches the server; two workers' entries in one slot both stand |
 | P2 | Review window, presence, transparency (recording indicator, read-only policy, screenshot retention, DPIA template, notice) | Owner sees no detail before publication or the window; worker sees everything the owner sees |
 | P3 | Category sets, rules and labels; owner per-worker category view; viewer category totals; day timeline; goals | Reclassification on rule change; visibility per the table |
 | P4 | Manual entries and web timer behind the project switch; report export; personal redaction rules | Flags on invoices and reports; exports match visibility; redacted values never leave the machine |
 | P5 | Full data export and account deletion | Uninvoiced data gone; invoiced records anonymised |
-| P6 | Monthly partitions and daily rollups | Account-wide reports over a year for 1,000 workers within the operational target; invoice totals still exact |
+| P6 | Daily rollups | Account-wide reports over a year for 1,000 workers within the operational target; invoice totals still exact |
 
-**Later:** editor heartbeats, calendar import, mobile, tags, trends and heatmap, weekly summary, focus sessions, break reminders, AI summary, MCP server, personal API tokens, single sign-on, moving screenshots to object storage. **Never:** automatic project suggestion, distraction blocking, stealth mode, single scores or rankings.
+**Later:** editor heartbeats, calendar import, mobile, tags, trends and heatmap, weekly summary, focus sessions, break reminders, AI summary, MCP server, personal API tokens, single sign-on, moving screenshots to object storage, a different storage layout if rollups are not enough. **Never:** automatic project suggestion, distraction blocking, stealth mode, single scores or rankings.
 
 ## Acceptance tests
 
 | Scenario | Required result |
 | --- | --- |
 | Entry of 10 minutes with 7 active | Billed 10 minutes; reference shows 7 active, 3 Idle; apps total 420 s plus 180 s Idle |
-| Idle auto-stop, worker keeps | The idle minutes stay billed |
-| Idle auto-stop, worker discards | Entries trimmed to last input; empty ones deleted; invoiced entries refused |
+| Idle auto-stop | Tracked time ends at the last input; the idle stretch is never uploaded; a manual stop keeps every minute |
+| Two workers tracking the same slot on one project | Both entries stored |
+| Manual entry in statistics | Shown as Manual; no active, idle or gap minutes |
 | Manual entry on a project with manual time off | Refused |
 | Manual entry and web timer allowed | Stored with `source`; flagged on invoice lines and reports |
 | Owner opens a worker's entry inside the review window | Time shown; detail "pending review" |
