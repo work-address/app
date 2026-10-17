@@ -1,0 +1,17 @@
+{
+  "product": "openclaw",
+  "runtimeVersion": "2026.10.4",
+  "adapterVersion": "0.1.0",
+  "mode": "fixed",
+  "status": "partial",
+  "verification": "Published npm SDK declarations and synthetic fixtures; live lifecycle qualification pending",
+  "source": "openclaw/plugin-sdk/diagnostic-runtime:onInternalDiagnosticEvent (metadata only, trusted core events)",
+  "events": ["run.started", "run.completed"],
+  "limitations": [
+    "No replay after an OpenClaw crash; a lost end event must remain incomplete",
+    "No human-wait boundaries, token counts, tool usage or nested-agent correlation",
+    "Harness-only streams ignored to avoid counting an outer run twice",
+    "No production ingestion, billing, credential issuance or desktop integration",
+    "No OS/runtime performance qualification yet"
+  ]
+}

@@ -1,0 +1,45 @@
+{
+  "name": "@work-address/agent-tracking-contract",
+  "version": "0.1.0",
+  "description": "Versioned Work Address agent event contract",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.16.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    },
+    "./schema": "./schema/agent-event-v1.json"
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "schema",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json && node scripts/schema.mjs",
+    "test": "node --test test/*.test.mjs",
+    "prepack": "pnpm build"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.17",
+    "typescript": "5.8.3"
+  },
+  "dependencies": {
+    "zod": "4.4.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/work-address/app.git",
+    "directory": "packages/agent-tracking-contract"
+  }
+}

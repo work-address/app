@@ -1,0 +1,22 @@
+export const fixture = {
+  schemaVersion: 1,
+  eventId: 'a15ee873-8ef2-4ee7-a1b0-71dcb6287f7b',
+  source: {
+    product: 'openclaw',
+    surface: 'gateway',
+    instanceId: '9c5cd0ba-a35c-4b97-a4d7-8925f52a17be',
+    adapterVersion: '0.1.0',
+    runtimeVersion: '2026.10.4',
+    epoch: '6021ebe2-7588-4d01-ad6f-3c0881b03dbd',
+    sequence: 1,
+  },
+  projectId: '677cf211-c57d-49ce-aa82-23fd013bed14',
+  sessionId: 'session',
+  runId: 'run',
+  agentId: 'root',
+  occurredAt: '2026-10-17T10:00:00.000Z',
+  observedAt: '2026-10-17T10:00:01.000Z',
+  clock: { basis: 'source_wall' },
+  capabilities: { runBoundaries: true, externalWaits: 'none', replay: false },
+  eventType: 'run.started',
+}

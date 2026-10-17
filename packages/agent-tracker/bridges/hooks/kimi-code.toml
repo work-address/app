@@ -1,0 +1,19 @@
+[[hooks]]
+event = "TurnStarted"
+command = "agent-tracker hook kimi-code"
+timeout = 2
+
+[[hooks]]
+event = "Stop"
+command = "agent-tracker hook kimi-code"
+timeout = 2
+
+[[hooks]]
+event = "StopFailure"
+command = "agent-tracker hook kimi-code"
+timeout = 2
+
+[[hooks]]
+event = "Interrupt"
+command = "agent-tracker hook kimi-code"
+timeout = 2

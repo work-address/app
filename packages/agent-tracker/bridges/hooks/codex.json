@@ -1,0 +1,37 @@
+{
+  "hooks": {
+    "UserPromptSubmit": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "agent-tracker hook codex",
+            "timeout": 2
+          }
+        ]
+      }
+    ],
+    "Stop": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "agent-tracker hook codex",
+            "timeout": 2
+          }
+        ]
+      }
+    ],
+    "Interrupt": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "agent-tracker hook codex",
+            "timeout": 2
+          }
+        ]
+      }
+    ]
+  }
+}

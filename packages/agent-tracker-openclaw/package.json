@@ -1,0 +1,67 @@
+{
+  "name": "@work-address/agent-tracker-openclaw",
+  "version": "0.1.0",
+  "description": "OpenClaw telemetry adapter for Work Address",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=24.16.0 <25 || >=26.1.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "openclaw.plugin.json",
+    "compatibility.json",
+    "LICENSE"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test test/*.test.mjs",
+    "prepack": "pnpm build"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.17",
+    "typescript": "5.8.3"
+  },
+  "dependencies": {
+    "@work-address/agent-tracking-contract": "workspace:^",
+    "@work-address/agent-tracker": "workspace:^"
+  },
+  "openclaw": {
+    "extensions": [
+      "./dist/plugin.js"
+    ],
+    "compat": {
+      "pluginApi": "2026.10.4",
+      "minGatewayVersion": "2026.10.4"
+    },
+    "build": {
+      "openclawVersion": "2026.10.4",
+      "pluginSdkVersion": "2026.10.4"
+    }
+  },
+  "peerDependencies": {
+    "openclaw": "2026.10.4"
+  },
+  "peerDependenciesMeta": {
+    "openclaw": {
+      "optional": true
+    }
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/work-address/app.git",
+    "directory": "packages/agent-tracker-openclaw"
+  }
+}

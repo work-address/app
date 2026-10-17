@@ -1,0 +1,34 @@
+{
+  "provenance": "Synthetic fixture matching openclaw@2026.10.4 published DiagnosticRunStartedEvent/DiagnosticRunCompletedEvent declarations; not a captured live session.",
+  "events": [
+    {
+      "type": "run.started",
+      "runId": "synthetic-run-1",
+      "ts": 1792231200000,
+      "seq": 1,
+      "sessionKey": "agent:main:private:user@example.com",
+      "agentId": "main"
+    },
+    {
+      "type": "harness.run.started",
+      "runId": "synthetic-run-1",
+      "harnessId": "embedded",
+      "ts": 1792231200100,
+      "seq": 2
+    },
+    {
+      "type": "model.usage",
+      "ts": 1792231201000,
+      "seq": 3,
+      "usage": { "input": 100, "output": 30 }
+    },
+    {
+      "type": "run.completed",
+      "runId": "synthetic-run-1",
+      "ts": 1792231202000,
+      "seq": 4,
+      "durationMs": 2000,
+      "outcome": "completed"
+    }
+  ]
+}

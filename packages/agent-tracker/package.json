@@ -1,0 +1,51 @@
+{
+  "name": "@work-address/agent-tracker",
+  "version": "0.1.0",
+  "description": "Durable Work Address agent collector and CLI",
+  "type": "module",
+  "license": "MIT",
+  "engines": {
+    "node": ">=22.16.0"
+  },
+  "main": "./dist/index.js",
+  "types": "./dist/index.d.ts",
+  "exports": {
+    ".": {
+      "types": "./dist/index.d.ts",
+      "import": "./dist/index.js"
+    }
+  },
+  "files": [
+    "dist",
+    "README.md",
+    "LICENSE",
+    "bridges/hermes/pyproject.toml",
+    "bridges/hermes/work_address_hermes/*.py",
+    "bridges/opencode/*.mjs",
+    "bridges/hooks/*",
+    "SERVER-RUNTIMES.md"
+  ],
+  "scripts": {
+    "build": "tsc -p tsconfig.json",
+    "test": "node --test test/*.test.mjs",
+    "prepack": "pnpm build"
+  },
+  "publishConfig": {
+    "access": "public"
+  },
+  "devDependencies": {
+    "@types/node": "22.19.17",
+    "typescript": "5.8.3"
+  },
+  "dependencies": {
+    "@work-address/agent-tracking-contract": "workspace:^"
+  },
+  "bin": {
+    "agent-tracker": "./dist/cli.js"
+  },
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/work-address/app.git",
+    "directory": "packages/agent-tracker"
+  }
+}

@@ -1,0 +1,38 @@
+name: Agent tracker packages
+
+on:
+  pull_request:
+    paths:
+      - 'packages/agent-track*/**'
+      - 'scripts/agent-tracker-*.mjs'
+      - 'package.json'
+      - 'pnpm-lock.yaml'
+      - 'pnpm-workspace.yaml'
+      - 'tsconfig.base.json'
+      - '.github/workflows/agent-tracker.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  packages:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts --filter '@work-address/*'
+      - uses: actions/setup-python@v5
+        with:
+          python-version: '3.12'
+      - run: python -m pip wheel --no-deps --wheel-dir /tmp/hermes-wheels ./packages/agent-tracker/bridges/hermes
+      - run: pnpm agent-tracker:test-hermes
+      - run: pnpm agent-tracker:test
+      - run: node scripts/agent-tracker-demo.mjs
+      - run: node scripts/agent-tracker-pack-smoke.mjs

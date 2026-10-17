@@ -1,0 +1,15 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "work-address-hermes"
+version = "0.1.0"
+description = "Fail-open Hermes observer bridge to the Work Address npm collector"
+requires-python = ">=3.10"
+
+[project.entry-points."hermes_agent.plugins"]
+work-address = "work_address_hermes:register"
+
+[tool.setuptools.packages.find]
+include = ["work_address_hermes*"]

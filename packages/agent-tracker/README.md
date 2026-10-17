@@ -1,0 +1,48 @@
+# Work Address agent collector
+
+Shared library and `agent-tracker` CLI for experimental server runtime adapters.
+See [server coverage, setup and qualification limits](SERVER-RUNTIMES.md). Requires Node
+22.16+ and built-in `node:sqlite`. No native addon installation is needed.
+
+## Commands
+
+- `agent-tracker setup <events-endpoint> <project-uuid>` reads the credential from
+  stdin and creates a new config in `WORK_ADDRESS_STATE_DIR` (default
+  `~/.work-address/agent-tracker`). Setup never overwrites an existing identity.
+- `agent-tracker adapters` prints the complete server support matrix.
+- `agent-tracker hook <product>` reads native hook JSON; experimental opt-in required.
+- `agent-tracker stream codex` reads one live exec JSONL stream.
+- `agent-tracker emit` accepts a strict normalized event on stdin.
+- `agent-tracker status` prints queued, rejected and lost event counts, never secrets.
+- `agent-tracker sync` attempts up to 20 batches of due events, then exits. Backoff
+  survives restarts. Exit 0 means no retained events remain; exit 1 reports a
+  command/transport failure; exit 2 means the drain is incomplete (backoff, active
+  upload lease, batch limit, or rejected events). Preserve the state directory
+  until remaining events are handled. Loss counts must also be monitored.
+
+A queue is bound to its endpoint, project, instance and credential. Use a separate
+state directory per identity; this prototype does not implement credential rotation.
+Do not edit a config to redirect existing queued data to another server or account.
+HTTPS is required except for explicit loopback HTTP; redirects are rejected.
+
+The library exports `EventQueue`, `sync`, `setup`, `readConfig` and config utilities.
+Each upload sends `{ events }`, with at most 50 events (16 KiB each). Only explicit
+`accepted`/`duplicate` acknowledgements delete rows. Missing acknowledgements are
+retried with the same event IDs. Rejected rows are held for inspection, not retried
+indefinitely. The upload lease is transactional and expires after 30 seconds; requests
+have a 10-second timeout. Delivery is at least once; the receiver must deduplicate.
+
+The queue caps stored payload bytes at 100 MiB and expires rows after seven days
+when enqueueing or preparing a batch. Drops increment a persistent loss count.
+SQLite indexes/page overhead is additional to the payload cap. This lifecycle/observation
+prototype has no enrichment events competing for queue space. Local data is stored
+in plaintext under restricted permissions; Windows ACL setup and OS keychain-backed
+credential storage remain qualification/release work.
+
+`examples/mock-ingest.mjs` is a development-only receiver: it binds loopback and
+validates/authenticates/deduplicates, but does not authorize real users or calculate
+billing. It stores only event IDs and payload hashes. With its default in-memory DB,
+deduplication lasts only until receiver restart; set `WORK_ADDRESS_MOCK_DB` to a test
+SQLite path if you need persistence. Never use it as a production endpoint.
+
+See the sibling OpenClaw package README for the runnable demo and installation steps.

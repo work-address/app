@@ -1,0 +1,15 @@
+{
+  "id": "work-address-agent-tracker",
+  "name": "Work Address agent tracker",
+  "description": "Passive agent run tracking; prototype with partial coverage.",
+  "categories": ["developer-tools"],
+  "activation": { "onStartup": true },
+  "configSchema": {
+    "type": "object",
+    "additionalProperties": false,
+    "required": ["stateDirectory"],
+    "properties": {
+      "stateDirectory": { "type": "string", "minLength": 1, "description": "Absolute path to a dedicated collector directory created by agent-tracker setup." }
+    }
+  }
+}

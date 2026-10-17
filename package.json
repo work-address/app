@@ -5,7 +5,13 @@
   "version": "0.0.1",
   "scripts": {
     "codegen:api-client": "pnpm --filter @app/api-client codegen",
-    "test": "pnpm --filter ./api test"
+    "test": "pnpm --filter ./api test",
+    "agent-tracker:build": "pnpm --filter '@work-address/*' -r build",
+    "agent-tracker:test": "pnpm agent-tracker:build && pnpm --filter '@work-address/*' -r test",
+    "agent-tracker:demo": "pnpm agent-tracker:build && node scripts/agent-tracker-demo.mjs",
+    "agent-tracker:verify-sdk": "node packages/agent-tracker-openclaw/scripts/verify-sdk.mjs",
+    "agent-tracker:pack-smoke": "pnpm agent-tracker:build && node scripts/agent-tracker-pack-smoke.mjs",
+    "agent-tracker:test-hermes": "cd packages/agent-tracker/bridges/hermes && PYTHONDONTWRITEBYTECODE=1 python3 -m unittest test_bridge.py"
   },
   "prettier": {
     "tabWidth": 2,

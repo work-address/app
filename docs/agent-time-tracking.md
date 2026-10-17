@@ -662,3 +662,7 @@ Read this plan, SPEC, the backend/frontend skills and existing tests first. Afte
 For each adapter, pin a tested product release and deployment, inspect its actual event schema, and capture sanitized fixtures for completion, interruption, continuation, waits, crashes, children and transcript token fields. Qualify only the measured coverage. Do not invent undocumented lifecycle events, infer human labour from agent activity, read anything from transcripts beyond token usage, store prompt or response text, bypass hook trust, or expose runtime-control endpoints for tracking.
 
 Deliver the schema, APIs, collector package and plugins, conformance fixtures, setup/uninstall instructions, compatibility manifest, UI, the Qt Agents page and evidence from the acceptance tests. Record any vendor-specific gate as partial or unsupported with its exact limitation.
+
+## Collector implementation status (2026-10-17)
+
+The experimental npm packages now have a [server runtime coverage matrix](../packages/agent-tracker/SERVER-RUNTIMES.md), hook bridges, Hermes Python shim and synthetic conformance tests. The matrix distinguishes implemented partial paths from unavailable transports. These packages do not complete the production ingest/accounting or desktop-reader phases described above; no live runtime qualification is claimed.
