@@ -47,7 +47,7 @@ export class InvoiceControllerCreateTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const expectedHours = (time.minutesActive || 0) / 60
+    const expectedHours = (+time.toAt - +time.fromAt) / 3600000
     const expectedCents = Math.round(60 * expectedHours * 100)
 
     expect(res.status).to.be.equal(200)

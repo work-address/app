@@ -17,7 +17,11 @@ import { Project } from '@/entity/project'
 import { EUserRole } from '@/model/user'
 import { InvoiceManager } from '@/service/invoice-manager'
 import { InvoiceRepository } from '@/repository/invoice-repository'
-import { InvoiceCreateDto, InvoiceSearchDto } from '@/model/dto/invoice'
+import {
+  InvoiceCreateDto,
+  InvoiceSearchDto,
+  InvoiceRejectDto,
+} from '@/model/dto/invoice'
 import { runPromise } from '@/service/effect-bridge'
 
 @Authorized([EUserRole.ROLE_USER])
@@ -29,6 +33,22 @@ export class InvoiceController {
   constructor() {
     this.invoiceManager = App.container.get('InvoiceManager')
     this.invoiceRepository = App.container.get('InvoiceRepository')
+  }
+
+  @Post('/:id/reject')
+  @HttpCode(200)
+  @OpenAPIExtended({
+    summary: 'Reject a requested invoice (project owner only)',
+    body: { schema: InvoiceRejectDto },
+    response: { schema: Invoice, options: { serializationGroup: 'search' } },
+  })
+  reject(
+    @CurrentUser() user: User,
+    @EntityFromParam({ paramName: 'id', relations: { project: true } })
+    invoice: Invoice,
+    @Body() body: InvoiceRejectDto,
+  ) {
+    return runPromise(this.invoiceManager.reject(invoice, user, body?.reason))
   }
 
   @OpenAPIExtended({
@@ -120,7 +140,7 @@ export class InvoiceController {
                 report: {
                   type: 'object',
                   properties: {
-                    rateHour: { type: 'number' },
+                    rateHour: { type: 'number', nullable: true },
                     rateTotal: { type: 'number' },
                     minutes: { type: 'number' },
                     minutesActive: { type: 'number' },

@@ -6,7 +6,7 @@ See [server coverage, setup and qualification limits](SERVER-RUNTIMES.md). Requi
 
 ## Commands
 
-- `agent-tracker setup <events-endpoint> <project-uuid>` reads the credential from
+- `agent-tracker setup <events-endpoint> <project-uuid> [source-instance-uuid]` reads the credential from
   stdin and creates a new config in `WORK_ADDRESS_STATE_DIR` (default
   `~/.work-address/agent-tracker`). Setup never overwrites an existing identity.
 - `agent-tracker adapters` prints the complete server support matrix.
@@ -23,6 +23,18 @@ See [server coverage, setup and qualification limits](SERVER-RUNTIMES.md). Requi
 A queue is bound to its endpoint, project, instance and credential. Use a separate
 state directory per identity; this prototype does not implement credential rotation.
 Do not edit a config to redirect existing queued data to another server or account.
+When using the app API, supply the same source-instance UUID used to issue the
+credential; omitting it generates an identity suitable for the mock receiver.
+
+`WORK_ADDRESS_PROJECT` selects a project for an agent process, and
+`WORK_ADDRESS_AGENT` selects that worker's agent handle. Hooks, Codex streams and
+the OpenClaw plugin honor these values. Each project/handle combination has a
+separate durable queue beneath the configured state directory; the base config
+and its existing queue are unchanged. Run `status` and `sync` with the same values
+to inspect or drain that scope. Attribution is pinned when a run first emits an
+event. The API validates membership, the owner switch and attachment again.
+Local policy/attachment preflight and automatic hook installation remain pending.
+
 HTTPS is required except for explicit loopback HTTP; redirects are rejected.
 
 The library exports `EventQueue`, `sync`, `setup`, `readConfig` and config utilities.

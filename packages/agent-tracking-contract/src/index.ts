@@ -74,6 +74,21 @@ export const MAX_EVENT_BYTES = 16 * 1024
 export const MAX_BATCH_BYTES = 1024 * 1024
 export const MAX_BATCH_EVENTS = 100
 
+export const collectorHealthV1Schema = z.strictObject({
+  queued: integer,
+  rejected: integer,
+  lost: integer,
+  heldRuns: integer,
+  lastSuccessfulUploadAt: timestamp.optional(),
+})
+export type CollectorHealthV1 = z.infer<typeof collectorHealthV1Schema>
+export const ingestBatchSchema = z
+  .strictObject({
+    events: z.array(agentEventV1Schema).max(MAX_BATCH_EVENTS),
+    health: collectorHealthV1Schema.optional(),
+  })
+  .refine((batch) => batch.events.length > 0 || batch.health !== undefined)
+
 export function parseEvent(value: unknown): AgentEventV1 {
   const event = agentEventV1Schema.parse(value)
   if (

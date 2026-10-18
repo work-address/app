@@ -14,6 +14,9 @@ import {
   IsOptional,
   IsString,
   MaxLength,
+  IsInt,
+  Min,
+  Max,
 } from 'class-validator'
 import { EProjectState } from '@/model/project'
 import { Invoice } from '@/entity/invoice'
@@ -82,6 +85,47 @@ export class Project extends AbstractBaseEntity implements IProject {
   @IsOptional()
   trackProcesses?: boolean | null
 
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @Column('bool', { default: false })
+  @IsBoolean()
+  @IsOptional()
+  trackAgents: boolean
+
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @Column('bool', { default: false })
+  @IsBoolean()
+  @IsOptional()
+  trackWindowTitles: boolean
+
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @Column('bool', { default: false })
+  @IsBoolean()
+  @IsOptional()
+  trackBrowserDomains: boolean
+
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @Column('bool', { default: false })
+  @IsBoolean()
+  @IsOptional()
+  allowManualTime: boolean
+
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @Column('int', { default: 24 })
+  @IsInt()
+  @Min(1)
+  @Max(24)
+  @IsOptional()
+  reviewWindowHours: number
+
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @JSONSchema({ type: 'integer', nullable: true })
+  @Column('int', { nullable: true })
+  @IsInt()
+  @Min(1)
+  @Max(3650)
+  @IsOptional()
+  screenshotRetentionDays: number | null
+
   @IsNotEmpty()
   @Expose({ groups: ['search', 'create', 'edit'] })
   @Column('text', { nullable: true })
@@ -118,6 +162,18 @@ export class Project extends AbstractBaseEntity implements IProject {
   @Type(() => ProjectStatistics)
   @OneToMany(() => ProjectStatistics, (statistics) => statistics.project)
   statistics: ProjectStatistics[]
+
+  @Column('timestamptz', { nullable: true })
+  agentTrackingSince: Date | null
+
+  @Column('jsonb', { name: 'agents', default: () => "'[]'::jsonb" })
+  agentAttachments: import('@/model/agent').AgentAttachment[]
+
+  @Expose({ groups: ['search'] })
+  @IsArray()
+  @IsOptional()
+  @JSONSchema({ type: 'array', items: { type: 'object' } })
+  agents?: import('@/model/agent').AgentAttachment[]
 
   public isOwner(user: User): boolean {
     return this.user?.id === user.id

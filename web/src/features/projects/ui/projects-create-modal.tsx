@@ -71,6 +71,12 @@ export const ProjectsCreateModal = ({
       collaborators: [],
       trackScreenshots: false,
       trackProcesses: false,
+      trackAgents: false,
+      trackWindowTitles: false,
+      trackBrowserDomains: false,
+      allowManualTime: false,
+      reviewWindowHours: 24,
+      screenshotRetentionDays: null,
     },
   })
 
@@ -108,6 +114,12 @@ export const ProjectsCreateModal = ({
       viewerAddresses,
       trackScreenshots: data.trackScreenshots,
       trackProcesses: data.trackProcesses,
+      trackAgents: data.trackAgents,
+      trackWindowTitles: data.trackWindowTitles,
+      trackBrowserDomains: data.trackBrowserDomains,
+      allowManualTime: data.allowManualTime,
+      reviewWindowHours: data.reviewWindowHours,
+      screenshotRetentionDays: data.screenshotRetentionDays,
     })
   }
 

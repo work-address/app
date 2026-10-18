@@ -314,7 +314,10 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
     expect(res.data.length).to.be.eq(1)
     const row = res.data[0] as Record<string, unknown>
     expect(row.projectId).to.be.eq(project.id)
-    expect(row.minutesActive).to.be.eq(time.minutesActive)
+    expect(row.minutesActive).to.be.eq(null)
+    expect(row.minutes).to.be.eq(
+      Math.round((+time.toAt - +time.fromAt) / 60000),
+    )
   }
 
   @test

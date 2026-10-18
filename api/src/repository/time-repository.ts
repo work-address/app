@@ -9,6 +9,11 @@ import {
 } from '@/repository/abstract-repository-template'
 import { fromPromise } from '@/service/effect-bridge'
 import { Time } from '@/entity/time'
+import { AppUsage } from '@/entity/app-usage'
+import { UsageResult } from '@/service/app-usage-policy'
+import { TimeVisibility } from '@/service/time-visibility'
+import { validate } from 'class-validator'
+import ConstraintsValidationException from '@/exception/constraints-validation-exception'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
 import { Invoice } from '@/entity/invoice'
@@ -24,6 +29,7 @@ import { ITimeTotals } from '@/model/time'
 import { Calc } from '@/service/calc'
 import AccessException from '@/exception/access-exception'
 import { TimeSearchDto } from '@/model/dto/time'
+import { BadRequestError } from 'routing-controllers'
 
 // Sort keys that don't map 1:1 onto a `time` column - they live on a
 // joined table instead (projectName -> project.title).
@@ -42,7 +48,8 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     const qb = this.getRepo()
       .createQueryBuilder('time')
       .innerJoinAndSelect('time.project', 'project')
-      .innerJoin('project.user', 'owner')
+      .innerJoinAndSelect('project.user', 'owner')
+      .innerJoinAndSelect('time.user', 'author')
       .andWhere('time.id = :timeId', { timeId: time.id })
 
     this.applyViewAccessFilter(qb, 'owner', user)
@@ -54,8 +61,112 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         throw new AccessException()
       }
 
-      return timeEntry
+      await this.loadUsage([timeEntry])
+      return TimeVisibility.redact(timeEntry, user)
     })
+  }
+
+  public saveWithUsage(time: Time, usage: UsageResult): RepoEffect<Time> {
+    return fromPromise(() =>
+      this.getRepo().manager.transaction(async (manager) => {
+        await manager.query(
+          'SELECT pg_advisory_xact_lock(hashtextextended($1, 0))',
+          [
+            `time:${time.project.id}:${time.user.id}:${time.fromAt.toISOString()}`,
+          ],
+        )
+        const existing = await manager
+          .getRepository(Time)
+          .createQueryBuilder('time')
+          .innerJoinAndSelect('time.project', 'project')
+          .leftJoinAndSelect('time.invoice', 'invoice')
+          .where(
+            'time.projectId=:project AND time.userId=:user AND time.fromAt=:from',
+            { project: time.project.id, user: time.user.id, from: time.fromAt },
+          )
+          .setLock('pessimistic_write', undefined, ['time'])
+          .getOne()
+        const preserveUsage = existing && TimeVisibility.published(existing)
+        if (
+          preserveUsage &&
+          (+time.toAt !== +existing.toAt ||
+            time.minutesActive !== existing.minutesActive)
+        )
+          throw new BadRequestError(
+            'Published time accounting cannot be changed by an upload',
+          )
+        if (existing) {
+          time.id = existing.id
+          time.invoice = existing.invoice
+          time.publishedAt = existing.publishedAt
+          time.isPaid = existing.isPaid
+        }
+        time.appsStatus = usage.status
+        time.appsReason = usage.reason
+        time.appsTruncated = usage.truncated
+        if (preserveUsage) {
+          time.appsStatus = existing.appsStatus
+          time.appsReason = existing.appsReason
+          time.appsTruncated = existing.appsTruncated
+        }
+        const errors = await validate(time)
+        if (errors.length) throw new ConstraintsValidationException(errors)
+        const saved = await manager.save(Time, time)
+        if (preserveUsage) return saved
+        await manager.delete(AppUsage, { time: { id: saved.id } })
+        if (usage.rows.length)
+          await manager.save(
+            AppUsage,
+            usage.rows.map((row) =>
+              manager.create(AppUsage, { ...row, time: saved }),
+            ),
+          )
+        return saved
+      }),
+    )
+  }
+
+  public purgeExpiredScreenshots(projectIds: string[]): RepoEffect<void> {
+    return fromPromise(async () => {
+      if (!projectIds.length) return
+      await this.getRepo().manager.query(
+        `UPDATE time SET screenshot=NULL FROM project
+        WHERE time."projectId"=project.id AND project.id=ANY($1::uuid[])
+        AND project."screenshotRetentionDays" IS NOT NULL AND time.screenshot IS NOT NULL
+        AND time."toAt" + project."screenshotRetentionDays" * INTERVAL '1 day' <= NOW()`,
+        [projectIds],
+      )
+    })
+  }
+
+  public async loadUsage(times: Time[]): Promise<void> {
+    if (!times.length) return
+    const rows = await this.getRepo()
+      .manager.getRepository(AppUsage)
+      .createQueryBuilder('usage')
+      .innerJoinAndSelect('usage.time', 'time')
+      .select(['usage', 'time.id'])
+      .where('time.id IN (:...ids)', { ids: times.map((time) => time.id) })
+      .getMany()
+    for (const time of times) {
+      const apps = new Map<string, NonNullable<Time['apps']>[number]>()
+      for (const row of rows.filter((row) => row.time.id === time.id)) {
+        const app = apps.get(row.app) ?? {
+          name: row.app,
+          seconds: 0,
+          titles: [],
+        }
+        app.seconds += row.seconds
+        if (row.title || row.domain)
+          app.titles.push({
+            title: row.title,
+            domain: row.domain,
+            seconds: row.seconds,
+          })
+        apps.set(row.app, app)
+      }
+      time.apps = [...apps.values()].sort((a, b) => b.seconds - a.seconds)
+    }
   }
 
   public getTotals(
@@ -70,6 +181,8 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
 
     this.applyViewAccessFilter(qb, 'owner', user)
 
+    const detail = TimeVisibility.detailSql()
+    qb.setParameter('detailUser', user.id)
     qb.select([
       'project.id as projectId',
       'project.rateHour as rateHour',
@@ -78,12 +191,12 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       // time, so a fixed multiplier would misread every row from before the
       // change. Distinct from `minutesActive`, which is time actually worked.
       'ROUND(SUM(EXTRACT(EPOCH FROM (time.toAt - time.fromAt)) / 60)) as minutes',
-      'SUM(time.minutesActive) as minutesActive',
-      'SUM(CASE WHEN COALESCE(time.isPaid, false) = true THEN time.minutesActive ELSE 0 END) as minutesPaid',
-      'SUM(CASE WHEN COALESCE(time.isPaid, false) = false THEN time.minutesActive ELSE 0 END) as minutesUnpaid',
-      'SUM(time.keyboardKeys) as keyboardKeys',
-      'SUM(time.mouseKeys) as mouseKeys',
-      'SUM(time.mouseDistance) as mouseDistance',
+      `SUM(CASE WHEN ${detail} THEN time.\"minutesActive\" ELSE NULL END) as minutesActive`,
+      'ROUND(SUM(CASE WHEN COALESCE(time.isPaid, false) = true THEN EXTRACT(EPOCH FROM (time."toAt" - time."fromAt"))/60 ELSE 0 END)) as minutesPaid',
+      'ROUND(SUM(CASE WHEN COALESCE(time.isPaid, false) = false THEN EXTRACT(EPOCH FROM (time."toAt" - time."fromAt"))/60 ELSE 0 END)) as minutesUnpaid',
+      `SUM(CASE WHEN ${detail} THEN time.\"keyboardKeys\" ELSE NULL END) as keyboardKeys`,
+      `SUM(CASE WHEN ${detail} THEN time.\"mouseKeys\" ELSE NULL END) as mouseKeys`,
+      `SUM(CASE WHEN ${detail} THEN time.\"mouseDistance\" ELSE NULL END) as mouseDistance`,
     ])
       .groupBy('project.id')
       .orderBy('project.id', 'ASC')
@@ -101,12 +214,14 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
           rateHour: r.ratehour,
           rateTotal: Calc.rateTotal(Number(r.minutes), r.ratehour),
           minutes: Number(r.minutes),
-          minutesActive: Number(r.minutesactive),
+          minutesActive:
+            r.minutesactive === null ? null : Number(r.minutesactive),
           minutesPaid: Number(r.minutespaid),
           minutesUnpaid: Number(r.minutesunpaid),
-          keyboardKeys: Number(r.keyboardkeys),
-          mouseKeys: Number(r.mousekeys),
-          mouseDistance: Number(r.mousedistance),
+          keyboardKeys: r.keyboardkeys === null ? null : Number(r.keyboardkeys),
+          mouseKeys: r.mousekeys === null ? null : Number(r.mousekeys),
+          mouseDistance:
+            r.mousedistance === null ? null : Number(r.mousedistance),
         }
       })
     })
@@ -139,7 +254,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       search,
     )
 
-    const sort = this.buildTimeOrderByCondition(s)
+    let sort = this.buildTimeOrderByCondition(s)
     const limit = this.filter.buildLimit(search)
 
     const qb = this.getRepo()
@@ -152,6 +267,45 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
 
     this.applyViewAccessFilter(qb, 'owner', user)
 
+    const privateSortColumns = [
+      'time.note',
+      'time.keyboardKeys',
+      'time.minutesActive',
+      'time.mouseKeys',
+      'time.mouseDistance',
+      'time.screenshot',
+    ]
+    const [sortColumn, sortDirection] = Object.entries(sort)[0] ?? []
+    if (privateSortColumns.includes(sortColumn)) {
+      // Sort the visible value, not the secret value that will be redacted later.
+      const screenshotVisible =
+        sortColumn === 'time.screenshot'
+          ? ` AND ${TimeVisibility.screenshotRetainedSql()}`
+          : ''
+      qb.addSelect(
+        `CASE WHEN ${TimeVisibility.detailSql()}${screenshotVisible} THEN ${sortColumn} ELSE NULL END`,
+        'visible_detail_sort',
+      ).setParameter('detailUser', user.id)
+      sort = { visible_detail_sort: sortDirection, 'time.id': 'ASC' }
+    }
+
+    const detailFilters = [
+      'screenshot',
+      'withScreenshots',
+      'withProcesses',
+      'note',
+      'keyboardKeysFrom',
+      'keyboardKeysTo',
+      'minutesActiveFrom',
+      'minutesActiveTo',
+      'mouseKeysFrom',
+      'mouseKeysTo',
+      'mouseDistanceFrom',
+      'mouseDistanceTo',
+    ]
+    if (detailFilters.some((key) => key in s.filter)) {
+      qb.andWhere(TimeVisibility.detailSql(), { detailUser: user.id })
+    }
     qb.andWhere(
       new Brackets((filterQb) => {
         if ('projectId' in s.filter) {
@@ -175,6 +329,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
           })
         }
         if ('screenshot' in s.filter) {
+          filterQb.andWhere(TimeVisibility.screenshotRetainedSql())
           filterQb.andWhere('time.screenshot ILIKE :screenshot', {
             screenshot: `%${s.filter.screenshot}%`,
           })
@@ -221,11 +376,12 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         }
         if ('withScreenshots' in s.filter) {
           if (s.filter.withScreenshots) {
+            filterQb.andWhere(TimeVisibility.screenshotRetainedSql())
             filterQb.andWhere('time.screenshot IS NOT NULL')
             filterQb.andWhere("time.screenshot != ''")
           } else {
             filterQb.andWhere(
-              "(time.screenshot IS NULL OR time.screenshot = '')",
+              `(time.screenshot IS NULL OR time.screenshot = '' OR NOT ${TimeVisibility.screenshotRetainedSql()})`,
             )
           }
         }
@@ -242,14 +398,19 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       }),
     )
 
-    return fromPromise(() =>
-      qb
+    return fromPromise(async () => {
+      const [times, count] = await qb
         .select()
         .orderBy(sort)
         .skip(limit * s.page)
         .take(limit)
-        .getManyAndCount(),
-    )
+        .getManyAndCount()
+      await this.loadUsage(times)
+      return [
+        times.map((time) => TimeVisibility.redact(time, user)),
+        count,
+      ] as [Time[], number]
+    })
   }
 
   public findByIdsConfirmAccess(ids: string[], user: User): RepoEffect<Time[]> {
@@ -279,6 +440,29 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
 
       return times
     })
+  }
+
+  public publishAsAuthor(ids: string[], user: User): RepoEffect<void> {
+    const uniqueIds = [...new Set(ids)]
+    if (!uniqueIds.length) return Effect.void
+    return fromPromise(() =>
+      this.getRepo().manager.transaction(async (manager) => {
+        // Never save a loaded entry here: uploads may have replaced its accounting
+        // and app evidence since the ownership check. Retain the first publication.
+        const result = await manager
+          .createQueryBuilder()
+          .update(Time)
+          .set({
+            publishedAt: () => 'COALESCE("publishedAt", CURRENT_TIMESTAMP)',
+          })
+          .where('id IN (:...ids) AND "userId"=:user AND "deletedAt" IS NULL', {
+            ids: uniqueIds,
+            user: user.id,
+          })
+          .execute()
+        if (result.affected !== uniqueIds.length) throw new AccessException()
+      }),
+    )
   }
 
   public findByIdsAsAuthor(ids: string[], user: User): RepoEffect<Time[]> {
@@ -355,12 +539,14 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
           SELECT 1 FROM "${invoiceTable}" invoice
           WHERE invoice."projectId" = "${timeTable}"."projectId"
             AND invoice."deletedAt" IS NULL
+            AND invoice.state <> 'REJECTED'
             AND (
               invoice."userId" IS NULL
               OR invoice."userId" = "${timeTable}"."userId"
             )
-            AND "${timeTable}"."fromAt" < invoice."toAt"
-            AND "${timeTable}"."toAt" > invoice."fromAt"
+            AND (invoice.id = "${timeTable}"."invoiceId" OR (invoice.lines IS NULL
+              AND "${timeTable}"."fromAt" < invoice."toAt"
+              AND "${timeTable}"."toAt" > invoice."fromAt"))
         )`,
         )
         .execute()
@@ -418,6 +604,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     project: Project,
     from: Date,
     to: Date,
+    author?: User,
   ): RepoEffect<Time | undefined> {
     return fromPromise(() =>
       this.getRepo()
@@ -426,7 +613,11 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         .innerJoinAndSelect('time.user', 'user')
         .andWhere('project.id = :projectId', { projectId: project.id })
         .andWhere('time.fromAt = :from', { from })
-        .andWhere('time.toAt = :to', { to })
+        .andWhere(
+          author ? 'user.id = :authorId' : 'time.toAt = :to',
+          author ? { authorId: author.id } : { to },
+        )
+        .leftJoinAndSelect('time.invoice', 'invoice')
         .getOne()
         .then((result) => result ?? undefined),
     )
@@ -457,6 +648,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         .andWhere('project.id = :projectId', { projectId: project.id })
         .andWhere('project.deletedAt IS NULL')
         .andWhere('COALESCE(time.isPaid, false) = false')
+        .andWhere('time.invoiceId IS NULL')
         .getMany(),
     )
   }

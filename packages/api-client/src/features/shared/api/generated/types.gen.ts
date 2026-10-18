@@ -15,6 +15,28 @@ export type Invoice = {
     toAt: string | string;
     amountCents: string;
     state: string;
+    lines: Array<{
+        kind: 'human' | 'agent';
+        agentId?: string;
+        name: string;
+        basis: 'tracked' | 'active';
+        minutes: number;
+        activeMinutes?: number;
+        manualMinutes?: number;
+        assistedMinutes?: number;
+        waitMinutes?: number;
+        unclassifiedMinutes?: number;
+        rateHourCents: number | null;
+        amountCents: number;
+        rateChanges: Array<{
+            at?: string;
+            fromCents?: number;
+            toCents?: number;
+            minutesBefore?: number;
+        }>;
+    }> | null;
+    rejectionReason?: string;
+    rejectedAt?: string | string;
     paidAt?: string | string;
     id?: string;
     createdAt?: string | string;
@@ -35,6 +57,21 @@ export type Time = {
     note?: string;
     screenshot?: string;
     processes?: Array<unknown>;
+    appsStatus?: string | null;
+    appsReason?: string | null;
+    appsTruncated?: boolean | null;
+    source?: string | null;
+    publishedAt?: string | null;
+    detailPendingReview?: boolean | null;
+    apps?: Array<{
+        name?: string;
+        seconds?: number;
+        titles?: Array<{
+            title?: string | null;
+            domain?: string | null;
+            seconds?: number;
+        }>;
+    }>;
     keyboardKeys: number;
     minutesActive: number;
     mouseKeys: number;
@@ -54,9 +91,18 @@ export type Project = {
     viewers?: Array<unknown>;
     trackScreenshots?: boolean;
     trackProcesses?: boolean;
+    trackAgents?: boolean;
+    trackWindowTitles?: boolean;
+    trackBrowserDomains?: boolean;
+    allowManualTime?: boolean;
+    reviewWindowHours?: number;
+    screenshotRetentionDays?: number | null;
     text: string;
     rateHour?: string;
     state: string;
+    agents?: Array<{
+        [key: string]: unknown;
+    }>;
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
@@ -87,6 +133,46 @@ export type User = {
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
+};
+
+export type AgentDto = {
+    id?: string;
+    name: string;
+    slug: string;
+    product: 'claude-code' | 'codex' | 'cursor' | 'gemini-cli' | 'copilot' | 'windsurf' | 'cline' | 'minimax' | 'devin-local' | 'claude-cowork' | 'kimi-code' | 'kimi-cli' | 'openclaw' | 'hermes' | 'opencode';
+    isDefault: boolean;
+    bindings: Array<string>;
+};
+
+export type AgentIdDto = {
+    id: string;
+};
+
+export type AgentRateDto = {
+    rateHourCents: number;
+};
+
+export type AgentCredentialDto = {
+    instanceId: string;
+    mode: 'timer' | 'fixed';
+    label?: string;
+};
+
+export type AgentSearchDto = {
+    projectId: string;
+    fromAt?: string | string;
+    toAt?: string | string;
+    offset?: number;
+};
+
+export type StatisticsQueryDto = {
+    projectIds: Array<string>;
+    from: string;
+    to: string;
+    timeZone: string;
+    userIds?: Array<string>;
+    invoiceId?: string;
+    app?: string;
 };
 
 export type AuthForgotPasswordDto = {
@@ -154,6 +240,16 @@ export type UserSearchDto = {
         [key: string]: unknown;
     };
     limit?: number;
+};
+
+export type RedactionRuleDto = {
+    field: 'title' | 'domain';
+    match: 'contains' | 'regex';
+    pattern: string;
+};
+
+export type UserSettingsDto = {
+    personalRedactionRules: Array<RedactionRuleDto>;
 };
 
 export type ProjectSearchSortDto = {
@@ -229,6 +325,10 @@ export type TimeSearchDto = {
 };
 
 export type TimeCreateDto = {
+    appsStatus?: unknown;
+    appsReason?: unknown;
+    appsTruncated?: unknown;
+    apps?: unknown;
     fromIndex: number;
     toIndex: number;
     fromAt: string;
@@ -254,8 +354,13 @@ export type TimeIdsDto = {
 };
 
 export type TimeInsertionResultDto = {
+    appsAccepted?: boolean;
     id?: string;
     error?: TimeInsertionErrorDto;
+    appsStatus?: unknown;
+    appsReason?: unknown;
+    appsTruncated?: unknown;
+    apps?: unknown;
     fromIndex: number;
     toIndex: number;
     fromAt: string;
@@ -276,7 +381,7 @@ export type InvoiceSearchFilterDto = {
     toAt?: string | string;
     amountFrom?: number;
     amountTo?: number;
-    state?: 'PAID' | 'Requested';
+    state?: 'PAID' | 'Requested' | 'REJECTED';
 };
 
 export type InvoiceSearchDto = {
@@ -292,6 +397,10 @@ export type InvoiceCreateDto = {
     fromUnix?: number;
     toUnix?: number;
     timeIds?: Array<string>;
+};
+
+export type InvoiceRejectDto = {
+    reason?: string;
 };
 
 export type EntitlementPushDto = {
@@ -369,12 +478,21 @@ export type ProjectSearch = {
     viewers?: Array<UserSearch>;
     trackScreenshots?: boolean;
     trackProcesses?: boolean;
+    trackAgents?: boolean;
+    trackWindowTitles?: boolean;
+    trackBrowserDomains?: boolean;
+    allowManualTime?: boolean;
+    reviewWindowHours?: number;
+    screenshotRetentionDays?: number | null;
     text?: string;
     rateHour?: string;
     state?: string;
     user?: UserSearch;
     invoices?: InvoiceSearch;
     time?: TimeSearch;
+    agents?: Array<{
+        [key: string]: unknown;
+    }>;
 };
 
 /**
@@ -387,6 +505,12 @@ export type ProjectCreate = {
     viewerAddresses?: Array<string>;
     trackScreenshots?: boolean;
     trackProcesses?: boolean;
+    trackAgents?: boolean;
+    trackWindowTitles?: boolean;
+    trackBrowserDomains?: boolean;
+    allowManualTime?: boolean;
+    reviewWindowHours?: number;
+    screenshotRetentionDays?: number | null;
     text?: string;
     rateHour?: string;
     state?: string;
@@ -413,6 +537,12 @@ export type ProjectEdit = {
     viewerAddresses?: Array<string>;
     trackScreenshots?: boolean;
     trackProcesses?: boolean;
+    trackAgents?: boolean;
+    trackWindowTitles?: boolean;
+    trackBrowserDomains?: boolean;
+    allowManualTime?: boolean;
+    reviewWindowHours?: number;
+    screenshotRetentionDays?: number | null;
     text?: string;
     rateHour?: string;
     state?: string;
@@ -431,6 +561,21 @@ export type TimeSearch = {
     note?: string;
     screenshot?: string;
     processes?: Array<unknown>;
+    appsStatus?: string | null;
+    appsReason?: string | null;
+    appsTruncated?: boolean | null;
+    source?: string | null;
+    publishedAt?: string | null;
+    detailPendingReview?: boolean | null;
+    apps?: Array<{
+        name?: string;
+        seconds?: number;
+        titles?: Array<{
+            title?: string | null;
+            domain?: string | null;
+            seconds?: number;
+        }>;
+    }>;
     keyboardKeys?: number;
     minutesActive?: number;
     mouseKeys?: number;
@@ -460,7 +605,272 @@ export type InvoiceSearch = {
     toAt?: string | string;
     amountCents?: string;
     state?: string;
+    lines?: Array<{
+        kind: 'human' | 'agent';
+        agentId?: string;
+        name: string;
+        basis: 'tracked' | 'active';
+        minutes: number;
+        activeMinutes?: number;
+        manualMinutes?: number;
+        assistedMinutes?: number;
+        waitMinutes?: number;
+        unclassifiedMinutes?: number;
+        rateHourCents: number | null;
+        amountCents: number;
+        rateChanges: Array<{
+            at?: string;
+            fromCents?: number;
+            toCents?: number;
+            minutesBefore?: number;
+        }>;
+    }> | null;
+    rejectionReason?: string;
+    rejectedAt?: string | string;
     paidAt?: string | string;
+};
+
+export type AgentControllerRemoveData = {
+    /**
+     * AgentIdDto
+     */
+    body?: AgentIdDto;
+    path?: never;
+    query?: never;
+    url: '/api/agents';
+};
+
+export type AgentControllerRemoveResponses = {
+    /**
+     * Successful response
+     */
+    204: unknown;
+};
+
+export type AgentControllerListData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/agents';
+};
+
+export type AgentControllerListResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type AgentControllerCreateData = {
+    /**
+     * AgentDto
+     */
+    body?: AgentDto;
+    path?: never;
+    query?: never;
+    url: '/api/agents';
+};
+
+export type AgentControllerCreateResponses = {
+    /**
+     * Successful response
+     */
+    201: unknown;
+};
+
+export type AgentControllerEditData = {
+    /**
+     * AgentDto
+     */
+    body?: AgentDto;
+    path?: never;
+    query?: never;
+    url: '/api/agents';
+};
+
+export type AgentControllerEditResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type AgentControllerAttachmentsData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/project/{id}/agents';
+};
+
+export type AgentControllerAttachmentsResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type AgentControllerDetachData = {
+    body?: never;
+    path: {
+        id: string;
+        agentId: string;
+    };
+    query?: never;
+    url: '/api/project/{id}/agents/{agentId}';
+};
+
+export type AgentControllerDetachResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type AgentControllerAttachData = {
+    /**
+     * AgentRateDto
+     */
+    body?: AgentRateDto;
+    path: {
+        id: string;
+        agentId: string;
+    };
+    query?: never;
+    url: '/api/project/{id}/agents/{agentId}';
+};
+
+export type AgentControllerAttachResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type AgentControllerCredentialsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/agent-tracking/credentials';
+};
+
+export type AgentControllerCredentialsResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type AgentControllerIssueData = {
+    /**
+     * AgentCredentialDto
+     */
+    body?: AgentCredentialDto;
+    path?: never;
+    query?: never;
+    url: '/api/agent-tracking/credentials';
+};
+
+export type AgentControllerIssueResponses = {
+    /**
+     * Successful response
+     */
+    201: unknown;
+};
+
+export type AgentControllerRevokeData = {
+    body?: never;
+    path: {
+        id: string;
+    };
+    query?: never;
+    url: '/api/agent-tracking/credentials/{id}';
+};
+
+export type AgentControllerRevokeResponses = {
+    /**
+     * Successful response
+     */
+    204: unknown;
+};
+
+export type AgentControllerIngestData = {
+    body?: unknown;
+    headers?: {
+        authorization?: string;
+    };
+    path?: never;
+    query?: never;
+    url: '/api/agent-tracking/events';
+};
+
+export type AgentControllerIngestResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type AgentControllerSearchData = {
+    /**
+     * AgentSearchDto
+     */
+    body?: AgentSearchDto;
+    path?: never;
+    query?: never;
+    url: '/api/agent-tracking/search';
+};
+
+export type AgentControllerSearchResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type AgentControllerStatusData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/agent-tracking/status';
+};
+
+export type AgentControllerStatusResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type StatisticsControllerOverviewData = {
+    body: StatisticsQueryDto;
+    path?: never;
+    query?: never;
+    url: '/api/statistics/overview';
+};
+
+export type StatisticsControllerOverviewResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type StatisticsControllerAppsData = {
+    body: StatisticsQueryDto;
+    path: {
+        kind: string;
+    };
+    query?: never;
+    url: '/api/statistics/apps/{kind}';
+};
+
+export type StatisticsControllerAppsResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
 };
 
 export type HelpControllerSwaggerData = {
@@ -565,6 +975,32 @@ export type AuthControllerStatusResponses = {
 };
 
 export type AuthControllerStatusResponse = AuthControllerStatusResponses[keyof AuthControllerStatusResponses];
+
+export type UserControllerSettingsData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/user/settings';
+};
+
+export type UserControllerSettingsResponses = {
+    200: UserSettingsDto;
+};
+
+export type UserControllerSettingsResponse = UserControllerSettingsResponses[keyof UserControllerSettingsResponses];
+
+export type UserControllerSaveSettingsData = {
+    body: UserSettingsDto;
+    path?: never;
+    query?: never;
+    url: '/api/user/settings';
+};
+
+export type UserControllerSaveSettingsResponses = {
+    200: UserSettingsDto;
+};
+
+export type UserControllerSaveSettingsResponse = UserControllerSaveSettingsResponses[keyof UserControllerSaveSettingsResponses];
 
 export type UserControllerSearchData = {
     body: UserSearchDto;
@@ -773,6 +1209,20 @@ export type ProjectControllerCloseResponses = {
     200: unknown;
 };
 
+export type TimeControllerPublishData = {
+    body: TimeIdsDto;
+    path?: never;
+    query?: never;
+    url: '/api/time/publish';
+};
+
+export type TimeControllerPublishResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
 export type TimeControllerSearchData = {
     body: TimeSearchDto;
     path?: never;
@@ -935,6 +1385,33 @@ export type TimeControllerEditResponses = {
     200: unknown;
 };
 
+export type InvoiceControllerRejectData = {
+    body: InvoiceRejectDto;
+    path: {
+        id: Invoice;
+    };
+    query?: never;
+    url: '/api/invoice/{id}/reject';
+};
+
+export type InvoiceControllerRejectErrors = {
+    /**
+     * Invoice does not exist
+     */
+    404: {
+        name?: string;
+        message?: string;
+    };
+};
+
+export type InvoiceControllerRejectError = InvoiceControllerRejectErrors[keyof InvoiceControllerRejectErrors];
+
+export type InvoiceControllerRejectResponses = {
+    200: InvoiceSearch;
+};
+
+export type InvoiceControllerRejectResponse = InvoiceControllerRejectResponses[keyof InvoiceControllerRejectResponses];
+
 export type InvoiceControllerSearchData = {
     body: InvoiceSearchDto;
     path?: never;
@@ -1000,7 +1477,7 @@ export type InvoiceControllerReadResponses = {
     200: InvoiceSearch & {
         time?: Array<TimeSearch>;
         report?: {
-            rateHour?: number;
+            rateHour?: number | null;
             rateTotal?: number;
             minutes?: number;
             minutesActive?: number;

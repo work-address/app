@@ -1,2 +1,4 @@
 dist/
 *.tgz
+
+dist-cjs/

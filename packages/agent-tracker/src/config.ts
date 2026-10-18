@@ -7,7 +7,7 @@ import {
 } from 'node:fs'
 import { resolve, join } from 'node:path'
 import { homedir } from 'node:os'
-import { randomUUID } from 'node:crypto'
+import { createHash, randomUUID } from 'node:crypto'
 
 export interface CollectorConfig {
   endpoint: string
@@ -86,18 +86,45 @@ export function readConfig(directory: string): CollectorConfig {
   return validateConfig(JSON.parse(readFileSync(path, 'utf8')))
 }
 
+/** Process overrides get separate durable queues; they never retarget a backlog. */
+export function readProcessScope(
+  directory: string,
+  environment: Partial<
+    Pick<NodeJS.ProcessEnv, 'WORK_ADDRESS_PROJECT' | 'WORK_ADDRESS_AGENT'>
+  > = process.env,
+): { config: CollectorConfig; directory: string; agent?: string } {
+  const stored = readConfig(directory)
+  const agent = environment.WORK_ADDRESS_AGENT
+  if (agent !== undefined && !/^[a-z0-9][a-z0-9-]{0,59}$/.test(agent))
+    throw new Error('INVALID_AGENT_HANDLE')
+  const config = validateConfig({
+    ...stored,
+    projectId: environment.WORK_ADDRESS_PROJECT ?? stored.projectId,
+  })
+  const separate = config.projectId !== stored.projectId || agent !== undefined
+  const key = createHash('sha256')
+    .update(JSON.stringify([config.projectId, agent ?? null]))
+    .digest('hex')
+  return {
+    config,
+    directory: separate ? join(directory, 'scopes', key) : directory,
+    agent,
+  }
+}
+
 /** Setup never overwrites an existing identity or redirects its queued events. */
 export function setup(
   directory: string,
   endpoint: string,
   projectId: string,
   credential: string,
+  instanceId: string = randomUUID(),
 ): CollectorConfig {
   const config = validateConfig({
     endpoint,
     projectId,
     credential,
-    instanceId: randomUUID(),
+    instanceId,
   })
   writeFileSync(
     join(privateDirectory(directory), 'config.json'),

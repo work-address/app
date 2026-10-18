@@ -4,6 +4,7 @@
 import * as Sentry from '@sentry/node'
 
 import { AppConfig } from '@/app/app-config'
+import { RecordingPrivacy } from '@/service/recording-privacy'
 
 const parameters = AppConfig.readConfig()
 
@@ -12,5 +13,9 @@ if (parameters.sentry) {
     dsn: parameters.sentry,
     environment: AppConfig.getEnv(),
     tracesSampleRate: 1.0,
+    beforeSend: (event) =>
+      RecordingPrivacy.sensitive(event.request?.url) ? null : event,
+    beforeSendTransaction: (event) =>
+      RecordingPrivacy.sensitive(event.request?.url) ? null : event,
   })
 }

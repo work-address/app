@@ -12,7 +12,9 @@ export const shareInvoiceRequested = createEvent()
 export const saveInvoicePdfRequested = createEvent()
 
 export const $invoiceCanSettle = combine($invoice, $user, (invoice, user) =>
-  Boolean(user?.id && invoice?.user?.id === user.id),
+  Boolean(
+    user?.id && invoice?.user?.id === user.id && invoice.state !== 'REJECTED',
+  ),
 )
 export const $invoiceSharePending = shareInvoiceFx.pending
 export const $invoicePrintPending = saveInvoicePdfFx.pending

@@ -12,7 +12,7 @@ export const loadMoreInvoices = createEvent()
 export const invoiceProjectFilterChanged = createEvent<string>()
 
 /** Empty string means "every state" - the tab the list opens on. */
-export type InvoiceStateFilter = '' | 'PAID' | 'Requested'
+export type InvoiceStateFilter = '' | 'PAID' | 'Requested' | 'REJECTED'
 
 export const invoiceStateFilterChanged = createEvent<InvoiceStateFilter>()
 
@@ -149,6 +149,9 @@ const emptySummary: InvoiceSummary = {
 export const $invoiceSummary = invoiceSummaryQuery.$data.map(
   (items): InvoiceSummary =>
     (items ?? []).reduce((acc, item) => {
+      if (item.state === 'REJECTED') {
+        return acc
+      }
       const cents = Math.trunc(Number(item.amountCents ?? 0)) || 0
       const paid = item.state === 'PAID'
 

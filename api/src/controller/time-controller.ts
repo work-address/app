@@ -46,6 +46,17 @@ export class TimeController {
     this.projectRepository = App.container.get('ProjectRepository')
   }
 
+  @Post('/publish')
+  @HttpCode(200)
+  @OpenAPIExtended({
+    summary: 'Publish reviewed detail of own entries',
+    body: { schema: TimeIdsDto },
+  })
+  async publish(@Body() body: TimeIdsDto, @CurrentUser() user: User) {
+    await runPromise(this.timeManager.publish(body.ids, user))
+    return { published: true }
+  }
+
   @OpenAPIExtended({
     summary: 'Search time entries',
     searchRequestBody: {

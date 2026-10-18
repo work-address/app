@@ -55,6 +55,7 @@ import {
 const STATE_TABS: { value: InvoiceStateFilter; labelKey: string }[] = [
   { value: '', labelKey: 'invoices.filter.state.all' },
   { value: 'Requested', labelKey: 'invoices.filter.state.awaiting' },
+  { value: 'REJECTED', labelKey: 'Rejected' },
   { value: 'PAID', labelKey: 'invoices.filter.state.paid' },
 ]
 
@@ -309,7 +310,11 @@ export default function InvoicesPage() {
             const isPaid = invoice.state === 'PAID'
             // Only the issuer may settle: the person owed the money is the
             // one who knows whether it arrived.
-            const canSettle = Boolean(user?.id && invoice.user?.id === user.id)
+            const canSettle = Boolean(
+              user?.id &&
+                invoice.user?.id === user.id &&
+                invoice.state !== 'REJECTED',
+            )
             const issuer =
               invoice.user?.name ||
               shortenAddress(
@@ -339,9 +344,11 @@ export default function InvoicesPage() {
                       color={isPaid ? 'green' : 'amber'}
                     >
                       {t(
-                        isPaid
-                          ? 'invoice.state.paid'
-                          : 'invoice.state.requested',
+                        invoice.state === 'REJECTED'
+                          ? 'Rejected'
+                          : isPaid
+                            ? 'invoice.state.paid'
+                            : 'invoice.state.requested',
                       )}
                     </Badge>
                     {isPaid ? (
@@ -372,15 +379,16 @@ export default function InvoicesPage() {
                   <Text size="4" weight="medium">
                     {formatCents(Number(invoice.amountCents ?? 0))}
                   </Text>
-                  {/* The project's rate as it stands today. The amount above
-                      was frozen when the invoice was raised, so editing the
-                      rate afterwards leaves the two describing different
-                      moments. */}
-                  <Text size="1" color="gray">
-                    {t('invoices.item.perHour', {
-                      rate: formatCurrency(invoice.project?.rateHour),
-                    })}
-                  </Text>
+                  {invoice.lines?.length === 1 &&
+                    invoice.lines[0].rateHourCents != null && (
+                      <Text size="1" color="gray">
+                        {t('invoices.item.perHour', {
+                          rate: formatCurrency(
+                            invoice.lines[0].rateHourCents / 100,
+                          ),
+                        })}
+                      </Text>
+                    )}
                 </Cell>
                 <Cell $area="action" $align="end">
                   <InvoicePaymentActions

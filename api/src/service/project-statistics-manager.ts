@@ -1,3 +1,6 @@
+import { User } from '@/entity/user'
+import { StatisticsManager } from '@/service/statistics-manager'
+import { fromPromise } from '@/service/effect-bridge'
 import { Effect } from 'effect'
 import { inject, injectable } from 'inversify'
 import moment from 'moment'
@@ -20,6 +23,41 @@ export class ProjectStatisticsManager {
   protected projectStatisticsRepository: ProjectStatisticsRepository
   @inject('TimeRepository')
   protected timeRepository: TimeRepository
+
+  @inject('StatisticsManager') private statistics: StatisticsManager
+
+  /** Compatibility shape for older clients; never serve the unscoped cache. */
+  public getScopedStatsForProject(
+    project: Project,
+    period: EProjectStatisticsPeriod,
+    user: User,
+  ): RepoEffect<ProjectStatistics[]> {
+    return fromPromise(async () => {
+      const config = this.periodConfig[period]
+      if (!config) throw new BadRequestError('Invalid statistics period')
+      const result = await this.statistics.read(
+        'ranking',
+        {
+          projectIds: [project.id],
+          from: moment
+            .utc()
+            .subtract(config.windowAmount, config.windowUnit)
+            .format('YYYY-MM-DD'),
+          to: moment.utc().add(1, 'day').format('YYYY-MM-DD'),
+          timeZone: 'UTC',
+        },
+        user,
+      )
+      return (result.rows ?? []).map((row) =>
+        Object.assign(new ProjectStatistics(), {
+          project,
+          period,
+          processName: row.app,
+          timeMin: Number(row.seconds) / 60,
+        }),
+      )
+    })
+  }
 
   public getStatsForProject(
     project: Project,

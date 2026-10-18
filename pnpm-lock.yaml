@@ -27,6 +27,9 @@ importers:
 
   api:
     dependencies:
+      '@work-address/agent-tracking-contract':
+        specifier: workspace:*
+        version: link:../packages/agent-tracking-contract
       '@sentry/node':
         specifier: ^10.71.0
         version: 10.71.0(@opentelemetry/core@2.10.0(@opentelemetry/api@1.9.1))

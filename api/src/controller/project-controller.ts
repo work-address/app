@@ -148,9 +148,10 @@ export class ProjectController {
         .findProjectWithAccessOrFail(project, currentUser)
         .pipe(
           Effect.flatMap((accessible) =>
-            this.projectStatisticsManager.getStatsForProject(
+            this.projectStatisticsManager.getScopedStatsForProject(
               accessible,
               period,
+              currentUser,
             ),
           ),
         ),

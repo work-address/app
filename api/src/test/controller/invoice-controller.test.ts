@@ -187,7 +187,7 @@ export class InvoiceControllerTest extends BaseControllerTest {
     expect(res.data.report?.rateHour).to.be.equal(60)
     expect(res.data.report?.minutes).to.be.equal(10)
     expect(res.data.report?.minutesActive).to.be.equal(billed.minutesActive)
-    expect(res.data.report?.minutesUnpaid).to.be.equal(billed.minutesActive)
+    expect(res.data.report?.minutesUnpaid).to.be.equal(10)
     expect(res.data.report?.minutesPaid).to.be.equal(0)
   }
 

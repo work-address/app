@@ -94,6 +94,14 @@ try {
     ],
     directory,
   )
+  run(
+    process.execPath,
+    [
+      '-e',
+      "const { ingestBatchSchema } = require('@work-address/agent-tracking-contract'); if (ingestBatchSchema.safeParse({events:[]}).success) throw new Error('invalid envelope accepted')",
+    ],
+    directory,
+  )
   console.log(
     'PASS: all three npm tarballs install and load outside the workspace; CLI and manifest present.',
   )

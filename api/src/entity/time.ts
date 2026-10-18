@@ -9,6 +9,7 @@ import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
 import { ITime } from '@/model/time'
 import {
+  Allow,
   IsArray,
   IsBoolean,
   IsDate,
@@ -24,7 +25,7 @@ import {
 })
 @Entity()
 @Exclude()
-@Unique('UQ_PROJECT_FROM_AT', ['project', 'fromAt'])
+@Unique('UQ_PROJECT_USER_FROM_AT', ['project', 'user', 'fromAt'])
 export class Time extends AbstractBaseEntity implements ITime {
   @Expose({ groups: ['search'] })
   @Type(() => Project)
@@ -85,25 +86,96 @@ export class Time extends AbstractBaseEntity implements ITime {
   @IsOptional()
   processes: ITime['processes']
 
+  @Allow()
+  @IsOptional()
+  @JSONSchema({ type: 'string', nullable: true })
+  @Expose({ groups: ['search'] })
+  @Column('text', { nullable: true })
+  appsStatus: string | null
+
+  @Allow()
+  @IsOptional()
+  @JSONSchema({ type: 'string', nullable: true })
+  @Expose({ groups: ['search'] })
+  @Column('text', { nullable: true })
+  appsReason: string | null
+
+  @Allow()
+  @IsOptional()
+  @JSONSchema({ type: 'boolean', nullable: true })
+  @Expose({ groups: ['search'] })
+  @Column('bool', { default: false })
+  appsTruncated: boolean = false
+
+  @Allow()
+  @IsOptional()
+  @JSONSchema({ type: 'string', nullable: true })
+  @Expose({ groups: ['search'] })
+  @Column('text', { default: 'desktop' })
+  source: 'desktop' | 'manual' | 'web' = 'desktop'
+
+  @Allow()
+  @IsOptional()
+  @JSONSchema({ type: 'string', nullable: true })
+  @Expose({ groups: ['search'] })
+  @Column('timestamptz', { nullable: true })
+  publishedAt: Date | null
+
+  @Allow()
+  @IsOptional()
+  @JSONSchema({ type: 'boolean', nullable: true })
+  @Expose({ groups: ['search'] })
+  detailPendingReview?: boolean
+
+  @Allow()
+  @IsOptional()
+  @JSONSchema({
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        name: { type: 'string' },
+        seconds: { type: 'number' },
+        titles: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              title: { type: 'string', nullable: true },
+              domain: { type: 'string', nullable: true },
+              seconds: { type: 'number' },
+            },
+          },
+        },
+      },
+    },
+  })
+  @Expose({ groups: ['search'] })
+  apps?: {
+    name: string
+    seconds: number
+    titles: { title: string | null; domain: string | null; seconds: number }[]
+  }[]
+
   @Expose({ groups: ['search', 'create'] })
   @Column('int', { nullable: false })
   @IsNumber()
-  keyboardKeys: number
+  keyboardKeys: number | null
 
   @Expose({ groups: ['search', 'create'] })
   @Column('int', { nullable: true })
   @IsNumber()
-  minutesActive: number
+  minutesActive: number | null
 
   @Expose({ groups: ['search', 'create'] })
   @Column('int', { nullable: false })
   @IsNumber()
-  mouseKeys: number
+  mouseKeys: number | null
 
   @Expose({ groups: ['search', 'create'] })
   @Column('float', { nullable: false })
   @IsNumber()
-  mouseDistance: number
+  mouseDistance: number | null
 
   @Expose({ groups: ['search', 'create'] })
   @Column('timestamptz', { nullable: false })

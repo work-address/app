@@ -926,7 +926,7 @@ export class TimeControllerSearchTest extends BaseControllerTest {
     older.note = `updated-sort-older-${marker}`
     await runPromise(this.timeRepository.saveMany([older, newer]))
     await new Promise((resolve) => setTimeout(resolve, 30))
-    older.keyboardKeys = older.keyboardKeys + 1
+    older.keyboardKeys = (older.keyboardKeys ?? 0) + 1
     await runPromise(this.timeRepository.saveMany([older]))
 
     const res = await timeControllerSearch({

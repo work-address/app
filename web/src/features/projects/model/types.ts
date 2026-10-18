@@ -34,4 +34,10 @@ export type ProjectFormValues = {
   collaborators: CollaboratorFormRow[]
   trackScreenshots: boolean
   trackProcesses: boolean
+  trackAgents: boolean
+  trackWindowTitles: boolean
+  trackBrowserDomains: boolean
+  allowManualTime: boolean
+  reviewWindowHours: number
+  screenshotRetentionDays: number | null
 }

@@ -48,6 +48,9 @@ export class ProjectManager {
       )
     }
 
+    delete (data as Partial<Project>).agents
+    delete (data as Partial<Project>).agentAttachments
+    data.agentTrackingSince = data.trackAgents ? new Date() : null
     return this.save(data)
   }
 
@@ -71,7 +74,13 @@ export class ProjectManager {
       )
     }
 
-    const editable: Partial<Project> = { ...data }
+    delete (data as Partial<Project>).agents
+    // Transformation exposes absent fields as undefined; a partial edit must
+    // retain the stored policy so legacy nulls can be normalized on save.
+    const editable: Partial<Project> = Object.fromEntries(
+      Object.entries(data).filter(([, value]) => value !== undefined),
+    )
+    delete editable.agentAttachments
     delete editable.workerAddresses
     delete editable.viewerAddresses
     delete editable.workers
@@ -84,6 +93,9 @@ export class ProjectManager {
     delete editable.createdAt
     delete editable.updatedAt
 
+    delete editable.agentTrackingSince
+    if (data.trackAgents && !project.trackAgents)
+      project.agentTrackingSince = new Date()
     Object.assign(project, editable)
 
     return this.save(project).pipe(Effect.asVoid)
@@ -159,6 +171,41 @@ export class ProjectManager {
   }
 
   public save(project: Project) {
+    // These two older columns allowed null, which has always meant recording off.
+    if (project.trackProcesses === null) project.trackProcesses = false
+    if (project.trackScreenshots === null) project.trackScreenshots = false
+    for (const key of [
+      'trackAgents',
+      'trackProcesses',
+      'trackScreenshots',
+      'trackWindowTitles',
+      'trackBrowserDomains',
+      'allowManualTime',
+    ] as const) {
+      if (project[key] !== undefined && typeof project[key] !== 'boolean')
+        throw new BadRequestError(`Invalid recording policy: ${key}`)
+    }
+    if (!project.trackProcesses) {
+      project.trackWindowTitles = false
+      project.trackBrowserDomains = false
+    }
+    if (
+      project.reviewWindowHours !== undefined &&
+      (!Number.isInteger(project.reviewWindowHours) ||
+        project.reviewWindowHours < 1 ||
+        project.reviewWindowHours > 24)
+    )
+      throw new BadRequestError('Review window must be from 1 to 24 hours')
+    if (
+      project.screenshotRetentionDays != null &&
+      (!Number.isInteger(project.screenshotRetentionDays) ||
+        project.screenshotRetentionDays < 1 ||
+        project.screenshotRetentionDays > 3650)
+    )
+      throw new BadRequestError('Invalid screenshot retention')
+
+    delete (project as Partial<Project>).agentAttachments
+    delete project.agents
     return this.projectRepository.saveSingle(project)
   }
 

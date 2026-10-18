@@ -28,6 +28,13 @@ export class OpenApi {
       components: {
         schemas,
         securitySchemes: {
+          agentCredential: {
+            type: 'http',
+            scheme: 'bearer',
+            bearerFormat: 'opaque',
+            description:
+              'Write-only per-machine agent credential; never a user JWT',
+          },
           bearerAuth: {
             type: 'http',
             scheme: 'bearer',

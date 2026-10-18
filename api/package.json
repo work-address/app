@@ -5,13 +5,14 @@
     "dev": "HTTPS=true NODE_ENV=development TS_NODE_PROJECT=tsconfig.json ts-node-dev -r tsconfig-paths/register --inspect --respawn src/server.ts",
     "export-openapi": "NODE_ENV=test TS_NODE_PROJECT=tsconfig.json TS_NODE_TRANSPILE_ONLY=1 ts-node -r tsconfig-paths/register -r ts-node/register src/scripts/export-openapi-spec.ts",
     "test": "NODE_ENV=test TS_NODE_PROJECT=tsconfig.json nyc ./node_modules/.bin/mocha -r tsconfig-paths/register -r ts-node/register ./src/test/**/**/**/**/*.test.ts",
-    "build": "rimraf build tsconfig.tsbuildinfo && tsc -p tsconfig.json",
+    "build": "pnpm --filter @work-address/agent-tracking-contract build && rimraf build tsconfig.tsbuildinfo && tsc -p tsconfig.json",
     "prettier:fix": "prettier --write \"**/*.{ts,js,md}\"",
     "prettier:check": "prettier --check \"**/*.{ts,js,md}\"",
     "typeorm:cli": "TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js",
     "schema:sync": "TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js schema:sync -d src/ormconfig.ts",
     "schema:drop": "TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js schema:drop -d src/ormconfig.ts",
-    "seed:demo": "NODE_ENV=development TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register src/scripts/seed-demo-data.ts"
+    "seed:demo": "NODE_ENV=development TS_NODE_PROJECT=tsconfig.json ts-node -r tsconfig-paths/register src/scripts/seed-demo-data.ts",
+    "test:isolated": "pnpm --filter @work-address/agent-tracking-contract build && node scripts/test-isolated.mjs"
   },
   "dependencies": {
     "@sentry/node": "^10.71.0",
@@ -46,7 +47,8 @@
     "typeorm": "^1.1.0",
     "web3": "^4.16.0",
     "winston": "^3.19.0",
-    "winston-transport": "^4.9.0"
+    "winston-transport": "^4.9.0",
+    "@work-address/agent-tracking-contract": "workspace:*"
   },
   "devDependencies": {
     "@app/api-client": "workspace:*",

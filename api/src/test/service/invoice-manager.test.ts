@@ -87,7 +87,9 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
       ),
     )
 
-    expect(workerInvoice.amountCents).to.equal(3000)
+    expect(workerInvoice.amountCents).to.equal(6000)
+    expect(workerInvoice.lines?.[0].activeMinutes).to.equal(30)
+    expect(workerInvoice.lines?.[0].minutes).to.be.closeTo(60, 0.001)
     expect(workerInvoice.user?.id).to.equal(worker.id)
   }
 

@@ -19,6 +19,8 @@ import { UserSearchDto } from '@/model/dto/user'
 import { EntityFromParam } from '@/decorator/entity-from-param'
 import express from 'express'
 import { runPromise } from '@/service/effect-bridge'
+import { UserSettingsManager } from '@/service/user-settings-manager'
+import { UserSettingsDto } from '@/model/dto/user-settings'
 
 @JsonController('/user')
 export class UserController {
@@ -28,6 +30,31 @@ export class UserController {
   constructor() {
     this.userManager = App.container.get('UserManager')
     this.userRepository = App.container.get('UserRepository')
+  }
+
+  @Get('/settings')
+  @Authorized([EUserRole.ROLE_USER])
+  @OpenAPIExtended({
+    summary: 'Read private recording settings',
+    response: { schema: UserSettingsDto },
+  })
+  settings(@CurrentUser() user: User) {
+    return App.container
+      .get<UserSettingsManager>('UserSettingsManager')
+      .read(user)
+  }
+
+  @Put('/settings')
+  @Authorized([EUserRole.ROLE_USER])
+  @OpenAPIExtended({
+    summary: 'Save private recording settings',
+    body: { schema: UserSettingsDto },
+    response: { schema: UserSettingsDto },
+  })
+  saveSettings(@CurrentUser() user: User, @Body() settings: UserSettingsDto) {
+    return App.container
+      .get<UserSettingsManager>('UserSettingsManager')
+      .save(user, settings)
   }
 
   @OpenAPIExtended({

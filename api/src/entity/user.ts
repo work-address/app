@@ -27,6 +27,13 @@ import { Project } from '@/entity/project'
 @Entity()
 @Exclude()
 export class User extends AbstractBaseEntity implements IUser {
+  @Column('jsonb', { default: () => "'[]'::jsonb" })
+  agents: import('@/model/agent').WorkerAgent[]
+
+  // Private settings are returned only by the authenticated /user/settings route.
+  @Column('jsonb', { default: () => "'[]'::jsonb" })
+  personalRedactionRules: import('@/model/dto/user-settings').RedactionRuleDto[]
+
   @Expose({ groups: ['search', 'register'] })
   @Column('text', { unique: true })
   @IsString()

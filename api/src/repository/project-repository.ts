@@ -61,6 +61,7 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
         return undefined
       }
 
+      this.scopeAgents(found, user)
       return yield* this.attachAccessUsers(found)
     })
   }
@@ -199,10 +200,20 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
         query.getManyAndCount(),
       )
 
+      for (const project of projects) this.scopeAgents(project, user)
       yield* this.attachAccessUsersToProjects(projects)
 
       return [projects, count] as [Project[], number]
     })
+  }
+
+  private scopeAgents(project: Project, user: User): void {
+    project.agents = (project.agentAttachments ?? []).filter(
+      (attachment) =>
+        project.isOwner(user) ||
+        (project.isWorker(user, this.entitlement.isPremium(project.user)) &&
+          attachment.workerId === user.id),
+    )
   }
 
   private attachAccessUsers(project: Project): RepoEffect<Project> {

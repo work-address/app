@@ -45,6 +45,7 @@ COPY --from=builder /app/api/package.json ./
 COPY --from=builder /app/node_modules /app/node_modules
 COPY --from=builder /app/api/node_modules ./node_modules
 COPY --from=builder /app/api/build ./build
+COPY --from=builder /app/packages/agent-tracking-contract /app/packages/agent-tracking-contract
 
 # typeorm:cli (schema:sync) needs TS sources + tsconfig (ormconfig uses src/entity/*)
 COPY --from=builder /app/tsconfig.base.json /app/tsconfig.base.json

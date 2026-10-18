@@ -12,7 +12,7 @@ planned contract. Waits, content and manual entries are not accepted until their
 semantics and tests are implemented. Capabilities describe the producer;
 a receiving server must check them against its own compatibility registry.
 
-`pnpm build` compiles `dist/` and generates `schema/agent-event-v1.json` from the
+`pnpm build` compiles ESM `dist/` and CommonJS `dist-cjs/` and generates `schema/agent-event-v1.json` from the
 same Zod definition. The JSON Schema is exported as
 `@work-address/agent-tracking-contract/schema` for consumers such as the Qt reader.
 The package has no dependency on backend entities, UI or OpenClaw.
@@ -26,3 +26,7 @@ Desktop timer mode also accepts `tracking.paused` with `stopped`, `idle`,
 `suspended` or `switched`, and `tracking.resumed` with `started` or `switched`.
 These require a reason and otherwise use the same strict envelope. The server
 must restrict these events to timer-mode credentials and qualified Qt adapters.
+
+`ingestBatchSchema` also validates optional collector health (`queued`, `rejected`,
+`lost`, `heldRuns`, optional `lastSuccessfulUploadAt`). Health has no timing
+semantics and may accompany an empty event list. Unknown health fields are rejected.

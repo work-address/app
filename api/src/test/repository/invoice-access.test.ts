@@ -112,7 +112,7 @@ export class InvoiceAccessTest extends AbstractDatabaseIntegration {
   }
 
   @test()
-  async invoice_isVisibleToAProjectViewer() {
+  async invoice_isHiddenFromAProjectViewer() {
     const owner = await this.userFixture.createPremiumUser()
     const viewer = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -132,7 +132,7 @@ export class InvoiceAccessTest extends AbstractDatabaseIntegration {
       this.invoiceRepository.findAndCount(search, viewer),
     )
 
-    expect(rows.map((row) => row.id)).to.include(invoice.id)
+    expect(rows.map((row) => row.id)).to.not.include(invoice.id)
   }
 
   /** One contractor's rate is not another contractor's business. */

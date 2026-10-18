@@ -1,4 +1,9 @@
+import { AgentRepository } from '@/repository/agent-repository'
+import { AgentManager } from '@/service/agent-manager'
 import { Container } from 'inversify'
+import { UserSettingsManager } from '@/service/user-settings-manager'
+import { StatisticsManager } from '@/service/statistics-manager'
+import { StatisticsRepository } from '@/repository/statistics-repository'
 
 import { IConfigParameters } from '@/model/config'
 
@@ -53,13 +58,24 @@ export class AppContainer {
     container.bind<Http>('Http').to(Http)
     container.bind<OpenApi>('OpenApi').to(OpenApi)
 
+    container.bind<StatisticsManager>('StatisticsManager').to(StatisticsManager)
+    container
+      .bind<StatisticsRepository>('StatisticsRepository')
+      .to(StatisticsRepository)
+
+    container
+      .bind<UserSettingsManager>('UserSettingsManager')
+      .to(UserSettingsManager)
+
+    container.bind<AgentRepository>('AgentRepository').to(AgentRepository)
+    container.bind<AgentManager>('AgentManager').to(AgentManager)
+
     // Repositories
     container.bind<UserRepository>('UserRepository').to(UserRepository)
     container.bind<ProjectRepository>('ProjectRepository').to(ProjectRepository)
     container
       .bind<ProjectStatisticsRepository>('ProjectStatisticsRepository')
       .to(ProjectStatisticsRepository)
-    container
     container.bind<TimeRepository>('TimeRepository').to(TimeRepository)
     container.bind<InvoiceRepository>('InvoiceRepository').to(InvoiceRepository)
 
@@ -86,10 +102,7 @@ export class AppContainer {
     container.bind<Mailer>('Mailer').to(Mailer)
     container.bind<ImageResizer>('ImageResizer').to(ImageResizer)
     container.bind<ProjectManager>('ProjectManager').to(ProjectManager)
-    container
-    container
     container.bind<InvoiceRecord>('InvoiceRecord').to(InvoiceRecord)
-    container
     container
       .bind<ProjectStatisticsManager>('ProjectStatisticsManager')
       .to(ProjectStatisticsManager)

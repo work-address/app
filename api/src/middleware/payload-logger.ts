@@ -1,5 +1,6 @@
 import { ExpressMiddlewareInterface, Middleware } from 'routing-controllers'
 import express from 'express'
+import { RecordingPrivacy } from '@/service/recording-privacy'
 import * as jwt from 'jsonwebtoken'
 
 import { AppContainer } from '@/app/app-container'
@@ -49,7 +50,9 @@ export class PayloadLogger implements ExpressMiddlewareInterface {
           url: request.originalUrl,
           ip: request.ip,
           statusCode: response.statusCode,
-          body: request.body,
+          body: RecordingPrivacy.sensitive(request.originalUrl || request.path)
+            ? undefined
+            : request.body,
           query: request.query,
           user,
         }).filter(([_key, val]) => {

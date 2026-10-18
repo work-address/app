@@ -96,6 +96,12 @@ export const ProjectsDialog = ({
               ),
               trackScreenshots: row.trackScreenshots ?? false,
               trackProcesses: row.trackProcesses ?? false,
+              trackAgents: row.trackAgents ?? false,
+              trackWindowTitles: row.trackWindowTitles ?? false,
+              trackBrowserDomains: row.trackBrowserDomains ?? false,
+              allowManualTime: row.allowManualTime ?? false,
+              reviewWindowHours: row.reviewWindowHours ?? 24,
+              screenshotRetentionDays: row.screenshotRetentionDays ?? null,
             }}
           />
         ))}

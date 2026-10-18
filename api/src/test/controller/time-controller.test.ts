@@ -253,7 +253,10 @@ export class TimeControllerTest extends BaseControllerTest {
     expect(res.data.length).to.be.eq(1)
     const row = res.data[0] as Record<string, unknown>
     expect(row.projectId).to.be.eq(project.id)
-    expect(row.minutesActive).to.be.eq(time.minutesActive)
+    expect(row.minutesActive).to.be.eq(null)
+    expect(row.minutes).to.be.eq(
+      Math.round((+time.toAt - +time.fromAt) / 60000),
+    )
   }
 
   @test
@@ -284,7 +287,7 @@ export class TimeControllerTest extends BaseControllerTest {
     const row = res.data[0] as Record<string, unknown>
     expect(row.minutesActive).to.be.eq(45)
     expect(row.minutesPaid).to.be.eq(0)
-    expect(row.minutesUnpaid).to.be.eq(45)
+    expect(row.minutesUnpaid).to.be.eq(60)
   }
 
   @test
@@ -315,7 +318,7 @@ export class TimeControllerTest extends BaseControllerTest {
 
     const row = res.data[0] as Record<string, unknown>
     expect(row.minutesActive).to.be.eq(30)
-    expect(row.minutesPaid).to.be.eq(30)
+    expect(row.minutesPaid).to.be.eq(60)
     expect(row.minutesUnpaid).to.be.eq(0)
   }
 
@@ -357,8 +360,8 @@ export class TimeControllerTest extends BaseControllerTest {
 
     const row = res.data[0] as Record<string, unknown>
     expect(row.minutesActive).to.be.eq(65)
-    expect(row.minutesPaid).to.be.eq(25)
-    expect(row.minutesUnpaid).to.be.eq(40)
+    expect(row.minutesPaid).to.be.eq(60)
+    expect(row.minutesUnpaid).to.be.eq(60)
   }
 
   @test

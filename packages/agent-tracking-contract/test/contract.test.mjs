@@ -1,7 +1,11 @@
 import { test } from 'node:test'
 import assert from 'node:assert/strict'
 import { readFileSync } from 'node:fs'
-import { parseEvent, ingestResponseSchema } from '../dist/index.js'
+import {
+  parseEvent,
+  ingestResponseSchema,
+  ingestBatchSchema,
+} from '../dist/index.js'
 
 export const fixture = {
   schemaVersion: 1,
@@ -64,6 +68,24 @@ test('acknowledgements reject arbitrary response text', () => {
   )
 })
 
+test('health is a bounded strict envelope and cannot carry event content', () => {
+  const health = { queued: 0, rejected: 1, lost: 2, heldRuns: 3 }
+  assert.deepEqual(ingestBatchSchema.parse({ events: [], health }), {
+    events: [],
+    health,
+  })
+  assert.throws(() =>
+    ingestBatchSchema.parse({
+      events: [],
+      health: { ...health, prompt: 'private' },
+    }),
+  )
+  assert.throws(() =>
+    ingestBatchSchema.parse({ events: [], health: { ...health, lost: -1 } }),
+  )
+  assert.throws(() => ingestBatchSchema.parse({ events: [] }))
+})
+
 test('observations require explicit evidence and cannot claim an unimplemented human wait', () => {
   const event = {
     ...fixture,
@@ -78,9 +100,26 @@ test('observations require explicit evidence and cannot claim an unimplemented h
 })
 
 test('desktop timer gates require their bounded reason and no private data', () => {
-  assert.equal(parseEvent({ ...fixture, eventType: 'tracking.paused', reason: 'idle' }).reason, 'idle')
-  assert.equal(parseEvent({ ...fixture, eventType: 'tracking.resumed', reason: 'started' }).reason, 'started')
+  assert.equal(
+    parseEvent({ ...fixture, eventType: 'tracking.paused', reason: 'idle' })
+      .reason,
+    'idle',
+  )
+  assert.equal(
+    parseEvent({ ...fixture, eventType: 'tracking.resumed', reason: 'started' })
+      .reason,
+    'started',
+  )
   assert.throws(() => parseEvent({ ...fixture, eventType: 'tracking.paused' }))
-  assert.throws(() => parseEvent({ ...fixture, eventType: 'tracking.resumed', reason: 'idle' }))
-  assert.throws(() => parseEvent({ ...fixture, eventType: 'tracking.paused', reason: 'stopped', path: '/private' }))
+  assert.throws(() =>
+    parseEvent({ ...fixture, eventType: 'tracking.resumed', reason: 'idle' }),
+  )
+  assert.throws(() =>
+    parseEvent({
+      ...fixture,
+      eventType: 'tracking.paused',
+      reason: 'stopped',
+      path: '/private',
+    }),
+  )
 })

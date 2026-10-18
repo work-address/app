@@ -3,6 +3,8 @@ import { inject, injectable } from 'inversify'
 import moment from 'moment'
 
 import { Time } from '@/entity/time'
+import { AppUsagePolicy } from '@/service/app-usage-policy'
+import { AppUsage } from '@/entity/app-usage'
 import { User } from '@/entity/user'
 import { TimeRepository } from '@/repository/time-repository'
 import { ProjectRepository } from '@/repository/project-repository'
@@ -62,6 +64,7 @@ export class TimeManager {
       // window, and so the purge below cannot move past what was just accepted.
       const retentionCutoff = TimeManager.retentionCutoff()
       const projectIdsUnderRetention = new Set<string>()
+      const touchedProjects = new Set<string>()
 
       const storeEntry = (
         item: TimeCreateDto,
@@ -75,6 +78,8 @@ export class TimeManager {
               item.projectId,
               user,
             )
+
+          touchedProjects.add(project.id)
 
           if (!this.entitlement.isPremium(project.user)) {
             projectIdsUnderRetention.add(project.id)
@@ -95,6 +100,7 @@ export class TimeManager {
             project,
             fromAt,
             toAt,
+            user,
           )
 
           if (existing && existing.user?.id !== user.id) {
@@ -120,15 +126,23 @@ export class TimeManager {
           time.mouseDistance = item.mouseDistance
           time.project = project
           time.screenshot = yield* fromPromise(() =>
-            this.resize(item.screenshot),
+            this.resize(project.trackScreenshots ? item.screenshot : undefined),
           )
-          time.processes = item.processes
+          time.processes = project.trackProcesses ? item.processes : null
 
-          const savedTime = yield* this.timeRepository.validateAndSave(time)
+          const usage = AppUsagePolicy.normalize(item, project)
+          const savedTime = yield* this.timeRepository.saveWithUsage(
+            time,
+            usage,
+          )
 
           return {
             ...item,
             id: savedTime.id,
+            appsAccepted:
+              savedTime.appsStatus !== null &&
+              savedTime.appsStatus !== undefined,
+            apps: undefined,
             screenshot: undefined,
             processes: undefined,
           }
@@ -147,6 +161,8 @@ export class TimeManager {
               Effect.succeed({
                 ...item,
                 error: ErrorFormatter.format(Cause.squash(cause)),
+                appsAccepted: undefined,
+                apps: undefined,
                 screenshot: undefined,
                 processes: undefined,
               }),
@@ -161,10 +177,21 @@ export class TimeManager {
           )
         }
 
+        yield* this.timeRepository.purgeExpiredScreenshots([...touchedProjects])
         return insertionResults
       })
 
       return program
+    })
+  }
+
+  public publish(ids: string[], user: User): RepoEffect<void> {
+    return Effect.gen(this, function* () {
+      const times = yield* this.timeRepository.findByIdsAsAuthor(ids, user)
+      yield* this.timeRepository.publishAsAuthor(
+        times.map((time) => time.id),
+        user,
+      )
     })
   }
 
@@ -218,7 +245,13 @@ export class TimeManager {
         time.processes = null
       }
 
-      yield* this.timeRepository.saveMany(times)
+      yield* fromPromise(() =>
+        this.timeRepository.getRepo().manager.transaction(async (manager) => {
+          await manager.save(Time, times)
+          for (const time of times)
+            await manager.delete(AppUsage, { time: { id: time.id } })
+        }),
+      )
     })
   }
 

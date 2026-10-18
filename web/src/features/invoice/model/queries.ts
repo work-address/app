@@ -35,7 +35,7 @@ export const INVOICE_PAGE_SIZE = 20
 
 export type InvoiceListParams = {
   projectId?: string
-  state?: 'PAID' | 'Requested'
+  state?: 'PAID' | 'Requested' | 'REJECTED'
   page: number
   /** Preserve the already-loaded prefix after a state change shifts offsets. */
   reloadThroughPage?: number

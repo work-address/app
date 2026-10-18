@@ -12,7 +12,8 @@
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
-      "import": "./dist/index.js"
+      "import": "./dist/index.js",
+      "require": "./dist-cjs/index.js"
     },
     "./schema": "./schema/agent-event-v1.json"
   },
@@ -20,10 +21,11 @@
     "dist",
     "README.md",
     "schema",
-    "LICENSE"
+    "LICENSE",
+    "dist-cjs"
   ],
   "scripts": {
-    "build": "tsc -p tsconfig.json && node scripts/schema.mjs",
+    "build": "tsc -p tsconfig.json && tsc -p tsconfig.cjs.json && node scripts/cjs.mjs && node scripts/schema.mjs",
     "test": "node --test test/*.test.mjs",
     "prepack": "pnpm build"
   },

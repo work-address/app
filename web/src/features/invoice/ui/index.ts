@@ -4,3 +4,5 @@ export * from './invoice-time'
 export * from './invoice-payment-actions'
 export { InvoiceActions } from './invoice-actions'
 export * from './open-invoice-link'
+
+export { InvoiceLines } from './invoice-lines'

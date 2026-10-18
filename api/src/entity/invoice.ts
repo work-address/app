@@ -6,8 +6,15 @@ import { JSONSchema } from 'class-validator-jsonschema'
 import { AbstractBaseEntity } from '@/entity/abstract-base-entity'
 import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
-import { IsDate, IsInt, IsNotEmpty, IsOptional } from 'class-validator'
-import { EInvoiceState, IInvoiceReport } from '@/model/invoice'
+import {
+  IsDate,
+  IsInt,
+  IsNotEmpty,
+  IsOptional,
+  Allow,
+  IsString,
+} from 'class-validator'
+import { EInvoiceState, IInvoiceReport, IInvoiceLine } from '@/model/invoice'
 
 // Type-only: `Time` imports `Invoice` for its own relation, and a value import
 // here would close that cycle at runtime.
@@ -66,6 +73,65 @@ export class Invoice extends AbstractBaseEntity {
   @Expose({ groups: ['search', 'create', 'edit'] })
   @Column('text', { nullable: true })
   state: EInvoiceState
+
+  @Expose({ groups: ['search'] })
+  @JSONSchema({
+    type: 'array',
+    nullable: true,
+    items: {
+      type: 'object',
+      properties: {
+        kind: { type: 'string', enum: ['human', 'agent'] },
+        agentId: { type: 'string' },
+        name: { type: 'string' },
+        basis: { type: 'string', enum: ['tracked', 'active'] },
+        minutes: { type: 'number' },
+        activeMinutes: { type: 'number' },
+        manualMinutes: { type: 'number' },
+        assistedMinutes: { type: 'number' },
+        waitMinutes: { type: 'number' },
+        unclassifiedMinutes: { type: 'number' },
+        rateHourCents: { type: 'number', nullable: true },
+        amountCents: { type: 'integer' },
+        rateChanges: {
+          type: 'array',
+          items: {
+            type: 'object',
+            properties: {
+              at: { type: 'string' },
+              fromCents: { type: 'integer' },
+              toCents: { type: 'integer' },
+              minutesBefore: { type: 'number' },
+            },
+          },
+        },
+      },
+      required: [
+        'kind',
+        'name',
+        'basis',
+        'minutes',
+        'rateHourCents',
+        'amountCents',
+        'rateChanges',
+      ],
+    },
+  })
+  @Allow()
+  @Column('jsonb', { nullable: true })
+  lines: IInvoiceLine[] | null
+
+  @Expose({ groups: ['search'] })
+  @IsOptional()
+  @IsString()
+  @Column('text', { nullable: true })
+  rejectionReason: string | null
+
+  @Expose({ groups: ['search'] })
+  @IsOptional()
+  @IsDate()
+  @Column('timestamptz', { nullable: true })
+  rejectedAt: Date | null
 
   /**
    * When the issuer recorded payment. Set alongside the PAID state and cleared

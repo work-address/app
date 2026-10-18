@@ -71,6 +71,12 @@ export const ProjectsDialogForm = ({
       viewerAddresses,
       trackScreenshots: values.trackScreenshots,
       trackProcesses: values.trackProcesses,
+      trackAgents: values.trackAgents,
+      trackWindowTitles: values.trackWindowTitles,
+      trackBrowserDomains: values.trackBrowserDomains,
+      allowManualTime: values.allowManualTime,
+      reviewWindowHours: values.reviewWindowHours,
+      screenshotRetentionDays: values.screenshotRetentionDays,
     })
   }
 

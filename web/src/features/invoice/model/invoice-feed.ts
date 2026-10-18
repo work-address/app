@@ -1,6 +1,9 @@
 import type { baseApi } from '@/shared'
 
-export type InvoiceFilter = { projectId?: string; state?: 'PAID' | 'Requested' }
+export type InvoiceFilter = {
+  projectId?: string
+  state?: 'PAID' | 'Requested' | 'REJECTED'
+}
 export type InvoiceSettlement = baseApi.InvoiceSearch & {
   id: string
   state: 'PAID' | 'Requested'

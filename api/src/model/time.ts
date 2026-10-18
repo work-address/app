@@ -3,10 +3,10 @@ import { TimeInsertionResultDto } from '@/model/dto/time'
 export interface ITime {
   id?: string
   note: string | null
-  minutesActive: number
-  keyboardKeys: number
-  mouseKeys: number
-  mouseDistance: number
+  minutesActive: number | null
+  keyboardKeys: number | null
+  mouseKeys: number | null
+  mouseDistance: number | null
   isPaid: boolean
   fromAt: Date
   toAt: Date
@@ -28,12 +28,12 @@ export interface ITimeTotals {
   rateHour: number
   rateTotal: number
   minutes: number
-  minutesActive: number
+  minutesActive: number | null
   minutesPaid: number
   minutesUnpaid: number
-  keyboardKeys: number
-  mouseKeys: number
-  mouseDistance: number
+  keyboardKeys: number | null
+  mouseKeys: number | null
+  mouseDistance: number | null
 }
 
 /** One contractor's contribution to one project, for the employer report. */

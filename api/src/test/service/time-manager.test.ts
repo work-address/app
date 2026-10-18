@@ -259,7 +259,7 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
   }
 
   @test()
-  async createOrUpdateMany_returnsErrorWhenUpdatingAnotherUsersEntry() {
+  async createOrUpdateMany_keepsIndependentEntriesForWorkersInTheSameSlot() {
     const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const otherWorker = await this.userFixture.createUser()
@@ -283,8 +283,12 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
       ),
     )
 
-    expect(result.error).to.exist
-    expect(result.error?.name).to.be.equal('UserAccessException')
+    expect(result.error).to.be.undefined
+    expect(result.id).not.to.equal(saved.id)
+    const original = await runPromise(
+      this.timeRepository.findOneByIdOrFail(saved.id!),
+    )
+    expect(original.note).to.equal(payload.note)
   }
 
   @test()

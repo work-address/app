@@ -16,6 +16,7 @@ import {
   InvoiceTotalAmountDesktop,
   InvoiceTotalAmountMobile,
   InvoiceTime,
+  InvoiceLines,
 } from '@/features/invoice'
 import { routes } from '@/routes'
 import {
@@ -144,6 +145,7 @@ export default function InvoicePage() {
           ) : (
             <InvoiceTotalAmountDesktop />
           )}
+          <InvoiceLines />
           <InvoiceTime />
         </Body>
       )}

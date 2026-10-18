@@ -1,4 +1,6 @@
 import 'reflect-metadata'
+import { AgentController } from '@/controller/agent-controller'
+import { StatisticsController } from '@/controller/statistics-controller'
 import * as http from 'http'
 import * as Sentry from '@sentry/node'
 import express from 'express'
@@ -52,6 +54,11 @@ export class App {
     // so derive req.ip from X-Forwarded-For instead of the socket peer
     // (which is the proxy container's docker network address, e.g. 172.19.0.2).
     this.express.set('trust proxy', true)
+
+    this.express.use(
+      '/api/agent-tracking/events',
+      bodyParser.json({ limit: '1mb' }),
+    )
 
     this.express.use(
       bodyParser.json({
@@ -149,6 +156,8 @@ export class App {
       routePrefix: '/api',
       controllers: [
         HelpController,
+        AgentController,
+        StatisticsController,
         ProjectController,
         AuthController,
         AuthTimeTrackerController,

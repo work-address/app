@@ -15,6 +15,7 @@ import { EInvoiceState, IInvoiceReport } from '@/model/invoice'
 import { InvoiceCreateDto } from '@/model/dto/invoice'
 import { Calc } from '@/service/calc'
 import AccessException from '@/exception/access-exception'
+import { InvoiceSnapshot } from '@/service/invoice-snapshot'
 
 /**
  * Invoices are the money record; `Time` is the work record. Nothing else
@@ -54,12 +55,27 @@ export class InvoiceManager {
 
       const times = yield* this.timeRepository.findForInvoiceSummary(found)
 
+      const active = times.reduce((sum, t) => sum + (t.minutesActive || 0), 0)
+      found.lines ??= [InvoiceSnapshot.legacyHuman(found.amountCents, active)]
       found.time = times
       found.report = InvoiceManager.reportFor(
         times,
-        Number(found.project?.rateHour) || 0,
+        (found.lines.find((line) => line.kind === 'human')?.rateHourCents ??
+          0) / 100,
       )
 
+      const human = found.lines.find((line) => line.kind === 'human')
+      if (human) {
+        found.report.rateHour =
+          human.rateHourCents === null ? null : human.rateHourCents / 100
+        found.report.minutes = human.minutes
+        found.report.minutesActive = human.activeMinutes ?? 0
+        found.report.minutesPaid =
+          found.state === EInvoiceState.PAID ? human.minutes : 0
+        found.report.minutesUnpaid =
+          found.state === EInvoiceState.REQUESTED ? human.minutes : 0
+      }
+      found.report.rateTotal = found.amountCents / 100
       return found
     })
   }
@@ -96,7 +112,9 @@ export class InvoiceManager {
   /** Hourly cost of a set of entries, in whole cents. */
   public static amountFor(times: Time[], rateHour: number): number {
     const minutes = times.reduce(
-      (sum, time) => sum + (time.minutesActive || 0),
+      (sum, time) =>
+        sum +
+        Math.max(0, (+new Date(time.toAt) - +new Date(time.fromAt)) / 60000),
       0,
     )
 
@@ -157,9 +175,10 @@ export class InvoiceManager {
       invoice.state = EInvoiceState.REQUESTED
       invoice.paidAt = null
 
-      const saved = yield* this.invoiceRepository.validateAndSave(invoice)
-
-      yield* this.attachTime(saved, times)
+      const saved = yield* this.invoiceRepository.saveWithEntries(
+        invoice,
+        times,
+      )
 
       return saved
     })
@@ -223,20 +242,13 @@ export class InvoiceManager {
       invoice.state = EInvoiceState.REQUESTED
       invoice.paidAt = null
 
-      const saved = yield* this.invoiceRepository.validateAndSave(invoice)
-
-      yield* this.attachTime(saved, times)
+      const saved = yield* this.invoiceRepository.saveWithEntries(
+        invoice,
+        times,
+      )
 
       return saved
     })
-  }
-
-  private attachTime(invoice: Invoice, times: Time[]): RepoEffect<void> {
-    for (const time of times) {
-      time.invoice = invoice
-    }
-
-    return this.timeRepository.saveMany(times).pipe(Effect.asVoid)
   }
 
   /**
@@ -281,73 +293,17 @@ export class InvoiceManager {
    * the record worth less than the wallet history it is meant to summarise.
    */
   public markPaid(invoice: Invoice, actor: User): RepoEffect<Invoice> {
-    return Effect.gen(this, function* () {
-      this.assertIssuer(invoice, actor)
-
-      if (invoice.state === EInvoiceState.PAID) {
-        return invoice
-      }
-
-      yield* this.setTimePaidFlag(invoice, true)
-
-      invoice.state = EInvoiceState.PAID
-      invoice.paidAt = new Date()
-
-      const saved = yield* this.invoiceRepository.saveSingle(invoice)
-
-      return saved
-    })
+    return this.invoiceRepository.setPaid(invoice, actor, true)
   }
-
-  /** Reverts a mistaken mark, releasing the entries back to unpaid. */
   public markUnpaid(invoice: Invoice, actor: User): RepoEffect<Invoice> {
-    return Effect.gen(this, function* () {
-      this.assertIssuer(invoice, actor)
-
-      if (invoice.state !== EInvoiceState.PAID) {
-        return invoice
-      }
-
-      yield* this.setTimePaidFlag(invoice, false)
-
-      invoice.state = EInvoiceState.REQUESTED
-      invoice.paidAt = null
-
-      const saved = yield* this.invoiceRepository.saveSingle(invoice)
-
-      return saved
-    })
+    return this.invoiceRepository.setPaid(invoice, actor, false)
   }
-
-  private assertIssuer(invoice: Invoice, actor: User): void {
-    if (!invoice.user || invoice.user.id !== actor.id) {
-      throw new AccessException(
-        'Only whoever issued an invoice can change whether it is paid',
-      )
-    }
-  }
-
-  /**
-   * Cascades the invoice's state onto the entries it bills.
-   *
-   * Follows the `invoice` link rather than the period: the invoice's dates are
-   * only the span of what it covers, and a sparse selection leaves entries in
-   * between that it must not touch.
-   */
-  private setTimePaidFlag(invoice: Invoice, isPaid: boolean): RepoEffect<void> {
-    return Effect.gen(this, function* () {
-      const times = yield* this.timeRepository.findForInvoice(invoice)
-
-      if (times.length === 0) {
-        return
-      }
-
-      for (const time of times) {
-        time.isPaid = isPaid
-      }
-
-      yield* this.timeRepository.saveMany(times)
-    })
+  public reject(
+    invoice: Invoice,
+    actor: User,
+    reason?: string,
+  ): RepoEffect<Invoice> {
+    return this.invoiceRepository.reject(invoice, actor, reason)
   }
 
   /**
@@ -399,9 +355,11 @@ export class InvoiceManager {
       invoice.state = EInvoiceState.REQUESTED
       invoice.paidAt = null
 
-      const saved = yield* this.invoiceRepository.validateAndSave(invoice)
-
-      yield* this.attachTime(saved, outstanding)
+      const saved = yield* this.invoiceRepository.saveWithEntries(
+        invoice,
+        outstanding,
+        true,
+      )
 
       return saved
     })

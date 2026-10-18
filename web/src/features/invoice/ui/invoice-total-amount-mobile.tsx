@@ -49,7 +49,13 @@ export const InvoiceTotalAmountMobile = () => {
           <Skeleton height="22px" width="90px" />
         ) : (
           <Badge size="2" variant="soft" color={isPaid ? 'green' : 'amber'}>
-            {t(isPaid ? 'invoice.state.paid' : 'invoice.state.requested')}
+            {t(
+              invoice?.state === 'REJECTED'
+                ? 'Rejected'
+                : isPaid
+                  ? 'invoice.state.paid'
+                  : 'invoice.state.requested',
+            )}
           </Badge>
         )}
       </Flex>

@@ -23,6 +23,10 @@ export class UserManager {
   public editValidateAndSave(user: User, data: User): RepoEffect<User> {
     return Effect.gen(this, function* () {
       const edited = Object.assign(user, data)
+      // These have their own transactional endpoints. A stale profile save must
+      // not overwrite a simultaneous agent or privacy-settings update.
+      delete (edited as Partial<User>).agents
+      delete (edited as Partial<User>).personalRedactionRules
 
       const errors = yield* fromPromise(() =>
         validate(edited, { groups: ['edit'] }),

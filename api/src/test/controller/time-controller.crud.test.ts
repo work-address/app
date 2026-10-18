@@ -458,15 +458,14 @@ export class TimeControllerCrudTest extends BaseControllerTest {
 
   @test
   async updatePersonal() {
-    // Uses a fixed historical timestamp well outside the free-tier 7-day
-    // retention window, so must be premium or the entries get purged.
     const user = await this.userFixture.createPremiumUser()
     const projectA = await this.projectFixture.createPersonal(user)
     const projectB = await this.projectFixture.createPersonal(user)
 
-    const unix = 1705829280
-    const fromAt = moment.unix(unix)
-    const toAt = moment.unix(unix).add(10, 'minutes')
+    // Updates are allowed during review; published accounting is covered by
+    // the recording-policy regression tests.
+    const fromAt = moment.utc().subtract(20, 'minutes').startOf('minute')
+    const toAt = fromAt.clone().add(10, 'minutes')
 
     await this.timeFixture.create(projectB, fromAt.toDate(), toAt.toDate())
     const data: TimeCreateDto[] = [

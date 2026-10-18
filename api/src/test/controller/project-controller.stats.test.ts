@@ -1,3 +1,4 @@
+import { AppUsage } from '@/entity/app-usage'
 import { faker } from '@faker-js/faker'
 import moment from 'moment'
 import { expect } from 'chai'
@@ -74,10 +75,7 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
       ),
     )
 
-    expect(stored).to.have.length(2)
-    expect(
-      stored.find((row) => row.processName === 'code')?.timeMin,
-    ).to.be.equal(25)
+    expect(stored).to.have.length(0)
   }
 
   @test
@@ -105,7 +103,7 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
   }
 
   @test
-  async getStats_returnsCachedStatsOnSecondCall() {
+  async getStatsReadsUsageWithoutWritingTheUnscopedCache() {
     const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.create(
       owner,
@@ -127,7 +125,7 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
         EProjectStatisticsPeriod.ONE_DAY,
       ),
     )
-    const updatedAtAfterFirst = storedAfterFirst[0].updatedAt
+    expect(storedAfterFirst).to.have.length(0)
 
     const second = await this.getStats(
       project,
@@ -144,8 +142,7 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
       ),
     )
 
-    expect(storedAfterSecond).to.have.length(1)
-    expect(storedAfterSecond[0].updatedAt).to.deep.equal(updatedAtAfterFirst)
+    expect(storedAfterSecond).to.have.length(0)
   }
 
   @test
@@ -367,6 +364,20 @@ export class ProjectControllerStatsTest extends BaseControllerTest {
 
     time.processes = processes
 
-    return runPromise(this.timeRepository.saveSingle(time))
+    const saved = await runPromise(this.timeRepository.saveSingle(time))
+    await this.timeRepository.getRepo().manager.save(
+      AppUsage,
+      processes.map((process) =>
+        Object.assign(new AppUsage(), {
+          time: saved,
+          identity: process.name,
+          app: process.name,
+          title: null,
+          domain: null,
+          seconds: process.timeMin * 60,
+        }),
+      ),
+    )
+    return saved
   }
 }

@@ -32,6 +32,7 @@ export class AppConfig {
   }
 
   public static readConfig(): IConfigParameters {
+    const isolated = AppConfig.isTest() && process.env.WA_TEST_DB_PORT
     return {
       host: process.env.APP_HOST as string,
       port: parseInt(process.env.APP_PORT as string),
@@ -46,11 +47,17 @@ export class AppConfig {
         .filter((domain) => domain.length > 0),
       database: {
         type: 'postgres',
-        host: process.env.APP_DB_HOST as string,
-        port: parseInt(process.env.APP_DB_PORT as string),
-        username: process.env.APP_DB_USERNAME as string,
-        password: process.env.APP_DB_PASSWORD as string,
-        database: process.env.APP_DB_NAME as string,
+        host: isolated ? '127.0.0.1' : (process.env.APP_DB_HOST as string),
+        port: parseInt(
+          isolated
+            ? process.env.WA_TEST_DB_PORT!
+            : (process.env.APP_DB_PORT as string),
+        ),
+        username: isolated
+          ? 'wa_test'
+          : (process.env.APP_DB_USERNAME as string),
+        password: isolated ? '' : (process.env.APP_DB_PASSWORD as string),
+        database: isolated ? 'wa_test' : (process.env.APP_DB_NAME as string),
       },
     }
   }

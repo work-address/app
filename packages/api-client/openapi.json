@@ -69,6 +69,104 @@
             "minLength": 1,
             "type": "string"
           },
+          "lines": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "human",
+                    "agent"
+                  ]
+                },
+                "agentId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "basis": {
+                  "type": "string",
+                  "enum": [
+                    "tracked",
+                    "active"
+                  ]
+                },
+                "minutes": {
+                  "type": "number"
+                },
+                "activeMinutes": {
+                  "type": "number"
+                },
+                "manualMinutes": {
+                  "type": "number"
+                },
+                "assistedMinutes": {
+                  "type": "number"
+                },
+                "waitMinutes": {
+                  "type": "number"
+                },
+                "unclassifiedMinutes": {
+                  "type": "number"
+                },
+                "rateHourCents": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "amountCents": {
+                  "type": "integer"
+                },
+                "rateChanges": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "at": {
+                        "type": "string"
+                      },
+                      "fromCents": {
+                        "type": "integer"
+                      },
+                      "toCents": {
+                        "type": "integer"
+                      },
+                      "minutesBefore": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              },
+              "required": [
+                "kind",
+                "name",
+                "basis",
+                "minutes",
+                "rateHourCents",
+                "amountCents",
+                "rateChanges"
+              ]
+            }
+          },
+          "rejectionReason": {
+            "type": "string"
+          },
+          "rejectedAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
           "paidAt": {
             "oneOf": [
               {
@@ -116,10 +214,11 @@
           "fromAt",
           "toAt",
           "amountCents",
-          "state"
+          "state",
+          "lines"
         ],
         "example": {
-          "id": "baf71337-8c84-4e9d-a68a-15782936a1e0"
+          "id": "dc309b40-e462-4af9-babd-7a87a3991beb"
         }
       },
       "ProjectStatistics": {
@@ -180,7 +279,7 @@
           "period"
         ],
         "example": {
-          "id": "2cdb6f11-ae3c-4d1e-a145-9630a0440f43"
+          "id": "caa4b686-f0e0-4e5e-998c-e7a5c1dc9143"
         }
       },
       "Time": {
@@ -197,6 +296,63 @@
           "processes": {
             "items": {},
             "type": "array"
+          },
+          "appsStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "appsReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "appsTruncated": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "source": {
+            "type": "string",
+            "nullable": true
+          },
+          "publishedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "detailPendingReview": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "apps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "seconds": {
+                  "type": "number"
+                },
+                "titles": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "domain": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "seconds": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "keyboardKeys": {
             "type": "number"
@@ -274,7 +430,7 @@
           "toAt"
         ],
         "example": {
-          "id": "485a0a4d-53e0-4d53-9d9a-5120e9e24c72"
+          "id": "4194019c-02ea-4aa0-9895-c15945b01c1f"
         }
       },
       "Project": {
@@ -313,6 +469,29 @@
           "trackProcesses": {
             "type": "boolean"
           },
+          "trackAgents": {
+            "type": "boolean"
+          },
+          "trackWindowTitles": {
+            "type": "boolean"
+          },
+          "trackBrowserDomains": {
+            "type": "boolean"
+          },
+          "allowManualTime": {
+            "type": "boolean"
+          },
+          "reviewWindowHours": {
+            "maximum": 24,
+            "type": "integer",
+            "minimum": 1
+          },
+          "screenshotRetentionDays": {
+            "maximum": 3650,
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true
+          },
           "text": {
             "type": "string",
             "minLength": 1
@@ -323,6 +502,12 @@
           "state": {
             "type": "string",
             "minLength": 1
+          },
+          "agents": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
           },
           "id": {
             "minLength": 1,
@@ -361,7 +546,7 @@
           "state"
         ],
         "example": {
-          "id": "3013e1c7-4d97-45c9-91a8-2315511e3f56"
+          "id": "ad1ee583-9466-462a-979b-50d183213b1a"
         }
       },
       "User": {
@@ -468,8 +653,200 @@
         },
         "type": "object",
         "example": {
-          "id": "3b70c900-7ca8-453c-b1ce-e32c44e6f0bc"
+          "id": "f6792e10-06b4-4866-9932-9e4959b87ac5"
         }
+      },
+      "AgentDto": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "name": {
+            "pattern": "^[^<>\\u0000-\\u001f]{1,60}$",
+            "type": "string"
+          },
+          "slug": {
+            "pattern": "^[a-z0-9][a-z0-9-]{0,59}$",
+            "type": "string"
+          },
+          "product": {
+            "type": "string",
+            "enum": [
+              "claude-code",
+              "codex",
+              "cursor",
+              "gemini-cli",
+              "copilot",
+              "windsurf",
+              "cline",
+              "minimax",
+              "devin-local",
+              "claude-cowork",
+              "kimi-code",
+              "kimi-cli",
+              "openclaw",
+              "hermes",
+              "opencode"
+            ]
+          },
+          "isDefault": {
+            "type": "boolean"
+          },
+          "bindings": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array",
+            "uniqueItems": true,
+            "maxItems": 100
+          }
+        },
+        "type": "object",
+        "required": [
+          "name",
+          "slug",
+          "product",
+          "isDefault",
+          "bindings"
+        ]
+      },
+      "AgentIdDto": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "id"
+        ]
+      },
+      "AgentRateDto": {
+        "properties": {
+          "rateHourCents": {
+            "maximum": 100000000,
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "rateHourCents"
+        ]
+      },
+      "AgentCredentialDto": {
+        "properties": {
+          "instanceId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "timer",
+              "fixed"
+            ]
+          },
+          "label": {
+            "pattern": "^[^<>\\u0000-\\u001f]*$",
+            "type": "string",
+            "maxLength": 60
+          }
+        },
+        "type": "object",
+        "required": [
+          "instanceId",
+          "mode"
+        ]
+      },
+      "AgentSearchDto": {
+        "properties": {
+          "projectId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "fromAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "toAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "offset": {
+            "maximum": 1000000,
+            "type": "integer",
+            "minimum": 0
+          }
+        },
+        "type": "object",
+        "required": [
+          "projectId"
+        ]
+      },
+      "StatisticsQueryDto": {
+        "properties": {
+          "projectIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 100,
+            "minItems": 1
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "timeZone": {
+            "type": "string"
+          },
+          "userIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 100
+          },
+          "invoiceId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "app": {
+            "maxLength": 200,
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "projectIds",
+          "from",
+          "to",
+          "timeZone"
+        ]
       },
       "AuthForgotPasswordDto": {
         "properties": {
@@ -673,6 +1050,50 @@
           "filter",
           "page",
           "sort"
+        ]
+      },
+      "RedactionRuleDto": {
+        "properties": {
+          "field": {
+            "type": "string",
+            "enum": [
+              "title",
+              "domain"
+            ]
+          },
+          "match": {
+            "type": "string",
+            "enum": [
+              "contains",
+              "regex"
+            ]
+          },
+          "pattern": {
+            "maxLength": 200,
+            "type": "string",
+            "minLength": 1
+          }
+        },
+        "type": "object",
+        "required": [
+          "field",
+          "match",
+          "pattern"
+        ]
+      },
+      "UserSettingsDto": {
+        "properties": {
+          "personalRedactionRules": {
+            "items": {
+              "$ref": "#/components/schemas/RedactionRuleDto"
+            },
+            "type": "array",
+            "maxItems": 100
+          }
+        },
+        "type": "object",
+        "required": [
+          "personalRedactionRules"
         ]
       },
       "ProjectSearchSortDto": {
@@ -990,6 +1411,10 @@
       },
       "TimeCreateDto": {
         "properties": {
+          "appsStatus": {},
+          "appsReason": {},
+          "appsTruncated": {},
+          "apps": {},
           "fromIndex": {
             "type": "number"
           },
@@ -1078,6 +1503,9 @@
       },
       "TimeInsertionResultDto": {
         "properties": {
+          "appsAccepted": {
+            "type": "boolean"
+          },
           "id": {
             "format": "uuid",
             "type": "string"
@@ -1085,6 +1513,10 @@
           "error": {
             "$ref": "#/components/schemas/TimeInsertionErrorDto"
           },
+          "appsStatus": {},
+          "appsReason": {},
+          "appsTruncated": {},
+          "apps": {},
           "fromIndex": {
             "type": "number"
           },
@@ -1178,7 +1610,8 @@
           "state": {
             "enum": [
               "PAID",
-              "Requested"
+              "Requested",
+              "REJECTED"
             ],
             "type": "string"
           }
@@ -1223,6 +1656,15 @@
               "type": "string"
             },
             "type": "array"
+          }
+        },
+        "type": "object"
+      },
+      "InvoiceRejectDto": {
+        "properties": {
+          "reason": {
+            "maxLength": 500,
+            "type": "string"
           }
         },
         "type": "object"
@@ -1494,6 +1936,29 @@
           "trackProcesses": {
             "type": "boolean"
           },
+          "trackAgents": {
+            "type": "boolean"
+          },
+          "trackWindowTitles": {
+            "type": "boolean"
+          },
+          "trackBrowserDomains": {
+            "type": "boolean"
+          },
+          "allowManualTime": {
+            "type": "boolean"
+          },
+          "reviewWindowHours": {
+            "maximum": 24,
+            "type": "integer",
+            "minimum": 1
+          },
+          "screenshotRetentionDays": {
+            "maximum": 3650,
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true
+          },
           "text": {
             "type": "string",
             "minLength": 1
@@ -1513,6 +1978,12 @@
           },
           "time": {
             "$ref": "#/components/schemas/Time_search"
+          },
+          "agents": {
+            "items": {
+              "type": "object"
+            },
+            "type": "array"
           }
         }
       },
@@ -1550,6 +2021,29 @@
           },
           "trackProcesses": {
             "type": "boolean"
+          },
+          "trackAgents": {
+            "type": "boolean"
+          },
+          "trackWindowTitles": {
+            "type": "boolean"
+          },
+          "trackBrowserDomains": {
+            "type": "boolean"
+          },
+          "allowManualTime": {
+            "type": "boolean"
+          },
+          "reviewWindowHours": {
+            "maximum": 24,
+            "type": "integer",
+            "minimum": 1
+          },
+          "screenshotRetentionDays": {
+            "maximum": 3650,
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true
           },
           "text": {
             "type": "string",
@@ -1648,6 +2142,29 @@
           "trackProcesses": {
             "type": "boolean"
           },
+          "trackAgents": {
+            "type": "boolean"
+          },
+          "trackWindowTitles": {
+            "type": "boolean"
+          },
+          "trackBrowserDomains": {
+            "type": "boolean"
+          },
+          "allowManualTime": {
+            "type": "boolean"
+          },
+          "reviewWindowHours": {
+            "maximum": 24,
+            "type": "integer",
+            "minimum": 1
+          },
+          "screenshotRetentionDays": {
+            "maximum": 3650,
+            "type": "integer",
+            "minimum": 1,
+            "nullable": true
+          },
           "text": {
             "type": "string",
             "minLength": 1
@@ -1712,6 +2229,63 @@
           "processes": {
             "items": {},
             "type": "array"
+          },
+          "appsStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "appsReason": {
+            "type": "string",
+            "nullable": true
+          },
+          "appsTruncated": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "source": {
+            "type": "string",
+            "nullable": true
+          },
+          "publishedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "detailPendingReview": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "apps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "properties": {
+                "name": {
+                  "type": "string"
+                },
+                "seconds": {
+                  "type": "number"
+                },
+                "titles": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "title": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "domain": {
+                        "type": "string",
+                        "nullable": true
+                      },
+                      "seconds": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              }
+            }
           },
           "keyboardKeys": {
             "type": "number"
@@ -1834,6 +2408,104 @@
             "minLength": 1,
             "type": "string"
           },
+          "lines": {
+            "type": "array",
+            "nullable": true,
+            "items": {
+              "type": "object",
+              "properties": {
+                "kind": {
+                  "type": "string",
+                  "enum": [
+                    "human",
+                    "agent"
+                  ]
+                },
+                "agentId": {
+                  "type": "string"
+                },
+                "name": {
+                  "type": "string"
+                },
+                "basis": {
+                  "type": "string",
+                  "enum": [
+                    "tracked",
+                    "active"
+                  ]
+                },
+                "minutes": {
+                  "type": "number"
+                },
+                "activeMinutes": {
+                  "type": "number"
+                },
+                "manualMinutes": {
+                  "type": "number"
+                },
+                "assistedMinutes": {
+                  "type": "number"
+                },
+                "waitMinutes": {
+                  "type": "number"
+                },
+                "unclassifiedMinutes": {
+                  "type": "number"
+                },
+                "rateHourCents": {
+                  "type": "number",
+                  "nullable": true
+                },
+                "amountCents": {
+                  "type": "integer"
+                },
+                "rateChanges": {
+                  "type": "array",
+                  "items": {
+                    "type": "object",
+                    "properties": {
+                      "at": {
+                        "type": "string"
+                      },
+                      "fromCents": {
+                        "type": "integer"
+                      },
+                      "toCents": {
+                        "type": "integer"
+                      },
+                      "minutesBefore": {
+                        "type": "number"
+                      }
+                    }
+                  }
+                }
+              },
+              "required": [
+                "kind",
+                "name",
+                "basis",
+                "minutes",
+                "rateHourCents",
+                "amountCents",
+                "rateChanges"
+              ]
+            }
+          },
+          "rejectionReason": {
+            "type": "string"
+          },
+          "rejectedAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
           "paidAt": {
             "oneOf": [
               {
@@ -1850,6 +2522,12 @@
       }
     },
     "securitySchemes": {
+      "agentCredential": {
+        "type": "http",
+        "scheme": "bearer",
+        "bearerFormat": "opaque",
+        "description": "Write-only per-machine agent credential; never a user JWT"
+      },
       "bearerAuth": {
         "type": "http",
         "scheme": "bearer",
@@ -1864,6 +2542,506 @@
   },
   "openapi": "3.0.0",
   "paths": {
+    "/api/agents": {
+      "get": {
+        "operationId": "AgentController.list",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "List",
+        "tags": [
+          "Agent"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "post": {
+        "operationId": "AgentController.create",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentDto"
+              }
+            }
+          },
+          "description": "AgentDto",
+          "required": false
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Create",
+        "tags": [
+          "Agent"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "AgentController.edit",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentDto"
+              }
+            }
+          },
+          "description": "AgentDto",
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Edit",
+        "tags": [
+          "Agent"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "AgentController.remove",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentIdDto"
+              }
+            }
+          },
+          "description": "AgentIdDto",
+          "required": false
+        },
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Remove",
+        "tags": [
+          "Agent"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/project/{id}/agents": {
+      "get": {
+        "operationId": "AgentController.attachments",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Attachments",
+        "tags": [
+          "Agent"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/project/{id}/agents/{agentId}": {
+      "put": {
+        "operationId": "AgentController.attach",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "agentId",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentRateDto"
+              }
+            }
+          },
+          "description": "AgentRateDto",
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Attach",
+        "tags": [
+          "Agent"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "AgentController.detach",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "string"
+            }
+          },
+          {
+            "in": "path",
+            "name": "agentId",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Detach",
+        "tags": [
+          "Agent"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/agent-tracking/credentials": {
+      "post": {
+        "operationId": "AgentController.issue",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentCredentialDto"
+              }
+            }
+          },
+          "description": "AgentCredentialDto",
+          "required": false
+        },
+        "responses": {
+          "201": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Issue",
+        "tags": [
+          "Agent"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "get": {
+        "operationId": "AgentController.credentials",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Credentials",
+        "tags": [
+          "Agent"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/agent-tracking/credentials/{id}": {
+      "delete": {
+        "operationId": "AgentController.revoke",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Revoke",
+        "tags": [
+          "Agent"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/agent-tracking/events": {
+      "post": {
+        "operationId": "AgentController.ingest",
+        "parameters": [
+          {
+            "in": "header",
+            "name": "authorization",
+            "required": false,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {}
+            }
+          },
+          "description": "",
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Durably ingest strictly validated agent events with a write-only collector credential",
+        "tags": [
+          "Agent"
+        ],
+        "security": [
+          {
+            "agentCredential": []
+          }
+        ]
+      }
+    },
+    "/api/agent-tracking/search": {
+      "post": {
+        "operationId": "AgentController.search",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AgentSearchDto"
+              }
+            }
+          },
+          "description": "AgentSearchDto",
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Search",
+        "tags": [
+          "Agent"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/agent-tracking/status": {
+      "get": {
+        "operationId": "AgentController.status",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Status",
+        "tags": [
+          "Agent"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/statistics/overview": {
+      "post": {
+        "operationId": "StatisticsController.overview",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatisticsQueryDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Visible time and usage totals",
+        "tags": [
+          "Statistics"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/statistics/apps/{kind}": {
+      "post": {
+        "operationId": "StatisticsController.apps",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "kind",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatisticsQueryDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "App summary, daily, ranking, titles, workers or projects",
+        "tags": [
+          "Statistics"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/help/openApi": {
       "get": {
         "operationId": "HelpController.swagger",
@@ -2129,6 +3307,67 @@
             "schema": {
               "type": "string"
             }
+          }
+        ]
+      }
+    },
+    "/api/user/settings": {
+      "get": {
+        "operationId": "UserController.settings",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSettingsDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Read private recording settings",
+        "tags": [
+          "User"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "UserController.saveSettings",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UserSettingsDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UserSettingsDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Save private recording settings",
+        "tags": [
+          "User"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
           }
         ]
       }
@@ -2692,6 +3931,39 @@
         ]
       }
     },
+    "/api/time/publish": {
+      "post": {
+        "operationId": "TimeController.publish",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimeIdsDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Publish reviewed detail of own entries",
+        "tags": [
+          "Time"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/time/search": {
       "post": {
         "operationId": "TimeController.search",
@@ -3176,6 +4448,73 @@
         ]
       }
     },
+    "/api/invoice/{id}/reject": {
+      "post": {
+        "operationId": "InvoiceController.reject",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "id",
+            "required": true,
+            "schema": {
+              "$ref": "#/components/schemas/Invoice"
+            }
+          }
+        ],
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/InvoiceRejectDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Invoice_search"
+                }
+              }
+            },
+            "description": ""
+          },
+          "404": {
+            "description": "Invoice does not exist",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object",
+                  "properties": {
+                    "name": {
+                      "type": "string",
+                      "example": "NotFoundError"
+                    },
+                    "message": {
+                      "type": "string",
+                      "example": "Invoice does not exist"
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        "summary": "Reject a requested invoice (project owner only)",
+        "tags": [
+          "Invoice"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/invoice/search": {
       "post": {
         "operationId": "InvoiceController.search",
@@ -3216,7 +4555,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "d46a58c2-2a27-4bca-bd8c-31681ad17b13"
+                  "projectId": "60115dce-4843-41c3-beb5-eb5f3f5fd97d"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -3284,8 +4623,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1788091680622,
-                "toUnix": 1788178080622
+                "fromUnix": 1792202032153,
+                "toUnix": 1792288432153
               }
             }
           },
@@ -3370,7 +4709,8 @@
                           "type": "object",
                           "properties": {
                             "rateHour": {
-                              "type": "number"
+                              "type": "number",
+                              "nullable": true
                             },
                             "rateTotal": {
                               "type": "number"
@@ -3649,7 +4989,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "aeb38ddb-9805-427e-91dc-0f478a046cad"
+                "nonce": "ac3c085e-2bb3-47ee-89d0-070edf071c9d"
               },
               "schema": {
                 "properties": {
@@ -3694,7 +5034,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "de9758eb-17f4-4139-8d7f-f192ed91a710"
+                "nonce": "1c969495-df71-403e-aa5c-46bcf14a8643"
               },
               "schema": {
                 "properties": {
@@ -3735,21 +5075,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "d5e14fa8-24ae-48a0-a9e1-8cee7c649f2e",
+                      "nonce": "282b0025-e73a-497e-ae04-404b58a7a732",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "772f0e98-a1e8-470d-b579-d3c60b5b5c66",
+                      "nonce": "81af6b2f-2509-4cf1-9835-3877daad1fba",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "ce85e2d9-15c6-4010-ab83-c2d91d25dbaa",
+                      "nonce": "44a56cf8-ffe3-4dd9-ad53-932ac3426dcd",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

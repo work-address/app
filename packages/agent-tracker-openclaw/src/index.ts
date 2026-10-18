@@ -9,6 +9,7 @@ export const ADAPTER_VERSION = '0.1.0'
 export interface AdapterOptions {
   instanceId: string
   projectId: string
+  agent?: string
   epoch?: string
   now?: () => number
 }
@@ -26,6 +27,7 @@ export class OpenClawAdapter {
   private readonly epoch: string
   private readonly now: () => number
   constructor(private readonly options: AdapterOptions) {
+    this.options = { ...options }
     this.epoch = options.epoch ?? randomUUID()
     this.now = options.now ?? Date.now
   }
@@ -79,6 +81,7 @@ export class OpenClawAdapter {
         product: 'openclaw',
         surface: 'gateway',
         instanceId: this.options.instanceId,
+        ...(this.options.agent ? { agent: this.options.agent } : {}),
         adapterVersion: ADAPTER_VERSION,
         runtimeVersion: OPENCLAW_VERSION,
         epoch: this.epoch,

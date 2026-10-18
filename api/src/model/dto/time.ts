@@ -131,6 +131,20 @@ export class TimeSearchDto extends SearchDto {
 }
 
 export class TimeCreateDto {
+  // App data is validated separately so malformed statistics never discard human time.
+  @Allow()
+  @IsOptional()
+  appsStatus?: unknown
+  @Allow()
+  @IsOptional()
+  appsReason?: unknown
+  @Allow()
+  @IsOptional()
+  appsTruncated?: unknown
+  @Allow()
+  @IsOptional()
+  apps?: unknown
+
   @IsNumber()
   fromIndex: number
   @IsNumber()
@@ -188,6 +202,10 @@ export class TimeIdsDto {
 }
 
 export class TimeInsertionResultDto extends TimeCreateDto {
+  @IsBoolean()
+  @IsOptional()
+  appsAccepted?: boolean
+
   @IsUUID()
   @IsOptional()
   id?: string

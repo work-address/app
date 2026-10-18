@@ -3,7 +3,13 @@ import { inject, injectable } from 'inversify'
 
 import { Filter } from '@/service/filter'
 import { Entitlement } from '@/service/entitlement'
-import { Brackets } from 'typeorm'
+import { Brackets, In } from 'typeorm'
+import { Time } from '@/entity/time'
+import { TimeAgent } from '@/entity/time-agent'
+import { AgentRepository } from '@/repository/agent-repository'
+import { EInvoiceState } from '@/model/invoice'
+import { InvoiceSnapshot } from '@/service/invoice-snapshot'
+import { BadRequestError } from 'routing-controllers'
 
 import type { ObjectLiteral, SelectQueryBuilder } from 'typeorm'
 import { Project } from '@/entity/project'
@@ -20,48 +26,224 @@ import { InvoiceSearchDto } from '@/model/dto/invoice'
 
 @injectable()
 export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
+  @inject('AgentRepository') protected agents: AgentRepository
   @inject('Filter')
   protected filter: Filter
   @inject('Entitlement')
   protected entitlement: Entitlement
   protected target = Invoice
 
-  /**
-   * Who may see an invoice: whoever issued it, the owner of its project, and
-   * that project's viewers.
-   *
-   * Workers see their own and no one else's - one contractor's rate and hours
-   * are not the business of another contractor on the same project. Viewers
-   * see all of them, which is the point of the role.
-   *
-   * Mirrors ProjectRepository.applyViewAccessFilter, including the premium
-   * predicate being omitted entirely on self-hosted instances rather than
-   * relying on column data.
-   */
+  /** Invoices are private to their issuer and the project owner. */
   private applyInvoiceAccessFilter(
     qb: SelectQueryBuilder<ObjectLiteral>,
     user: User,
   ): void {
-    const { accessUserId, userAddress } = Project.accessParams(user)
+    const { accessUserId } = Project.accessParams(user)
 
     qb.andWhere(
       new Brackets((scope) => {
         scope
           .where('issuer.id = :accessUserId', { accessUserId })
           .orWhere('owner.id = :accessUserId', { accessUserId })
-          .orWhere(
-            new Brackets((viewer) => {
-              const isViewerAddress = `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.viewerAddresses, '{}')) AS address)`
+      }),
+    )
+  }
 
-              if (this.entitlement.shouldFilterByPremium()) {
-                viewer
-                  .where('owner.premium = true')
-                  .andWhere(isViewerAddress, { userAddress })
-              } else {
-                viewer.where(isViewerAddress, { userAddress })
-              }
-            }),
+  public saveWithEntries(
+    invoice: Invoice,
+    selected: Time[],
+    reuseExisting = false,
+  ): RepoEffect<Invoice> {
+    return fromPromise(() =>
+      this.getRepo().manager.transaction(async (manager) => {
+        await manager.query(
+          'SELECT pg_advisory_xact_lock(hashtextextended($1,0))',
+          [`invoice:${invoice.project.id}:${invoice.user!.id}`],
+        )
+        const project = await manager
+          .getRepository(Project)
+          .createQueryBuilder('project')
+          .innerJoinAndSelect('project.user', 'owner')
+          .where('project.id=:id', { id: invoice.project.id })
+          .setLock('pessimistic_read', undefined, ['project'])
+          .getOneOrFail()
+        if (
+          !project.isWorker(
+            invoice.user!,
+            this.entitlement.isPremium(project.user),
           )
+        )
+          throw new AccessException()
+        const times = await manager
+          .getRepository(Time)
+          .createQueryBuilder('time')
+          .where('time.id IN (:...ids)', { ids: selected.map((t) => t.id) })
+          .andWhere('time.userId=:user AND time.projectId=:project', {
+            user: invoice.user!.id,
+            project: project.id,
+          })
+          .andWhere(
+            'time.invoiceId IS NULL AND COALESCE(time.isPaid,false)=false',
+          )
+          .setLock('pessimistic_write')
+          .getMany()
+        if (times.length !== selected.length) {
+          if (reuseExisting && times.length === 0) {
+            const previous = await manager
+              .getRepository(Time)
+              .createQueryBuilder('time')
+              .innerJoinAndSelect('time.invoice', 'invoice')
+              .where('time.id IN (:...ids)', { ids: selected.map((t) => t.id) })
+              .andWhere('time.userId=:user AND time.projectId=:project', {
+                user: invoice.user!.id,
+                project: project.id,
+              })
+              .getMany()
+            if (
+              previous.length === selected.length &&
+              previous.every((t) => t.invoice?.id === previous[0].invoice?.id)
+            )
+              return previous[0].invoice!
+          }
+          throw new BadRequestError(
+            'Some time is already invoiced or no longer available',
+          )
+        }
+        const minutes = times.reduce(
+          (sum, t) => sum + Math.max(0, (+t.toAt - +t.fromAt) / 60000),
+          0,
+        )
+        const rateHourCents = Math.round(Number(project.rateHour || 0) * 100)
+        invoice.amountCents = Math.round((minutes * rateHourCents) / 60)
+        invoice.lines = [
+          {
+            kind: 'human',
+            name: 'Human time',
+            basis: 'tracked',
+            minutes,
+            activeMinutes: times.reduce(
+              (sum, t) =>
+                sum +
+                Math.min(
+                  Math.max(0, (+t.toAt - +t.fromAt) / 60000),
+                  t.minutesActive || 0,
+                ),
+              0,
+            ),
+            manualMinutes: times
+              .filter((t) => t.source !== 'desktop')
+              .reduce((sum, t) => sum + (+t.toAt - +t.fromAt) / 60000, 0),
+            rateHourCents,
+            amountCents: invoice.amountCents,
+            rateChanges: [],
+          },
+        ]
+        const saved = await manager.save(Invoice, invoice)
+        await manager.update(
+          Time,
+          { id: In(times.map((t) => t.id)) },
+          { invoice: saved, publishedAt: new Date() },
+        )
+        return saved
+      }),
+    )
+  }
+
+  public reject(
+    invoice: Invoice,
+    actor: User,
+    reason?: string,
+  ): RepoEffect<Invoice> {
+    return fromPromise(() =>
+      this.getRepo().manager.transaction(async (manager) => {
+        const stored = await manager.findOneOrFail(Invoice, {
+          where: { id: invoice.id },
+          loadEagerRelations: false,
+          lock: { mode: 'pessimistic_write' },
+        })
+        const project = await manager.findOneOrFail(Project, {
+          where: { id: invoice.project.id },
+          relations: { user: true },
+        })
+        if (!project.isOwner(actor))
+          throw new AccessException(
+            'Only the project owner may reject an invoice',
+          )
+        if (stored.state !== EInvoiceState.REQUESTED)
+          throw new BadRequestError('Only a requested invoice can be rejected')
+        if (
+          reason !== undefined &&
+          (typeof reason !== 'string' || reason.length > 500)
+        )
+          throw new BadRequestError('Invalid rejection reason')
+        if (stored.lines === null) {
+          // Preserve the charged basis before unlinking the only legacy evidence.
+          const times = await manager
+            .createQueryBuilder(Time, 'time')
+            .where('time.invoiceId=:id', { id: stored.id })
+            .orderBy('time.id', 'ASC')
+            .setLock('pessimistic_write')
+            .getMany()
+          stored.lines = [
+            InvoiceSnapshot.legacyHuman(
+              stored.amountCents,
+              times.reduce((sum, time) => sum + (time.minutesActive || 0), 0),
+            ),
+          ]
+        }
+        stored.state = EInvoiceState.REJECTED
+        stored.rejectionReason = reason?.trim() || null
+        stored.rejectedAt = new Date()
+        await this.agents.releaseInvoice(manager, stored.id)
+        await manager.update(
+          Time,
+          { invoice: { id: stored.id } },
+          { invoice: null, isPaid: false },
+        )
+        return manager.save(Invoice, stored)
+      }),
+    )
+  }
+
+  public setPaid(
+    invoice: Invoice,
+    actor: User,
+    paid: boolean,
+  ): RepoEffect<Invoice> {
+    return fromPromise(() =>
+      this.getRepo().manager.transaction(async (manager) => {
+        const stored = await manager.findOneOrFail(Invoice, {
+          where: { id: invoice.id },
+          relations: { user: true },
+        })
+        await manager.query(
+          'SELECT pg_advisory_xact_lock(hashtextextended($1,0))',
+          [`payment:${invoice.id}`],
+        )
+        const locked = await manager.findOneOrFail(Invoice, {
+          where: { id: invoice.id },
+          loadEagerRelations: false,
+          lock: { mode: 'pessimistic_write' },
+        })
+        if (stored.user?.id !== actor.id)
+          throw new AccessException(
+            'Only the person who issued an invoice may change its payment state',
+          )
+        if (locked.state === EInvoiceState.REJECTED)
+          throw new BadRequestError('A rejected invoice cannot be paid')
+        locked.state = paid ? EInvoiceState.PAID : EInvoiceState.REQUESTED
+        locked.paidAt = paid ? (locked.paidAt ?? new Date()) : null
+        await manager.update(
+          TimeAgent,
+          { invoiceId: invoice.id, userId: actor.id },
+          { isPaid: paid },
+        )
+        await manager.update(
+          Time,
+          { invoice: { id: invoice.id }, user: { id: actor.id } },
+          { isPaid: paid },
+        )
+        return manager.save(Invoice, Object.assign(stored, locked))
       }),
     )
   }
@@ -70,7 +252,7 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
     const qb = this.getRepo()
       .createQueryBuilder('invoice')
       .innerJoinAndSelect('invoice.project', 'project')
-      .innerJoin('project.user', 'owner')
+      .innerJoinAndSelect('project.user', 'owner')
       .leftJoinAndSelect('invoice.user', 'issuer')
       .andWhere('invoice.id = :invoiceId', { invoiceId: invoice.id })
 
@@ -131,7 +313,7 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
       this.getRepo()
         .createQueryBuilder('invoice')
         .innerJoinAndSelect('invoice.project', 'project')
-        .innerJoin('project.user', 'owner')
+        .innerJoinAndSelect('project.user', 'owner')
         .leftJoinAndSelect('invoice.user', 'issuer')
         .select()
         // `.where()` REPLACES every condition set before it, so the access

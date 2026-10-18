@@ -1,6 +1,6 @@
 import {
   EventQueue,
-  readConfig,
+  readProcessScope,
   sync,
   type CollectorConfig,
 } from '@work-address/agent-tracker'
@@ -68,9 +68,10 @@ export function register(api: PluginApi, sdkLoader = loadSdk): void {
         const directory = api.pluginConfig?.stateDirectory
         if (typeof directory !== 'string' || !directory)
           throw new Error('MISSING_STATE_DIRECTORY')
-        config = readConfig(directory)
-        queue = new EventQueue(directory, config)
-        const adapter = new OpenClawAdapter(config)
+        const scope = readProcessScope(directory)
+        config = scope.config
+        queue = new EventQueue(scope.directory, config)
+        const adapter = new OpenClawAdapter({ ...config, agent: scope.agent })
         const sdk = await sdkLoader()
         if (!sdk.areDiagnosticsEnabledForProcess())
           throw new Error('DIAGNOSTICS_DISABLED')

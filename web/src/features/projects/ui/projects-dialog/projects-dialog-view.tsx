@@ -46,6 +46,12 @@ export const ProjectsDialogView = ({ data }: ProjectsDialogViewProps) => {
       collaborators,
       trackScreenshots: data.trackScreenshots ?? false,
       trackProcesses: data.trackProcesses ?? false,
+      trackAgents: data.trackAgents ?? false,
+      trackWindowTitles: data.trackWindowTitles ?? false,
+      trackBrowserDomains: data.trackBrowserDomains ?? false,
+      allowManualTime: data.allowManualTime ?? false,
+      reviewWindowHours: data.reviewWindowHours ?? 24,
+      screenshotRetentionDays: data.screenshotRetentionDays ?? null,
     },
   })
 

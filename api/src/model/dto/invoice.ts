@@ -1,6 +1,8 @@
 import { Type } from 'class-transformer'
 import {
   IsArray,
+  IsString,
+  MaxLength,
   IsDate,
   IsEnum,
   IsNumber,
@@ -69,4 +71,11 @@ export class InvoiceCreateDto {
   @IsUUID('4', { each: true })
   @IsOptional()
   timeIds?: string[]
+}
+
+export class InvoiceRejectDto {
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  reason?: string
 }

@@ -99,6 +99,7 @@ function nativeId(value: unknown): string {
   return opaque(value)
 }
 interface State {
+  assignment?: string | null
   run: string
   epoch: string
   sequence: number
@@ -120,6 +121,7 @@ function fresh(run: string = randomUUID()): State {
 }
 export interface CaptureOptions {
   runtimeVersion: string
+  agent?: string
   now?: () => number
 }
 function envelope(
@@ -133,6 +135,7 @@ function envelope(
   boundaries: boolean,
   observedState: 'running' | 'unknown' = 'unknown',
 ): AgentEventV1 {
+  if (state.assignment === undefined) state.assignment = options.agent ?? null
   const at = new Date((options.now ?? Date.now)()).toISOString()
   return parseEvent({
     schemaVersion: 1,
@@ -141,6 +144,7 @@ function envelope(
       product,
       surface,
       instanceId: config.instanceId,
+      ...(state.assignment ? { agent: state.assignment } : {}),
       adapterVersion: '0.1.0',
       runtimeVersion: options.runtimeVersion,
       epoch: state.epoch,
@@ -199,6 +203,7 @@ export function captureHook(
   const key = opaque(JSON.stringify([product, session, turn ?? 'session']))
   return queue.capture(key, (previous) => {
     let state: State = previous ? JSON.parse(previous) : fresh(turn)
+    if (previous && state.assignment === undefined) state.assignment = null
     const events: AgentEventV1[] = []
     const emit = (
       type: AgentEventV1['eventType'],

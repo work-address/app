@@ -22,6 +22,8 @@ RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --filte
 
 COPY api/ ./api/
 
+RUN pnpm --filter @work-address/agent-tracking-contract build
+
 WORKDIR /app/api
 
 # Expose the port used by the API server
