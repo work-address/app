@@ -7,12 +7,20 @@ import {
   type AgentEventV1,
   type IngestResult,
 } from '@work-address/agent-tracking-contract'
-import { privateDirectory, type CollectorConfig } from './config.js'
+import {
+  privateDirectory,
+  validateConfig,
+  type CollectorConfig,
+} from './config.js'
+
+const scopeHash = (config: CollectorConfig) =>
+  createHash('sha256').update(JSON.stringify(config)).digest('hex')
 
 export interface QueueOptions {
   maxBytes?: number
   retentionMs?: number
   now?: () => number
+  random?: () => number
 }
 export class EventQueue {
   private inTransaction = false
@@ -20,13 +28,17 @@ export class EventQueue {
   private readonly now: () => number
   private readonly maxBytes: number
   private readonly retentionMs: number
+  private readonly config: CollectorConfig
+  private readonly random: () => number
 
   constructor(
     directory: string,
-    private readonly config: CollectorConfig,
+    config: CollectorConfig,
     options: QueueOptions = {},
   ) {
+    this.config = validateConfig(config)
     this.now = options.now ?? Date.now
+    this.random = options.random ?? Math.random
     this.maxBytes = options.maxBytes ?? 100 * 1024 * 1024
     this.retentionMs = options.retentionMs ?? 7 * 86400_000
     const path = join(privateDirectory(directory), 'queue.sqlite')
@@ -51,25 +63,31 @@ export class EventQueue {
       CREATE TABLE IF NOT EXISTS lease (id INTEGER PRIMARY KEY CHECK(id=1), owner TEXT NOT NULL, expires INTEGER NOT NULL);
       CREATE INDEX IF NOT EXISTS pending_events ON events(state, next_attempt, created);`)
     // Credential rotation deliberately requires a new state directory for this prototype.
-    const scope = createHash('sha256')
-      .update(JSON.stringify(config))
-      .digest('hex')
-    this.db
-      .prepare("INSERT OR IGNORE INTO metadata VALUES ('scope', ?)")
-      .run(scope)
-    if (
-      this.db.prepare("SELECT value FROM metadata WHERE key='scope'").get()
-        ?.value !== scope
-    ) {
+    const scope = scopeHash(this.config)
+    try {
+      this.transaction(() => {
+        this.db
+          .prepare("INSERT OR IGNORE INTO metadata VALUES ('scope', ?)")
+          .run(scope)
+        const stored = this.db
+          .prepare("SELECT value FROM metadata WHERE key='scope'")
+          .get()?.value
+        // Recover a legacy queue only when the caller supplies its exact original config.
+        if (stored !== scope && stored !== scopeHash(config))
+          throw new Error('QUEUE_SCOPE_MISMATCH')
+        if (stored !== scope)
+          this.db
+            .prepare("UPDATE metadata SET value=? WHERE key='scope'")
+            .run(scope)
+      })
+    } catch (error) {
       this.db.close()
-      throw new Error('QUEUE_SCOPE_MISMATCH')
+      throw error
     }
   }
 
   assertScope(config: CollectorConfig): void {
-    const scope = createHash('sha256')
-      .update(JSON.stringify(config))
-      .digest('hex')
+    const scope = scopeHash(validateConfig(config))
     if (
       this.db.prepare("SELECT value FROM metadata WHERE key='scope'").get()
         ?.value !== scope
@@ -201,6 +219,14 @@ export class EventQueue {
 
   batch(): AgentEventV1[] {
     this.transaction(() => this.expire())
+    if (
+      Number(
+        this.db
+          .prepare("SELECT value FROM metadata WHERE key='retry_after'")
+          .get()?.value ?? 0,
+      ) > this.now()
+    )
+      return []
     const rows = this.db
       .prepare(
         "SELECT payload FROM events WHERE state='pending' AND next_attempt <= ? ORDER BY created, rowid LIMIT 50",
@@ -223,15 +249,32 @@ export class EventQueue {
     })
   }
 
-  retry(events: AgentEventV1[]): void {
+  retry(events: AgentEventV1[], retryAfter?: string | null): void {
+    const now = this.now()
+    const header = retryAfter?.trim()
+    const deadline = header
+      ? /^\d+$/.test(header)
+        ? now + Number(header) * 1000
+        : /^[A-Za-z]{3}, /.test(header)
+          ? Date.parse(header)
+          : NaN
+      : NaN
     this.transaction(() => {
+      // Server cooldown applies to this destination, including events arriving later.
+      if (Number.isSafeInteger(deadline) && deadline > now)
+        this.db
+          .prepare(
+            "INSERT INTO metadata VALUES ('retry_after', ?) ON CONFLICT(key) DO UPDATE SET value=CAST(MAX(CAST(value AS INTEGER), CAST(excluded.value AS INTEGER)) AS TEXT)",
+          )
+          .run(String(deadline))
       for (const event of events) {
         const row = this.db
           .prepare('SELECT attempts FROM events WHERE id=?')
           .get(event.eventId)
         if (!row) continue
         const attempts = Number(row.attempts) + 1
-        const delay = Math.min(3600_000, 1000 * 2 ** Math.min(attempts, 12))
+        const ceiling = Math.min(3600_000, 1000 * 2 ** Math.min(attempts, 12))
+        const delay = Math.floor(ceiling * (0.5 + this.random() * 0.5))
         this.db
           .prepare('UPDATE events SET attempts=?,next_attempt=? WHERE id=?')
           .run(attempts, this.now() + delay, event.eventId)

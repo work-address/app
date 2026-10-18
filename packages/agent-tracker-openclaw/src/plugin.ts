@@ -51,7 +51,7 @@ export function register(api: PluginApi, sdkLoader = loadSdk): void {
     if (!queue || stopped || flight) return
     flight = sync(queue, config)
       .then((result) => {
-        if (result.state === 'retry') warn()
+        if (result.state === 'retry' || result.state === 'rejected') warn()
       })
       .catch(warn)
       .finally(() => {

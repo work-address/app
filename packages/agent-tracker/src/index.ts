@@ -34,7 +34,28 @@ export async function sync(
         },
         body,
       })
-      if (!response.ok || !response.body) throw new Error('UPLOAD_FAILED')
+      if (!response.ok) {
+        // Error bodies are untrusted and may contain private vendor data.
+        await response.body?.cancel().catch(() => {})
+        if (
+          response.status >= 400 &&
+          response.status < 500 &&
+          response.status !== 408 &&
+          response.status !== 429
+        ) {
+          queue.acknowledge(
+            events.map((event) => ({
+              eventId: event.eventId,
+              status: 'rejected',
+              code: 'HTTP_PERMANENT_FAILURE',
+            })),
+          )
+          return { state: 'rejected' as const, sent: 0 }
+        }
+        queue.retry(events, response.headers.get('Retry-After'))
+        return { state: 'retry' as const, sent: 0 }
+      }
+      if (!response.body) throw new Error('UPLOAD_FAILED')
       // Bound response bodies, including chunked responses, before JSON decoding.
       const reader = response.body.getReader()
       const chunks: Uint8Array[] = []

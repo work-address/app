@@ -7,6 +7,7 @@ import { fileURLToPath } from 'node:url'
 import { spawn } from 'node:child_process'
 import { once } from 'node:events'
 import { randomUUID } from 'node:crypto'
+import { createServer } from 'node:http'
 import { setup, EventQueue } from '../dist/index.js'
 import { createMockReceiver } from '../examples/mock-ingest.mjs'
 import { fixture } from './fixture.mjs'
@@ -54,6 +55,34 @@ async function syncCli(directory) {
   const [code] = await once(child, 'exit')
   return { code, status: JSON.parse(stdout), stderr }
 }
+
+for (const status of [400, 413, 429])
+  test(`CLI preserves HTTP ${status} handling across subprocess restarts`, async (t) => {
+    let calls = 0
+    const server = createServer((req, res) => {
+      calls++
+      req.resume()
+      res.writeHead(status, { 'Retry-After': '120' })
+      res.end('PRIVATE error body')
+    })
+    server.listen(0, '127.0.0.1')
+    await once(server, 'listening')
+    t.after(() => new Promise((resolve) => server.close(resolve)))
+    const c = context(t, `http://127.0.0.1:${server.address().port}/events`)
+    c.queue.enqueue(c.event)
+    const first = await syncCli(c.dir)
+    assert.equal(first.code, status === 429 ? 1 : 2)
+    assert.deepEqual(first.status, {
+      queued: status === 429 ? 1 : 0,
+      rejected: status === 429 ? 0 : 1,
+      lost: 0,
+    })
+    const second = await syncCli(c.dir)
+    assert.equal(second.code, 2)
+    assert.deepEqual(second.status, first.status)
+    assert.equal(calls, 1)
+    assert.equal(first.stderr.includes('PRIVATE'), false)
+  })
 for (const reason of ['backoff', 'lease', 'rejected'])
   test(`sync exits incomplete when retained events are in ${reason}`, async (t) => {
     const c = context(t)

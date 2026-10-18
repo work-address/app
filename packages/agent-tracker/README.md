@@ -32,6 +32,14 @@ retried with the same event IDs. Rejected rows are held for inspection, not retr
 indefinitely. The upload lease is transactional and expires after 30 seconds; requests
 have a 10-second timeout. Delivery is at least once; the receiver must deduplicate.
 
+HTTP 4xx responses other than 408 and 429 hold the batch as rejected with the
+diagnostic code `HTTP_PERMANENT_FAILURE`; response bodies are discarded. Network
+failures, 408, 429 and 5xx responses retry with exponential backoff and jitter.
+Valid `Retry-After` delays (seconds or HTTP dates) pause uploads for the entire
+queue, including newly captured events, and survive restarts. Queue identity uses
+normalized configuration, so JSON key order and equivalent endpoint spelling do
+not change its scope.
+
 The queue caps stored payload bytes at 100 MiB and expires rows after seven days
 when enqueueing or preparing a batch. Drops increment a persistent loss count.
 SQLite indexes/page overhead is additional to the payload cap. This lifecycle/observation
