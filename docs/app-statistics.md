@@ -100,7 +100,7 @@ The `osascript`/System Events path and its Automation permission are removed, as
 
 ### Project settings and status
 
-`Project` gets owner-only switches beside the existing `trackScreenshots` and `trackProcesses`: `trackWindowTitles` and `trackBrowserDomains`. Titles and domains require apps. The desktop app removes its unconnected checkboxes and shows, read-only, what the current project records. The server enforces the switches: it drops app data, titles or domains the project does not record, whatever the client sends.
+`Project` gets owner-only switches beside the existing `trackScreenshots` and `trackProcesses`: `trackWindowTitles` and `trackBrowserDomains`, and `trackAgents` from [agent-time-tracking.md](agent-time-tracking.md). Titles and domains require apps. The desktop app removes its unconnected checkboxes and shows, read-only, what the current project records. The server enforces the switches: it drops app data, titles or domains the project does not record, whatever the client sends.
 
 Every uploaded entry carries `appsStatus`:
 

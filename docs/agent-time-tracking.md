@@ -19,6 +19,7 @@ This plan covers Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot (CLI and
 - On a worker's laptop, agent work counts only while the desktop tracker's timer is on for the project the run started under. Agent work that starts while the timer is off is not recorded.
 - On a laptop, the desktop tracker reads the agents' own local logs; nothing has to be installed in the agent tools.
 - On a server, an agent is tracked whenever it works, into the project its collector was configured with.
+- The project owner decides whether a project records agent time at all: `trackAgents`, off by default, beside the screenshot and app switches. Off means nothing is collected for that project on any machine; the worker's attachments and rates wait until it is on.
 - A worker owns a list of agents, one or more per product (for example "Claude Code (laptop)" and "Claude Code (build server)"), each optionally bound to the machines it runs on. They attach agents to projects they work on and set each agent's hourly rate for that project, starting at $0.00.
 - Agent time is **assisted** while the same worker's own timer runs on the same project, and **autonomous** otherwise, wherever the agent runs. Both are billed; each agent line shows how much of it was assisted, so the client sees when they pay for a person and an agent in the same hour.
 - Agent time is billable. One invoice per worker per period carries a human line and one line per agent, each at its own rate.
@@ -39,6 +40,7 @@ This plan covers Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot (CLI and
 | Assisted and autonomous | Assisted = agent time while the same worker's own timer runs on the same project; autonomous = the rest, wherever the agent runs. Computed on read; frozen on invoice lines as `assistedMinutes` | Splitting by laptop versus server; splitting by who started the run |
 | Overlap with human time | Both human and agent time are billed; each agent line states its assisted part | Not billing assisted time by default |
 | Storage across modes | One `time_agent` table for laptop and server runs; mode and surface recorded per run | Separate tables per mode or tool family |
+| Owner switch | `Project.trackAgents`, owner-only, off by default. Off means no collection anywhere for the project; both the switch and the worker's attachment are needed. Turning it off ends counting for open runs at that moment. Decided 18 Oct 2026 | On by default; collected but unbilled; laptop-only gating |
 | Storage | `time_agent` table in the Time domain, one row per run | A `kind` column on `time`, which forces a human filter into ~28 server and 6 web call sites |
 | Attachment | A worker-managed agents list on Project, beside `workerAddresses` | Agents inside the owner-managed `workerAddresses` |
 | Rate | Set by the worker per project from $0.00; the rate when the invoice is created prices every hour on the line, as for human hours. Every change is logged for the owner, and an invoice line flags hours a change repriced. Reviewed 13 Oct 2026 | Owner-set rates; acknowledgement gates; pricing hours by a rate history; locking the rate while hours are unbilled |
@@ -284,7 +286,7 @@ A worker can have several agents of the same product. A run is assigned, when it
 | `rateChanges` | `[{at, fromCents, toCents, changedBy}]`, appended on every rate change; kept while the attachment exists |
 | `attachedAt`, `detachedAt` | Detaching keeps the entry so past runs stay invoiceable at this rate |
 
-Only the owning worker writes their entries, and only while they are a worker or the owner of the project. The project owner reads every entry. Other workers and viewers never receive other workers' entries. Owner project edits must not be able to overwrite this list. When the owner removes a worker from `workerAddresses`, the entries stay for the record; the worker can no longer invoice, so neither can their agents.
+`Project.trackAgents` (bool, default false) is the owner's switch, edited with `trackScreenshots` and `trackProcesses`. While it is off, the project accepts no agent runs from any source; turning it off ends counting for open runs at that moment, and turning it on counts runs that start afterwards. Only the owning worker writes attachment entries, and only while they are a worker or the owner of the project. The project owner reads every entry. Other workers and viewers never receive other workers' entries. Owner project edits must not be able to overwrite this list. When the owner removes a worker from `workerAddresses`, the entries stay for the record; the worker can no longer invoice, so neither can their agents.
 
 ### `time_agent`
 
@@ -459,7 +461,7 @@ Each event gets a result:
 }
 ```
 
-`accepted` means durably stored, not yet visible. Reuse of an event ID with a different payload returns `EVENT_ID_CONFLICT`. An invalid envelope is HTTP 400; oversized 413; bad/expired credential 401; out-of-scope 403; throttled 429 with Retry-After. Retry network/429/5xx with exponential backoff and jitter; do not retry permanent failures. Keep rejected items in a bounded local diagnostic queue. The deduplication key is `(sourceInstanceId, eventId)` under the owning worker; cross-user collisions never reveal another user's event.
+`accepted` means durably stored, not yet visible. A run for a project whose `trackAgents` is off is rejected with `AGENT_TRACKING_OFF`. Reuse of an event ID with a different payload returns `EVENT_ID_CONFLICT`. An invalid envelope is HTTP 400; oversized 413; bad/expired credential 401; out-of-scope 403; throttled 429 with Retry-After. Retry network/429/5xx with exponential backoff and jitter; do not retry permanent failures. Keep rejected items in a bounded local diagnostic queue. The deduplication key is `(sourceInstanceId, eventId)` under the owning worker; cross-user collisions never reveal another user's event.
 
 ## Attribution, content and privacy
 
@@ -504,10 +506,12 @@ Nothing is installed into the agent tools on a laptop: no hooks, no plugins, no 
 - **Reading:** `QFileSystemWatcher` events are treated as hints; the reader also polls every 30–60 seconds, and only polls on WSL paths. It remembers a byte offset and file identity per file, reads only appended records, and handles truncation, rotation and deletion. SQLite stores (Cursor, OpenCode) are opened read-only. The reader never writes to, locks or changes an agent's files, and never opens the settings, credential or sign-in files beside them.
 - **Parsing:** one parser per tool and per qualified version, chosen from the version each log records. Records are parsed in memory and only allowlisted fields survive: prompt and response text, code, tool arguments and output, account fields such as email, and paths are never written to disk by Work Address or uploaded. A version without a qualified parser produces no events and shows as "unsupported version" on the Agents page.
 - **Runs:** each parser rebuilds runs from its tool's records (Codex: `task_started` and `task_complete`; Claude Code: a prompt and the assistant records that follow it, with sidechain records as subagents) and emits the event contract's `run.*`, `wait.*` and `run.content` events with the records' own timestamps (`clock.basis=source_wall`). The server assigns each run to the agent bound to this Qt install for its product, or to the product's default agent.
+- **Project switch:** the reader produces runs only for projects whose `trackAgents` is on, which the app reads with the project list. While a project's switch is off, nothing is parsed into runs for it; switching it off ends counting for its open runs at that moment.
 - **Timer gate:** the app keeps its timer history: starts, stops, project switches, idle auto-stops and suspends. A run takes the project the timer was on when it started. A run that started with the timer off is dropped and counted, and the app shows "Claude Code ran while your timer was off" with **Start timer**. Stretches of a run while the timer was off or on another project become `tracking.paused` and `tracking.resumed` events. Runs found later in a log, for example after the app restarts, follow the same rule against the recorded history, so nothing from before the app's first timer ever counts.
 - **Queue and upload:** SQLite per server and account, capped at 100 MiB or seven days; uploaded every 30 seconds, separately from the 10-minute human cycle, with backoff. It authenticates with the scoped write-only credential the app requests with its own sign-in, never with the worker's JWT.
 - **Unattached agents:** their runs wait in the queue with "Attach Codex to project X".
 - **Agents page:** detected tools and folders, each parser's status (qualified, unsupported version, unreadable), queue, rejections, waiting runs, credential expiry and the off-timer count.
+- **Icon:** a third icon, `agents.svg`, beside the screenshot and app icons on the project page, with the same tooltip pattern and four states: grey "Agents off for this project"; highlighted "Record AI agents", listing the detected tools; running, while a run of this worker's agent on the current project has had evidence in the last 90 seconds; red with the error text when a store cannot be read or a version is unsupported. Clicking it opens the Agents page.
 - **Limits:** agents never trigger screenshots or input capture. The app gains an opt-in "Start at login" setting on all three platforms. The agent queue follows the app's current server and account. Agents running elsewhere (an SSH host, a dev container, the cloud) write their logs there and are invisible to the laptop; they need fixed mode where they run.
 
 ### npm collector (fixed mode)
@@ -521,6 +525,8 @@ Nothing is installed into the agent tools on a laptop: no hooks, no plugins, no 
 | OpenCode plugin package | OpenCode on servers | 7 |
 
 No standalone binaries, no Homebrew, no code signing.
+
+**Project switch.** When the configured project's `trackAgents` is off, the collector enqueues nothing for it and `status` reports "agents off for project X"; the server rejects anything that still arrives with `AGENT_TRACKING_OFF`.
 
 **Hook path.** Hooks call `~/.work-address/bin/agent-tracker`, a shim that resolves Node on every run (recorded path, then the login shell, then common install locations) and reports in `status` when it cannot.
 
@@ -536,7 +542,8 @@ No standalone binaries, no Homebrew, no code signing.
 ## User experience
 
 - **My agents** (account settings): the worker's agent list, one or more per product, each with a short handle, a default flag per product and optional machine bindings; add, rename, remove; credentials per machine with expiry and revocation; collector health per machine.
-- **Project dialog, Agents tab:** the worker attaches or detaches their own agents and sets each rate. The owner sees every worker's agents read-only, with each agent's rate history (date, old and new rate, who changed it). Other workers see only their own. Viewers see no tab. The same tab carries the agent charts from [app-statistics.md](app-statistics.md): billed time per day by agent, stacked into assisted and autonomous, tokens per day and the runs table. There is no project page; the dialog grows instead.
+- **Project edit dialog:** the owner's `trackAgents` switch sits with screenshots, apps, titles and domains.
+- **Project dialog, Agents tab:** the worker attaches or detaches their own agents and sets each rate; while the project's switch is off the tab says so, and attachments wait. The owner sees every worker's agents read-only, with each agent's rate history (date, old and new rate, who changed it). Other workers see only their own. Viewers see no tab. The same tab carries the agent charts from [app-statistics.md](app-statistics.md): billed time per day by agent, stacked into assisted and autonomous, tokens per day and the runs table. There is no project page; the dialog grows instead.
 - **Agents view:** runs grouped by task, with filters for project, agent, product, date, status and coverage. Shows start/end, billed time with assisted, waiting, unclassified and manual parts, elapsed, runtime where qualified, known waits, child relationships, tokens, model, tool counts and commits. Missing runtime reads "Unavailable with this integration", never zero. Time-only integrations (Windsurf, Cline, and Copilot until its tokens are supported) carry a label, so a missing token count never reads as zero. Untracked stretches of a laptop run show as gaps marked "timer off".
 - **Invoices:** a human line and one line per agent with minutes, rate and amount; each agent line says "of which X h assisted, overlapping the worker's own billed hours"; waiting, unclassified and manual minutes flagged; a line whose rate changed after some of its hours were worked says so ("rate changed on 12 Oct; 31 h of this line were worked before the change, at $5/h"); agents at $0.00 appear at $0.00. Older invoices show their charged rate. The owner has a **Reject** action with an optional reason; a rejected invoice shows its reason and the worker can issue a new one.
 - **Dashboard and export:** separate human and agent sections; hours never combined; money as human, agent and combined amounts, scoped by role.
@@ -576,7 +583,7 @@ The Statistics domain ([app-statistics.md](app-statistics.md), its Phase 1) ship
 - Changes to `entity/invoice.ts`, `model/invoice.ts`, `service/invoice-manager.ts`, `controller/invoice-controller.ts`, `entity/project.ts`, `entity/user.ts`, project read/edit paths, `middleware/payload-logger.ts`, `app/app.ts`, `app/app-container.ts`, generated clients.
 - `web/src/features/agent-tracking/` for My agents, the project dialog's Agents tab and the Agents view; invoice and dashboard changes in their existing slices. Agent charts use the shared chart components from [app-statistics.md](app-statistics.md).
 - `api/src/entity/agent-tool-usage.ts` belongs to the Statistics domain and ships with this plan's Phase 3.
-- `time-tracker/` (sibling repo): the log reader (folder discovery per OS including WSL, watching plus polling, per-file offsets, read-only SQLite access, one parser per tool and version, the field allowlist), timer history and gate events, the agent queue and 30-second uploader, the off-timer notice with **Start timer**, the Agents page, credential request, and opt-in start at login.
+- `time-tracker/` (sibling repo): the log reader (folder discovery per OS including WSL, watching plus polling, per-file offsets, read-only SQLite access, one parser per tool and version, the field allowlist), timer history and gate events, the agent queue and 30-second uploader, the off-timer notice with **Start timer**, the project switch, the agents icon with its four states, the Agents page, credential request, and opt-in start at login.
 
 ### Schema and rollout
 
@@ -619,6 +626,9 @@ All schema changes are additive (new tables, new nullable columns, a new state v
 | Owner removes the worker | Neither the worker nor their agents can invoice |
 | Another worker or a viewer reads agents, runs, totals or invoices | Receives nothing of the other worker's agents; viewers receive no agent data |
 | Run for an unattached agent | Held in the Qt or collector queue, not uploaded; status explains the fix |
+| `trackAgents` off on the project | Nothing collected on laptop or server; anything arriving is rejected with `AGENT_TRACKING_OFF`; the icon is grey and `status` says why; attachments and rates untouched |
+| `trackAgents` turned off mid-run, then on | Counting ends at the switch-off; runs starting after the switch-on count |
+| Qt agents icon | Grey, recording, running (evidence within 90 s on the current project) and error states; opens the Agents page |
 | Timer mode: a run starts while the timer is off | Not recorded; off-timer count rises; Qt notice offers **Start timer** |
 | Timer stops mid-run (by the worker, idle auto-stop or suspend), then restarts | `untracked` segment in between; billed time excludes it; the run closes with its content |
 | Timer switches project mid-run, then back | The run pauses while the timer is on the other project and resumes when it returns |

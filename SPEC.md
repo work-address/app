@@ -167,6 +167,12 @@ owner's levers are rejecting an invoice and removing the worker. Agent runs
 carry timings, tokens, model, tools and commits, never prompt or response
 text.
 
+**The owner decides whether a project records agent time at all.** A
+per-project switch, off by default like screenshots and apps. Off means no
+agent run on that project is collected anywhere, laptop or server; the
+worker's attachments and rates wait until it is on. Both are needed before an
+agent line can exist: the owner's switch and the worker's attachment.
+
 **An agent's rate is the one in force when the invoice is created.** It prices
 every hour on that agent's line, including hours worked before a change, the
 same rule human hours follow. Every change is logged, and an invoice line shows

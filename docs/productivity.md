@@ -121,7 +121,7 @@ Also decided, beyond the feature list: the review window, presence, the owner's 
 
 **Review window.** Each project has `reviewWindowHours`, set by the owner from 1 to 24 (default 24). An entry's detail (screenshot, app usage, titles, hostnames, timeline) is visible only to its author until they publish it or the window passes since the entry ended. During the window the owner sees the entry's time with "detail pending review". The author can remove a screenshot or app data before publishing. Creating an invoice publishes the detail of the entries it covers.
 
-**Transparency.** The desktop app always shows when it is recording and, read-only, what the current project records (apps, titles, hostnames, screenshots) and its review window. There is no hidden mode. Each project can set a screenshot retention period; older screenshots are removed while their entries remain. Owners get a downloadable DPIA template and an employee notice describing exactly what the project records and who sees it.
+**Transparency.** The desktop app always shows when it is recording and, read-only, what the current project records (apps, titles, hostnames, screenshots, agents) and its review window. There is no hidden mode. Each project can set a screenshot retention period; older screenshots are removed while their entries remain. Owners get a downloadable DPIA template and an employee notice describing exactly what the project records and who sees it.
 
 ## Billing changes
 
