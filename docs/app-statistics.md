@@ -141,6 +141,16 @@ An entry without `appsStatus` comes from an older desktop app. Statistics show i
 
 At most 30 apps per entry and 20 titles per app. The desktop keeps the largest by seconds and folds the remainder into an app or title named "Other", setting `appsTruncated`. Seconds are positive integers; an app's titles never add up to more than the app. Validation is nested (`ValidateNested`, `ArrayMaxSize`, string lengths, hostname format).
 
+**Desktop acknowledgement.** A successful per-entry upload response adds
+`appsAccepted: true` only after the server durably stores the app breakdown or its
+accepted collection-gap status. This is a response-only field, never copied from
+the request. Accepting the human time alone is not an app-data acknowledgement.
+For enabled collection, Qt retains the local bucket and screenshot when the
+field is absent and shows that human time was saved but app statistics still need
+syncing. The worker retries after a server upgrade; legacy APIs that echo unknown
+request fields cannot silently acknowledge data they did not store. Entries with
+`appsStatus=off` need no app-data acknowledgement.
+
 ### Fixes in the same rewrite
 
 - Store each minute's apps in SQLite as a JSON array, not a comma-joined string.

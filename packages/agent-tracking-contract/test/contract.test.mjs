@@ -47,7 +47,7 @@ test('published JSON schema exposes a strict lifecycle/observation union', () =>
   const schema = JSON.parse(
     readFileSync(new URL('../schema/agent-event-v1.json', import.meta.url)),
   )
-  assert.equal(schema.oneOf.length, 5)
+  assert.equal(schema.oneOf.length, 7)
   assert.ok(schema.oneOf.every((item) => item.additionalProperties === false))
 })
 test('acknowledgements reject arbitrary response text', () => {
@@ -75,4 +75,12 @@ test('observations require explicit evidence and cannot claim an unimplemented h
   assert.equal(parseEvent(event).observedState, 'unknown')
   assert.throws(() => parseEvent({ ...event, observedState: 'human_wait' }))
   assert.throws(() => parseEvent({ ...event, evidenceKind: undefined }))
+})
+
+test('desktop timer gates require their bounded reason and no private data', () => {
+  assert.equal(parseEvent({ ...fixture, eventType: 'tracking.paused', reason: 'idle' }).reason, 'idle')
+  assert.equal(parseEvent({ ...fixture, eventType: 'tracking.resumed', reason: 'started' }).reason, 'started')
+  assert.throws(() => parseEvent({ ...fixture, eventType: 'tracking.paused' }))
+  assert.throws(() => parseEvent({ ...fixture, eventType: 'tracking.resumed', reason: 'idle' }))
+  assert.throws(() => parseEvent({ ...fixture, eventType: 'tracking.paused', reason: 'stopped', path: '/private' }))
 })

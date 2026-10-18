@@ -34,9 +34,19 @@ const base = {
   }),
 }
 
-/** The prototype supports lifecycle events only. Other variants require a schema revision. */
+/** Strict lifecycle, observation and desktop timer-gate events. */
 export const agentEventV1Schema = z.discriminatedUnion('eventType', [
   z.strictObject({ ...base, eventType: z.literal('run.started') }),
+  z.strictObject({
+    ...base,
+    eventType: z.literal('tracking.paused'),
+    reason: z.enum(['stopped', 'idle', 'suspended', 'switched']),
+  }),
+  z.strictObject({
+    ...base,
+    eventType: z.literal('tracking.resumed'),
+    reason: z.enum(['started', 'switched']),
+  }),
   z.strictObject({
     ...base,
     eventType: z.literal('run.observed'),
