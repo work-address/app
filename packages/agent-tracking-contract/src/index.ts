@@ -31,6 +31,10 @@ const base = {
     runBoundaries: z.boolean(),
     externalWaits: z.enum(['none', 'partial', 'complete']),
     replay: z.boolean(),
+    // The adapter observes every open run at least every 15 seconds, so a run
+    // without evidence for 90 seconds is stale. Sparse hook adapters leave it
+    // unset and their runs stay open until a terminal arrives.
+    liveness: z.boolean().optional(),
   }),
 }
 

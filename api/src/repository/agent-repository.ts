@@ -510,6 +510,7 @@ export class AgentRepository {
         coverage: 'run',
         mode: first.mode,
         waitCoverage: 'none',
+        liveness: start.capabilities.liveness === true,
         provisional: projected.provisional,
         qualification: 'unqualified',
         normalizerRevision: 1,

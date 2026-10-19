@@ -236,6 +236,22 @@ export class EventQueue {
     return rows.map((row) => parseEvent(JSON.parse(String(row.payload))))
   }
 
+  /** When the earliest pending event becomes due, or undefined with nothing pending. */
+  nextAttemptAt(): number | undefined {
+    const pending = this.db
+      .prepare(
+        "SELECT MIN(next_attempt) AS at FROM events WHERE state='pending'",
+      )
+      .get()?.at
+    if (pending == null) return undefined
+    const cooldown = Number(
+      this.db
+        .prepare("SELECT value FROM metadata WHERE key='retry_after'")
+        .get()?.value ?? 0,
+    )
+    return Math.max(Number(pending), cooldown)
+  }
+
   acknowledge(results: IngestResult[]): void {
     this.transaction(() => {
       for (const result of results) {

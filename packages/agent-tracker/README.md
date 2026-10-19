@@ -18,7 +18,9 @@ See [server coverage, setup and qualification limits](SERVER-RUNTIMES.md). Requi
 - `agent-tracker emit` accepts a strict normalized event on stdin.
 - `agent-tracker status` prints queued, rejected and lost event counts, never secrets.
 - `agent-tracker sync` attempts up to 20 batches of due events, then exits. Backoff
-  survives restarts. Exit 0 means no retained events remain; exit 1 reports a
+  survives restarts; with `WORK_ADDRESS_SYNC_WAIT_MS` set, sync sleeps through
+  backoff that falls due within that budget instead of exiting on the first
+  failure. Exit 0 means no retained events remain; exit 1 reports a
   command/transport failure; exit 2 means the drain is incomplete (backoff, active
   upload lease, batch limit, or rejected events). Preserve the state directory
   until remaining events are handled. Loss counts must also be monitored.

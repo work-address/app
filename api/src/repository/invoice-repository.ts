@@ -226,7 +226,13 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
     )
   }
 
-  /** Finished: terminal and past the 60 s grace, or stale (90 s without evidence). */
+  /**
+   * Finished: terminal and unchanged for the 60 s grace, or stale, meaning a
+   * run the adapter observes continuously has had no evidence for 90 s. Both
+   * are measured from receipt (`updatedAt`), not source time: a backlog can
+   * arrive hours late, in several batches. A sparse hook run with no terminal
+   * stays open until its Stop reconciles it.
+   */
   private static finishedRuns(
     qb: SelectQueryBuilder<TimeAgent>,
     now: number,
@@ -234,11 +240,14 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
     return qb.andWhere(
       new Brackets((finished) =>
         finished
-          .where('run.status IN (:...terminal) AND run.toAt <= :settled', {
+          .where('run.status IN (:...terminal) AND run.updatedAt <= :settled', {
             terminal: ['completed', 'failed', 'cancelled'],
             settled: new Date(now - 60000),
           })
-          .orWhere('run.toAt <= :stale', { stale: new Date(now - 90000) }),
+          .orWhere(
+            `run.measurement->>'liveness' = 'true' AND run.updatedAt <= :stale`,
+            { stale: new Date(now - 90000) },
+          ),
       ),
     )
   }

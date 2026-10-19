@@ -8,7 +8,14 @@ import { once } from 'node:events'
 import { createServer } from 'node:http'
 import { setTimeout as sleep } from 'node:timers/promises'
 import { randomUUID } from 'node:crypto'
-import { EventQueue, readConfig, setup, uploadTrigger } from '../dist/index.js'
+import {
+  drain,
+  EventQueue,
+  readConfig,
+  setup,
+  uploadTrigger,
+} from '../dist/index.js'
+import { fixture } from './fixture.mjs'
 
 const quiet = {
   CLAUDE_CODE_REMOTE: '',
@@ -21,12 +28,19 @@ const quiet = {
   JENKINS_URL: '',
 }
 
-async function receiver(t) {
+/** `failures` requests answer 503 before the receiver starts accepting. */
+async function receiver(t, failures = 0) {
   const received = []
+  let calls = 0
   const server = createServer(async (req, res) => {
     const chunks = []
     for await (const chunk of req) chunks.push(chunk)
     const { events } = JSON.parse(Buffer.concat(chunks).toString('utf8'))
+    if (calls++ < failures) {
+      res.writeHead(503)
+      res.end()
+      return
+    }
     received.push(...events)
     res.writeHead(200, { 'Content-Type': 'application/json' })
     res.end(
@@ -43,8 +57,31 @@ async function receiver(t) {
   t.after(() => new Promise((done) => server.close(done)))
   return {
     received,
+    calls: () => calls,
     endpoint: `http://127.0.0.1:${server.address().port}/api/agent-tracking/events`,
   }
+}
+
+/** An in-process queue with one event in it and no jitter, so backoff is exactly 1 s. */
+function queued(t, endpoint) {
+  const dir = mkdtempSync(join(tmpdir(), 'wa-drain-'))
+  const config = setup(
+    dir,
+    endpoint,
+    fixture.projectId,
+    'test-credential-00000',
+  )
+  const queue = new EventQueue(dir, config, { random: () => 0 })
+  const event = {
+    ...fixture,
+    source: { ...fixture.source, instanceId: config.instanceId },
+  }
+  queue.enqueue(event)
+  t.after(() => {
+    queue.close()
+    rmSync(dir, { recursive: true, force: true })
+  })
+  return { dir, queue, config, event }
 }
 
 function collector(t, endpoint) {
@@ -135,4 +172,78 @@ test('an unreachable server never fails the hook or counts as loss', async (t) =
   assert.equal(stop.stdout.trim(), '{}')
   assert.equal(c.status().lost, 0)
   assert.equal(c.status().queued, 2)
+})
+
+test('drain waits out the backoff a failed request caused, within its wait budget', async (t) => {
+  const r = await receiver(t, 1)
+  const q = queued(t, r.endpoint)
+  const started = Date.now()
+  assert.equal(
+    await drain(q.queue, q.config, { waitUntil: Date.now() + 10_000 }),
+    'drained',
+  )
+  assert.equal(r.calls(), 2)
+  assert.ok(Date.now() - started >= 900, 'slept through the 1 s backoff')
+  assert.deepEqual(q.queue.status(), { queued: 0, rejected: 0, lost: 0 })
+})
+
+test('drain without a wait budget reports the retry instead of giving up silently', async (t) => {
+  const r = await receiver(t, 1)
+  const q = queued(t, r.endpoint)
+  assert.equal(await drain(q.queue, q.config), 'retry')
+  assert.equal(r.calls(), 1)
+  assert.equal(q.queue.status().queued, 1)
+  // Already in backoff from another process: nothing is due, but it is not drained.
+  assert.equal(await drain(q.queue, q.config), 'waiting')
+  assert.equal(r.calls(), 1)
+})
+
+test('drain never starts a request it cannot finish inside its deadline', async (t) => {
+  const r = await receiver(t)
+  const q = queued(t, r.endpoint)
+  assert.equal(
+    await drain(q.queue, q.config, { deadline: Date.now() + 500 }),
+    'incomplete',
+  )
+  assert.equal(r.calls(), 0)
+  // The event stays due for the next uploader rather than in backoff.
+  assert.ok(q.queue.nextAttemptAt() <= Date.now())
+})
+
+test('a CI Stop hook survives one failed request and still delivers before it returns', async (t) => {
+  const r = await receiver(t, 1)
+  const c = collector(t, r.endpoint)
+  await c.hook('UserPromptSubmit')
+  const stop = await c.hook('Stop', { CI: 'true' })
+  assert.equal(stop.status, 0)
+  assert.equal(stop.stdout.trim(), '{}')
+  // Jitter can split the two backed-off events across requests.
+  assert.ok(r.calls() >= 2)
+  assert.deepEqual(r.received.map((e) => e.eventType).sort(), [
+    'run.observed',
+    'run.started',
+  ])
+  assert.deepEqual(c.status(), { queued: 0, rejected: 0, lost: 0 })
+})
+
+test('the detached uploader waits out backoff left by an earlier process', async (t) => {
+  const r = await receiver(t)
+  const q = queued(t, r.endpoint)
+  q.queue.retry([q.event])
+  assert.ok(q.queue.nextAttemptAt() > Date.now())
+  const child = spawn(process.execPath, [resolve('dist/cli.js'), 'sync'], {
+    env: {
+      ...process.env,
+      NODE_NO_WARNINGS: '1',
+      WORK_ADDRESS_STATE_DIR: q.dir,
+      WORK_ADDRESS_SYNC_WAIT_MS: '10000',
+    },
+    stdio: ['ignore', 'pipe', 'pipe'],
+  })
+  let stdout = ''
+  child.stdout.on('data', (d) => (stdout += d))
+  const [code] = await once(child, 'close')
+  assert.equal(code, 0, stdout)
+  assert.deepEqual(JSON.parse(stdout), { queued: 0, rejected: 0, lost: 0 })
+  assert.equal(r.received.length, 1)
 })

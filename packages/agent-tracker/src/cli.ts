@@ -3,7 +3,7 @@ import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { collectCodexStream } from './stream.js'
 import { readInput } from './input.js'
-import { startUploader, uploadTrigger } from './upload.js'
+import { drain, startUploader, uploadTrigger } from './upload.js'
 import {
   captureHook,
   isHookProduct,
@@ -11,26 +11,12 @@ import {
   CodexExecAdapter,
   emitEvent,
 } from './adapters.js'
-import {
-  EventQueue,
-  readProcessScope,
-  setup,
-  stateDirectory,
-  sync,
-  type CollectorConfig,
-} from './index.js'
+import { EventQueue, readProcessScope, setup, stateDirectory } from './index.js'
 
-/** Drain within the hook's budget; whatever remains goes to the detached uploader. */
-async function flush(
-  queue: EventQueue,
-  config: CollectorConfig,
-  budgetMs: number,
-): Promise<void> {
-  const deadline = Date.now() + budgetMs
-  while (Date.now() < deadline) {
-    const result = await sync(queue, config, fetch, deadline - Date.now())
-    if (result.state !== 'uploaded' || result.sent === 0) return
-  }
+/** `sync` waits out backoff this long; 0 (the default) exits on the first failure. */
+function syncWaitMs(): number {
+  const value = Number(process.env.WORK_ADDRESS_SYNC_WAIT_MS ?? 0)
+  return Number.isFinite(value) && value > 0 ? value : 0
 }
 
 async function main(): Promise<void> {
@@ -97,7 +83,11 @@ async function main(): Promise<void> {
         captureHook(queue, config, args[0], input, options)
         const trigger = uploadTrigger(input?.hook_event_name)
         try {
-          if (trigger === 'flush') await flush(queue, config, 8_000)
+          if (trigger === 'flush') {
+            // Inside the hook's budget; the rest goes to the detached uploader.
+            const deadline = Date.now() + 8_000
+            await drain(queue, config, { deadline, waitUntil: deadline })
+          }
           if (trigger !== 'none' && queue.status().queued)
             startUploader(fileURLToPath(import.meta.url))
         } catch {
@@ -132,14 +122,10 @@ async function main(): Promise<void> {
   try {
     if (command === 'sync') {
       // Finite drain, so a producer cannot keep this command alive indefinitely.
-      for (let batches = 0; batches < 20; batches++) {
-        const result = await sync(queue, config)
-        if (result.state === 'retry') {
-          process.exitCode = 1
-          break
-        }
-        if (result.state !== 'uploaded' || result.sent === 0) break
-      }
+      const result = await drain(queue, config, {
+        waitUntil: Date.now() + syncWaitMs(),
+      })
+      if (result === 'retry') process.exitCode = 1
     }
     const status = queue.status()
     // 0 means all locally retained events have been acknowledged. Backoff, a

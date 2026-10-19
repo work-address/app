@@ -33,6 +33,7 @@ export class TimeAgent extends AbstractBaseEntity {
     coverage: 'run'
     mode: 'timer' | 'fixed'
     waitCoverage: 'none'
+    liveness: boolean
     provisional: boolean
     qualification: 'unqualified'
     normalizerRevision: number

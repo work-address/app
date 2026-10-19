@@ -746,6 +746,7 @@ export class AgentControllerTest extends BaseControllerTest {
       ],
     })
     expect(uploaded.status).to.equal(200)
+    await this.settle(['a', 'b'])
     const first = await App.conn.manager.findOneByOrFail(TimeAgent, {
       sourceRunId: 'a',
     })
@@ -818,6 +819,7 @@ export class AgentControllerTest extends BaseControllerTest {
         s.event('run.completed', 3, 180000, { runId: 'b' }),
       ],
     })
+    await this.settle(['a', 'b'])
     const first = await App.conn.manager.findOneByOrFail(TimeAgent, {
       sourceRunId: 'a',
     })
@@ -830,5 +832,64 @@ export class AgentControllerTest extends BaseControllerTest {
     expect(invoice.data.lines).to.have.length(1)
     expect(invoice.data.lines[0]).to.include({ kind: 'agent', minutes: 2 })
     expect(invoice.data.amountCents).to.equal(20)
+  }
+  @test() async finalityFollowsReceiptAndOnlyObservedRunsGoStale() {
+    const s = await this.scenario('fixed')
+    const live = {
+      ...s.event('run.started', 0, 0).capabilities,
+      liveness: true,
+    }
+    await s.uploader.post('/agent-tracking/events', {
+      events: [
+        // A hook adapter saw only the start; its Stop may still come.
+        s.event('run.started', 0, 0, { runId: 'sparse' }),
+        // A continuously observed run that went quiet.
+        s.event('run.started', 1, 0, { runId: 'live', capabilities: live }),
+        s.event('run.observed', 2, 30000, {
+          runId: 'live',
+          capabilities: live,
+          observedState: 'running',
+          evidenceKind: 'runtime_state',
+        }),
+        s.event('run.started', 3, 0, { runId: 'done' }),
+        s.event('run.completed', 4, 60000, { runId: 'done' }),
+      ],
+    })
+    const run = (id: string) =>
+      App.conn.manager.findOneByOrFail(TimeAgent, { sourceRunId: id })
+    const period = {
+      fromUnix: +(await run('done')).fromAt,
+      toUnix: +(await run('done')).fromAt + 30000,
+    }
+    // Everything was received a moment ago: inside the grace, nothing bills.
+    expect(
+      (await s.client.post(`/invoice/project/${s.project.id}`, period)).status,
+    ).to.equal(400)
+    await this.settle(['sparse', 'live', 'done'])
+    const invoice = await s.client.post(
+      `/invoice/project/${s.project.id}`,
+      period,
+    )
+    expect(invoice.status).to.equal(200)
+    expect(invoice.data.lines[0]).to.include({ kind: 'agent', minutes: 1 })
+    expect(
+      (await App.conn.manager.find(TimeAgent))
+        .filter((r) => r.invoiceId === invoice.data.id)
+        .map((r) => r.sourceRunId)
+        .sort(),
+    ).to.deep.equal(['done', 'live'])
+    // The sparse run's late Stop still reconciles it instead of being quarantined.
+    const late = await s.uploader.post('/agent-tracking/events', {
+      events: [s.event('run.completed', 5, 120000, { runId: 'sparse' })],
+    })
+    expect(late.data.results[0].status).to.equal('accepted')
+    expect(await run('sparse')).to.include({ status: 'completed' })
+  }
+  /** Backdate receipt so the runs are past the grace and staleness windows. */
+  private async settle(runIds: string[]) {
+    await App.conn.manager.query(
+      `UPDATE time_agent SET "updatedAt" = NOW() - INTERVAL '2 minutes' WHERE "sourceRunId" = ANY($1)`,
+      [runIds],
+    )
   }
 }

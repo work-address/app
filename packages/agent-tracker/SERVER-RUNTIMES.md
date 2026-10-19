@@ -102,7 +102,11 @@ start a short-lived detached `agent-tracker sync` when events are queued; the
 upload lease keeps it single. When `CLAUDE_CODE_REMOTE` or a CI variable (`CI`,
 `GITHUB_ACTIONS`, `GITLAB_CI`, `BUILDKITE`, `CIRCLECI`, `JENKINS_URL`) is set,
 `Stop` and `StopFailure` also flush for up to 8 seconds before returning, which is
-why the bundled configs give those hooks a 10-second timeout. Set
+why the bundled configs give those hooks a 10-second timeout. A flush never starts
+a request with under a second left, and waits out a short backoff after a failed
+request while its budget allows. The detached uploader waits out backoff for up to
+five minutes (`WORK_ADDRESS_SYNC_WAIT_MS`, which it sets for itself; a plain
+`agent-tracker sync` defaults to 0 and exits on the first failure). Set
 `WORK_ADDRESS_HOOK_UPLOAD=0` to leave delivery to `agent-tracker sync`. Still run
 `sync` before a CI job or ephemeral VM exits, even when the agent command fails
 (for example, a CI `always()` cleanup step), to drain what a flush left. Sync can
