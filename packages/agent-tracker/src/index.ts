@@ -12,6 +12,7 @@ export async function sync(
   queue: EventQueue,
   value: CollectorConfig,
   fetcher: typeof fetch = fetch,
+  timeoutMs = 10_000,
 ) {
   const config = validateConfig(value)
   queue.assertScope(config)
@@ -27,7 +28,7 @@ export async function sync(
       const response = await fetcher(config.endpoint, {
         method: 'POST',
         redirect: 'error',
-        signal: AbortSignal.timeout(10_000),
+        signal: AbortSignal.timeout(timeoutMs),
         headers: {
           'Content-Type': 'application/json',
           Authorization: `Bearer ${config.credential}`,
@@ -93,3 +94,4 @@ export async function sync(
   }
 }
 export * from './adapters.js'
+export * from './upload.js'

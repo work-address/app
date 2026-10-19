@@ -30,6 +30,8 @@ function context(t) {
     WORK_ADDRESS_COLLECTOR_BIN: executable,
     WORK_ADDRESS_EXPERIMENTAL_ADAPTERS: '1',
     WORK_ADDRESS_RUNTIME_VERSION: 'fixture',
+    // These tests inspect the queue; delivery is covered in hook-upload.test.
+    WORK_ADDRESS_HOOK_UPLOAD: '0',
   }
   t.after(() => {
     queue.close()

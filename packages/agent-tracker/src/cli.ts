@@ -1,7 +1,9 @@
 #!/usr/bin/env node
 import { randomUUID } from 'node:crypto'
+import { fileURLToPath } from 'node:url'
 import { collectCodexStream } from './stream.js'
 import { readInput } from './input.js'
+import { startUploader, uploadTrigger } from './upload.js'
 import {
   captureHook,
   isHookProduct,
@@ -15,7 +17,21 @@ import {
   setup,
   stateDirectory,
   sync,
+  type CollectorConfig,
 } from './index.js'
+
+/** Drain within the hook's budget; whatever remains goes to the detached uploader. */
+async function flush(
+  queue: EventQueue,
+  config: CollectorConfig,
+  budgetMs: number,
+): Promise<void> {
+  const deadline = Date.now() + budgetMs
+  while (Date.now() < deadline) {
+    const result = await sync(queue, config, fetch, deadline - Date.now())
+    if (result.state !== 'uploaded' || result.sent === 0) return
+  }
+}
 
 async function main(): Promise<void> {
   const [command, ...args] = process.argv.slice(2)
@@ -77,13 +93,17 @@ async function main(): Promise<void> {
       if (command === 'hook') {
         if (args.length !== 1 || !isHookProduct(args[0]))
           throw new Error('UNKNOWN_ADAPTER')
-        captureHook(
-          queue,
-          config,
-          args[0],
-          JSON.parse(await readInput()),
-          options,
-        )
+        const input = JSON.parse(await readInput())
+        captureHook(queue, config, args[0], input, options)
+        const trigger = uploadTrigger(input?.hook_event_name)
+        try {
+          if (trigger === 'flush') await flush(queue, config, 8_000)
+          if (trigger !== 'none' && queue.status().queued)
+            startUploader(fileURLToPath(import.meta.url))
+        } catch {
+          // Delivery is retried by the next hook or `sync`; it never counts as
+          // capture loss and never fails the agent's hook.
+        }
         console.log('{}') // Neutral valid JSON, including Codex Stop's output contract.
       } else if (command === 'emit') {
         if (args.length) throw new Error('USAGE')

@@ -1,5 +1,16 @@
 {
   "hooks": {
+    "SessionStart": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "agent-tracker hook claude-code",
+            "timeout": 2
+          }
+        ]
+      }
+    ],
     "UserPromptSubmit": [
       {
         "hooks": [
@@ -17,7 +28,7 @@
           {
             "type": "command",
             "command": "agent-tracker hook claude-code",
-            "timeout": 2
+            "timeout": 10
           }
         ]
       }
@@ -28,7 +39,18 @@
           {
             "type": "command",
             "command": "agent-tracker hook claude-code",
-            "timeout": 2
+            "timeout": 10
+          }
+        ]
+      }
+    ],
+    "SessionEnd": [
+      {
+        "hooks": [
+          {
+            "type": "command",
+            "command": "agent-tracker hook claude-code",
+            "timeout": 1
           }
         ]
       }

@@ -96,9 +96,16 @@ a record could lose a turn boundary, so parsing does not resume mid-stream. It
 reports failure after draining; an unfinished observed turn remains unknown.
 Source event numbers continue increasing across all turns in one launch epoch.
 
-**Delivery:** hooks enqueue only. Run `agent-tracker sync` periodically under your
-service supervisor and synchronously before a CI job or ephemeral VM exits, even
-when the agent command fails (for example, a CI `always()` cleanup step). Sync can
+**Delivery:** no resident service. `SessionStart`, `SessionEnd`, `Stop`,
+`StopFailure`, `Interrupt`, Hermes `on_session_end` and OpenCode `idle`/`error`
+start a short-lived detached `agent-tracker sync` when events are queued; the
+upload lease keeps it single. When `CLAUDE_CODE_REMOTE` or a CI variable (`CI`,
+`GITHUB_ACTIONS`, `GITLAB_CI`, `BUILDKITE`, `CIRCLECI`, `JENKINS_URL`) is set,
+`Stop` and `StopFailure` also flush for up to 8 seconds before returning, which is
+why the bundled configs give those hooks a 10-second timeout. Set
+`WORK_ADDRESS_HOOK_UPLOAD=0` to leave delivery to `agent-tracker sync`. Still run
+`sync` before a CI job or ephemeral VM exits, even when the agent command fails
+(for example, a CI `always()` cleanup step), to drain what a flush left. Sync can
 retry at most 20 batches with a 10-second request timeout each; budget teardown time
 accordingly. A failed upload requires persistent state to survive VM reclamation.
 Sync exits 0 only when no retained events remain, 1 for command/transport failures,

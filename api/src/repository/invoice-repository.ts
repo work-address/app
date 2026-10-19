@@ -3,12 +3,13 @@ import { inject, injectable } from 'inversify'
 
 import { Filter } from '@/service/filter'
 import { Entitlement } from '@/service/entitlement'
-import { Brackets, In } from 'typeorm'
+import { Brackets, EntityManager, In } from 'typeorm'
 import { Time } from '@/entity/time'
 import { TimeAgent } from '@/entity/time-agent'
 import { AgentRepository } from '@/repository/agent-repository'
-import { EInvoiceState } from '@/model/invoice'
+import { EInvoiceState, IInvoiceLine } from '@/model/invoice'
 import { InvoiceSnapshot } from '@/service/invoice-snapshot'
+import { AgentInvoiceLines } from '@/service/agent-invoice-lines'
 import { BadRequestError } from 'routing-controllers'
 
 import type { ObjectLiteral, SelectQueryBuilder } from 'typeorm'
@@ -49,10 +50,16 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
     )
   }
 
+  /**
+   * Freezes the human line and one line per agent. `agentRuns` picks the
+   * issuer's finished, uninvoiced runs: none, those starting inside the
+   * invoice period, or all of them (the period then grows to cover them).
+   */
   public saveWithEntries(
     invoice: Invoice,
     selected: Time[],
     reuseExisting = false,
+    agentRuns: 'none' | 'period' | 'all' = 'none',
   ): RepoEffect<Invoice> {
     return fromPromise(() =>
       this.getRepo().manager.transaction(async (manager) => {
@@ -74,19 +81,23 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
           )
         )
           throw new AccessException()
-        const times = await manager
-          .getRepository(Time)
-          .createQueryBuilder('time')
-          .where('time.id IN (:...ids)', { ids: selected.map((t) => t.id) })
-          .andWhere('time.userId=:user AND time.projectId=:project', {
-            user: invoice.user!.id,
-            project: project.id,
-          })
-          .andWhere(
-            'time.invoiceId IS NULL AND COALESCE(time.isPaid,false)=false',
-          )
-          .setLock('pessimistic_write')
-          .getMany()
+        const times = selected.length
+          ? await manager
+              .getRepository(Time)
+              .createQueryBuilder('time')
+              .where('time.id IN (:...ids)', {
+                ids: selected.map((t) => t.id),
+              })
+              .andWhere('time.userId=:user AND time.projectId=:project', {
+                user: invoice.user!.id,
+                project: project.id,
+              })
+              .andWhere(
+                'time.invoiceId IS NULL AND COALESCE(time.isPaid,false)=false',
+              )
+              .setLock('pessimistic_write')
+              .getMany()
+          : []
         if (times.length !== selected.length) {
           if (reuseExisting && times.length === 0) {
             const previous = await manager
@@ -109,14 +120,39 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
             'Some time is already invoiced or no longer available',
           )
         }
-        const minutes = times.reduce(
-          (sum, t) => sum + Math.max(0, (+t.toAt - +t.fromAt) / 60000),
-          0,
-        )
-        const rateHourCents = Math.round(Number(project.rateHour || 0) * 100)
-        invoice.amountCents = Math.round((minutes * rateHourCents) / 60)
-        invoice.lines = [
-          {
+        const runs =
+          agentRuns === 'none'
+            ? []
+            : await this.invoiceableRuns(manager, project, invoice, agentRuns)
+        if (!times.length && !runs.length) {
+          // A concurrent ensure already billed everything outstanding.
+          const latest = reuseExisting
+            ? await manager.findOne(Invoice, {
+                where: {
+                  project: { id: project.id },
+                  user: { id: invoice.user!.id },
+                },
+                order: { createdAt: 'DESC' },
+              })
+            : null
+          if (latest) return latest
+          throw new BadRequestError(
+            'There is no unpaid tracked time in that period',
+          )
+        }
+        if (agentRuns === 'all') {
+          const spans = [...times, ...runs]
+          invoice.fromAt = new Date(Math.min(...spans.map((s) => +s.fromAt)))
+          invoice.toAt = new Date(Math.max(...spans.map((s) => +s.toAt)))
+        }
+        const lines: IInvoiceLine[] = []
+        if (times.length) {
+          const minutes = times.reduce(
+            (sum, t) => sum + Math.max(0, (+t.toAt - +t.fromAt) / 60000),
+            0,
+          )
+          const rateHourCents = Math.round(Number(project.rateHour || 0) * 100)
+          lines.push({
             kind: 'human',
             name: 'Human time',
             basis: 'tracked',
@@ -134,18 +170,145 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
               .filter((t) => t.source !== 'desktop')
               .reduce((sum, t) => sum + (+t.toAt - +t.fromAt) / 60000, 0),
             rateHourCents,
-            amountCents: invoice.amountCents,
+            amountCents: Math.round((minutes * rateHourCents) / 60),
             rateChanges: [],
-          },
-        ]
-        const saved = await manager.save(Invoice, invoice)
-        await manager.update(
-          Time,
-          { id: In(times.map((t) => t.id)) },
-          { invoice: saved, publishedAt: new Date() },
+          })
+        }
+        if (runs.length) {
+          const worker = await manager.findOneByOrFail(User, {
+            id: invoice.user!.id,
+          })
+          // Assisted time overlaps any of the worker's own entries on the
+          // project, invoiced or not.
+          const human = await manager
+            .createQueryBuilder(Time, 'time')
+            .select(['time.id', 'time.fromAt', 'time.toAt'])
+            .where('time.userId=:user AND time.projectId=:project', {
+              user: worker.id,
+              project: project.id,
+            })
+            .andWhere('time.toAt > :from AND time.fromAt < :to', {
+              from: new Date(Math.min(...runs.map((r) => +r.fromAt))),
+              to: new Date(Math.max(...runs.map((r) => +r.toAt))),
+            })
+            .getMany()
+          lines.push(
+            ...AgentInvoiceLines.build(
+              runs,
+              worker.agents ?? [],
+              project.agentAttachments ?? [],
+              worker.id,
+              human,
+              new Date(),
+            ),
+          )
+        }
+        invoice.lines = lines
+        invoice.amountCents = lines.reduce(
+          (sum, line) => sum + line.amountCents,
+          0,
         )
+        const saved = await manager.save(Invoice, invoice)
+        if (times.length)
+          await manager.update(
+            Time,
+            { id: In(times.map((t) => t.id)) },
+            { invoice: saved, publishedAt: new Date() },
+          )
+        if (runs.length)
+          await manager.update(
+            TimeAgent,
+            { id: In(runs.map((r) => r.id)) },
+            { invoiceId: saved.id },
+          )
         return saved
       }),
+    )
+  }
+
+  /** Finished: terminal and past the 60 s grace, or stale (90 s without evidence). */
+  private static finishedRuns(
+    qb: SelectQueryBuilder<TimeAgent>,
+    now: number,
+  ): SelectQueryBuilder<TimeAgent> {
+    return qb.andWhere(
+      new Brackets((finished) =>
+        finished
+          .where('run.status IN (:...terminal) AND run.toAt <= :settled', {
+            terminal: ['completed', 'failed', 'cancelled'],
+            settled: new Date(now - 60000),
+          })
+          .orWhere('run.toAt <= :stale', { stale: new Date(now - 90000) }),
+      ),
+    )
+  }
+
+  private uninvoicedRuns(
+    manager: EntityManager,
+    projectId: string,
+    userId: string,
+  ): SelectQueryBuilder<TimeAgent> {
+    return InvoiceRepository.finishedRuns(
+      manager
+        .createQueryBuilder(TimeAgent, 'run')
+        .where('run.userId=:user AND run.projectId=:project', {
+          user: userId,
+          project: projectId,
+        })
+        .andWhere('run.invoiceId IS NULL AND run.isPaid=false'),
+      Date.now(),
+    )
+  }
+
+  private async invoiceableRuns(
+    manager: EntityManager,
+    project: Project,
+    invoice: Invoice,
+    scope: 'period' | 'all',
+  ): Promise<TimeAgent[]> {
+    const select = () => {
+      const qb = this.uninvoicedRuns(manager, project.id, invoice.user!.id)
+      if (scope === 'period')
+        qb.andWhere('run.fromAt >= :from AND run.fromAt < :to', {
+          from: invoice.fromAt,
+          to: invoice.toAt,
+        })
+      return qb
+    }
+    // A detached agent's past runs stay invoiceable at its last rate.
+    const attached = (run: TimeAgent) =>
+      (project.agentAttachments ?? []).some(
+        (a) => a.agentId === run.agentId && a.workerId === run.userId,
+      )
+    const candidates = (await select().getMany()).filter(attached)
+    if (!candidates.length) return []
+    // Ingestion takes these run locks before row locks; keep the same order.
+    for (const key of candidates.map((run) => run.runKey).sort())
+      await manager.query(
+        'SELECT pg_advisory_xact_lock(hashtextextended($1, 0))',
+        [`agent:${key}`],
+      )
+    return (
+      await select()
+        .andWhere('run.id IN (:...ids)', { ids: candidates.map((r) => r.id) })
+        .orderBy('run.id')
+        .setLock('pessimistic_write')
+        .getMany()
+    ).filter(attached)
+  }
+
+  public hasInvoiceableAgentRuns(
+    project: Project,
+    author: User,
+  ): RepoEffect<boolean> {
+    return fromPromise(async () =>
+      Boolean(
+        await this.uninvoicedRuns(
+          this.getRepo().manager,
+          project.id,
+          author.id,
+        ).getCount(),
+      ),
     )
   }
 

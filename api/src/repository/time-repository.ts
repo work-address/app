@@ -101,6 +101,15 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
           time.publishedAt = existing.publishedAt
           time.isPaid = existing.isPaid
         }
+        if (preserveUsage) {
+          // Evidence never changes once the owner can see it: a desktop retry
+          // must not restore a removed screenshot or rewrite input counts.
+          time.screenshot = existing.screenshot
+          time.processes = existing.processes
+          time.keyboardKeys = existing.keyboardKeys
+          time.mouseKeys = existing.mouseKeys
+          time.mouseDistance = existing.mouseDistance
+        }
         time.appsStatus = usage.status
         time.appsReason = usage.reason
         time.appsTruncated = usage.truncated

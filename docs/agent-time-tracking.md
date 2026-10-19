@@ -675,4 +675,6 @@ Deliver the schema, APIs, collector package and plugins, conformance fixtures, s
 
 ## Collector implementation status (2026-10-17)
 
-The experimental npm packages now have a [server runtime coverage matrix](../packages/agent-tracker/SERVER-RUNTIMES.md), hook bridges, Hermes Python shim and synthetic conformance tests. The matrix distinguishes implemented partial paths from unavailable transports. These packages do not complete the production ingest/accounting or desktop-reader phases described above; no live runtime qualification is claimed.
+The experimental npm packages now have a [server runtime coverage matrix](../packages/agent-tracker/SERVER-RUNTIMES.md), hook bridges, Hermes Python shim and synthetic conformance tests. The matrix distinguishes implemented partial paths from unavailable transports. These packages do not complete the production ingest/accounting or desktop-reader phases described above; no live runtime qualification is claimed. Hooks start the detached uploader and the CI/cloud flush at Stop described in [Collector](#collector).
+
+Invoices carry agent lines (2026-10-20): a period or "everything outstanding" invoice bills the issuer's finished runs (terminal and past the 60-second grace, or stale after 90 seconds) per agent as the union of their segments, with the assisted, waiting and unclassified parts and the rate changes since the earliest run. An invoice for selected human entries bills no agent runs. Staleness is applied when invoicing; stored rows are not yet re-marked final.

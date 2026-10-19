@@ -6,12 +6,12 @@ timeout = 2
 [[hooks]]
 event = "Stop"
 command = "agent-tracker hook kimi-code"
-timeout = 2
+timeout = 10
 
 [[hooks]]
 event = "StopFailure"
 command = "agent-tracker hook kimi-code"
-timeout = 2
+timeout = 10
 
 [[hooks]]
 event = "Interrupt"

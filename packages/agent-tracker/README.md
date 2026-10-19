@@ -11,6 +11,9 @@ See [server coverage, setup and qualification limits](SERVER-RUNTIMES.md). Requi
   `~/.work-address/agent-tracker`). Setup never overwrites an existing identity.
 - `agent-tracker adapters` prints the complete server support matrix.
 - `agent-tracker hook <product>` reads native hook JSON; experimental opt-in required.
+  Session boundaries and stops start a detached `sync`; in CI and cloud sandboxes
+  `Stop` flushes first. `WORK_ADDRESS_HOOK_UPLOAD=0` turns this off (see
+  SERVER-RUNTIMES.md).
 - `agent-tracker stream codex` reads one live exec JSONL stream.
 - `agent-tracker emit` accepts a strict normalized event on stdin.
 - `agent-tracker status` prints queued, rejected and lost event counts, never secrets.

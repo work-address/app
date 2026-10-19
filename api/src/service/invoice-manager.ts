@@ -156,12 +156,8 @@ export class InvoiceManager {
         author,
       )
 
-      if (times.length === 0) {
-        return yield* Effect.fail(
-          new BadRequestError('There is no unpaid tracked time in that period'),
-        )
-      }
-
+      // With no human time the invoice can still carry agent lines; the
+      // repository refuses it when neither exists.
       const invoice = new Invoice()
 
       invoice.project = accessible
@@ -178,6 +174,8 @@ export class InvoiceManager {
       const saved = yield* this.invoiceRepository.saveWithEntries(
         invoice,
         times,
+        false,
+        'period',
       )
 
       return saved
@@ -185,7 +183,8 @@ export class InvoiceManager {
   }
 
   /**
-   * Bills a specific set of tracked entries.
+   * Bills a specific set of tracked entries. Agent runs are not part of a
+   * selection; they wait for a period invoice.
    *
    * Every id must belong to the caller, to this project, and be neither paid
    * nor already invoiced - the repository filters on all of that, so a short
@@ -332,22 +331,25 @@ export class InvoiceManager {
           author,
         )
 
-      if (outstanding.length === 0) {
+      if (
+        outstanding.length === 0 &&
+        !(yield* this.invoiceRepository.hasInvoiceableAgentRuns(
+          accessible,
+          author,
+        ))
+      ) {
         return yield* this.invoiceRepository.findLatestForAuthor(
           accessible,
           author,
         )
       }
 
-      const starts = outstanding.map((time) => new Date(time.fromAt).getTime())
-      const ends = outstanding.map((time) => new Date(time.toAt).getTime())
-
       const invoice = new Invoice()
 
       invoice.project = accessible
       invoice.user = author
-      invoice.fromAt = new Date(Math.min(...starts))
-      invoice.toAt = new Date(Math.max(...ends))
+      // The repository sets the period to span the human entries and agent
+      // runs it bills.
       invoice.amountCents = InvoiceManager.amountFor(
         outstanding,
         Number(accessible.rateHour) || 0,
@@ -359,6 +361,7 @@ export class InvoiceManager {
         invoice,
         outstanding,
         true,
+        'all',
       )
 
       return saved

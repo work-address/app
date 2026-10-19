@@ -733,4 +733,102 @@ export class AgentControllerTest extends BaseControllerTest {
       ).data.results[0].code,
     ).to.equal('AGENT_TRACKING_OFF')
   }
+  @test() async finishedRunsBillTheirUnionOnTheAgentsOwnLine() {
+    const s = await this.scenario('fixed')
+    const uploaded = await s.uploader.post('/agent-tracking/events', {
+      events: [
+        s.event('run.started', 0, 0, { runId: 'a' }),
+        s.event('run.completed', 1, 120000, { runId: 'a' }),
+        s.event('run.started', 2, 60000, { runId: 'b' }),
+        s.event('run.completed', 3, 180000, { runId: 'b' }),
+        // Still running: not finished, so it waits for a later invoice.
+        s.event('run.started', 4, 295000, { runId: 'open' }),
+      ],
+    })
+    expect(uploaded.status).to.equal(200)
+    const first = await App.conn.manager.findOneByOrFail(TimeAgent, {
+      sourceRunId: 'a',
+    })
+    // The worker's own entry overlaps the first 90 s: that part is assisted.
+    const human = await s.client.post('/time', [
+      {
+        projectId: s.project.id,
+        fromAt: first.fromAt.toISOString(),
+        toAt: new Date(+first.fromAt + 90000).toISOString(),
+        fromIndex: 1,
+        toIndex: 2,
+        note: '',
+        keyboardKeys: 1,
+        mouseKeys: 0,
+        mouseDistance: 0,
+        minutesActive: 1,
+      },
+    ])
+    expect(human.data[0].error).to.equal(undefined)
+
+    const invoice = (
+      await s.client.post(`/invoice/project/${s.project.id}`, {})
+    ).data
+    const [humanLine, agentLine] = invoice.lines
+    expect(humanLine).to.include({ kind: 'human', minutes: 1.5 })
+    // Runs 0-120 s and 60-180 s overlap: the agent bills their 3-minute union.
+    expect(agentLine).to.include({
+      kind: 'agent',
+      agentId: s.agent.id,
+      name: 'My Codex',
+      basis: 'active',
+      minutes: 3,
+      assistedMinutes: 1.5,
+      waitMinutes: 0,
+      unclassifiedMinutes: 3,
+      rateHourCents: 600,
+      amountCents: 30,
+    })
+    // Attaching at $6 came after the runs started: all 3 minutes predate it.
+    expect(agentLine.rateChanges).to.have.length(1)
+    expect(agentLine.rateChanges[0]).to.include({
+      fromCents: 0,
+      toCents: 600,
+      minutesBefore: 3,
+    })
+    expect(invoice.amountCents).to.equal(humanLine.amountCents + 30)
+    const linked = async () =>
+      (await App.conn.manager.find(TimeAgent))
+        .filter((run) => run.invoiceId === invoice.id)
+        .map((run) => run.sourceRunId)
+        .sort()
+    expect(await linked()).to.deep.equal(['a', 'b'])
+    expect(
+      (await this.client(s.owner).get(`/invoice/${invoice.id}`)).data.lines,
+    ).to.have.length(2)
+
+    expect(
+      (await this.client(s.owner).post(`/invoice/${invoice.id}/reject`, {}))
+        .status,
+    ).to.equal(200)
+    expect(await linked()).to.deep.equal([])
+  }
+  @test() async periodInvoicesBillOnlyRunsStartingInThePeriod() {
+    const s = await this.scenario('fixed')
+    await s.uploader.post('/agent-tracking/events', {
+      events: [
+        s.event('run.started', 0, 0, { runId: 'a' }),
+        s.event('run.completed', 1, 120000, { runId: 'a' }),
+        s.event('run.started', 2, 60000, { runId: 'b' }),
+        s.event('run.completed', 3, 180000, { runId: 'b' }),
+      ],
+    })
+    const first = await App.conn.manager.findOneByOrFail(TimeAgent, {
+      sourceRunId: 'a',
+    })
+    // No human time at all: the invoice carries the agent line alone.
+    const invoice = await s.client.post(`/invoice/project/${s.project.id}`, {
+      fromUnix: +first.fromAt,
+      toUnix: +first.fromAt + 30000,
+    })
+    expect(invoice.status).to.equal(200)
+    expect(invoice.data.lines).to.have.length(1)
+    expect(invoice.data.lines[0]).to.include({ kind: 'agent', minutes: 2 })
+    expect(invoice.data.amountCents).to.equal(20)
+  }
 }

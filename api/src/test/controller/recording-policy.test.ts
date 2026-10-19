@@ -545,4 +545,52 @@ export class RecordingPolicyTest extends BaseControllerTest {
         .data.id,
     ).not.to.equal(invoice.data.id)
   }
+  @test() async publishedEvidenceSurvivesDesktopReuploads() {
+    const owner = await this.userFixture.createPremiumUser()
+    const worker = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner, 60)
+    project.workerAddresses = [worker.address]
+    project.trackProcesses = true
+    project.trackScreenshots = true
+    await App.conn.manager.save(project)
+    const client = this.client(worker)
+    const end = new Date(Date.now() - 60000)
+    const payload = {
+      projectId: project.id,
+      fromAt: new Date(+end - 600000).toISOString(),
+      toAt: end.toISOString(),
+      fromIndex: 1,
+      toIndex: 2,
+      note: '',
+      keyboardKeys: 7,
+      mouseKeys: 3,
+      mouseDistance: 10,
+      minutesActive: 5,
+      processes: [{ name: 'Editor', timeMin: 5 }],
+    }
+    const id = (await client.post('/time', [payload])).data[0].id
+    expect((await client.post('/time/publish', { ids: [id] })).status).to.equal(
+      200,
+    )
+    await App.conn.manager.update(Time, id, { screenshot: 'stored-image' })
+    // A desktop retry with different counts and no screenshot.
+    const retry = await client.post('/time', [
+      {
+        ...payload,
+        keyboardKeys: 99,
+        mouseKeys: 99,
+        mouseDistance: 99,
+        processes: [{ name: 'Other', timeMin: 5 }],
+      },
+    ])
+    expect(retry.data[0].error).to.equal(undefined)
+    const stored = await App.conn.manager.findOneByOrFail(Time, { id })
+    expect(stored).to.include({
+      screenshot: 'stored-image',
+      keyboardKeys: 7,
+      mouseKeys: 3,
+      mouseDistance: 10,
+    })
+    expect(stored.processes).to.deep.equal(payload.processes)
+  }
 }
