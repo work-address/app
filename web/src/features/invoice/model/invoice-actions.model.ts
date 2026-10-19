@@ -1,5 +1,7 @@
 import { combine, createEvent, sample } from 'effector'
 
+import { canSettleInvoice } from '../lib/invoice-state'
+
 import { getInvoicePageUrl } from './invoice-actions'
 import { saveInvoicePdfFx, shareInvoiceFx } from './invoice-actions.effects'
 import { $invoiceSettlementPendingIds } from './settlement.model'
@@ -11,11 +13,7 @@ import { showToastFx, translate } from '@/shared'
 export const shareInvoiceRequested = createEvent()
 export const saveInvoicePdfRequested = createEvent()
 
-export const $invoiceCanSettle = combine($invoice, $user, (invoice, user) =>
-  Boolean(
-    user?.id && invoice?.user?.id === user.id && invoice.state !== 'REJECTED',
-  ),
-)
+export const $invoiceCanSettle = combine($invoice, $user, canSettleInvoice)
 export const $invoiceSharePending = shareInvoiceFx.pending
 export const $invoicePrintPending = saveInvoicePdfFx.pending
 export const $invoiceActionsPending = combine(

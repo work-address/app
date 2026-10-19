@@ -4,7 +4,11 @@ import { QRCodeSVG } from 'qrcode.react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { useInvoiceInfoFields } from '../lib'
+import {
+  invoiceStateColor,
+  invoiceStateLabelKey,
+  useInvoiceInfoFields,
+} from '../lib'
 import { $invoice, $invoiceLoading, getInvoicePageUrl } from '../model'
 
 import { InvoiceActions } from './invoice-actions'
@@ -21,7 +25,6 @@ export const InvoiceTotalAmountDesktop = () => {
     loading: $invoiceLoading,
   })
 
-  const isPaid = invoice?.state === 'PAID'
   const invoiceUrl = invoice?.id
     ? getInvoicePageUrl(window.location.origin, invoice.id)
     : ''
@@ -65,14 +68,8 @@ export const InvoiceTotalAmountDesktop = () => {
             {loading ? (
               <Skeleton width="60px" height="22px" loading={loading} />
             ) : (
-              <Badge size="2" variant="soft" color={isPaid ? 'green' : 'amber'}>
-                {t(
-                  invoice?.state === 'REJECTED'
-                    ? 'Rejected'
-                    : isPaid
-                      ? 'invoice.state.paid'
-                      : 'invoice.state.requested',
-                )}
+              <Badge size="2" variant="soft" color={invoiceStateColor(invoice)}>
+                {t(invoiceStateLabelKey(invoice))}
               </Badge>
             )}
           </Flex>

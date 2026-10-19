@@ -1,6 +1,18 @@
 import { Flex } from '@radix-ui/themes'
-import { Controller, useWatch, type Control } from 'react-hook-form'
+import {
+  Controller,
+  useController,
+  useWatch,
+  type Control,
+  type ControllerRenderProps,
+} from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
+
+import {
+  isValidReviewWindowHours,
+  isValidScreenshotRetentionDays,
+  readWholeNumber,
+} from '../lib/tracking-options'
 
 import type { ProjectFormValues } from '../model'
 
@@ -20,15 +32,24 @@ const OPTIONS = [
     name: 'trackScreenshots',
     labelKey: 'project.createModal.trackScreenshots',
   },
-  { name: 'trackAgents', labelKey: 'Record AI agents' },
-  { name: 'trackWindowTitles', labelKey: 'Record window titles' },
-  { name: 'trackBrowserDomains', labelKey: 'Record browser hostnames' },
-  { name: 'allowManualTime', labelKey: 'Allow manual entries and web timer' },
+  { name: 'trackAgents', labelKey: 'project.createModal.trackAgents' },
+  {
+    name: 'trackWindowTitles',
+    labelKey: 'project.createModal.trackWindowTitles',
+  },
+  {
+    name: 'trackBrowserDomains',
+    labelKey: 'project.createModal.trackBrowserDomains',
+  },
+  { name: 'allowManualTime', labelKey: 'project.createModal.allowManualTime' },
   {
     name: 'trackProcesses',
     labelKey: 'project.createModal.trackProcesses',
   },
 ] as const
+
+type SwitchName = (typeof OPTIONS)[number]['name']
+type SwitchField = ControllerRenderProps<ProjectFormValues, SwitchName>
 
 export const ProjectsFormTrackingOptions = ({
   control,
@@ -37,33 +58,49 @@ export const ProjectsFormTrackingOptions = ({
 }: ProjectsFormTrackingOptionsProps) => {
   const { t } = useTranslation()
   const apps = useWatch({ control, name: 'trackProcesses' })
+  // Titles and domains require apps. They are held here, outside the loop, so
+  // switching apps off can switch them off too: the form then shows exactly
+  // what the server will store instead of a checked box that cannot be used.
+  const titles = useController({ control, name: 'trackWindowTitles' })
+  const domains = useController({ control, name: 'trackBrowserDomains' })
+  const detailFields: Partial<Record<SwitchName, SwitchField>> = {
+    trackWindowTitles: titles.field,
+    trackBrowserDomains: domains.field,
+  }
+
+  const renderSwitch = (name: SwitchName, id: string, field: SwitchField) => (
+    <Checkbox
+      id={id}
+      checked={field.value}
+      disabled={disabled || (name in detailFields && !apps)}
+      onCheckedChange={(checked) => {
+        const on = checked === true
+        field.onChange(on)
+        if (name === 'trackProcesses' && !on) {
+          titles.field.onChange(false)
+          domains.field.onChange(false)
+        }
+      }}
+    />
+  )
 
   return (
     <Flex direction={'column'} gap={'3'}>
       {OPTIONS.map(({ name, labelKey }) => {
         const id = `${ID_PREFIX}${name}${idSuffix}`
+        const held = detailFields[name]
 
         return (
           <Flex key={name} gap={'2'} align={'center'}>
-            <Controller
-              control={control}
-              name={name}
-              render={({ field }) => (
-                <Checkbox
-                  id={id}
-                  checked={field.value}
-                  disabled={
-                    disabled ||
-                    ((name === 'trackWindowTitles' ||
-                      name === 'trackBrowserDomains') &&
-                      !apps)
-                  }
-                  onCheckedChange={(checked) => {
-                    field.onChange(checked === true)
-                  }}
-                />
-              )}
-            />
+            {held ? (
+              renderSwitch(name, id, held)
+            ) : (
+              <Controller
+                control={control}
+                name={name}
+                render={({ field }) => renderSwitch(name, id, field)}
+              />
+            )}
             <Text as="label" htmlFor={id} size={'3'}>
               {t(labelKey)}
             </Text>
@@ -73,33 +110,50 @@ export const ProjectsFormTrackingOptions = ({
       <Controller
         control={control}
         name="reviewWindowHours"
-        render={({ field }) => (
+        rules={{
+          validate: (value) =>
+            isValidReviewWindowHours(value) ||
+            t('project.createModal.reviewWindowHoursInvalid'),
+        }}
+        render={({ field, fieldState }) => (
           <Input
-            label={t('Review window (hours)')}
-            type="number"
-            min={1}
-            max={24}
-            value={String(field.value ?? 24)}
+            label={t('project.createModal.reviewWindowHours')}
+            inputMode="numeric"
+            value={Number.isFinite(field.value) ? String(field.value) : ''}
             disabled={disabled}
-            onChange={(event) => field.onChange(Number(event.target.value))}
+            state={fieldState.error ? 'error' : undefined}
+            errorMessage={fieldState.error?.message}
+            onBlur={field.onBlur}
+            onChange={(event) =>
+              // A cleared field is not 0 hours; it is left for validation to name.
+              field.onChange(readWholeNumber(event.target.value) ?? Number.NaN)
+            }
           />
         )}
       />
       <Controller
         control={control}
         name="screenshotRetentionDays"
-        render={({ field }) => (
+        rules={{
+          validate: (value) =>
+            isValidScreenshotRetentionDays(value) ||
+            t('project.createModal.screenshotRetentionDaysInvalid'),
+        }}
+        render={({ field, fieldState }) => (
           <Input
-            label={t('Screenshot retention (days; blank keeps screenshots)')}
-            type="number"
-            min={1}
-            max={3650}
-            value={field.value == null ? '' : String(field.value)}
+            label={t('project.createModal.screenshotRetentionDays')}
+            inputMode="numeric"
+            value={
+              field.value == null || !Number.isFinite(field.value)
+                ? ''
+                : String(field.value)
+            }
             disabled={disabled}
+            state={fieldState.error ? 'error' : undefined}
+            errorMessage={fieldState.error?.message}
+            onBlur={field.onBlur}
             onChange={(event) =>
-              field.onChange(
-                event.target.value === '' ? null : Number(event.target.value),
-              )
+              field.onChange(readWholeNumber(event.target.value))
             }
           />
         )}

@@ -17,13 +17,17 @@ import {
   $invoicesTotal,
   $isLoadingMoreInvoices,
   InvoicePaymentActions,
+  canSettleInvoice,
   fetchInvoiceList,
   retryInvoiceSummary,
   formatCents,
   invoiceListQuery,
   invoiceProjectFilterChanged,
   invoiceProjectsQuery,
+  invoiceRateHour,
+  invoiceStateColor,
   invoiceStateFilterChanged,
+  invoiceStateLabelKey,
   loadMoreInvoices,
   shortenAddress,
   type InvoiceStateFilter,
@@ -55,7 +59,7 @@ import {
 const STATE_TABS: { value: InvoiceStateFilter; labelKey: string }[] = [
   { value: '', labelKey: 'invoices.filter.state.all' },
   { value: 'Requested', labelKey: 'invoices.filter.state.awaiting' },
-  { value: 'REJECTED', labelKey: 'Rejected' },
+  { value: 'REJECTED', labelKey: 'invoices.filter.state.rejected' },
   { value: 'PAID', labelKey: 'invoices.filter.state.paid' },
 ]
 
@@ -308,13 +312,8 @@ export default function InvoicesPage() {
           ) : null}
           {rows.map((invoice) => {
             const isPaid = invoice.state === 'PAID'
-            // Only the issuer may settle: the person owed the money is the
-            // one who knows whether it arrived.
-            const canSettle = Boolean(
-              user?.id &&
-                invoice.user?.id === user.id &&
-                invoice.state !== 'REJECTED',
-            )
+            const canSettle = canSettleInvoice(invoice, user)
+            const rateHour = invoiceRateHour(invoice)
             const issuer =
               invoice.user?.name ||
               shortenAddress(
@@ -341,15 +340,9 @@ export default function InvoicesPage() {
                     <Badge
                       size="2"
                       variant="soft"
-                      color={isPaid ? 'green' : 'amber'}
+                      color={invoiceStateColor(invoice)}
                     >
-                      {t(
-                        invoice.state === 'REJECTED'
-                          ? 'Rejected'
-                          : isPaid
-                            ? 'invoice.state.paid'
-                            : 'invoice.state.requested',
-                      )}
+                      {t(invoiceStateLabelKey(invoice))}
                     </Badge>
                     {isPaid ? (
                       <Text size="1" color="gray">
@@ -379,16 +372,15 @@ export default function InvoicesPage() {
                   <Text size="4" weight="medium">
                     {formatCents(Number(invoice.amountCents ?? 0))}
                   </Text>
-                  {invoice.lines?.length === 1 &&
-                    invoice.lines[0].rateHourCents != null && (
-                      <Text size="1" color="gray">
-                        {t('invoices.item.perHour', {
-                          rate: formatCurrency(
-                            invoice.lines[0].rateHourCents / 100,
-                          ),
-                        })}
-                      </Text>
-                    )}
+                  {/* The frozen line rate, or the project's rate for an
+                      invoice issued before lines were stored. */}
+                  {rateHour != null && (
+                    <Text size="1" color="gray">
+                      {t('invoices.item.perHour', {
+                        rate: formatCurrency(rateHour),
+                      })}
+                    </Text>
+                  )}
                 </Cell>
                 <Cell $area="action" $align="end">
                   <InvoicePaymentActions
