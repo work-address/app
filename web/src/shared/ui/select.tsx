@@ -276,6 +276,9 @@ const Value = styled.span`
   white-space: nowrap;
 `
 const PopoverContent = styled(Popover.Content)`
+  /* A column, so the empty focus-guard spans around the list take no line. */
+  display: flex;
+  flex-direction: column;
   z-index: 60;
   min-width: var(--radix-popover-trigger-width);
   max-width: min(360px, calc(100vw - var(--space-7)));
@@ -288,7 +291,7 @@ const MenuTitle = styled.div`
 `
 const MenuList = styled(ListBox)`
   display: grid;
-  gap: var(--space-1);
+  gap: 2px;
   max-height: var(--select-menu-height);
   overflow-y: auto;
   outline: none;
@@ -298,9 +301,12 @@ const MenuItem = styled(ListBoxItem)`
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   gap: var(--space-2);
-  padding: var(--space-2) var(--space-3);
+  /* Match the trigger's size 2 text; the phone rule keeps a touch-sized row. */
+  padding: calc(var(--space-1) * 1.5) var(--space-3);
   border-radius: var(--radius-2);
   color: var(--gray-12);
+  font-size: var(--font-size-2);
+  line-height: var(--line-height-2);
   cursor: pointer;
   outline: none;
   &[data-hovered],
@@ -317,6 +323,8 @@ const MenuItem = styled(ListBoxItem)`
   }
   ${(p) => p.theme.breakpoints.down('md')} {
     min-height: var(--space-8);
+    font-size: var(--font-size-3);
+    line-height: var(--line-height-3);
   }
 `
 const ItemLabel = styled.span`
