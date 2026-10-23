@@ -4,6 +4,7 @@ import { useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
+import { DEFAULT_REVIEW_WINDOW_HOURS } from '../lib/tracking-options'
 import { mapCollaboratorsToAddresses } from '../model'
 
 import { ProjectsAddCollaborators } from './projects-add-collaborators'
@@ -75,8 +76,7 @@ export const ProjectsCreateModal = ({
       trackWindowTitles: false,
       trackBrowserDomains: false,
       allowManualTime: false,
-      reviewWindowHours: 24,
-      screenshotRetentionDays: null,
+      reviewWindowHours: DEFAULT_REVIEW_WINDOW_HOURS,
     },
   })
 
@@ -119,7 +119,7 @@ export const ProjectsCreateModal = ({
       trackBrowserDomains: data.trackBrowserDomains,
       allowManualTime: data.allowManualTime,
       reviewWindowHours: data.reviewWindowHours,
-      screenshotRetentionDays: data.screenshotRetentionDays,
+      screenshotRetentionDays: null,
     })
   }
 
@@ -189,6 +189,7 @@ export const ProjectsCreateModal = ({
           <Flex gap={'4'} direction={'column'}>
             <Input
               label={t('dashboard.projectsTable.form.projectName')}
+              hint={t('project.form.hint.title')}
               id={'projectName'}
               placeholder={t('project.createModal.projectNamePlaceholder')}
               disabled={pending}
@@ -199,6 +200,7 @@ export const ProjectsCreateModal = ({
             <Grid columns={'1fr 1fr'} gap={'2'}>
               <Input
                 label={t('dashboard.projectsTable.form.rate')}
+                hint={t('project.form.hint.rate')}
                 id={'rate'}
                 placeholder={t('project.createModal.ratePlaceholder')}
                 addonLeft={
@@ -216,6 +218,7 @@ export const ProjectsCreateModal = ({
                 control={control}
                 name="state"
                 label={t('dashboard.projectsTable.form.status')}
+                hint={t('project.form.hint.state')}
                 options={stateOptions}
                 fallbackValue={'Active'}
                 id={'state'}
@@ -226,6 +229,7 @@ export const ProjectsCreateModal = ({
             </Grid>
             <TextArea
               label={t('dashboard.projectsTable.form.description')}
+              hint={t('project.form.hint.description')}
               id={'description'}
               placeholder={t('project.createModal.descriptionPlaceholder')}
               rows={isMobile ? 7 : 3}

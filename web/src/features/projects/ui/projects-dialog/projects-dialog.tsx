@@ -11,11 +11,7 @@ import { ProjectsDialogView } from './projects-dialog-view'
 import type { ProjectsDialogMode } from '../../model'
 
 import { editProjectMutation, type ProjectWithStats } from '@/entities/projects'
-import {
-  AdaptiveDialog,
-  DIALOG_WIDTH_STANDARD,
-  DIALOG_WIDTH_WIDE,
-} from '@/shared'
+import { AdaptiveDialog, DIALOG_WIDTH_WIDE } from '@/shared'
 
 type ProjectsDialogProps = {
   open: boolean
@@ -59,19 +55,17 @@ export const ProjectsDialog = ({
       title={
         <ProjectsDialogTitle
           title={row?.title}
-          projectId={row?.id}
           mode={modalMode}
           onDelete={() => onDeleteClick(row)}
         />
       }
       open={open}
       onOpenChange={setOpen}
-      desktopWidth={
-        modalMode === 'view' ? DIALOG_WIDTH_WIDE : DIALOG_WIDTH_STANDARD
-      }
+      desktopWidth={DIALOG_WIDTH_WIDE}
       footer={
         <ProjectsDialogFooter
           mode={modalMode}
+          projectId={row?.id}
           isPending={editingStatus === 'pending'}
           onDelete={() => row && onDeleteClick(row)}
           onEdit={() => setModalMode('edit')}
@@ -101,7 +95,6 @@ export const ProjectsDialog = ({
               trackBrowserDomains: row.trackBrowserDomains ?? false,
               allowManualTime: row.allowManualTime ?? false,
               reviewWindowHours: row.reviewWindowHours ?? 24,
-              screenshotRetentionDays: row.screenshotRetentionDays ?? null,
             }}
           />
         ))}

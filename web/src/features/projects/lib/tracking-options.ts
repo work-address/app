@@ -1,34 +1,32 @@
 /**
  * The project's recording policy as the form holds it, kept in step with the
- * server's rules (`ProjectManager`): titles and domains need apps, the review
- * window is 1-24 whole hours, retention is 1-3650 whole days or unset.
+ * server's rules (`ProjectManager`): titles and domains need apps, and the
+ * review window is 1-24 whole hours. The form offers 1-12 of those.
  */
 export const REVIEW_WINDOW_HOURS = { min: 1, max: 24 } as const
-export const SCREENSHOT_RETENTION_DAYS = { min: 1, max: 3650 } as const
+export const REVIEW_WINDOW_CHOICES = { min: 1, max: 12 } as const
+export const DEFAULT_REVIEW_WINDOW_HOURS = REVIEW_WINDOW_CHOICES.max
 
-/** A blank field is `null`; digits are the number; anything else is `NaN`. */
-export const readWholeNumber = (text: string): number | null => {
-  const trimmed = text.trim()
-  if (!trimmed) {
-    return null
-  }
-  return /^\d+$/.test(trimmed) ? Number(trimmed) : Number.NaN
-}
-
-const within = (
-  value: unknown,
-  range: { readonly min: number; readonly max: number },
-): value is number =>
+export const isValidReviewWindowHours = (value: unknown): value is number =>
   typeof value === 'number' &&
   Number.isInteger(value) &&
-  value >= range.min &&
-  value <= range.max
+  value >= REVIEW_WINDOW_HOURS.min &&
+  value <= REVIEW_WINDOW_HOURS.max
 
-export const isValidReviewWindowHours = (value: unknown): boolean =>
-  within(value, REVIEW_WINDOW_HOURS)
-
-export const isValidScreenshotRetentionDays = (value: unknown): boolean =>
-  value == null || within(value, SCREENSHOT_RETENTION_DAYS)
+/**
+ * The hours the review window dropdown offers. A project saved with a longer
+ * window keeps it as an extra choice, so editing something else does not
+ * quietly shorten it.
+ */
+export const reviewWindowHourChoices = (current: unknown): number[] => {
+  const hours = Array.from(
+    { length: REVIEW_WINDOW_CHOICES.max - REVIEW_WINDOW_CHOICES.min + 1 },
+    (_, index) => REVIEW_WINDOW_CHOICES.min + index,
+  )
+  return isValidReviewWindowHours(current) && !hours.includes(current)
+    ? [...hours, current].sort((a, b) => a - b)
+    : hours
+}
 
 type DetailPolicy = { trackWindowTitles: boolean; trackBrowserDomains: boolean }
 

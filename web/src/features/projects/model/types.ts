@@ -39,5 +39,4 @@ export type ProjectFormValues = {
   trackBrowserDomains: boolean
   allowManualTime: boolean
   reviewWindowHours: number
-  screenshotRetentionDays: number | null
 }

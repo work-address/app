@@ -22,7 +22,14 @@ export type HintProps = {
  */
 export const Hint = ({ content, className, size = 14 }: HintProps) => (
   <Tooltip content={content}>
-    <Root className={className} role="img" aria-label={content} tabIndex={0}>
+    <Root
+      className={className}
+      role="img"
+      aria-label={content}
+      tabIndex={0}
+      // Inside a label a click would also toggle or focus its control.
+      onClick={(event) => event.preventDefault()}
+    >
       <QuestionMarkCircledIcon width={size} height={size} />
     </Root>
   </Tooltip>
@@ -32,6 +39,7 @@ const Root = styled.span`
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
+  vertical-align: middle;
   color: var(--ds-neutral-9);
   cursor: help;
 

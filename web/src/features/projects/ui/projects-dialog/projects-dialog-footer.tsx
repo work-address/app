@@ -5,10 +5,12 @@ import { useTranslation } from 'react-i18next'
 
 import type { ProjectsDialogMode } from '../../model'
 
-import { Button, useBreakpoint } from '@/shared'
+import { OpenInvoiceLink } from '@/features/invoice'
+import { Button, PrintIcon, Text, useBreakpoint } from '@/shared'
 
 type ProjectsDialogFooterProps = {
   mode: ProjectsDialogMode
+  projectId?: string
   isPending: boolean
   onDelete: () => void
   onEdit: () => void
@@ -17,6 +19,7 @@ type ProjectsDialogFooterProps = {
 
 export const ProjectsDialogFooter = ({
   mode,
+  projectId,
   isPending,
   onDelete,
   onEdit,
@@ -31,6 +34,21 @@ export const ProjectsDialogFooter = ({
     onEdit()
   }
 
+  const invoiceLink = projectId ? (
+    <OpenInvoiceLink projectId={projectId} variant={'button'}>
+      <Text size="2" as="span">
+        {t('dashboard.projectsTable.drawer.invoice')}
+      </Text>
+      <img src={PrintIcon} alt="" width={28} height={28} />
+    </OpenInvoiceLink>
+  ) : null
+
+  const editButton = (
+    <Button iconLeft={<Pencil1Icon />} onClick={handleEditClick}>
+      {t('dashboard.projectsTable.drawer.edit')}
+    </Button>
+  )
+
   if (isDesktop) {
     return (
       <Flex justify="between">
@@ -44,9 +62,10 @@ export const ProjectsDialogFooter = ({
         </Button>
         <Flex gap="3">
           {mode === 'view' ? (
-            <Button iconLeft={<Pencil1Icon />} onClick={handleEditClick}>
-              {t('dashboard.projectsTable.drawer.edit')}
-            </Button>
+            <>
+              {invoiceLink}
+              {editButton}
+            </>
           ) : (
             <>
               <Button color="neutral" variant="soft" onClick={onCancel}>
@@ -67,10 +86,13 @@ export const ProjectsDialogFooter = ({
   }
 
   if (mode === 'view') {
-    return (
-      <Button iconLeft={<Pencil1Icon />} onClick={handleEditClick}>
-        {t('dashboard.projectsTable.drawer.edit')}
-      </Button>
+    return invoiceLink ? (
+      <Grid columns="1fr 1fr" gap="2">
+        {invoiceLink}
+        {editButton}
+      </Grid>
+    ) : (
+      editButton
     )
   }
 

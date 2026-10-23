@@ -6,8 +6,12 @@ import { match, P } from 'ts-pattern'
 
 import { useBreakpoint } from '../hooks'
 
+import { Hint } from './hint'
+
 export type InputProps = TextField.RootProps & {
   label?: string
+  /** Explains the label in a question-mark tooltip beside it. */
+  hint?: string
   value?: string
   id?: string
   labelWidth?: string
@@ -22,10 +26,17 @@ export type InputProps = TextField.RootProps & {
   errorMessage?: string
 }
 
+const LABEL_WITH_HINT = {
+  display: 'inline-flex',
+  alignItems: 'center',
+  gap: 'var(--space-1)',
+} as const
+
 export const Input = forwardRef(
   (
     {
       label,
+      hint,
       id,
       labelWidth = 'auto',
       addonLeft,
@@ -88,8 +99,10 @@ export const Input = forwardRef(
             size={textSize || '2'}
             weight={textWeight || 'medium'}
             htmlFor={resolvedId}
+            style={hint ? LABEL_WITH_HINT : undefined}
           >
             {label}
+            {hint && <Hint content={hint} size={13} />}
           </Text>
         )}
         <Field

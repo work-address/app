@@ -17,6 +17,7 @@ import type { CollaboratorRole, ProjectFormValues } from '../model'
 
 import {
   Button,
+  Hint,
   Input,
   isValidWalletAddress,
   normalizeAddress,
@@ -112,6 +113,7 @@ export const ProjectsAddCollaborators = ({
               : 'project.createModal.collaborators.title',
           )}
         </Text>
+        <Hint content={t('project.form.hint.collaborators')} size={13} />
         {premiumLocked && (
           <Tooltip
             content={t('project.createModal.collaborators.premiumRequired')}
@@ -131,6 +133,7 @@ export const ProjectsAddCollaborators = ({
               <AddressField>
                 <Input
                   label={t('project.createModal.collaborators.walletAddress')}
+                  hint={t('project.form.hint.walletAddress')}
                   id={`${ID_PREFIX}address-${index}`}
                   placeholder={t(
                     'project.createModal.collaborators.walletPlaceholder',
@@ -147,6 +150,7 @@ export const ProjectsAddCollaborators = ({
                 {readOnly ? (
                   <Input
                     label={t('project.createModal.collaborators.role')}
+                    hint={t('project.form.hint.role')}
                     id={`${ID_PREFIX}role-${index}`}
                     value={getRoleLabel(field.role)}
                     disabled
@@ -157,6 +161,7 @@ export const ProjectsAddCollaborators = ({
                     control={control}
                     name={`collaborators.${index}.role`}
                     label={t('project.createModal.collaborators.role')}
+                    hint={t('project.form.hint.role')}
                     options={roleOptions}
                     fallbackValue={'Viewer'}
                     id={`role-${index}`}

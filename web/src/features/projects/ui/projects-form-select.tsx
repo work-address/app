@@ -9,6 +9,7 @@ type ProjectsFormSelectProps = {
   name: FieldPath<ProjectFormValues>
   options: SelectOption[]
   label?: string
+  hint?: string
   id?: string
   disabled?: boolean
   hasError?: boolean
@@ -28,6 +29,7 @@ export const ProjectsFormSelect = ({
   name,
   options,
   label,
+  hint,
   id,
   disabled,
   hasError,
@@ -40,6 +42,7 @@ export const ProjectsFormSelect = ({
     render={({ field }) => (
       <Select
         label={label}
+        hint={hint}
         options={options}
         value={
           typeof field.value === 'string' && field.value

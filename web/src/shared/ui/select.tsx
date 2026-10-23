@@ -13,6 +13,7 @@ import { useBreakpoint } from '../hooks'
 
 import { Button } from './button/ui/button'
 import { Drawer } from './dialogs/ui/drawer'
+import { Hint } from './hint'
 
 import type { InputProps } from './input'
 
@@ -27,6 +28,8 @@ type SelectProps = {
   multi?: boolean
   title?: string
   label?: string
+  /** Explains the label in a question-mark tooltip beside it. */
+  hint?: string
   allSelectedText?: string
   inputProps?: InputProps
   menuMaxHeight?: string | number
@@ -41,6 +44,7 @@ export const Select = ({
   multi,
   title,
   label,
+  hint,
   allSelectedText,
   inputProps,
   menuMaxHeight,
@@ -182,7 +186,12 @@ export const Select = ({
         } as CSSProperties
       }
     >
-      {label ? <Label htmlFor={id}>{label}</Label> : null}
+      {label ? (
+        <Label htmlFor={id}>
+          {label}
+          {hint && <Hint content={hint} size={13} />}
+        </Label>
+      ) : null}
       {isMobile ? (
         <Drawer
           open={open}
@@ -223,6 +232,9 @@ const Root = styled.div`
   }
 `
 const Label = styled.label`
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
   font-size: var(--font-size-2);
   line-height: var(--line-height-2);
   font-weight: 500;

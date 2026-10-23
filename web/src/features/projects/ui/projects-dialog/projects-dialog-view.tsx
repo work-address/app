@@ -51,7 +51,6 @@ export const ProjectsDialogView = ({ data }: ProjectsDialogViewProps) => {
       trackBrowserDomains: data.trackBrowserDomains ?? false,
       allowManualTime: data.allowManualTime ?? false,
       reviewWindowHours: data.reviewWindowHours ?? 24,
-      screenshotRetentionDays: data.screenshotRetentionDays ?? null,
     },
   })
 
