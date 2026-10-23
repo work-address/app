@@ -18,6 +18,8 @@ services:
       - "8000:8000"
     environment:
       VITE_API_URL: "http://0.0.0.0:4000"
+      # Inside the container localhost is web itself; reach the api by its compose service name.
+      VITE_API_PROXY_TARGET: "http://api:4000"
     develop:
       watch:
         - action: sync
@@ -62,7 +64,7 @@ services:
       [
         "sh",
         "-c",
-        "TS_NODE_PROJECT=tsconfig.json pnpm exec ts-node -r tsconfig-paths/register ./node_modules/typeorm/cli.js schema:sync -f src/ormconfig.ts && pnpm run dev",
+        "pnpm run schema:sync && pnpm run dev",
       ]
     develop:
       watch:

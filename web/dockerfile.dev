@@ -19,8 +19,8 @@ COPY tsconfig.base.json ./
 COPY packages/ packages/
 COPY web/ web/
 
-# Install project dependencies (from monorepo root for workspace resolution)
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install
+# Install web and its workspace deps only; a full install also pulls the agent trackers (openclaw needs a newer Node)
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --filter "{./web}..."
 
 # Expose the port used by the Vite development server
 EXPOSE 8000

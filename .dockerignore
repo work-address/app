@@ -16,4 +16,8 @@
 # Match nested paths (e.g. api/tsconfig.tsbuildinfo); plain *.tsbuildinfo does not
 **/*.tsbuildinfo
 
+# Machine-local env overrides (e.g. web/.env.local proxying to localhost) must not leak into images
+**/.env.local
+**/.env.*.local
+
 # api/ source is required for the API image build; **/node_modules/ already trims bulk

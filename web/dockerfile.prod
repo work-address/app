@@ -25,7 +25,7 @@ COPY web/ web/
 COPY scripts/resolve-git-commit.sh scripts/resolve-git-commit.sh
 
 # Install project dependencies (frozen lockfile = reproducible, like npm ci)
-RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile
+RUN --mount=type=cache,target=/root/.local/share/pnpm/store pnpm install --frozen-lockfile --filter "{./web}..."
 
 # Build the React.js application (outputs to /app/web/dist)
 WORKDIR /app/web
