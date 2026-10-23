@@ -112,8 +112,32 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
     )
 
     expect(result.error).to.exist
-    expect(result.error?.name).to.be.equal('EntityNotFoundError')
+    expect(result.error?.name).to.be.equal('ProjectUnavailableException')
     expect(result.id).to.be.undefined
+  }
+
+  @test()
+  async createOrUpdateMany_refusesMalformedProjectIdPerEntry() {
+    const owner = await this.userFixture.createPremiumUser()
+    const project = await this.projectFixture.create(
+      owner,
+      EProjectState.ACTIVE,
+    )
+    const results = await runPromise(
+      this.timeManager.createOrUpdateMany(
+        [
+          this.buildTimePayload('not-a-project-id', 4),
+          this.buildTimePayload(project.id, 5),
+        ],
+        owner,
+      ),
+    )
+    // Refused like any unavailable project, never as a Postgres error a
+    // tracker would retry, and the rest of the batch is still stored.
+    expect(results[0].error?.name).to.be.equal('ProjectUnavailableException')
+    expect(results[0].error?.message).to.not.match(/matching|SELECT|:id/)
+    expect(results[1].error).to.be.undefined
+    expect(results[1].id).to.be.a('string')
   }
 
   @test()
@@ -135,7 +159,7 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
     )
 
     expect(result.error).to.exist
-    expect(result.error?.name).to.be.equal('EntityNotFoundError')
+    expect(result.error?.name).to.be.equal('ProjectUnavailableException')
   }
 
   /**
@@ -162,7 +186,7 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
 
     const batch = [
       shift(this.buildTimePayload(project.id, 60), 0),
-      // Unknown project: findProjectForTimeTracking raises EntityNotFoundError.
+      // Unknown project: findProjectForTimeTracking refuses it as unavailable.
       shift(
         this.buildTimePayload('d650ad83-eab3-4200-9bf2-479a47c59892', 61),
         30,
@@ -186,7 +210,7 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
     expect(results[0].id).to.be.a('string')
 
     expect(results[1].error).to.exist
-    expect(results[1].error?.name).to.be.equal('EntityNotFoundError')
+    expect(results[1].error?.name).to.be.equal('ProjectUnavailableException')
     expect(results[1].id).to.be.undefined
 
     expect(results[2].error).to.be.undefined
@@ -248,7 +272,7 @@ export class TimeManagerTest extends AbstractDatabaseIntegration {
     await runPromise(this.projectRepository.saveSingle(project))
 
     const [secondResult] = await runPromise(effect)
-    expect(secondResult.error?.name).to.be.equal('EntityNotFoundError')
+    expect(secondResult.error?.name).to.be.equal('ProjectUnavailableException')
 
     // The backlogged entry survives: the second run had no project of its own
     // under retention, so it must not have purged anything.

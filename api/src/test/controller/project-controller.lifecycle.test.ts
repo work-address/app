@@ -225,7 +225,7 @@ export class ProjectControllerLifecycleTest extends BaseControllerTest {
 
     expect(res.status).to.be.equal(200)
     expect(res.data[0]).to.have.property('error')
-    expect(res.data[0].error?.name).to.be.equal('EntityNotFoundError')
+    expect(res.data[0].error?.name).to.be.equal('ProjectUnavailableException')
   }
 
   @test()
@@ -265,6 +265,6 @@ export class ProjectControllerLifecycleTest extends BaseControllerTest {
 
     expect(res.status).to.be.equal(200)
     expect(res.data[0]).to.have.property('error')
-    expect(res.data[0].error?.name).to.be.equal('EntityNotFoundError')
+    expect(res.data[0].error?.name).to.be.equal('ProjectUnavailableException')
   }
 }

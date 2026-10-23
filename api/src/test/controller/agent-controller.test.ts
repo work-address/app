@@ -530,13 +530,11 @@ export class AgentControllerTest extends BaseControllerTest {
         })
       ).status,
     ).to.equal(403)
-    expect(
-      (
-        await s.uploader.post('/agent-tracking/events', {
-          events: [s.event('run.started', 0, 0, { projectId: randomUUID() })],
-        })
-      ).status,
-    ).to.equal(403)
+    const unknown = await s.uploader.post('/agent-tracking/events', {
+      events: [s.event('run.started', 0, 0, { projectId: randomUUID() })],
+    })
+    expect(unknown.status).to.equal(200)
+    expect(unknown.data.results[0].code).to.equal('PROJECT_UNAVAILABLE')
     expect(
       (
         await s.uploader.post('/agent-tracking/events', {
@@ -590,13 +588,49 @@ export class AgentControllerTest extends BaseControllerTest {
       trackAgents: true,
       workerAddresses: [],
     })
+    const removed = await s.uploader.post('/agent-tracking/events', {
+      events: [s.event('run.started', 0, 0)],
+    })
+    expect(removed.status).to.equal(200)
+    expect(removed.data.results[0].code).to.equal('PROJECT_UNAVAILABLE')
+  }
+  @test() async unavailableProjectsRejectOnlyTheirOwnEvents() {
+    const s = await this.scenario()
+    const kept = s.event('run.started', 0, 0)
+    const gone = s.event('run.started', 1, 1000, {
+      projectId: randomUUID(),
+      runId: 'other-run',
+    })
+    const mixed = await s.uploader.post('/agent-tracking/events', {
+      events: [gone, kept],
+    })
+    expect(mixed.status).to.equal(200)
+    expect(mixed.data.results).to.deep.equal([
+      {
+        eventId: gone.eventId,
+        status: 'rejected',
+        code: 'PROJECT_UNAVAILABLE',
+      },
+      { eventId: kept.eventId, status: 'accepted' },
+    ])
+    expect(await App.conn.manager.count(AgentEvent)).to.equal(1)
+    // A deleted project rejects its later events, still one by one.
     expect(
-      (
-        await s.uploader.post('/agent-tracking/events', {
-          events: [s.event('run.started', 0, 0)],
-        })
-      ).status,
-    ).to.equal(403)
+      (await this.client(s.owner).delete(`/project/${s.project.id}`)).status,
+    ).to.equal(200)
+    const after = s.event('run.completed', 2, 2000)
+    const deleted = await s.uploader.post('/agent-tracking/events', {
+      events: [after],
+    })
+    expect(deleted.status).to.equal(200)
+    expect(deleted.data.results).to.deep.equal([
+      {
+        eventId: after.eventId,
+        status: 'rejected',
+        code: 'PROJECT_UNAVAILABLE',
+      },
+    ])
+    expect(await App.conn.manager.count(AgentEvent)).to.equal(1)
   }
   @test() async healthCannotExtendRunsAndIsRateLimited() {
     const s = await this.scenario()

@@ -12,10 +12,14 @@ import { fromPromise } from '@/service/effect-bridge'
 import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
 import AccessException from '@/exception/access-exception'
+import ProjectUnavailableException from '@/exception/project-unavailable-exception'
 import { EProjectState } from '@/model/project'
 import { ProjectSearchDto } from '@/model/dto/project'
 import { UserRepository } from '@/repository/user-repository'
 import { Entitlement } from '@/service/entitlement'
+
+const UUID_PATTERN =
+  /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
 
 @injectable()
 export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
@@ -87,6 +91,10 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
     id: string,
     user: User,
   ): RepoEffect<Project> {
+    // A malformed id is refused like any unavailable project instead of
+    // reaching Postgres as a query error a client would retry forever.
+    if (!UUID_PATTERN.test(String(id ?? '')))
+      return Effect.fail(new ProjectUnavailableException())
     const qb = this.getRepo()
       .createQueryBuilder('project')
       .innerJoinAndSelect('project.user', 'owner')
@@ -95,7 +103,13 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
 
     this.applyWorkerAccessFilter(qb, 'owner', user)
 
-    return fromPromise(() => qb.getOneOrFail())
+    return fromPromise(() => qb.getOne()).pipe(
+      Effect.flatMap((project) =>
+        project
+          ? Effect.succeed(project)
+          : Effect.fail(new ProjectUnavailableException()),
+      ),
+    )
   }
 
   public findProjectOwnedBy(
@@ -200,7 +214,15 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
         query.getManyAndCount(),
       )
 
-      for (const project of projects) this.scopeAgents(project, user)
+      for (const project of projects) {
+        this.scopeAgents(project, user)
+        // Whether this user's time uploads to it are accepted: what
+        // findProjectForTimeTracking checks. A tracker offers only these,
+        // since the list also holds closed projects and viewer-only ones.
+        project.canTrack =
+          project.state === EProjectState.ACTIVE &&
+          project.isWorker(user, this.entitlement.isPremium(project.user))
+      }
       yield* this.attachAccessUsersToProjects(projects)
 
       return [projects, count] as [Project[], number]

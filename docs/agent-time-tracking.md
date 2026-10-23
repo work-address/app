@@ -461,7 +461,7 @@ Each event gets a result:
 }
 ```
 
-`accepted` means durably stored, not yet visible. A run for a project whose `trackAgents` is off is rejected with `AGENT_TRACKING_OFF`. Reuse of an event ID with a different payload returns `EVENT_ID_CONFLICT`. An invalid envelope is HTTP 400; oversized 413; bad/expired credential 401; out-of-scope 403; throttled 429 with Retry-After. Retry network/429/5xx with exponential backoff and jitter; do not retry permanent failures. Keep rejected items in a bounded local diagnostic queue. The deduplication key is `(sourceInstanceId, eventId)` under the owning worker; cross-user collisions never reveal another user's event.
+`accepted` means durably stored, not yet visible. A run for a project whose `trackAgents` is off is rejected with `AGENT_TRACKING_OFF`. An event for a project that does not exist, was deleted, or that the uploader no longer works on is rejected on its own with `PROJECT_UNAVAILABLE`, without saying which; the rest of the batch is processed. Collectors hold such events and send them again when the project is available to them again. Reuse of an event ID with a different payload returns `EVENT_ID_CONFLICT`. An invalid envelope is HTTP 400; oversized 413; bad/expired credential 401; out-of-scope 403; throttled 429 with Retry-After. Retry network/429/5xx with exponential backoff and jitter; do not retry permanent failures. Keep rejected items in a bounded local diagnostic queue. The deduplication key is `(sourceInstanceId, eventId)` under the owning worker; cross-user collisions never reveal another user's event.
 
 ## Attribution, content and privacy
 
@@ -627,6 +627,7 @@ All schema changes are additive (new tables, new nullable columns, a new state v
 | Another worker or a viewer reads agents, runs, totals or invoices | Receives nothing of the other worker's agents; viewers receive no agent data |
 | Run for an unattached agent | Held in the Qt or collector queue, not uploaded; status explains the fix |
 | `trackAgents` off on the project | Nothing collected on laptop or server; anything arriving is rejected with `AGENT_TRACKING_OFF`; the icon is grey and `status` says why; attachments and rates untouched |
+| Project deleted, or the worker removed, while its events are queued | Only that project's events are rejected, with `PROJECT_UNAVAILABLE`; other projects' events in the batch are stored; the Qt queue holds them and sends them if the project returns |
 | `trackAgents` turned off mid-run, then on | Counting ends at the switch-off; runs starting after the switch-on count |
 | Qt agents icon | Grey, recording, running (evidence within 90 s on the current project) and error states; opens the Agents page |
 | Timer mode: a run starts while the timer is off | Not recorded; off-timer count rises; Qt notice offers **Start timer** |

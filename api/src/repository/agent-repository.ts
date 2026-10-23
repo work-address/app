@@ -26,6 +26,62 @@ import type {
   CollectorHealthV1,
 } from '@work-address/agent-tracking-contract'
 
+/**
+ * Why an event for an available project is refused, or null to store it. The
+ * order is the contract: the first matching reason is the one reported.
+ */
+function rejectionCode({
+  project,
+  event,
+  row,
+  previous,
+  assigned,
+  credential,
+  user,
+  now,
+}: {
+  project: Project
+  event: AgentEventV1
+  row: TimeAgent | null
+  previous: AgentEvent | null
+  assigned: WorkerAgent | undefined
+  credential: AgentCredential
+  user: User
+  now: number
+}): string | null {
+  if (!project.trackAgents || project.state !== EProjectState.ACTIVE)
+    return 'AGENT_TRACKING_OFF'
+  if (
+    project.agentTrackingSince &&
+    (row ? +row.fromAt : Date.parse(event.occurredAt)) <
+      +project.agentTrackingSince
+  )
+    return 'AGENT_TRACKING_OFF'
+  if (Date.parse(event.occurredAt) < now - 7 * 86400000)
+    return 'REVISION_WINDOW_EXPIRED'
+  if (
+    Date.parse(event.occurredAt) > now + 300000 ||
+    Date.parse(event.observedAt) > now + 300000
+  )
+    return 'FUTURE_TIMESTAMP'
+  if (
+    previous &&
+    (previous.projectId !== event.projectId ||
+      previous.mode !== credential.mode ||
+      previous.payload.source.agent !== event.source.agent)
+  )
+    return 'RUN_SCOPE_MISMATCH'
+  if (
+    !assigned ||
+    !project.agentAttachments?.some(
+      (a) =>
+        a.agentId === assigned.id && a.workerId === user.id && !a.detachedAt,
+    )
+  )
+    return 'AGENT_NOT_ATTACHED'
+  return null
+}
+
 @injectable()
 export class AgentRepository {
   @inject('Entitlement') private entitlement: Entitlement
@@ -121,6 +177,18 @@ export class AgentRepository {
     user: User,
     write: boolean,
   ): Promise<Project> {
+    const project = await this.workerProject(tx, id, user, write)
+    if (!project) throw new ForbiddenError()
+    return project
+  }
+
+  /** The project if it exists and `user` works on it; never says which is missing. */
+  private async workerProject(
+    tx: EntityManager,
+    id: string,
+    user: User,
+    write: boolean,
+  ): Promise<Project | null> {
     const project = await tx
       .createQueryBuilder(Project, 'p')
       .innerJoinAndSelect('p.user', 'owner')
@@ -129,12 +197,10 @@ export class AgentRepository {
         'p',
       ])
       .getOne()
-    if (
-      !project ||
-      !project.isWorker(user, this.entitlement.isPremium(project.user))
-    )
-      throw new ForbiddenError()
-    return project
+    return project &&
+      project.isWorker(user, this.entitlement.isPremium(project.user))
+      ? project
+      : null
   }
 
   public async attachments(
@@ -290,12 +356,18 @@ export class AgentRepository {
         where: { id: credential.userId },
         lock: { mode: 'pessimistic_read' },
       })
-      // Validate all project/source scopes before accepting any event in a batch.
-      const projects = new Map<string, Project>()
+      // A project that was deleted, or that the uploader no longer works on,
+      // rejects only its own events (PROJECT_UNAVAILABLE). Failing the whole
+      // batch made a collector's queue for every other project wait behind
+      // them. The code does not say whether the project exists.
+      const projects = new Map<string, Project | null>()
       for (const projectId of [
         ...new Set(events.map((e) => e.projectId)),
       ].sort())
-        projects.set(projectId, await this.project(tx, projectId, user, false))
+        projects.set(
+          projectId,
+          await this.workerProject(tx, projectId, user, false),
+        )
       if (
         events.some(
           (e) =>
@@ -321,7 +393,15 @@ export class AgentRepository {
           [`agent:${key}`],
         )
       for (const event of events) {
-        const project = projects.get(event.projectId)!
+        const project = projects.get(event.projectId)
+        if (!project) {
+          results.push({
+            eventId: event.eventId,
+            status: 'rejected',
+            code: 'PROJECT_UNAVAILABLE',
+          })
+          continue
+        }
         const payloadHash = AgentRepository.hash(
           AgentRepository.canonical(event),
         )
@@ -371,39 +451,16 @@ export class AgentRepository {
                   (id) => id.toLowerCase() === credential.instanceId,
                 ),
               ) ?? productAgents.find((a) => a.isDefault))
-        let code: string | null = null
-        if (!project.trackAgents || project.state !== EProjectState.ACTIVE)
-          code = 'AGENT_TRACKING_OFF'
-        else if (
-          project.agentTrackingSince &&
-          (row ? +row.fromAt : Date.parse(event.occurredAt)) <
-            +project.agentTrackingSince
-        )
-          code = 'AGENT_TRACKING_OFF'
-        else if (Date.parse(event.occurredAt) < now - 7 * 86400000)
-          code = 'REVISION_WINDOW_EXPIRED'
-        else if (
-          Date.parse(event.occurredAt) > now + 300000 ||
-          Date.parse(event.observedAt) > now + 300000
-        )
-          code = 'FUTURE_TIMESTAMP'
-        else if (
-          previous &&
-          (previous.projectId !== event.projectId ||
-            previous.mode !== credential.mode ||
-            previous.payload.source.agent !== event.source.agent)
-        )
-          code = 'RUN_SCOPE_MISMATCH'
-        else if (
-          !assigned ||
-          !project.agentAttachments?.some(
-            (a) =>
-              a.agentId === assigned.id &&
-              a.workerId === user.id &&
-              !a.detachedAt,
-          )
-        )
-          code = 'AGENT_NOT_ATTACHED'
+        const code = rejectionCode({
+          project,
+          event,
+          row,
+          previous,
+          assigned,
+          credential,
+          user,
+          now,
+        })
         if (code) {
           results.push({ eventId: event.eventId, status: 'rejected', code })
           continue

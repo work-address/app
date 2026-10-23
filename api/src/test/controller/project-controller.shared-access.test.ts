@@ -59,6 +59,42 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
   }
 
   @test
+  async searchSaysWhichProjectsAcceptTheCallersTime() {
+    const owner = await this.userFixture.createPremiumUser()
+    const worker = await this.userFixture.createUser()
+    const viewer = await this.userFixture.createUser()
+    const active = await this.projectFixture.create(owner, EProjectState.ACTIVE)
+    const closed = await this.projectFixture.create(
+      owner,
+      EProjectState.INACTIVE,
+    )
+    await this.grantAccess(active, owner, worker, viewer)
+    await this.grantAccess(closed, owner, worker, viewer)
+    const canTrack = async (user: User) => {
+      const res = await axios.post(
+        `${this.url}/api/project/search`,
+        { filter: {}, page: 0, sort: {}, limit: 0 },
+        {
+          headers: {
+            Authorization: this.authenticator.getTokens(user).accessToken,
+          },
+        },
+      )
+      const rows = res.data[0] as { id: string; canTrack?: boolean }[]
+      return Object.fromEntries(rows.map((row) => [row.id, row.canTrack]))
+    }
+    expect(await canTrack(owner)).to.deep.include({
+      [active.id]: true,
+      [closed.id]: false,
+    })
+    expect(await canTrack(worker)).to.deep.include({
+      [active.id]: true,
+      [closed.id]: false,
+    })
+    expect((await canTrack(viewer))[active.id]).to.equal(false)
+  }
+
+  @test
   async workerCanTrackTimeOnSharedProject() {
     const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()

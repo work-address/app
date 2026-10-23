@@ -175,6 +175,11 @@ export class Project extends AbstractBaseEntity implements IProject {
   @JSONSchema({ type: 'array', items: { type: 'object' } })
   agents?: import('@/model/agent').AgentAttachment[]
 
+  /** Set on search results: whether the caller's time uploads are accepted. */
+  @Expose({ groups: ['search'] })
+  @IsOptional()
+  canTrack?: boolean
+
   public isOwner(user: User): boolean {
     return this.user?.id === user.id
   }
