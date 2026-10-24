@@ -11,6 +11,7 @@ import {
   timeScreenshotRemoveRequested,
 } from '../../model'
 
+import { TimeDialogAgents } from './time-dialog-agents'
 import { TimeDialogFooter } from './time-dialog-footer'
 import { TimeDialogMetrics } from './time-dialog-metrics'
 import { TimeDialogNav } from './time-dialog-nav'
@@ -189,7 +190,7 @@ export const TimeDialog = ({
   // Derived straight from the row: the feed clears screenshot/processes when
   // the mutation lands, so there is no local copy to keep in step.
   const hasScreenshot = Boolean(row?.screenshot)
-  const hasProcesses = getTimeApps(row).length > 0
+  const hasProcesses = getTimeApps(row ?? undefined).length > 0
   const isPending =
     isDeleting || isEditing || isRemovingScreenshot || isRemovingProcesses
   const screenshotSrc = hasScreenshot
@@ -324,6 +325,7 @@ export const TimeDialog = ({
                 )}
               />
               {hasProcesses && row && <TimeDialogProcesses time={row} />}
+              <TimeDialogAgents time={row} />
             </DetailsColumn>
           </Content>
         </>

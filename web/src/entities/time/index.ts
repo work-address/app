@@ -12,7 +12,11 @@ import {
   resetTimeSort,
   setTimeLoading,
 } from './time.events'
-import { timeQuery, type TimeQueryParams } from './time.queries'
+import {
+  timeAgentRunsQuery,
+  timeQuery,
+  type TimeQueryParams,
+} from './time.queries'
 import { $hasMoreTime, $timeFilters, $timePage, $timeSort } from './time.stores'
 
 import type { TimeFilters, TimeSort } from './types'
@@ -104,6 +108,14 @@ export {
   resetTimeSort,
   loadMoreTime,
 } from './time.events'
+
+// A project without agent tracking, or a viewer, has none to show: the
+// dialog simply leaves the section out.
+timeAgentRunsQuery.finished.failure.watch(({ error }) => {
+  suppressGlobalErrorToast(error)
+})
+
+export { timeAgentRunsQuery, type TimeAgentRun } from './time.queries'
 
 export {
   deleteTimeMutation,

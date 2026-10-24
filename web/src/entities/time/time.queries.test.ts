@@ -2,7 +2,7 @@ import { AxiosError } from 'axios'
 import { allSettled, fork } from 'effector'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
-import { timeQuery } from './time.queries'
+import { timeAgentRunsQuery, timeQuery } from './time.queries'
 import {
   $allTime,
   $isLoadingMoreTime,
@@ -10,10 +10,20 @@ import {
   $timeLoading,
 } from './time.stores'
 
-const { search } = vi.hoisted(() => ({ search: vi.fn() }))
+const { search, agentSearch } = vi.hoisted(() => ({
+  search: vi.fn(),
+  agentSearch: vi.fn(),
+}))
 vi.mock('@/shared', async () => {
   const { runApi, runApiData } = await import('@/shared/lib/api')
-  return { baseApi: { timeControllerSearch: search }, runApi, runApiData }
+  return {
+    baseApi: {
+      timeControllerSearch: search,
+      agentControllerSearch: agentSearch,
+    },
+    runApi,
+    runApiData,
+  }
 })
 
 beforeEach(() => search.mockReset())
@@ -60,5 +70,30 @@ describe('time search reliability', () => {
     })
     expect(scope.getState($timeFailed)).toBe(false)
     expect(search.mock.calls[1][0].body.filter.note).toBe('design')
+  })
+})
+
+describe('agent runs of an entry', () => {
+  it("asks for the project's runs over the entry's period and returns the rows", async () => {
+    const scope = fork()
+    const params = {
+      projectId: 'project',
+      fromAt: '2026-10-24T00:40:00.000Z',
+      toAt: '2026-10-24T00:50:00.000Z',
+    }
+    const runs = [
+      {
+        id: 'run',
+        userId: 'u',
+        product: 'codex',
+        fromAt: params.fromAt,
+        toAt: params.toAt,
+        status: 'completed',
+      },
+    ]
+    agentSearch.mockResolvedValueOnce({ data: [runs, 1] })
+    await allSettled(timeAgentRunsQuery.start, { scope, params })
+    expect(agentSearch).toHaveBeenCalledWith({ body: params })
+    expect(scope.getState(timeAgentRunsQuery.$data)).toEqual(runs)
   })
 })

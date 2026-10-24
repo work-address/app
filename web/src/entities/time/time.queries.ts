@@ -74,3 +74,32 @@ export const timeQuery = createQuery({
 // Pagination reads the previous page from the store, so a stale response must
 // never land after a newer one.
 concurrency(timeQuery, { strategy: 'TAKE_LATEST' })
+
+/** An agent run as /agent-tracking/search returns it; the fields the entry dialog shows. */
+export type TimeAgentRun = {
+  id: string
+  userId: string
+  product: string
+  fromAt: string
+  toAt: string
+  status: string
+}
+
+export type TimeAgentRunsParams = {
+  projectId: string
+  fromAt: string
+  toAt: string
+}
+
+/** The project's agent runs that overlap an entry: everyone's for its owner, one's own otherwise. */
+export const timeAgentRunsQuery = createQuery({
+  handler: async (params: TimeAgentRunsParams) => {
+    const [runs] = (await runApiData(() =>
+      baseApi.agentControllerSearch({ body: params }),
+    )) as [TimeAgentRun[], number]
+
+    return runs
+  },
+})
+
+concurrency(timeAgentRunsQuery, { strategy: 'TAKE_LATEST' })
