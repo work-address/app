@@ -1,6 +1,6 @@
 # Dashboard rework
 
-Status: confirmed specification from design reviews on 24 October 2026. Baseline: this repository at `ede090f5`. Nothing below exists yet unless marked; every route, widget and phase is a proposed contract.
+Status: confirmed specification from design reviews on 24 October 2026, implemented on `feat/0-dashboard-split` (phases D1–D5). Baseline: this repository at `ede090f5`.
 
 The dashboard becomes the place for statistics: time tracked, charts, app usage, personal performance insights and agent insights, for owners, workers and people tracking their own time. The worklogs move to their own page, `/time`.
 
@@ -60,7 +60,7 @@ Top to bottom. Each loads, fails and retries on its own, with a skeleton while l
 1. **KPI row:**
    - Tracked
    - Active %
-   - Earned: billable value in the period, wall-clock minutes at the project rate, with human and agent amounts in the hint
+   - Earned: tracked human time in the period at each project's rate (agent amounts need per-agent attachment rates and come with the invoice-line work)
    - Unpaid: the part of Earned not on a paid invoice
    - Agent time: assisted and autonomous as two figures in one tile
 
@@ -80,8 +80,8 @@ Top to bottom. Each loads, fails and retries on its own, with a skeleton while l
    - assisted and autonomous time
    - status breakdown (completed, failed, …)
    - agent hours against human hours per day
-7. **Recent prompts:** the last 5–10, each with product, project, duration and time; clicking one opens its entry's time dialog.
-8. **Recent screenshots:** the latest 8 in the period; clicking one opens the time dialog on the dashboard. Hidden when there are none.
+7. **Recent prompts:** the last 8, each with product, project, duration and time; clicking one opens `/time` on that day and project. A held prompt says so.
+8. **Recent screenshots:** the latest 8 in the period, from the newest 48 visible screenshots narrowed to the selected projects and people; clicking one opens the time dialog on the dashboard. Hidden when there are none.
 9. **Team** (owners only): each worker's tracked time, active %, unpaid amount and agent time, sorted by name.
 
 ## Visibility

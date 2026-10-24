@@ -88,7 +88,7 @@ export const BucketBarChart = ({
             <YAxis
               axisLine={false}
               tickLine={false}
-              width={44}
+              width={56}
               allowDecimals={false}
               tickFormatter={formatTick}
               tick={{ fontSize: 12, fill: 'var(--ds-neutral-11)' }}
