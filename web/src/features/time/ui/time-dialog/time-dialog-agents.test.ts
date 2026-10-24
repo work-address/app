@@ -18,6 +18,7 @@ const run = (
 ): TimeAgentRun => ({
   runKey,
   userId,
+  projectId: 'project',
   product: 'claude-code',
   fromAt,
   toAt,

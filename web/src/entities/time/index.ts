@@ -13,6 +13,8 @@ import {
   setTimeLoading,
 } from './time.events'
 import {
+  recentAgentRunsQuery,
+  recentScreenshotsQuery,
   timeAgentRunsQuery,
   timeQuery,
   type TimeQueryParams,
@@ -116,12 +118,23 @@ timeAgentRunsQuery.finished.failure.watch(({ error }) => {
   suppressGlobalErrorToast(error)
 })
 
+// The dashboard's strips show their own failure in place.
+recentAgentRunsQuery.finished.failure.watch(({ error }) => {
+  suppressGlobalErrorToast(error)
+})
+recentScreenshotsQuery.finished.failure.watch(({ error }) => {
+  suppressGlobalErrorToast(error)
+})
+
 export {
+  recentAgentRunsQuery,
+  recentScreenshotsQuery,
   timeAgentRunsQuery,
   timeQuery,
   type TimeAgentRun,
   type TimeAgentSegment,
   type TimeQueryParams,
+  type RecentTimeParams,
 } from './time.queries'
 
 export {

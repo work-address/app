@@ -82,6 +82,7 @@ export type TimeAgentRun = {
   /** Unique per run: what a list keys its runs by. */
   runKey: string
   userId: string
+  projectId: string
   product: string
   /** Where the agent ran: `cli`, `ide`, `desktop`... */
   surface?: string
@@ -122,3 +123,55 @@ export const timeAgentRunsQuery = createQuery({
 })
 
 concurrency(timeAgentRunsQuery, { strategy: 'TAKE_LATEST' })
+
+export type RecentTimeParams = {
+  fromAt: string
+  toAt: string
+}
+
+/**
+ * The newest runs across every project the reader works on: their own, and
+ * every worker's on projects they own. Prompts another worker has not yet
+ * released come back held.
+ */
+export const recentAgentRunsQuery = createQuery({
+  handler: async (params: RecentTimeParams) => {
+    const [runs] = (await runApiData(() =>
+      baseApi.agentControllerSearch({ body: params }),
+    )) as [TimeAgentRun[], number]
+
+    return runs
+  },
+})
+
+concurrency(recentAgentRunsQuery, { strategy: 'TAKE_LATEST' })
+
+/** How many entries to look through for the screenshot strip. */
+const RECENT_SCREENSHOTS_PAGE = 48
+
+/**
+ * The newest entries with a screenshot the reader may see: the search applies
+ * the review window and retention, so nothing held comes back.
+ */
+export const recentScreenshotsQuery = createQuery({
+  handler: async (params: RecentTimeParams) => {
+    const [items] = (await runApiData(() =>
+      baseApi.timeControllerSearch({
+        body: {
+          filter: {
+            withScreenshots: true,
+            fromAt: params.fromAt,
+            toAt: params.toAt,
+          },
+          page: 0,
+          limit: RECENT_SCREENSHOTS_PAGE,
+          sort: { fromAt: 'DESC' },
+        },
+      }),
+    )) as [Time[], number]
+
+    return items ?? []
+  },
+})
+
+concurrency(recentScreenshotsQuery, { strategy: 'TAKE_LATEST' })

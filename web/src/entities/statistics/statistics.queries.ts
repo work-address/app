@@ -1,8 +1,13 @@
 import { concurrency, createQuery } from '@farfetched/core'
 
 import type {
+  StatisticsAgents,
+  StatisticsDailyRow,
+  StatisticsHourlyRow,
+  StatisticsInsights,
   StatisticsProjectAppRow,
   StatisticsQuery,
+  StatisticsTeamRow,
   StatisticsTotalsRow,
 } from './types'
 
@@ -22,24 +27,33 @@ const run = async <T>(request: () => Promise<unknown>): Promise<T> => {
   }
 }
 
-export const statisticsOverviewQuery = createQuery({
-  handler: async (query: StatisticsQuery): Promise<StatisticsTotalsRow[]> => {
-    const { totals } = await run<{ totals: Record<string, unknown>[] }>(() =>
-      baseApi.statisticsControllerOverview({ body: query }),
-    )
+const overviewHandler = async (
+  query: StatisticsQuery,
+): Promise<StatisticsTotalsRow[]> => {
+  const { totals } = await run<{ totals: Record<string, unknown>[] }>(() =>
+    baseApi.statisticsControllerOverview({ body: query }),
+  )
 
-    return totals.map((row) => ({
-      projectId: String(row.projectId),
-      trackedSeconds: toNumber(row.trackedSeconds) ?? 0,
-      activeSeconds: toNumber(row.activeSeconds),
-      idleSeconds: toNumber(row.idleSeconds),
-      manualSeconds: toNumber(row.manualSeconds),
-      paidSeconds: toNumber(row.paidSeconds),
-    }))
-  },
-})
+  return totals.map((row) => ({
+    projectId: String(row.projectId),
+    trackedSeconds: toNumber(row.trackedSeconds) ?? 0,
+    activeSeconds: toNumber(row.activeSeconds),
+    idleSeconds: toNumber(row.idleSeconds),
+    manualSeconds: toNumber(row.manualSeconds),
+    paidSeconds: toNumber(row.paidSeconds),
+  }))
+}
+
+export const statisticsOverviewQuery = createQuery({ handler: overviewHandler })
 
 concurrency(statisticsOverviewQuery, { strategy: 'TAKE_LATEST' })
+
+/** The same totals for the period before, which the KPI deltas compare with. */
+export const statisticsPreviousOverviewQuery = createQuery({
+  handler: overviewHandler,
+})
+
+concurrency(statisticsPreviousOverviewQuery, { strategy: 'TAKE_LATEST' })
 
 export const statisticsProjectAppsQuery = createQuery({
   handler: async (
@@ -61,3 +75,57 @@ export const statisticsProjectAppsQuery = createQuery({
 })
 
 concurrency(statisticsProjectAppsQuery, { strategy: 'TAKE_LATEST' })
+
+export const statisticsDailyQuery = createQuery({
+  handler: async (query: StatisticsQuery): Promise<StatisticsDailyRow[]> => {
+    const { rows } = await run<{ rows: StatisticsDailyRow[] }>(() =>
+      baseApi.statisticsControllerTimeDaily({ body: query }),
+    )
+
+    return rows
+  },
+})
+
+concurrency(statisticsDailyQuery, { strategy: 'TAKE_LATEST' })
+
+export const statisticsHourlyQuery = createQuery({
+  handler: async (query: StatisticsQuery): Promise<StatisticsHourlyRow[]> => {
+    const { rows } = await run<{ rows: StatisticsHourlyRow[] }>(() =>
+      baseApi.statisticsControllerTimeHourly({ body: query }),
+    )
+
+    return rows
+  },
+})
+
+concurrency(statisticsHourlyQuery, { strategy: 'TAKE_LATEST' })
+
+export const statisticsInsightsQuery = createQuery({
+  handler: async (query: StatisticsQuery): Promise<StatisticsInsights> =>
+    run<StatisticsInsights>(() =>
+      baseApi.statisticsControllerInsightsMe({ body: query }),
+    ),
+})
+
+concurrency(statisticsInsightsQuery, { strategy: 'TAKE_LATEST' })
+
+export const statisticsAgentsQuery = createQuery({
+  handler: async (query: StatisticsQuery): Promise<StatisticsAgents> =>
+    run<StatisticsAgents>(() =>
+      baseApi.statisticsControllerAgentsDaily({ body: query }),
+    ),
+})
+
+concurrency(statisticsAgentsQuery, { strategy: 'TAKE_LATEST' })
+
+export const statisticsTeamQuery = createQuery({
+  handler: async (query: StatisticsQuery): Promise<StatisticsTeamRow[]> => {
+    const { rows } = await run<{ rows: StatisticsTeamRow[] }>(() =>
+      baseApi.statisticsControllerTeam({ body: query }),
+    )
+
+    return rows
+  },
+})
+
+concurrency(statisticsTeamQuery, { strategy: 'TAKE_LATEST' })

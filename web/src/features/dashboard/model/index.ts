@@ -14,12 +14,15 @@ export type {
 } from './applications-usage-chart'
 export {
   $dashboardFilters,
+  $dashboardInstants,
   $dashboardPeople,
+  $dashboardScreenshots,
   $dashboardProjectIds,
   $dashboardProjects,
   $dashboardRange,
   $dashboardStatisticsQuery,
   $dashboardUserIds,
+  $isDashboardOwner,
   dashboardFiltersRestored,
   dashboardPeopleChanged,
   dashboardProjectsChanged,

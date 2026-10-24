@@ -4,13 +4,26 @@ import i18n from 'i18next'
 import { $user } from '@/entities/profile'
 import { $projects, type ProjectWithStats } from '@/entities/projects'
 import {
+  statisticsAgentsQuery,
+  statisticsDailyQuery,
+  statisticsHourlyQuery,
+  statisticsInsightsQuery,
   statisticsOverviewQuery,
+  statisticsPreviousOverviewQuery,
   statisticsProjectAppsQuery,
+  statisticsTeamQuery,
   type StatisticsQuery,
 } from '@/entities/statistics'
 import {
+  recentAgentRunsQuery,
+  recentScreenshotsQuery,
+  type RecentTimeParams,
+} from '@/entities/time'
+import {
   DEFAULT_DATE_RANGE_PRESET,
+  fromDay,
   parseDateRange,
+  previousDateRange,
   resolveDateRange,
   toApiDateRange,
   weekStartsOnFor,
@@ -102,14 +115,36 @@ export const $dashboardFilters = combine({
   userIds: $dashboardUserIds,
 })
 
-export const $dashboardStatisticsQuery = $dashboardFilters.map(
-  ({ range, projectIds, userIds }): StatisticsQuery => ({
-    ...toApiDateRange(range),
-    // Days are the reader's days, wherever the server is.
-    timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
-    ...(projectIds.length > 0 ? { projectIds } : {}),
-    ...(userIds.length > 0 ? { userIds } : {}),
-  }),
+const toStatisticsQuery = ({
+  range,
+  projectIds,
+  userIds,
+}: DashboardFilters): StatisticsQuery => ({
+  ...toApiDateRange(range),
+  // Days are the reader's days, wherever the server is.
+  timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
+  ...(projectIds.length > 0 ? { projectIds } : {}),
+  ...(userIds.length > 0 ? { userIds } : {}),
+})
+
+export const $dashboardStatisticsQuery =
+  $dashboardFilters.map(toStatisticsQuery)
+
+/** The same filters over the period the KPI deltas compare with. */
+export const $dashboardPreviousQuery = $dashboardFilters.map((filters) =>
+  toStatisticsQuery({ ...filters, range: previousDateRange(filters.range) }),
+)
+
+/** The period as instants, for the searches that take them. */
+export const $dashboardInstants = $dashboardRange.map(
+  (range): RecentTimeParams => {
+    const { to } = toApiDateRange(range)
+
+    return {
+      fromAt: fromDay(range.from).toISOString(),
+      toAt: fromDay(to).toISOString(),
+    }
+  },
 )
 
 /** The projects the period figures cover: the selection, or all of them. */
@@ -166,14 +201,80 @@ export const $dashboardPeople = combine(
   },
 )
 
+/** Whether the reader owns a project: the team list is theirs alone. */
+export const $isDashboardOwner = combine($projects, $user, (projects, user) =>
+  Boolean(
+    user?.id &&
+      (projects as (ProjectWithStats & ProjectAccess)[]).some(
+        (project) => project.user?.id === user.id,
+      ),
+  ),
+)
+
+const filtersApplied = merge([
+  dashboardFiltersRestored,
+  dashboardRangeChanged,
+  dashboardProjectsChanged,
+  dashboardPeopleChanged,
+  dashboardStatisticsRequested,
+])
+
 sample({
-  clock: merge([
-    dashboardFiltersRestored,
-    dashboardRangeChanged,
-    dashboardProjectsChanged,
-    dashboardPeopleChanged,
-    dashboardStatisticsRequested,
-  ]),
+  clock: filtersApplied,
   source: $dashboardStatisticsQuery,
-  target: [statisticsOverviewQuery.start, statisticsProjectAppsQuery.start],
+  target: [
+    statisticsOverviewQuery.start,
+    statisticsProjectAppsQuery.start,
+    statisticsDailyQuery.start,
+    statisticsHourlyQuery.start,
+    statisticsInsightsQuery.start,
+    statisticsAgentsQuery.start,
+  ],
 })
+
+sample({
+  clock: filtersApplied,
+  source: $dashboardPreviousQuery,
+  target: statisticsPreviousOverviewQuery.start,
+})
+
+sample({
+  clock: filtersApplied,
+  source: $dashboardInstants,
+  target: [recentAgentRunsQuery.start, recentScreenshotsQuery.start],
+})
+
+// Ownership is only known once the projects arrive, which can be after the
+// filters are restored.
+sample({
+  clock: [filtersApplied, $isDashboardOwner.updates],
+  source: { query: $dashboardStatisticsQuery, owner: $isDashboardOwner },
+  filter: ({ owner }) => owner,
+  fn: ({ query }) => query,
+  target: statisticsTeamQuery.start,
+})
+
+const VISIBLE_SCREENSHOTS = 8
+
+/**
+ * The newest screenshots matching the filter. The search takes one project at
+ * most and no person, so the selection is applied to its newest page here.
+ */
+export const $dashboardScreenshots = combine(
+  recentScreenshotsQuery.$data,
+  $dashboardProjects,
+  $dashboardUserIds,
+  (entries, projects, userIds) => {
+    const visible = new Set(projects.map((project) => project.id))
+    const people = new Set(userIds)
+
+    return (entries ?? [])
+      .filter((entry) => visible.has(entry.project?.id))
+      .filter(
+        (entry) =>
+          people.size === 0 ||
+          people.has((entry as { user?: { id?: string } }).user?.id ?? ''),
+      )
+      .slice(0, VISIBLE_SCREENSHOTS)
+  },
+)

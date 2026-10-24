@@ -28,3 +28,58 @@ export type StatisticsProjectAppRow = {
   app: string
   seconds: number
 }
+
+/** Tracked seconds on one project on one of the reader's days. */
+export type StatisticsDailyRow = {
+  day: string
+  projectId: string
+  trackedSeconds: number
+}
+
+/** The reader's active seconds in one weekday-and-hour cell. */
+export type StatisticsHourlyRow = {
+  /** ISO weekday: 1 is Monday. */
+  weekday: number
+  hour: number
+  activeSeconds: number
+}
+
+/** Figures about the reader alone, whoever the people filter selects. */
+export type StatisticsInsights = {
+  focus: { count: number; minutes: number; longestMinutes: number }
+  /** Hours of the day, best first. */
+  productiveHours: number[]
+  /** Active share of measured time, 0-1; null with nothing measured. */
+  activeRatio: number | null
+  keysPerActiveHour: number | null
+  clicksPerActiveHour: number | null
+}
+
+export type StatisticsAgentDailyRow = {
+  day: string
+  product: string
+  assistedSeconds: number
+  autonomousSeconds: number
+  waitSeconds: number
+}
+
+export type StatisticsAgentRunCount = {
+  product: string
+  status: string
+  count: number
+}
+
+export type StatisticsAgents = {
+  daily: StatisticsAgentDailyRow[]
+  runs: StatisticsAgentRunCount[]
+}
+
+/** One person's time on the reader's own projects. */
+export type StatisticsTeamRow = {
+  userId: string
+  name: string
+  trackedSeconds: number
+  activeSeconds: number
+  unpaidSeconds: number
+  agentSeconds: number
+}
