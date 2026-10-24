@@ -4,6 +4,8 @@ Versioned, strict runtime validation and TypeScript types for the collector prot
 `parseEvent` accepts only the explicit lifecycle variants `run.started`,
 `run.completed`, `run.failed`, and `run.cancelled`, plus observations and desktop
 timer gates described below. Nested unknown fields are rejected.
+`run.started` may carry `prompt`, the text that started the run, up to 4,000
+characters; no other event carries content.
 Each event is limited to 16 KiB; timestamps are ISO UTC and numeric durations are
 nonnegative safe integers in milliseconds.
 

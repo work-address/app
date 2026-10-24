@@ -29,6 +29,8 @@ export class TimeAgent extends AbstractBaseEntity {
   @Column('timestamptz') toAt: Date
   @Column('text') status: string
   @Column('jsonb') segments: AgentSegment[]
+  // The text that started the run, when its collector sends it.
+  @Column('text', { nullable: true }) prompt: string | null
   @Column('jsonb') measurement: {
     coverage: 'run'
     mode: 'timer' | 'fixed'

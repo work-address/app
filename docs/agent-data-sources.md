@@ -139,7 +139,8 @@ Hooks are better only for real-time delivery, live permission waits and session 
 - **What it uploads:** agent time and daily token counts by model; the front app per active minute; optionally the front-tab site for chosen sites and browsers. It says it never records window titles, file names, keystrokes or screen content.
 - **Where:** Supabase Postgres in the US, sign-in through Clerk.
 - **How it compares:**
-  - **Same:** both read token counts from local logs, and both store no prompts.
+  - **Same:** both read token counts from local logs.
+  - **Different:** we send the prompt that started each run (the worker can turn it off); it stores no prompts.
   - **Different:** we count one agent's overlapping runs once per project, and the desktop timer decides the project.
 
 Sources: [privacy policy](https://firstlight.sh/privacy), [release notes](https://github.com/serafimcloud/firstlight-releases/releases).

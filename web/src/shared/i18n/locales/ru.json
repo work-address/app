@@ -201,6 +201,7 @@
   "dashboard.worklogsTable.confirmRemoveProcesses.description": "Данные о процессах будут безвозвратно удалены из этой записи времени. Отслеженная сессия и остальные данные активности останутся без изменений.",
   "dashboard.worklogsTable.confirmRemoveProcesses.processes": "Процессы",
   "dashboard.worklogsTable.agents.title": "ИИ-агенты",
+  "dashboard.worklogsTable.agents.prompt": "Запрос",
   "dashboard.worklogsTable.agents.status.running": "Работает",
   "dashboard.worklogsTable.agents.status.completed": "Завершён",
   "dashboard.worklogsTable.agents.status.cancelled": "Отменён",

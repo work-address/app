@@ -7,6 +7,8 @@ const id = z
   .regex(/^[A-Za-z0-9._:-]+$/)
 const integer = z.number().int().nonnegative().max(Number.MAX_SAFE_INTEGER)
 const timestamp = z.iso.datetime()
+/** The prompt that started a run, as the person typed it, cut to this length. */
+export const MAX_PROMPT_CHARS = 4000
 const base = {
   schemaVersion: z.literal(1),
   eventId: z.uuid(),
@@ -40,7 +42,11 @@ const base = {
 
 /** Strict lifecycle, observation and desktop timer-gate events. */
 export const agentEventV1Schema = z.discriminatedUnion('eventType', [
-  z.strictObject({ ...base, eventType: z.literal('run.started') }),
+  z.strictObject({
+    ...base,
+    eventType: z.literal('run.started'),
+    prompt: z.string().min(1).max(MAX_PROMPT_CHARS).optional(),
+  }),
   z.strictObject({
     ...base,
     eventType: z.literal('tracking.paused'),

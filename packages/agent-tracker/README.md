@@ -40,6 +40,10 @@ to inspect or drain that scope. Attribution is pinned when a run first emits an
 event. The API validates membership, the owner switch and attachment again.
 Local policy/attachment preflight and automatic hook installation remain pending.
 
+Claude Code and Codex hooks send the prompt that starts a run with `run.started`,
+trimmed and cut to 4,000 characters; the worker and the project owner see it on
+the run. Set `WORK_ADDRESS_PROMPTS=off` to keep prompts on the machine.
+
 HTTPS is required except for explicit loopback HTTP; redirects are rejected.
 
 The library exports `EventQueue`, `sync`, `setup`, `readConfig` and config utilities.

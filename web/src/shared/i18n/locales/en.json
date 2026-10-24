@@ -197,6 +197,7 @@
   "dashboard.worklogsTable.confirmRemoveProcesses.description": "Process data will be permanently removed from this time entry. The tracked session and other activity data remain unchanged.",
   "dashboard.worklogsTable.confirmRemoveProcesses.processes": "Processes",
   "dashboard.worklogsTable.agents.title": "AI agents",
+  "dashboard.worklogsTable.agents.prompt": "Prompt",
   "dashboard.worklogsTable.agents.status.running": "Running",
   "dashboard.worklogsTable.agents.status.completed": "Completed",
   "dashboard.worklogsTable.agents.status.cancelled": "Cancelled",

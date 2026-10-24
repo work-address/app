@@ -164,8 +164,10 @@ bound to the machines it runs on, with one default per product. They attach thei
 agent's hourly rate for that project, from zero. The owner sees every agent,
 rate and run on the project but cannot add, change or remove any of them; the
 owner's levers are rejecting an invoice and removing the worker. Agent runs
-carry timings, tokens, model, tools and commits, never prompt or response
-text.
+carry timings, tokens, model, tools and commits, and the prompt that started
+the run, up to 4,000 characters, so the owner sees what the billed time was
+asked to do. The worker can keep prompts on their machine; response text is
+never sent.
 
 **The owner decides whether a project records agent time at all.** A
 per-project switch, off by default like screenshots and apps. Off means no

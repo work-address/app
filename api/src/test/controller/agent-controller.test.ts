@@ -312,7 +312,7 @@ export class AgentControllerTest extends BaseControllerTest {
   @test() async lifecycleReplayPausesAndVisibilityAreScoped() {
     const s = await this.scenario()
     const events = [
-      s.event('run.started', 0, 0),
+      s.event('run.started', 0, 0, { prompt: 'Fix the login bug' }),
       s.event('tracking.paused', 1, 60000, { reason: 'idle' }),
       s.event('tracking.resumed', 2, 120000, { reason: 'started' }),
       s.event('run.completed', 3, 180000),
@@ -338,13 +338,14 @@ export class AgentControllerTest extends BaseControllerTest {
       runs[0][0].segments.map((v: { state: string }) => v.state),
     ).to.deep.equal(['unknown', 'untracked', 'unknown'])
     expect(runs[0][0].measurement.qualification).to.equal('unqualified')
-    expect(
-      (
-        await this.client(s.owner).post('/agent-tracking/search', {
-          projectId: s.project.id,
-        })
-      ).data[1],
-    ).to.equal(1)
+    expect(runs[0][0].prompt).to.equal('Fix the login bug')
+    const owned = (
+      await this.client(s.owner).post('/agent-tracking/search', {
+        projectId: s.project.id,
+      })
+    ).data
+    expect(owned[1]).to.equal(1)
+    expect(owned[0][0].prompt).to.equal('Fix the login bug')
     expect(
       (
         await this.client(s.viewer).post('/agent-tracking/search', {
@@ -663,7 +664,7 @@ export class AgentControllerTest extends BaseControllerTest {
     expect(
       (
         await s.uploader.post('/agent-tracking/events', {
-          events: [{ ...s.event('run.started', 0, 0), prompt: secretText }],
+          events: [{ ...s.event('run.completed', 0, 0), prompt: secretText }],
         })
       ).status,
     ).to.equal(400)

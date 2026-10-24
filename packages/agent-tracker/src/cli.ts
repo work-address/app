@@ -73,6 +73,7 @@ async function main(): Promise<void> {
     try {
       const options = {
         agent: scoped.agent,
+        prompts: process.env.WORK_ADDRESS_PROMPTS !== 'off',
         runtimeVersion:
           process.env.WORK_ADDRESS_RUNTIME_VERSION ?? 'unqualified',
       }

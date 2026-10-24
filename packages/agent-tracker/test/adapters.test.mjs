@@ -13,6 +13,7 @@ import {
   setup,
   readConfig,
   emitEvent,
+  promptText,
 } from '../dist/index.js'
 
 function context(t) {
@@ -184,6 +185,31 @@ test('Kimi scheduled starts and late turn terminals do not close a different run
     ['run.started', 'run.started'],
   )
 })
+for (const product of ['claude-code', 'codex'])
+  test(`${product}: the run start carries the submitted prompt`, (t) => {
+    const c = context(t)
+    c.capture(product, 'UserPromptSubmit', {
+      turn_id: 't',
+      prompt: '  Fix the login bug\n',
+    })
+    c.capture(product, 'Stop', { turn_id: 't', last_assistant_message: 'X' })
+    const [start, stop] = c.queue.batch()
+    assert.equal(start.prompt, 'Fix the login bug')
+    assert.equal('prompt' in stop, false)
+  })
+test('prompts stay local when turned off, and are cut to fit an event', (t) => {
+  const c = context(t)
+  c.options.prompts = false
+  c.capture('claude-code', 'UserPromptSubmit', { prompt: 'PRIVATE' })
+  assert.equal(JSON.stringify(c.queue.batch()).includes('PRIVATE'), false)
+  assert.equal(promptText('   '), undefined)
+  assert.equal(promptText(42), undefined)
+  assert.equal(promptText('a'.repeat(5000)).length, 4000)
+  // Escaped control characters inflate JSON sixfold; the cut still fits.
+  const escaped = promptText('\u0001'.repeat(4000))
+  assert.ok(Buffer.byteLength(JSON.stringify(escaped)) <= 12 * 1024)
+  assert.equal(/[\uD800-\uDBFF]$/.test(promptText('😀'.repeat(2500))), false)
+})
 test('OpenCode records session observations, never qualified run boundaries', (t) => {
   const c = context(t)
   c.capture('opencode', 'busy')
@@ -254,7 +280,7 @@ test('capture state and queue writes roll back together if event validation fail
   c.capture('hermes', 'pre_llm_call', hermes)
   assert.equal(c.queue.batch().length, 1)
   assert.throws(() =>
-    emitEvent(c.queue, { ...c.queue.batch()[0], prompt: 'PRIVATE' }),
+    emitEvent(c.queue, { ...c.queue.batch()[0], response: 'PRIVATE' }),
   )
 })
 test('command hook fails open, bounds stdin and requires explicit experimental opt-in', (t) => {

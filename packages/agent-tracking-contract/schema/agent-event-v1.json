@@ -153,6 +153,11 @@
         "eventType": {
           "type": "string",
           "const": "run.started"
+        },
+        "prompt": {
+          "type": "string",
+          "minLength": 1,
+          "maxLength": 4000
         }
       },
       "required": [

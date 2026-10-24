@@ -32,12 +32,18 @@ export const fixture = {
 test('strict contract rejects private fields at every boundary', () => {
   assert.deepEqual(parseEvent(fixture), fixture)
   for (const input of [
-    { ...fixture, prompt: 'secret' },
+    { ...fixture, prompt: '' },
+    { ...fixture, prompt: 'x'.repeat(4001) },
+    { ...fixture, eventType: 'run.completed', prompt: 'secret' },
     { ...fixture, source: { ...fixture.source, email: 'private' } },
     { ...fixture, capabilities: { ...fixture.capabilities, arbitrary: true } },
     { ...fixture, eventType: 'run.failed', sourceDurationMs: -1 },
   ])
     assert.throws(() => parseEvent(input))
+})
+test('a run start may carry the prompt that started it', () => {
+  const started = { ...fixture, prompt: 'Fix the login bug' }
+  assert.deepEqual(parseEvent(started), started)
 })
 test('invalid dates, unknown events and unsafe numeric ranges are rejected', () => {
   for (const extra of [

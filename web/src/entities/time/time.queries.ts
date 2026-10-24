@@ -87,6 +87,8 @@ export type TimeAgentRun = {
   status: string
   /** The run's timeline; `untracked` is time the timer was paused. */
   segments?: TimeAgentSegment[]
+  /** The text that started the run, when its collector sent it. */
+  prompt?: string | null
   isPaid?: boolean
   invoiceId?: string | null
 }

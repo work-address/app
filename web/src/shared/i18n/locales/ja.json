@@ -195,6 +195,7 @@
   "dashboard.worklogsTable.confirmRemoveProcesses.description": "プロセスデータはこの時間エントリから完全に削除されます。記録されたセッションとその他のアクティビティデータは変更されません。",
   "dashboard.worklogsTable.confirmRemoveProcesses.processes": "プロセス",
   "dashboard.worklogsTable.agents.title": "AI エージェント",
+  "dashboard.worklogsTable.agents.prompt": "プロンプト",
   "dashboard.worklogsTable.agents.status.running": "実行中",
   "dashboard.worklogsTable.agents.status.completed": "完了",
   "dashboard.worklogsTable.agents.status.cancelled": "キャンセル",

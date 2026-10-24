@@ -30,7 +30,7 @@ test('HTTP development receiver authenticates, validates and deduplicates', asyn
     'duplicate',
   )
   assert.equal(
-    (await send({ events: [{ ...fixture, prompt: 'private' }] })).status,
+    (await send({ events: [{ ...fixture, response: 'private' }] })).status,
     400,
   )
   assert.equal(

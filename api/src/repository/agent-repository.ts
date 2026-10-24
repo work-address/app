@@ -667,6 +667,7 @@ export class AgentRepository {
       toAt: projected.toAt,
       status: projected.status,
       segments: projected.segments,
+      prompt: ('prompt' in start && start.prompt) || null,
       measurement: {
         coverage: 'run',
         mode: first.mode,

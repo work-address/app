@@ -199,6 +199,7 @@
   "dashboard.worklogsTable.confirmRemoveProcesses.description": "Los datos de procesos se eliminarán permanentemente de esta entrada de tiempo. La sesión registrada y el resto de datos de actividad no cambian.",
   "dashboard.worklogsTable.confirmRemoveProcesses.processes": "Procesos",
   "dashboard.worklogsTable.agents.title": "Agentes de IA",
+  "dashboard.worklogsTable.agents.prompt": "Instrucción",
   "dashboard.worklogsTable.agents.status.running": "En curso",
   "dashboard.worklogsTable.agents.status.completed": "Completado",
   "dashboard.worklogsTable.agents.status.cancelled": "Cancelado",

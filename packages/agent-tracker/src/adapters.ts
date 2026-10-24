@@ -1,5 +1,7 @@
 import { createHash, randomUUID } from 'node:crypto'
 import {
+  MAX_EVENT_BYTES,
+  MAX_PROMPT_CHARS,
   parseEvent,
   type AgentEventV1,
 } from '@work-address/agent-tracking-contract'
@@ -122,7 +124,19 @@ function fresh(run: string = randomUUID()): State {
 export interface CaptureOptions {
   runtimeVersion: string
   agent?: string
+  /** False keeps the prompt on this machine; the run is still timed. */
+  prompts?: boolean
   now?: () => number
+}
+/** The prompt cut to fit the contract, leaving the rest of the event room inside MAX_EVENT_BYTES. */
+export function promptText(value: unknown): string | undefined {
+  if (typeof value !== 'string') return
+  let text = value.trim().slice(0, MAX_PROMPT_CHARS)
+  while (Buffer.byteLength(JSON.stringify(text)) > MAX_EVENT_BYTES - 4096)
+    text = text.slice(0, Math.floor(text.length * 0.9))
+  // Never end on half a surrogate pair.
+  if (/[\uD800-\uDBFF]$/.test(text)) text = text.slice(0, -1)
+  return text || undefined
 }
 function envelope(
   config: CollectorConfig,
@@ -134,6 +148,7 @@ function envelope(
   eventType: AgentEventV1['eventType'],
   boundaries: boolean,
   observedState: 'running' | 'unknown' = 'unknown',
+  prompt?: string,
 ): AgentEventV1 {
   if (state.assignment === undefined) state.assignment = options.agent ?? null
   const at = new Date((options.now ?? Date.now)()).toISOString()
@@ -169,10 +184,11 @@ function envelope(
           evidenceKind: product === 'opencode' ? 'runtime_state' : 'lifecycle',
         }
       : {}),
+    ...(eventType === 'run.started' && prompt ? { prompt } : {}),
   })
 }
 
-/** Raw fields are read by allowlist. No prompts, paths, titles, model text or errors are persisted. */
+/** Raw fields are read by allowlist. Only the prompt that starts a run is kept; no paths, titles, model text or errors. */
 export function captureHook(
   queue: EventQueue,
   config: CollectorConfig,
@@ -208,6 +224,7 @@ export function captureHook(
     const emit = (
       type: AgentEventV1['eventType'],
       observed?: 'running' | 'unknown',
+      prompt?: string,
     ) => {
       events.push(
         envelope(
@@ -220,6 +237,7 @@ export function captureHook(
           type,
           product === 'hermes',
           observed,
+          prompt,
         ),
       )
     }
@@ -252,6 +270,11 @@ export function captureHook(
           emit(
             product === 'opencode' ? 'run.observed' : 'run.started',
             'running',
+            // Claude Code and Codex pass the submitted text on UserPromptSubmit.
+            options.prompts !== false &&
+              (product === 'claude-code' || product === 'codex')
+              ? promptText(e.prompt)
+              : undefined,
           )
           state.started = true
         }

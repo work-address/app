@@ -1,6 +1,6 @@
 import { Badge, Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { useEffect } from 'react'
+import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -240,6 +240,12 @@ export const TimeDialogAgents = ({ time }: TimeDialogAgentsProps) => {
                   </Text>
                 </Flex>
               </Flex>
+              {run.prompt && (
+                <RunPrompt
+                  label={t('dashboard.worklogsTable.agents.prompt')}
+                  text={run.prompt}
+                />
+              )}
               <Timeline
                 role="img"
                 aria-label={legend
@@ -280,6 +286,24 @@ export const TimeDialogAgents = ({ time }: TimeDialogAgentsProps) => {
   )
 }
 
+/** Two lines of the prompt; a click shows all of it, as typed. */
+const RunPrompt = ({ label, text }: { label: string; text: string }) => {
+  const [open, setOpen] = useState(false)
+
+  return (
+    <Prompt
+      type="button"
+      aria-label={label}
+      aria-expanded={open}
+      title={open ? undefined : text}
+      data-open={open || undefined}
+      onClick={() => setOpen((value) => !value)}
+    >
+      <PromptText>{text}</PromptText>
+    </Prompt>
+  )
+}
+
 const List = styled.div`
   display: grid;
   gap: var(--space-2);
@@ -307,6 +331,42 @@ const Avatar = styled.span`
   color: var(--ds-accent-11);
   font-size: var(--font-size-2);
   font-weight: 600;
+`
+
+const Prompt = styled.button`
+  all: unset;
+  display: block;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-2);
+  background: var(--gray-a2);
+  color: var(--ds-neutral-12);
+  font-size: var(--font-size-1);
+  line-height: var(--line-height-1);
+  cursor: pointer;
+
+  &[data-open] {
+    max-height: 240px;
+    overflow-y: auto;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ds-accent-8);
+    outline-offset: 1px;
+  }
+`
+
+// The clamp sits inside the padding, so a third line never shows through it.
+const PromptText = styled.span`
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+
+  [data-open] > & {
+    display: block;
+  }
 `
 
 // The entry's whole period; each span sits where the run was in it.
