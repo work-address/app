@@ -44,7 +44,8 @@ export class AgentCredentialDto {
   label?: string
 }
 export class AgentSearchDto {
-  @IsUUID() projectId: string
+  /** Omitted: every project the caller works on. */
+  @IsOptional() @IsUUID() projectId?: string
   @IsOptional() @IsISO8601() fromAt?: string
   @IsOptional() @IsISO8601() toAt?: string
   @IsOptional() @IsInt() @Min(0) @Max(1000000) offset?: number

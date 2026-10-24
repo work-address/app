@@ -92,6 +92,8 @@ export type TimeAgentRun = {
   segments?: TimeAgentSegment[]
   /** The text that started the run, when its collector sent it. */
   prompt?: string | null
+  /** Another worker's prompt, held until their review window passes. */
+  promptPendingReview?: boolean
   isPaid?: boolean
   invoiceId?: string | null
 }

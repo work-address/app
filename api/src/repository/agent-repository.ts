@@ -7,7 +7,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from 'routing-controllers'
-import { EntityManager } from 'typeorm'
+import { Brackets, EntityManager } from 'typeorm'
 import { getDataSource } from '@/connector/data-source'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
@@ -709,24 +709,86 @@ export class AgentRepository {
     }
   }
 
-  public async search(user: User, query: AgentSearchDto) {
+  public async search(
+    user: User,
+    query: AgentSearchDto,
+    now = Date.now(),
+  ): Promise<[TimeAgent[], number]> {
     return getDataSource().transaction(async (tx) => {
-      const project = await this.project(tx, query.projectId, user, false)
+      const projects = query.projectId
+        ? [await this.project(tx, query.projectId, user, false)]
+        : await this.workerProjects(tx, user)
+      if (!projects.length) return [[], 0]
+      const owned = projects.filter((p) => p.isOwner(user)).map((p) => p.id)
       const qb = tx
         .createQueryBuilder(TimeAgent, 'run')
-        .where('run.projectId = :projectId', { projectId: project.id })
-      if (!project.isOwner(user))
-        qb.andWhere('run.userId = :userId', { userId: user.id })
+        .where('run.projectId IN (:...projectIds)', {
+          projectIds: projects.map((p) => p.id),
+        })
+        .andWhere(
+          owned.length
+            ? '(run.projectId IN (:...owned) OR run.userId = :userId)'
+            : 'run.userId = :userId',
+          { owned, userId: user.id },
+        )
       if (query.fromAt)
         qb.andWhere('run.toAt >= :fromAt', { fromAt: query.fromAt })
       if (query.toAt) qb.andWhere('run.fromAt < :toAt', { toAt: query.toAt })
-      return qb
+      const [runs, count] = await qb
         .orderBy('run.fromAt', 'DESC')
         .addOrderBy('run.id', 'ASC')
         .skip(query.offset ?? 0)
         .take(100)
         .getManyAndCount()
+      const windows = new Map(
+        projects.map((p) => [p.id, (p.reviewWindowHours ?? 24) * 3600_000]),
+      )
+      for (const run of runs) this.holdPrompt(run, user, windows, now)
+      return [runs, count]
     })
+  }
+
+  /**
+   * A prompt is detail, like a screenshot: another worker's reaches the
+   * owner only once their review window has passed or the run is invoiced.
+   */
+  private holdPrompt(
+    run: TimeAgent,
+    user: User,
+    windows: Map<string, number>,
+    now: number,
+  ): void {
+    if (run.userId === user.id || run.invoiceId) return
+    const window = windows.get(run.projectId) ?? 24 * 3600_000
+    if (new Date(run.toAt).getTime() + window <= now) return
+    if (run.prompt) run.promptPendingReview = true
+    run.prompt = null
+  }
+
+  /** Every live project `user` owns or works on. */
+  private async workerProjects(
+    tx: EntityManager,
+    user: User,
+  ): Promise<Project[]> {
+    const { accessUserId, userAddress } = Project.accessParams(user)
+    const projects = await tx
+      .createQueryBuilder(Project, 'p')
+      .innerJoinAndSelect('p.user', 'owner')
+      .where('p.deletedAt IS NULL')
+      .andWhere(
+        new Brackets((qb) =>
+          qb
+            .where('owner.id = :accessUserId', { accessUserId })
+            .orWhere(
+              `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(p."workerAddresses", '{}')) AS address)`,
+              { userAddress },
+            ),
+        ),
+      )
+      .getMany()
+    return projects.filter((p) =>
+      p.isWorker(user, this.entitlement.isPremium(p.user)),
+    )
   }
 
   public async status(user: User) {

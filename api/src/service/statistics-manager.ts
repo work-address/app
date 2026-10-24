@@ -13,6 +13,8 @@ import { User } from '@/entity/user'
 import { StatisticsQueryDto } from '@/model/dto/statistics'
 import { runPromise } from '@/service/effect-bridge'
 import AccessException from '@/exception/access-exception'
+import { StatisticsInsights } from '@/service/statistics-insights'
+import { Span, TimeSpans } from '@/service/time-spans'
 
 const APP_KINDS = ['daily', 'ranking', 'titles', 'workers', 'projects']
 
@@ -125,5 +127,145 @@ export class StatisticsManager {
     if (!APP_KINDS.includes(kind))
       throw new BadRequestError('Unknown statistics report')
     return { rows: await this.repository.apps(scope, kind) }
+  }
+
+  /** Tracked time per day and project. */
+  public async timeDaily(query: StatisticsQueryDto, user: User) {
+    const scope = await this.scope(query, user)
+    if (!scope.projects.length) return { rows: [] }
+    const rows = await this.repository.timeDaily(scope)
+    return {
+      rows: rows.map((row) => ({
+        day: row.day,
+        projectId: row.projectId,
+        trackedSeconds: Math.round(Number(row.trackedSeconds)),
+      })),
+    }
+  }
+
+  /**
+   * The caller's own entries. Insights describe the person reading them,
+   * whoever the people filter selects - an owner never gets another
+   * person's focus or intensity from here.
+   */
+  private async ownEntries(query: StatisticsQueryDto, user: User) {
+    const scope = await this.scope({ ...query, userIds: undefined }, user)
+    if (!scope.projects.length) return []
+    const rows = await this.repository.ownEntries(scope)
+    const number = (value: unknown) => (value == null ? null : Number(value))
+    return rows.map((row) => ({
+      fromAt: new Date(row.fromAt),
+      toAt: new Date(row.toAt),
+      activeSeconds: number(row.activeSeconds),
+      keyboardKeys: number(row.keyboardKeys),
+      mouseKeys: number(row.mouseKeys),
+    }))
+  }
+
+  /** The caller's active time by weekday and hour. */
+  public async timeHourly(query: StatisticsQueryDto, user: User) {
+    const entries = await this.ownEntries(query, user)
+    return { rows: StatisticsInsights.hourly(entries, query.timeZone) }
+  }
+
+  public async insightsMe(query: StatisticsQueryDto, user: User) {
+    const entries = await this.ownEntries(query, user)
+    return StatisticsInsights.me(entries, query.timeZone)
+  }
+
+  public async agentsDaily(query: StatisticsQueryDto, user: User) {
+    const scope = await this.scope(query, user)
+    if (!scope.projects.length) return { daily: [], runs: [] }
+    const runs = await this.repository.agentRuns(scope)
+    const human = await this.repository.humanSpans(
+      scope,
+      [...new Set(runs.map((run) => run.userId))],
+      [...new Set(runs.map((run) => run.projectId))],
+    )
+    const daily = StatisticsInsights.agentDaily(
+      runs,
+      human.map((row) => ({
+        userId: row.userId,
+        projectId: row.projectId,
+        span: [+new Date(row.fromAt), +new Date(row.toAt)] as Span,
+      })),
+      [+scope.from, +scope.to],
+      query.timeZone,
+    )
+    const counts = new Map<
+      string,
+      { product: string; status: string; count: number }
+    >()
+    for (const run of runs) {
+      const key = `${run.product}:${run.status}`
+      const row = counts.get(key) ?? {
+        product: run.product,
+        status: run.status,
+        count: 0,
+      }
+      row.count++
+      counts.set(key, row)
+    }
+    return {
+      daily,
+      runs: [...counts.values()].sort(
+        (a, b) =>
+          a.product.localeCompare(b.product) ||
+          a.status.localeCompare(b.status),
+      ),
+    }
+  }
+
+  /**
+   * Each person's time on the caller's own projects, sorted by name. Never
+   * ranked: the order says nothing about anyone.
+   */
+  public async team(query: StatisticsQueryDto, user: User) {
+    const scope = await this.scope(query, user)
+    if (!scope.owners.length) throw new AccessException()
+    const [rows, runs] = await Promise.all([
+      this.repository.team(scope, scope.owners),
+      this.repository.agentRuns(scope, scope.owners),
+    ])
+    const agentMs = new Map<string, number>()
+    const byAgent = new Map<string, Span[]>()
+    for (const run of runs) {
+      const key = `${run.userId}:${run.agentId}`
+      byAgent.set(key, [
+        ...(byAgent.get(key) ?? []),
+        ...run.segments
+          .filter((segment) => segment.state === 'running')
+          .map((s): Span => [Date.parse(s.fromAt), Date.parse(s.toAt)]),
+      ])
+    }
+    for (const [key, spans] of byAgent) {
+      const userId = key.split(':')[0]
+      const ms = TimeSpans.ms(
+        TimeSpans.intersect(TimeSpans.union(spans), [[+scope.from, +scope.to]]),
+      )
+      agentMs.set(userId, (agentMs.get(userId) ?? 0) + ms)
+    }
+    const people = rows.map((row) => ({
+      userId: row.userId as string,
+      name: (row.name || row.address) as string,
+      trackedSeconds: Math.round(Number(row.trackedSeconds)),
+      activeSeconds: Math.round(Number(row.activeSeconds)),
+      unpaidSeconds: Math.round(Number(row.unpaidSeconds)),
+      agentSeconds: Math.round((agentMs.get(row.userId) ?? 0) / 1000),
+    }))
+    // Someone whose agents worked while they tracked nothing still appears.
+    for (const [userId, ms] of agentMs)
+      if (!people.some((p) => p.userId === userId))
+        people.push({
+          userId,
+          name: userId,
+          trackedSeconds: 0,
+          activeSeconds: 0,
+          unpaidSeconds: 0,
+          agentSeconds: Math.round(ms / 1000),
+        })
+    return {
+      rows: people.sort((a, b) => a.name.localeCompare(b.name)),
+    }
   }
 }

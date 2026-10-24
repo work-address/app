@@ -159,7 +159,7 @@ export type AgentCredentialDto = {
 };
 
 export type AgentSearchDto = {
-    projectId: string;
+    projectId?: string;
     fromAt?: string | string;
     toAt?: string | string;
     offset?: number;
@@ -851,6 +851,76 @@ export type StatisticsControllerOverviewData = {
 };
 
 export type StatisticsControllerOverviewResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type StatisticsControllerTimeDailyData = {
+    body: StatisticsQueryDto;
+    path?: never;
+    query?: never;
+    url: '/api/statistics/time/daily';
+};
+
+export type StatisticsControllerTimeDailyResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type StatisticsControllerTimeHourlyData = {
+    body: StatisticsQueryDto;
+    path?: never;
+    query?: never;
+    url: '/api/statistics/time/hourly';
+};
+
+export type StatisticsControllerTimeHourlyResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type StatisticsControllerInsightsMeData = {
+    body: StatisticsQueryDto;
+    path?: never;
+    query?: never;
+    url: '/api/statistics/insights/me';
+};
+
+export type StatisticsControllerInsightsMeResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type StatisticsControllerAgentsDailyData = {
+    body: StatisticsQueryDto;
+    path?: never;
+    query?: never;
+    url: '/api/statistics/agents/daily';
+};
+
+export type StatisticsControllerAgentsDailyResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type StatisticsControllerTeamData = {
+    body: StatisticsQueryDto;
+    path?: never;
+    query?: never;
+    url: '/api/statistics/team';
+};
+
+export type StatisticsControllerTeamResponses = {
     /**
      * Successful response
      */

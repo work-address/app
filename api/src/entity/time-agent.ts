@@ -31,6 +31,11 @@ export class TimeAgent extends AbstractBaseEntity {
   @Column('jsonb') segments: AgentSegment[]
   // The text that started the run, when its collector sends it.
   @Column('text', { nullable: true }) prompt: string | null
+  /**
+   * Set on search results: the prompt is another worker's and is held until
+   * their review window passes or the run is invoiced.
+   */
+  promptPendingReview?: boolean
   @Column('jsonb') measurement: {
     coverage: 'run'
     mode: 'timer' | 'fixed'

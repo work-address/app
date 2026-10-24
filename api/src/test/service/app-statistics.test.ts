@@ -9,6 +9,8 @@ import { TimeRepository } from '@/repository/time-repository'
 import { AppUsage } from '@/entity/app-usage'
 import { Project } from '@/entity/project'
 import { Time } from '@/entity/time'
+import { TimeAgent } from '@/entity/time-agent'
+import { randomUUID } from 'crypto'
 import { AppUsagePolicy } from '@/service/app-usage-policy'
 import { EProjectState } from '@/model/project'
 import { TimeCreateDto } from '@/model/dto/time'
@@ -254,6 +256,120 @@ export class AppStatisticsTest extends AbstractDatabaseIntegration {
     expect(await statistics.read('projects', range, nobody)).to.deep.equal({
       rows: [],
     })
+  }
+  @test() async dashboardRoutesKeepInsightsPersonalAndTeamsToOwners() {
+    const owner = await this.userFixture.createPremiumUser()
+    const worker = await this.userFixture.createUser()
+    const project = await this.container
+      .get<ProjectFixture>('ProjectFixture')
+      .create(owner, EProjectState.ACTIVE)
+    project.workerAddresses = [worker.address]
+    await this.conn.manager.save(project)
+    const manager = this.container.get<TimeManager>('TimeManager')
+    const [own] = await runPromise(
+      manager.createOrUpdateMany([this.payload(project.id)], worker),
+    )
+    expect(own.error).to.equal(undefined)
+    const time = await this.conn
+      .getRepository(Time)
+      .findOneByOrFail({ id: own.id })
+    // The worker's agent ran for the length of their entry and 10 more
+    // minutes after it: 10 assisted, 10 autonomous.
+    const end = +time.toAt + 600000
+    await this.conn.getRepository(TimeAgent).save({
+      runKey: randomUUID().split('-').join(''),
+      userId: worker.id,
+      projectId: project.id,
+      agentId: randomUUID(),
+      product: 'claude-code',
+      surface: 'cli',
+      sourceInstanceId: randomUUID(),
+      sourceSessionId: 's',
+      sourceRunId: 'r',
+      sourceAgentId: 'a',
+      fromAt: time.fromAt,
+      toAt: new Date(end),
+      status: 'completed',
+      prompt: null,
+      segments: [
+        {
+          state: 'running',
+          fromAt: time.fromAt.toISOString(),
+          toAt: new Date(end).toISOString(),
+          evidence: 'fixture',
+        },
+      ],
+      measurement: {
+        coverage: 'run',
+        mode: 'timer',
+        waitCoverage: 'none',
+        liveness: false,
+        provisional: false,
+        qualification: 'unqualified',
+        normalizerRevision: 1,
+        adapterVersion: '0',
+        runtimeVersion: '0',
+        schemaVersion: 1,
+      },
+    })
+    const statistics =
+      this.container.get<StatisticsManager>('StatisticsManager')
+    const range = {
+      from: new Date(Date.now() - 86400000).toISOString().slice(0, 10),
+      to: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
+      timeZone: 'UTC',
+    }
+
+    const daily = await statistics.timeDaily(range, owner)
+    expect(daily.rows).to.deep.equal([
+      {
+        day: time.fromAt.toISOString().slice(0, 10),
+        projectId: project.id,
+        trackedSeconds: 600,
+      },
+    ])
+
+    // Insights describe the reader, whoever the people filter selects.
+    const mine = await statistics.insightsMe(
+      { ...range, userIds: [worker.id] },
+      owner,
+    )
+    expect(mine.activeRatio).to.equal(null)
+    expect((await statistics.timeHourly(range, owner)).rows).to.deep.equal([])
+    const theirs = await statistics.insightsMe(range, worker)
+    expect(theirs.activeRatio).to.equal(0.7)
+    expect((await statistics.timeHourly(range, worker)).rows).to.have.length(1)
+
+    const agents = await statistics.agentsDaily(range, owner)
+    expect(agents.runs).to.deep.equal([
+      { product: 'claude-code', status: 'completed', count: 1 },
+    ])
+    const total = agents.daily.reduce(
+      (sum, row) => ({
+        assisted: sum.assisted + row.assistedSeconds,
+        autonomous: sum.autonomous + row.autonomousSeconds,
+      }),
+      { assisted: 0, autonomous: 0 },
+    )
+    expect(total).to.deep.equal({ assisted: 600, autonomous: 600 })
+
+    const team = await statistics.team(range, owner)
+    expect(team.rows).to.have.length(1)
+    expect(team.rows[0]).to.include({
+      userId: worker.id,
+      trackedSeconds: 600,
+      unpaidSeconds: 600,
+      agentSeconds: 1200,
+    })
+    // The worker's entry is still in its review window: no activity yet.
+    expect(team.rows[0].activeSeconds).to.equal(0)
+    let denied = false
+    try {
+      await statistics.team(range, worker)
+    } catch {
+      denied = true
+    }
+    expect(denied).to.equal(true)
   }
   @test()
   async rejectsInvalidUsageWithoutLosingTimeAndNeverEchoesAcknowledgement() {

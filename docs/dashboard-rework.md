@@ -106,12 +106,12 @@ Every route takes `{projectIds?, from, to, timeZone, userIds?}` under `/api`, sh
 | `POST /statistics/overview` | Totals for the KPI row, with paid seconds (never for viewers); called twice for the previous period | Exists; `paidSeconds` added in D2 |
 | `POST /statistics/apps/:kind` | App usage | Exists |
 | `POST /statistics/time/daily` | Minutes per day per project | Yes |
-| `POST /statistics/time/hourly` | Active minutes per weekday × hour | Yes |
-| `POST /statistics/insights/me` | Focus sessions, productive hours, active ratio, input per active hour, for the caller only | Yes |
-| `POST /statistics/agents/daily` | Agent minutes per day, assisted and autonomous, by product and status; no tokens yet | Planned in app-statistics |
-| `POST /statistics/team` | Per worker: tracked, active, unpaid, agent minutes, sorted by name; owner only | Yes |
-| `POST /agent-tracking/search` | Recent runs with prompts; extended to search across projects, with the review-window hold on other workers' prompts | Changed |
-| `POST /time/search` | Recent screenshots, with a new `hasScreenshot` filter | Changed |
+| `POST /statistics/time/hourly` | The caller's active seconds per ISO weekday × hour; ignores `userIds` | Yes |
+| `POST /statistics/insights/me` | The caller's focus sessions (count, minutes, longest), top 3 productive hours, active ratio, keys and clicks per active hour; measured desktop time only for ratios; ignores `userIds` | Yes |
+| `POST /statistics/agents/daily` | `daily`: assisted, autonomous and wait seconds per day and product, each agent's overlapping runs merged as on invoice lines; `runs`: counts per product and status. Never viewers; no tokens yet | Planned in app-statistics |
+| `POST /statistics/team` | Per person on the caller's own projects: tracked, active (after review), unpaid and agent seconds, sorted by name; 403 without an owned project | Yes |
+| `POST /agent-tracking/search` | Recent runs with prompts; `projectId` optional for every project the caller works on; another worker's prompt is `null` with `promptPendingReview` until their review window passes or the run is invoiced | Changed |
+| `POST /time/search` | Recent screenshots, with the existing `withScreenshots: true` filter, which already respects review and retention | Exists |
 
 ## Files
 
@@ -132,7 +132,7 @@ Committed in order on `feat/0-dashboard-split`, then one PR to `main` for review
 | --- | --- | --- |
 | D1 | `/time` page, nav item, worklog filters in the URL | Worklogs work on `/time` as they did on the dashboard; reload and shared links keep filters |
 | D2 | Shared range picker and filter bar; existing widgets limited to the period; omitted `projectIds` | An owner with more than 100 projects gets correct totals; previous-period deltas match the same elapsed length |
-| D3 | New statistics routes, the prompt hold and `hasScreenshot`, with tests | Access and math tests pass for owner, worker and viewer |
+| D3 | New statistics routes, cross-project agent search and the prompt hold, with tests (screenshots reuse `withScreenshots`) | Access and math tests pass for owner, worker and viewer |
 | D4 | New widgets, one commit each, on the shared charts | Each widget's loading, empty, failure and role states render |
 | D5 | Translations and visual QA with Playwright screenshots | Every widget checked in en, es, ja, ru and zh, desktop and phone |
 

@@ -345,7 +345,23 @@ export class AgentControllerTest extends BaseControllerTest {
       })
     ).data
     expect(owned[1]).to.equal(1)
-    expect(owned[0][0].prompt).to.equal('Fix the login bug')
+    // Another worker's prompt is detail: held from the owner until the
+    // worker's review window passes.
+    expect(owned[0][0].prompt).to.equal(null)
+    expect(owned[0][0].promptPendingReview).to.equal(true)
+    const dayAgo = Date.now() - 25 * 3600_000
+    await App.conn.manager.update(
+      TimeAgent,
+      { runKey: owned[0][0].runKey },
+      { fromAt: new Date(dayAgo - 180000), toAt: new Date(dayAgo) },
+    )
+    // Without a project the search covers every project the owner works on.
+    const released = (
+      await this.client(s.owner).post('/agent-tracking/search', {})
+    ).data
+    expect(released[1]).to.equal(1)
+    expect(released[0][0].prompt).to.equal('Fix the login bug')
+    expect(released[0][0].promptPendingReview).to.equal(undefined)
     expect(
       (
         await this.client(s.viewer).post('/agent-tracking/search', {
