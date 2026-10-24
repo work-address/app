@@ -34,16 +34,19 @@ export const OpenInvoiceLink = ({
   style,
   onClick,
   variant = 'inline',
+  iconLeft,
   ...rest
 }: {
   projectId: string
   children: ReactNode
+  /** The `button` variant's leading icon, placed as Button places it. */
+  iconLeft?: ReactNode
   className?: string
   style?: CSSProperties
   /**
    * `inline` carries no chrome of its own - it sits inside a row of text and
-   * the call site styles it. `button` reads as a button: ghost background on
-   * hover, focus ring, transitions.
+   * the call site styles it. `button` is a grey soft Button, the secondary
+   * action beside a solid one in a dialog footer.
    */
   variant?: OpenInvoiceLinkVariant
   /**
@@ -80,9 +83,14 @@ export const OpenInvoiceLink = ({
 
   if (variant === 'button') {
     return (
-      <ButtonRoot variant={'ghost'} color={'neutral'} {...shared}>
+      <Button
+        variant={'soft'}
+        color={'neutral'}
+        iconLeft={iconLeft}
+        {...shared}
+      >
         {children}
-      </ButtonRoot>
+      </Button>
     )
   }
 
@@ -92,13 +100,6 @@ export const OpenInvoiceLink = ({
     </InlineRoot>
   )
 }
-
-// Sits inline next to a title rather than in a button row, so it is a little
-// more compact than the nominal medium size.
-const ButtonRoot = styled(Button)`
-  min-height: 28px;
-  padding: 0 8px;
-`
 
 const InlineRoot = styled.button`
   display: contents;
