@@ -1,6 +1,7 @@
 import { useUnit } from 'effector-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
 import {
   $dashboardProjects,
@@ -8,7 +9,12 @@ import {
 } from '../../model/dashboard-filters'
 
 import { $hasProjects, $projectsLoading } from '@/entities/projects'
-import { statisticsOverviewQuery } from '@/entities/statistics'
+import {
+  statisticsAgentsQuery,
+  statisticsOverviewQuery,
+  statisticsPreviousOverviewQuery,
+  type StatisticsTotalsRow,
+} from '@/entities/statistics'
 import {
   formatCurrency,
   formatDurationFromMinutes,
@@ -17,12 +23,59 @@ import {
   StatTile,
 } from '@/shared'
 
+type Totals = {
+  minutes: number
+  minutesActive: number
+  earned: number
+  unpaid: number
+  minutesUnpaid: number
+  /** False when every row is a project the reader only views. */
+  hasDetail: boolean
+}
+
 /**
- * The four numbers a freelancer opens the dashboard for: how much they have
- * worked in the period, how much of that was real activity, what has been
- * paid for and what has not. Summed over the projects the filter selects,
- * whatever tab or search is applied below - the strip is the whole picture,
- * the table is the detail.
+ * Sums the period's rows. A project the reader only views comes without its
+ * detail; the activity and money figures leave it out rather than count it
+ * as zero. Money is each project's tracked time at its own rate, so a cheap
+ * project's backlog is never valued at an expensive one's.
+ */
+const sumTotals = (
+  rows: StatisticsTotalsRow[] | null,
+  rates: Map<string | undefined, number>,
+): Totals => {
+  const acc: Totals = {
+    minutes: 0,
+    minutesActive: 0,
+    earned: 0,
+    unpaid: 0,
+    minutesUnpaid: 0,
+    hasDetail: false,
+  }
+
+  for (const row of rows ?? []) {
+    acc.minutes += row.trackedSeconds / 60
+
+    if (row.paidSeconds === undefined) {
+      continue
+    }
+
+    const rate = rates.get(row.projectId) ?? 0
+    const unpaid = Math.max(0, row.trackedSeconds - row.paidSeconds) / 60
+
+    acc.hasDetail = true
+    acc.minutesActive += (row.activeSeconds ?? 0) / 60
+    acc.earned += (row.trackedSeconds / 3600) * rate
+    acc.unpaid += (unpaid * rate) / 60
+    acc.minutesUnpaid += unpaid
+  }
+
+  return acc
+}
+
+/**
+ * The headline figures for the period: how much was worked, how much of it
+ * was active, what it is worth, what is still unpaid, and what agents did.
+ * Each compares with the same stretch of the period before.
  */
 export const DashboardSummary = () => {
   const { t } = useTranslation()
@@ -30,6 +83,8 @@ export const DashboardSummary = () => {
   const {
     projects,
     rows,
+    previousRows,
+    agents,
     pending,
     failed,
     retry,
@@ -38,6 +93,8 @@ export const DashboardSummary = () => {
   } = useUnit({
     projects: $dashboardProjects,
     rows: statisticsOverviewQuery.$data,
+    previousRows: statisticsPreviousOverviewQuery.$data,
+    agents: statisticsAgentsQuery.$data,
     pending: statisticsOverviewQuery.$pending,
     failed: statisticsOverviewQuery.$failed,
     retry: dashboardStatisticsRequested,
@@ -45,48 +102,32 @@ export const DashboardSummary = () => {
     hasProjects: $hasProjects,
   })
 
-  const totals = useMemo(() => {
-    const rates = new Map(
-      projects.map((project) => [project.id, Number(project.rateHour) || 0]),
-    )
-    const acc = {
-      minutes: 0,
-      minutesActive: 0,
-      minutesPaid: 0,
-      minutesUnpaid: 0,
-      paid: 0,
-      unpaid: 0,
-      // A project the reader only views comes without its detail; the
-      // activity and money tiles leave it out rather than count it as zero.
-      hasDetail: false,
-    }
+  const rates = useMemo(
+    () =>
+      new Map(
+        projects.map((project) => [project.id, Number(project.rateHour) || 0]),
+      ),
+    [projects],
+  )
+  const totals = useMemo(() => sumTotals(rows, rates), [rows, rates])
+  const previous = useMemo(
+    () => (previousRows ? sumTotals(previousRows, rates) : null),
+    [previousRows, rates],
+  )
 
-    for (const row of rows ?? []) {
-      acc.minutes += row.trackedSeconds / 60
+  const agentTotals = useMemo(
+    () =>
+      (agents?.daily ?? []).reduce(
+        (acc, row) => ({
+          assisted: acc.assisted + row.assistedSeconds / 60,
+          autonomous: acc.autonomous + row.autonomousSeconds / 60,
+        }),
+        { assisted: 0, autonomous: 0 },
+      ),
+    [agents],
+  )
 
-      if (row.paidSeconds === undefined) {
-        continue
-      }
-
-      // Priced at each project's own rate, so a cheap project's backlog
-      // does not get valued at an expensive one's rate.
-      const rate = rates.get(row.projectId) ?? 0
-      const paid = row.paidSeconds / 60
-      const unpaid = Math.max(0, row.trackedSeconds / 60 - paid)
-
-      acc.hasDetail = true
-      acc.minutesActive += (row.activeSeconds ?? 0) / 60
-      acc.minutesPaid += paid
-      acc.minutesUnpaid += unpaid
-      acc.paid += (paid * rate) / 60
-      acc.unpaid += (unpaid * rate) / 60
-    }
-
-    return acc
-  }, [projects, rows])
-
-  // Nothing to sum until there is a project; the empty state below the title
-  // already says so.
+  // Nothing to sum until there is a project; the intro says so.
   if (!projectsLoading && !hasProjects) {
     return null
   }
@@ -103,22 +144,65 @@ export const DashboardSummary = () => {
   // Refetching for a new period keeps the old figures until the new ones land.
   const loading = projectsLoading || (pending && rows === null)
   const showDetail = loading || totals.hasDetail || (rows ?? []).length === 0
+  const hasAgents = (agents?.daily.length ?? 0) > 0
 
-  const activePercent =
-    totals.minutes > 0
-      ? Math.round((totals.minutesActive / totals.minutes) * 100)
-      : 0
+  const activeShare = (value: Totals) =>
+    value.minutes > 0 ? value.minutesActive / value.minutes : 0
+
+  /** "↑ 12% vs previous period", or nothing to compare with. */
+  const change = (current: number, before: number | undefined) => {
+    if (before === undefined) {
+      return
+    }
+
+    if (before <= 0) {
+      return current > 0 ? t('dashboard.summary.delta.new') : undefined
+    }
+
+    const percent = Math.round(((current - before) / before) * 100)
+
+    if (percent === 0) {
+      return t('dashboard.summary.delta.same')
+    }
+
+    return t('dashboard.summary.delta.change', {
+      arrow: percent > 0 ? '↑' : '↓',
+      percent: Math.abs(percent),
+    })
+  }
+
+  /** Percentage points, for a share that is already a percentage. */
+  const pointsChange = (current: number, before: number | undefined) => {
+    if (before === undefined) {
+      return
+    }
+
+    const points = Math.round((current - before) * 100)
+
+    return points === 0
+      ? t('dashboard.summary.delta.same')
+      : t('dashboard.summary.delta.points', {
+          arrow: points > 0 ? '↑' : '↓',
+          points: Math.abs(points),
+        })
+  }
+
+  const duration = (minutes: number) =>
+    formatDurationFromMinutes(Math.round(minutes), t)
 
   return (
-    <StatStrip>
+    <StatStrip $columns={showDetail ? 5 : 1}>
       <StatTile
         label={t('dashboard.summary.tracked.label')}
-        value={formatDurationFromMinutes(Math.round(totals.minutes), t)}
-        hint={t('dashboard.summary.tracked.hint', {
-          projects: t('dashboard.page.projectsCount', {
-            count: projects.length,
-          }),
-        })}
+        value={duration(totals.minutes)}
+        hint={
+          change(totals.minutes, previous?.minutes) ??
+          t('dashboard.summary.tracked.hint', {
+            projects: t('dashboard.page.projectsCount', {
+              count: projects.length,
+            }),
+          })
+        }
         loading={loading}
       />
       {showDetail && (
@@ -126,25 +210,31 @@ export const DashboardSummary = () => {
           <StatTile
             tone="accent"
             label={t('dashboard.summary.active.label')}
-            value={formatDurationFromMinutes(
-              Math.round(totals.minutesActive),
-              t,
-            )}
-            hint={t('dashboard.summary.active.hint', {
-              percent: activePercent,
-            })}
+            value={`${Math.round(activeShare(totals) * 100)}%`}
+            hint={[
+              t('dashboard.summary.active.hint', {
+                time: duration(totals.minutesActive),
+              }),
+              // A share of nothing is not a baseline.
+              pointsChange(
+                activeShare(totals),
+                previous && previous.minutes > 0
+                  ? activeShare(previous)
+                  : undefined,
+              ),
+            ]
+              .filter(Boolean)
+              .join(' · ')}
             loading={loading}
           />
           <StatTile
             tone="green"
-            label={t('dashboard.summary.paid.label')}
-            value={formatCurrency(totals.paid)}
-            hint={t('dashboard.summary.paid.hint', {
-              time: formatDurationFromMinutes(
-                Math.round(totals.minutesPaid),
-                t,
-              ),
-            })}
+            label={t('dashboard.summary.earned.label')}
+            value={formatCurrency(totals.earned)}
+            hint={
+              change(totals.earned, previous?.earned) ??
+              t('dashboard.summary.earned.hint')
+            }
             loading={loading}
           />
           <StatTile
@@ -152,11 +242,33 @@ export const DashboardSummary = () => {
             label={t('dashboard.summary.unpaid.label')}
             value={formatCurrency(totals.unpaid)}
             hint={t('dashboard.summary.unpaid.hint', {
-              time: formatDurationFromMinutes(
-                Math.round(totals.minutesUnpaid),
-                t,
-              ),
+              time: duration(totals.minutesUnpaid),
             })}
+            loading={loading}
+          />
+          <StatTile
+            label={t('dashboard.summary.agents.label')}
+            value={
+              hasAgents ? (
+                <AgentValue>
+                  <span>
+                    {duration(agentTotals.assisted)}
+                    <small>{t('dashboard.summary.agents.assisted')}</small>
+                  </span>
+                  <span>
+                    {duration(agentTotals.autonomous)}
+                    <small>{t('dashboard.summary.agents.autonomous')}</small>
+                  </span>
+                </AgentValue>
+              ) : (
+                '—'
+              )
+            }
+            hint={
+              hasAgents
+                ? t('dashboard.summary.agents.hint')
+                : t('dashboard.summary.agents.none')
+            }
             loading={loading}
           />
         </>
@@ -164,3 +276,23 @@ export const DashboardSummary = () => {
     </StatStrip>
   )
 }
+
+/* Two figures side by side - assisted and autonomous are never added up. */
+const AgentValue = styled.span`
+  display: inline-flex;
+  flex-wrap: wrap;
+  gap: 2px 12px;
+
+  span {
+    display: inline-flex;
+    align-items: baseline;
+    gap: 4px;
+    white-space: nowrap;
+  }
+
+  small {
+    color: var(--ds-neutral-11);
+    font-size: var(--font-size-1);
+    font-weight: 400;
+  }
+`
