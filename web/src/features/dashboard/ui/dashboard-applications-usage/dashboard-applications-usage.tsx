@@ -1,63 +1,52 @@
 import { useUnit } from 'effector-react'
-import { useEffect, useMemo, useState } from 'react'
+import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
+  $dashboardProjects,
   buildApplicationsUsageChart,
-  PERIOD_TO_STATS_PERIOD,
-  type Period,
+  toProjectProcessStats,
 } from '../../model'
 
 import { DashboardApplicationsUsageCard } from './dashboard-applications-usage-card'
 import { DashboardApplicationsUsageChart } from './dashboard-applications-usage-chart'
 import { DashboardApplicationsUsageEmpty } from './dashboard-applications-usage-empty'
 
-import {
-  $projectsLoading,
-  $projectsProcessStats,
-  $projectsProcessStatsLoading,
-  $projectsWithProcessTracking,
-  fetchProjectsProcessStats,
-} from '@/entities/projects'
+import { $projectsLoading } from '@/entities/projects'
+import { statisticsProjectAppsQuery } from '@/entities/statistics'
 
 export const DashboardApplicationsUsage = () => {
   const { t } = useTranslation()
-  const [period, setPeriod] = useState<Period>('Month')
 
-  const {
-    projects,
-    projectsLoading,
-    processStats,
-    processStatsLoading,
-    fetchProcessStats,
-  } = useUnit({
-    projects: $projectsWithProcessTracking,
+  const { selectedProjects, projectsLoading, rows, pending, failed } = useUnit({
+    selectedProjects: $dashboardProjects,
     projectsLoading: $projectsLoading,
-    processStats: $projectsProcessStats,
-    processStatsLoading: $projectsProcessStatsLoading,
-    fetchProcessStats: fetchProjectsProcessStats,
+    rows: statisticsProjectAppsQuery.$data,
+    pending: statisticsProjectAppsQuery.$pending,
+    failed: statisticsProjectAppsQuery.$failed,
   })
 
-  const projectIdsKey = useMemo(
-    () => projects.map((project) => project.id).join(','),
-    [projects],
+  const projects = useMemo(
+    () => selectedProjects.filter((project) => project.trackProcesses),
+    [selectedProjects],
   )
-
-  useEffect(() => {
-    if (projectIdsKey) {
-      fetchProcessStats(PERIOD_TO_STATS_PERIOD[period])
-    }
-  }, [projectIdsKey, period, fetchProcessStats])
 
   const chart = useMemo(
-    () => buildApplicationsUsageChart(projects, processStats),
-    [projects, processStats],
+    () =>
+      buildApplicationsUsageChart(
+        projects,
+        toProjectProcessStats(
+          projects.map((project) => project.id ?? ''),
+          rows ?? [],
+          failed,
+        ),
+      ),
+    [projects, rows, failed],
   )
 
-  // Keep the previous period on screen while refetching; show the placeholder only
-  // until we have any stats to render.
-  const isLoading =
-    projectsLoading || (processStatsLoading && processStats.length === 0)
+  // Keep the previous period on screen while refetching; show the placeholder
+  // only until there is anything to render.
+  const isLoading = projectsLoading || (pending && rows === null)
 
   // A failed fetch also leaves nothing to stack, but it is not an empty state:
   // those rows keep their bars so the tooltip can say the load failed.
@@ -69,11 +58,7 @@ export const DashboardApplicationsUsage = () => {
   const emptyKey = projects.length === 0 ? 'trackingOff' : 'noActivity'
 
   return (
-    <DashboardApplicationsUsageCard
-      period={period}
-      isLoading={isLoading}
-      onPeriodChange={setPeriod}
-    >
+    <DashboardApplicationsUsageCard isLoading={isLoading}>
       {isEmpty ? (
         <DashboardApplicationsUsageEmpty
           title={t(`dashboard.applicationsUsage.empty.${emptyKey}.title`)}

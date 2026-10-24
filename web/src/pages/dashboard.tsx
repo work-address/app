@@ -1,26 +1,33 @@
 import { PlusIcon } from '@radix-ui/react-icons'
 import { Badge, Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { useCallback, useEffect, useState } from 'react'
+import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import {
   fetchProjects,
-  fetchProjectsStats,
-  $projectsStatsFailed,
   $projectsLoading,
   $projectsFailed,
   $hasProjects,
   $projects,
 } from '@/entities/projects'
+import { statisticsOverviewQuery } from '@/entities/statistics'
 import {
   DashboardApplicationsUsage,
+  DashboardFilterBar,
   DashboardPremiumBanner,
   DashboardProjectsSearchInput,
   DashboardSummary,
+  $dashboardProjectIds,
+  dashboardStatisticsRequested,
+  useDashboardSearchSync,
 } from '@/features/dashboard'
-import { ProjectsCreateModal, ProjectsTable } from '@/features/projects'
+import {
+  ProjectsCreateModal,
+  ProjectsTable,
+  type ProjectsTablePeriodTotals,
+} from '@/features/projects'
 import {
   PageHelmet,
   PageHeader,
@@ -40,19 +47,44 @@ export default function DashboardPage() {
     fetchProjects: fetchProjectsEvent,
     projectsLoading,
     projectsFailed,
-    projectsStatsFailed,
-    retryProjectsStats,
+    periodFailed,
+    retryPeriod,
     hasProjects,
     projects,
+    periodRows,
+    selectedProjectIds,
   } = useUnit({
     fetchProjects,
     projectsLoading: $projectsLoading,
     projectsFailed: $projectsFailed,
-    projectsStatsFailed: $projectsStatsFailed,
-    retryProjectsStats: fetchProjectsStats,
+    periodFailed: statisticsOverviewQuery.$failed,
+    retryPeriod: dashboardStatisticsRequested,
     hasProjects: $hasProjects,
     projects: $projects,
+    periodRows: statisticsOverviewQuery.$data,
+    selectedProjectIds: $dashboardProjectIds,
   })
+
+  useDashboardSearchSync()
+
+  // The table's time and money follow the period, like the figures above it.
+  const periodTotals = useMemo(() => {
+    const rates = new Map(
+      projects.map((project) => [project.id, Number(project.rateHour) || 0]),
+    )
+
+    return Object.fromEntries(
+      (periodRows ?? []).map((row) => [
+        row.projectId,
+        {
+          minutes: Math.round(row.trackedSeconds / 60),
+          minutesActive: Math.round((row.activeSeconds ?? 0) / 60),
+          paid:
+            ((row.paidSeconds ?? 0) / 3600) * (rates.get(row.projectId) ?? 0),
+        },
+      ]),
+    ) as ProjectsTablePeriodTotals
+  }, [periodRows, projects])
 
   // While loading, the projects table renders as skeletons so the layout does
   // not jump. Once loaded, an account with no projects gets the
@@ -88,7 +120,10 @@ export default function DashboardPage() {
             comes back once there is something under it. */}
         {(showContent || projectsFailed) && (
           <Overview>
-            <PageHeader title={t('dashboard.page.title')} />
+            <PageHeader
+              title={t('dashboard.page.title')}
+              actions={showContent ? <DashboardFilterBar /> : null}
+            />
             {showContent && <DashboardSummary />}
           </Overview>
         )}
@@ -114,7 +149,10 @@ export default function DashboardPage() {
                     <Badge size={'2'} color={'gray'}>
                       <Text weight={'medium'} size={'1'}>
                         {t('dashboard.page.projectsCount', {
-                          count: projects.length,
+                          count:
+                            selectedProjectIds.length > 0
+                              ? selectedProjectIds.length
+                              : projects.length,
                         })}
                       </Text>
                     </Badge>
@@ -125,13 +163,16 @@ export default function DashboardPage() {
                 </SearchArea>
               </ProjectsHead>
               <S.TableArea>
-                {projectsStatsFailed ? (
+                {periodFailed ? (
                   <LoadFailure
                     title={t('dashboard.projectsTable.totalsFailure.title')}
-                    onRetry={retryProjectsStats}
+                    onRetry={retryPeriod}
                   />
                 ) : (
-                  <ProjectsTable />
+                  <ProjectsTable
+                    projectIds={selectedProjectIds}
+                    periodTotals={periodTotals}
+                  />
                 )}
               </S.TableArea>
             </S.Main>

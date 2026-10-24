@@ -671,5 +671,20 @@
   "invoice.lines.rateChanged": "Ставка изменена {{date}}; {{before}} этой строки отработаны до изменения по {{from}}/ч",
   "header.nav.time": "Время",
   "time.page.title": "Время",
-  "time.page.meta": "Все учтённые записи времени в одной ленте. Фильтруйте по проекту, дате и активности, смотрите скриншоты и приложения и отмечайте оплаченное время."
+  "time.page.meta": "Все учтённые записи времени в одной ленте. Фильтруйте по проекту, дате и активности, смотрите скриншоты и приложения и отмечайте оплаченное время.",
+  "common.dateRange.label": "Период",
+  "common.dateRange.today": "Сегодня",
+  "common.dateRange.thisWeek": "Эта неделя",
+  "common.dateRange.lastWeek": "Прошлая неделя",
+  "common.dateRange.thisMonth": "Этот месяц",
+  "common.dateRange.lastMonth": "Прошлый месяц",
+  "common.dateRange.thisYear": "Этот год",
+  "common.dateRange.custom": "Свой период",
+  "common.dateRange.from": "С",
+  "common.dateRange.to": "По",
+  "dashboard.filters.projects": "Проекты",
+  "dashboard.filters.allProjects": "Все проекты",
+  "dashboard.filters.people": "Люди",
+  "dashboard.filters.everyone": "Все",
+  "dashboard.summary.failure.title": "Не удалось загрузить показатели за этот период"
 }

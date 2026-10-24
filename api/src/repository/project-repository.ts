@@ -75,6 +75,26 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
    * no visible project means 403, stated once in the type instead of as an
    * `if (!accessible) throw` after every call.
    */
+  /** Every live project the user owns, works on or views. */
+  public findAllWithAccess(user: User): RepoEffect<Project[]> {
+    const qb = this.getRepo()
+      .createQueryBuilder('project')
+      .innerJoinAndSelect('project.user', 'owner')
+      .where('project.deletedAt IS NULL')
+
+    this.applyViewAccessFilter(qb, 'owner', user)
+
+    return Effect.gen(this, function* () {
+      const projects = yield* fromPromise(() => qb.getMany())
+
+      yield* this.attachAccessUsersToProjects(projects)
+      for (const project of projects) {
+        this.scopeAgents(project, user)
+      }
+      return projects
+    })
+  }
+
   public findProjectWithAccessOrFail(
     project: Project,
     user: User,

@@ -663,5 +663,20 @@
   "invoice.lines.rateChanged": "Rate changed on {{date}}; {{before}} of this line were worked before the change, at {{from}}/h",
   "header.nav.time": "Time",
   "time.page.title": "Time",
-  "time.page.meta": "Every tracked worklog in one feed. Filter by project, date and activity, review screenshots and apps, and mark time as paid."
+  "time.page.meta": "Every tracked worklog in one feed. Filter by project, date and activity, review screenshots and apps, and mark time as paid.",
+  "common.dateRange.label": "Period",
+  "common.dateRange.today": "Today",
+  "common.dateRange.thisWeek": "This week",
+  "common.dateRange.lastWeek": "Last week",
+  "common.dateRange.thisMonth": "This month",
+  "common.dateRange.lastMonth": "Last month",
+  "common.dateRange.thisYear": "This year",
+  "common.dateRange.custom": "Custom",
+  "common.dateRange.from": "From",
+  "common.dateRange.to": "To",
+  "dashboard.filters.projects": "Projects",
+  "dashboard.filters.allProjects": "All projects",
+  "dashboard.filters.people": "People",
+  "dashboard.filters.everyone": "Everyone",
+  "dashboard.summary.failure.title": "Could not load the figures for this period"
 }

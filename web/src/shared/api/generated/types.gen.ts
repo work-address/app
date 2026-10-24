@@ -166,7 +166,7 @@ export type AgentSearchDto = {
 };
 
 export type StatisticsQueryDto = {
-    projectIds: Array<string>;
+    projectIds?: Array<string>;
     from: string;
     to: string;
     timeZone: string;

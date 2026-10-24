@@ -64,11 +64,29 @@ import {
 
 const rowIdGetter = (row: ProjectWithStats) => row.id ?? ''
 
-export const ProjectsTable = () => {
+export type ProjectsTablePeriodTotals = Record<
+  string,
+  { minutes: number; minutesActive: number; paid: number }
+>
+
+type ProjectsTableProps = {
+  /** Only these projects; empty or missing shows every one. */
+  projectIds?: string[]
+  /**
+   * Time for a period instead of all time. A project missing from it tracked
+   * nothing in the period.
+   */
+  periodTotals?: ProjectsTablePeriodTotals
+}
+
+export const ProjectsTable = ({
+  projectIds,
+  periodTotals,
+}: ProjectsTableProps = {}) => {
   const isMobile = useBreakpoint('isMobile')
 
   const {
-    projects,
+    projects: allProjects,
     isProjectsLoading,
     isProjectsFiltering,
     filter,
@@ -102,6 +120,24 @@ export const ProjectsTable = () => {
     setCreateDialogOpen: projectCreateDialogOpenChanged,
     allowDeleteAll: $canDeleteAllProjects,
   })
+
+  const projects = useMemo(() => {
+    const selected = projectIds?.length ? new Set(projectIds) : null
+    const rows = selected
+      ? allProjects.filter((project) => selected.has(project.id ?? ''))
+      : allProjects
+
+    if (!periodTotals) {
+      return rows
+    }
+
+    return rows.map((project) => ({
+      ...project,
+      minutes: periodTotals[project.id ?? '']?.minutes ?? 0,
+      minutesActive: periodTotals[project.id ?? '']?.minutesActive ?? 0,
+      paid: periodTotals[project.id ?? '']?.paid ?? 0,
+    }))
+  }, [allProjects, projectIds, periodTotals])
 
   const renderingData = isProjectsLoading ? [] : projects
 
@@ -201,26 +237,32 @@ export const ProjectsTable = () => {
         headerText: t('dashboard.projectsTable.head.timeActive'),
         description: t('common.metricDesc.timeActive'),
       },
-      {
-        dataKey: 'keyboardKeys',
-        headerText: t('dashboard.projectsTable.head.keyboardKeys'),
-        description: t('common.metricDesc.keyboard'),
-        getValue: (data) => formatCount(data.keyboardKeys),
-      },
-      {
-        dataKey: 'mouseKeys',
-        headerText: t('dashboard.projectsTable.head.mouseKeys'),
-        description: t('common.metricDesc.mouse'),
-        getValue: (data) => formatCount(data.mouseKeys),
-      },
-      {
-        dataKey: 'mouseDistance',
-        headerText: t('dashboard.projectsTable.head.mouseDistance'),
-        description: t('common.metricDesc.mouseDistance'),
-        getValue: (data) => formatCount(data.mouseDistance),
-      },
+      // Input counts are only known for all time; beside a period's hours
+      // they would read as that period's.
+      ...(periodTotals
+        ? []
+        : ([
+            {
+              dataKey: 'keyboardKeys',
+              headerText: t('dashboard.projectsTable.head.keyboardKeys'),
+              description: t('common.metricDesc.keyboard'),
+              getValue: (data) => formatCount(data.keyboardKeys),
+            },
+            {
+              dataKey: 'mouseKeys',
+              headerText: t('dashboard.projectsTable.head.mouseKeys'),
+              description: t('common.metricDesc.mouse'),
+              getValue: (data) => formatCount(data.mouseKeys),
+            },
+            {
+              dataKey: 'mouseDistance',
+              headerText: t('dashboard.projectsTable.head.mouseDistance'),
+              description: t('common.metricDesc.mouseDistance'),
+              getValue: (data) => formatCount(data.mouseDistance),
+            },
+          ] satisfies MobileDataTableConfig<ProjectWithStats>)),
     ],
-    [t],
+    [t, periodTotals],
   )
 
   const projectsContextValues = useMemo(

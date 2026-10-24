@@ -661,5 +661,20 @@
   "invoice.lines.rateChanged": "{{date}}に料金が変更されました。この行のうち{{before}}は変更前に{{from}}/時で作業されました",
   "header.nav.time": "時間",
   "time.page.title": "時間",
-  "time.page.meta": "記録したすべての作業ログをひとつのフィードで。プロジェクト、日付、アクティビティで絞り込み、スクリーンショットとアプリを確認し、支払済みにできます。"
+  "time.page.meta": "記録したすべての作業ログをひとつのフィードで。プロジェクト、日付、アクティビティで絞り込み、スクリーンショットとアプリを確認し、支払済みにできます。",
+  "common.dateRange.label": "期間",
+  "common.dateRange.today": "今日",
+  "common.dateRange.thisWeek": "今週",
+  "common.dateRange.lastWeek": "先週",
+  "common.dateRange.thisMonth": "今月",
+  "common.dateRange.lastMonth": "先月",
+  "common.dateRange.thisYear": "今年",
+  "common.dateRange.custom": "カスタム",
+  "common.dateRange.from": "開始",
+  "common.dateRange.to": "終了",
+  "dashboard.filters.projects": "プロジェクト",
+  "dashboard.filters.allProjects": "すべてのプロジェクト",
+  "dashboard.filters.people": "メンバー",
+  "dashboard.filters.everyone": "全員",
+  "dashboard.summary.failure.title": "この期間の数値を読み込めませんでした"
 }

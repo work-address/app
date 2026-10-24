@@ -1,17 +1,37 @@
+import type { StatisticsProjectAppRow } from '@/entities/statistics'
+
 import {
+  normalizeProcessName,
   OTHER_PROCESS_NAME,
   type ProjectProcessStats,
   type ProjectWithStats,
-  type StatsPeriod,
 } from '@/entities/projects'
 import { getHourAxis } from '@/shared'
 
-export type Period = 'Week' | 'Month' | 'Year'
+/**
+ * The period's app rows in the chart's per-project shape. One failed request
+ * covers every project, so every row is marked and the tooltip can say so.
+ */
+export const toProjectProcessStats = (
+  projectIds: string[],
+  rows: StatisticsProjectAppRow[],
+  failed: boolean,
+): ProjectProcessStats[] => {
+  const byProject = new Map<string, ProjectProcessStats>(
+    projectIds.map((projectId) => [
+      projectId,
+      { projectId, processes: [], failed },
+    ]),
+  )
 
-export const PERIOD_TO_STATS_PERIOD: Record<Period, StatsPeriod> = {
-  Week: '7D',
-  Month: '1M',
-  Year: '1Y',
+  for (const row of rows) {
+    byProject.get(row.projectId)?.processes.push({
+      processName: normalizeProcessName(row.app),
+      timeMin: row.seconds / 60,
+    })
+  }
+
+  return [...byProject.values()]
 }
 
 // Invisible bar: hover target for projects with no process data.

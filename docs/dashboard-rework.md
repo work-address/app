@@ -46,7 +46,7 @@ Related documents: [productivity.md](productivity.md) holds the product contract
 
 ## Filter bar
 
-Shown on the dashboard and `/time`.
+Shown on the dashboard. `/time` keeps the worklogs' own date and project filters under the same URL names, so dashboard links land on the same entries; a people filter there waits for time search by person.
 
 - **Range picker:** Today, This week, Last week, This month, Last month, This year, Custom; at most 366 days; days in the viewer's timezone. The same component as the project dialog's picker.
 - **Projects:** multi-select, all by default. "All" sends no `projectIds`.
@@ -99,11 +99,11 @@ Top to bottom. Each loads, fails and retries on its own, with a skeleton while l
 
 ## API
 
-Every route takes `{projectIds?, from, to, timeZone, userIds?}` under `/api`, shares the `Statistics` scope, and applies the visibility table. Omitted `projectIds` means every project visible to the caller.
+Every route takes `{projectIds?, from, to, timeZone, userIds?}` under `/api`, shares the `Statistics` scope, and applies the visibility table. Omitted `projectIds` means every project visible to the caller; with a `userIds` naming anyone else, that narrows to the caller's own projects, the only ones a people filter applies to.
 
 | Route | Returns | New |
 | --- | --- | --- |
-| `POST /statistics/overview` | Totals for the KPI row; called twice for the previous period | Exists |
+| `POST /statistics/overview` | Totals for the KPI row, with paid seconds (never for viewers); called twice for the previous period | Exists; `paidSeconds` added in D2 |
 | `POST /statistics/apps/:kind` | App usage | Exists |
 | `POST /statistics/time/daily` | Minutes per day per project | Yes |
 | `POST /statistics/time/hourly` | Active minutes per weekday × hour | Yes |

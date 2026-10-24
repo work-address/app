@@ -1,6 +1,5 @@
 import {
   ArrayMaxSize,
-  ArrayMinSize,
   IsArray,
   IsOptional,
   IsString,
@@ -9,11 +8,12 @@ import {
 } from 'class-validator'
 
 export class StatisticsQueryDto {
+  /** Omitted or empty: every project the caller can see. */
+  @IsOptional()
   @IsArray()
-  @ArrayMinSize(1)
   @ArrayMaxSize(100)
   @IsUUID('all', { each: true })
-  projectIds: string[]
+  projectIds?: string[]
   @IsString() from: string
   @IsString() to: string
   @IsString() timeZone: string

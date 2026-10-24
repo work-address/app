@@ -665,5 +665,20 @@
   "invoice.lines.rateChanged": "La tarifa cambió el {{date}}; {{before}} de esta línea se trabajaron antes del cambio, a {{from}}/h",
   "header.nav.time": "Tiempo",
   "time.page.title": "Tiempo",
-  "time.page.meta": "Todos los registros de tiempo en un solo listado. Filtra por proyecto, fecha y actividad, revisa capturas y apps, y marca el tiempo como pagado."
+  "time.page.meta": "Todos los registros de tiempo en un solo listado. Filtra por proyecto, fecha y actividad, revisa capturas y apps, y marca el tiempo como pagado.",
+  "common.dateRange.label": "Periodo",
+  "common.dateRange.today": "Hoy",
+  "common.dateRange.thisWeek": "Esta semana",
+  "common.dateRange.lastWeek": "Semana pasada",
+  "common.dateRange.thisMonth": "Este mes",
+  "common.dateRange.lastMonth": "Mes pasado",
+  "common.dateRange.thisYear": "Este año",
+  "common.dateRange.custom": "Personalizado",
+  "common.dateRange.from": "Desde",
+  "common.dateRange.to": "Hasta",
+  "dashboard.filters.projects": "Proyectos",
+  "dashboard.filters.allProjects": "Todos los proyectos",
+  "dashboard.filters.people": "Personas",
+  "dashboard.filters.everyone": "Todos",
+  "dashboard.summary.failure.title": "No se pudieron cargar las cifras de este periodo"
 }

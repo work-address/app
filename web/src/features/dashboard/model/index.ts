@@ -3,13 +3,29 @@ export {
   getBarColor,
   HIT_AREA_KEY,
   isProcessKey,
-  PERIOD_TO_STATS_PERIOD,
   toProcessKey,
   toProcessName,
+  toProjectProcessStats,
 } from './applications-usage-chart'
 export type {
   ApplicationsUsageChart,
   ChartDatum,
-  Period,
   ProcessKey,
 } from './applications-usage-chart'
+export {
+  $dashboardFilters,
+  $dashboardPeople,
+  $dashboardProjectIds,
+  $dashboardProjects,
+  $dashboardRange,
+  $dashboardStatisticsQuery,
+  $dashboardUserIds,
+  dashboardFiltersRestored,
+  dashboardPeopleChanged,
+  dashboardProjectsChanged,
+  dashboardRangeChanged,
+  dashboardStatisticsRequested,
+  parseDashboardSearch,
+  toDashboardSearch,
+} from './dashboard-filters'
+export type { DashboardFilters, DashboardPerson } from './dashboard-filters'

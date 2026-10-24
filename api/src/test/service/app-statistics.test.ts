@@ -193,6 +193,68 @@ export class AppStatisticsTest extends AbstractDatabaseIntegration {
     }
     expect(denied).to.equal(true)
   }
+  @test() async omittedProjectsMeanEveryVisibleProject() {
+    const owner = await this.userFixture.createPremiumUser()
+    const worker = await this.userFixture.createUser()
+    const other = await this.userFixture.createPremiumUser()
+    const viewer = await this.userFixture.createUser()
+    const projects = this.container.get<ProjectFixture>('ProjectFixture')
+    const own = await projects.create(owner, EProjectState.ACTIVE)
+    Object.assign(own, {
+      workerAddresses: [worker.address],
+      viewerAddresses: [viewer.address],
+    })
+    await this.conn.manager.save(own)
+    // The owner also works on someone else's project.
+    const theirs = await projects.create(other, EProjectState.ACTIVE)
+    theirs.workerAddresses = [owner.address]
+    await this.conn.manager.save(theirs)
+    const manager = this.container.get<TimeManager>('TimeManager')
+    const [paid] = await runPromise(
+      manager.createOrUpdateMany([this.payload(own.id)], worker),
+    )
+    await runPromise(
+      manager.createOrUpdateMany([this.payload(theirs.id)], owner),
+    )
+    await this.conn.getRepository(Time).update(paid.id!, { isPaid: true })
+    const statistics =
+      this.container.get<StatisticsManager>('StatisticsManager')
+    const range = {
+      from: new Date(Date.now() - 86400000).toISOString().slice(0, 10),
+      to: new Date(Date.now() + 86400000).toISOString().slice(0, 10),
+      timeZone: 'UTC',
+    }
+    const ids = (report: any) =>
+      report.totals.map((row: any) => row.projectId).sort()
+
+    const all = (await statistics.read('overview', range, owner)) as any
+    expect(ids(all)).to.deep.equal([own.id, theirs.id].sort())
+    const ownRow = all.totals.find((row: any) => row.projectId === own.id)
+    expect(Number(ownRow.paidSeconds)).to.equal(600)
+
+    // Filtering by a worker narrows "all" to the projects the owner owns,
+    // rather than refusing because of the one they only work on.
+    const people = (await statistics.read(
+      'overview',
+      { ...range, userIds: [worker.id] },
+      owner,
+    )) as any
+    expect(ids(people)).to.deep.equal([own.id])
+
+    const viewed = (await statistics.read('overview', range, viewer)) as any
+    expect(ids(viewed)).to.deep.equal([own.id])
+    expect(viewed.totals[0].paidSeconds).to.equal(undefined)
+
+    const nobody = await this.userFixture.createUser()
+    expect(await statistics.read('overview', range, nobody)).to.deep.equal({
+      totals: [],
+      apps: [],
+      gaps: [],
+    })
+    expect(await statistics.read('projects', range, nobody)).to.deep.equal({
+      rows: [],
+    })
+  }
   @test()
   async rejectsInvalidUsageWithoutLosingTimeAndNeverEchoesAcknowledgement() {
     const owner = await this.userFixture.createPremiumUser()

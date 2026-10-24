@@ -3,22 +3,18 @@ import styled from 'styled-components'
 
 import { DashboardApplicationsUsageSkeleton } from './dashboard-applications-usage-skeleton'
 
-import type { Period } from '../../model'
 import type { ReactNode } from 'react'
 
-import { Card, Select, SectionTitle } from '@/shared'
+import { Card, SectionTitle } from '@/shared'
 
 type DashboardApplicationsUsageCardProps = {
-  period: Period
   isLoading: boolean
-  onPeriodChange: (period: Period) => void
   children: ReactNode
 }
 
+/** The period comes from the dashboard's filter bar, like every other figure. */
 export const DashboardApplicationsUsageCard = ({
-  period,
   isLoading,
-  onPeriodChange,
   children,
 }: DashboardApplicationsUsageCardProps) => {
   const { t } = useTranslation()
@@ -27,26 +23,6 @@ export const DashboardApplicationsUsageCard = ({
     <Root>
       <Head>
         <SectionTitle>{t('dashboard.applicationsUsage.title')}</SectionTitle>
-        <PeriodSelect>
-          <Select
-            options={[
-              {
-                value: 'Week',
-                label: t('dashboard.applicationsUsage.period.week'),
-              },
-              {
-                value: 'Month',
-                label: t('dashboard.applicationsUsage.period.month'),
-              },
-              {
-                value: 'Year',
-                label: t('dashboard.applicationsUsage.period.year'),
-              },
-            ]}
-            value={period}
-            onChange={(v) => onPeriodChange(v as Period)}
-          />
-        </PeriodSelect>
       </Head>
       <Body>
         <Plot>
@@ -66,15 +42,10 @@ const Head = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
+  /* The height the period select used to give it, so the card stays level
+     with the projects table beside it. */
+  min-height: 32px;
   margin-bottom: var(--spacing-5);
-`
-
-const PeriodSelect = styled.div`
-  width: 120px;
-
-  button {
-    height: 32px;
-  }
 `
 
 const Body = styled(Card)`

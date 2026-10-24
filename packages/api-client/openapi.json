@@ -811,8 +811,7 @@
               "type": "string"
             },
             "type": "array",
-            "maxItems": 100,
-            "minItems": 1
+            "maxItems": 100
           },
           "from": {
             "type": "string"
@@ -842,7 +841,6 @@
         },
         "type": "object",
         "required": [
-          "projectIds",
           "from",
           "to",
           "timeZone"

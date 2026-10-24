@@ -661,5 +661,20 @@
   "invoice.lines.rateChanged": "费率于{{date}}变更；本行中有{{before}}在变更前按{{from}}/小时完成",
   "header.nav.time": "时间",
   "time.page.title": "时间",
-  "time.page.meta": "所有工时记录集中在一个列表中。按项目、日期和活动筛选，查看截图和应用，并将时间标记为已付款。"
+  "time.page.meta": "所有工时记录集中在一个列表中。按项目、日期和活动筛选，查看截图和应用，并将时间标记为已付款。",
+  "common.dateRange.label": "时间段",
+  "common.dateRange.today": "今天",
+  "common.dateRange.thisWeek": "本周",
+  "common.dateRange.lastWeek": "上周",
+  "common.dateRange.thisMonth": "本月",
+  "common.dateRange.lastMonth": "上月",
+  "common.dateRange.thisYear": "今年",
+  "common.dateRange.custom": "自定义",
+  "common.dateRange.from": "开始",
+  "common.dateRange.to": "结束",
+  "dashboard.filters.projects": "项目",
+  "dashboard.filters.allProjects": "全部项目",
+  "dashboard.filters.people": "成员",
+  "dashboard.filters.everyone": "所有人",
+  "dashboard.summary.failure.title": "无法加载此时间段的数据"
 }

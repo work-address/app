@@ -144,7 +144,7 @@ export {
   type ProjectProcessStats,
 } from './types'
 
-export { OTHER_PROCESS_NAME } from './utils'
+export { normalizeProcessName, OTHER_PROCESS_NAME } from './utils'
 
 export {
   fetchProjects,

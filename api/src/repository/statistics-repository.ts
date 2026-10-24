@@ -75,6 +75,10 @@ export class StatisticsRepository {
         `COALESCE(SUM(CASE WHEN time.source<>'desktop' AND ${detail} THEN ${seconds} ELSE 0 END),0)`,
         'manualSeconds',
       )
+      .addSelect(
+        `COALESCE(SUM(CASE WHEN COALESCE(time.\"isPaid\", false) THEN ${seconds} ELSE 0 END),0)`,
+        'paidSeconds',
+      )
       .groupBy('project.id')
       .getRawMany()
   }
