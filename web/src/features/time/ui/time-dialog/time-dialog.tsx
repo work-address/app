@@ -1,4 +1,3 @@
-import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useEffect } from 'react'
 import { Controller, useForm, type SubmitHandler } from 'react-hook-form'
@@ -11,7 +10,7 @@ import {
   timeScreenshotRemoveRequested,
 } from '../../model'
 
-import { TimeDialogAgents } from './time-dialog-agents'
+import { TimeDialogAgents, useEntryAgentRuns } from './time-dialog-agents'
 import { TimeDialogFooter } from './time-dialog-footer'
 import { TimeDialogMetrics } from './time-dialog-metrics'
 import { TimeDialogNav } from './time-dialog-nav'
@@ -27,6 +26,7 @@ import {
 } from '@/entities/time'
 import {
   AdaptiveDialog,
+  DIALOG_WIDTH_WIDE,
   Select,
   Text,
   TextArea,
@@ -191,6 +191,8 @@ export const TimeDialog = ({
   // the mutation lands, so there is no local copy to keep in step.
   const hasScreenshot = Boolean(row?.screenshot)
   const hasProcesses = getTimeApps(row ?? undefined).length > 0
+  const agentRuns = useEntryAgentRuns(row)
+  const hasAgents = agentRuns.length > 0
   const isPending =
     isDeleting || isEditing || isRemovingScreenshot || isRemovingProcesses
   const screenshotSrc = hasScreenshot
@@ -243,7 +245,15 @@ export const TimeDialog = ({
       open={open}
       onOpenChange={onOpenChange}
       title={row?.project?.title ?? t('dashboard.page.worklogs.title')}
-      desktopWidth={hasScreenshot ? '1000px' : '540px'}
+      desktopWidth={
+        hasScreenshot && hasAgents
+          ? WIDTH_THREE_COLUMNS
+          : hasScreenshot
+            ? '1000px'
+            : hasAgents
+              ? DIALOG_WIDTH_WIDE
+              : '540px'
+      }
       desktopShowClose
       headerActions={
         row ? (
@@ -275,21 +285,28 @@ export const TimeDialog = ({
     >
       {row && (
         <>
-          <Flex mb="4">
-            <Text size="2">{rangeLabel}</Text>
-          </Flex>
-          <Content data-single-column={!hasScreenshot || undefined}>
+          <Content
+            data-screenshot={hasScreenshot || undefined}
+            data-agents={hasAgents || undefined}
+          >
             {hasScreenshot && screenshotSrc && (
               <ScreenshotColumn>
-                <Screenshot
-                  src={screenshotSrc}
-                  alt={row.project?.title ?? ''}
-                />
-                <TimeDialogMetrics row={row} />
+                <Shot>
+                  <Text size="2" weight="medium">
+                    {t('dashboard.worklogsTable.head.screenshot')}
+                  </Text>
+                  <Screenshot
+                    src={screenshotSrc}
+                    alt={row.project?.title ?? ''}
+                  />
+                </Shot>
+                <TimeDialogMetrics row={row} range={rangeLabel} />
               </ScreenshotColumn>
             )}
-            <DetailsColumn data-full-width={!hasScreenshot || undefined}>
-              {!hasScreenshot && <TimeDialogMetrics row={row} />}
+            <DetailsColumn>
+              {!hasScreenshot && (
+                <TimeDialogMetrics row={row} range={rangeLabel} />
+              )}
               <Controller
                 name="paymentStatus"
                 control={control}
@@ -325,8 +342,12 @@ export const TimeDialog = ({
                 )}
               />
               {hasProcesses && row && <TimeDialogProcesses time={row} />}
-              <TimeDialogAgents time={row} />
             </DetailsColumn>
+            {hasAgents && (
+              <AgentsColumn>
+                <TimeDialogAgents items={agentRuns} />
+              </AgentsColumn>
+            )}
           </Content>
         </>
       )}
@@ -334,66 +355,72 @@ export const TimeDialog = ({
   )
 }
 
+// Screenshot, details and agent runs side by side, never wider than the window.
+const WIDTH_THREE_COLUMNS = 'min(1320px, calc(100vw - 48px))'
+
 const Content = styled.div`
-  display: flex;
-  align-items: flex-start;
-  gap: var(--space-6);
-  flex-direction: row;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-4);
   width: 100%;
 
-  &[data-single-column] {
-    flex-direction: column;
+  ${(p) => p.theme.breakpoints.up('md')} {
+    column-gap: var(--space-6);
+
+    &[data-screenshot] {
+      grid-template-columns: minmax(0, 540px) minmax(0, 1fr);
+    }
+
+    &[data-agents]:not([data-screenshot]) {
+      grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
+    }
+
+    /* Too narrow for three: the runs take a full row under the other two. */
+    &[data-screenshot][data-agents] {
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr);
+    }
   }
 
-  ${(p) => p.theme.breakpoints.down('md')} {
-    flex-direction: column;
-    gap: var(--space-4);
+  ${(p) => p.theme.breakpoints.up('lg')} {
+    &[data-screenshot][data-agents] {
+      grid-template-columns: minmax(0, 1.25fr) minmax(0, 1fr) minmax(0, 1fr);
+    }
   }
 `
 
 const DetailsColumn = styled.div`
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: var(--space-4);
-  flex: 1;
   min-width: 0;
-  width: auto;
+`
 
-  &[data-full-width] {
-    width: 100%;
-  }
+const AgentsColumn = styled.div`
+  min-width: 0;
 
-  & > * {
-    width: 100%;
-  }
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    width: 100%;
+  ${(p) => p.theme.breakpoints.between('md', 'lg')} {
+    [data-screenshot] > & {
+      grid-column: 1 / -1;
+    }
   }
 `
 
 const ScreenshotColumn = styled.div`
-  display: flex;
-  flex-direction: column;
+  display: grid;
   gap: var(--space-4);
-  flex-shrink: 0;
-  width: 540px;
-  max-width: 100%;
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    width: 100%;
-  }
+  min-width: 0;
 `
 
-const Screenshot = styled.img`
-  width: 540px;
-  height: 384px;
-  max-width: 100%;
-  object-fit: contain;
-  border-radius: 12px;
+// Labelled like the other columns, so all three start on one line.
+const Shot = styled.div`
+  display: grid;
+  gap: var(--space-2);
+`
 
-  ${(p) => p.theme.breakpoints.down('md')} {
-    width: 100%;
-    height: auto;
-  }
+// Scales with its column at its own shape: no empty band under a wide shot.
+const Screenshot = styled.img`
+  display: block;
+  width: 100%;
+  height: auto;
+  border-radius: 12px;
 `

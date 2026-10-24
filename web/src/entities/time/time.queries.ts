@@ -77,7 +77,10 @@ concurrency(timeQuery, { strategy: 'TAKE_LATEST' })
 
 /** An agent run as /agent-tracking/search returns it; the fields the entry dialog shows. */
 export type TimeAgentRun = {
-  id: string
+  /** Not sent by the API; `runKey` names the run. */
+  id?: string
+  /** Unique per run: what a list keys its runs by. */
+  runKey: string
   userId: string
   product: string
   /** Where the agent ran: `cli`, `ide`, `desktop`... */

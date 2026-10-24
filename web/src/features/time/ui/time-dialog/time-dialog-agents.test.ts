@@ -11,12 +11,12 @@ const entry = {
 } as unknown as Time
 
 const run = (
-  id: string,
+  runKey: string,
   fromAt: string,
   toAt: string,
   userId = 'author',
 ): TimeAgentRun => ({
-  id,
+  runKey,
   userId,
   product: 'claude-code',
   fromAt,
@@ -41,7 +41,7 @@ describe('getEntryAgentRuns', () => {
       ],
       entry,
     )
-    expect(items.map(({ run }) => run.id)).toEqual(['early', 'late'])
+    expect(items.map(({ run }) => run.runKey)).toEqual(['early', 'late'])
     expect(items[0].minutes).toBeCloseTo(2.5)
     // a run past the entry's end counts only up to it
     expect(items[1].minutes).toBeCloseTo((2 * 60 + 7) / 60)

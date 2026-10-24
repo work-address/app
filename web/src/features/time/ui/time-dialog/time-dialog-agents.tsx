@@ -56,7 +56,7 @@ const STATE_COLORS: Record<SegmentState, string> = {
 }
 
 type TimeDialogAgentsProps = {
-  time: Time
+  items: EntryAgentRun[]
 }
 
 export type EntryAgentRun = {
@@ -139,27 +139,38 @@ export const getEntryAgentRuns = (
 }
 
 /**
- * The agent runs of the entry's author on its project during its period.
- * Agent time is recorded apart from the person's activity, so it is listed
- * here, not counted in the entry's active minutes. Everything is on the card:
- * nothing waits behind a hover, which a touch screen does not have.
+ * Asks for the agent runs of the entry's author on its project during its
+ * period and summarizes them. The dialog calls it, so it can make room for
+ * them only when there are some.
  */
-export const TimeDialogAgents = ({ time }: TimeDialogAgentsProps) => {
-  const { t, i18n } = useTranslation()
+export const useEntryAgentRuns = (time: Time | null): EntryAgentRun[] => {
   const { start, runs } = useUnit({
     start: timeAgentRunsQuery.start,
     runs: timeAgentRunsQuery.$data,
   })
 
-  const projectId = time.project?.id
+  const projectId = time?.project?.id
+  const tracksAgents = time?.project?.trackAgents !== false
+  const fromAt = time?.fromAt
+  const toAt = time?.toAt
 
   useEffect(() => {
-    if (projectId && time.project?.trackAgents !== false) {
-      start({ projectId, fromAt: time.fromAt, toAt: time.toAt })
+    if (projectId && tracksAgents && fromAt && toAt) {
+      start({ projectId, fromAt, toAt })
     }
-  }, [start, projectId, time.fromAt, time.toAt, time.project?.trackAgents])
+  }, [start, projectId, tracksAgents, fromAt, toAt])
 
-  const items = getEntryAgentRuns(runs ?? [], time)
+  return time ? getEntryAgentRuns(runs ?? [], time) : []
+}
+
+/**
+ * An entry's agent runs. Agent time is recorded apart from the person's
+ * activity, so it is listed here, not counted in the entry's active minutes.
+ * Everything is on the card: nothing waits behind a hover, which a touch
+ * screen does not have.
+ */
+export const TimeDialogAgents = ({ items }: TimeDialogAgentsProps) => {
+  const { t, i18n } = useTranslation()
 
   if (items.length === 0) {
     return null
@@ -196,7 +207,7 @@ export const TimeDialogAgents = ({ time }: TimeDialogAgentsProps) => {
           const legend = STATES.filter((state) => minutesByState[state] > 0)
 
           return (
-            <Card key={run.id}>
+            <Card key={run.runKey}>
               <Flex align="center" gap="2" minWidth="0">
                 <Avatar aria-hidden>{name.slice(0, 1)}</Avatar>
                 <Flex direction="column" minWidth="0" flexGrow="1">

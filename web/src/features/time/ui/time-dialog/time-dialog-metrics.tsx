@@ -9,16 +9,23 @@ import { formatCount, formatDurationFromMinutes, Hint, Text } from '@/shared'
 
 type TimeDialogMetricsProps = {
   row: Time
+  /** The entry's period, said under the heading the activity belongs to. */
+  range: string
 }
 
-export const TimeDialogMetrics = ({ row }: TimeDialogMetricsProps) => {
+export const TimeDialogMetrics = ({ row, range }: TimeDialogMetricsProps) => {
   const { t } = useTranslation()
 
   return (
     <Root>
-      <Text size="2" weight="medium">
-        {t('dashboard.worklogsTable.head.activeMetrics')}
-      </Text>
+      <Heading>
+        <Text size="2" weight="medium">
+          {t('dashboard.worklogsTable.head.activeMetrics')}
+        </Text>
+        <Text size="2" color="gray">
+          {range}
+        </Text>
+      </Heading>
       <MetricsGrid>
         <Metric
           label={t('dashboard.worklogsTable.head.timeActive')}
@@ -76,6 +83,11 @@ const Root = styled.div`
   flex-direction: column;
   gap: var(--space-2);
   width: 100%;
+`
+
+const Heading = styled.div`
+  display: grid;
+  gap: var(--space-1);
 `
 
 const MetricsGrid = styled.div`
