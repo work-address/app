@@ -14,7 +14,7 @@ import {
 import { TimeDialogFooter } from './time-dialog-footer'
 import { TimeDialogMetrics } from './time-dialog-metrics'
 import { TimeDialogNav } from './time-dialog-nav'
-import { TimeDialogProcesses } from './time-dialog-processes'
+import { getTimeApps, TimeDialogProcesses } from './time-dialog-processes'
 
 import type { Time } from '@/entities/time'
 
@@ -189,7 +189,7 @@ export const TimeDialog = ({
   // Derived straight from the row: the feed clears screenshot/processes when
   // the mutation lands, so there is no local copy to keep in step.
   const hasScreenshot = Boolean(row?.screenshot)
-  const hasProcesses = Boolean(row?.processes && row.processes.length > 0)
+  const hasProcesses = getTimeApps(row).length > 0
   const isPending =
     isDeleting || isEditing || isRemovingScreenshot || isRemovingProcesses
   const screenshotSrc = hasScreenshot
@@ -323,9 +323,7 @@ export const TimeDialog = ({
                   />
                 )}
               />
-              {hasProcesses && (
-                <TimeDialogProcesses processes={row.processes} />
-              )}
+              {hasProcesses && row && <TimeDialogProcesses time={row} />}
             </DetailsColumn>
           </Content>
         </>

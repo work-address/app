@@ -11,6 +11,7 @@
   "common.duration.hoursAndMinutes": "{{hours}}時間{{minutes}}分",
   "common.duration.hoursOnly": "{{hours}}時間",
   "common.duration.minutesOnly": "{{minutes}}分",
+  "common.duration.underMinute": "1分未満",
   "common.edit": "編集",
   "common.errors.unexpected": "問題が発生しました。もう一度お試しください。",
   "common.loadFailure.description": "情報を読み込めませんでした。もう一度お試しください。",

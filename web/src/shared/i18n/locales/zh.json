@@ -11,6 +11,7 @@
   "common.duration.hoursAndMinutes": "{{hours}} 小时 {{minutes}} 分钟",
   "common.duration.hoursOnly": "{{hours}} 小时",
   "common.duration.minutesOnly": "{{minutes}} 分钟",
+  "common.duration.underMinute": "不到 1 分钟",
   "common.edit": "编辑",
   "common.errors.unexpected": "出现问题，请重试。",
   "common.loadFailure.description": "无法加载此信息，请重试。",

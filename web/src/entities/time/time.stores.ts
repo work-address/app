@@ -136,7 +136,11 @@ const $timeFeed = createStore<TimeFeed>(EMPTY_FEED)
     })),
   )
   .on(removeTimeProcessesMutation.finished.success, (feed, { params }) =>
-    patchTimeItems(feed, params, (item) => ({ ...item, processes: [] })),
+    patchTimeItems(feed, params, (item) => ({
+      ...item,
+      processes: [],
+      apps: [],
+    })),
   )
   .reset(resetTimeFilters)
 

@@ -12,7 +12,7 @@ type TimeProcessItem = {
 }
 
 type TimeDialogProcessesProps = {
-  processes?: Time['processes']
+  time: Pick<Time, 'apps' | 'processes'>
 }
 
 // Keeps a one-minute process from rendering as an invisible sliver.
@@ -22,37 +22,55 @@ const MIN_BAR_PERCENT = 4
 const MIN_FILL_OPACITY = 0.45
 
 const toMinutes = (value?: number) => {
-  const rounded = Math.round(Number(value))
+  const minutes = Number(value)
 
-  return Number.isFinite(rounded) ? Math.max(0, rounded) : 0
+  return Number.isFinite(minutes) ? Math.max(0, minutes) : 0
 }
 
 // Longer processes sit at full strength, shorter ones fade back.
 const getFillOpacity = (ratio: number) =>
   Number((MIN_FILL_OPACITY + ratio * (1 - MIN_FILL_OPACITY)).toFixed(2))
 
-export const TimeDialogProcesses = ({
-  processes,
-}: TimeDialogProcessesProps) => {
-  const { t } = useTranslation()
+/**
+ * The apps an entry recorded, in minutes. Entries from the current tracker
+ * carry per-app seconds in `apps`; older ones only the legacy `processes`.
+ */
+export const getTimeApps = (time?: Pick<Time, 'apps' | 'processes'>) => {
+  const apps = (time?.apps ?? [])
+    .filter((app): app is typeof app & { name: string } => Boolean(app?.name))
+    .map((app) => ({ name: app.name, minutes: toMinutes(app.seconds) / 60 }))
+  if (apps.length > 0) {
+    return apps
+  }
 
-  const processItems = (processes ?? [])
+  return (time?.processes ?? [])
     .map((item) => item as TimeProcessItem)
     .filter((item): item is TimeProcessItem & { name: string } =>
       Boolean(item?.name),
     )
     .map((item) => ({ name: item.name, minutes: toMinutes(item.timeMin) }))
-    .sort((a, b) => a.minutes - b.minutes)
+}
+
+export const TimeDialogProcesses = ({ time }: TimeDialogProcessesProps) => {
+  const { t } = useTranslation()
+
+  const processItems = getTimeApps(time).sort((a, b) => a.minutes - b.minutes)
 
   if (processItems.length === 0) {
     return null
   }
 
+  // Seconds-precise apps would otherwise read "0 min" under half a minute.
+  const formatDuration = (minutes: number) =>
+    minutes > 0 && minutes < 1
+      ? t('common.duration.underMinute')
+      : formatDurationFromMinutes(minutes, t)
+
   // Bars are read against the busiest process, so the longest one fills its track.
   const minutesList = processItems.map((item) => item.minutes)
   const longest = Math.max(...minutesList)
   const shortest = Math.min(...minutesList)
-  const scaleMax = Math.max(longest, 1)
+  const scaleMax = longest > 0 ? longest : 1
 
   return (
     <Flex direction="column" gap="2" width="100%">
@@ -61,15 +79,15 @@ export const TimeDialogProcesses = ({
       </Text>
       {longest > 0 && (
         <Scale>
-          {shortest !== longest && (
-            <ScaleLabel>{formatDurationFromMinutes(shortest, t)}</ScaleLabel>
+          {formatDuration(shortest) !== formatDuration(longest) && (
+            <ScaleLabel>{formatDuration(shortest)}</ScaleLabel>
           )}
-          <ScaleLabel>{formatDurationFromMinutes(longest, t)}</ScaleLabel>
+          <ScaleLabel>{formatDuration(longest)}</ScaleLabel>
         </Scale>
       )}
       <ProcessesList>
         {processItems.map((item, index) => {
-          const duration = formatDurationFromMinutes(item.minutes, t)
+          const duration = formatDuration(item.minutes)
           const ratio = item.minutes / scaleMax
           const percent = item.minutes
             ? Math.max(MIN_BAR_PERCENT, ratio * 100)

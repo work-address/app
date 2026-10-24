@@ -395,14 +395,12 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
           }
         }
         if ('withProcesses' in s.filter) {
-          if (s.filter.withProcesses) {
-            filterQb.andWhere('time.processes IS NOT NULL')
-            filterQb.andWhere("time.processes::text != '[]'")
-          } else {
-            filterQb.andWhere(
-              "(time.processes IS NULL OR time.processes::text = '[]')",
-            )
-          }
+          // Current trackers store apps in app_usage; older rows only in processes.
+          const hasProcesses = `((time.processes IS NOT NULL AND time.processes::text != '[]')
+            OR EXISTS (SELECT 1 FROM app_usage usage WHERE usage."timeId" = time.id))`
+          filterQb.andWhere(
+            s.filter.withProcesses ? hasProcesses : `NOT ${hasProcesses}`,
+          )
         }
       }),
     )

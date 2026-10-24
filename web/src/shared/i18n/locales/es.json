@@ -11,6 +11,7 @@
   "common.duration.hoursAndMinutes": "{{hours}} h {{minutes}} min",
   "common.duration.hoursOnly": "{{hours}} h",
   "common.duration.minutesOnly": "{{minutes}} min",
+  "common.duration.underMinute": "< 1 min",
   "common.edit": "Editar",
   "common.errors.unexpected": "Algo salió mal. Inténtalo de nuevo.",
   "common.loadFailure.description": "No se pudo cargar esta información. Inténtalo de nuevo.",
