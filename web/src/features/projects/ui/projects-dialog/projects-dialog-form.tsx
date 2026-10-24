@@ -1,19 +1,15 @@
-import { Box, Flex, Grid } from '@radix-ui/themes'
 import { useStoreMap, useUnit } from 'effector-react'
-import { useEffect, useMemo } from 'react'
+import { useEffect } from 'react'
 import { useForm } from 'react-hook-form'
-import { useTranslation } from 'react-i18next'
 
 import { mapCollaboratorsToAddresses } from '../../model'
-import { ProjectsAddCollaborators } from '../projects-add-collaborators'
-import { ProjectsFormSelect } from '../projects-form-select'
-import { ProjectsFormTrackingOptions } from '../projects-form-tracking-options'
+import { ProjectsFormFields } from '../projects-form-fields'
 
 import type { ProjectFormValues } from '../../model'
 
 import { $user } from '@/entities/profile'
 import { $rawProjects, editProjectMutation } from '@/entities/projects'
-import { Input, Text, TextArea, type InputProps, BASE_CURRENCY } from '@/shared'
+import { useBreakpoint } from '@/shared'
 
 type ProjectsDialogFormProps = {
   projectId: string
@@ -24,14 +20,13 @@ export const ProjectsDialogForm = ({
   projectId,
   defaultValues,
 }: ProjectsDialogFormProps) => {
-  const { t } = useTranslation()
-
   const {
     register,
     handleSubmit,
     reset: resetForm,
     formState: { errors },
     control,
+    setFocus,
   } = useForm<ProjectFormValues>({
     mode: 'onSubmit',
     reValidateMode: 'onSubmit',
@@ -87,98 +82,26 @@ export const ProjectsDialogForm = ({
     }
   }, [editingStatus, resetForm])
 
-  const stateOptions = useMemo(
-    () => [
-      {
-        label: t('dashboard.projectsTable.status.active'),
-        value: 'Active',
-      },
-      {
-        label: t('dashboard.page.tabs.inactive'),
-        value: 'Inactive',
-      },
-    ],
-    [t],
-  )
-
-  const inputProps: InputProps = {
-    rows: 'auto auto',
-    columns: '1fr',
-    gap: '2',
-  }
+  // Edit replaces the Edit button under the pointer with Save: start in the
+  // first field instead of leaving focus on a button the person did not press.
+  // Not on phones, where focusing a field throws the keyboard over the form.
+  const isDesktop = useBreakpoint('isDesktop')
+  useEffect(() => {
+    if (isDesktop) {
+      setFocus('title')
+    }
+  }, [isDesktop, setFocus])
 
   return (
     <form onSubmit={handleSubmit(handleFormSubmit)} id="edit-project-form">
-      {/* Details lead and tracking follows; the drawer stacks them in one column. */}
-      <Grid
-        columns={{ initial: '1', md: 'minmax(0, 1fr) minmax(0, 1fr)' }}
-        gap="5"
-      >
-        <Flex direction="column" gap="4" minWidth="0">
-          <Input
-            label={t('dashboard.projectsTable.form.projectName')}
-            hint={t('project.form.hint.title')}
-            id="projectName"
-            disabled={isPending}
-            state={errors.title ? 'error' : 'valid'}
-            {...inputProps}
-            {...register('title', { required: true })}
-          />
-          <ProjectsFormSelect
-            control={control}
-            name="state"
-            label={t('dashboard.projectsTable.form.status')}
-            hint={t('project.form.hint.state')}
-            options={stateOptions}
-            fallbackValue="Active"
-            id="state"
-            disabled={isPending}
-            hasError={Boolean(errors.state)}
-            inputProps={inputProps}
-          />
-          <Input
-            label={t('dashboard.projectsTable.form.rate')}
-            hint={t('project.form.hint.rate')}
-            addonLeft={
-              <Text size={'2'} color={'gray'}>
-                {BASE_CURRENCY.symbol}
-              </Text>
-            }
-            id="rate"
-            inputMode="decimal"
-            disabled={isPending}
-            state={errors.rateHour ? 'error' : 'valid'}
-            {...inputProps}
-            {...register('rateHour', { required: true })}
-          />
-          <TextArea
-            label={t('dashboard.projectsTable.form.description')}
-            hint={t('project.form.hint.description')}
-            placeholder={t('project.createModal.descriptionPlaceholder')}
-            rows={3}
-            id="description"
-            disabled={isPending}
-            state={errors.text ? 'error' : 'valid'}
-            {...register('text', { required: true })}
-          />
-        </Flex>
-        <ProjectsFormTrackingOptions
-          control={control}
-          disabled={isPending}
-          idSuffix="-edit"
-        />
-        {/* Address, role and remove need a full row; a column squeezes the address. */}
-        <Box gridColumn="1 / -1" minWidth="0">
-          <ProjectsAddCollaborators
-            control={control}
-            register={register}
-            errors={errors}
-            disabled={isPending}
-            premiumLocked={!user?.premium}
-            inputProps={inputProps}
-          />
-        </Box>
-      </Grid>
+      <ProjectsFormFields
+        control={control}
+        register={register}
+        errors={errors}
+        disabled={isPending}
+        premiumLocked={!user?.premium}
+        idSuffix="-edit"
+      />
     </form>
   )
 }

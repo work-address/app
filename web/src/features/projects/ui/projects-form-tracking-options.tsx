@@ -1,4 +1,3 @@
-import { Flex } from '@radix-ui/themes'
 import {
   Controller,
   useController,
@@ -7,6 +6,7 @@ import {
   type ControllerRenderProps,
 } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
 import { reviewWindowHourChoices } from '../lib/tracking-options'
 
@@ -23,9 +23,8 @@ type ProjectsFormTrackingOptionsProps = {
 
 const ID_PREFIX = 'project-form-'
 const REVIEW_WINDOW_SELECT_WIDTH = '96px'
-// Label above the field, as the other form inputs do.
-const STACKED_INPUT = { rows: 'auto auto', columns: '1fr', gap: '2' } as const
 
+// Titles and domains need apps, so they follow it, nested beneath it.
 const OPTIONS = [
   {
     name: 'trackScreenshots',
@@ -38,16 +37,6 @@ const OPTIONS = [
     hintKey: 'project.form.hint.trackAgents',
   },
   {
-    name: 'trackWindowTitles',
-    labelKey: 'project.createModal.trackWindowTitles',
-    hintKey: 'project.form.hint.trackWindowTitles',
-  },
-  {
-    name: 'trackBrowserDomains',
-    labelKey: 'project.createModal.trackBrowserDomains',
-    hintKey: 'project.form.hint.trackBrowserDomains',
-  },
-  {
     name: 'allowManualTime',
     labelKey: 'project.createModal.allowManualTime',
     hintKey: 'project.form.hint.allowManualTime',
@@ -56,6 +45,16 @@ const OPTIONS = [
     name: 'trackProcesses',
     labelKey: 'project.createModal.trackProcesses',
     hintKey: 'project.form.hint.trackProcesses',
+  },
+  {
+    name: 'trackWindowTitles',
+    labelKey: 'project.createModal.trackWindowTitles',
+    hintKey: 'project.form.hint.trackWindowTitles',
+  },
+  {
+    name: 'trackBrowserDomains',
+    labelKey: 'project.createModal.trackBrowserDomains',
+    hintKey: 'project.form.hint.trackBrowserDomains',
   },
 ] as const
 
@@ -95,57 +94,72 @@ export const ProjectsFormTrackingOptions = ({
     />
   )
 
-  return (
-    <Flex direction={'column'} gap={'3'}>
-      {OPTIONS.map(({ name, labelKey, hintKey }) => {
-        const id = `${ID_PREFIX}${name}${idSuffix}`
-        const held = detailFields[name]
+  const headingId = `${ID_PREFIX}recording${idSuffix}`
+  const reviewId = `${ID_PREFIX}reviewWindowHours${idSuffix}`
 
-        return (
-          <Flex key={name} gap={'2'} align={'center'}>
-            {held ? (
-              renderSwitch(name, id, held)
-            ) : (
-              <Controller
-                control={control}
-                name={name}
-                render={({ field }) => renderSwitch(name, id, field)}
+  return (
+    <Root role="group" aria-labelledby={headingId}>
+      <Text id={headingId} size={'2'} weight={'medium'}>
+        {t('project.form.recording')}
+      </Text>
+      {/* One card, one row per setting: the review window is a recording
+          rule too, so it closes the list instead of standing apart. */}
+      <List>
+        {OPTIONS.map(({ name, labelKey, hintKey }) => {
+          const id = `${ID_PREFIX}${name}${idSuffix}`
+          const held = detailFields[name]
+
+          return (
+            <Row key={name} data-nested={held ? true : undefined}>
+              {held ? (
+                renderSwitch(name, id, held)
+              ) : (
+                <Controller
+                  control={control}
+                  name={name}
+                  render={({ field }) => renderSwitch(name, id, field)}
+                />
+              )}
+              <Text as="label" htmlFor={id} size={'2'}>
+                <LabelWithHint label={t(labelKey)} hint={t(hintKey)} />
+              </Text>
+            </Row>
+          )
+        })}
+        <Row data-kind="select">
+          <Text as="label" htmlFor={reviewId} size={'2'}>
+            <LabelWithHint
+              label={t('project.createModal.reviewWindowHours')}
+              hint={t('project.form.hint.reviewWindowHours')}
+            />
+          </Text>
+          <Controller
+            control={control}
+            name="reviewWindowHours"
+            render={({ field }) => (
+              <Select
+                options={reviewWindowHourChoices(field.value).map((hours) => ({
+                  value: String(hours),
+                  label: String(hours),
+                }))}
+                value={String(field.value)}
+                onChange={(value) => {
+                  if (!Array.isArray(value)) {
+                    field.onChange(Number(value))
+                  }
+                }}
+                inputProps={{
+                  // Two-digit hours need no more; the full width read as a text field.
+                  style: { width: REVIEW_WINDOW_SELECT_WIDTH },
+                  disabled,
+                  id: reviewId,
+                }}
               />
             )}
-            <Text as="label" htmlFor={id} size={'3'}>
-              <LabelWithHint label={t(labelKey)} hint={t(hintKey)} />
-            </Text>
-          </Flex>
-        )
-      })}
-      <Controller
-        control={control}
-        name="reviewWindowHours"
-        render={({ field }) => (
-          <Select
-            label={t('project.createModal.reviewWindowHours')}
-            hint={t('project.form.hint.reviewWindowHours')}
-            options={reviewWindowHourChoices(field.value).map((hours) => ({
-              value: String(hours),
-              label: String(hours),
-            }))}
-            value={String(field.value)}
-            onChange={(value) => {
-              if (!Array.isArray(value)) {
-                field.onChange(Number(value))
-              }
-            }}
-            inputProps={{
-              ...STACKED_INPUT,
-              // Two-digit hours need no more; the full column width read as a text field.
-              style: { width: REVIEW_WINDOW_SELECT_WIDTH },
-              disabled,
-              id: `${ID_PREFIX}reviewWindowHours${idSuffix}`,
-            }}
           />
-        )}
-      />
-    </Flex>
+        </Row>
+      </List>
+    </Root>
   )
 }
 
@@ -165,3 +179,43 @@ const LabelWithHint = ({ label, hint }: { label: string; hint: string }) => {
     </>
   )
 }
+
+const Root = styled.div`
+  display: grid;
+  align-content: start;
+  gap: var(--space-2);
+  min-width: 0;
+`
+
+// Outlined inside its box, as the fields beside it are, so both columns end
+// on the same pixel.
+const List = styled.div`
+  display: grid;
+  border-radius: var(--radius-3);
+  box-shadow: inset 0 0 0 1px var(--gray-a5);
+`
+
+const Row = styled.div`
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-2);
+  min-height: var(--space-7);
+  padding: var(--space-1) var(--space-3);
+
+  & + & {
+    border-top: 1px solid var(--gray-a3);
+  }
+
+  /* A checkbox's width plus the gap: the nested box sits under the label,
+     with no line between it and the switch it depends on. */
+  &[data-nested] {
+    padding-left: calc(var(--space-3) + var(--space-4) + var(--space-2));
+    border-top-color: transparent;
+  }
+
+  /* Label first, the dropdown at the row's end. */
+  &[data-kind='select'] {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+`

@@ -77,6 +77,12 @@ export const ProjectsAddCollaborators = ({
     [t],
   )
 
+  const addLabel = t(
+    fields.length > 0
+      ? 'project.createModal.collaborators.addMore'
+      : 'project.createModal.collaborators.add',
+  )
+
   const getRoleLabel = (role: CollaboratorRole) =>
     roleOptions.find((option) => option.value === role)?.label ?? role
 
@@ -103,27 +109,58 @@ export const ProjectsAddCollaborators = ({
     return true
   }
 
+  const addButton = readOnly ? null : premiumLocked ? (
+    <Tooltip content={t('project.createModal.collaborators.premiumRequired')}>
+      <span>
+        <Button
+          size="s"
+          variant="soft"
+          color="neutral"
+          iconLeft={<PlusIcon />}
+          disabled
+        >
+          {addLabel}
+        </Button>
+      </span>
+    </Tooltip>
+  ) : (
+    <Button
+      size="s"
+      variant="soft"
+      color="neutral"
+      iconLeft={<PlusIcon />}
+      disabled={fieldsDisabled}
+      onClick={() => append({ address: '', role: 'Viewer' })}
+    >
+      {addLabel}
+    </Button>
+  )
+
   return (
-    <Flex direction={'column'} gap={'4'}>
-      <Flex align={'center'} gap={'2'}>
-        <Text size={'3'} weight={'medium'}>
-          {t(
-            readOnly
-              ? 'project.createModal.collaborators.viewTitle'
-              : 'project.createModal.collaborators.title',
+    <Flex direction={'column'} gap={'3'}>
+      {/* The add action ends the heading's line instead of taking its own. */}
+      <Header>
+        <Title>
+          <Text size={'2'} weight={'medium'}>
+            {t(
+              readOnly
+                ? 'project.createModal.collaborators.viewTitle'
+                : 'project.form.collaborators',
+            )}
+          </Text>
+          <Hint content={t('project.form.hint.collaborators')} size={13} />
+          {premiumLocked && (
+            <Tooltip
+              content={t('project.createModal.collaborators.premiumRequired')}
+            >
+              <LockIconWrap>
+                <LockClosedIcon width={14} height={14} />
+              </LockIconWrap>
+            </Tooltip>
           )}
-        </Text>
-        <Hint content={t('project.form.hint.collaborators')} size={13} />
-        {premiumLocked && (
-          <Tooltip
-            content={t('project.createModal.collaborators.premiumRequired')}
-          >
-            <LockIconWrap>
-              <LockClosedIcon width={14} height={14} />
-            </LockIconWrap>
-          </Tooltip>
-        )}
-      </Flex>
+        </Title>
+        {addButton}
+      </Header>
       {fields.map((field, index) => {
         const addressError = errors.collaborators?.[index]?.address
 
@@ -201,33 +238,6 @@ export const ProjectsAddCollaborators = ({
           </Flex>
         )
       })}
-      {!readOnly &&
-        (premiumLocked ? (
-          <Tooltip
-            content={t('project.createModal.collaborators.premiumRequired')}
-          >
-            <span>
-              <AddMoreButton
-                variant="ghost"
-                color="neutral"
-                iconLeft={<PlusIcon />}
-                disabled
-              >
-                {t('project.createModal.collaborators.addMore')}
-              </AddMoreButton>
-            </span>
-          </Tooltip>
-        ) : (
-          <AddMoreButton
-            variant="ghost"
-            color="neutral"
-            iconLeft={<PlusIcon />}
-            disabled={fieldsDisabled}
-            onClick={() => append({ address: '', role: 'Viewer' })}
-          >
-            {t('project.createModal.collaborators.addMore')}
-          </AddMoreButton>
-        ))}
     </Flex>
   )
 }
@@ -248,14 +258,18 @@ const RoleField = styled.div`
   flex-shrink: 0;
 `
 
-const AddMoreButton = styled(Button)`
-  margin-left: 12px;
-  align-self: flex-start;
-  color: var(--gray-11);
-  padding-inline: 0;
+const Header = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: var(--space-6);
+`
 
-  &:hover:not(:disabled) {
-    background: transparent;
-    color: var(--gray-12);
-  }
+const Title = styled.div`
+  display: grid;
+  grid-auto-flow: column;
+  justify-content: start;
+  align-items: center;
+  gap: var(--space-2);
 `

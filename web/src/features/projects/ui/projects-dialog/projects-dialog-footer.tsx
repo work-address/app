@@ -1,4 +1,4 @@
-import { TrashIcon, Pencil1Icon } from '@radix-ui/react-icons'
+import { FileTextIcon, Pencil1Icon, TrashIcon } from '@radix-ui/react-icons'
 import { Flex, Grid } from '@radix-ui/themes'
 import { type MouseEvent } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -6,7 +6,7 @@ import { useTranslation } from 'react-i18next'
 import type { ProjectsDialogMode } from '../../model'
 
 import { OpenInvoiceLink } from '@/features/invoice'
-import { Button, PrintIcon, Text, useBreakpoint } from '@/shared'
+import { Button, useBreakpoint } from '@/shared'
 
 type ProjectsDialogFooterProps = {
   mode: ProjectsDialogMode
@@ -35,11 +35,12 @@ export const ProjectsDialogFooter = ({
   }
 
   const invoiceLink = projectId ? (
-    <OpenInvoiceLink projectId={projectId} variant={'button'}>
-      <Text size="2" as="span">
-        {t('dashboard.projectsTable.drawer.invoice')}
-      </Text>
-      <img src={PrintIcon} alt="" width={28} height={28} />
+    <OpenInvoiceLink
+      projectId={projectId}
+      variant={'button'}
+      iconLeft={<FileTextIcon />}
+    >
+      {t('dashboard.projectsTable.drawer.invoice')}
     </OpenInvoiceLink>
   ) : null
 
