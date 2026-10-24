@@ -80,9 +80,21 @@ export type TimeAgentRun = {
   id: string
   userId: string
   product: string
+  /** Where the agent ran: `cli`, `ide`, `desktop`... */
+  surface?: string
   fromAt: string
   toAt: string
   status: string
+  /** The run's timeline; `untracked` is time the timer was paused. */
+  segments?: TimeAgentSegment[]
+  isPaid?: boolean
+  invoiceId?: string | null
+}
+
+export type TimeAgentSegment = {
+  fromAt: string
+  toAt: string
+  state: 'running' | 'human_wait' | 'unknown' | 'untracked'
 }
 
 export type TimeAgentRunsParams = {

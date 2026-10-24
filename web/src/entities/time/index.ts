@@ -115,7 +115,11 @@ timeAgentRunsQuery.finished.failure.watch(({ error }) => {
   suppressGlobalErrorToast(error)
 })
 
-export { timeAgentRunsQuery, type TimeAgentRun } from './time.queries'
+export {
+  timeAgentRunsQuery,
+  type TimeAgentRun,
+  type TimeAgentSegment,
+} from './time.queries'
 
 export {
   deleteTimeMutation,

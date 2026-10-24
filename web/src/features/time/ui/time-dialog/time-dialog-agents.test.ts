@@ -62,4 +62,51 @@ describe('getEntryAgentRuns', () => {
     )
     expect(items).toHaveLength(1)
   })
+
+  it('bills every state but a paused timer, clipped to the entry', () => {
+    const [item] = getEntryAgentRuns(
+      [
+        {
+          ...run(
+            'timeline',
+            '2026-10-24T00:35:00.000Z',
+            '2026-10-24T00:49:00.000Z',
+          ),
+          segments: [
+            {
+              fromAt: '2026-10-24T00:35:00.000Z',
+              toAt: '2026-10-24T00:42:00.000Z',
+              state: 'running',
+            },
+            {
+              fromAt: '2026-10-24T00:42:00.000Z',
+              toAt: '2026-10-24T00:44:00.000Z',
+              state: 'untracked',
+            },
+            {
+              fromAt: '2026-10-24T00:44:00.000Z',
+              toAt: '2026-10-24T00:45:00.000Z',
+              state: 'human_wait',
+            },
+            {
+              fromAt: '2026-10-24T00:45:00.000Z',
+              toAt: '2026-10-24T00:49:00.000Z',
+              state: 'unknown',
+            },
+          ],
+        },
+      ],
+      entry,
+    )
+    // running counts only from the entry's start (00:40)
+    expect(item.minutesByState).toEqual({
+      running: 2,
+      untracked: 2,
+      human_wait: 1,
+      unknown: 4,
+    })
+    expect(item.minutes).toBe(7)
+    expect(item.spans[0]).toEqual({ state: 'running', left: 0, width: 20 })
+    expect(item.spans.at(-1)).toEqual({ state: 'unknown', left: 50, width: 40 })
+  })
 })
