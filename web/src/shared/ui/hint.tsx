@@ -1,4 +1,5 @@
 import { QuestionMarkCircledIcon } from '@radix-ui/react-icons'
+import { useRef, useState } from 'react'
 import styled from 'styled-components'
 
 import { Tooltip } from './tooltip'
@@ -20,20 +21,40 @@ export type HintProps = {
  * opens on focus as well as hover, which is the only route to the description
  * for a keyboard user.
  */
-export const Hint = ({ content, className, size = 14 }: HintProps) => (
-  <Tooltip content={content}>
-    <Root
-      className={className}
-      role="img"
-      aria-label={content}
-      tabIndex={0}
-      // Inside a label a click would also toggle or focus its control.
-      onClick={(event) => event.preventDefault()}
+export const Hint = ({ content, className, size = 14 }: HintProps) => {
+  const ref = useRef<HTMLSpanElement>(null)
+  const [open, setOpen] = useState(false)
+
+  return (
+    <Tooltip
+      content={content}
+      open={open}
+      // A dialog focuses its first focusable element on open, which is often a
+      // hint beside the first label; only hover or keyboard focus shows it.
+      onOpenChange={(next) =>
+        setOpen(
+          next &&
+            Boolean(
+              ref.current?.matches(':hover') ||
+                ref.current?.matches(':focus-visible'),
+            ),
+        )
+      }
     >
-      <QuestionMarkCircledIcon width={size} height={size} />
-    </Root>
-  </Tooltip>
-)
+      <Root
+        ref={ref}
+        className={className}
+        role="img"
+        aria-label={content}
+        tabIndex={0}
+        // Inside a label a click would also toggle or focus its control.
+        onClick={(event) => event.preventDefault()}
+      >
+        <QuestionMarkCircledIcon width={size} height={size} />
+      </Root>
+    </Tooltip>
+  )
+}
 
 const Root = styled.span`
   display: inline-flex;
