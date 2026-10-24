@@ -41,6 +41,28 @@ export const AGENT_PRODUCTS = [
   'opencode',
 ] as const
 
+/** The name a product's default agent gets when it is created for a worker. */
+export const AGENT_PRODUCT_NAMES: Record<
+  (typeof AGENT_PRODUCTS)[number],
+  string
+> = {
+  'claude-code': 'Claude Code',
+  codex: 'Codex',
+  cursor: 'Cursor',
+  'gemini-cli': 'Gemini CLI',
+  copilot: 'Copilot',
+  windsurf: 'Windsurf',
+  cline: 'Cline',
+  minimax: 'MiniMax',
+  'devin-local': 'Devin Local',
+  'claude-cowork': 'Claude Cowork',
+  'kimi-code': 'Kimi Code',
+  'kimi-cli': 'Kimi CLI',
+  openclaw: 'OpenClaw',
+  hermes: 'Hermes',
+  opencode: 'OpenCode',
+}
+
 export interface AgentSegment {
   fromAt: string
   toAt: string

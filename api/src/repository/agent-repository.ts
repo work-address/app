@@ -15,7 +15,11 @@ import { AgentCredential } from '@/entity/agent-credential'
 import { AgentEvent } from '@/entity/agent-event'
 import { TimeAgent } from '@/entity/time-agent'
 import { EProjectState } from '@/model/project'
-import { AgentAttachment, WorkerAgent } from '@/model/agent'
+import {
+  AGENT_PRODUCT_NAMES,
+  AgentAttachment,
+  WorkerAgent,
+} from '@/model/agent'
 import { AgentCredentialDto, AgentDto, AgentSearchDto } from '@/model/dto/agent'
 import { Entitlement } from '@/service/entitlement'
 import { AgentTimeNormalizer } from '@/service/agent-time-normalizer'
@@ -317,6 +321,105 @@ export class AgentRepository {
     if (!result.affected) throw new NotFoundError()
   }
 
+  /**
+   * A laptop collector uploads runs without naming an agent, so they went to
+   * the worker's default agent for the product, attached to the project -
+   * which nobody had set up, and every run waited (AGENT_NOT_ATTACHED). Now
+   * a worker who never had an agent for the product gets a default one, and
+   * a project that opted in with trackAgents gets it attached at 0/hour
+   * until the worker sets a rate. The worker's own choices stand: an agent
+   * they removed is not recreated, one they detached is not reattached, and
+   * server collectors, which name their agent, are not touched.
+   */
+  private async provisionDefaults(hash: string, events: AgentEventV1[]) {
+    const unnamed = events.filter((e) => !e.source.agent)
+    if (!unnamed.length) return
+    await getDataSource().transaction(async (tx) => {
+      const credential = await tx.findOneBy(AgentCredential, {
+        secretHash: hash,
+      })
+      if (
+        !credential ||
+        credential.revokedAt ||
+        +credential.expiresAt <= Date.now() ||
+        credential.mode !== 'timer'
+      )
+        return
+      const user = await tx.findOneOrFail(User, {
+        where: { id: credential.userId },
+        lock: { mode: 'pessimistic_write' },
+      })
+      const agents = user.agents ?? []
+      const now = new Date().toISOString()
+      const products = new Map<string, Set<string>>() // project -> products
+      for (const e of unnamed) {
+        if (!products.has(e.projectId)) products.set(e.projectId, new Set())
+        products.get(e.projectId)!.add(e.source.product)
+      }
+      let created = false
+      for (const product of new Set(unnamed.map((e) => e.source.product))) {
+        if (!(product in AGENT_PRODUCT_NAMES)) continue
+        if (agents.some((a) => a.product === product)) continue
+        let slug = product
+        for (let n = 2; agents.some((a) => a.slug === slug); n++)
+          slug = `${product}-${n}`
+        agents.push({
+          id: randomUUID(),
+          name: AGENT_PRODUCT_NAMES[
+            product as keyof typeof AGENT_PRODUCT_NAMES
+          ],
+          slug,
+          product,
+          isDefault: true,
+          bindings: [],
+          createdAt: now,
+          removedAt: null,
+        })
+        created = true
+      }
+      if (created) await tx.update(User, user.id, { agents })
+      for (const projectId of [...products.keys()].sort()) {
+        const project = await this.workerProject(tx, projectId, user, true)
+        if (
+          !project ||
+          !project.trackAgents ||
+          project.state !== EProjectState.ACTIVE
+        )
+          continue
+        const attachments = project.agentAttachments ?? []
+        let attached = false
+        for (const product of products.get(projectId)!) {
+          const live = agents.filter(
+            (a) => !a.removedAt && a.product === product,
+          )
+          const agent =
+            live.find((a) => a.bindings.includes(credential.instanceId)) ??
+            live.find((a) => a.isDefault)
+          if (
+            !agent ||
+            attachments.some(
+              (a) => a.agentId === agent.id && a.workerId === user.id,
+            )
+          )
+            continue
+          attachments.push({
+            agentId: agent.id,
+            workerId: user.id,
+            rateHourCents: 0,
+            rateChanges: [],
+            attachedAt: now,
+            detachedAt: null,
+          })
+          attached = true
+        }
+        if (attached)
+          await tx.update(Project, project.id, {
+            agentAttachments: attachments,
+          })
+      }
+    })
+  }
+
   public async ingest(
     secret: string,
     events: AgentEventV1[],
@@ -326,6 +429,7 @@ export class AgentRepository {
     // Keep the submitted spelling in acknowledgements for existing collectors.
     const submittedIds = events.map((event) => event.eventId)
     events = events.map((event) => AgentIdentity.event(event))
+    await this.provisionDefaults(AgentRepository.hash(secret), events)
     return getDataSource().transaction(async (tx) => {
       const hash = AgentRepository.hash(secret)
       const credential = await tx.findOne(AgentCredential, {

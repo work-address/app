@@ -5,6 +5,7 @@ import { randomUUID } from 'crypto'
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { App } from '@/app/app'
 import { User } from '@/entity/user'
+import { Project } from '@/entity/project'
 import { AgentCredential } from '@/entity/agent-credential'
 import { AgentEvent } from '@/entity/agent-event'
 import { TimeAgent } from '@/entity/time-agent'
@@ -116,6 +117,133 @@ export class AgentControllerTest extends BaseControllerTest {
       uploader,
       event,
     }
+  }
+  /** A worker on an opted-in project who never set up an agent. */
+  private async unprovisioned(
+    mode: 'timer' | 'fixed' = 'timer',
+    trackAgents = true,
+  ) {
+    const owner = await this.userFixture.createPremiumUser()
+    const worker = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner, 60)
+    project.workerAddresses = [worker.address]
+    project.trackAgents = trackAgents
+    await App.conn.manager.save(project)
+    const client = this.client(worker)
+    const instanceId = randomUUID()
+    const issued = await client.post('/agent-tracking/credentials', {
+      instanceId,
+      mode,
+    })
+    expect(issued.status).to.equal(201)
+    const uploader = this.client(issued.data.credential)
+    const epoch = randomUUID()
+    let sequence = 0
+    const upload = async (extra = {}) => {
+      const at = new Date(Date.now() - 60000).toISOString()
+      const response = await uploader.post('/agent-tracking/events', {
+        events: [
+          {
+            schemaVersion: 1,
+            eventId: randomUUID(),
+            source: {
+              product: 'codex',
+              surface: 'cli',
+              instanceId,
+              adapterVersion: '0.1.0',
+              runtimeVersion: 'synthetic-test',
+              epoch,
+              sequence: sequence++,
+            },
+            projectId: project.id,
+            sessionId: 'session',
+            runId: randomUUID(),
+            agentId: 'root',
+            occurredAt: at,
+            observedAt: at,
+            clock: { basis: 'source_wall' },
+            capabilities: {
+              runBoundaries: true,
+              externalWaits: 'complete',
+              replay: true,
+            },
+            eventType: 'run.started',
+            ...extra,
+          },
+        ],
+      })
+      expect(response.status).to.equal(200)
+      return response.data.results[0] as { status: string; code?: string }
+    }
+    const state = async () => ({
+      agents: (await App.conn.manager.findOneByOrFail(User, { id: worker.id }))
+        .agents,
+      attachments: (
+        await App.conn.manager.findOneByOrFail(Project, { id: project.id })
+      ).agentAttachments,
+    })
+    return { worker, project, client, upload, state }
+  }
+  @test() async firstLaptopRunGetsADefaultAgentAttachedToTheProject() {
+    const s = await this.unprovisioned()
+    expect((await s.upload()).status).to.equal('accepted')
+    const { agents, attachments } = await s.state()
+    expect(agents).to.have.length(1)
+    expect(agents[0]).to.include({
+      name: 'Codex',
+      slug: 'codex',
+      product: 'codex',
+      isDefault: true,
+      removedAt: null,
+    })
+    expect(attachments).to.have.length(1)
+    expect(attachments[0]).to.include({
+      agentId: agents[0].id,
+      workerId: s.worker.id,
+      rateHourCents: 0,
+      detachedAt: null,
+    })
+    // a later run reuses them
+    expect((await s.upload()).status).to.equal('accepted')
+    const again = await s.state()
+    expect(again.agents).to.have.length(1)
+    expect(again.attachments).to.have.length(1)
+  }
+  @test() async provisioningLeavesTheWorkersOwnChoicesAlone() {
+    // detached on purpose: not attached again
+    const detached = await this.unprovisioned()
+    await detached.upload()
+    const agent = (await detached.state()).agents[0]
+    expect(
+      (
+        await detached.client.delete(
+          `/project/${detached.project.id}/agents/${agent.id}`,
+        )
+      ).status,
+    ).to.be.oneOf([200, 204])
+    expect((await detached.upload()).code).to.equal('AGENT_NOT_ATTACHED')
+    expect((await detached.state()).attachments[0].detachedAt).not.to.equal(
+      null,
+    )
+    // removed on purpose: not created again
+    const removed = await this.unprovisioned()
+    await removed.upload()
+    const own = (await removed.state()).agents[0]
+    expect(
+      (await removed.client.delete('/agents', { data: { id: own.id } })).status,
+    ).to.be.oneOf([200, 204])
+    expect((await removed.upload()).code).to.equal('AGENT_NOT_ATTACHED')
+    expect(
+      (await removed.state()).agents.filter((a) => !a.removedAt),
+    ).to.have.length(0)
+    // a project that did not opt in gets nothing attached
+    const off = await this.unprovisioned('timer', false)
+    expect((await off.upload()).code).to.equal('AGENT_TRACKING_OFF')
+    expect((await off.state()).attachments ?? []).to.have.length(0)
+    // server collectors name their agent: nothing is created for them
+    const fixed = await this.unprovisioned('fixed')
+    expect((await fixed.upload()).status).to.equal('rejected')
+    expect((await fixed.state()).agents ?? []).to.have.length(0)
   }
   @test() async collectorSecretsAreWriteOnlyPrivateAndRevocable() {
     const s = await this.scenario()
