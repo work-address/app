@@ -218,7 +218,7 @@
           "lines"
         ],
         "example": {
-          "id": "01366788-575e-4ba1-8794-e6dee89b9305"
+          "id": "d65a9928-51de-4d74-a24f-0c1f81125786"
         }
       },
       "ProjectStatistics": {
@@ -279,7 +279,7 @@
           "period"
         ],
         "example": {
-          "id": "7ba48835-5145-4bc2-8638-cffb3806a470"
+          "id": "f8554178-2f2c-404d-9520-253467056f86"
         }
       },
       "Time": {
@@ -434,7 +434,7 @@
           "toAt"
         ],
         "example": {
-          "id": "2de0c532-0058-4c7b-858a-20ee44d0aec0"
+          "id": "5b387080-07a2-4aba-8598-ff67bda9f885"
         }
       },
       "Project": {
@@ -559,7 +559,7 @@
           "state"
         ],
         "example": {
-          "id": "f9223bc5-c6a9-4247-b952-cda327a63760"
+          "id": "fc9c93be-4423-4219-9c64-06c3d3bf5ed9"
         }
       },
       "User": {
@@ -629,7 +629,8 @@
           "roles": {
             "items": {
               "enum": [
-                "ROLE_USER"
+                "ROLE_USER",
+                "ROLE_ADMIN"
               ],
               "type": "string"
             },
@@ -648,6 +649,7 @@
             "nullable": true,
             "readOnly": true
           },
+          "lastSeenAt": {},
           "id": {
             "minLength": 1,
             "type": "string",
@@ -680,8 +682,210 @@
         },
         "type": "object",
         "example": {
-          "id": "cb87244d-d281-4180-a4e2-365b95041e33"
+          "id": "4cafa11d-0003-4b67-b865-61ecb4aebc35"
         }
+      },
+      "AdminUserSearchFilterDto": {
+        "properties": {
+          "query": {
+            "maxLength": 200,
+            "type": "string"
+          },
+          "premium": {
+            "type": "boolean"
+          },
+          "ids": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 100
+          }
+        },
+        "type": "object"
+      },
+      "AdminUserSortDto": {
+        "properties": {
+          "createdAt": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          },
+          "lastSeenAt": {
+            "type": "string",
+            "enum": [
+              "ASC",
+              "DESC"
+            ]
+          }
+        },
+        "type": "object"
+      },
+      "AdminUserSearchDto": {
+        "properties": {
+          "page": {
+            "minimum": 0,
+            "type": "integer"
+          },
+          "limit": {
+            "maximum": 100,
+            "type": "integer",
+            "minimum": 1
+          },
+          "filter": {
+            "$ref": "#/components/schemas/AdminUserSearchFilterDto"
+          },
+          "sort": {
+            "$ref": "#/components/schemas/AdminUserSortDto"
+          }
+        },
+        "type": "object",
+        "required": [
+          "page"
+        ]
+      },
+      "AdminUserDto": {
+        "properties": {
+          "id": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "address": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "email": {
+            "type": "string"
+          },
+          "phone": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "company": {
+            "type": "string"
+          },
+          "city": {
+            "type": "string"
+          },
+          "country": {
+            "type": "string"
+          },
+          "roles": {
+            "items": {
+              "enum": [
+                "ROLE_USER",
+                "ROLE_ADMIN"
+              ],
+              "type": "string"
+            },
+            "type": "array"
+          },
+          "premium": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          },
+          "lastSeenAt": {
+            "oneOf": [
+              {
+                "format": "date",
+                "type": "string"
+              },
+              {
+                "format": "date-time",
+                "type": "string"
+              }
+            ]
+          }
+        },
+        "type": "object",
+        "required": [
+          "id",
+          "address",
+          "roles",
+          "premium",
+          "createdAt"
+        ]
+      },
+      "AdminDailyCountDto": {
+        "properties": {
+          "date": {
+            "type": "string"
+          },
+          "count": {
+            "type": "integer"
+          }
+        },
+        "type": "object",
+        "required": [
+          "date",
+          "count"
+        ]
+      },
+      "AdminUserStatsDto": {
+        "properties": {
+          "total": {
+            "type": "integer"
+          },
+          "premium": {
+            "type": "integer"
+          },
+          "active1d": {
+            "type": "integer"
+          },
+          "active7d": {
+            "type": "integer"
+          },
+          "active30d": {
+            "type": "integer"
+          },
+          "signupsInWindow": {
+            "type": "integer"
+          },
+          "signups": {
+            "items": {
+              "$ref": "#/components/schemas/AdminDailyCountDto"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object",
+        "required": [
+          "total",
+          "premium",
+          "active1d",
+          "active7d",
+          "active30d",
+          "signupsInWindow",
+          "signups"
+        ]
+      },
+      "AdminUserStatsQueryDto": {
+        "properties": {
+          "days": {
+            "maximum": 365,
+            "type": "number",
+            "minimum": 1
+          }
+        },
+        "type": "object"
       },
       "AgentDto": {
         "properties": {
@@ -3837,6 +4041,93 @@
         ]
       }
     },
+    "/api/admin/user/search": {
+      "post": {
+        "operationId": "AdminController.search",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/AdminUserSearchDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "array",
+                  "items": {
+                    "oneOf": [
+                      {
+                        "type": "array",
+                        "items": {
+                          "$ref": "#/components/schemas/AdminUserDto"
+                        }
+                      },
+                      {
+                        "type": "integer"
+                      }
+                    ]
+                  }
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Search every account (admin only), newest first",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/admin/user/stats": {
+      "get": {
+        "operationId": "AdminController.stats",
+        "parameters": [
+          {
+            "in": "query",
+            "name": "days",
+            "schema": {
+              "maximum": 365,
+              "type": "number",
+              "minimum": 1
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserStatsDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Account totals, actives and daily signups (admin only)",
+        "tags": [
+          "Admin"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/project/search": {
       "post": {
         "operationId": "ProjectController.search",
@@ -4856,7 +5147,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "144e9bc0-91c0-40a9-9765-bfcdc3b4a6bb"
+                  "projectId": "86a5b144-463a-4786-a0ff-5a5fe3eb9890"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -4924,8 +5215,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1794089939772,
-                "toUnix": 1794176339772
+                "fromUnix": 1794165519542,
+                "toUnix": 1794251919542
               }
             }
           },
@@ -5318,7 +5609,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "1619b284-2bb5-4c37-a619-cdd7253ce261"
+                "nonce": "2e8db0dc-8dce-4215-8345-97ab78643ec0"
               },
               "schema": {
                 "properties": {
@@ -5363,7 +5654,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "0ebc92a1-ec0b-4932-be9c-76ec95b88b01"
+                "nonce": "ec95eff9-404b-4271-89da-89042100855a"
               },
               "schema": {
                 "properties": {
@@ -5404,21 +5695,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "3b33994b-870b-4e51-8ae0-2cda393c6b32",
+                      "nonce": "afb35301-51d6-4c0a-bc83-1e10fb299bf9",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "9b0139c8-5f0f-49e1-8f8f-1825385de227",
+                      "nonce": "1f921c98-ce7e-41d2-aeec-f88fda892edc",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "b1f1efb6-b722-4193-a575-e50e19db1965",
+                      "nonce": "b47a19e9-5c62-4ce5-a83c-f78165003bb7",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

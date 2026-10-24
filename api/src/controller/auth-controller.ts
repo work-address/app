@@ -8,6 +8,7 @@ import {
   Req,
 } from 'routing-controllers'
 import express from 'express'
+import { Effect } from 'effect'
 
 import {
   OpenAPIExtended,
@@ -172,6 +173,13 @@ export class AuthController {
   public async status(@Req() req: express.Request): Promise<User | null> {
     const token = req.headers.authorization as string
     const user = await runPromise(this.authenticator.getUserFromJwtToken(token))
+
+    if (user) {
+      // Best effort: a failed write must not sign anyone out.
+      await runPromise(
+        Effect.ignore(this.userRepository.touchLastSeen(user.id)),
+      )
+    }
 
     return user
   }

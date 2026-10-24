@@ -1,4 +1,4 @@
-import { Entity, Column, OneToMany } from 'typeorm'
+import { Entity, Column, Index, OneToMany } from 'typeorm'
 import { faker } from '@faker-js/faker'
 import { JSONSchema } from 'class-validator-jsonschema'
 import { Exclude, Expose, Transform } from 'class-transformer'
@@ -213,4 +213,11 @@ export class User extends AbstractBaseEntity implements IUser {
       ? this.address
       : (this.email ?? null)
   }
+
+  // Bumped by GET /auth/status at most once an hour; read only by the admin
+  // dashboard, so it is never exposed on a profile.
+  @Column('timestamptz', { nullable: true })
+  @Index()
+  @IsOptional()
+  lastSeenAt?: Date | null
 }

@@ -132,13 +132,67 @@ export type User = {
     tz?: string;
     city?: string;
     country?: string;
-    roles?: Array<'ROLE_USER'>;
+    roles?: Array<'ROLE_USER' | 'ROLE_ADMIN'>;
     premium?: boolean;
     readonly payWallet?: string | null;
     readonly contactEmail?: string | null;
+    lastSeenAt?: unknown;
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
+};
+
+export type AdminUserSearchFilterDto = {
+    query?: string;
+    premium?: boolean;
+    ids?: Array<string>;
+};
+
+export type AdminUserSortDto = {
+    createdAt?: 'ASC' | 'DESC';
+    lastSeenAt?: 'ASC' | 'DESC';
+};
+
+export type AdminUserSearchDto = {
+    page: number;
+    limit?: number;
+    filter?: AdminUserSearchFilterDto;
+    sort?: AdminUserSortDto;
+};
+
+export type AdminUserDto = {
+    id: string;
+    address: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    title?: string;
+    company?: string;
+    city?: string;
+    country?: string;
+    roles: Array<'ROLE_USER' | 'ROLE_ADMIN'>;
+    premium: boolean;
+    createdAt: string | string;
+    lastSeenAt?: string | string;
+};
+
+export type AdminDailyCountDto = {
+    date: string;
+    count: number;
+};
+
+export type AdminUserStatsDto = {
+    total: number;
+    premium: number;
+    active1d: number;
+    active7d: number;
+    active30d: number;
+    signupsInWindow: number;
+    signups: Array<AdminDailyCountDto>;
+};
+
+export type AdminUserStatsQueryDto = {
+    days?: number;
 };
 
 export type AgentDto = {
@@ -663,8 +717,9 @@ export type UserWritable = {
     tz?: string;
     city?: string;
     country?: string;
-    roles?: Array<'ROLE_USER'>;
+    roles?: Array<'ROLE_USER' | 'ROLE_ADMIN'>;
     premium?: boolean;
+    lastSeenAt?: unknown;
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
@@ -1368,6 +1423,34 @@ export type UserControllerEditResponses = {
 };
 
 export type UserControllerEditResponse = UserControllerEditResponses[keyof UserControllerEditResponses];
+
+export type AdminControllerSearchData = {
+    body: AdminUserSearchDto;
+    path?: never;
+    query?: never;
+    url: '/api/admin/user/search';
+};
+
+export type AdminControllerSearchResponses = {
+    200: Array<Array<AdminUserDto> | number>;
+};
+
+export type AdminControllerSearchResponse = AdminControllerSearchResponses[keyof AdminControllerSearchResponses];
+
+export type AdminControllerStatsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        days?: number;
+    };
+    url: '/api/admin/user/stats';
+};
+
+export type AdminControllerStatsResponses = {
+    200: AdminUserStatsDto;
+};
+
+export type AdminControllerStatsResponse = AdminControllerStatsResponses[keyof AdminControllerStatsResponses];
 
 export type ProjectControllerSearchData = {
     body: ProjectSearchDto;

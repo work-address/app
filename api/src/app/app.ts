@@ -20,6 +20,7 @@ import { IConfigParameters } from '@/model/config'
 import { AuthController } from '@/controller/auth-controller'
 import { ValidateRoles } from '@/middleware/validate-roles'
 import { UserController } from '@/controller/user-controller'
+import { AdminController } from '@/controller/admin-controller'
 import { ProjectController } from '@/controller/project-controller'
 import { TimeController } from '@/controller/time-controller'
 import { InvoiceController } from '@/controller/invoice-controller'
@@ -167,6 +168,7 @@ export class App {
         TimeController,
         InvoiceController,
         EntitlementController,
+        AdminController,
       ],
     })
   }
