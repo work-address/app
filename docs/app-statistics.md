@@ -260,7 +260,7 @@ Three tabs share one range picker:
   - Day timeline: one block per entry showing its apps and Idle; time by the owner's categories and labels ([productivity.md](productivity.md)).
 - **Agents:** billed time per day by agent, stacked into assisted and autonomous, tokens per day, and the runs table grouped by task. Hidden from viewers; a worker sees their own agents.
 
-**Range picker:** this week, last week, this month, last month, this year, and a custom range. Opened from an invoice, it preselects "this invoice". Days follow the viewer's timezone.
+**Range picker:** today, this week, last week, this month, last month, this year, and a custom range; the same component as the dashboard's ([dashboard-rework.md](dashboard-rework.md)). Revised 24 Oct 2026. Opened from an invoice, it preselects "this invoice". Days follow the viewer's timezone.
 
 ### Shared charts
 
@@ -332,4 +332,4 @@ Verification entry points: `pnpm --filter ./api test`, `pnpm --filter ./api buil
 
 ## Later
 
-A weekday × hour heatmap; agent model and tool mix and outcome rates; browser extensions to cover Firefox on macOS, Linux and Wayland; per-compositor Wayland support.
+Agent model and tool mix and outcome rates; browser extensions to cover Firefox on macOS, Linux and Wayland; per-compositor Wayland support.

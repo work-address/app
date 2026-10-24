@@ -93,11 +93,11 @@ Sources and the full matrix are in [Market reference](#market-reference).
 | 9 | Tags on entries | Later |
 | 10 | Automatic project suggestion | **Never** (the timer decides the project) |
 | 11 | Day timeline | **Now** |
-| 12 | Trends and heatmap | Later |
+| 12 | Trends and heatmap | **Now**: weekday × hour heatmap on the dashboard ([dashboard-rework.md](dashboard-rework.md)); trends later. Revised 24 Oct 2026 |
 | 13 | Report export (CSV, PDF, JSON) | **Now** |
 | 14 | Weekly summary | Later (needs the planned notification system) |
 | 15 | Goals | **Now** |
-| 16 | Focus sessions / Pomodoro | Later |
+| 16 | Focus sessions / Pomodoro | **Now** for focus sessions as a computed, self-only metric ([dashboard-rework.md](dashboard-rework.md)); Pomodoro later. Revised 24 Oct 2026 |
 | 17 | Blocking distracting apps and sites | **Never** |
 | 18 | Break reminders and overwork alerts | Later |
 | 19 | Personal redaction rules | **Now** |
@@ -256,7 +256,7 @@ Builds on app-statistics Phase 1 (the Statistics domain) and Phase 2 (foreground
 | P5 | Full data export and account deletion | Uninvoiced data gone; invoiced records anonymised |
 | P6 | Daily rollups | Account-wide reports over a year for 1,000 workers within the operational target; invoice totals still exact |
 
-**Later:** editor heartbeats, calendar import, mobile, tags, trends and heatmap, weekly summary, focus sessions, break reminders, AI summary, MCP server, personal API tokens, single sign-on, moving screenshots to object storage, a different storage layout if rollups are not enough. **Never:** automatic project suggestion, distraction blocking, stealth mode, single scores or rankings.
+**Later:** editor heartbeats, calendar import, mobile, tags, trends, weekly summary, Pomodoro, break reminders, AI summary, MCP server, personal API tokens, single sign-on, moving screenshots to object storage, a different storage layout if rollups are not enough. **Never:** automatic project suggestion, distraction blocking, stealth mode, single scores or rankings.
 
 ## Acceptance tests
 
