@@ -1,4 +1,4 @@
-import { Flex, Grid } from '@radix-ui/themes'
+import { Box, Flex, Grid } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useEffect, useMemo } from 'react'
 import { useForm } from 'react-hook-form'
@@ -25,7 +25,7 @@ import {
   Text,
   TextArea,
   useBreakpoint,
-  DIALOG_WIDTH_STANDARD,
+  DIALOG_WIDTH_WIDE,
 } from '@/shared'
 
 type ProjectsCreatePayload = {
@@ -144,7 +144,7 @@ export const ProjectsCreateModal = ({
   return (
     <AdaptiveDialog
       desktopPadding={'var(--space-5)'}
-      desktopWidth={DIALOG_WIDTH_STANDARD}
+      desktopWidth={DIALOG_WIDTH_WIDE}
       onOpenChange={onOpenChange}
       open={open}
       title={<>{t('project.createModal.title')}</>}
@@ -186,67 +186,76 @@ export const ProjectsCreateModal = ({
           id="create-project-form"
           onSubmit={handleSubmit(handleFormSubmit)}
         >
-          <Flex gap={'4'} direction={'column'}>
-            <Input
-              label={t('dashboard.projectsTable.form.projectName')}
-              hint={t('project.form.hint.title')}
-              id={'projectName'}
-              placeholder={t('project.createModal.projectNamePlaceholder')}
-              disabled={pending}
-              state={errors.title ? 'error' : 'valid'}
-              {...inputProps}
-              {...register('title', { required: true })}
-            />
-            <Grid columns={'1fr 1fr'} gap={'2'}>
+          {/* Same layout as the edit form: details, then tracking, then
+              collaborators across both columns; phones stack them. */}
+          <Grid
+            columns={{ initial: '1', md: 'minmax(0, 1fr) minmax(0, 1fr)' }}
+            gap={'5'}
+          >
+            <Flex gap={'4'} direction={'column'} minWidth={'0'}>
               <Input
-                label={t('dashboard.projectsTable.form.rate')}
-                hint={t('project.form.hint.rate')}
-                id={'rate'}
-                placeholder={t('project.createModal.ratePlaceholder')}
-                addonLeft={
-                  <Text size={'2'} color={'gray'}>
-                    {BASE_CURRENCY.symbol}
-                  </Text>
-                }
+                label={t('dashboard.projectsTable.form.projectName')}
+                hint={t('project.form.hint.title')}
+                id={'projectName'}
+                placeholder={t('project.createModal.projectNamePlaceholder')}
                 disabled={pending}
-                inputMode="decimal"
-                state={errors.rateHour ? 'error' : 'valid'}
+                state={errors.title ? 'error' : 'valid'}
                 {...inputProps}
-                {...register('rateHour', { required: true })}
+                {...register('title', { required: true })}
               />
-              <ProjectsFormSelect
-                control={control}
-                name="state"
-                label={t('dashboard.projectsTable.form.status')}
-                hint={t('project.form.hint.state')}
-                options={stateOptions}
-                fallbackValue={'Active'}
-                id={'state'}
+              <Grid columns={'1fr 1fr'} gap={'2'}>
+                <Input
+                  label={t('dashboard.projectsTable.form.rate')}
+                  hint={t('project.form.hint.rate')}
+                  id={'rate'}
+                  placeholder={t('project.createModal.ratePlaceholder')}
+                  addonLeft={
+                    <Text size={'2'} color={'gray'}>
+                      {BASE_CURRENCY.symbol}
+                    </Text>
+                  }
+                  disabled={pending}
+                  inputMode="decimal"
+                  state={errors.rateHour ? 'error' : 'valid'}
+                  {...inputProps}
+                  {...register('rateHour', { required: true })}
+                />
+                <ProjectsFormSelect
+                  control={control}
+                  name="state"
+                  label={t('dashboard.projectsTable.form.status')}
+                  hint={t('project.form.hint.state')}
+                  options={stateOptions}
+                  fallbackValue={'Active'}
+                  id={'state'}
+                  disabled={pending}
+                  hasError={Boolean(errors.state)}
+                  inputProps={inputProps}
+                />
+              </Grid>
+              <TextArea
+                label={t('dashboard.projectsTable.form.description')}
+                hint={t('project.form.hint.description')}
+                id={'description'}
+                placeholder={t('project.createModal.descriptionPlaceholder')}
+                rows={isMobile ? 7 : 3}
                 disabled={pending}
-                hasError={Boolean(errors.state)}
+                state={errors.text ? 'error' : 'valid'}
+                {...register('text', { required: true })}
+              />
+            </Flex>
+            <ProjectsFormTrackingOptions control={control} disabled={pending} />
+            <Box gridColumn={'1 / -1'} minWidth={'0'}>
+              <ProjectsAddCollaborators
+                control={control}
+                register={register}
+                errors={errors}
+                disabled={pending}
+                premiumLocked={!user?.premium}
                 inputProps={inputProps}
               />
-            </Grid>
-            <TextArea
-              label={t('dashboard.projectsTable.form.description')}
-              hint={t('project.form.hint.description')}
-              id={'description'}
-              placeholder={t('project.createModal.descriptionPlaceholder')}
-              rows={isMobile ? 7 : 3}
-              disabled={pending}
-              state={errors.text ? 'error' : 'valid'}
-              {...register('text', { required: true })}
-            />
-            <ProjectsFormTrackingOptions control={control} disabled={pending} />
-            <ProjectsAddCollaborators
-              control={control}
-              register={register}
-              errors={errors}
-              disabled={pending}
-              premiumLocked={!user?.premium}
-              inputProps={inputProps}
-            />
-          </Flex>
+            </Box>
+          </Grid>
         </form>
       </Flex>
     </AdaptiveDialog>
