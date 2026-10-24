@@ -13,13 +13,22 @@ import {
   $projects,
 } from '@/entities/projects'
 import { statisticsOverviewQuery } from '@/entities/statistics'
+import { recentScreenshotsQuery } from '@/entities/time'
 import {
+  DashboardAgents,
   DashboardApplicationsUsage,
   DashboardFilterBar,
+  DashboardInsights,
+  DashboardRecentPrompts,
+  DashboardTeam,
+  DashboardTimeDaily,
+  DashboardWidget,
   DashboardPremiumBanner,
   DashboardProjectsSearchInput,
   DashboardSummary,
   $dashboardProjectIds,
+  $dashboardScreenshots,
+  $isDashboardOwner,
   dashboardStatisticsRequested,
   useDashboardSearchSync,
 } from '@/features/dashboard'
@@ -28,6 +37,7 @@ import {
   ProjectsTable,
   type ProjectsTablePeriodTotals,
 } from '@/features/projects'
+import { TimeScreenshotStrip } from '@/features/time'
 import {
   PageHelmet,
   PageHeader,
@@ -53,6 +63,9 @@ export default function DashboardPage() {
     projects,
     periodRows,
     selectedProjectIds,
+    screenshots,
+    screenshotsLoaded,
+    isOwner,
   } = useUnit({
     fetchProjects,
     projectsLoading: $projectsLoading,
@@ -63,6 +76,9 @@ export default function DashboardPage() {
     projects: $projects,
     periodRows: statisticsOverviewQuery.$data,
     selectedProjectIds: $dashboardProjectIds,
+    screenshots: $dashboardScreenshots,
+    screenshotsLoaded: recentScreenshotsQuery.$succeeded,
+    isOwner: $isDashboardOwner,
   })
 
   useDashboardSearchSync()
@@ -113,9 +129,10 @@ export default function DashboardPage() {
       />
       <Wrapper>
         <DashboardPremiumBanner />
-        {/* The page reads top-down: the headline figures, then the projects
-            they come from beside the app breakdown. The worklogs live on
-            /time. */}
+        {/* The page reads top-down: the headline figures, the period day by
+            day, the projects beside the app breakdown, then how and when the
+            work happened, what agents did, and - for an owner - who did it.
+            The worklogs live on /time. */}
         {/* The intro's hero already reads "Dashboard", so the page title only
             comes back once there is something under it. */}
         {(showContent || projectsFailed) && (
@@ -136,52 +153,70 @@ export default function DashboardPage() {
             onRetry={load}
           />
         ) : showContent ? (
-          <S.Content>
-            <S.Main>
-              <ProjectsHead>
-                <Flex align={'center'} gap={'2'} style={{ minWidth: 0 }}>
-                  <S.SectionTitle>
-                    {t('dashboard.page.projects.title')}
-                  </S.SectionTitle>
-                  {/* No count until there is one: "0 projects" over the
+          <Sections>
+            <DashboardTimeDaily />
+            <S.Content>
+              <S.Main>
+                <ProjectsHead>
+                  <Flex align={'center'} gap={'2'} style={{ minWidth: 0 }}>
+                    <S.SectionTitle>
+                      {t('dashboard.page.projects.title')}
+                    </S.SectionTitle>
+                    {/* No count until there is one: "0 projects" over the
                         loading rows read as an answer. */}
-                  {!projectsLoading && (
-                    <Badge size={'2'} color={'gray'}>
-                      <Text weight={'medium'} size={'1'}>
-                        {t('dashboard.page.projectsCount', {
-                          count:
-                            selectedProjectIds.length > 0
-                              ? selectedProjectIds.length
-                              : projects.length,
-                        })}
-                      </Text>
-                    </Badge>
+                    {!projectsLoading && (
+                      <Badge size={'2'} color={'gray'}>
+                        <Text weight={'medium'} size={'1'}>
+                          {t('dashboard.page.projectsCount', {
+                            count:
+                              selectedProjectIds.length > 0
+                                ? selectedProjectIds.length
+                                : projects.length,
+                          })}
+                        </Text>
+                      </Badge>
+                    )}
+                  </Flex>
+                  <SearchArea>
+                    <DashboardProjectsSearchInput />
+                  </SearchArea>
+                </ProjectsHead>
+                <S.TableArea>
+                  {periodFailed ? (
+                    <LoadFailure
+                      title={t('dashboard.projectsTable.totalsFailure.title')}
+                      onRetry={retryPeriod}
+                    />
+                  ) : (
+                    <ProjectsTable
+                      projectIds={selectedProjectIds}
+                      periodTotals={periodTotals}
+                    />
                   )}
-                </Flex>
-                <SearchArea>
-                  <DashboardProjectsSearchInput />
-                </SearchArea>
-              </ProjectsHead>
-              <S.TableArea>
-                {periodFailed ? (
-                  <LoadFailure
-                    title={t('dashboard.projectsTable.totalsFailure.title')}
-                    onRetry={retryPeriod}
-                  />
-                ) : (
-                  <ProjectsTable
-                    projectIds={selectedProjectIds}
-                    periodTotals={periodTotals}
-                  />
-                )}
-              </S.TableArea>
-            </S.Main>
-            {showCharts && (
-              <S.Aside>
-                <DashboardApplicationsUsage />
-              </S.Aside>
-            )}
-          </S.Content>
+                </S.TableArea>
+              </S.Main>
+              {showCharts && (
+                <S.Aside>
+                  <DashboardApplicationsUsage />
+                </S.Aside>
+              )}
+            </S.Content>
+            <Pair>
+              <DashboardInsights />
+              <DashboardAgents />
+            </Pair>
+            <Pair>
+              <DashboardRecentPrompts />
+              {/* Hidden rather than empty: a period without screenshots is
+                ordinary, and most projects do not take them. */}
+              {screenshotsLoaded && screenshots.length > 0 && (
+                <DashboardWidget title={t('dashboard.screenshots.title')}>
+                  <TimeScreenshotStrip entries={screenshots} />
+                </DashboardWidget>
+              )}
+            </Pair>
+            {isOwner && <DashboardTeam />}
+          </Sections>
         ) : (
           <Intro
             imageSrc={DashboardEmptyStateImage}
@@ -201,6 +236,23 @@ export default function DashboardPage() {
     </>
   )
 }
+
+const Sections = styled.div`
+  display: grid;
+  gap: var(--space-7);
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    gap: var(--space-6);
+  }
+`
+
+/* Two widgets side by side on a desktop; a lone one takes the row. */
+const Pair = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
+  gap: var(--space-6);
+  align-items: start;
+`
 
 const Overview = styled.div`
   display: grid;
