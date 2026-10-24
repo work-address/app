@@ -10,6 +10,7 @@ import { routes } from '@/routes'
 import { bindNavigate, ErrorBoundary } from '@/shared'
 
 const DashboardPage = lazy(() => import('@/pages/dashboard'))
+const TimePage = lazy(() => import('@/pages/time'))
 const ProfilePage = lazy(() => import('@/pages/profile'))
 const ProfileEditPage = lazy(() => import('@/pages/profile-edit'))
 const SignInPage = lazy(() => import('@/pages/sign-in'))
@@ -51,6 +52,10 @@ const router = createBrowserRouter([
       {
         path: routes.dashboard.schema,
         element: <DashboardPage />,
+      },
+      {
+        path: routes.time.schema,
+        element: <TimePage />,
       },
       {
         path: routes.profile.children.edit.schema,

@@ -658,5 +658,8 @@
   "invoices.filter.state.rejected": "已拒绝",
   "invoice.lines.waiting": "等待人工处理",
   "invoice.lines.unclassified": "未分类",
-  "invoice.lines.rateChanged": "费率于{{date}}变更；本行中有{{before}}在变更前按{{from}}/小时完成"
+  "invoice.lines.rateChanged": "费率于{{date}}变更；本行中有{{before}}在变更前按{{from}}/小时完成",
+  "header.nav.time": "时间",
+  "time.page.title": "时间",
+  "time.page.meta": "所有工时记录集中在一个列表中。按项目、日期和活动筛选，查看截图和应用，并将时间标记为已付款。"
 }

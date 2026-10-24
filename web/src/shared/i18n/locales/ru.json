@@ -668,5 +668,8 @@
   "invoices.filter.state.rejected": "Отклонён",
   "invoice.lines.waiting": "Ожидание человека",
   "invoice.lines.unclassified": "Не классифицировано",
-  "invoice.lines.rateChanged": "Ставка изменена {{date}}; {{before}} этой строки отработаны до изменения по {{from}}/ч"
+  "invoice.lines.rateChanged": "Ставка изменена {{date}}; {{before}} этой строки отработаны до изменения по {{from}}/ч",
+  "header.nav.time": "Время",
+  "time.page.title": "Время",
+  "time.page.meta": "Все учтённые записи времени в одной ленте. Фильтруйте по проекту, дате и активности, смотрите скриншоты и приложения и отмечайте оплаченное время."
 }

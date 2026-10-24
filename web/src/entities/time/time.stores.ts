@@ -7,6 +7,7 @@ import {
   fetchTime,
   resetTimeFilters,
   resetTimeSort,
+  restoreTimeQuery,
   setTimeLoading,
 } from './time.events'
 import {
@@ -62,6 +63,10 @@ const patchTimeItems = (
 
 export const $timeFilters = createStore<TimeFilters>(DEFAULT_TIME_FILTERS)
   .on(changeTimeFilters, (state, filters) => ({ ...state, ...filters }))
+  .on(restoreTimeQuery, (_, { filters }) => ({
+    ...DEFAULT_TIME_FILTERS,
+    ...filters,
+  }))
   .reset(resetTimeFilters)
 
 export const $hasActiveTimeFilters = $timeFilters.map((filters) =>
@@ -73,6 +78,7 @@ export const $hasActiveTimeFilters = $timeFilters.map((filters) =>
 export const $timeSort = createStore<TimeSort>({ fromAt: 'DESC' })
   .on(appendTimeSort, (state, sort) => ({ ...state, ...sort }))
   .on(resetTimeSort, (_, payload) => payload ?? { fromAt: 'DESC' })
+  .on(restoreTimeQuery, (_, { sort }) => sort)
 
 export const $timePage = createStore(0)
   .on(timeQuery.finished.success, (_, { params }) => params.page ?? 0)

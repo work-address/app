@@ -18,7 +18,7 @@ Related documents: [productivity.md](productivity.md) holds the product contract
 
 | Area | Decision | Not chosen |
 | --- | --- | --- |
-| Worklogs | Move to `/time`, unchanged, with filters, sort and page in the URL | Staying on the dashboard; a worklogs redesign |
+| Worklogs | Move to `/time`, unchanged, with filters and sort in the URL; the feed scrolls, so no page number | Staying on the dashboard; a worklogs redesign |
 | Projects table | Stays on the dashboard, totals for the selected period | Its own `/projects` page; moving it to `/time` |
 | Navigation | Dashboard → Time (clock icon) → Invoices → Profile, desktop and mobile | — |
 | Audience | One view for owners, workers and self-trackers, filtered by project and person | Separate owner and worker modes; own work only |
@@ -40,7 +40,7 @@ Related documents: [productivity.md](productivity.md) holds the product contract
 
 ## Pages and navigation
 
-- **`/time`:** the existing `TimeWorklogs` with its filters, bulk actions and time dialog. Filters, sort and page live in the URL. An empty account sees the existing `TimeEmptyState`.
+- **`/time`:** the existing `TimeWorklogs` with its filters, bulk actions and time dialog. Filters and sort live in the URL, following each applied search; the feed scrolls, so no page number. Malformed values are dropped. An empty account sees the existing `TimeEmptyState`.
 - **Dashboard (`/`):** the filter bar and the widgets below. A new account with no projects still sees the intro screen.
 - The invoices page's "Go to your projects" button keeps pointing at the dashboard.
 
@@ -120,7 +120,7 @@ Every route takes `{projectIds?, from, to, timeZone, userIds?}` under `/api`, sh
 - The range picker in `web/src/shared/ui/`, used by the dashboard, `/time` and the project dialog.
 - Widgets in `web/src/features/dashboard/`.
 - `api/src/service/statistics-manager.ts` and `api/src/repository/statistics-repository.ts` for the new routes; `api/src/repository/agent-repository.ts` for the prompt hold.
-- Translations in en, ru and zh.
+- Translations in en, es, ja, ru and zh.
 
 Use the repository's Effector/Farfetched data flow, Feature-Sliced Design, styled-components and shared UI. No API calls from components.
 
@@ -134,7 +134,7 @@ Committed in order on `feat/0-dashboard-split`, then one PR to `main` for review
 | D2 | Shared range picker and filter bar; existing widgets limited to the period; omitted `projectIds` | An owner with more than 100 projects gets correct totals; previous-period deltas match the same elapsed length |
 | D3 | New statistics routes, the prompt hold and `hasScreenshot`, with tests | Access and math tests pass for owner, worker and viewer |
 | D4 | New widgets, one commit each, on the shared charts | Each widget's loading, empty, failure and role states render |
-| D5 | Translations and visual QA with Playwright screenshots | Every widget checked in en, ru and zh, desktop and phone |
+| D5 | Translations and visual QA with Playwright screenshots | Every widget checked in en, es, ja, ru and zh, desktop and phone |
 
 ## Acceptance tests
 

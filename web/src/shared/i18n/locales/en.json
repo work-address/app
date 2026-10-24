@@ -660,5 +660,8 @@
   "invoices.filter.state.rejected": "Rejected",
   "invoice.lines.waiting": "Waiting for a person",
   "invoice.lines.unclassified": "Unclassified",
-  "invoice.lines.rateChanged": "Rate changed on {{date}}; {{before}} of this line were worked before the change, at {{from}}/h"
+  "invoice.lines.rateChanged": "Rate changed on {{date}}; {{before}} of this line were worked before the change, at {{from}}/h",
+  "header.nav.time": "Time",
+  "time.page.title": "Time",
+  "time.page.meta": "Every tracked worklog in one feed. Filter by project, date and activity, review screenshots and apps, and mark time as paid."
 }

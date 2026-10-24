@@ -106,6 +106,7 @@ export {
   applyTimeFilters,
   resetTimeFilters,
   resetTimeSort,
+  restoreTimeQuery,
   loadMoreTime,
 } from './time.events'
 
@@ -117,8 +118,10 @@ timeAgentRunsQuery.finished.failure.watch(({ error }) => {
 
 export {
   timeAgentRunsQuery,
+  timeQuery,
   type TimeAgentRun,
   type TimeAgentSegment,
+  type TimeQueryParams,
 } from './time.queries'
 
 export {

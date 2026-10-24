@@ -25,3 +25,12 @@ export const appendTimeSort = createEvent<TimeSort>()
 export const resetTimeSort = createEvent<TimeSort | null>()
 
 export const loadMoreTime = createEvent()
+
+/**
+ * Replaces the filters and sort wholesale, without fetching: a page that reads
+ * them from its URL sets them first and fetches once.
+ */
+export const restoreTimeQuery = createEvent<{
+  filters: Partial<TimeFilters>
+  sort: TimeSort
+}>()

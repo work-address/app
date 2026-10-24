@@ -1,4 +1,5 @@
 import {
+  ClockIcon,
   DashboardIcon,
   FileTextIcon,
   PersonIcon,
@@ -10,6 +11,7 @@ import type { Route, IdRouteParams, NoChildRoutes, MappingRoute } from './types'
 /* eslint-disable */
 type MainRoutes =
   & Route<'/', 'dashboard'>
+  & Route<'/time', 'time'>
   & Route<'/sign-in', 'signIn'>
   & Route<'/profile/:walletAddress', 'profile', ProfileRoutes, { walletAddress: string }>
   & Route<'https://address.work/docs', 'docs'>
@@ -35,7 +37,7 @@ export const routes: MainRoutes = {
     build: () => '/',
 
     desktopOrder: 0,
-    mobileOrder: 1,
+    mobileOrder: 0,
 
     showInMenu: true,
     translateKeyDesktop: 'header.nav.dashboard',
@@ -43,12 +45,25 @@ export const routes: MainRoutes = {
     icon: DashboardIcon,
   },
 
+  time: {
+    schema: '/time',
+    build: () => '/time',
+
+    desktopOrder: 1,
+    mobileOrder: 1,
+
+    showInMenu: true,
+    translateKeyDesktop: 'header.nav.time',
+    translateKeyMobile: 'header.nav.time',
+    icon: ClockIcon,
+  },
+
   profile: {
     schema: '/profile/:walletAddress',
     build: ({ walletAddress }) => `/profile/${walletAddress}`,
 
-    desktopOrder: 1,
-    mobileOrder: 0,
+    desktopOrder: 3,
+    mobileOrder: 3,
 
     icon: PersonIcon,
     showInMenu: true,
@@ -86,8 +101,8 @@ export const routes: MainRoutes = {
     translateKeyDesktop: 'header.nav.helpCenter',
     translateKeyMobile: 'header.nav.helpCenter',
 
-    desktopOrder: 3,
-    mobileOrder: 3,
+    desktopOrder: 4,
+    mobileOrder: 4,
 
     icon: QuestionMarkCircledIcon,
   },
@@ -147,6 +162,7 @@ export const routes: MainRoutes = {
 /** Routes hidden from the menu for unauthenticated visitors. */
 export const AUTH_REQUIRED_ROUTES = new Set<string>([
   routes.dashboard.schema,
+  routes.time.schema,
   routes.profile.schema,
   routes.invoices.schema,
 ])

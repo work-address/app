@@ -14,7 +14,6 @@ import {
   $hasProjects,
   $projects,
 } from '@/entities/projects'
-import { fetchTime, $timeLoading } from '@/entities/time'
 import {
   DashboardApplicationsUsage,
   DashboardPremiumBanner,
@@ -22,7 +21,6 @@ import {
   DashboardSummary,
 } from '@/features/dashboard'
 import { ProjectsCreateModal, ProjectsTable } from '@/features/projects'
-import { TimeWorklogs } from '@/features/time'
 import {
   PageHelmet,
   PageHeader,
@@ -40,32 +38,27 @@ export default function DashboardPage() {
 
   const {
     fetchProjects: fetchProjectsEvent,
-    fetchTime: fetchTimeEvent,
     projectsLoading,
     projectsFailed,
     projectsStatsFailed,
     retryProjectsStats,
-    timeLoading,
     hasProjects,
     projects,
   } = useUnit({
     fetchProjects,
-    fetchTime,
     projectsLoading: $projectsLoading,
     projectsFailed: $projectsFailed,
     projectsStatsFailed: $projectsStatsFailed,
     retryProjectsStats: fetchProjectsStats,
-    timeLoading: $timeLoading,
     hasProjects: $hasProjects,
     projects: $projects,
   })
 
-  // While loading, the projects table and worklogs render as skeletons so the
-  // layout does not jump. Once loaded, an account with no projects gets the
+  // While loading, the projects table renders as skeletons so the layout does
+  // not jump. Once loaded, an account with no projects gets the
   // intro screen instead of an empty table: a new account starts with nothing,
   // and creating the first project is the only thing to do here.
-  const showContent =
-    !projectsFailed && (projectsLoading || timeLoading || hasProjects)
+  const showContent = !projectsFailed && (projectsLoading || hasProjects)
   // Reserve the chart column while projects load so the layout does not jump.
   // The card stays up even when nothing tracks processes yet — its empty state
   // is what tells people the feature exists.
@@ -73,8 +66,7 @@ export default function DashboardPage() {
 
   const load = useCallback(() => {
     fetchProjectsEvent()
-    fetchTimeEvent()
-  }, [fetchProjectsEvent, fetchTimeEvent])
+  }, [fetchProjectsEvent])
 
   useEffect(() => {
     load()
@@ -90,7 +82,8 @@ export default function DashboardPage() {
       <Wrapper>
         <DashboardPremiumBanner />
         {/* The page reads top-down: the headline figures, then the projects
-            they come from beside the app breakdown, then the worklog feed. */}
+            they come from beside the app breakdown. The worklogs live on
+            /time. */}
         {/* The intro's hero already reads "Dashboard", so the page title only
             comes back once there is something under it. */}
         {(showContent || projectsFailed) && (
@@ -108,49 +101,46 @@ export default function DashboardPage() {
             onRetry={load}
           />
         ) : showContent ? (
-          <>
-            <S.Content>
-              <S.Main>
-                <ProjectsHead>
-                  <Flex align={'center'} gap={'2'} style={{ minWidth: 0 }}>
-                    <S.SectionTitle>
-                      {t('dashboard.page.projects.title')}
-                    </S.SectionTitle>
-                    {/* No count until there is one: "0 projects" over the
+          <S.Content>
+            <S.Main>
+              <ProjectsHead>
+                <Flex align={'center'} gap={'2'} style={{ minWidth: 0 }}>
+                  <S.SectionTitle>
+                    {t('dashboard.page.projects.title')}
+                  </S.SectionTitle>
+                  {/* No count until there is one: "0 projects" over the
                         loading rows read as an answer. */}
-                    {!projectsLoading && (
-                      <Badge size={'2'} color={'gray'}>
-                        <Text weight={'medium'} size={'1'}>
-                          {t('dashboard.page.projectsCount', {
-                            count: projects.length,
-                          })}
-                        </Text>
-                      </Badge>
-                    )}
-                  </Flex>
-                  <SearchArea>
-                    <DashboardProjectsSearchInput />
-                  </SearchArea>
-                </ProjectsHead>
-                <S.TableArea>
-                  {projectsStatsFailed ? (
-                    <LoadFailure
-                      title={t('dashboard.projectsTable.totalsFailure.title')}
-                      onRetry={retryProjectsStats}
-                    />
-                  ) : (
-                    <ProjectsTable />
+                  {!projectsLoading && (
+                    <Badge size={'2'} color={'gray'}>
+                      <Text weight={'medium'} size={'1'}>
+                        {t('dashboard.page.projectsCount', {
+                          count: projects.length,
+                        })}
+                      </Text>
+                    </Badge>
                   )}
-                </S.TableArea>
-              </S.Main>
-              {showCharts && (
-                <S.Aside>
-                  <DashboardApplicationsUsage />
-                </S.Aside>
-              )}
-            </S.Content>
-            <TimeWorklogs />
-          </>
+                </Flex>
+                <SearchArea>
+                  <DashboardProjectsSearchInput />
+                </SearchArea>
+              </ProjectsHead>
+              <S.TableArea>
+                {projectsStatsFailed ? (
+                  <LoadFailure
+                    title={t('dashboard.projectsTable.totalsFailure.title')}
+                    onRetry={retryProjectsStats}
+                  />
+                ) : (
+                  <ProjectsTable />
+                )}
+              </S.TableArea>
+            </S.Main>
+            {showCharts && (
+              <S.Aside>
+                <DashboardApplicationsUsage />
+              </S.Aside>
+            )}
+          </S.Content>
         ) : (
           <Intro
             imageSrc={DashboardEmptyStateImage}
@@ -182,9 +172,8 @@ const Overview = styled.div`
   }
 `
 
-/* The intro takes the place of the projects table and the worklogs, so it
-   gets the room they would have had rather than sitting flush under the
-   title. */
+/* The intro takes the place of the projects table, so it gets the room it
+   would have had rather than sitting flush under the title. */
 const Intro = styled(DashboardEmptyState)`
   padding: var(--space-6) 0 var(--space-8);
 

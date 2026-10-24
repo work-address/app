@@ -658,5 +658,8 @@
   "invoices.filter.state.rejected": "却下済み",
   "invoice.lines.waiting": "人の対応待ち",
   "invoice.lines.unclassified": "未分類",
-  "invoice.lines.rateChanged": "{{date}}に料金が変更されました。この行のうち{{before}}は変更前に{{from}}/時で作業されました"
+  "invoice.lines.rateChanged": "{{date}}に料金が変更されました。この行のうち{{before}}は変更前に{{from}}/時で作業されました",
+  "header.nav.time": "時間",
+  "time.page.title": "時間",
+  "time.page.meta": "記録したすべての作業ログをひとつのフィードで。プロジェクト、日付、アクティビティで絞り込み、スクリーンショットとアプリを確認し、支払済みにできます。"
 }

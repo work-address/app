@@ -34,13 +34,21 @@ import {
   fetchTime,
   TimeEmptyState,
 } from '@/entities/time'
-import { ListPageLayout as S, LoadFailure, useBreakpoint } from '@/shared'
+import {
+  ListPageLayout as S,
+  LoadFailure,
+  PageHeader,
+  useBreakpoint,
+} from '@/shared'
 
 const EMPTY_STATE_HEIGHT = 560
 
 /**
- * The worklogs section: one set of filters, one selection and one dialog over
- * whichever presentation the reader picked.
+ * The worklogs page body: one set of filters, one selection and one dialog
+ * over whichever presentation the reader picked.
+ *
+ * It owns the page header because the sort and view controls belong beside
+ * the title, and only this component knows about them.
  *
  * The chrome lives here rather than in either view so that switching between
  * them keeps the filters applied and the selection intact.
@@ -114,25 +122,27 @@ export const TimeWorklogs = () => {
 
   return (
     <S.Section>
-      <S.SectionTitleRow>
-        <S.SectionTitle>{t('dashboard.page.worklogs.title')}</S.SectionTitle>
-        <Actions>
-          {/* Beside the toggle rather than inside a view: the list can also
-              sort from its column headers, and both write the same store. */}
-          {isDesktop && (
-            <>
-              <TimeSortSelect />
-              <TimeViewToggle />
-            </>
-          )}
-          {isMobile && (
-            <TimeMobileFilters
-              filtersOpen={filtersOpen}
-              onFiltersOpenChange={setFiltersOpen}
-            />
-          )}
-        </Actions>
-      </S.SectionTitleRow>
+      <Header
+        title={t('time.page.title')}
+        actions={
+          <Actions>
+            {/* Beside the toggle rather than inside a view: the list can also
+                sort from its column headers, and both write the same store. */}
+            {isDesktop && (
+              <>
+                <TimeSortSelect />
+                <TimeViewToggle />
+              </>
+            )}
+            {isMobile && (
+              <TimeMobileFilters
+                filtersOpen={filtersOpen}
+                onFiltersOpenChange={setFiltersOpen}
+              />
+            )}
+          </Actions>
+        }
+      />
       {/* A phone cannot fit all three controls beside the title - the last
           one used to land past the right edge of the screen. The filters
           button stays with the title; the sort picker and the view toggle
@@ -172,6 +182,10 @@ export const TimeWorklogs = () => {
     </S.Section>
   )
 }
+
+const Header = styled(PageHeader)`
+  margin-bottom: var(--space-5);
+`
 
 const Actions = styled.div`
   display: grid;
