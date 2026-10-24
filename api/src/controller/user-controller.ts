@@ -4,7 +4,6 @@ import {
   Get,
   HttpCode,
   JsonController,
-  Post,
   Put,
   Res,
 } from 'routing-controllers'
@@ -15,7 +14,6 @@ import { EUserRole } from '@/model/user'
 import { UserManager } from '@/service/user-manager'
 import { CurrentUser } from '@/decorator/current-user'
 import { UserRepository } from '@/repository/user-repository'
-import { UserSearchDto } from '@/model/dto/user'
 import { EntityFromParam } from '@/decorator/entity-from-param'
 import express from 'express'
 import { runPromise } from '@/service/effect-bridge'
@@ -55,26 +53,6 @@ export class UserController {
     return App.container
       .get<UserSettingsManager>('UserSettingsManager')
       .save(user, settings)
-  }
-
-  @OpenAPIExtended({
-    summary: 'Search users',
-    searchRequestBody: {
-      example: {
-        filter: { role: EUserRole.ROLE_USER },
-        sort: { createdAt: 'ASC' },
-        page: 0,
-      },
-    },
-    response: {
-      schema: User,
-      options: { isPagination: true, serializationGroup: 'search' },
-    },
-  })
-  @Authorized([EUserRole.ROLE_USER])
-  @Post('/search')
-  public search(@Body() search: UserSearchDto) {
-    return runPromise(this.userRepository.findAndCount(search))
   }
 
   @OpenAPIExtended({

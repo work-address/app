@@ -15,12 +15,7 @@ From `src/public-api.ts`:
 ## Basic usage
 
 ```ts
-import {
-  createClient,
-  createConfig,
-  userControllerRead,
-  userControllerSearch,
-} from '@app/api-client'
+import { createClient, createConfig, userControllerRead } from '@app/api-client'
 
 const client = createClient(
   createConfig({
@@ -31,16 +26,6 @@ const client = createClient(
 const readRes = await userControllerRead({
   client,
   path: { address: '0x123...' },
-  throwOnError: true,
-})
-
-const searchRes = await userControllerSearch({
-  client,
-  body: {
-    filter: { id: readRes.data?.id },
-    sort: { createdAt: 'DESC' },
-    page: 0,
-  },
   throwOnError: true,
 })
 ```

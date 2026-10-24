@@ -218,7 +218,7 @@
           "lines"
         ],
         "example": {
-          "id": "dc309b40-e462-4af9-babd-7a87a3991beb"
+          "id": "ace488b4-4a52-409a-9056-4e056267218e"
         }
       },
       "ProjectStatistics": {
@@ -279,7 +279,7 @@
           "period"
         ],
         "example": {
-          "id": "caa4b686-f0e0-4e5e-998c-e7a5c1dc9143"
+          "id": "2de9a710-3979-48a5-a38d-ff993164aa04"
         }
       },
       "Time": {
@@ -430,7 +430,7 @@
           "toAt"
         ],
         "example": {
-          "id": "4194019c-02ea-4aa0-9895-c15945b01c1f"
+          "id": "e220d32f-a656-439e-ac74-bf98c7f52412"
         }
       },
       "Project": {
@@ -509,6 +509,7 @@
             },
             "type": "array"
           },
+          "canTrack": {},
           "id": {
             "minLength": 1,
             "type": "string",
@@ -546,7 +547,7 @@
           "state"
         ],
         "example": {
-          "id": "ad1ee583-9466-462a-979b-50d183213b1a"
+          "id": "e9e72262-2e81-4cea-bbab-c25ba5a0ee6c"
         }
       },
       "User": {
@@ -653,7 +654,7 @@
         },
         "type": "object",
         "example": {
-          "id": "f6792e10-06b4-4866-9932-9e4959b87ac5"
+          "id": "9af9d2c5-dc2c-4ad4-994e-5bf16c5d6126"
         }
       },
       "AgentDto": {
@@ -985,68 +986,6 @@
           "proof"
         ]
       },
-      "SearchDto": {
-        "properties": {
-          "page": {
-            "minLength": 1,
-            "type": "number"
-          },
-          "filter": {
-            "type": "object"
-          },
-          "sort": {
-            "type": "object"
-          },
-          "limit": {
-            "type": "number"
-          }
-        },
-        "type": "object",
-        "required": [
-          "page",
-          "filter",
-          "sort"
-        ]
-      },
-      "UserSearchFilterDto": {
-        "properties": {
-          "id": {
-            "format": "uuid",
-            "type": "string"
-          },
-          "role": {
-            "enum": [
-              "ROLE_USER"
-            ],
-            "type": "string"
-          }
-        },
-        "type": "object"
-      },
-      "UserSearchDto": {
-        "properties": {
-          "filter": {
-            "$ref": "#/components/schemas/UserSearchFilterDto",
-            "type": "object"
-          },
-          "page": {
-            "minLength": 1,
-            "type": "number"
-          },
-          "sort": {
-            "type": "object"
-          },
-          "limit": {
-            "type": "number"
-          }
-        },
-        "type": "object",
-        "required": [
-          "filter",
-          "page",
-          "sort"
-        ]
-      },
       "RedactionRuleDto": {
         "properties": {
           "field": {
@@ -1089,6 +1028,29 @@
         "type": "object",
         "required": [
           "personalRedactionRules"
+        ]
+      },
+      "SearchDto": {
+        "properties": {
+          "page": {
+            "minLength": 1,
+            "type": "number"
+          },
+          "filter": {
+            "type": "object"
+          },
+          "sort": {
+            "type": "object"
+          },
+          "limit": {
+            "type": "number"
+          }
+        },
+        "type": "object",
+        "required": [
+          "page",
+          "filter",
+          "sort"
         ]
       },
       "ProjectSearchSortDto": {
@@ -3367,94 +3329,6 @@
         ]
       }
     },
-    "/api/user/search": {
-      "post": {
-        "operationId": "UserController.search",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UserSearchDto",
-                "type": "object",
-                "required": [
-                  "page",
-                  "filter",
-                  "sort"
-                ],
-                "properties": {
-                  "page": {
-                    "type": "integer",
-                    "minimum": 0,
-                    "description": "Zero-based page index"
-                  },
-                  "sort": {
-                    "type": "object",
-                    "additionalProperties": {
-                      "type": "string"
-                    },
-                    "description": "Map of field name to sort direction (ASC or DESC)"
-                  },
-                  "limit": {
-                    "type": "integer",
-                    "description": "Optional page size override"
-                  },
-                  "filter": {
-                    "type": "object",
-                    "additionalProperties": true,
-                    "description": "Endpoint-specific filters (see summary / examples)"
-                  }
-                }
-              },
-              "example": {
-                "filter": {
-                  "role": "ROLE_USER"
-                },
-                "sort": {
-                  "createdAt": "ASC"
-                },
-                "page": 0
-              }
-            }
-          },
-          "description": "",
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "array",
-                  "items": {
-                    "oneOf": [
-                      {
-                        "type": "array",
-                        "items": {
-                          "$ref": "#/components/schemas/User_search"
-                        }
-                      },
-                      {
-                        "type": "integer"
-                      }
-                    ]
-                  }
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "summary": "Search users",
-        "tags": [
-          "User"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
     "/api/user/{address}/address": {
       "get": {
         "operationId": "UserController.read",
@@ -4550,7 +4424,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "60115dce-4843-41c3-beb5-eb5f3f5fd97d"
+                  "projectId": "0e38040f-f40b-4ede-9db6-a2eaf5a6c537"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -4618,8 +4492,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1792202032153,
-                "toUnix": 1792288432153
+                "fromUnix": 1792772827609,
+                "toUnix": 1792859227609
               }
             }
           },
@@ -4984,7 +4858,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "ac3c085e-2bb3-47ee-89d0-070edf071c9d"
+                "nonce": "cef34c37-82ec-41b8-8bdd-be2f64ee4f1f"
               },
               "schema": {
                 "properties": {
@@ -5029,7 +4903,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "1c969495-df71-403e-aa5c-46bcf14a8643"
+                "nonce": "ec21c31e-cfc7-4f9a-b041-63f17519bb61"
               },
               "schema": {
                 "properties": {
@@ -5070,21 +4944,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "282b0025-e73a-497e-ae04-404b58a7a732",
+                      "nonce": "6ab34598-f1b4-4a1c-ad81-eba183a08825",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "81af6b2f-2509-4cf1-9835-3877daad1fba",
+                      "nonce": "3baa9f27-0fd3-4b41-bea3-0943d2519304",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "44a56cf8-ffe3-4dd9-ad53-932ac3426dcd",
+                      "nonce": "73e6a1d3-9c86-4429-ad74-d3cf9c774a7a",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

@@ -103,6 +103,7 @@ export type Project = {
     agents?: Array<{
         [key: string]: unknown;
     }>;
+    canTrack?: unknown;
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
@@ -217,6 +218,16 @@ export type AuthTonLoginDto = {
     proof: AuthTonProofPayloadDto;
 };
 
+export type RedactionRuleDto = {
+    field: 'title' | 'domain';
+    match: 'contains' | 'regex';
+    pattern: string;
+};
+
+export type UserSettingsDto = {
+    personalRedactionRules: Array<RedactionRuleDto>;
+};
+
 export type SearchDto = {
     page: number;
     filter: {
@@ -226,30 +237,6 @@ export type SearchDto = {
         [key: string]: unknown;
     };
     limit?: number;
-};
-
-export type UserSearchFilterDto = {
-    id?: string;
-    role?: 'ROLE_USER';
-};
-
-export type UserSearchDto = {
-    filter: UserSearchFilterDto;
-    page: number;
-    sort: {
-        [key: string]: unknown;
-    };
-    limit?: number;
-};
-
-export type RedactionRuleDto = {
-    field: 'title' | 'domain';
-    match: 'contains' | 'regex';
-    pattern: string;
-};
-
-export type UserSettingsDto = {
-    personalRedactionRules: Array<RedactionRuleDto>;
 };
 
 export type ProjectSearchSortDto = {
@@ -1001,19 +988,6 @@ export type UserControllerSaveSettingsResponses = {
 };
 
 export type UserControllerSaveSettingsResponse = UserControllerSaveSettingsResponses[keyof UserControllerSaveSettingsResponses];
-
-export type UserControllerSearchData = {
-    body: UserSearchDto;
-    path?: never;
-    query?: never;
-    url: '/api/user/search';
-};
-
-export type UserControllerSearchResponses = {
-    200: Array<Array<UserSearch> | number>;
-};
-
-export type UserControllerSearchResponse = UserControllerSearchResponses[keyof UserControllerSearchResponses];
 
 export type UserControllerReadData = {
     body?: never;

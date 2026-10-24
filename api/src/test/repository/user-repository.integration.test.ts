@@ -5,7 +5,6 @@ import { suite, test } from '@testdeck/mocha'
 import { UserRepository } from '@/repository/user-repository'
 import { AbstractDatabaseIntegration } from '@/test/abstract-database.integration'
 import { User } from '@/entity/user'
-import { EUserRole } from '@/model/user'
 import { Signer } from '@/service/auth/signer'
 import { runPromise } from '@/service/effect-bridge'
 
@@ -74,33 +73,5 @@ export class UserRepositoryIntegrationTest extends AbstractDatabaseIntegration {
     expect(newUser).to.have.property('id')
     expect(removedUser).to.have.property('id')
     expect(newUser.id).to.be.eq(removedUser.id)
-  }
-
-  @test()
-  async findAndCount() {
-    const user = await this.userFixture.createUser()
-
-    const positiveA = await runPromise(
-      this.userRepository.findAndCount({
-        filter: {
-          id: user.id,
-        },
-        sort: { createdAt: 'ASC' },
-        page: 0,
-      }),
-    )
-    const positiveB = await runPromise(
-      this.userRepository.findAndCount({
-        filter: {
-          id: user.id,
-          role: EUserRole.ROLE_USER,
-        },
-        sort: { createdAt: 'ASC' },
-        page: 0,
-      }),
-    )
-
-    expect(positiveA[1]).to.be.eq(1)
-    expect(positiveB[1]).to.be.eq(1)
   }
 }
