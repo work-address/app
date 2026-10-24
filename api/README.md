@@ -85,7 +85,8 @@ Concurrent workers may upload the same time slot independently.
 The experimental agent API supports own-agent CRUD, per-worker project
 attachments and rate history, 90-day hashed write-only credentials, bounded strict
 event ingestion, durable deduplication, role-scoped search and own-source status.
-Enable ingestion only for diagnostic testing with `AGENT_TRACKING_ENABLED=true`.
+Ingestion is on unless `AGENT_TRACKING_ENABLED=false`, which stops it (503
+`AGENT_TRACKING_DISABLED`) while credentials and reads keep working.
 JWTs issue/revoke credentials but cannot upload events; collector credentials
 cannot call ordinary API routes. The events parser has a 1 MiB limit before the
 normal 30 MiB JSON parser. Limits are 100 events/batch, 16 KiB/event and a

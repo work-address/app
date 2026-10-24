@@ -15,7 +15,8 @@ export class AgentControllerTest extends BaseControllerTest {
   private previousFlag: string | undefined
   async before() {
     this.previousFlag = process.env.AGENT_TRACKING_ENABLED
-    process.env.AGENT_TRACKING_ENABLED = 'true'
+    // the default: on unless switched off
+    delete process.env.AGENT_TRACKING_ENABLED
     await super.before()
   }
   async after() {
@@ -157,6 +158,28 @@ export class AgentControllerTest extends BaseControllerTest {
           .data,
       ),
     ).not.to.contain('My Codex')
+  }
+  @test() async ingestionIsOnUnlessSwitchedOff() {
+    const s = await this.scenario()
+    process.env.AGENT_TRACKING_ENABLED = 'false'
+    const off = await s.uploader.post('/agent-tracking/events', {
+      events: [s.event('run.started', 0, 0)],
+    })
+    expect(off.status).to.equal(503)
+    // credentials still issue while ingestion is off
+    expect(
+      (
+        await s.client.post('/agent-tracking/credentials', {
+          instanceId: randomUUID(),
+          mode: 'timer',
+        })
+      ).status,
+    ).to.equal(201)
+    delete process.env.AGENT_TRACKING_ENABLED
+    const on = await s.uploader.post('/agent-tracking/events', {
+      events: [s.event('run.started', 0, 0)],
+    })
+    expect(on.status).to.equal(200)
   }
   @test() async lifecycleReplayPausesAndVisibilityAreScoped() {
     const s = await this.scenario()

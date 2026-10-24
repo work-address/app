@@ -55,7 +55,10 @@ export class AgentManager {
   }
 
   public ingest(authorization: string | undefined, body: unknown) {
-    if (process.env.AGENT_TRACKING_ENABLED !== 'true')
+    // On unless switched off: AGENT_TRACKING_ENABLED=false stops ingestion
+    // while credentials, agents and reads keep working. Each project still
+    // opts in with trackAgents.
+    if (process.env.AGENT_TRACKING_ENABLED === 'false')
       throw new HttpError(503, 'AGENT_TRACKING_DISABLED')
     const parsed = ingestBatchSchema.safeParse(body)
     if (!parsed.success) throw new BadRequestError('INVALID_ENVELOPE')
