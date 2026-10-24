@@ -38,7 +38,7 @@
       "runtimeExecutable": "sh",
       "runtimeArgs": [
         "-c",
-        "cd web && VITE_API_PROXY_TARGET=http://localhost:4100 npx vite --port 8100 --strictPort"
+        "cd web && VITE_API_URL= VITE_API_PROXY_TARGET=http://localhost:4100 npx vite --port 8100 --strictPort"
       ],
       "port": 8100
     }
