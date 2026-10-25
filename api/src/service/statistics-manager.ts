@@ -152,8 +152,16 @@ export class StatisticsManager {
     const scope = await this.scope({ ...query, userIds: undefined }, user)
     if (!scope.projects.length) return []
     const rows = await this.repository.ownEntries(scope)
+    const apps = new Map<string, { name: string; seconds: number }[]>()
+    for (const usage of await this.repository.appsOf(rows.map((r) => r.id)))
+      apps.set(usage.timeId, [
+        ...(apps.get(usage.timeId) ?? []),
+        { name: usage.app, seconds: Number(usage.seconds) },
+      ])
     const number = (value: unknown) => (value == null ? null : Number(value))
     return rows.map((row) => ({
+      projectId: row.projectId as string,
+      apps: apps.get(row.id) ?? [],
       fromAt: new Date(row.fromAt),
       toAt: new Date(row.toAt),
       activeSeconds: number(row.activeSeconds),

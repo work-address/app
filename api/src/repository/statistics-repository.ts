@@ -157,7 +157,9 @@ export class StatisticsRepository {
       ...scope,
       query: { ...scope.query, userIds: [scope.user.id] },
     })
-      .select('time."fromAt"', 'fromAt')
+      .select('time.id', 'id')
+      .addSelect('time."projectId"', 'projectId')
+      .addSelect('time."fromAt"', 'fromAt')
       .addSelect('time."toAt"', 'toAt')
       .addSelect(
         `CASE WHEN time.source='desktop' THEN LEAST(GREATEST(0, EXTRACT(EPOCH FROM (time."toAt"-time."fromAt"))), GREATEST(0, COALESCE(time."minutesActive",0)*60)) END`,
@@ -167,6 +169,27 @@ export class StatisticsRepository {
       .addSelect('time."mouseKeys"', 'mouseKeys')
       .orderBy('time."fromAt"', 'ASC')
       .getRawMany()
+  }
+
+  /** Seconds per app on the given entries, in batches the driver accepts. */
+  public async appsOf(timeIds: string[]) {
+    const rows: { timeId: string; app: string; seconds: number }[] = []
+    for (let i = 0; i < timeIds.length; i += 5000) {
+      const batch = timeIds.slice(i, i + 5000)
+      rows.push(
+        ...(await getDataSource()
+          .getRepository(AppUsage)
+          .createQueryBuilder('usage')
+          .select('usage."timeId"', 'timeId')
+          .addSelect('usage.app', 'app')
+          .addSelect('SUM(usage.seconds)', 'seconds')
+          .where('usage."timeId" IN (:...batch)', { batch })
+          .groupBy('usage."timeId"')
+          .addGroupBy('usage.app')
+          .getRawMany()),
+      )
+    }
+    return rows
   }
 
   /**

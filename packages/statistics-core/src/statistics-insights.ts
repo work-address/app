@@ -20,6 +20,9 @@ export interface InsightEntry {
   activeSeconds: number | null
   keyboardKeys: number | null
   mouseKeys: number | null
+  /** For the hour's breakdown; left out where a caller has no use for it. */
+  projectId?: string
+  apps?: { name: string; seconds: number }[]
 }
 
 export interface HourlyRow {
@@ -27,7 +30,25 @@ export interface HourlyRow {
   weekday: number
   hour: number
   activeSeconds: number
+  /** All time started in the hour, manual included. */
+  trackedSeconds: number
+  keyboardKeys: number
+  mouseKeys: number
+  /** How many different days had time in this weekday's hour. */
+  days: number
+  /** The hour's busiest projects and apps, most time first. */
+  projects: { projectId: string; seconds: number }[]
+  apps: { name: string; seconds: number }[]
 }
+
+/** How many projects and apps an hour's breakdown names. */
+export const HOURLY_TOP = 3
+
+const top = <K extends string>(totals: Map<string, number>, key: K) =>
+  [...totals]
+    .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
+    .slice(0, HOURLY_TOP)
+    .map(([id, seconds]) => ({ [key]: id, seconds: Math.round(seconds) }) as Record<K, string> & { seconds: number })
 
 export interface AgentRunInput {
   userId: string
@@ -86,25 +107,66 @@ export class StatisticsInsights {
     }
   }
 
-  /** Active time by weekday and hour, in the reader's timezone. */
+  /**
+   * Time by weekday and hour, in the reader's timezone: active and tracked
+   * time, input, how many days it was worked, and what was worked on.
+   */
   public static hourly(entries: InsightEntry[], timeZone: string): HourlyRow[] {
-    const cells = new Map<string, HourlyRow>()
+    type Cell = HourlyRow & {
+      dayKeys: Set<string>
+      projectTotals: Map<string, number>
+      appTotals: Map<string, number>
+    }
+    const cells = new Map<string, Cell>()
     for (const entry of entries) {
-      if (!entry.activeSeconds) continue
       // An entry is one slot; its start places it.
-      const { weekday, hour } = zonedParts(entry.fromAt, timeZone)
+      const { weekday, hour, day } = zonedParts(entry.fromAt, timeZone)
       const key = `${weekday}:${hour}`
-      const cell = cells.get(key) ?? { weekday, hour, activeSeconds: 0 }
-      cell.activeSeconds += entry.activeSeconds
+      const cell: Cell = cells.get(key) ?? {
+        weekday,
+        hour,
+        activeSeconds: 0,
+        trackedSeconds: 0,
+        keyboardKeys: 0,
+        mouseKeys: 0,
+        days: 0,
+        projects: [],
+        apps: [],
+        dayKeys: new Set(),
+        projectTotals: new Map(),
+        appTotals: new Map(),
+      }
+      const seconds = Math.max(0, (+entry.toAt - +entry.fromAt) / 1000)
+      cell.activeSeconds += entry.activeSeconds ?? 0
+      cell.trackedSeconds += seconds
+      cell.keyboardKeys += entry.keyboardKeys ?? 0
+      cell.mouseKeys += entry.mouseKeys ?? 0
+      cell.dayKeys.add(day)
+      if (entry.projectId)
+        cell.projectTotals.set(
+          entry.projectId,
+          (cell.projectTotals.get(entry.projectId) ?? 0) + seconds,
+        )
+      for (const app of entry.apps ?? [])
+        cell.appTotals.set(app.name, (cell.appTotals.get(app.name) ?? 0) + app.seconds)
       cells.set(key, cell)
     }
-    return [...cells.values()].sort(
-      (a, b) => a.weekday - b.weekday || a.hour - b.hour,
-    )
+    return [...cells.values()]
+      .map(({ dayKeys, projectTotals, appTotals, ...cell }) => ({
+        ...cell,
+        trackedSeconds: Math.round(cell.trackedSeconds),
+        days: dayKeys.size,
+        projects: top(projectTotals, 'projectId'),
+        apps: top(appTotals, 'name'),
+      }))
+      .sort((a, b) => a.weekday - b.weekday || a.hour - b.hour)
   }
 
   /** The hours of the day with the most active time, best first. */
-  public static productiveHours(rows: HourlyRow[], limit = 3): number[] {
+  public static productiveHours(
+    rows: Pick<HourlyRow, 'weekday' | 'hour' | 'activeSeconds'>[],
+    limit = 3,
+  ): number[] {
     const byHour = new Map<number, number>()
     for (const row of rows)
       byHour.set(row.hour, (byHour.get(row.hour) ?? 0) + row.activeSeconds)

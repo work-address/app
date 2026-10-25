@@ -59,8 +59,49 @@ describe('StatisticsInsights', () => {
       [entry(slots(0, 1)[0]), entry(slots(10, 1)[0], null)],
       'Asia/Tokyo',
     )
-    // 09:00 UTC Monday is 18:00 Monday in Tokyo; unmeasured time is left out.
-    expect(rows).to.deep.equal([{ weekday: 1, hour: 18, activeSeconds: 420 }])
+    // 09:00 UTC Monday is 18:00 Monday in Tokyo; unmeasured time is tracked
+    // but never active.
+    expect(rows).to.have.length(1)
+    expect(rows[0]).to.include({
+      weekday: 1,
+      hour: 18,
+      activeSeconds: 420,
+      trackedSeconds: 1200,
+      keyboardKeys: 100,
+      days: 1,
+    })
+  })
+
+  it('breaks an hour down by project and app, busiest first', () => {
+    const [first, second, third] = slots(0, 3)
+    const rows = StatisticsInsights.hourly(
+      [
+        {
+          ...entry(first),
+          projectId: 'a',
+          apps: [{ name: 'Code', seconds: 300 }],
+        },
+        {
+          ...entry(second),
+          projectId: 'b',
+          apps: [{ name: 'Slack', seconds: 60 }],
+        },
+        {
+          ...entry(third),
+          projectId: 'b',
+          apps: [{ name: 'Code', seconds: 200 }],
+        },
+      ],
+      'UTC',
+    )
+    expect(rows[0].projects).to.deep.equal([
+      { projectId: 'b', seconds: 1200 },
+      { projectId: 'a', seconds: 600 },
+    ])
+    expect(rows[0].apps).to.deep.equal([
+      { name: 'Code', seconds: 500 },
+      { name: 'Slack', seconds: 60 },
+    ])
   })
 
   it('ranks productive hours across weekdays', () => {

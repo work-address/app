@@ -38,12 +38,21 @@ export type StatisticsDailyRow = {
   trackedSeconds: number
 }
 
-/** The reader's active seconds in one weekday-and-hour cell. */
+/** The reader's time in one weekday-and-hour cell, over the whole stretch. */
 export type StatisticsHourlyRow = {
   /** ISO weekday: 1 is Monday. */
   weekday: number
   hour: number
   activeSeconds: number
+  /** All time started in the hour, manual included. */
+  trackedSeconds: number
+  keyboardKeys: number
+  mouseKeys: number
+  /** How many different days had time at this weekday and hour. */
+  days: number
+  /** The hour's busiest projects and apps, most time first. */
+  projects: { projectId: string; seconds: number }[]
+  apps: { name: string; seconds: number }[]
 }
 
 /** Figures about the reader alone, whoever the people filter selects. */

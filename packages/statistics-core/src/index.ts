@@ -3,6 +3,7 @@ export { nextMidnight, zonedParts, type ZonedParts } from './zoned.js'
 export {
   FOCUS_GAP_MS,
   FOCUS_MIN_MS,
+  HOURLY_TOP,
   StatisticsInsights,
   type AgentDailyRow,
   type AgentRunInput,

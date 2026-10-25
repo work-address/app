@@ -313,6 +313,8 @@ function ownEntries(db: Db, meId: string, query: StatisticsQuery, now: number) {
     toAt: new Date(time.toAt),
     activeSeconds: time.source === 'desktop' ? activeSeconds(time) : null,
     keyboardKeys: time.keyboardKeys,
+    projectId: time.projectId,
+    apps: time.apps,
     mouseKeys: time.mouseKeys,
   }))
 }
