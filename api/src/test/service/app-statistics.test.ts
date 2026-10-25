@@ -329,6 +329,12 @@ export class AppStatisticsTest extends AbstractDatabaseIntegration {
       },
     ])
 
+    const hourly = await statistics.timeDaily(
+      { ...range, bucket: 'hour' },
+      owner,
+    )
+    expect(hourly.rows[0].day).to.equal(time.fromAt.toISOString().slice(0, 13))
+
     // Insights describe the reader, whoever the people filter selects.
     const mine = await statistics.insightsMe(
       { ...range, userIds: [worker.id] },

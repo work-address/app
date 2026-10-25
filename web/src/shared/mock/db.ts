@@ -226,6 +226,9 @@ const PROMPTS = [
   'Make the project dialog keyboard accessible',
 ]
 
+/** How many projects the demo's own user tracks on. */
+const MY_TRACKED_PROJECTS = 3
+
 const SLOT_MS = 10 * 60_000
 const DAY_MS = 24 * 3_600_000
 
@@ -348,11 +351,19 @@ export function buildDb(settings: DemoSettings, now: number): Db {
   const times: MockTime[] = []
   const runs: MockRun[] = []
   const days = workdays(today, shape.days)
+  // One person juggles a few projects, not every active one at once: past
+  // that their own figures would add up to more hours than a day has.
+  let myProjects = 0
   for (const project of projects.slice(0, shape.tracked)) {
     // The owner tracks on their own projects too; a viewer never tracks.
+    const mine = project.ownerId === me.id || project.workerIds.includes(me.id)
+    const tracksHere = mine && myProjects < MY_TRACKED_PROJECTS
+    if (tracksHere) {
+      myProjects++
+    }
     const trackers = [
-      ...project.workerIds,
-      ...(project.ownerId === me.id ? [me.id] : []),
+      ...project.workerIds.filter((id) => id !== me.id),
+      ...(tracksHere ? [me.id] : []),
     ]
     for (const userId of trackers) {
       const tf = seeded(`${key}:time:${project.id}:${userId}:${dayKey}`)
@@ -488,8 +499,16 @@ function trackBlock(
     }
     times.push(makeEntry(f, project, userId, from, source))
   }
-  if (project.trackAgents && f.number.float() < 0.35) {
-    runs.push(makeRun(f, project.id, userId, blockStart, now))
+  // Most stretches of work have an agent beside them, some several, one after
+  // another through the block - so agent charts have something to show.
+  if (project.trackAgents && f.number.float() < 0.6) {
+    const count = f.number.int({ min: 1, max: 3 })
+    for (let run = 0; run < count; run++) {
+      const start = blockStart + Math.floor((slots * run) / count) * SLOT_MS
+      if (start < now) {
+        runs.push(makeRun(f, project.id, userId, start, now))
+      }
+    }
   }
 }
 

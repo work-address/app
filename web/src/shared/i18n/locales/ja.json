@@ -733,5 +733,6 @@
   "dashboard.team.note": "名前順。アクティビティは各記録の確認期間後に反映されます。",
   "dashboard.team.empty.title": "あなたのプロジェクトで記録した人はいません",
   "dashboard.team.empty.description": "期間を広げるか、別のプロジェクトを選んでください。",
-  "dashboard.insights.focusValue_other": "{{count}}回 · {{time}} · 最長 {{longest}}"
+  "dashboard.insights.focusValue_other": "{{count}}回 · {{time}} · 最長 {{longest}}",
+  "dashboard.insights.lastFourWeeks": "過去4週間"
 }

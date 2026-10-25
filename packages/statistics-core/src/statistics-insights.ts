@@ -38,7 +38,11 @@ export interface AgentRunInput {
   segments: AgentSegment[]
 }
 
+/** How finely time is cut: by the reader's day, or by their hour. */
+export type StatisticsBucket = 'day' | 'hour'
+
 export interface AgentDailyRow {
+  /** `YYYY-MM-DD`, or `YYYY-MM-DDTHH` when cut by hour. */
   day: string
   product: string
   assistedSeconds: number
@@ -149,6 +153,7 @@ export class StatisticsInsights {
     human: { userId: string; projectId: string; span: Span }[],
     range: Span,
     timeZone: string,
+    bucket: StatisticsBucket = 'day',
   ): AgentDailyRow[] {
     const humanBy = new Map<string, Span[]>()
     for (const entry of human) {
@@ -167,7 +172,9 @@ export class StatisticsInsights {
       field: 'assistedSeconds' | 'autonomousSeconds' | 'waitSeconds',
     ) => {
       for (const span of spans)
-        for (const [day, ms] of this.splitByDay(span, timeZone)) {
+        for (const [day, ms] of bucket === 'hour'
+          ? this.splitByHour(span, timeZone)
+          : this.splitByDay(span, timeZone)) {
           const key = `${day}:${product}`
           const row = rows.get(key) ?? {
             day,
@@ -215,6 +222,23 @@ export class StatisticsInsights {
         (a, b) =>
           a.day.localeCompare(b.day) || a.product.localeCompare(b.product),
       )
+  }
+
+  /** A span cut at the reader's hours, as [`YYYY-MM-DDTHH`, milliseconds] pairs. */
+  public static splitByHour(
+    span: Span,
+    timeZone: string,
+  ): [string, number][] {
+    const out: [string, number][] = []
+    let cursor = span[0]
+    while (cursor < span[1]) {
+      const { day, hour, minute, second } = zonedParts(cursor, timeZone)
+      const elapsed = (minute * 60 + second) * 1000 + (cursor % 1000)
+      const next = Math.min(span[1], cursor - elapsed + 3600_000)
+      out.push([`${day}T${String(hour).padStart(2, '0')}`, next - cursor])
+      cursor = next
+    }
+    return out
   }
 
   /** A span cut at the reader's midnights, as [day, milliseconds] pairs. */

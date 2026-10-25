@@ -9,4 +9,5 @@ export {
   type AgentSegment,
   type HourlyRow,
   type InsightEntry,
+  type StatisticsBucket,
 } from './statistics-insights.js'

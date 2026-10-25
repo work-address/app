@@ -31,6 +31,7 @@ export type StatisticsQuery = {
   timeZone: string
   invoiceId?: string
   app?: string
+  bucket?: 'day' | 'hour'
 }
 
 /** A refusal with the status the API would answer. */
@@ -161,11 +162,18 @@ const appVisible = (scope: Scope, time: MockTime) =>
   ((scope.owners.has(time.projectId) || scope.viewers.has(time.projectId)) &&
     isPublished(time, projectOf(scope.db, time.projectId)!, scope.now))
 
+const pad = (n: number) => String(n).padStart(2, '0')
+
 const dayOf = (iso: string) => {
   const date = new Date(iso)
-  const pad = (n: number) => String(n).padStart(2, '0')
   return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
 }
+
+/** The reader's day, or their hour after it, as `time/daily` keys them. */
+const bucketOf = (iso: string, bucket: StatisticsQuery['bucket']) =>
+  bucket === 'hour'
+    ? `${dayOf(iso)}T${pad(new Date(iso).getHours())}`
+    : dayOf(iso)
 
 export function totals(scope: Scope) {
   const rows = new Map<string, Record<string, number | string>>()
@@ -279,7 +287,7 @@ export function timeDaily(scope: Scope) {
     if (!countable(scope, time)) {
       continue
     }
-    const day = dayOf(time.fromAt)
+    const day = bucketOf(time.fromAt, scope.query.bucket)
     const key = `${day}:${time.projectId}`
     const row = rows.get(key) ?? {
       day,
@@ -390,6 +398,7 @@ export function agentsDaily(scope: Scope) {
       human,
       [scope.from, scope.to],
       scope.query.timeZone,
+      scope.query.bucket ?? 'day',
     ),
     runs: [...counts.values()].sort(
       (a, b) =>

@@ -1,6 +1,7 @@
 import {
   ArrayMaxSize,
   IsArray,
+  IsIn,
   IsOptional,
   IsString,
   IsUUID,
@@ -24,4 +25,6 @@ export class StatisticsQueryDto {
   userIds?: string[]
   @IsOptional() @IsUUID() invoiceId?: string
   @IsOptional() @IsString() @MaxLength(200) app?: string
+  /** How `time/daily` and `agents/daily` cut the period: by day, or by hour. */
+  @IsOptional() @IsIn(['day', 'hour']) bucket?: 'day' | 'hour'
 }

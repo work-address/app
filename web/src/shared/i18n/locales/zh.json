@@ -733,5 +733,6 @@
   "dashboard.team.note": "按姓名排序。每条记录过了审核期后才计入活跃度。",
   "dashboard.team.empty.title": "没有人在你的项目中记录时间",
   "dashboard.team.empty.description": "选择更长的时间段或其他项目。",
-  "dashboard.insights.focusValue_other": "{{count}} 次 · {{time}} · 最长 {{longest}}"
+  "dashboard.insights.focusValue_other": "{{count}} 次 · {{time}} · 最长 {{longest}}",
+  "dashboard.insights.lastFourWeeks": "最近 4 周"
 }

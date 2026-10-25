@@ -3,7 +3,10 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { dashboardStatisticsRequested } from '../../model/dashboard-filters'
+import {
+  $dashboardInsightsWidened,
+  dashboardStatisticsRequested,
+} from '../../model/dashboard-filters'
 import { DashboardWidget } from '../dashboard-widget'
 
 import {
@@ -27,7 +30,8 @@ const MONDAY = new Date(2026, 9, 19)
 export const DashboardInsights = () => {
   const { t, i18n } = useTranslation()
 
-  const { hourly, insights, pending, failed, retry } = useUnit({
+  const { hourly, insights, widened, pending, failed, retry } = useUnit({
+    widened: $dashboardInsightsWidened,
     hourly: statisticsHourlyQuery.$data,
     insights: statisticsInsightsQuery.$data,
     pending: statisticsInsightsQuery.$pending,
@@ -79,7 +83,12 @@ export const DashboardInsights = () => {
     >
       <Layout>
         <div>
-          <Caption>{t('dashboard.insights.heatmap')}</Caption>
+          <Caption>
+            {t('dashboard.insights.heatmap')}
+            {/* A day or a week has no pattern to show: the figures reach back
+                four weeks, and say so. */}
+            {widened ? ` · ${t('dashboard.insights.lastFourWeeks')}` : ''}
+          </Caption>
           <WeekHourHeatmap
             cells={(hourly ?? []).map((row) => ({
               weekday: row.weekday,

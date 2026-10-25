@@ -51,7 +51,7 @@ A "Demo" pill in the bottom-left corner, above the app, expands into:
 | Busy | Dozens, past the API's 100-id limit | Months | 25 workers, some on several projects |
 | Random | Typical's shape, every name and figure redrawn | | Shuffle draws another |
 
-Every non-empty world has agents with runs, prompts and held prompts; screenshots and app usage, with some projects tracking them off; entries still inside their review window; invoices requested, paid and rejected; manual and web time; an agent run in progress.
+The demo's own user tracks on at most three projects, so their figures stay within a day's hours; the team works across every active project. Every non-empty world has agents beside most stretches of work, with prompts and held prompts; screenshots and app usage, with some projects tracking them off; entries still inside their review window; invoices requested, paid and rejected; manual and web time; an agent run in progress.
 
 For each role the projects are: **Owner** owns all; **Worker** works on projects others own; **Viewer** only views others' projects; **Mixed** owns some and works on others.
 

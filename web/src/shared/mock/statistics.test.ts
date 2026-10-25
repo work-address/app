@@ -10,6 +10,7 @@ import {
   overview,
   statisticsScope,
   team,
+  timeDaily,
   type StatisticsQuery,
 } from './statistics'
 
@@ -114,6 +115,20 @@ describe('demo statistics per role', () => {
         ),
       ),
     ).toBe(403)
+  })
+})
+
+describe('demo hourly buckets', () => {
+  it('keys time by the reader hour when asked', () => {
+    const data = db('owner')
+    const rows = timeDaily(
+      statisticsScope(data, data.meId, { ...QUERY, bucket: 'hour' }, NOW),
+    )
+
+    expect(rows.length).toBeGreaterThan(0)
+    expect(rows.every((row) => /^\d{4}-\d{2}-\d{2}T\d{2}$/.test(row.day))).toBe(
+      true,
+    )
   })
 })
 

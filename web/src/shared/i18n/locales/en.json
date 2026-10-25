@@ -736,5 +736,6 @@
   "dashboard.team.empty.title": "No one tracked time on your projects",
   "dashboard.team.empty.description": "Pick a longer period or other projects.",
   "dashboard.insights.focusValue_one": "{{count}} session · {{time}} · longest {{longest}}",
-  "dashboard.insights.focusValue_other": "{{count}} sessions · {{time}} · longest {{longest}}"
+  "dashboard.insights.focusValue_other": "{{count}} sessions · {{time}} · longest {{longest}}",
+  "dashboard.insights.lastFourWeeks": "last 4 weeks"
 }

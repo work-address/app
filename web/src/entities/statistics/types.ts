@@ -6,6 +6,8 @@ export type StatisticsQuery = {
   from: string
   to: string
   timeZone: string
+  /** How `time/daily` and `agents/daily` cut the period. */
+  bucket?: 'day' | 'hour'
 }
 
 /**

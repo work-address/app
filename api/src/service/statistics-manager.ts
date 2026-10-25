@@ -191,6 +191,7 @@ export class StatisticsManager {
       })),
       [+scope.from, +scope.to],
       query.timeZone,
+      query.bucket ?? 'day',
     )
     const counts = new Map<
       string,

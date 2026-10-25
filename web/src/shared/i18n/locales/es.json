@@ -738,5 +738,6 @@
   "dashboard.team.empty.title": "Nadie registró tiempo en tus proyectos",
   "dashboard.team.empty.description": "Elige un periodo más largo u otros proyectos.",
   "dashboard.insights.focusValue_one": "{{count}} sesión · {{time}} · la más larga {{longest}}",
-  "dashboard.insights.focusValue_other": "{{count}} sesiones · {{time}} · la más larga {{longest}}"
+  "dashboard.insights.focusValue_other": "{{count}} sesiones · {{time}} · la más larga {{longest}}",
+  "dashboard.insights.lastFourWeeks": "últimas 4 semanas"
 }

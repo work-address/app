@@ -65,10 +65,10 @@ Top to bottom. Each loads, fails and retries on its own, with a skeleton while l
    - Agent time: assisted and autonomous as two figures in one tile
 
    Each tile shows the change against the previous period of the same elapsed length.
-2. **Time per day:** bars stacked by project. The period's seven busiest projects get a colour each, in creation order, and the rest share "Other"; a project keeps its colour within a view, though not necessarily across periods.
+2. **Time per day:** bars stacked by project, by the hour for a period of one or two days (trimmed to 8:00-19:00, widened to any hour with time), by day up to about six weeks, then by week and month. `time/daily` and `agents/daily` take `bucket: 'hour'` for this. The period's seven busiest projects get a colour each, in creation order, and the rest share "Other"; a project keeps its colour within a view, though not necessarily across periods.
 3. **Projects table:** the existing table, totals for the period.
 4. **App usage:** the existing card, moved onto the shared charts.
-5. **Your insights** (signed-in user only):
+5. **Your insights** (signed-in user only; over the last four weeks whenever the period is shorter, captioned so - a day has no weekday-by-hour pattern):
    - weekday × hour heatmap, shaded by active minutes
    - most productive hours
    - focus sessions: consecutive tracked slots allowing gaps of up to one slot (10 minutes), at least 45 minutes in total; count and length (both thresholds are constants)

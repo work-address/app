@@ -11,6 +11,7 @@ import {
   bucketKeyOf,
   bucketLabels,
   periodBuckets,
+  visibleBuckets,
 } from '../../model/period-buckets'
 import { DashboardWidget } from '../dashboard-widget'
 
@@ -114,7 +115,10 @@ export const DashboardAgents = () => {
       products.set(row.product, product)
     }
 
-    const buckets: Bucket[] = periods.map((period) => ({
+    const buckets: Bucket[] = visibleBuckets(
+      periods,
+      new Set(values.keys()),
+    ).map((period) => ({
       key: period.key,
       ...bucketLabels(period, i18n.language),
       values: values.get(period.key) ?? {},

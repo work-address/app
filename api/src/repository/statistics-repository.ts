@@ -132,7 +132,11 @@ export class StatisticsRepository {
         : 'time."userId" = :user',
       { shared, user: scope.user.id },
     )
-    const day = 'TO_CHAR(time."fromAt" AT TIME ZONE :zone, \'YYYY-MM-DD\')'
+    // An hour bucket keeps the day in front, so keys sort and group alike.
+    const day =
+      scope.query.bucket === 'hour'
+        ? 'TO_CHAR(time."fromAt" AT TIME ZONE :zone, \'YYYY-MM-DD"T"HH24\')'
+        : 'TO_CHAR(time."fromAt" AT TIME ZONE :zone, \'YYYY-MM-DD\')'
     return q
       .select(day, 'day')
       .addSelect('project.id', 'projectId')

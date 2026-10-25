@@ -173,6 +173,10 @@ export type StatisticsQueryDto = {
     userIds?: Array<string>;
     invoiceId?: string;
     app?: string;
+    /**
+     * How `time/daily` and `agents/daily` cut the period: by day, or by hour.
+     */
+    bucket?: 'day' | 'hour';
 };
 
 export type AuthForgotPasswordDto = {

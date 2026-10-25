@@ -1,5 +1,8 @@
+import { subDays } from 'date-fns'
 import { combine, createEvent, createStore, merge, sample } from 'effector'
 import i18n from 'i18next'
+
+import { bucketSizeFor } from './period-buckets'
 
 import { $user } from '@/entities/profile'
 import { $projects, type ProjectWithStats } from '@/entities/projects'
@@ -22,6 +25,8 @@ import {
 import {
   DEFAULT_DATE_RANGE_PRESET,
   fromDay,
+  rangeLengthDays,
+  toDay,
   parseDateRange,
   previousDateRange,
   resolveDateRange,
@@ -125,10 +130,34 @@ const toStatisticsQuery = ({
   timeZone: Intl.DateTimeFormat().resolvedOptions().timeZone,
   ...(projectIds.length > 0 ? { projectIds } : {}),
   ...(userIds.length > 0 ? { userIds } : {}),
+  // A day or two is drawn by the hour; anything longer by the day.
+  ...(bucketSizeFor(range) === 'hour' ? { bucket: 'hour' as const } : {}),
 })
 
 export const $dashboardStatisticsQuery =
   $dashboardFilters.map(toStatisticsQuery)
+
+/** The shortest stretch the reader's insights are drawn from. */
+export const INSIGHTS_MIN_DAYS = 28
+
+/**
+ * Whether the insights reach back past the chosen period: a weekday-by-hour
+ * pattern, focus and productive hours mean nothing over a day or two, so
+ * they always look at the last four weeks at least.
+ */
+export const $dashboardInsightsWidened = $dashboardRange.map(
+  (range) => rangeLengthDays(range) < INSIGHTS_MIN_DAYS,
+)
+
+export const $dashboardInsightsQuery = $dashboardFilters.map((filters) => {
+  const { range } = filters
+  const widened = rangeLengthDays(range) < INSIGHTS_MIN_DAYS
+  const from = widened
+    ? toDay(subDays(fromDay(range.to), INSIGHTS_MIN_DAYS - 1))
+    : range.from
+
+  return toStatisticsQuery({ ...filters, range: { ...range, from } })
+})
 
 /** The same filters over the period the KPI deltas compare with. */
 export const $dashboardPreviousQuery = $dashboardFilters.map((filters) =>
@@ -226,10 +255,14 @@ sample({
     statisticsOverviewQuery.start,
     statisticsProjectAppsQuery.start,
     statisticsDailyQuery.start,
-    statisticsHourlyQuery.start,
-    statisticsInsightsQuery.start,
     statisticsAgentsQuery.start,
   ],
+})
+
+sample({
+  clock: filtersApplied,
+  source: $dashboardInsightsQuery,
+  target: [statisticsHourlyQuery.start, statisticsInsightsQuery.start],
 })
 
 sample({

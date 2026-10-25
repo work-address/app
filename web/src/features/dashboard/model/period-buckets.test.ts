@@ -1,6 +1,11 @@
 import { describe, expect, it } from 'vitest'
 
-import { bucketKeyOf, bucketSizeFor, periodBuckets } from './period-buckets'
+import {
+  bucketKeyOf,
+  bucketSizeFor,
+  periodBuckets,
+  visibleBuckets,
+} from './period-buckets'
 
 describe('period buckets', () => {
   it('draws days, then weeks, then months as the period grows', () => {
@@ -40,5 +45,28 @@ describe('period buckets', () => {
 
     expect(buckets).toHaveLength(10)
     expect(bucketKeyOf('2026-10-24', 'month', 1)).toBe('2026-10-01')
+  })
+
+  it('draws a day or two by the hour', () => {
+    expect(bucketSizeFor({ from: '2026-10-25', to: '2026-10-25' })).toBe('hour')
+    expect(bucketSizeFor({ from: '2026-10-24', to: '2026-10-25' })).toBe('hour')
+    expect(bucketSizeFor({ from: '2026-10-23', to: '2026-10-25' })).toBe('day')
+
+    const hours = periodBuckets({ from: '2026-10-25', to: '2026-10-25' }, 1)
+
+    expect(hours).toHaveLength(24)
+    expect(hours[9].key).toBe('2026-10-25T09')
+    expect(bucketKeyOf('2026-10-25T09', 'hour', 1)).toBe('2026-10-25T09')
+  })
+
+  it('trims a day to working hours, widened to any hour with time', () => {
+    const hours = periodBuckets({ from: '2026-10-25', to: '2026-10-25' }, 1)
+
+    expect(visibleBuckets(hours, new Set()).map((b) => b.key)).toEqual(
+      hours.slice(8, 19).map((b) => b.key),
+    )
+    expect(
+      visibleBuckets(hours, new Set(['2026-10-25T06', '2026-10-25T21'])),
+    ).toHaveLength(16)
   })
 })

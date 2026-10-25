@@ -746,5 +746,6 @@
   "dashboard.insights.focusValue_one": "{{count}} сессия · {{time}} · самая долгая {{longest}}",
   "dashboard.insights.focusValue_few": "{{count}} сессии · {{time}} · самая долгая {{longest}}",
   "dashboard.insights.focusValue_many": "{{count}} сессий · {{time}} · самая долгая {{longest}}",
-  "dashboard.insights.focusValue_other": "{{count}} сессии · {{time}} · самая долгая {{longest}}"
+  "dashboard.insights.focusValue_other": "{{count}} сессии · {{time}} · самая долгая {{longest}}",
+  "dashboard.insights.lastFourWeeks": "за последние 4 недели"
 }

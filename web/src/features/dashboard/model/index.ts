@@ -14,6 +14,7 @@ export type {
 } from './applications-usage-chart'
 export {
   $dashboardFilters,
+  $dashboardInsightsWidened,
   $dashboardInstants,
   $dashboardPeople,
   $dashboardScreenshots,

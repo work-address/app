@@ -160,4 +160,34 @@ describe('StatisticsInsights', () => {
       ['2026-10-20', 15 * 60],
     ])
   })
+
+  it('cuts agent time at the reader hours, half-hour zones included', () => {
+    // 09:00-10:30 UTC is 14:30-16:00 in India (UTC+5:30).
+    expect(
+      StatisticsInsights.splitByHour([nine, nine + 90 * MIN], 'Asia/Kolkata'),
+    ).to.deep.equal([
+      ['2026-10-19T14', 30 * MIN],
+      ['2026-10-19T15', 60 * MIN],
+    ])
+    const rows = StatisticsInsights.agentDaily(
+      [
+        {
+          userId: 'u',
+          projectId: 'p',
+          agentId: 'a',
+          product: 'codex',
+          status: 'completed',
+          segments: [segment('running', 30, 90)],
+        },
+      ],
+      [],
+      [nine - 600 * MIN, nine + 600 * MIN],
+      'UTC',
+      'hour',
+    )
+    expect(rows.map((row) => [row.day, row.autonomousSeconds])).to.deep.equal([
+      ['2026-10-19T09', 30 * 60],
+      ['2026-10-19T10', 30 * 60],
+    ])
+  })
 })
