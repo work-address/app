@@ -284,16 +284,17 @@ const Segmented = <T extends string>({
   </SegmentedRoot>
 )
 
-/* Bottom left, clear of the toasts (top centre); above the app and its
-   dialogs so the demo can be steered with one open. */
+/* Bottom right, clear of the toasts (top centre) and of the sidebar's footer
+   controls bottom left; above the app and its dialogs so the demo can be
+   steered with one open. */
 const Root = styled.div`
   position: fixed;
-  left: 12px;
+  right: 12px;
   bottom: calc(12px + env(safe-area-inset-bottom, 0px));
   z-index: 2147483000;
   display: flex;
   flex-direction: column;
-  align-items: flex-start;
+  align-items: flex-end;
   gap: 8px;
   font-family:
     Inter,

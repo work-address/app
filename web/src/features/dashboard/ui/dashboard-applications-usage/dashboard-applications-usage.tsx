@@ -13,18 +13,23 @@ import { DashboardApplicationsUsageChart } from './dashboard-applications-usage-
 import { DashboardApplicationsUsageEmpty } from './dashboard-applications-usage-empty'
 
 import { $projectsLoading } from '@/entities/projects'
-import { statisticsProjectAppsQuery } from '@/entities/statistics'
+import {
+  statisticsOverviewQuery,
+  statisticsProjectAppsQuery,
+} from '@/entities/statistics'
 
 export const DashboardApplicationsUsage = () => {
   const { t } = useTranslation()
 
-  const { selectedProjects, projectsLoading, rows, pending, failed } = useUnit({
-    selectedProjects: $dashboardProjects,
-    projectsLoading: $projectsLoading,
-    rows: statisticsProjectAppsQuery.$data,
-    pending: statisticsProjectAppsQuery.$pending,
-    failed: statisticsProjectAppsQuery.$failed,
-  })
+  const { selectedProjects, projectsLoading, rows, pending, failed, totals } =
+    useUnit({
+      selectedProjects: $dashboardProjects,
+      projectsLoading: $projectsLoading,
+      rows: statisticsProjectAppsQuery.$data,
+      pending: statisticsProjectAppsQuery.$pending,
+      failed: statisticsProjectAppsQuery.$failed,
+      totals: statisticsOverviewQuery.$data,
+    })
 
   // Projects with the most app time first, so a long list never opens on
   // empty bars; the rest keep their order after them.
@@ -73,7 +78,17 @@ export const DashboardApplicationsUsage = () => {
 
   // `projects` is already filtered to the ones tracking processes, so an empty
   // list means the feature is off everywhere rather than merely unused so far.
-  const emptyKey = projects.length === 0 ? 'trackingOff' : 'noActivity'
+  // Tracked hours without app rows are a different story again: apps stay
+  // private until an entry is past its review window (and manual entries
+  // never have any), so the period has time in it that is not yet - or not
+  // ever - broken down here.
+  const hasTrackedTime = (totals ?? []).some((row) => row.trackedSeconds > 0)
+  const emptyKey =
+    projects.length === 0
+      ? 'trackingOff'
+      : hasTrackedTime
+        ? 'pendingReview'
+        : 'noActivity'
 
   return (
     <DashboardApplicationsUsageCard isLoading={isLoading}>

@@ -1,10 +1,10 @@
-import { Header } from './header'
+import { Sidebar } from './sidebar'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
 
 const meta = {
-  title: 'Example/Header',
-  component: Header,
+  title: 'Example/Sidebar',
+  component: Sidebar,
   // This component will have an automatically generated Autodocs entry: https://storybook.js.org/docs/writing-docs/autodocs
   tags: ['autodocs'],
   parameters: {
@@ -12,7 +12,7 @@ const meta = {
     layout: 'fullscreen',
   },
   args: {},
-} satisfies Meta<typeof Header>
+} satisfies Meta<typeof Sidebar>
 
 export default meta
 type Story = StoryObj<typeof meta>

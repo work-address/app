@@ -184,7 +184,6 @@ export const ProfileViewQrCode = ({
    could continue it, but that card is often empty there, and a card that ends
    in nothing looked like a rendering fault. */
 const Root = styled(ProfileViewCard)`
-  box-shadow: var(--shadow-4);
   height: 100%;
 
   ${(p) => p.theme.breakpoints.up('md')} {

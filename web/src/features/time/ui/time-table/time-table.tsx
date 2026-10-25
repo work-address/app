@@ -152,6 +152,8 @@ export const TimeTable = () => {
   return (
     <DataTable<Time>
       nowrap
+      shadow={false}
+      rounded={false}
       data={entries}
       config={config}
       getRowId={(row) => row.id ?? ''}

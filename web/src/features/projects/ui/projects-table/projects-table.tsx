@@ -171,21 +171,24 @@ export const ProjectsTable = ({
 
   const desktopConfig = useMemo(
     (): DataTableConfig<ProjectWithStats> => [
+      // Widths are what each column's longest value needs and no more: the
+      // table shares a dashboard row with another tile, so five columns have
+      // to fit in half the page.
       {
         dataKey: 'createdAt',
-        width: 140,
+        width: 116,
         headerText: t('dashboard.projectsTable.drawer.meta.createdAt'),
         getValue: (data: ProjectWithStats) =>
           dateFormatter.format(new Date(data.createdAt ?? new Date())),
       },
       {
         dataKey: 'title',
-        width: 200,
+        width: 148,
         headerText: t('dashboard.projectsTable.head.projectName'),
       },
       {
         dataKey: 'state',
-        width: 120,
+        width: 68,
         horizontalAlign: 'center',
         headerText: t('dashboard.projectsTable.head.status'),
       },
@@ -194,14 +197,14 @@ export const ProjectsTable = ({
         // row, so a project with nothing tracked yet still shows its rate
         // rather than $0.00.
         dataKey: 'rateHour',
-        width: 120,
+        width: 76,
         headerText: t('dashboard.projectsTable.drawer.meta.rateHour'),
         description: t('common.metricDesc.rateHour'),
         getValue: (data) => formatCurrency(data.rateHour),
       },
       {
         customKey: 'timeTotal',
-        width: 120,
+        width: 108,
         headerText: t('dashboard.projectsTable.head.timeTotal'),
         description: t('common.metricDesc.timeTotal'),
       },
@@ -408,8 +411,18 @@ export const ProjectsTable = ({
 const Root = styled.div`
   height: 100%;
 
+  /* Grows with the tile around it, so the table ends level with whatever
+     sits beside it, and never shorter than four rows. */
   ${(p) => p.theme.breakpoints.up('md')} {
-    height: 307px;
+    flex: 1;
+    min-height: 307px;
     overflow: auto;
+
+    /* Half the table's usual cell inset: the room five columns need in half
+       a page comes out of the gutters, not the values. */
+    & th,
+    & td {
+      padding-inline: 6px;
+    }
   }
 `

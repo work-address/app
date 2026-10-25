@@ -153,7 +153,6 @@ export const ProfileViewDescriptionAndSkills = ({
 }
 
 const Root = styled(ProfileViewCard)`
-  box-shadow: var(--shadow-4);
   ${(p) => p.theme.breakpoints.up('md')} {
     padding: var(--space-5);
   }

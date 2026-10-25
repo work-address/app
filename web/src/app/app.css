@@ -13,6 +13,13 @@ body {
   background-color: var(--ds-neutral-2);
 }
 
+/* The app owns its scrolling - the page sheet scrolls, not the document - so
+   the viewport must not rubber-band past it and expose the canvas behind. */
+html,
+body {
+  overscroll-behavior: none;
+}
+
 ul,
 ol {
   list-style: none;

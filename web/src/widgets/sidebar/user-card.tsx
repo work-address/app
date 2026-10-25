@@ -15,13 +15,14 @@ type Props = {
     premium?: boolean | null
   } | null
   userAlt: string
-  stretch?: boolean
+  /** The collapsed sidebar: the QR avatar alone, as wide as a nav icon row. */
+  compact?: boolean
 }
 
-export const HeaderUserLink = ({
+export const UserCard = ({
   user,
   userAlt,
-  stretch,
+  compact,
   onNoPremiumClick,
 }: Props) => {
   const displayName = user?.name || user?.title || ''
@@ -39,8 +40,8 @@ export const HeaderUserLink = ({
    * it.
    */
   return (
-    <Root data-stretch={stretch || undefined}>
-      <ProfileCard data-stretch={stretch || undefined}>
+    <Root data-compact={compact || undefined}>
+      <ProfileCard>
         <UserBox>
           <UserAvatar role="img" aria-label={userAlt}>
             <QRCodeSVG
@@ -52,7 +53,7 @@ export const HeaderUserLink = ({
               marginSize={0}
             />
           </UserAvatar>
-          <UserText>
+          <UserText hidden={compact}>
             <UserSubRow>
               <UserSub>
                 {formatWalletAddress(user?.friendlyWalletAddress || '')}
@@ -79,16 +80,15 @@ export const HeaderUserLink = ({
 
 const Root = styled.div`
   position: relative;
-  display: inline-flex;
-  /* Free to give way when the row around it runs out of room - in the mobile
-     header it shares that row with the logo and the burger. */
+  display: flex;
+  width: 100%;
+  /* Free to give way when the sidebar narrows - the name ellipsizes. */
   min-width: 0;
   border-radius: 8px;
-  background: var(--ds-neutral-2);
   transition: background 0.15s ease;
 
-  &[data-stretch] {
-    width: 100%;
+  &[data-compact] {
+    width: 40px;
   }
 
   /*
@@ -127,21 +127,19 @@ const StretchedLink = styled(NavLink)`
  * card's height and width.
  */
 const ProfileCard = styled.div`
-  display: inline-flex;
+  display: flex;
   align-items: center;
-  justify-content: center;
+  width: 100%;
   min-width: 0;
-  min-height: 32px;
-  padding: 0 6px 0 1px;
-  gap: 8px;
-  border: 1px solid transparent;
+  min-height: 40px;
+  padding: 4px 8px 4px 0;
   font-size: 14px;
   line-height: 1;
   white-space: nowrap;
   color: var(--ds-neutral-11);
 
-  &[data-stretch] {
-    width: 100%;
+  [data-compact] > & {
+    padding: 0;
   }
 `
 
@@ -160,7 +158,6 @@ const UserAvatar = styled.div`
      inset around it disappears. The name ellipsizes instead. */
   flex-shrink: 0;
   border-radius: 6px;
-  background: var(--gray-100);
   display: inline-flex;
   align-items: center;
   justify-content: center;
@@ -172,8 +169,12 @@ const UserText = styled.div`
   justify-items: start;
 
   /* A grid item in a flex row defaults to min-width: auto, so a long display
-     name cannot shrink and pushes the whole header wider. */
+     name cannot shrink and pushes the sidebar wider. */
   min-width: 0;
+
+  &[hidden] {
+    display: none;
+  }
 `
 
 const UserNameRow = styled.span`
@@ -190,8 +191,8 @@ const UserName = styled.span`
   font-weight: 500;
   color: var(--ds-neutral-12);
 
-  /* Display names are free text. Without this a long one grows the header
-     button indefinitely, since nothing upstream constrains its width. */
+  /* Display names are free text; the sidebar's width is fixed, so a long
+     one ellipsizes rather than spilling out of it. */
   min-width: 0;
   overflow: hidden;
   text-overflow: ellipsis;

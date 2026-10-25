@@ -4,6 +4,10 @@
 
   --white: #fff;
   --ds-secondary: #f0f0f3;
+
+  /* The navigation chrome around the white page sheet. */
+  --sidebar-bg: #eeeff2;
+  --sidebar-border: #e0e1e6;
   --muted: #80838d;
   --gray-100: rgba(230, 232, 235, 0.5);
   --border: #000830;

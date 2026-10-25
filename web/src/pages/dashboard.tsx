@@ -1,5 +1,5 @@
 import { FileTextIcon, PlusIcon } from '@radix-ui/react-icons'
-import { Badge, Flex } from '@radix-ui/themes'
+import { Badge } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -49,7 +49,6 @@ import {
   Wrapper,
   DashboardEmptyState,
   LoadFailure,
-  ListPageLayout as S,
 } from '@/shared'
 import { DashboardEmptyStateImage } from '@/shared'
 
@@ -162,10 +161,11 @@ export default function DashboardPage() {
       />
       <Wrapper>
         <DashboardPremiumBanner />
-        {/* The page reads top-down: the headline figures, the period day by
-            day, the projects beside the app breakdown, then how and when the
-            work happened, what agents did, and - for an owner - who did it.
-            The worklogs live on /time. */}
+        {/* The headline figures, then a grid of equal tiles read left to
+            right: how and when the work happened beside the period day by
+            day, the projects beside the app breakdown, what agents did and
+            what they were asked, and - for an owner - who did it. The
+            worklogs live on /time. */}
         {/* The intro's hero already reads "Dashboard", so the page title only
             comes back once there is something under it. */}
         {(showContent || projectsFailed) && (
@@ -187,16 +187,21 @@ export default function DashboardPage() {
           />
         ) : showContent ? (
           <Sections initial="hidden" animate="shown" variants={reveal.list}>
-            <motion.div variants={reveal.item}>
+            {/* About tracking, agents and screenshots: nothing a viewer can
+                ever have, so they are left out instead of empty. */}
+            {canTrack && (
+              <Tile variants={reveal.item}>
+                <DashboardInsights />
+              </Tile>
+            )}
+            <Tile variants={reveal.item}>
               <DashboardTimeDaily />
-            </motion.div>
-            <S.Content as={motion.div} variants={reveal.item}>
-              <S.Main>
-                <ProjectsHead>
-                  <Flex align={'center'} gap={'2'} style={{ minWidth: 0 }}>
-                    <S.SectionTitle>
-                      {t('dashboard.page.projects.title')}
-                    </S.SectionTitle>
+            </Tile>
+            <Tile variants={reveal.item}>
+              <DashboardWidget
+                title={t('dashboard.page.projects.title')}
+                aside={
+                  <ProjectsTools>
                     {/* No count until there is one: "0 projects" over the
                         loading rows read as an answer. */}
                     {!projectsLoading && (
@@ -211,56 +216,54 @@ export default function DashboardPage() {
                         </Text>
                       </Badge>
                     )}
-                  </Flex>
-                  <SearchArea>
-                    <DashboardProjectsSearchInput />
-                  </SearchArea>
-                </ProjectsHead>
-                <S.TableArea>
-                  {periodFailed ? (
-                    <LoadFailure
-                      title={t('dashboard.projectsTable.totalsFailure.title')}
-                      onRetry={retryPeriod}
-                    />
-                  ) : (
-                    <ProjectsTable
-                      projectIds={selectedProjectIds}
-                      periodTotals={periodTotals}
-                      projectPopup={projectPopup}
-                    />
-                  )}
-                </S.TableArea>
-              </S.Main>
-              {showCharts && (
-                <S.Aside>
-                  <DashboardApplicationsUsage />
-                </S.Aside>
-              )}
-            </S.Content>
-            {/* About tracking, agents and screenshots: nothing a viewer can
-                ever have, so they are left out instead of empty. */}
+                    <SearchArea>
+                      <DashboardProjectsSearchInput />
+                    </SearchArea>
+                  </ProjectsTools>
+                }
+              >
+                {periodFailed ? (
+                  <LoadFailure
+                    title={t('dashboard.projectsTable.totalsFailure.title')}
+                    onRetry={retryPeriod}
+                  />
+                ) : (
+                  <ProjectsTable
+                    projectIds={selectedProjectIds}
+                    periodTotals={periodTotals}
+                    projectPopup={projectPopup}
+                  />
+                )}
+              </DashboardWidget>
+            </Tile>
+            {showCharts && (
+              <Tile variants={reveal.item}>
+                <DashboardApplicationsUsage />
+              </Tile>
+            )}
             {canTrack && (
               <>
-                <Pair variants={reveal.item}>
-                  <DashboardInsights />
+                <Tile variants={reveal.item}>
                   <DashboardAgents />
-                </Pair>
-                <Pair variants={reveal.item}>
+                </Tile>
+                <Tile variants={reveal.item}>
                   <DashboardRecentPrompts />
-                  {/* Hidden rather than empty: a period without screenshots
-                      is ordinary, and most projects do not take them. */}
-                  {screenshotsLoaded && screenshots.length > 0 && (
+                </Tile>
+                {/* Hidden rather than empty: a period without screenshots
+                    is ordinary, and most projects do not take them. */}
+                {screenshotsLoaded && screenshots.length > 0 && (
+                  <Tile variants={reveal.item}>
                     <DashboardWidget title={t('dashboard.screenshots.title')}>
                       <TimeScreenshotStrip entries={screenshots} />
                     </DashboardWidget>
-                  )}
-                </Pair>
+                  </Tile>
+                )}
               </>
             )}
             {isOwner && (
-              <motion.div variants={reveal.item}>
+              <Tile variants={reveal.item}>
                 <DashboardTeam />
-              </motion.div>
+              </Tile>
             )}
           </Sections>
         ) : (
@@ -296,30 +299,32 @@ const REVEAL_STILL = {
   item: { hidden: { opacity: 1 }, shown: { opacity: 1 } },
 }
 
+/* Equal tiles, two across on a desktop and one on anything narrower. A
+   row's tiles share its height, so neighbours end on the same line. */
 const Sections = styled(motion.div)`
   display: grid;
-  gap: var(--space-7);
+  grid-template-columns: minmax(0, 1fr);
+  gap: var(--space-4);
 
-  ${(p) => p.theme.breakpoints.down('md')} {
-    gap: var(--space-6);
+  ${(p) => p.theme.breakpoints.up('lg')} {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 `
 
-/* Two widgets side by side on a desktop; a lone one takes the row. */
-const Pair = styled(motion.div)`
+/* The reveal's handle on a tile; a grid itself, so the tile fills the cell. */
+const Tile = styled(motion.div)`
   display: grid;
-  grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
-  gap: var(--space-6);
+  min-width: 0;
 `
 
+/* The same gap as between the tiles below: the stat strip is their first row. */
 const Overview = styled.div`
   display: grid;
   gap: var(--space-4);
-  margin-bottom: var(--space-6);
+  margin-bottom: var(--space-4);
 
   ${(p) => p.theme.breakpoints.down('md')} {
     gap: var(--space-3);
-    margin-bottom: var(--space-5);
   }
 `
 
@@ -333,23 +338,29 @@ const Intro = styled(DashboardEmptyState)`
   }
 `
 
-/* The search belongs to the projects group, so it sits beside the title
-   rather than being pushed to the far edge. On a phone it takes its own line
-   rather than squeezing the title. */
-const ProjectsHead = styled(S.SectionTitleRow)`
-  flex-wrap: wrap;
-  justify-content: flex-start;
+/* The count and the search share the title row; on a phone the row wraps
+   and the search takes a line of its own rather than squeezing the title. */
+const ProjectsTools = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: var(--space-3);
+  flex: 1;
+  min-width: 0;
 
-  ${(p) => p.theme.breakpoints.up('md')} {
-    gap: var(--space-5);
+  ${(p) => p.theme.breakpoints.down('md')} {
+    flex-basis: 100%;
+    flex-wrap: wrap;
+    justify-content: flex-start;
   }
 `
 
 const SearchArea = styled.div`
-  width: 280px;
+  width: 240px;
   max-width: 100%;
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    width: 100%;
+    flex: 1;
+    min-width: 200px;
   }
 `

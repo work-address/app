@@ -265,8 +265,6 @@ export const ProfileViewLinks = ({
 }
 
 const Root = styled(ProfileViewCard)`
-  box-shadow: var(--shadow-4);
-
   ${(p) => p.theme.breakpoints.up('md')} {
     padding-inline: var(--space-4);
   }

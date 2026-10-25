@@ -38,6 +38,9 @@ export type DataTableProps<T extends AnyRecord> = {
   minHeight?: string
   maxHeight?: string
   className?: string
+  /** The card around the table; both off, it sits flat on the page. */
+  shadow?: boolean
+  rounded?: boolean
   HeaderComponent?: (props: DesktopHeaderCellRenderProps<T>) => ReactNode
   BodyComponent?: (props: DesktopBodyCellRenderProps<T>) => ReactNode
   skeletonHeight?: string
@@ -80,6 +83,8 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
     onReachEnd,
     isLoadingMore,
     className,
+    shadow,
+    rounded,
     getGroupKey,
     renderGroupHeader,
   } = props
@@ -172,6 +177,8 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
   return (
     <TableCard
       className={className}
+      shadow={shadow}
+      rounded={rounded}
       $height={height}
       $minHeight={minHeight}
       $maxHeight={maxHeight}
@@ -489,10 +496,13 @@ const Root = styled.table`
 `
 
 const HeaderTd = styled.th<{ $width?: number; $truncate?: boolean }>`
-  background: var(--ds-neutral-2);
+  /* White, not transparent: the header is sticky, and in a table with its
+     own height the rows scroll under it. */
+  background: var(--white);
   padding: 12px var(--space-3);
   font-size: var(--font-size-2);
-  font-weight: 500;
+  font-weight: 600;
+  color: var(--ds-neutral-12);
   position: sticky;
   top: 0;
   border-bottom: 1px solid var(--ds-neutral-alpha-6);
@@ -511,14 +521,6 @@ const HeaderTd = styled.th<{ $width?: number; $truncate?: boolean }>`
 `
 
 const THead = styled.thead`
-  ${HeaderTd}:first-child {
-    border-top-left-radius: 8px;
-  }
-
-  ${HeaderTd}:last-child {
-    border-top-right-radius: 8px;
-  }
-
   border-bottom: 1px solid var(--ds-neutral-alpha-6);
 `
 

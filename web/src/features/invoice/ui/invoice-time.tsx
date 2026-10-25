@@ -122,6 +122,7 @@ export const InvoiceTime = () => {
       </Heading>
       <InvoiceTimeContext value={contextValue}>
         <InvoiceTimeTable
+          shadow={false}
           loading={loading}
           data={visibleEntries}
           config={tableConfig}

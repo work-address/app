@@ -1,5 +1,6 @@
 import { ArrowDownIcon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
+import styled from 'styled-components'
 
 import { Button } from '../button'
 import { Hint } from '../hint'
@@ -43,12 +44,12 @@ export const DesktopHeaderCellComponent = <T extends AnyRecord>(
         : {})}
     >
       <Flex align={'center'} gap={'2'}>
-        <Text color={'gray'}>
+        <Title>
           {props.columnConfig.headerText ??
             normalizeDataKeyToReadableString(
               String(props.dataKey ?? '') || props.customKey,
             )}
-        </Text>
+        </Title>
         {props.columnConfig.sortable && (
           <>
             {(sortKey === 'ASC' || sortKey === 'DESC') && (
@@ -80,3 +81,13 @@ export const DesktopHeaderCellComponent = <T extends AnyRecord>(
     </Flex>
   )
 }
+
+/**
+ * Stated on the title itself: a sortable header wraps it in a ghost Button,
+ * which would otherwise hand down its own lighter weight and colour, so
+ * sortable and plain titles came out differently.
+ */
+const Title = styled(Text)`
+  font-weight: 600;
+  color: var(--ds-neutral-12);
+`

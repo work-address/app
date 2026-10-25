@@ -117,9 +117,19 @@ export const ProjectsDesktopCell = React.memo(
 
 const TitleCell = styled(Flex)`
   min-width: 0;
+  position: relative;
 `
 
+/* Laid over the cell's end rather than beside the name: hidden, it would
+   still hold its width, and the column could never get narrower than name
+   plus link - too wide for the half-page tile the table lives in. */
 const InvoiceLink = styled(OpenInvoiceLink)`
+  position: absolute;
+  top: 50%;
+  right: 0;
+  transform: translateY(-50%);
+  padding-left: var(--space-2);
+  background: var(--white);
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
