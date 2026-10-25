@@ -1,10 +1,12 @@
 {
   "scripts": {
     "dev": "vite",
-    "build": "tsc -b && vite build",
+    "dev:live": "VITE_DEMO=false vite",
+    "build": "tsc -b && vite build && node scripts/check-demo-free-build.mjs",
+    "build:demo": "tsc -b && VITE_DEMO=true vite build",
     "test": "vitest run --project unit",
     "lint": "eslint .",
-    "preview": "vite preview",
+    "preview": "pnpm build:demo && vite preview",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "codegen": "node --env-file=.env src/scripts/generate-client.ts"
@@ -68,6 +70,7 @@
     "@app/eslint-config": "workspace:*",
     "@chromatic-com/storybook": "^5.3.0",
     "@eslint/js": "9.22.0",
+    "@faker-js/faker": "10.6.0",
     "@hey-api/client-axios": "^0.9.1",
     "@hey-api/openapi-ts": "0.99.0",
     "@storybook/addon-a11y": "^10.5.10",
@@ -88,6 +91,7 @@
     "eslint-plugin-react-refresh": "^0.5.2",
     "eslint-plugin-storybook": "^10.5.10",
     "globals": "^16.5.0",
+    "msw": "3.0.3",
     "playwright": "^1.62.1",
     "storybook": "^10.5.10",
     "typescript": "~5.9.3",
@@ -95,5 +99,10 @@
     "vite": "^7.3.1",
     "vitest": "^4.1.11"
   },
-  "sideEffects": true
+  "sideEffects": true,
+  "msw": {
+    "workerDirectory": [
+      "public"
+    ]
+  }
 }

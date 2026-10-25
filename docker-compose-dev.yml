@@ -18,6 +18,8 @@ services:
       - "8000:8000"
     environment:
       VITE_API_URL: "http://0.0.0.0:4000"
+      # Talk to the api container, not the in-browser demo (docs/demo-mode.md).
+      VITE_DEMO: "false"
       # Inside the container localhost is web itself; reach the api by its compose service name.
       VITE_API_PROXY_TARGET: "http://api:4000"
     develop:

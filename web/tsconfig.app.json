@@ -22,10 +22,18 @@
     "erasableSyntaxOnly": true,
     "noUncheckedSideEffectImports": true,
     "paths": {
-      "@/*": ["./src/*"]
+      "@/*": ["./src/*"],
+      "@work-address/statistics-core": [
+        "../packages/statistics-core/src/index.ts"
+      ]
     }
   },
-  "include": ["src/**/*.ts", "src/**/*.tsx", ".storybook/preview.tsx"],
+  "include": [
+    "src/**/*.ts",
+    "src/**/*.tsx",
+    ".storybook/preview.tsx",
+    "../packages/statistics-core/src/**/*.ts"
+  ],
   "exclude": ["node_modules"]
 }
 

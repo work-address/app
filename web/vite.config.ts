@@ -76,6 +76,12 @@ export default defineConfig(({ command, mode }) => {
     resolve: {
       alias: {
         '@': path.resolve(__dirname, './src'),
+        // Source, not the package's build: the demo shares the API's rules
+        // without a build step in front of `pnpm dev`.
+        '@work-address/statistics-core': path.resolve(
+          __dirname,
+          '../packages/statistics-core/src/index.ts',
+        ),
       },
     },
     optimizeDeps: {

@@ -25,7 +25,7 @@ Related documents: [dashboard-rework.md](dashboard-rework.md) defines the statis
 | Roles | Owner, Worker, Viewer, Mixed (owns some projects, works on others) | Pure roles only |
 | Session | Starts signed in as the chosen role; sign-out works; a wallet sign-in signs in as the role; `/connect` succeeds at once | Starting signed out |
 | Edits | Persist in localStorage per role and world until Reset | Lost on reload |
-| Timeline | Relative to today, stable within the day, in the browser's timezone | Fixed dates |
+| Timeline | Relative to today, stable within the day, in the browser's timezone; weekends get a quarter of a weekday's work, so a week starting on Sunday is never empty on its first day | Fixed dates; weekdays only |
 | Images | Generated in the browser: screenshot-like canvases, initial avatars | Remote image hosts |
 | Panel language | English only | Translated |
 
