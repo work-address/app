@@ -8,12 +8,14 @@ Related documents: [dashboard-rework.md](dashboard-rework.md) defines the statis
 
 ## Flag
 
-| | `pnpm dev` | `pnpm build` |
+| Script | Demo | API |
 | --- | --- | --- |
-| Default | Demo on | Demo off; the mock layer is not in the bundle |
-| Opt out / in | `VITE_DEMO=false`, or `pnpm dev:live` | `VITE_DEMO=true`, or `pnpm build:demo` |
+| `pnpm dev` | Off (`VITE_DEMO=false`) | The one at `VITE_API_URL` |
+| `pnpm dev:demo` | On | None: the mock answers |
+| `pnpm build`, `pnpm preview` | Off; the mock layer is not in the bundle | The one at `VITE_API_URL` |
+| `pnpm build:demo` | On (`VITE_DEMO=true`) | None |
 
-`DEMO_MODE` in `web/src/shared/config/demo.ts` reads it. `main.tsx` guards the mock layer with literals Vite inlines (`import.meta.env.DEV || import.meta.env.VITE_DEMO === 'true'`), so a plain build drops `msw` and the fixtures entirely. The live launch configs set `VITE_DEMO=false`. Local use only; no hosted demo for now.
+`DEMO_MODE` in `web/src/shared/config/demo.ts` reads `VITE_DEMO`: in development demo mode is on unless it is `false`, in a build off unless it is `true`. `main.tsx` guards the mock layer with literals Vite inlines (`import.meta.env.DEV || import.meta.env.VITE_DEMO === 'true'`), so a plain build drops `msw` and the fixtures entirely. The live launch configs set `VITE_DEMO=false`. Local use only; no hosted demo for now.
 
 ## Decisions
 

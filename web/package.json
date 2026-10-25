@@ -1,12 +1,12 @@
 {
   "scripts": {
-    "dev": "vite",
-    "dev:live": "VITE_DEMO=false vite",
+    "dev": "VITE_DEMO=false vite",
+    "dev:demo": "vite",
     "build": "tsc -b && vite build && node scripts/check-demo-free-build.mjs",
     "build:demo": "tsc -b && VITE_DEMO=true vite build",
     "test": "vitest run --project unit",
     "lint": "eslint .",
-    "preview": "pnpm build:demo && vite preview",
+    "preview": "pnpm build && vite preview",
     "storybook": "storybook dev -p 6006",
     "build-storybook": "storybook build",
     "codegen": "node --env-file=.env src/scripts/generate-client.ts"
