@@ -65,7 +65,7 @@ Top to bottom. Each loads, fails and retries on its own, with a skeleton while l
    - Agent time: assisted and autonomous as two figures in one tile
 
    Each tile shows the change against the previous period of the same elapsed length.
-2. **Time per day:** bars stacked by project.
+2. **Time per day:** bars stacked by project. The period's seven busiest projects get a colour each, in creation order, and the rest share "Other"; a project keeps its colour within a view, though not necessarily across periods.
 3. **Projects table:** the existing table, totals for the period.
 4. **App usage:** the existing card, moved onto the shared charts.
 5. **Your insights** (signed-in user only):

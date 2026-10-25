@@ -3,7 +3,6 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 
 import {
-  $dashboardProjects,
   $dashboardRange,
   dashboardStatisticsRequested,
 } from '../../model/dashboard-filters'
@@ -12,11 +11,7 @@ import {
   bucketLabels,
   periodBuckets,
 } from '../../model/period-buckets'
-import {
-  projectSeries,
-  projectSeriesKey,
-  projectSlots,
-} from '../../model/project-series'
+import { projectSeries } from '../../model/project-series'
 import { DashboardWidget } from '../dashboard-widget'
 
 import { $projects } from '@/entities/projects'
@@ -32,33 +27,42 @@ import {
 export const DashboardTimeDaily = () => {
   const { t, i18n } = useTranslation()
 
-  const { range, allProjects, projects, rows, pending, failed, retry } =
-    useUnit({
-      range: $dashboardRange,
-      allProjects: $projects,
-      projects: $dashboardProjects,
-      rows: statisticsDailyQuery.$data,
-      pending: statisticsDailyQuery.$pending,
-      failed: statisticsDailyQuery.$failed,
-      retry: dashboardStatisticsRequested,
-    })
+  const { range, allProjects, rows, pending, failed, retry } = useUnit({
+    range: $dashboardRange,
+    allProjects: $projects,
+    rows: statisticsDailyQuery.$data,
+    pending: statisticsDailyQuery.$pending,
+    failed: statisticsDailyQuery.$failed,
+    retry: dashboardStatisticsRequested,
+  })
 
   const chart = useMemo(() => {
     const weekStartsOn = weekStartsOnFor(i18n.language)
-    const slots = projectSlots(allProjects)
     const periods = periodBuckets(range, weekStartsOn)
     const size = periods[0]?.size ?? 'day'
+    const totals = new Map<string, number>()
+
+    for (const row of rows ?? []) {
+      totals.set(
+        row.projectId,
+        (totals.get(row.projectId) ?? 0) + row.trackedSeconds,
+      )
+    }
+
+    const { keyOf, series } = projectSeries(
+      allProjects,
+      totals,
+      t('dashboard.charts.other'),
+    )
     const values = new Map<string, Record<string, number>>()
-    const withTime = new Set<string>()
 
     for (const row of rows ?? []) {
       const key = bucketKeyOf(row.day, size, weekStartsOn)
-      const series = projectSeriesKey(slots, row.projectId)
+      const seriesKey = keyOf(row.projectId)
       const bucket = values.get(key) ?? {}
 
-      bucket[series] = (bucket[series] ?? 0) + row.trackedSeconds / 3600
+      bucket[seriesKey] = (bucket[seriesKey] ?? 0) + row.trackedSeconds / 3600
       values.set(key, bucket)
-      withTime.add(row.projectId)
     }
 
     const buckets: Bucket[] = periods.map((period) => ({
@@ -67,16 +71,8 @@ export const DashboardTimeDaily = () => {
       values: values.get(period.key) ?? {},
     }))
 
-    return {
-      buckets,
-      series: projectSeries(
-        projects,
-        slots,
-        withTime,
-        t('dashboard.charts.other'),
-      ),
-    }
-  }, [allProjects, projects, range, rows, i18n.language, t])
+    return { buckets, series }
+  }, [allProjects, range, rows, i18n.language, t])
 
   const formatHours = (hours: number) =>
     formatDurationFromMinutes(Math.round(hours * 60), t)
