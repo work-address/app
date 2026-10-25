@@ -1,3 +1,4 @@
+import { useLayoutEffect, useRef, useState } from 'react'
 import {
   Bar,
   BarChart,
@@ -10,7 +11,7 @@ import {
 import styled from 'styled-components'
 
 import { ChartLegend } from './chart-legend'
-import { ChartTooltip } from './chart-tooltip'
+import { ChartTooltip, type ChartTooltipContent } from './chart-tooltip'
 
 export type BucketSeries = { key: string; label: string; color: string }
 
@@ -33,9 +34,17 @@ type Props = {
   totalLabel?: string
   emptyLabel: string
   height?: number
+  /**
+   * Everything to say about a bar, laid out in columns. Without it the popup
+   * lists the bar's series.
+   */
+  describe?: (bucketKey: string) => ChartTooltipContent | null
 }
 
 const SURFACE = 'var(--white)'
+
+/** A breakdown popup's width where the plot has room for it. */
+const POPUP_WIDTH = 600
 
 /**
  * Bars per day, week or month - one value per series in each. One axis, thin
@@ -51,8 +60,31 @@ export const BucketBarChart = ({
   totalLabel,
   emptyLabel,
   height = 240,
+  describe,
 }: Props) => {
+  const plotRef = useRef<HTMLDivElement>(null)
+  const [plotWidth, setPlotWidth] = useState(0)
+
+  // The popup's width follows the plot's, which only the DOM knows.
+  useLayoutEffect(() => {
+    const plot = plotRef.current
+    if (!plot) {
+      return
+    }
+    const observer = new ResizeObserver(([entry]) =>
+      setPlotWidth(entry.contentRect.width),
+    )
+    observer.observe(plot)
+    return () => observer.disconnect()
+  }, [])
+
+  // Too narrow for a breakdown beside the pointer: pin it to the plot's
+  // left edge at the plot's width, and let its columns wrap.
+  const narrow =
+    Boolean(describe) && plotWidth > 0 && plotWidth < POPUP_WIDTH * 1.4
+  const popupWidth = narrow ? plotWidth : POPUP_WIDTH
   const data = buckets.map((bucket) => ({
+    key: bucket.key,
     label: bucket.label,
     title: bucket.title,
     ...Object.fromEntries(
@@ -62,7 +94,7 @@ export const BucketBarChart = ({
 
   return (
     <Root>
-      <Plot style={{ height }}>
+      <Plot ref={plotRef} style={{ height }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}
@@ -95,14 +127,32 @@ export const BucketBarChart = ({
             />
             <Tooltip
               cursor={{ fill: 'var(--ds-neutral-alpha-3)' }}
+              position={narrow ? { x: 0 } : undefined}
               content={({ active, payload }) => {
                 if (!active || !payload?.length) {
                   return null
                 }
 
                 const row = payload[0].payload as Record<string, number> & {
+                  key: string
                   title: string
                 }
+                const detail = describe?.(row.key)
+
+                if (detail) {
+                  return (
+                    <Wide data-wide style={{ width: popupWidth }}>
+                      <ChartTooltip
+                        title={detail.title ?? row.title}
+                        rows={detail.rows}
+                        sections={detail.sections}
+                        note={detail.note}
+                        layout="horizontal"
+                      />
+                    </Wide>
+                  )
+                }
+
                 const rows = series
                   .filter((s) => (row[s.key] ?? 0) > 0)
                   .map((s) => ({
@@ -169,3 +219,8 @@ const Plot = styled.div`
     outline: none;
   }
 `
+
+/* A breakdown needs a width for its columns to sit side by side; recharts
+   keeps the popup inside the chart, and the columns wrap on a narrow one. */
+/* Its width is set from the plot, so it never floats out of the card. */
+const Wide = styled.div``

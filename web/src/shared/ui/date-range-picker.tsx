@@ -124,10 +124,14 @@ export const DateRangePicker = ({ value, onChange, className }: Props) => {
 }
 
 const Root = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
+  display: grid;
+  grid-auto-flow: column;
+  align-items: end;
   gap: var(--space-2);
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    grid-auto-flow: row;
+  }
 `
 
 const PresetSelect = styled(Select)`

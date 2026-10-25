@@ -1,6 +1,7 @@
-import { PlusIcon } from '@radix-ui/react-icons'
+import { FileTextIcon, PlusIcon } from '@radix-ui/react-icons'
 import { Badge, Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
+import { motion, useReducedMotion } from 'motion/react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
@@ -19,6 +20,7 @@ import {
   DashboardApplicationsUsage,
   DashboardFilterBar,
   DashboardInsights,
+  DashboardProjectPopup,
   DashboardRecentPrompts,
   DashboardTeam,
   DashboardTimeDaily,
@@ -26,12 +28,14 @@ import {
   DashboardPremiumBanner,
   DashboardProjectsSearchInput,
   DashboardSummary,
+  $dashboardCanTrack,
   $dashboardProjectIds,
   $dashboardScreenshots,
   $isDashboardOwner,
   dashboardStatisticsRequested,
   useDashboardSearchSync,
 } from '@/features/dashboard'
+import { OpenInvoiceLink } from '@/features/invoice'
 import {
   ProjectsCreateModal,
   ProjectsTable,
@@ -66,6 +70,7 @@ export default function DashboardPage() {
     screenshots,
     screenshotsLoaded,
     isOwner,
+    canTrack,
   } = useUnit({
     fetchProjects,
     projectsLoading: $projectsLoading,
@@ -79,9 +84,37 @@ export default function DashboardPage() {
     screenshots: $dashboardScreenshots,
     screenshotsLoaded: recentScreenshotsQuery.$succeeded,
     isOwner: $isDashboardOwner,
+    canTrack: $dashboardCanTrack,
   })
 
   useDashboardSearchSync()
+
+  // Sections arrive one after another rather than all at once; with reduced
+  // motion they simply appear.
+  const reducedMotion = useReducedMotion()
+  const reveal = reducedMotion ? REVEAL_STILL : REVEAL
+  // The table's hover card: the project's details, and invoicing it, the
+  // same action its row offers.
+  const projectPopup = useCallback(
+    (row: { id?: string }) => (
+      <DashboardProjectPopup
+        projectId={row.id ?? ''}
+        variant="plain"
+        actions={
+          row.id ? (
+            <OpenInvoiceLink
+              projectId={row.id}
+              variant={'button'}
+              iconLeft={<FileTextIcon />}
+            >
+              {t('dashboard.projectsTable.drawer.invoice')}
+            </OpenInvoiceLink>
+          ) : null
+        }
+      />
+    ),
+    [t],
+  )
 
   // The table's time and money follow the period, like the figures above it.
   const periodTotals = useMemo(() => {
@@ -153,9 +186,11 @@ export default function DashboardPage() {
             onRetry={load}
           />
         ) : showContent ? (
-          <Sections>
-            <DashboardTimeDaily />
-            <S.Content>
+          <Sections initial="hidden" animate="shown" variants={reveal.list}>
+            <motion.div variants={reveal.item}>
+              <DashboardTimeDaily />
+            </motion.div>
+            <S.Content as={motion.div} variants={reveal.item}>
               <S.Main>
                 <ProjectsHead>
                   <Flex align={'center'} gap={'2'} style={{ minWidth: 0 }}>
@@ -191,6 +226,7 @@ export default function DashboardPage() {
                     <ProjectsTable
                       projectIds={selectedProjectIds}
                       periodTotals={periodTotals}
+                      projectPopup={projectPopup}
                     />
                   )}
                 </S.TableArea>
@@ -201,21 +237,31 @@ export default function DashboardPage() {
                 </S.Aside>
               )}
             </S.Content>
-            <Pair>
-              <DashboardInsights />
-              <DashboardAgents />
-            </Pair>
-            <Pair>
-              <DashboardRecentPrompts />
-              {/* Hidden rather than empty: a period without screenshots is
-                ordinary, and most projects do not take them. */}
-              {screenshotsLoaded && screenshots.length > 0 && (
-                <DashboardWidget title={t('dashboard.screenshots.title')}>
-                  <TimeScreenshotStrip entries={screenshots} />
-                </DashboardWidget>
-              )}
-            </Pair>
-            {isOwner && <DashboardTeam />}
+            {/* About tracking, agents and screenshots: nothing a viewer can
+                ever have, so they are left out instead of empty. */}
+            {canTrack && (
+              <>
+                <Pair variants={reveal.item}>
+                  <DashboardInsights />
+                  <DashboardAgents />
+                </Pair>
+                <Pair variants={reveal.item}>
+                  <DashboardRecentPrompts />
+                  {/* Hidden rather than empty: a period without screenshots
+                      is ordinary, and most projects do not take them. */}
+                  {screenshotsLoaded && screenshots.length > 0 && (
+                    <DashboardWidget title={t('dashboard.screenshots.title')}>
+                      <TimeScreenshotStrip entries={screenshots} />
+                    </DashboardWidget>
+                  )}
+                </Pair>
+              </>
+            )}
+            {isOwner && (
+              <motion.div variants={reveal.item}>
+                <DashboardTeam />
+              </motion.div>
+            )}
           </Sections>
         ) : (
           <Intro
@@ -237,7 +283,20 @@ export default function DashboardPage() {
   )
 }
 
-const Sections = styled.div`
+const REVEAL = {
+  list: { shown: { transition: { staggerChildren: 0.06 } } },
+  item: {
+    hidden: { opacity: 0, y: 8 },
+    shown: { opacity: 1, y: 0, transition: { duration: 0.24 } },
+  },
+}
+
+const REVEAL_STILL = {
+  list: {},
+  item: { hidden: { opacity: 1 }, shown: { opacity: 1 } },
+}
+
+const Sections = styled(motion.div)`
   display: grid;
   gap: var(--space-7);
 
@@ -247,11 +306,10 @@ const Sections = styled.div`
 `
 
 /* Two widgets side by side on a desktop; a lone one takes the row. */
-const Pair = styled.div`
+const Pair = styled(motion.div)`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(min(100%, 420px), 1fr));
   gap: var(--space-6);
-  align-items: start;
 `
 
 const Overview = styled.div`

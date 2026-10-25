@@ -149,6 +149,11 @@ export const $dashboardInsightsWidened = $dashboardRange.map(
   (range) => rangeLengthDays(range) < INSIGHTS_MIN_DAYS,
 )
 
+/** How many days the insights are drawn from: the period, or four weeks. */
+export const $dashboardInsightsDays = $dashboardRange.map((range) =>
+  Math.max(INSIGHTS_MIN_DAYS, rangeLengthDays(range)),
+)
+
 export const $dashboardInsightsQuery = $dashboardFilters.map((filters) => {
   const { range } = filters
   const widened = rangeLengthDays(range) < INSIGHTS_MIN_DAYS
@@ -228,6 +233,24 @@ export const $dashboardPeople = combine(
       .map(([id, name]) => ({ id, name }))
       .sort((a, b) => a.name.localeCompare(b.name))
   },
+)
+
+/**
+ * Whether the reader owns or works on any project. Someone who only views
+ * never tracks, runs agents or takes screenshots, so the widgets about those
+ * are left out rather than shown empty for good.
+ */
+export const $dashboardCanTrack = combine($projects, $user, (projects, user) =>
+  Boolean(
+    user?.id &&
+      (projects as (ProjectWithStats & ProjectAccess)[]).some(
+        (project) =>
+          project.user?.id === user.id ||
+          (project.workers as { id?: string }[] | undefined)?.some(
+            (worker) => worker.id === user.id,
+          ),
+      ),
+  ),
 )
 
 /** Whether the reader owns a project: the team list is theirs alone. */

@@ -26,10 +26,28 @@ export const DashboardApplicationsUsage = () => {
     failed: statisticsProjectAppsQuery.$failed,
   })
 
-  const projects = useMemo(
-    () => selectedProjects.filter((project) => project.trackProcesses),
-    [selectedProjects],
-  )
+  // Projects with the most app time first, so a long list never opens on
+  // empty bars; the rest keep their order after them.
+  const projects = useMemo(() => {
+    const seconds = new Map<string, number>()
+
+    for (const row of rows ?? []) {
+      seconds.set(
+        row.projectId,
+        (seconds.get(row.projectId) ?? 0) + row.seconds,
+      )
+    }
+
+    return selectedProjects
+      .filter((project) => project.trackProcesses)
+      .map((project, index) => ({ project, index }))
+      .sort(
+        (a, b) =>
+          (seconds.get(b.project.id ?? '') ?? 0) -
+            (seconds.get(a.project.id ?? '') ?? 0) || a.index - b.index,
+      )
+      .map(({ project }) => project)
+  }, [selectedProjects, rows])
 
   const chart = useMemo(
     () =>

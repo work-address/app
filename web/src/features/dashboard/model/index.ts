@@ -14,6 +14,7 @@ export type {
 } from './applications-usage-chart'
 export {
   $dashboardFilters,
+  $dashboardInsightsDays,
   $dashboardInsightsWidened,
   $dashboardInstants,
   $dashboardPeople,
@@ -33,3 +34,14 @@ export {
   toDashboardSearch,
 } from './dashboard-filters'
 export type { DashboardFilters, DashboardPerson } from './dashboard-filters'
+export { weekHourDetail, type WeekHourDetail } from './week-hour-detail'
+export {
+  bucketBreakdowns,
+  emptyBreakdown,
+  type BucketBreakdown,
+} from './bucket-breakdown'
+export {
+  projectSummary,
+  type ProjectSummary,
+  type ProjectWithAccess,
+} from './project-summary'

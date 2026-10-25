@@ -91,15 +91,24 @@ export const DashboardFilterBar = () => {
   )
 }
 
+/* One row beside the title on a desktop. On a phone the period takes a line
+   and projects and people share the next, so the filters cost two rows of the
+   screen rather than three. */
 const Root = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  align-items: flex-end;
+  display: grid;
+  grid-auto-flow: column;
+  align-items: end;
   gap: var(--space-3);
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    flex-direction: column;
-    align-items: stretch;
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+
+    & > :first-child,
+    & > :last-child:nth-child(2) {
+      grid-column: 1 / -1;
+    }
   }
 `
 
@@ -107,6 +116,7 @@ const Field = styled.div`
   width: 200px;
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    width: 100%;
+    width: auto;
+    min-width: 0;
   }
 `

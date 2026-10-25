@@ -44,6 +44,7 @@ const PROCESS_KEY_PREFIX = 'process:'
 export type ProcessKey = `${typeof PROCESS_KEY_PREFIX}${string}`
 
 export type ChartDatum = {
+  projectId: string
   label: string
   hasData: boolean
   failed: boolean
@@ -124,6 +125,7 @@ export const buildApplicationsUsageChart = (
   const data = projects.map((project) => {
     const stats = statsByProject.get(project.id ?? '')
     const row: ChartDatum = {
+      projectId: project.id ?? '',
       label: project.title,
       hasData: false,
       failed: Boolean(stats?.failed),

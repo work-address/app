@@ -54,9 +54,11 @@ export const DashboardWidget = ({
   </Root>
 )
 
+/* The body takes whatever height the row gives it, so two widgets side by
+   side end on the same line whatever each holds. */
 const Root = styled.section`
   display: grid;
-  align-content: start;
+  grid-template-rows: auto 1fr;
   gap: var(--space-3);
   min-width: 0;
 `

@@ -171,7 +171,10 @@ export const DashboardSummary = () => {
     })
   }
 
-  /** Percentage points, for a share that is already a percentage. */
+  /**
+   * Percentage points, for a share that is already a percentage. Short, since
+   * it shares its line with the active time.
+   */
   const pointsChange = (current: number, before: number | undefined) => {
     if (before === undefined) {
       return
@@ -180,8 +183,8 @@ export const DashboardSummary = () => {
     const points = Math.round((current - before) * 100)
 
     return points === 0
-      ? t('dashboard.summary.delta.same')
-      : t('dashboard.summary.delta.points', {
+      ? undefined
+      : t('dashboard.summary.delta.pointsShort', {
           arrow: points > 0 ? '↑' : '↓',
           points: Math.abs(points),
         })
@@ -248,17 +251,14 @@ export const DashboardSummary = () => {
           />
           <StatTile
             label={t('dashboard.summary.agents.label')}
+            // Assisted and autonomous are two figures, never one sum: the
+            // first is the value, the second its line, so the tile is as
+            // tall as its neighbours.
             value={
               hasAgents ? (
                 <AgentValue>
-                  <span>
-                    {duration(agentTotals.assisted)}
-                    <small>{t('dashboard.summary.agents.assisted')}</small>
-                  </span>
-                  <span>
-                    {duration(agentTotals.autonomous)}
-                    <small>{t('dashboard.summary.agents.autonomous')}</small>
-                  </span>
+                  {duration(agentTotals.assisted)}
+                  <small>{t('dashboard.summary.agents.assisted')}</small>
                 </AgentValue>
               ) : (
                 '—'
@@ -266,7 +266,9 @@ export const DashboardSummary = () => {
             }
             hint={
               hasAgents
-                ? t('dashboard.summary.agents.hint')
+                ? t('dashboard.summary.agents.autonomousHint', {
+                    time: duration(agentTotals.autonomous),
+                  })
                 : t('dashboard.summary.agents.none')
             }
             loading={loading}
@@ -277,18 +279,12 @@ export const DashboardSummary = () => {
   )
 }
 
-/* Two figures side by side - assisted and autonomous are never added up. */
 const AgentValue = styled.span`
-  display: inline-flex;
-  flex-wrap: wrap;
-  gap: 2px 12px;
-
-  span {
-    display: inline-flex;
-    align-items: baseline;
-    gap: 4px;
-    white-space: nowrap;
-  }
+  display: inline-grid;
+  grid-auto-flow: column;
+  align-items: baseline;
+  gap: 4px;
+  white-space: nowrap;
 
   small {
     color: var(--ds-neutral-11);

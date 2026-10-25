@@ -1,3 +1,4 @@
+import { useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Bar,
@@ -16,8 +17,7 @@ import {
   toProcessKey,
   type ApplicationsUsageChart,
 } from '../../model'
-
-import { DashboardApplicationsUsageTooltip } from './dashboard-applications-usage-tooltip'
+import { DashboardProjectPopup } from '../dashboard-project-popup'
 
 // Projects visible in the chart area before horizontal scroll kicks in.
 const VISIBLE_PROJECTS_COUNT = 4
@@ -51,6 +51,9 @@ export const DashboardApplicationsUsageChart = ({
   yAxis,
 }: ApplicationsUsageChart) => {
   const { t } = useTranslation()
+  // The hovered project, drawn outside the scroller so it is never clipped.
+  const [active, setActive] = useState<number | null>(null)
+  const hovered = active === null ? undefined : data[active]
   const isScrollable = data.length > VISIBLE_PROJECTS_COUNT
 
   return (
@@ -88,6 +91,11 @@ export const DashboardApplicationsUsageChart = ({
             <BarChart
               data={data}
               margin={{ top: PLOT_TOP, right: 8, left: 0, bottom: 0 }}
+              onMouseMove={(state) => {
+                const index = Number(state?.activeTooltipIndex)
+                setActive(Number.isInteger(index) ? index : null)
+              }}
+              onMouseLeave={() => setActive(null)}
             >
               <CartesianGrid vertical={false} strokeDasharray="3 6" />
               <XAxis
@@ -100,10 +108,11 @@ export const DashboardApplicationsUsageChart = ({
                 tickFormatter={truncateLabel}
               />
               <YAxis domain={[0, yAxis.max]} ticks={yAxis.ticks} hide />
+              {/* Only the bar highlight: the project's popup is drawn
+                  beside the card, below. */}
               <Tooltip
-                content={<DashboardApplicationsUsageTooltip />}
+                content={() => null}
                 cursor={{ fill: 'var(--c-rgba-0-52-130-0_06)' }}
-                wrapperStyle={{ pointerEvents: 'auto' }}
               />
               {processNames.length > 0 ? (
                 processNames.map((processName, index) => (
@@ -135,13 +144,37 @@ export const DashboardApplicationsUsageChart = ({
           </ResponsiveContainer>
         </ChartWrap>
       </Scroller>
+      {hovered?.projectId ? (
+        <Popup>
+          <DashboardProjectPopup projectId={hovered.projectId} />
+        </Popup>
+      ) : null}
     </Root>
   )
 }
 
 const Root = styled.div`
+  position: relative;
   display: flex;
   height: ${CHART_HEIGHT}px;
+`
+
+/* Beside the card on a desktop, over the projects table, since the card is
+   too narrow for the details; under the chart on a phone. */
+const Popup = styled.div`
+  position: absolute;
+  top: 0;
+  right: calc(100% + var(--space-5));
+  z-index: 2;
+  width: min(640px, calc(100vw - 48px));
+  pointer-events: none;
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    top: calc(100% + var(--space-2));
+    right: auto;
+    left: 0;
+    width: 100%;
+  }
 `
 
 const YAxisGutter = styled.div`

@@ -2,7 +2,7 @@ import { TrashIcon, PlusIcon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { AnimatePresence, motion } from 'motion/react'
-import { useCallback, useMemo } from 'react'
+import { useCallback, useMemo, type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -77,11 +77,14 @@ type ProjectsTableProps = {
    * nothing in the period.
    */
   periodTotals?: ProjectsTablePeriodTotals
+  /** Details shown when the pointer rests on a project's name. */
+  projectPopup?: (row: ProjectWithStats) => ReactNode
 }
 
 export const ProjectsTable = ({
   projectIds,
   periodTotals,
+  projectPopup,
 }: ProjectsTableProps = {}) => {
   const isMobile = useBreakpoint('isMobile')
 
@@ -269,8 +272,9 @@ export const ProjectsTable = ({
     (): ProjectsTableContextValues => ({
       handleActionClick,
       t,
+      projectPopup,
     }),
-    [handleActionClick, t],
+    [handleActionClick, t, projectPopup],
   )
 
   return (

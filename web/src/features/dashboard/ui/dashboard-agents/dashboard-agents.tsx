@@ -3,6 +3,7 @@ import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
+import { bucketBreakdowns } from '../../model/bucket-breakdown'
 import {
   $dashboardRange,
   dashboardStatisticsRequested,
@@ -15,6 +16,7 @@ import {
 } from '../../model/period-buckets'
 import { DashboardWidget } from '../dashboard-widget'
 
+import { $projects } from '@/entities/projects'
 import {
   statisticsAgentsQuery,
   statisticsDailyQuery,
@@ -25,7 +27,11 @@ import {
   SERIES_COLORS,
   weekStartsOnFor,
   type Bucket,
+  type ChartTooltipContent,
 } from '@/shared'
+
+/** How many agents or projects a popup column names. */
+const POPUP_ROWS = 6
 
 const HUMAN = 'human'
 const AGENT = 'agent'
@@ -47,10 +53,11 @@ type ProductRow = {
 export const DashboardAgents = () => {
   const { t, i18n } = useTranslation()
 
-  const { range, agents, daily, pending, failed, retry } = useUnit({
+  const { range, agents, daily, projects, pending, failed, retry } = useUnit({
     range: $dashboardRange,
     agents: statisticsAgentsQuery.$data,
     daily: statisticsDailyQuery.$data,
+    projects: $projects,
     pending: statisticsAgentsQuery.$pending,
     failed: statisticsAgentsQuery.$failed,
     retry: dashboardStatisticsRequested,
@@ -126,6 +133,12 @@ export const DashboardAgents = () => {
 
     return {
       buckets,
+      breakdowns: bucketBreakdowns(
+        daily ?? [],
+        agents?.daily ?? [],
+        size,
+        weekStartsOn,
+      ),
       runs,
       totals,
       products: [...products.values()].sort(
@@ -139,6 +152,62 @@ export const DashboardAgents = () => {
 
   const duration = (minutes: number) =>
     formatDurationFromMinutes(Math.round(minutes), t)
+
+  const titles = useMemo(
+    () => new Map(projects.map((project) => [project.id, project.title])),
+    [projects],
+  )
+
+  /** Everything about a bar: people beside agents, and who did what. */
+  const describe = (key: string): ChartTooltipContent => {
+    const bar = view.breakdowns.get(key)
+    const agentMinutes = bar ? bar.agents.assisted + bar.agents.autonomous : 0
+
+    if (!bar || (bar.peopleMinutes === 0 && agentMinutes === 0)) {
+      return { rows: [], note: t('dashboard.agents.tooltipEmpty') }
+    }
+
+    return {
+      rows: [
+        {
+          label: t('dashboard.agents.humanHours'),
+          value: duration(bar.peopleMinutes),
+        },
+        {
+          label: t('dashboard.agents.assisted'),
+          value: duration(bar.agents.assisted),
+        },
+        {
+          label: t('dashboard.agents.autonomous'),
+          value: duration(bar.agents.autonomous),
+        },
+        {
+          label: t('dashboard.agents.waiting'),
+          value: duration(bar.agents.waiting),
+        },
+        {
+          label: t('dashboard.charts.popup.agentsRan'),
+          value: String(bar.products.length),
+        },
+      ],
+      sections: [
+        {
+          title: t('dashboard.charts.popup.byAgent'),
+          rows: bar.products.slice(0, POPUP_ROWS).map((product) => ({
+            label: product.product,
+            value: duration(product.assisted + product.autonomous),
+          })),
+        },
+        {
+          title: t('dashboard.insights.cell.projects'),
+          rows: bar.projects.slice(0, POPUP_ROWS).map((project) => ({
+            label: titles.get(project.projectId) ?? t('dashboard.charts.other'),
+            value: duration(project.minutes),
+          })),
+        },
+      ],
+    }
+  }
 
   return (
     <DashboardWidget
@@ -195,6 +264,7 @@ export const DashboardAgents = () => {
             t('dashboard.charts.hoursTick', { value: hours })
           }
           emptyLabel={t('dashboard.agents.tooltipEmpty')}
+          describe={describe}
         />
         <Table>
           <thead>
