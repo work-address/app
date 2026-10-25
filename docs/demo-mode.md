@@ -1,6 +1,6 @@
 # Demo mode
 
-Status: confirmed specification from a design review on 25 October 2026. Baseline: `feat/0-dashboard-split`. Modelled on creds-app's demo mode (`apps/web/src/shared/mock`).
+Status: confirmed specification from a design review on 25 October 2026. Baseline: `dev` at `3108ea17`. Modelled on creds-app's demo mode (`apps/web/src/shared/mock`).
 
 Demo mode runs the web app with no backend: MSW answers every API request from a seeded in-memory database, and a panel in the bottom-left corner switches who you are and what data there is. It exists to show and test every screen in every state - empty, one project, dozens, a worker's view, an owner's view - without seeding a database or signing in with a wallet.
 
@@ -68,4 +68,4 @@ Every route the web calls: auth, profile, projects, time (search, totals, edit, 
 
 ## Delivery
 
-Branch `feat/0-demo-mode`, cut from `feat/0-dashboard-split`; a PR to `dev` once the dashboard PR has merged.
+Branch `feat/0-demo-mode`, on `dev` after the dashboard rework merged into it; a PR to `dev`.
