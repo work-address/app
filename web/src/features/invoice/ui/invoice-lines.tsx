@@ -15,7 +15,9 @@ import { $invoice } from '../model/stores'
 import {
   Button,
   formatDurationFromMinutes,
+  SectionTitle,
   Text,
+  TextArea,
   useDateFormatter,
 } from '@/shared'
 
@@ -81,7 +83,9 @@ export const InvoiceLines = () => {
       )}
       <TableWrap>
         <Table>
-          <caption>{t('invoice.lines.heading')}</caption>
+          {/* The table's own caption, set like the page's other section
+              titles, so "Billed time" and "Worklogs" match. */}
+          <Caption as="caption">{t('invoice.lines.heading')}</Caption>
           <thead>
             <tr>
               <th>{t('invoice.lines.work')}</th>
@@ -127,19 +131,24 @@ export const InvoiceLines = () => {
             reject(reason)
           }}
         >
-          <label>
-            {t('invoice.reject.reasonLabel')}
-            <Reason
-              value={reason}
-              maxLength={500}
-              onChange={(event) => setReason(event.target.value)}
-            />
-          </label>
-          <Text size="2">{t('invoice.reject.notice')}</Text>
+          <TextArea
+            label={t('invoice.reject.reasonLabel')}
+            value={reason}
+            maxLength={500}
+            rows={3}
+            onChange={(event) => setReason(event.target.value)}
+          />
+          <Text size="2" color="gray">
+            {t('invoice.reject.notice')}
+          </Text>
           <Button type="submit" variant="outline" loading={pending}>
             {t('invoice.reject.action')}
           </Button>
-          {failed && <Text role="alert">{t('invoice.reject.failed')}</Text>}
+          {failed && (
+            <Text size="2" color="red" role="alert">
+              {t('invoice.reject.failed')}
+            </Text>
+          )}
         </RejectForm>
       )}
     </Root>
@@ -147,48 +156,77 @@ export const InvoiceLines = () => {
 }
 const Root = styled.section`
   display: grid;
-  gap: var(--space-3);
+  gap: var(--space-4);
   min-width: 0;
 `
+
 const TableWrap = styled.div`
   overflow-x: auto;
 `
+
+const Caption = styled(SectionTitle)`
+  text-align: left;
+  padding-bottom: var(--space-4);
+`
+
+/* Set like DataTable: a bold, dark header over hairline rows. */
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
-  caption {
-    text-align: left;
-    font-weight: 600;
-    padding-bottom: var(--space-3);
-  }
+  font-size: var(--font-size-2);
+  line-height: var(--line-height-2);
+
   th,
   td {
     padding: var(--space-3);
     text-align: right;
-    border-bottom: 1px solid var(--gray-5);
+    border-bottom: 1px solid var(--ds-neutral-alpha-6);
   }
+
+  th {
+    font-weight: 600;
+    color: var(--ds-neutral-12);
+  }
+
   th:first-child,
   td:first-child {
     text-align: left;
   }
+
   td {
     vertical-align: top;
   }
+
+  /* Figures never break; the work column gives way instead. */
+  td:not(:first-child) {
+    white-space: nowrap;
+  }
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    th,
+    td {
+      padding: var(--space-2) var(--space-1);
+    }
+  }
 `
+
 const Detail = styled.div`
-  font-size: 12px;
-  color: var(--gray-11);
+  font-size: var(--font-size-1);
+  line-height: var(--line-height-1);
+  color: var(--ds-neutral-11);
 `
+
+/* The field fills the form; only the button keeps to its own width. */
 const RejectForm = styled.form`
   display: grid;
   gap: var(--space-2);
-  justify-items: start;
+  width: min(480px, 100%);
+
+  & > button {
+    justify-self: start;
+  }
+
   @media print {
     display: none;
   }
-`
-const Reason = styled.textarea`
-  display: block;
-  width: min(420px, 70vw);
-  min-height: 70px;
 `

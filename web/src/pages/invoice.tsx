@@ -1,6 +1,7 @@
 import { ArrowLeftIcon } from '@radix-ui/react-icons'
 import { Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
+import { motion, useReducedMotion } from 'motion/react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate, useParams } from 'react-router-dom'
@@ -54,6 +55,10 @@ export default function InvoicePage() {
   const location = useLocation()
 
   const isMobile = useBreakpoint('isMobile')
+  // The blocks arrive one after another, as the dashboard's do; with reduced
+  // motion they simply appear.
+  const reducedMotion = useReducedMotion()
+  const reveal = reducedMotion ? REVEAL_STILL : REVEAL
 
   useEffect(() => {
     if (validId) {
@@ -108,7 +113,7 @@ export default function InvoicePage() {
           onRetry={() => id && fetchInvoiceEvent({ id })}
         />
       ) : (
-        <Body>
+        <Body initial="hidden" animate="shown" variants={reveal.list}>
           {/* The back arrow shares a row with the title rather than sitting
               alone above it, and the title is set like the other pages'. */}
           {isMobile && (
@@ -138,19 +143,38 @@ export default function InvoicePage() {
               )}
             </MobileHead>
           )}
-          {isMobile ? (
-            <InvoiceCard shadow={false}>
-              <InvoiceTotalAmountMobile />
-            </InvoiceCard>
-          ) : (
-            <InvoiceTotalAmountDesktop />
-          )}
-          <InvoiceLines />
-          <InvoiceTime />
+          <motion.div variants={reveal.item}>
+            {isMobile ? (
+              <InvoiceCard shadow={false}>
+                <InvoiceTotalAmountMobile />
+              </InvoiceCard>
+            ) : (
+              <InvoiceTotalAmountDesktop />
+            )}
+          </motion.div>
+          <motion.div variants={reveal.item}>
+            <InvoiceLines />
+          </motion.div>
+          <Worklogs variants={reveal.item}>
+            <InvoiceTime />
+          </Worklogs>
         </Body>
       )}
     </Root>
   )
+}
+
+const REVEAL = {
+  list: { shown: { transition: { staggerChildren: 0.06 } } },
+  item: {
+    hidden: { opacity: 0, y: 8 },
+    shown: { opacity: 1, y: 0, transition: { duration: 0.24 } },
+  },
+}
+
+const REVEAL_STILL = {
+  list: {},
+  item: { hidden: { opacity: 1 }, shown: { opacity: 1 } },
 }
 
 const InvoicePrintGlobalStyle = createGlobalStyle`
@@ -184,9 +208,16 @@ const Root = styled(Wrapper)`
   }
 `
 
-const Body = styled.div`
+const Body = styled(motion.div)`
   display: grid;
-  gap: 20px;
+  gap: var(--space-5);
+  min-width: 0;
+`
+
+/* The heading and its table keep the gap they had inside the page's grid. */
+const Worklogs = styled(motion.div)`
+  display: grid;
+  gap: var(--space-5);
   min-width: 0;
 `
 
@@ -214,7 +245,7 @@ const BackButton = styled(IconButton)`
 
 const InvoiceCard = styled(Card)`
   ${(p) => p.theme.breakpoints.down('md')} {
-    padding: 12px;
+    padding: var(--space-3);
   }
 `
 

@@ -288,7 +288,6 @@
   "invoice.qrScan.mobile": "Scan to open invoice",
   "invoice.state.paid": "Paid",
   "invoice.state.requested": "Awaiting payment",
-  "invoice.summary.heading": "Summary",
   "invoice.totalAmount": "Total amount",
   "invoice.worklogs.count_one": "{{count}} entry",
   "invoice.worklogs.count_other": "{{count}} entries",

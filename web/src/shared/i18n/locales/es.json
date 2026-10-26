@@ -290,7 +290,6 @@
   "invoice.qrScan.mobile": "Escanea para abrir la factura",
   "invoice.state.paid": "Pagada",
   "invoice.state.requested": "Pendiente de pago",
-  "invoice.summary.heading": "Resumen",
   "invoice.totalAmount": "Importe total",
   "invoice.worklogs.count_one": "{{count}} registro",
   "invoice.worklogs.count_other": "{{count}} registros",

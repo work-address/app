@@ -286,7 +286,6 @@
   "invoice.qrScan.mobile": "スキャンして請求書を開く",
   "invoice.state.paid": "支払い済み",
   "invoice.state.requested": "支払い待ち",
-  "invoice.summary.heading": "概要",
   "invoice.totalAmount": "合計金額",
   "invoice.worklogs.count_one": "{{count}} 件",
   "invoice.worklogs.count_other": "{{count}} 件",

@@ -286,7 +286,6 @@
   "invoice.qrScan.mobile": "扫码打开账单",
   "invoice.state.paid": "已支付",
   "invoice.state.requested": "待支付",
-  "invoice.summary.heading": "摘要",
   "invoice.totalAmount": "总金额",
   "invoice.worklogs.count_one": "{{count}} 条",
   "invoice.worklogs.count_other": "{{count}} 条",

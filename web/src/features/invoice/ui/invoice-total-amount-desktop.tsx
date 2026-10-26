@@ -1,4 +1,4 @@
-import { Badge, Flex, Grid, Skeleton } from '@radix-ui/themes'
+import { Badge, Flex, Grid, Separator, Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { useTranslation } from 'react-i18next'
@@ -82,29 +82,18 @@ export const InvoiceTotalAmountDesktop = () => {
             {t('invoices.item.reference')} {invoice?.id}
           </Reference>
         )}
-        <Text size={'4'} weight={'medium'}>
-          {t('invoice.summary.heading')}
-        </Text>
-        <Grid
-          columns={'1fr 1fr'}
-          flow={'column'}
-          rows={'5'}
-          gapY={'1'}
-          gapX={'8'}
-        >
+        <Separator size={'4'} />
+        {/* The facts need no heading: under the title and the reference they
+            are self-evidently the invoice's summary. */}
+        <Facts>
           {infoFields.map((field) => (
-            <Grid
-              key={field.id}
-              gap={'2'}
-              columns={'160px max-content'}
-              align="center"
-            >
-              <Flex align={'center'} gap={'1'}>
+            <Fact key={field.id}>
+              <Label>
                 <Text size={'3'} color={'gray'}>
                   {t(`invoice.fields.${field.id}`)}
                 </Text>
                 {field.desc ? <Hint content={field.desc} /> : null}
-              </Flex>
+              </Label>
               {loading ? (
                 <Skeleton />
               ) : (
@@ -112,9 +101,9 @@ export const InvoiceTotalAmountDesktop = () => {
                   {field.value}
                 </Text>
               )}
-            </Grid>
+            </Fact>
           ))}
-        </Grid>
+        </Facts>
       </Flex>
     </Grid>
   )
@@ -122,4 +111,35 @@ export const InvoiceTotalAmountDesktop = () => {
 
 const Reference = styled(Text)`
   overflow-wrap: anywhere;
+`
+
+/* Two columns of label-value pairs, filled down the first column first, so
+   the time figures read top to bottom and the input counts beside them. */
+const Facts = styled.dl`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-auto-flow: column;
+  grid-template-rows: repeat(5, auto);
+  column-gap: var(--space-8);
+  row-gap: var(--space-1);
+  margin: 0;
+`
+
+/* The label keeps to one line whatever it says, so its value and the hint
+   beside it stay on that same line - the rows then line up across columns. */
+const Fact = styled.div`
+  display: grid;
+  grid-template-columns: max-content minmax(0, 1fr);
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 32px;
+`
+
+const Label = styled.dt`
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: start;
+  gap: var(--space-1);
+  white-space: nowrap;
 `

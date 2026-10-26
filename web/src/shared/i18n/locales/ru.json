@@ -292,7 +292,6 @@
   "invoice.qrScan.mobile": "Отсканируйте, чтобы открыть счёт",
   "invoice.state.paid": "Оплачен",
   "invoice.state.requested": "Ожидает оплаты",
-  "invoice.summary.heading": "Итого",
   "invoice.totalAmount": "Общая сумма",
   "invoice.worklogs.count_few": "{{count}} записи",
   "invoice.worklogs.count_many": "{{count}} записей",
