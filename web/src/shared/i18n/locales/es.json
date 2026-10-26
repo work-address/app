@@ -110,7 +110,6 @@
   "dashboard.projectsTable.actions.delete": "Eliminar",
   "dashboard.projectsTable.actions.edit": "Editar",
   "dashboard.projectsTable.actions.invoice": "Invoice",
-  "dashboard.projectsTable.actions.invoiceHint": "Abre la factura del proyecto y emite una por el tiempo no pagado",
   "dashboard.projectsTable.actions.print": "Imprimir",
   "dashboard.projectsTable.aria.info": "Información",
   "dashboard.projectsTable.aria.sort": "Ordenar",

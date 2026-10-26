@@ -36,6 +36,12 @@ const POPUP_ROWS = 6
 const HUMAN = 'human'
 const AGENT = 'agent'
 
+/* Short enough that figures, chart and a few agents fit the tile's ceiling. */
+const CHART_HEIGHT = 150
+
+// agent | runs | assisted | autonomous
+const COLUMN_WIDTHS = ['40%', '15%', '22.5%', '22.5%']
+
 type ProductRow = {
   product: string
   assisted: number
@@ -223,6 +229,22 @@ export const DashboardAgents = () => {
             }
           : undefined
       }
+      // Beside the title, where a count belongs, rather than as a loose line
+      // under the table.
+      aside={
+        view.statuses.length > 0 ? (
+          <Statuses>
+            {view.statuses.map(([status, count]) => (
+              <li key={status}>
+                {t(`dashboard.agents.status.${status}`, {
+                  defaultValue: status,
+                })}{' '}
+                <b>{count}</b>
+              </li>
+            ))}
+          </Statuses>
+        ) : undefined
+      }
     >
       <Layout>
         <Figures>
@@ -245,7 +267,7 @@ export const DashboardAgents = () => {
         </Figures>
         <BucketBarChart
           stacked={false}
-          height={200}
+          height={CHART_HEIGHT}
           buckets={view.buckets}
           series={[
             {
@@ -267,6 +289,11 @@ export const DashboardAgents = () => {
           describe={describe}
         />
         <Table>
+          <colgroup>
+            {COLUMN_WIDTHS.map((width, index) => (
+              <col key={index} style={{ width }} />
+            ))}
+          </colgroup>
           <thead>
             <tr>
               <th>{t('dashboard.agents.product')}</th>
@@ -286,18 +313,6 @@ export const DashboardAgents = () => {
             ))}
           </tbody>
         </Table>
-        {view.statuses.length > 0 && (
-          <Statuses>
-            {view.statuses.map(([status, count]) => (
-              <li key={status}>
-                {t(`dashboard.agents.status.${status}`, {
-                  defaultValue: status,
-                })}{' '}
-                <b>{count}</b>
-              </li>
-            ))}
-          </Statuses>
-        )}
       </Layout>
     </DashboardWidget>
   )
@@ -308,10 +323,12 @@ const Layout = styled.div`
   gap: var(--space-4);
 `
 
+/* Four cells of the same size, each a small tile of its own, so the strip
+   reads as one row of figures rather than four loose labels. */
 const Figures = styled.dl`
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-3);
+  gap: var(--space-2);
   margin: 0;
 
   ${(p) => p.theme.breakpoints.down('md')} {
@@ -321,38 +338,60 @@ const Figures = styled.dl`
   dt {
     color: var(--ds-neutral-11);
     font-size: var(--font-size-1);
+    line-height: var(--line-height-1);
   }
 
   dd {
     margin: 0;
-    font-size: var(--font-size-4);
-    font-weight: 500;
+    font-size: var(--font-size-3);
+    line-height: var(--line-height-3);
+    font-weight: 600;
     font-variant-numeric: tabular-nums;
+    white-space: nowrap;
   }
 `
 
+/* The label may run to two lines ("Waiting on a person" in a quarter of a
+   tile); the value sits at the bottom, so the four values stay on one line
+   across the strip whatever their labels do. */
 const Figure = styled.div`
   display: grid;
+  grid-template-rows: minmax(0, 1fr) auto;
   gap: 2px;
   min-width: 0;
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-2);
+  background: var(--ds-neutral-2);
 `
 
+/* Fixed columns: the figures above and the rows below keep their places
+   whatever the numbers are, instead of each state laying the table out anew. */
 const Table = styled.table`
   width: 100%;
+  table-layout: fixed;
   border-collapse: collapse;
   font-size: var(--font-size-2);
+  line-height: var(--line-height-2);
   font-variant-numeric: tabular-nums;
 
   th {
-    padding: 6px 8px 6px 0;
+    padding: 0 0 var(--space-1);
     color: var(--ds-neutral-11);
     font-size: var(--font-size-1);
+    line-height: var(--line-height-1);
     font-weight: 400;
     text-align: left;
+    border-bottom: 1px solid var(--ds-neutral-alpha-6);
   }
 
   td {
-    padding: 8px 8px 8px 0;
+    padding: var(--space-2) 0;
+    overflow: hidden;
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  tr + tr td {
     border-top: 1px solid var(--ds-neutral-alpha-4);
   }
 
@@ -365,11 +404,12 @@ const Table = styled.table`
 const Statuses = styled.ul`
   display: flex;
   flex-wrap: wrap;
-  gap: 6px 16px;
+  gap: var(--space-1) var(--space-3);
   margin: 0;
   padding: 0;
   color: var(--ds-neutral-11);
   font-size: var(--font-size-1);
+  line-height: var(--line-height-1);
   list-style: none;
 
   b {

@@ -47,7 +47,9 @@ export const DashboardWidget = ({
           <Placeholder />
         </Skeleton>
       ) : empty ? (
-        <StateNotice title={empty.title} description={empty.description} />
+        <Empty>
+          <StateNotice title={empty.title} description={empty.description} />
+        </Empty>
       ) : (
         children
       )}
@@ -94,6 +96,14 @@ const Body = styled.div`
   min-height: 0;
   overflow: auto;
   padding: var(--space-4);
+`
+
+/* A tile takes its row's height whatever it holds; an empty notice sits in
+   the middle of that rather than leaving the bottom two thirds blank. */
+const Empty = styled.div`
+  display: grid;
+  align-content: center;
+  height: 100%;
 `
 
 const Placeholder = styled.div`

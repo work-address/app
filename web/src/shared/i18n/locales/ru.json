@@ -111,7 +111,6 @@
   "dashboard.projectsTable.actions.delete": "Удалить",
   "dashboard.projectsTable.actions.edit": "Изменить",
   "dashboard.projectsTable.actions.invoice": "Invoice",
-  "dashboard.projectsTable.actions.invoiceHint": "Открыть счёт проекта; за неоплаченное время он будет выставлен",
   "dashboard.projectsTable.actions.print": "Печать",
   "dashboard.projectsTable.aria.info": "Информация",
   "dashboard.projectsTable.aria.sort": "Сортировка",

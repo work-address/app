@@ -26,7 +26,8 @@ const VISIBLE_PROJECTS_COUNT = 4
 // name is always available in the tooltip.
 const MAX_LABEL_LENGTH = 8
 
-const CHART_HEIGHT = 306
+/* The plot fills its tile; this is only the floor, for a tile with little beside it. */
+const MIN_CHART_HEIGHT = 240
 // Vertical bounds of the plot box; the hour gutter outside the scroller must
 // use the same numbers to line up with the grid. Keep in sync with the chart
 // margin below, the XAxis height, and the skeleton.
@@ -156,7 +157,8 @@ export const DashboardApplicationsUsageChart = ({
 const Root = styled.div`
   position: relative;
   display: flex;
-  height: ${CHART_HEIGHT}px;
+  height: 100%;
+  min-height: ${MIN_CHART_HEIGHT}px;
 `
 
 /* Beside the card on a desktop, over the projects table, since the card is

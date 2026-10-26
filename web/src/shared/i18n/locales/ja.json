@@ -108,7 +108,6 @@
   "dashboard.projectsTable.actions.delete": "削除",
   "dashboard.projectsTable.actions.edit": "編集",
   "dashboard.projectsTable.actions.invoice": "Invoice",
-  "dashboard.projectsTable.actions.invoiceHint": "このプロジェクトの請求書を開きます。未払いの時間があれば発行します。",
   "dashboard.projectsTable.actions.print": "印刷",
   "dashboard.projectsTable.aria.info": "情報",
   "dashboard.projectsTable.aria.sort": "並べ替え",

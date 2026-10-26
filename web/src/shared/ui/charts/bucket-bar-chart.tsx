@@ -34,6 +34,8 @@ type Props = {
   totalLabel?: string
   emptyLabel: string
   height?: number
+  /** Take the height of the card instead of `height`; the legend keeps its own. */
+  fill?: boolean
   /**
    * Everything to say about a bar, laid out in columns. Without it the popup
    * lists the bar's series.
@@ -60,6 +62,7 @@ export const BucketBarChart = ({
   totalLabel,
   emptyLabel,
   height = 240,
+  fill = false,
   describe,
 }: Props) => {
   const plotRef = useRef<HTMLDivElement>(null)
@@ -93,8 +96,8 @@ export const BucketBarChart = ({
   }))
 
   return (
-    <Root>
-      <Plot ref={plotRef} style={{ height }}>
+    <Root data-fill={fill || undefined}>
+      <Plot ref={plotRef} style={fill ? undefined : { height }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}
@@ -210,10 +213,22 @@ export const BucketBarChart = ({
 const Root = styled.div`
   display: grid;
   gap: var(--space-3);
+
+  /* The plot takes whatever the card leaves over the legend, so a chart
+     beside a taller card has no dead band above or below its bars. */
+  &[data-fill] {
+    height: 100%;
+    grid-template-rows: minmax(0, 1fr) auto;
+  }
 `
 
 const Plot = styled.div`
   width: 100%;
+
+  ${Root}[data-fill] & {
+    height: 100%;
+    min-height: 200px;
+  }
 
   .recharts-surface {
     outline: none;

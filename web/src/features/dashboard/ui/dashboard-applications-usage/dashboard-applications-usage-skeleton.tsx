@@ -3,7 +3,7 @@ import styled from 'styled-components'
 
 // Mirrors the geometry of the real chart so the plot area doesn't jump once the
 // data arrives: same height, same y-axis gutter, same bar cap.
-const CHART_HEIGHT = 306
+const MIN_CHART_HEIGHT = 240
 const LABEL_AREA_HEIGHT = 30
 // Floor for the gutter; the real chart grows past it when its ticks are wider.
 const Y_AXIS_MIN_WIDTH = 28
@@ -46,7 +46,8 @@ export const DashboardApplicationsUsageSkeleton = () => (
 
 const Root = styled.div`
   display: flex;
-  height: ${CHART_HEIGHT}px;
+  height: 100%;
+  min-height: ${MIN_CHART_HEIGHT}px;
   padding-top: 6px;
 `
 

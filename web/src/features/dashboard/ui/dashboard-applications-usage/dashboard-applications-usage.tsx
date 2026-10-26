@@ -10,7 +10,6 @@ import {
 
 import { DashboardApplicationsUsageCard } from './dashboard-applications-usage-card'
 import { DashboardApplicationsUsageChart } from './dashboard-applications-usage-chart'
-import { DashboardApplicationsUsageEmpty } from './dashboard-applications-usage-empty'
 
 import { $projectsLoading } from '@/entities/projects'
 import {
@@ -91,17 +90,20 @@ export const DashboardApplicationsUsage = () => {
         : 'noActivity'
 
   return (
-    <DashboardApplicationsUsageCard isLoading={isLoading}>
-      {isEmpty ? (
-        <DashboardApplicationsUsageEmpty
-          title={t(`dashboard.applicationsUsage.empty.${emptyKey}.title`)}
-          description={t(
-            `dashboard.applicationsUsage.empty.${emptyKey}.description`,
-          )}
-        />
-      ) : (
-        <DashboardApplicationsUsageChart {...chart} />
-      )}
+    <DashboardApplicationsUsageCard
+      isLoading={isLoading}
+      empty={
+        isEmpty
+          ? {
+              title: t(`dashboard.applicationsUsage.empty.${emptyKey}.title`),
+              description: t(
+                `dashboard.applicationsUsage.empty.${emptyKey}.description`,
+              ),
+            }
+          : undefined
+      }
+    >
+      <DashboardApplicationsUsageChart {...chart} />
     </DashboardApplicationsUsageCard>
   )
 }

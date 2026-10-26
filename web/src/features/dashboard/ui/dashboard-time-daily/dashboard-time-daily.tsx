@@ -198,6 +198,7 @@ export const DashboardTimeDaily = () => {
       }
     >
       <BucketBarChart
+        fill
         buckets={chart.buckets}
         series={chart.series}
         formatValue={formatHours}

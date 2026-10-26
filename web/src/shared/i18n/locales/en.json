@@ -109,7 +109,6 @@
   "dashboard.projectsTable.actions.delete": "Delete",
   "dashboard.projectsTable.actions.edit": "Edit",
   "dashboard.projectsTable.actions.invoice": "Invoice",
-  "dashboard.projectsTable.actions.invoiceHint": "Open this project's invoice, raising one for any unpaid time",
   "dashboard.projectsTable.actions.print": "Print",
   "dashboard.projectsTable.aria.info": "Info",
   "dashboard.projectsTable.aria.sort": "Sort",

@@ -58,7 +58,6 @@ import {
   IconButton,
   Tooltip,
   useBreakpoint,
-  useDateFormatter,
   ProjectsEmptyState,
 } from '@/shared'
 
@@ -145,7 +144,6 @@ export const ProjectsTable = ({
   const renderingData = isProjectsLoading ? [] : projects
 
   const { t } = useTranslation()
-  const dateFormatter = useDateFormatter()
 
   const handleTabClick = (tab: string) => {
     changeStateTab(tab as ProjectsFilter['projectState'])
@@ -172,15 +170,9 @@ export const ProjectsTable = ({
   const desktopConfig = useMemo(
     (): DataTableConfig<ProjectWithStats> => [
       // Widths are what each column's longest value needs and no more: the
-      // table shares a dashboard row with another tile, so five columns have
-      // to fit in half the page.
-      {
-        dataKey: 'createdAt',
-        width: 116,
-        headerText: t('dashboard.projectsTable.drawer.meta.createdAt'),
-        getValue: (data: ProjectWithStats) =>
-          dateFormatter.format(new Date(data.createdAt ?? new Date())),
-      },
+      // table shares a dashboard row with another tile, so it has to fit in
+      // half the page. The start date lives in the project's popup and
+      // dialog; here the name takes the room.
       {
         dataKey: 'title',
         width: 148,
@@ -224,7 +216,7 @@ export const ProjectsTable = ({
       //   headerText: t('dashboard.projectsTable.head.mouseDistance'),
       // },
     ],
-    [t, dateFormatter],
+    [t],
   )
 
   const mobileConfig = useMemo(
@@ -412,17 +404,22 @@ const Root = styled.div`
   height: 100%;
 
   /* Grows with the tile around it, so the table ends level with whatever
-     sits beside it, and never shorter than four rows. */
+     sits beside it, and never shorter than its header and four rows. */
   ${(p) => p.theme.breakpoints.up('md')} {
     flex: 1;
-    min-height: 307px;
+    min-height: 244px;
     overflow: auto;
 
     /* Half the table's usual cell inset: the room five columns need in half
-       a page comes out of the gutters, not the values. */
+       a page comes out of the gutters, not the values. Rows are one line
+       each, so they take half the usual height too. */
     & th,
     & td {
       padding-inline: 6px;
+    }
+
+    & td {
+      padding-block: var(--space-2);
     }
   }
 `

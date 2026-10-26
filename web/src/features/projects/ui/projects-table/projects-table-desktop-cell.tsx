@@ -8,12 +8,9 @@ import { ProjectsTableContext } from './projects-table-context'
 
 import type { ProjectWithStats } from '@/entities/projects'
 
-import { OpenInvoiceLink } from '@/features/invoice'
 import {
   type DesktopBodyCellRenderProps,
-  PrintIcon,
   Text,
-  Tooltip,
   formatDurationFromMinutes,
 } from '@/shared'
 
@@ -53,20 +50,6 @@ export const ProjectsDesktopCell = React.memo(
             ) : (
               <Text $themeVariant={'primary'}>{props.data.title}</Text>
             )}
-            <Tooltip content={t('dashboard.projectsTable.actions.invoiceHint')}>
-              <InvoiceLink
-                projectId={props.data.id ?? ''}
-                onClick={(event) => event.stopPropagation()}
-              >
-                <Text color={'gray'} size={'2'} as="span">
-                  |
-                </Text>
-                <Text size={'2'} as="span">
-                  {t('dashboard.projectsTable.actions.invoice')}
-                </Text>
-                <img src={PrintIcon} alt="" width={28} height={28} />
-              </InvoiceLink>
-            </Tooltip>
           </TitleCell>
         )
         break
@@ -117,33 +100,6 @@ export const ProjectsDesktopCell = React.memo(
 
 const TitleCell = styled(Flex)`
   min-width: 0;
-  position: relative;
-`
-
-/* Laid over the cell's end rather than beside the name: hidden, it would
-   still hold its width, and the column could never get narrower than name
-   plus link - too wide for the half-page tile the table lives in. */
-const InvoiceLink = styled(OpenInvoiceLink)`
-  position: absolute;
-  top: 50%;
-  right: 0;
-  transform: translateY(-50%);
-  padding-left: var(--space-2);
-  background: var(--white);
-  display: inline-flex;
-  align-items: center;
-  flex-shrink: 0;
-  gap: var(--space-2);
-  text-decoration: none;
-  color: inherit;
-  opacity: 0;
-  pointer-events: none;
-  transition: opacity 0.15s ease;
-
-  tr:hover & {
-    opacity: 1;
-    pointer-events: auto;
-  }
 `
 
 const Name = styled.span`
