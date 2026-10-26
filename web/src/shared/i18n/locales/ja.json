@@ -655,6 +655,8 @@
   "header.nav.time": "時間",
   "time.page.title": "時間",
   "time.page.meta": "記録したすべての作業ログをひとつのフィードで。プロジェクト、日付、アクティビティで絞り込み、スクリーンショットとアプリを確認し、支払済みにできます。",
+  "time.page.description": "記録されたすべてのエントリを新しい順に。プロジェクト、日付、アクティビティで絞り込めます。",
+  "time.filters.projectsPlaceholder": "すべてのプロジェクト",
   "common.dateRange.label": "期間",
   "common.dateRange.today": "今日",
   "common.dateRange.thisWeek": "今週",

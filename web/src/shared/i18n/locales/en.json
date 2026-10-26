@@ -657,6 +657,8 @@
   "header.nav.time": "Time",
   "time.page.title": "Time",
   "time.page.meta": "Every tracked worklog in one feed. Filter by project, date and activity, review screenshots and apps, and mark time as paid.",
+  "time.page.description": "Every tracked entry, newest first, with filters for project, date and activity.",
+  "time.filters.projectsPlaceholder": "All projects",
   "common.dateRange.label": "Period",
   "common.dateRange.today": "Today",
   "common.dateRange.thisWeek": "This week",

@@ -1,6 +1,7 @@
-import { Flex, Grid } from '@radix-ui/themes'
+import { Grid } from '@radix-ui/themes'
 import { useStoreMap } from 'effector-react'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
 import { TimeDateRangePicker } from './time-date-range-picker'
 import { TimeNoteInput } from './time-note-input'
@@ -8,7 +9,7 @@ import { TimeProjectsSelect } from './time-projects-select'
 import { TimeTwoSideInput } from './time-two-side-input'
 
 import { $timeFilters } from '@/entities/time'
-import { ListPageLayout as S, Text } from '@/shared'
+import { Text } from '@/shared'
 
 export const TimeFilters = () => {
   const { t } = useTranslation()
@@ -20,24 +21,24 @@ export const TimeFilters = () => {
   })
 
   return (
-    <Flex gap={'3'} mb={'4'}>
-      <S.Field $basis={214}>
+    <Root>
+      <Field>
         <TimeProjectsSelect />
-      </S.Field>
-      <S.Field $basis={300}>
-        <Flex gap={'2'} direction={'column'}>
+      </Field>
+      <Field data-span="2">
+        <Grid gap={'2'}>
           <Text size={'2'} weight={'medium'} as="label" htmlFor={activeDateId}>
             {t('dashboard.page.filters.date')}
           </Text>
           <Grid columns={'1fr 1fr'} gap={'2'}>
             <TimeDateRangePicker />
           </Grid>
-        </Flex>
-      </S.Field>
-      <S.Field $basis={214}>
+        </Grid>
+      </Field>
+      <Field>
         <TimeNoteInput />
-      </S.Field>
-      <S.Field $basis={160}>
+      </Field>
+      <Field>
         <TimeTwoSideInput
           label={t('dashboard.page.filters.timeActive')}
           leftId="timeActiveMin"
@@ -46,8 +47,8 @@ export const TimeFilters = () => {
           leftPlaceholder={t('dashboard.page.filters.min')}
           rightPlaceholder={t('dashboard.page.filters.max')}
         />
-      </S.Field>
-      <S.Field $basis={160}>
+      </Field>
+      <Field>
         <TimeTwoSideInput
           label={t('dashboard.page.filters.keyboard')}
           leftId="keyboardKeysMin"
@@ -56,8 +57,8 @@ export const TimeFilters = () => {
           leftPlaceholder={t('dashboard.page.filters.min')}
           rightPlaceholder={t('dashboard.page.filters.max')}
         />
-      </S.Field>
-      <S.Field $basis={160}>
+      </Field>
+      <Field>
         <TimeTwoSideInput
           label={t('dashboard.page.filters.mouse')}
           leftId="mouseKeysMin"
@@ -66,8 +67,8 @@ export const TimeFilters = () => {
           leftPlaceholder={t('dashboard.page.filters.min')}
           rightPlaceholder={t('dashboard.page.filters.max')}
         />
-      </S.Field>
-      <S.Field>
+      </Field>
+      <Field>
         <TimeTwoSideInput
           label={t('dashboard.page.filters.mouseDistance')}
           leftId="mouseDistanceMin"
@@ -76,7 +77,25 @@ export const TimeFilters = () => {
           leftPlaceholder={t('dashboard.page.filters.min')}
           rightPlaceholder={t('dashboard.page.filters.max')}
         />
-      </S.Field>
-    </Flex>
+      </Field>
+    </Root>
   )
 }
+
+/* Fields wrap onto a second line when the page runs narrow, rather than
+   squeezing until a date field shows three characters of its placeholder. */
+const Root = styled.div`
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+`
+
+/* The date field holds two inputs, so it takes two columns. */
+const Field = styled.div`
+  min-width: 0;
+
+  &[data-span='2'] {
+    grid-column: span 2;
+  }
+`

@@ -50,4 +50,11 @@ const List = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
   gap: var(--space-3);
+
+  /* Two across on a phone: a tile is mostly its screenshot, and one 16:10
+     tile per row made a day of entries a dozen screens long. */
+  ${(p) => p.theme.breakpoints.down('md')} {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
 `

@@ -659,6 +659,8 @@
   "header.nav.time": "Tiempo",
   "time.page.title": "Tiempo",
   "time.page.meta": "Todos los registros de tiempo en un solo listado. Filtra por proyecto, fecha y actividad, revisa capturas y apps, y marca el tiempo como pagado.",
+  "time.page.description": "Cada entrada registrada, la más reciente primero, con filtros por proyecto, fecha y actividad.",
+  "time.filters.projectsPlaceholder": "Todos los proyectos",
   "common.dateRange.label": "Periodo",
   "common.dateRange.today": "Hoy",
   "common.dateRange.thisWeek": "Esta semana",

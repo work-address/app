@@ -1,4 +1,5 @@
 import { useUnit } from 'effector-react'
+import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
@@ -58,6 +59,7 @@ export const TimeWorklogs = () => {
 
   const isMobile = useBreakpoint('isMobile')
   const isDesktop = useBreakpoint('isDesktop')
+  const reducedMotion = useReducedMotion()
 
   const {
     entries,
@@ -124,6 +126,7 @@ export const TimeWorklogs = () => {
     <S.Section>
       <Header
         title={t('time.page.title')}
+        description={t('time.page.description')}
         actions={
           <Actions>
             {/* Beside the toggle rather than inside a view: the list can also
@@ -163,7 +166,19 @@ export const TimeWorklogs = () => {
         <TimeContext.Provider value={contextValue}>
           {isDesktop && selectedCount > 0 && <TimeWorklogsBulkActions />}
           {isMobile && selectedCount > 0 && <TimeMobileBulkActions />}
-          {view === 'grid' ? <TimeGrid /> : <TimeTable />}
+          {/* The views cross-fade rather than snap: the same entries, a
+              different shape. */}
+          <AnimatePresence mode="wait" initial={false}>
+            <motion.div
+              key={view}
+              initial={{ opacity: 0 }}
+              animate={{ opacity: 1 }}
+              exit={{ opacity: 0 }}
+              transition={{ duration: reducedMotion ? 0 : 0.15 }}
+            >
+              {view === 'grid' ? <TimeGrid /> : <TimeTable />}
+            </motion.div>
+          </AnimatePresence>
           <TimeDialog
             open={isDialogOpen}
             row={selectedEntry}
@@ -200,7 +215,7 @@ const MobileToolbar = styled.div`
   justify-content: space-between;
   flex-wrap: wrap;
   gap: var(--space-2);
-  margin-bottom: 14px;
+  margin-bottom: var(--space-3);
 `
 
 const Empty = styled.div`

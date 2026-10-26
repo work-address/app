@@ -665,6 +665,8 @@
   "header.nav.time": "Время",
   "time.page.title": "Время",
   "time.page.meta": "Все учтённые записи времени в одной ленте. Фильтруйте по проекту, дате и активности, смотрите скриншоты и приложения и отмечайте оплаченное время.",
+  "time.page.description": "Все учтённые записи, новые сверху, с фильтрами по проекту, дате и активности.",
+  "time.filters.projectsPlaceholder": "Все проекты",
   "common.dateRange.label": "Период",
   "common.dateRange.today": "Сегодня",
   "common.dateRange.thisWeek": "Эта неделя",

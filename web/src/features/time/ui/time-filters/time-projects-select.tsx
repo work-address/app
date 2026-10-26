@@ -40,7 +40,7 @@ export const TimeProjectsSelect = () => {
         }
       }}
       allSelectedText={t('dashboard.page.filters.allWorklogs')}
-      placeholder={'Select projects'}
+      placeholder={t('time.filters.projectsPlaceholder')}
     />
   )
 }

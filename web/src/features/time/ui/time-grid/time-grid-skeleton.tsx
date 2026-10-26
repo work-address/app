@@ -20,6 +20,12 @@ const Root = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
   gap: var(--space-3);
+
+  /* The same two-across as the grid it stands in for. */
+  ${(p) => p.theme.breakpoints.down('md')} {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: var(--space-2);
+  }
 `
 
 const Item = styled.div`

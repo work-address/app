@@ -3,6 +3,7 @@ import { useUnit } from 'effector-react'
 import { memo, useContext } from 'react'
 import styled from 'styled-components'
 
+import { formatTrackedCount } from '../../model'
 import { TimeContext } from '../time-context'
 
 import type { Time } from '@/entities/time'
@@ -64,7 +65,7 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
       return (
         <Flex direction={'column'}>
           <Text size="2">
-            {timeFormatter.format(new Date(props.data.fromAt))}-
+            {timeFormatter.format(new Date(props.data.fromAt))} -{' '}
             {timeFormatter.format(new Date(props.data.toAt))}
           </Text>
           <Text size="2" color={'gray'}>
@@ -74,9 +75,13 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
       )
     }
 
+    case 'keyboardKeys':
+    case 'mouseKeys':
     case 'mouseDistance': {
       return (
-        <Text size="2">{numberFormatter.format(props.data.mouseDistance)}</Text>
+        <Text size="2">
+          {formatTrackedCount(props.data[props.dataKey], numberFormatter)}
+        </Text>
       )
     }
 
