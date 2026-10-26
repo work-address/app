@@ -145,6 +145,9 @@ export default function InvoicesPage() {
   const formatDate = (value: string | undefined) =>
     value ? dateFormatter.format(new Date(value)) : '—'
 
+  const formatPeriod = (from: string | undefined, to: string | undefined) =>
+    from && to ? dateFormatter.formatRange(new Date(from), new Date(to)) : '—'
+
   const isFiltered = Boolean(projectId || stateFilter)
   const showSkeleton = pending && !loadingMore && rows.length === 0
   const showEmpty = !pending && !failed && rows.length === 0
@@ -245,155 +248,157 @@ export default function InvoicesPage() {
             </Text>
           ) : null}
         </Toolbar>
-        <List aria-label={t('invoices.page.title')} aria-busy={pending}>
-          {isDesktop && (showSkeleton || rows.length > 0) ? (
-            <HeadRow aria-hidden>
-              <HeadCell $area="project">{t('invoices.item.project')}</HeadCell>
-              <HeadCell $area="status">{t('invoices.item.status')}</HeadCell>
-              <HeadCell $area="issuedBy">
-                {t('invoices.item.issuedBy')}
-              </HeadCell>
-              <HeadCell $area="period">{t('invoices.item.period')}</HeadCell>
-              <HeadCell $area="issued">{t('invoices.item.issued')}</HeadCell>
-              <HeadCell $area="amount" $align="end">
-                {t('invoices.item.amount')}
-              </HeadCell>
-              <HeadCell $area="action" />
-            </HeadRow>
-          ) : null}
-          {showSkeleton
-            ? [0, 1, 2].map((row) => <SkeletonRow key={row} />)
-            : null}
-          {/* A failed request is not an empty list. Saying "no invoices yet"
-              when the truth is "could not load them" sends someone looking for
-              an invoice they know exists. */}
-          {failed ? (
-            <LoadFailure
-              title={t('invoices.page.error.title')}
-              description={t('invoices.page.error.description')}
-              onRetry={() => fetchList()}
-            />
-          ) : null}
-          {showEmpty ? (
-            <StateNotice
-              title={t(
-                isFiltered
-                  ? 'invoices.page.empty.filtered.title'
-                  : 'invoices.page.empty.title',
-              )}
-              description={t(
-                isFiltered
-                  ? 'invoices.page.empty.filtered.description'
-                  : 'invoices.page.empty.description',
-              )}
-              actions={
-                isFiltered ? (
-                  <Button
-                    size="l"
-                    variant="outline"
-                    onClick={() => {
-                      changeProject('')
-                      changeState('')
-                    }}
-                  >
-                    {t('invoices.page.empty.filtered.reset')}
-                  </Button>
-                ) : (
-                  <Button
-                    size="l"
-                    variant="outline"
-                    onClick={() => navigate(routes.dashboard.build())}
-                  >
-                    {t('invoices.page.empty.action')}
-                  </Button>
-                )
-              }
-            />
-          ) : null}
-          {rows.map((invoice) => {
-            const isPaid = invoice.state === 'PAID'
-            const canSettle = canSettleInvoice(invoice, user)
-            const rateHour = invoiceRateHour(invoice)
-            const issuer =
-              invoice.user?.name ||
-              shortenAddress(
-                getFriendlyWalletAddress(invoice.user?.address) ?? '',
-              )
-
-            return (
-              <Row key={invoice.id}>
-                <Cell $area="project">
-                  <ProjectLink
-                    to={routes.invoice.build({ id: invoice.id as string })}
-                  >
-                    <Text size="3" weight="medium" truncate>
-                      {invoice.project?.title ?? '—'}
-                    </Text>
-                  </ProjectLink>
-                  <Text size="1" color="gray" truncate>
-                    {t('invoices.item.reference')}{' '}
-                    {shortenAddress(invoice.id ?? '')}
-                  </Text>
-                </Cell>
-                <Cell $area="status" label={t('invoices.item.status')}>
-                  <Flex direction="column" align="start" gap="1">
-                    <Badge
-                      size="2"
-                      variant="soft"
-                      color={invoiceStateColor(invoice)}
-                    >
-                      {t(invoiceStateLabelKey(invoice))}
-                    </Badge>
-                    {isPaid ? (
-                      <Text size="1" color="gray">
-                        {formatDate(invoice.paidAt)}
-                      </Text>
-                    ) : null}
-                  </Flex>
-                </Cell>
-                <Cell $area="issuedBy" label={t('invoices.item.issuedBy')}>
-                  <Text size="2" truncate>
-                    {issuer}
-                  </Text>
-                </Cell>
-                <Cell $area="period" label={t('invoices.item.period')}>
-                  <Text size="2">
-                    {formatDate(invoice.fromAt)} — {formatDate(invoice.toAt)}
-                  </Text>
-                </Cell>
-                <Cell $area="issued" label={t('invoices.item.issued')}>
-                  <Text size="2">{formatDate(invoice.createdAt)}</Text>
-                </Cell>
-                <Cell
-                  $area="amount"
-                  $align="end"
-                  label={t('invoices.item.amount')}
+        {/* A failed request is not an empty list. Saying "no invoices yet"
+            when the truth is "could not load them" sends someone looking for
+            an invoice they know exists. */}
+        {failed ? (
+          <LoadFailure
+            title={t('invoices.page.error.title')}
+            description={t('invoices.page.error.description')}
+            onRetry={() => fetchList()}
+          />
+        ) : showEmpty ? (
+          <StateNotice
+            title={t(
+              isFiltered
+                ? 'invoices.page.empty.filtered.title'
+                : 'invoices.page.empty.title',
+            )}
+            description={t(
+              isFiltered
+                ? 'invoices.page.empty.filtered.description'
+                : 'invoices.page.empty.description',
+            )}
+            actions={
+              isFiltered ? (
+                <Button
+                  size="l"
+                  variant="outline"
+                  onClick={() => {
+                    changeProject('')
+                    changeState('')
+                  }}
                 >
-                  <Text size="4" weight="medium">
-                    {formatCents(Number(invoice.amountCents ?? 0))}
-                  </Text>
-                  {/* The frozen line rate, or the project's rate for an
-                      invoice issued before lines were stored. */}
-                  {rateHour != null && (
-                    <Text size="1" color="gray">
-                      {t('invoices.item.perHour', {
-                        rate: formatCurrency(rateHour),
-                      })}
+                  {t('invoices.page.empty.filtered.reset')}
+                </Button>
+              ) : (
+                <Button
+                  size="l"
+                  variant="outline"
+                  onClick={() => navigate(routes.dashboard.build())}
+                >
+                  {t('invoices.page.empty.action')}
+                </Button>
+              )
+            }
+          />
+        ) : (
+          <List aria-label={t('invoices.page.title')} aria-busy={pending}>
+            {isDesktop ? (
+              <HeadRow aria-hidden>
+                <HeadCell $area="project">
+                  {t('invoices.item.project')}
+                </HeadCell>
+                <HeadCell $area="status">{t('invoices.item.status')}</HeadCell>
+                <HeadCell $area="issuedBy">
+                  {t('invoices.item.issuedBy')}
+                </HeadCell>
+                <HeadCell $area="period">{t('invoices.item.period')}</HeadCell>
+                <HeadCell $area="issued">{t('invoices.item.issued')}</HeadCell>
+                <HeadCell $area="amount" $align="end">
+                  {t('invoices.item.amount')}
+                </HeadCell>
+                <HeadCell $area="action" />
+              </HeadRow>
+            ) : null}
+            {showSkeleton
+              ? [0, 1, 2].map((row) => <SkeletonRow key={row} />)
+              : null}
+            {rows.map((invoice) => {
+              const isPaid = invoice.state === 'PAID'
+              const canSettle = canSettleInvoice(invoice, user)
+              const rateHour = invoiceRateHour(invoice)
+              const issuer =
+                invoice.user?.name ||
+                shortenAddress(
+                  getFriendlyWalletAddress(invoice.user?.address) ?? '',
+                )
+
+              return (
+                <Row key={invoice.id}>
+                  <Cell $area="project">
+                    <ProjectLink
+                      to={routes.invoice.build({ id: invoice.id as string })}
+                    >
+                      <Text size="3" weight="medium" truncate>
+                        {invoice.project?.title ?? '—'}
+                      </Text>
+                    </ProjectLink>
+                    <Text size="1" color="gray" truncate>
+                      {t('invoices.item.reference')}{' '}
+                      {shortenAddress(invoice.id ?? '')}
                     </Text>
-                  )}
-                </Cell>
-                <Cell $area="action" $align="end">
-                  <InvoicePaymentActions
-                    invoiceId={invoice.id as string}
-                    isPaid={isPaid}
-                    canSettle={canSettle}
-                    stretch={!isDesktop}
-                  />
-                </Cell>
-              </Row>
-            )
-          })}
-        </List>
+                  </Cell>
+                  <Cell $area="status" label={t('invoices.item.status')}>
+                    <Flex direction="column" align="start" gap="1">
+                      <Badge
+                        size="2"
+                        variant="soft"
+                        color={invoiceStateColor(invoice)}
+                      >
+                        {t(invoiceStateLabelKey(invoice))}
+                      </Badge>
+                      {isPaid ? (
+                        <Text size="1" color="gray">
+                          {formatDate(invoice.paidAt)}
+                        </Text>
+                      ) : null}
+                    </Flex>
+                  </Cell>
+                  <Cell $area="issuedBy" label={t('invoices.item.issuedBy')}>
+                    <Text size="2" truncate>
+                      {issuer}
+                    </Text>
+                  </Cell>
+                  <Cell $area="period" label={t('invoices.item.period')}>
+                    <Text size="2">
+                      {formatPeriod(invoice.fromAt, invoice.toAt)}
+                    </Text>
+                  </Cell>
+                  <Cell $area="issued" label={t('invoices.item.issued')}>
+                    <Text size="2">{formatDate(invoice.createdAt)}</Text>
+                  </Cell>
+                  <Cell
+                    $area="amount"
+                    $align="end"
+                    label={t('invoices.item.amount')}
+                  >
+                    <Text size="4" weight="medium">
+                      {formatCents(Number(invoice.amountCents ?? 0))}
+                    </Text>
+                    {/* The frozen line rate, or the project's rate for an
+                      invoice issued before lines were stored. */}
+                    {rateHour != null && (
+                      <Text size="1" color="gray">
+                        {t('invoices.item.perHour', {
+                          rate: formatCurrency(rateHour),
+                        })}
+                      </Text>
+                    )}
+                  </Cell>
+                  <Cell $area="action" $align="end">
+                    <InvoicePaymentActions
+                      invoiceId={invoice.id as string}
+                      isPaid={isPaid}
+                      canSettle={canSettle}
+                      stretch={!isDesktop}
+                    />
+                  </Cell>
+                </Row>
+              )
+            })}
+          </List>
+        )}
         {hasMore ? (
           <Flex direction="column" gap="2" align="center" py="2">
             <Button
@@ -444,7 +449,7 @@ const SkeletonRow = () => (
     </Cell>
     <Cell $area="period">
       <Skeleton>
-        <Text size="2">00th Aug 0000 — 00th Aug 0000</Text>
+        <Text size="2">00th – 00th Aug 0000</Text>
       </Skeleton>
     </Cell>
     <Cell $area="issued">
@@ -490,10 +495,14 @@ const MOBILE_AREAS = `
   "action action"
 `
 
+/* One panel with one border: the rows inside part with hairlines, the way
+   every other table in the app does, rather than each wearing a card. */
 const List = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: var(--space-2);
+  display: grid;
+  border: 1px solid var(--ds-neutral-alpha-6);
+  border-radius: var(--radius-3);
+  background: var(--color-panel-solid);
+  overflow: hidden;
 `
 
 const FilterBar = styled.div`
@@ -519,20 +528,22 @@ const HeadRow = styled.div`
   grid-template-columns: ${COLUMNS};
   grid-template-areas: ${AREAS};
   gap: var(--space-4);
-  padding: 0 var(--space-4);
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--ds-neutral-alpha-6);
 `
 
+/* Set like DataTable's header cells, so this list and the tables around it
+   read as one family. */
 const HeadCell = styled.div<{ $area: string; $align?: 'start' | 'end' }>`
   grid-area: ${(p) => p.$area};
-  font-size: var(--font-size-1);
-  font-weight: 500;
-  text-transform: uppercase;
-  letter-spacing: 0.04em;
-  color: var(--ds-neutral-11);
+  font-size: var(--font-size-2);
+  font-weight: 600;
+  line-height: 20px;
+  color: var(--ds-neutral-12);
   text-align: ${(p) => (p.$align === 'end' ? 'right' : 'left')};
 `
 
-/* Positioned so ProjectLink's overlay can stretch across the whole card: the
+/* Positioned so ProjectLink's overlay can stretch across the whole row: the
    entire row opens the invoice, not just the title. */
 const Row = styled.div`
   position: relative;
@@ -541,14 +552,15 @@ const Row = styled.div`
   grid-template-areas: ${AREAS};
   align-items: center;
   gap: var(--space-4);
-  border: 1px solid var(--gray-a5);
-  border-radius: var(--radius-3);
   padding: var(--space-3) var(--space-4);
-  background: var(--color-panel-solid);
-  transition: border-color 0.15s ease;
+  transition: background-color 0.15s ease;
+
+  & + & {
+    border-top: 1px solid var(--ds-neutral-alpha-6);
+  }
 
   &:hover {
-    border-color: var(--gray-a8);
+    background-color: var(--ds-neutral-2);
   }
 
   ${(p) => p.theme.breakpoints.down('md')} {
@@ -614,10 +626,10 @@ const ProjectLink = styled(NavLink)`
     outline: none;
   }
 
+  /* Inset, so the ring survives the panel clipping its rows' corners. */
   &:focus-visible::after {
     outline: 2px solid var(--ds-accent-9);
-    outline-offset: 2px;
-    border-radius: var(--radius-3);
+    outline-offset: -2px;
   }
 
   ${Row}:hover & {
