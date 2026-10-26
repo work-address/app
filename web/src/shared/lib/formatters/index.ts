@@ -1,5 +1,6 @@
 export * from './format-duration'
 export * from './format-wallet-address'
 export * from './get-friendly-wallet-address'
+export * from './format-date-range'
 export * from './intl-formatters'
 export * from './to-image-data-url'
