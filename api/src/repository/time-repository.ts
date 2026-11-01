@@ -421,33 +421,19 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     })
   }
 
-  public findByIdsConfirmAccess(ids: string[], user: User): RepoEffect<Time[]> {
-    const uniqueIds = [...new Set(ids)]
+  /** Removes what entries recorded about processes, and the usage built from it. */
+  public clearProcesses(times: Time[]): RepoEffect<void> {
+    for (const time of times) {
+      time.processes = null
+    }
 
-    const qb = this.getRepo()
-      .createQueryBuilder('time')
-      .innerJoinAndSelect('time.project', 'project')
-      .innerJoinAndSelect('project.user', 'owner')
-      .innerJoinAndSelect('time.user', 'author')
-      .andWhere('time.id IN (:...ids)', { ids: uniqueIds })
-
-    this.access.filterEntries(qb, { project: 'project', owner: 'owner' }, user)
-
-    return fromPromise(async () => {
-      const times = await qb.getMany()
-
-      if (times.length !== uniqueIds.length) {
-        throw new AccessException()
-      }
-
-      for (const time of times) {
-        if (!time.isAuthor(user) && !time.project.isOwner(user)) {
-          throw new AccessException()
-        }
-      }
-
-      return times
-    })
+    return fromPromise(() =>
+      this.getRepo().manager.transaction(async (manager) => {
+        await manager.save(Time, times)
+        for (const time of times)
+          await manager.delete(AppUsage, { time: { id: time.id } })
+      }),
+    )
   }
 
   public publishAsAuthor(ids: string[], user: User): RepoEffect<void> {
@@ -561,53 +547,6 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     })
   }
 
-  public findTimeAsAuthorOrFail(time: Time, user: User): RepoEffect<Time> {
-    return fromPromise(() =>
-      this.getRepo()
-        .createQueryBuilder('time')
-        .innerJoinAndSelect('time.project', 'project')
-        .innerJoinAndSelect('time.user', 'author')
-        .andWhere('time.id = :timeId', { timeId: time.id })
-        .andWhere('author.id = :userId', { userId: user.id })
-        .select()
-        .getOneOrFail(),
-    )
-  }
-
-  public findWithProcessesForProjectSince(
-    project: Project,
-    fromAt: Date,
-  ): RepoEffect<Time[]> {
-    return fromPromise(() =>
-      this.getRepo()
-        .createQueryBuilder('time')
-        .innerJoin('time.project', 'project')
-        .andWhere('project.id = :projectId', { projectId: project.id })
-        .andWhere('time.fromAt >= :fromAt', { fromAt })
-        .andWhere('time.processes IS NOT NULL')
-        .andWhere("time.processes::text != '[]'")
-        .orderBy('time.fromAt', 'ASC')
-        .getMany(),
-    )
-  }
-
-  public findAllTimeForProject(
-    project: Project,
-    user: User,
-  ): RepoEffect<Time[]> {
-    const qb = this.getRepo()
-      .createQueryBuilder('time')
-      .innerJoinAndSelect('time.project', 'project')
-      .innerJoin('project.user', 'owner')
-      .andWhere('project.id = :projectId', { projectId: project.id })
-
-    this.access.filterEntries(qb, { project: 'project', owner: 'owner' }, user)
-
-    return fromPromise(() =>
-      qb.select('time').orderBy('time.fromAt', 'DESC').getMany(),
-    )
-  }
-
   public findTimeSingleForProject(
     project: Project,
     from: Date,
@@ -656,30 +595,6 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         .andWhere('project.id = :projectId', { projectId: project.id })
         .andWhere('project.deletedAt IS NULL')
         .andWhere(INVOICEABLE)
-        .getMany(),
-    )
-  }
-
-  /**
-   * Every entry an invoice covers, paid or not, so reverting a payment can put
-   * back exactly what marking it paid took.
-   */
-  public findTimeForAuthorBetween(
-    from: Date,
-    to: Date,
-    project: Project,
-    author: User,
-  ): RepoEffect<Time[]> {
-    return fromPromise(() =>
-      this.getRepo()
-        .createQueryBuilder('time')
-        .innerJoinAndSelect('time.project', 'project')
-        .innerJoin('time.user', 'author')
-        .andWhere('time.fromAt >= :from', { from })
-        .andWhere('time.toAt <= :to', { to })
-        .andWhere('author.id = :authorId', { authorId: author.id })
-        .andWhere('project.id = :projectId', { projectId: project.id })
-        .andWhere('project.deletedAt IS NULL')
         .getMany(),
     )
   }
@@ -785,24 +700,4 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     )
   }
 
-  public findTimeBetweenForProject(
-    from: number,
-    to: number,
-    project: Project,
-    freelancer: User,
-  ): RepoEffect<Time[]> {
-    return fromPromise(() =>
-      this.getRepo()
-        .createQueryBuilder('time')
-        .innerJoinAndSelect('time.project', 'project')
-        .innerJoin('project.user', 'owner')
-        .andWhere('time.fromAt >= :from', { from: new Date(from) })
-        .andWhere('time.toAt <= :to', { to: new Date(to) })
-        .andWhere('owner.id = :ownerId', { ownerId: freelancer.id })
-        .andWhere('project.id = :projectId', { projectId: project.id })
-        .andWhere('project.deletedAt IS NULL')
-        .andWhere('COALESCE(time.isPaid, false) = false')
-        .getMany(),
-    )
-  }
 }

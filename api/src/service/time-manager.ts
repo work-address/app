@@ -4,7 +4,6 @@ import moment from 'moment'
 
 import { Time } from '@/entity/time'
 import { AppUsagePolicy } from '@/service/app-usage-policy'
-import { AppUsage } from '@/entity/app-usage'
 import { User } from '@/entity/user'
 import { TimeRepository } from '@/repository/time-repository'
 import { ProjectRepository } from '@/repository/project-repository'
@@ -254,17 +253,7 @@ export class TimeManager {
     return Effect.gen(this, function* () {
       const times = yield* this.timeRepository.findByIdsAsAuthor(ids, user)
 
-      for (const time of times) {
-        time.processes = null
-      }
-
-      yield* fromPromise(() =>
-        this.timeRepository.getRepo().manager.transaction(async (manager) => {
-          await manager.save(Time, times)
-          for (const time of times)
-            await manager.delete(AppUsage, { time: { id: time.id } })
-        }),
-      )
+      yield* this.timeRepository.clearProcesses(times)
     })
   }
 
