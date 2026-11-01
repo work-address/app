@@ -1,4 +1,3 @@
-import { ProjectAccess } from '@/service/project-access'
 import { inject, injectable } from 'inversify'
 import moment from 'moment-timezone'
 import { BadRequestError } from 'routing-controllers'
@@ -16,6 +15,7 @@ import { runPromise } from '@/service/effect-bridge'
 import AccessException from '@/exception/access-exception'
 import { StatisticsInsights } from '@/service/statistics-insights'
 import { Span, TimeSpans } from '@/service/time-spans'
+import { ProjectAccess } from '@/service/project-access'
 
 const APP_KINDS = ['daily', 'ranking', 'titles', 'workers', 'projects']
 

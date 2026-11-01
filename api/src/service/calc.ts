@@ -17,14 +17,17 @@ export class Calc {
   /**
    * Wall-clock minutes a set of entries covers, taken from each row's own
    * span so that entries recorded under different tracker intervals total
-   * correctly together.
+   * correctly together. A backwards entry counts as nothing.
    */
   public static spanMinutes(times: { fromAt: Date; toAt: Date }[]): number {
     return times.reduce(
       (total, time) =>
         total +
-        (new Date(time.toAt).getTime() - new Date(time.fromAt).getTime()) /
-          60000,
+        Math.max(
+          0,
+          (new Date(time.toAt).getTime() - new Date(time.fromAt).getTime()) /
+            60000,
+        ),
       0,
     )
   }

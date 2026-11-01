@@ -33,6 +33,10 @@ const TIME_SORT_COLUMN_BY_KEY: Record<string, string> = {
   paidStatus: 'time.isPaid',
 }
 
+/** What an author may still bill: not paid by hand, and on no invoice. */
+const INVOICEABLE =
+  'COALESCE(time.isPaid, false) = false AND time.invoiceId IS NULL'
+
 @injectable()
 export class TimeRepository extends AbstractRepositoryTemplate<Time> {
   @inject('ProjectAccess')
@@ -651,8 +655,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         .andWhere('author.id = :authorId', { authorId: author.id })
         .andWhere('project.id = :projectId', { projectId: project.id })
         .andWhere('project.deletedAt IS NULL')
-        .andWhere('COALESCE(time.isPaid, false) = false')
-        .andWhere('time.invoiceId IS NULL')
+        .andWhere(INVOICEABLE)
         .getMany(),
     )
   }
@@ -704,8 +707,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         .andWhere('author.id = :authorId', { authorId: author.id })
         .andWhere('project.id = :projectId', { projectId: project.id })
         .andWhere('project.deletedAt IS NULL')
-        .andWhere('COALESCE(time.isPaid, false) = false')
-        .andWhere('time.invoiceId IS NULL')
+        .andWhere(INVOICEABLE)
         .orderBy('time.fromAt', 'ASC')
         .getMany(),
     )
@@ -736,8 +738,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         .andWhere('author.id = :authorId', { authorId: author.id })
         .andWhere('project.id = :projectId', { projectId: project.id })
         .andWhere('project.deletedAt IS NULL')
-        .andWhere('COALESCE(time.isPaid, false) = false')
-        .andWhere('time.invoiceId IS NULL')
+        .andWhere(INVOICEABLE)
         .orderBy('time.fromAt', 'ASC')
         .getMany(),
     )

@@ -1,4 +1,3 @@
-import { ProjectAccess } from '@/service/project-access'
 import { Effect } from 'effect'
 import { inject, injectable } from 'inversify'
 import { BadRequestError } from 'routing-controllers'
@@ -14,9 +13,9 @@ import { TimeRepository } from '@/repository/time-repository'
 import { User } from '@/entity/user'
 import { EInvoiceState, IInvoiceReport } from '@/model/invoice'
 import { InvoiceCreateDto } from '@/model/dto/invoice'
-import { Calc } from '@/service/calc'
 import AccessException from '@/exception/access-exception'
 import { InvoiceSnapshot } from '@/service/invoice-snapshot'
+import { ProjectAccess } from '@/service/project-access'
 
 /**
  * Invoices are the money record; `Time` is the work record. Nothing else
@@ -62,69 +61,36 @@ export class InvoiceManager {
       const active = times.reduce((sum, t) => sum + (t.minutesActive || 0), 0)
       found.lines ??= [InvoiceSnapshot.legacyHuman(found.amountCents, active)]
       found.time = times
-      found.report = InvoiceManager.reportFor(
-        times,
-        (found.lines.find((line) => line.kind === 'human')?.rateHourCents ??
-          0) / 100,
-      )
-
-      const human = found.lines.find((line) => line.kind === 'human')
-      if (human) {
-        found.report.rateHour =
-          human.rateHourCents === null ? null : human.rateHourCents / 100
-        found.report.minutes = human.minutes
-        found.report.minutesActive = human.activeMinutes ?? 0
-        found.report.minutesPaid =
-          found.state === EInvoiceState.PAID ? human.minutes : 0
-        found.report.minutesUnpaid =
-          found.state === EInvoiceState.REQUESTED ? human.minutes : 0
-      }
-      found.report.rateTotal = found.amountCents / 100
+      found.report = InvoiceManager.reportFor(found, times)
       return found
     })
   }
 
   /**
-   * Rolls a set of entries up for display.
-   *
-   * Summed in memory from the same rows that are returned as line items, so
-   * the two cannot drift. `minutes` is the wall-clock span the tracker
-   * covered, read from each entry's own fromAt/toAt rather than assumed from
-   * a fixed interval, so an invoice spanning a change of interval still bills
-   * correctly. Distinct from `minutesActive`, which is time actually worked.
+   * The invoice page's roll-up. Money and minutes come from the frozen human
+   * line, because that is what was charged; input counts come from the entries.
    */
-  public static reportFor(times: Time[], rateHour: number): IInvoiceReport {
+  private static reportFor(invoice: Invoice, times: Time[]): IInvoiceReport {
     const sum = (pick: (time: Time) => number | null | undefined): number =>
       times.reduce((total, time) => total + (Number(pick(time)) || 0), 0)
-
-    const minutes = Calc.spanMinutes(times)
-    const minutesActive = sum((time) => time.minutesActive)
+    const human = invoice.lines?.find((line) => line.kind === 'human')
+    const minutes = human?.minutes ?? 0
 
     return {
-      rateHour,
-      rateTotal: Calc.rateTotal(minutes, rateHour),
+      rateHour: human
+        ? human.rateHourCents === null
+          ? null
+          : human.rateHourCents / 100
+        : 0,
+      rateTotal: invoice.amountCents / 100,
       minutes,
-      minutesActive,
-      minutesPaid: sum((time) => (time.isPaid ? time.minutesActive : 0)),
-      minutesUnpaid: sum((time) => (time.isPaid ? 0 : time.minutesActive)),
+      minutesActive: human?.activeMinutes ?? 0,
+      minutesPaid: invoice.state === EInvoiceState.PAID ? minutes : 0,
+      minutesUnpaid: invoice.state === EInvoiceState.REQUESTED ? minutes : 0,
       keyboardKeys: sum((time) => time.keyboardKeys),
       mouseKeys: sum((time) => time.mouseKeys),
       mouseDistance: sum((time) => time.mouseDistance),
     }
-  }
-
-  /** Hourly cost of a set of entries, in whole cents. */
-  public static amountFor(times: Time[], rateHour: number): number {
-    const minutes = times.reduce(
-      (sum, time) =>
-        sum +
-        Math.max(0, (+new Date(time.toAt) - +new Date(time.fromAt)) / 60000),
-      0,
-    )
-
-    // Rounded once, at the end: rounding per entry accumulates a cent of drift
-    // for every row on a long invoice.
-    return Math.round((minutes / 60) * rateHour * 100)
   }
 
   /**
@@ -168,10 +134,6 @@ export class InvoiceManager {
       invoice.user = author
       invoice.fromAt = fromAt
       invoice.toAt = toAt
-      invoice.amountCents = InvoiceManager.amountFor(
-        times,
-        Number(accessible.rateHour) || 0,
-      )
       invoice.state = EInvoiceState.REQUESTED
       invoice.paidAt = null
 
@@ -238,10 +200,6 @@ export class InvoiceManager {
       invoice.toAt = new Date(
         Math.max(...times.map((time) => new Date(time.toAt).getTime())),
       )
-      invoice.amountCents = InvoiceManager.amountFor(
-        times,
-        Number(accessible.rateHour) || 0,
-      )
       invoice.state = EInvoiceState.REQUESTED
       invoice.paidAt = null
 
@@ -296,17 +254,61 @@ export class InvoiceManager {
    * the record worth less than the wallet history it is meant to summarise.
    */
   public markPaid(invoice: Invoice, actor: User): RepoEffect<Invoice> {
-    return this.invoiceRepository.setPaid(invoice, actor, true)
+    return this.setPaid(invoice, actor, true)
   }
   public markUnpaid(invoice: Invoice, actor: User): RepoEffect<Invoice> {
-    return this.invoiceRepository.setPaid(invoice, actor, false)
+    return this.setPaid(invoice, actor, false)
   }
+
+  private setPaid(
+    invoice: Invoice,
+    actor: User,
+    paid: boolean,
+  ): RepoEffect<Invoice> {
+    return this.invoiceRepository.setPayment(invoice, (current) => {
+      if (current.user?.id !== actor.id) {
+        throw new AccessException(
+          'Only the person who issued an invoice may change its payment state',
+        )
+      }
+
+      if (current.state === EInvoiceState.REJECTED) {
+        throw new BadRequestError('A rejected invoice cannot be paid')
+      }
+
+      current.state = paid ? EInvoiceState.PAID : EInvoiceState.REQUESTED
+      current.paidAt = paid ? (current.paidAt ?? new Date()) : null
+    })
+  }
+
+  /** The person paying is the one who disputes, and only the invoice as a whole. */
   public reject(
     invoice: Invoice,
     actor: User,
     reason?: string,
   ): RepoEffect<Invoice> {
-    return this.invoiceRepository.reject(invoice, actor, reason)
+    return this.invoiceRepository.reject(invoice, (stored, project) => {
+      if (!project.isOwner(actor)) {
+        throw new AccessException(
+          'Only the project owner may reject an invoice',
+        )
+      }
+
+      if (stored.state !== EInvoiceState.REQUESTED) {
+        throw new BadRequestError('Only a requested invoice can be rejected')
+      }
+
+      if (
+        reason !== undefined &&
+        (typeof reason !== 'string' || reason.length > 500)
+      ) {
+        throw new BadRequestError('Invalid rejection reason')
+      }
+
+      stored.state = EInvoiceState.REJECTED
+      stored.rejectionReason = reason?.trim() || null
+      stored.rejectedAt = new Date()
+    })
   }
 
   /**
@@ -354,10 +356,6 @@ export class InvoiceManager {
       invoice.user = author
       // The repository sets the period to span the human entries and agent
       // runs it bills.
-      invoice.amountCents = InvoiceManager.amountFor(
-        outstanding,
-        Number(accessible.rateHour) || 0,
-      )
       invoice.state = EInvoiceState.REQUESTED
       invoice.paidAt = null
 

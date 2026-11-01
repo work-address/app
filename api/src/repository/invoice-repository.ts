@@ -2,6 +2,7 @@ import _ from 'lodash'
 import { inject, injectable } from 'inversify'
 
 import { Filter } from '@/service/filter'
+import { InvoiceLines } from '@/service/invoice-lines'
 import { ProjectAccess } from '@/service/project-access'
 import { Brackets, EntityManager, In } from 'typeorm'
 import { Time } from '@/entity/time'
@@ -140,32 +141,7 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
         }
         const lines: IInvoiceLine[] = []
         if (times.length) {
-          const minutes = times.reduce(
-            (sum, t) => sum + Math.max(0, (+t.toAt - +t.fromAt) / 60000),
-            0,
-          )
-          const rateHourCents = Math.round(Number(project.rateHour || 0) * 100)
-          lines.push({
-            kind: 'human',
-            name: 'Human time',
-            basis: 'tracked',
-            minutes,
-            activeMinutes: times.reduce(
-              (sum, t) =>
-                sum +
-                Math.min(
-                  Math.max(0, (+t.toAt - +t.fromAt) / 60000),
-                  t.minutesActive || 0,
-                ),
-              0,
-            ),
-            manualMinutes: times
-              .filter((t) => t.source !== 'desktop')
-              .reduce((sum, t) => sum + (+t.toAt - +t.fromAt) / 60000, 0),
-            rateHourCents,
-            amountCents: Math.round((minutes * rateHourCents) / 60),
-            rateChanges: [],
-          })
+          lines.push(InvoiceLines.human(times, Number(project.rateHour || 0)))
         }
         if (runs.length) {
           const worker = await manager.findOneByOrFail(User, {
@@ -314,10 +290,13 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
     )
   }
 
+  /**
+   * Rejects under the invoice's lock. `decide` holds the rules and marks the
+   * invoice; this releases what it billed and keeps its charged basis.
+   */
   public reject(
     invoice: Invoice,
-    actor: User,
-    reason?: string,
+    decide: (stored: Invoice, project: Project) => void,
   ): RepoEffect<Invoice> {
     return fromPromise(() =>
       this.getRepo().manager.transaction(async (manager) => {
@@ -330,17 +309,7 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
           where: { id: invoice.project.id },
           relations: { user: true },
         })
-        if (!project.isOwner(actor))
-          throw new AccessException(
-            'Only the project owner may reject an invoice',
-          )
-        if (stored.state !== EInvoiceState.REQUESTED)
-          throw new BadRequestError('Only a requested invoice can be rejected')
-        if (
-          reason !== undefined &&
-          (typeof reason !== 'string' || reason.length > 500)
-        )
-          throw new BadRequestError('Invalid rejection reason')
+        decide(stored, project)
         if (stored.lines === null) {
           // Preserve the charged basis before unlinking the only legacy evidence.
           const times = await manager
@@ -356,9 +325,6 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
             ),
           ]
         }
-        stored.state = EInvoiceState.REJECTED
-        stored.rejectionReason = reason?.trim() || null
-        stored.rejectedAt = new Date()
         await this.agents.releaseInvoice(manager, stored.id)
         await manager.update(
           Time,
@@ -370,10 +336,13 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
     )
   }
 
-  public setPaid(
+  /**
+   * Changes a payment under the invoice's lock. `decide` holds the rules and
+   * marks the invoice; the issuer's entries and runs follow what it decided.
+   */
+  public setPayment(
     invoice: Invoice,
-    actor: User,
-    paid: boolean,
+    decide: (current: Invoice) => void,
   ): RepoEffect<Invoice> {
     return fromPromise(() =>
       this.getRepo().manager.transaction(async (manager) => {
@@ -390,25 +359,21 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
           loadEagerRelations: false,
           lock: { mode: 'pessimistic_write' },
         })
-        if (stored.user?.id !== actor.id)
-          throw new AccessException(
-            'Only the person who issued an invoice may change its payment state',
-          )
-        if (locked.state === EInvoiceState.REJECTED)
-          throw new BadRequestError('A rejected invoice cannot be paid')
-        locked.state = paid ? EInvoiceState.PAID : EInvoiceState.REQUESTED
-        locked.paidAt = paid ? (locked.paidAt ?? new Date()) : null
+        const current = Object.assign(stored, locked)
+        decide(current)
+        const isPaid = current.state === EInvoiceState.PAID
+        const scope = { user: { id: current.user!.id } }
         await manager.update(
           TimeAgent,
-          { invoiceId: invoice.id, userId: actor.id },
-          { isPaid: paid },
+          { invoiceId: invoice.id, userId: current.user!.id },
+          { isPaid },
         )
         await manager.update(
           Time,
-          { invoice: { id: invoice.id }, user: { id: actor.id } },
-          { isPaid: paid },
+          { invoice: { id: invoice.id }, ...scope },
+          { isPaid },
         )
-        return manager.save(Invoice, Object.assign(stored, locked))
+        return manager.save(Invoice, current)
       }),
     )
   }
