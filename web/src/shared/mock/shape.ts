@@ -4,6 +4,7 @@
  * owner is premium) and `TimeVisibility` (another worker's detail reaches the
  * owner after their review window; viewers never get it).
  */
+import { spanMinutes } from './db'
 import { demoScreenshots } from './images'
 
 import type {
@@ -141,11 +142,9 @@ const invoiceMinutes = (db: Db, invoice: MockInvoice) => {
   const entries = db.times.filter((time) => invoice.timeIds.includes(time.id))
   return {
     entries,
-    minutes: entries.length * 10,
+    minutes: spanMinutes(entries),
     active: entries.reduce((sum, e) => sum + (e.minutesActive ?? 0), 0),
-    manual: entries
-      .filter((e) => e.source !== 'desktop')
-      .reduce((sum) => sum + 10, 0),
+    manual: spanMinutes(entries.filter((e) => e.source !== 'desktop')),
   }
 }
 

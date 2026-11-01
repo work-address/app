@@ -1,0 +1,63 @@
+name: API contract
+
+# The API and the web demo's mock answer the same scenarios
+# (packages/api-contract), so a rule changed in one fails until the other agrees.
+on:
+  pull_request:
+    paths:
+      - 'api/src/**'
+      - 'web/src/shared/mock/**'
+      - 'packages/api-contract/**'
+      - 'packages/statistics-core/**'
+      - 'pnpm-lock.yaml'
+      - '.github/workflows/api-contract.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  contract:
+    runs-on: ubuntu-latest
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_USER: contract
+          POSTGRES_PASSWORD: contract
+          POSTGRES_DB: contract
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd pg_isready --health-interval 5s --health-timeout 5s
+          --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+    env:
+      APP_DB_HOST: localhost
+      APP_DB_PORT: '5432'
+      APP_DB_USERNAME: contract
+      APP_DB_PASSWORD: contract
+      APP_DB_NAME: contract
+    steps:
+      - uses: actions/checkout@v4
+      - uses: pnpm/action-setup@v4
+        with:
+          version: 9.15.0
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          cache: pnpm
+      - run: pnpm install --frozen-lockfile --ignore-scripts
+      - run: pnpm --filter @work-address/agent-tracking-contract --filter @work-address/statistics-core build
+      - name: The API
+        working-directory: api
+        run: >-
+          NODE_ENV=test TS_NODE_PROJECT=tsconfig.json
+          NODE_OPTIONS=--no-experimental-strip-types
+          ./node_modules/.bin/mocha --exit
+          -r tsconfig-paths/register -r ts-node/register
+          src/test/contract/api-contract.test.ts
+      - name: The demo's mock
+        working-directory: web
+        run: ./node_modules/.bin/vitest run --project unit src/shared/mock/contract.test.ts

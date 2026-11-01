@@ -84,6 +84,15 @@ export type MockTime = {
   invoiceId: string | null
 }
 
+/** Minutes an entry spans: its own times, not an assumed slot. */
+export const spanMinutes = (entries: Pick<MockTime, 'fromAt' | 'toAt'>[]) =>
+  entries.reduce(
+    (sum, entry) =>
+      sum +
+      Math.max(0, (Date.parse(entry.toAt) - Date.parse(entry.fromAt)) / 60_000),
+    0,
+  )
+
 export type MockInvoiceState = 'PAID' | 'Requested' | 'REJECTED'
 
 export type MockInvoice = {
@@ -648,7 +657,7 @@ function makeInvoices(
       continue
     }
     const rateHourCents = Math.round(Number(project.rateHour) * 100)
-    const minutes = entries.length * 10
+    const minutes = spanMinutes(entries)
     const state: MockInvoiceState =
       !rejected && Number(age) === 1 && f.number.float() < 0.5
         ? 'REJECTED'

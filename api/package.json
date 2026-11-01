@@ -67,6 +67,7 @@
     "@types/lodash": "^4.17.25",
     "@types/mocha": "^9.1.1",
     "@types/node": "^26.3.0",
+    "@work-address/api-contract": "workspace:*",
     "chai": "^4.5.0",
     "eslint": "^9.39.4",
     "mocha": "^9.2.2",

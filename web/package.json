@@ -84,6 +84,7 @@
     "@vitejs/plugin-react": "^5.2.0",
     "@vitest/browser-playwright": "^4.1.11",
     "@vitest/coverage-v8": "^4.1.11",
+    "@work-address/api-contract": "workspace:*",
     "babel-plugin-styled-components": "^2.3.0",
     "effector-logger": "^0.15.0",
     "eslint": "^9.39.4",

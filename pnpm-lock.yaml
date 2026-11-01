@@ -172,6 +172,9 @@ importers:
       '@types/node':
         specifier: ^26.3.0
         version: 26.3.0
+      '@work-address/api-contract':
+        specifier: workspace:*
+        version: link:../packages/api-contract
       chai:
         specifier: ^4.5.0
         version: 4.5.0
@@ -266,6 +269,8 @@ importers:
       tsx:
         specifier: ^4.19.4
         version: 4.21.0
+
+  packages/api-contract: {}
 
   packages/eslint-config:
     dependencies:
@@ -554,6 +559,9 @@ importers:
       '@vitest/coverage-v8':
         specifier: ^4.1.11
         version: 4.1.11(@vitest/browser@4.1.11)(vitest@4.1.11)
+      '@work-address/api-contract':
+        specifier: workspace:*
+        version: link:../packages/api-contract
       babel-plugin-styled-components:
         specifier: ^2.3.0
         version: 2.3.0(@babel/core@7.29.0)(styled-components@6.5.3(css-to-react-native@3.2.0)(react-dom@19.2.8(react@19.2.8))(react-native@0.85.3(@babel/core@7.29.0)(@types/react@19.2.18)(bufferutil@4.1.0)(react@19.2.8)(utf-8-validate@6.0.6))(react@19.2.8))

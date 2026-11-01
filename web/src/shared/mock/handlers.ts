@@ -6,12 +6,14 @@
  */
 import { http, HttpResponse, delay, type HttpHandler } from 'msw'
 
+import { spanMinutes } from './db'
 import { DEMO_ACCESS_TOKEN, DEMO_REFRESH_TOKEN, signInDemo } from './session'
 import { readDemoSettings, writeDemoSettings } from './settings'
 import {
   hasDetail,
   isOwner,
   isViewer,
+  isPublished,
   isWorker,
   projectOf,
   shapeInvoice,
@@ -28,6 +30,7 @@ import {
   DemoHttpError,
   insightsMe,
   overview,
+  reportRefused,
   statisticsScope,
   team,
   timeDaily,
@@ -255,6 +258,9 @@ function searchTimes({ db, meId, body }: Ctx) {
     (!has(`${key}To`) || (value ?? Infinity) <= Number(filter[`${key}To`]))
   const rows = visibleTimes(db, meId).filter((time) => {
     const project = projectOf(db, time.projectId)!
+    if (project.state !== 'Active') {
+      return false
+    }
     if (needsDetail && !hasDetail(time, project, meId)) {
       return false
     }
@@ -313,17 +319,23 @@ function searchTimes({ db, meId, body }: Ctx) {
   return [(items as MockTime[]).map((time) => shapeTime(db, time, meId)), total]
 }
 
-/** Entries the reader may change: their own, or any on a project they own. */
+/** Entries the reader may change: their own record, nobody else's. */
 function editableTimes(db: Db, meId: string, ids: unknown) {
   const wanted = new Set(Array.isArray(ids) ? (ids as string[]) : [])
   const rows = db.times.filter((time) => wanted.has(time.id))
   for (const time of rows) {
-    const project = projectOf(db, time.projectId)
-    if (!project || (time.userId !== meId && !isOwner(project, meId))) {
+    if (time.userId !== meId) {
       fail(403, 'Access denied')
     }
   }
   return rows
+}
+
+/** An invoice owns the paid state of what it bills. */
+function refuseInvoicedPaidChange(time: MockTime, isPaid: boolean) {
+  if (time.invoiceId && time.isPaid !== isPaid) {
+    fail(400, 'This time is on an invoice: change the invoice instead')
+  }
 }
 
 const visibleInvoices = (db: Db, meId: string) =>
@@ -332,14 +344,31 @@ const visibleInvoices = (db: Db, meId: string) =>
     return invoice.userId === meId || (project && isOwner(project, meId))
   })
 
-function ownedInvoice(db: Db, meId: string, id: string) {
+function rejectableInvoice(db: Db, meId: string, id: string) {
   const invoice = db.invoices.find((i) => i.id === id)
   const project = invoice && db.projects.find((p) => p.id === invoice.projectId)
   if (!invoice || !project) {
     fail(404, 'Invoice not found')
   }
   if (!isOwner(project!, meId)) {
-    fail(403, 'Access denied')
+    fail(403, 'Only the project owner may reject an invoice')
+  }
+  if (invoice!.state !== 'Requested') {
+    fail(400, 'Only a requested invoice can be rejected')
+  }
+  return invoice!
+}
+
+function settleableInvoice(db: Db, meId: string, id: string) {
+  const invoice = db.invoices.find((i) => i.id === id)
+  if (!invoice) {
+    fail(404, 'Invoice not found')
+  }
+  if (invoice!.userId !== meId) {
+    fail(403, 'Only the person who issued an invoice may change its payment')
+  }
+  if (invoice!.state === 'REJECTED') {
+    fail(400, 'A rejected invoice cannot be paid')
   }
   return invoice!
 }
@@ -521,7 +550,9 @@ export const handlers: HttpHandler[] = [
       if (time.projectId !== params.id || Date.parse(time.fromAt) < since) {
         continue
       }
-      if (!hasDetail(time, project!, meId)) {
+      // A worker reads their own; the owner and viewers what is published.
+      const shared = isOwner(project!, meId) || !isWorker(db, project!, meId)
+      if (time.userId !== meId && !(shared && isPublished(time, project!))) {
         continue
       }
       for (const app of time.apps) {
@@ -584,6 +615,9 @@ export const handlers: HttpHandler[] = [
     if (!time) {
       fail(404, 'Time not found')
     }
+    if ('isPaid' in body) {
+      refuseInvoicedPaidChange(time, Boolean(body.isPaid))
+    }
     return shapeTime(
       db,
       saveRow('times', {
@@ -605,7 +639,11 @@ export const handlers: HttpHandler[] = [
   }),
   ...(['paid', 'unpaid'] as const).map((state) =>
     route('post', `/time/${state}`, ({ db, meId, body }) => {
-      for (const time of editableTimes(db, meId, body.ids)) {
+      const rows = editableTimes(db, meId, body.ids)
+      for (const time of rows) {
+        refuseInvoicedPaidChange(time, state === 'paid')
+      }
+      for (const time of rows) {
         saveRow('times', { ...time, isPaid: state === 'paid' })
       }
       return { success: true }
@@ -642,9 +680,12 @@ export const handlers: HttpHandler[] = [
     ]
   }),
   route('get', '/invoice/:id', ({ db, meId, params }) => {
+    if (!db.invoices.some((i) => i.id === params.id)) {
+      fail(404, 'Invoice not found')
+    }
     const invoice = visibleInvoices(db, meId).find((i) => i.id === params.id)
     if (!invoice) {
-      fail(404, 'Invoice not found')
+      fail(403, 'Access denied')
     }
     return shapeInvoice(db, invoice!, meId, true)
   }),
@@ -654,14 +695,38 @@ export const handlers: HttpHandler[] = [
       fail(403, 'Access denied')
     }
     const wanted = new Set((body.timeIds as string[] | undefined) ?? [])
+    const from = body.fromUnix as number | undefined
+    const to = body.toUnix as number | undefined
+    const ranged = wanted.size === 0 && from !== undefined && to !== undefined
     const entries = db.times
       .filter(
-        (t) => t.projectId === project!.id && t.userId === meId && !t.invoiceId,
+        (t) =>
+          t.projectId === project!.id &&
+          t.userId === meId &&
+          !t.invoiceId &&
+          !t.isPaid,
       )
       .filter((t) => wanted.size === 0 || wanted.has(t.id))
+      .filter(
+        (t) =>
+          !ranged || (Date.parse(t.fromAt) >= from && Date.parse(t.toAt) <= to),
+      )
       .sort((a, b) => a.fromAt.localeCompare(b.fromAt))
+    if (wanted.size > 0 && entries.length !== wanted.size) {
+      fail(
+        400,
+        'Some of the selected entries are not yours, already paid, or already on an invoice',
+      )
+    }
     if (entries.length === 0) {
-      fail(400, 'Nothing to invoice')
+      if (ranged) {
+        fail(400, 'There is no unpaid tracked time in that period')
+      }
+      // Everything outstanding is billed already: the latest stands.
+      const latest = db.invoices
+        .filter((i) => i.projectId === project!.id && i.userId === meId)
+        .sort((a, b) => b.createdAt.localeCompare(a.createdAt))[0]
+      return latest ? shapeInvoice(db, latest, meId) : null
     }
     const now = new Date().toISOString()
     const rateHourCents = Math.round(Number(project!.rateHour) * 100)
@@ -673,7 +738,7 @@ export const handlers: HttpHandler[] = [
       userId: meId,
       fromAt: entries[0].fromAt,
       toAt: entries.at(-1)!.toAt,
-      amountCents: Math.round((entries.length * 10 * rateHourCents) / 60),
+      amountCents: Math.round((spanMinutes(entries) * rateHourCents) / 60),
       rateHourCents,
       state: 'Requested',
       rejectionReason: null,
@@ -691,7 +756,7 @@ export const handlers: HttpHandler[] = [
       db,
       setInvoiceState(
         db,
-        ownedInvoice(db, meId, params.id),
+        rejectableInvoice(db, meId, params.id),
         'REJECTED',
         body.reason as string,
       ),
@@ -701,14 +766,14 @@ export const handlers: HttpHandler[] = [
   route('post', '/invoice/:id/paid', ({ db, meId, params }) =>
     shapeInvoice(
       db,
-      setInvoiceState(db, ownedInvoice(db, meId, params.id), 'PAID'),
+      setInvoiceState(db, settleableInvoice(db, meId, params.id), 'PAID'),
       meId,
     ),
   ),
   route('post', '/invoice/:id/unpaid', ({ db, meId, params }) =>
     shapeInvoice(
       db,
-      setInvoiceState(db, ownedInvoice(db, meId, params.id), 'Requested'),
+      setInvoiceState(db, settleableInvoice(db, meId, params.id), 'Requested'),
       meId,
     ),
   ),
@@ -758,6 +823,9 @@ export const handlers: HttpHandler[] = [
     const scope = statisticsScope(db, meId, q)
     if (scope.projects.length === 0) {
       return { rows: [] }
+    }
+    if (reportRefused(scope, params.kind)) {
+      fail(403, 'Access denied')
     }
     return { rows: apps(scope, params.kind) }
   }),

@@ -1,0 +1,8 @@
+{
+  "name": "@work-address/api-contract",
+  "version": "0.0.1",
+  "description": "Scenarios the Work Address API and the web demo's mock must both pass",
+  "private": true,
+  "main": "./src/index.ts",
+  "types": "./src/index.ts"
+}

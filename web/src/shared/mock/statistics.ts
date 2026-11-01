@@ -2,12 +2,20 @@
  * The `/statistics/*` routes over the demo database, on the API's terms
  * (`StatisticsManager`, `StatisticsRepository`): the same scope, the same
  * visibility per role, the same review window. The rules the API keeps in
- * code - focus, hours, assisted time - come from the shared package, so the
- * two cannot drift.
+ * code - scope, report permissions, focus, hours, assisted time - come from the
+ * shared package. What the API computes in SQL is checked instead: the scenarios
+ * in packages/api-contract run against both. Window titles and gaps stay empty,
+ * because the demo's seed has no data to draw them from.
  */
 import {
   StatisticsInsights,
   TimeSpans,
+  projectsForPeople,
+  refusesQuery,
+  refusesReport,
+  zonedMidnight,
+  zonedParts,
+  type ReaderRole,
   type Span,
 } from '@work-address/statistics-core'
 
@@ -58,9 +66,21 @@ type Scope = {
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 
-// The web sends the browser's own timezone, so a local midnight is the
-// reader's midnight.
-const localMidnight = (day: string) => new Date(`${day}T00:00:00`).getTime()
+const roleOf = (project: MockProject, meId: string): ReaderRole =>
+  isOwner(project, meId)
+    ? 'owner'
+    : project.workerIds.includes(meId)
+      ? 'worker'
+      : project.viewerIds.includes(meId)
+        ? 'viewer'
+        : null
+
+/** Whether a report is refused to this scope's reader. */
+export const reportRefused = (scope: Scope, kind: string) =>
+  refusesReport(
+    kind,
+    scope.projects.map((project) => roleOf(project, scope.meId)),
+  )
 
 export function statisticsScope(
   db: Db,
@@ -74,8 +94,8 @@ export function statisticsScope(
       'Use a date range of at most 366 days; to is exclusive',
     )
   }
-  const from = localMidnight(query.from)
-  const to = localMidnight(query.to)
+  const from = zonedMidnight(query.from, query.timeZone)
+  const to = zonedMidnight(query.to, query.timeZone)
   if (to <= from || (to - from) / 86_400_000 > 366) {
     throw new DemoHttpError(
       400,
@@ -83,6 +103,7 @@ export function statisticsScope(
     )
   }
   const visible = visibleProjects(db, meId)
+  const role = (project: MockProject) => roleOf(project, meId)
   let projects: MockProject[]
   if (query.projectIds?.length) {
     projects = [...new Set(query.projectIds)].map((id) => {
@@ -92,20 +113,10 @@ export function statisticsScope(
       }
       return project
     })
-  } else if (query.userIds?.length) {
-    const onlySelf = query.userIds.every((id) => id === meId)
-    projects = visible.filter(
-      (p) => isOwner(p, meId) || (onlySelf && isWorker(db, p, meId)),
-    )
   } else {
-    projects = visible
+    projects = projectsForPeople(visible, role, meId, query.userIds)
   }
-  if (
-    query.userIds?.length &&
-    projects.some((p) => !isOwner(p, meId)) &&
-    (projects.some((p) => !isWorker(db, p, meId)) ||
-      query.userIds.some((id) => id !== meId))
-  ) {
+  if (refusesQuery(projects, role, meId, query)) {
     throw new DemoHttpError(403, 'Access denied')
   }
   return {
@@ -164,16 +175,18 @@ const appVisible = (scope: Scope, time: MockTime) =>
 
 const pad = (n: number) => String(n).padStart(2, '0')
 
-const dayOf = (iso: string) => {
-  const date = new Date(iso)
-  return `${date.getFullYear()}-${pad(date.getMonth() + 1)}-${pad(date.getDate())}`
-}
+const dayOf = (iso: string, timeZone: string) =>
+  zonedParts(Date.parse(iso), timeZone).day
 
 /** The reader's day, or their hour after it, as `time/daily` keys them. */
-const bucketOf = (iso: string, bucket: StatisticsQuery['bucket']) =>
+const bucketOf = (
+  iso: string,
+  bucket: StatisticsQuery['bucket'],
+  timeZone: string,
+) =>
   bucket === 'hour'
-    ? `${dayOf(iso)}T${pad(new Date(iso).getHours())}`
-    : dayOf(iso)
+    ? `${dayOf(iso, timeZone)}T${pad(zonedParts(Date.parse(iso), timeZone).hour)}`
+    : dayOf(iso, timeZone)
 
 export function totals(scope: Scope) {
   const rows = new Map<string, Record<string, number | string>>()
@@ -250,7 +263,7 @@ export function apps(scope: Scope, kind: string) {
       }
       const dims: Record<string, string> = { app: app.name }
       if (kind === 'daily') {
-        dims.day = dayOf(time.fromAt)
+        dims.day = dayOf(time.fromAt, scope.query.timeZone)
       }
       if (kind === 'titles') {
         Object.assign(dims, { title: '', domain: '' })
@@ -287,7 +300,7 @@ export function timeDaily(scope: Scope) {
     if (!countable(scope, time)) {
       continue
     }
-    const day = bucketOf(time.fromAt, scope.query.bucket)
+    const day = bucketOf(time.fromAt, scope.query.bucket, scope.query.timeZone)
     const key = `${day}:${time.projectId}`
     const row = rows.get(key) ?? {
       day,
@@ -355,6 +368,9 @@ function agentRuns(scope: Scope, only?: Set<string>) {
       return false
     }
     if (users && !users.has(run.userId)) {
+      return false
+    }
+    if (scope.query.invoiceId && run.invoiceId !== scope.query.invoiceId) {
       return false
     }
     return (

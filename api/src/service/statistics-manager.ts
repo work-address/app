@@ -15,6 +15,12 @@ import { runPromise } from '@/service/effect-bridge'
 import AccessException from '@/exception/access-exception'
 import { StatisticsInsights } from '@/service/statistics-insights'
 import { Span, TimeSpans } from '@/service/time-spans'
+import {
+  VIEWER_HIDDEN_TOTALS,
+  projectsForPeople,
+  refusesQuery,
+  refusesReport,
+} from '@work-address/statistics-core'
 import { ProjectAccess } from '@/service/project-access'
 
 const APP_KINDS = ['daily', 'ranking', 'titles', 'workers', 'projects']
@@ -25,11 +31,6 @@ export class StatisticsManager {
   @inject('ProjectRepository') protected projects: ProjectRepository
   @inject('InvoiceRepository') protected invoices: InvoiceRepository
   @inject('StatisticsRepository') protected repository: StatisticsRepository
-
-  /** By role, not plan: which report a reader gets once they can see the project. */
-  private works(project: Project, user: User): boolean {
-    return this.access.role(project, user) !== 'viewer'
-  }
 
   public async scope(
     query: StatisticsQueryDto,
@@ -60,14 +61,8 @@ export class StatisticsManager {
           ),
         )
       : await this.visibleProjects(query, user)
-    if (
-      query.userIds?.length &&
-      projects.some((p) => !p.isOwner(user)) &&
-      (projects.some((p) => !this.works(p, user)) ||
-        query.userIds.some((id) => id !== user.id))
-    )
-      throw new AccessException()
-    if (query.invoiceId && projects.some((p) => !this.works(p, user)))
+    const roleOf = (project: Project) => this.access.role(project, user)
+    if (refusesQuery(projects, roleOf, user.id, query))
       throw new AccessException()
     if (query.invoiceId) {
       const invoice = await runPromise(
@@ -86,7 +81,7 @@ export class StatisticsManager {
       from: from.toDate(),
       to: to.toDate(),
       owners: projects.filter((p) => p.isOwner(user)).map((p) => p.id),
-      viewers: projects.filter((p) => !this.works(p, user)).map((p) => p.id),
+      viewers: projects.filter((p) => roleOf(p) === 'viewer').map((p) => p.id),
     }
   }
   /**
@@ -96,10 +91,11 @@ export class StatisticsManager {
    */
   private async visibleProjects(query: StatisticsQueryDto, user: User) {
     const projects = await runPromise(this.projects.findAllWithAccess(user))
-    if (!query.userIds?.length) return projects
-    const onlySelf = query.userIds.every((id) => id === user.id)
-    return projects.filter(
-      (p) => p.isOwner(user) || (onlySelf && this.works(p, user)),
+    return projectsForPeople(
+      projects,
+      (p) => this.access.role(p, user),
+      user.id,
+      query.userIds,
     )
   }
 
@@ -112,9 +108,13 @@ export class StatisticsManager {
         ? { totals: [], apps: [], gaps: [] }
         : { rows: [] }
     }
-    if (kind === 'workers' && scope.owners.length !== scope.projects.length)
+    if (
+      refusesReport(
+        kind,
+        scope.projects.map((p) => this.access.role(p, user)),
+      )
+    )
       throw new AccessException()
-    if (kind === 'titles' && scope.viewers.length) throw new AccessException()
     if (kind === 'overview' || kind === 'summary') {
       const [totals, apps, gaps] = await Promise.all([
         this.repository.totals(scope),
@@ -123,10 +123,7 @@ export class StatisticsManager {
       ])
       for (const row of totals) {
         if (scope.viewers.includes(row.projectId)) {
-          delete row.activeSeconds
-          delete row.idleSeconds
-          delete row.manualSeconds
-          delete row.paidSeconds
+          for (const field of VIEWER_HIDDEN_TOTALS) delete row[field]
         }
       }
       return { totals, apps, gaps: scope.viewers.length ? [] : gaps }

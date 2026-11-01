@@ -71,3 +71,12 @@ export function nextMidnight(at: number, timeZone: string): number {
   }
   return next
 }
+
+/** The instant `YYYY-MM-DD` starts on the reader's clock. */
+export function zonedMidnight(day: string, timeZone: string): number {
+  const utc = Date.parse(`${day}T00:00:00Z`)
+  const parts = zonedParts(utc, timeZone)
+  const clock = ((parts.hour * 60 + parts.minute) * 60 + parts.second) * 1000
+  // Behind UTC, that instant is still the day before on the reader's clock.
+  return utc - (parts.day === day ? clock : clock - 24 * 3600_000)
+}
