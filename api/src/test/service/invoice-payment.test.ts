@@ -5,7 +5,10 @@ import moment from 'moment'
 import { AbstractDatabaseIntegration } from '@/test/abstract-database.integration'
 import { EInvoiceState } from '@/model/invoice'
 import { EProjectState } from '@/model/project'
+import InvoicedTimeException from '@/exception/invoiced-time-exception'
 import { InvoiceManager } from '@/service/invoice-manager'
+import { Time } from '@/entity/time'
+import { TimeManager } from '@/service/time-manager'
 import { ProjectFixture } from '@/test/fixture/project-fixture'
 import { ProjectRepository } from '@/repository/project-repository'
 import { TimeFixture } from '@/test/fixture/time-fixture'
@@ -36,6 +39,55 @@ export class InvoicePaymentTest extends AbstractDatabaseIntegration {
     this.invoiceManager = this.container.get('InvoiceManager')
     this.timeRepository = this.container.get('TimeRepository')
     this.projectRepository = this.container.get('ProjectRepository')
+  }
+
+  @test()
+  async anInvoicedEntryRefusesAHandChangeAndAnUninvoicedOneAccepts() {
+    const { project, worker, workerTime } = await this.scenario()
+    const timeManager = this.container.get<TimeManager>('TimeManager')
+    const refused = async (change: () => Promise<unknown>) => {
+      try {
+        await change()
+      } catch (error) {
+        return error
+      }
+      return undefined
+    }
+
+    expect(
+      await refused(() =>
+        runPromise(timeManager.setIsPaidMany([workerTime.id], true, worker)),
+      ),
+    ).to.be.instanceOf(InvoicedTimeException)
+
+    const loaded = await runPromise(
+      this.timeRepository.findOneByIdOrFail(workerTime.id),
+    )
+    expect(
+      await refused(() =>
+        runPromise(
+          timeManager.editAndSave(
+            loaded,
+            Object.assign(new Time(), { isPaid: true }),
+          ),
+        ),
+      ),
+    ).to.be.instanceOf(InvoicedTimeException)
+    // Saying what it already is changes nothing, so it is not refused.
+    await runPromise(timeManager.setIsPaidMany([workerTime.id], false, worker))
+
+    const loose = await this.timeFixture.create(
+      project,
+      moment.utc(workerTime.fromAt).subtract(3, 'hours').toDate(),
+      moment.utc(workerTime.fromAt).subtract(2, 'hours').toDate(),
+      worker,
+    )
+    await runPromise(timeManager.setIsPaidMany([loose.id], true, worker))
+
+    const corrected = await runPromise(
+      this.timeRepository.findOneByIdOrFail(loose.id),
+    )
+    expect(corrected.isPaid).to.be.true
   }
 
   private async scenario() {

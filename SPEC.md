@@ -85,10 +85,8 @@ keep their time.
 sets it and `markUnpaid` clears it, scoped to the issuer's own entries and runs
 on the invoice. Nothing else writes it except an author correcting their own
 human entries by hand — one at a time, or in bulk through `POST /time/paid` and
-`/time/unpaid`. Those bulk paths do not update the invoice that covers the
-entries, so work and money can be driven apart through them; that divergence is
-a known defect, not a second owner of the flag. Agent runs have no hand-edit
-path.
+`/time/unpaid` — and only while no invoice covers them. Once one does, those
+paths refuse with `InvoicedTimeException`. Agent runs have no hand-edit path.
 
 This is what stops the work record and the money record from drifting.
 

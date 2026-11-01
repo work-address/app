@@ -253,6 +253,14 @@ sample({
   target: setTimePaidStatusMutation.reset,
 })
 sample({
+  clock: setTimePaidStatusMutation.finished.failure,
+  fn: () => ({
+    type: 'error' as const,
+    messageKey: 'dashboard.worklogsTable.paymentStatus.changeFailed',
+  }),
+  target: showToastFx,
+})
+sample({
   clock: deleteTimeMutation.finished.success,
   fn: () => ({
     type: 'success' as const,

@@ -17,6 +17,7 @@ import RetentionExceededException from '@/exception/retention-exceeded-exception
 import { ImageResizer } from '@/service/image-resizer'
 import { RepoEffect } from '@/repository/abstract-repository-template'
 import { fromPromise } from '@/service/effect-bridge'
+import InvoicedTimeException from '@/exception/invoiced-time-exception'
 
 @injectable()
 export class TimeManager {
@@ -207,6 +208,10 @@ export class TimeManager {
     return Effect.gen(this, function* () {
       const times = yield* this.timeRepository.findByIdsAsAuthor(ids, user)
 
+      if (times.some((time) => time.invoiceId && time.isPaid !== isPaid)) {
+        return yield* Effect.fail(new InvoicedTimeException())
+      }
+
       for (const time of times) {
         time.isPaid = isPaid
       }
@@ -216,6 +221,14 @@ export class TimeManager {
   }
 
   public editAndSave(time: Time, data: Time): RepoEffect<void> {
+    if (
+      data.isPaid !== undefined &&
+      data.isPaid !== time.isPaid &&
+      time.invoiceId
+    ) {
+      return Effect.fail(new InvoicedTimeException())
+    }
+
     time.note = data.note
 
     if (data.isPaid !== undefined) {

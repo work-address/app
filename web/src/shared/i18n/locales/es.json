@@ -227,6 +227,7 @@
   "dashboard.worklogsTable.head.timeActive": "Tiempo activo",
   "dashboard.worklogsTable.loadMoreError": "No se pudieron cargar más registros. Desplázate de nuevo para reintentar.",
   "dashboard.worklogsTable.paymentStatus.changed": "Estado de pago cambiado",
+  "dashboard.worklogsTable.paymentStatus.changeFailed": "El estado del pago no cambió. El tiempo de una factura cambia con la factura.",
   "dashboard.worklogsTable.paymentStatus.paid": "Pagado",
   "dashboard.worklogsTable.paymentStatus.unpaid": "No pagado",
   "dashboard.worklogsTable.removeProcesses": "Eliminar procesos",

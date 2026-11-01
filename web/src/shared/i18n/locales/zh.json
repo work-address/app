@@ -223,6 +223,7 @@
   "dashboard.worklogsTable.head.timeActive": "活跃时间",
   "dashboard.worklogsTable.loadMoreError": "无法加载更多工时记录。请再次滚动以重试。",
   "dashboard.worklogsTable.paymentStatus.changed": "支付状态已更改",
+  "dashboard.worklogsTable.paymentStatus.changeFailed": "支付状态未更改。发票上的工时随发票一起更改。",
   "dashboard.worklogsTable.paymentStatus.paid": "已支付",
   "dashboard.worklogsTable.paymentStatus.unpaid": "未支付",
   "dashboard.worklogsTable.removeProcesses": "移除进程",

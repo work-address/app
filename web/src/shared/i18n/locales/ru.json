@@ -229,6 +229,7 @@
   "dashboard.worklogsTable.head.timeActive": "Активное время",
   "dashboard.worklogsTable.loadMoreError": "Не удалось загрузить ещё записи. Прокрутите ещё раз, чтобы повторить.",
   "dashboard.worklogsTable.paymentStatus.changed": "Статус оплаты изменён",
+  "dashboard.worklogsTable.paymentStatus.changeFailed": "Статус оплаты не изменён. Время в счёте меняется вместе со счётом.",
   "dashboard.worklogsTable.paymentStatus.paid": "Оплачено",
   "dashboard.worklogsTable.paymentStatus.unpaid": "Не оплачено",
   "dashboard.worklogsTable.removeProcesses": "Удалить процессы",
