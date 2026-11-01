@@ -4,7 +4,6 @@ import { Exclude, Expose, Type } from 'class-transformer'
 import { JSONSchema } from 'class-validator-jsonschema'
 
 import { User } from '@/entity/user'
-import { WalletAddress } from '@/service/wallet-address'
 import { AbstractBaseEntity } from '@/entity/abstract-base-entity'
 import {
   ArrayMaxSize,
@@ -182,55 +181,5 @@ export class Project extends AbstractBaseEntity implements IProject {
 
   public isOwner(user: User): boolean {
     return this.user?.id === user.id
-  }
-
-  public isWorker(user: User, ownerIsPremium?: boolean): boolean {
-    return (
-      this.isOwner(user) ||
-      this.hasCollaborator(this.workerAddresses, user, ownerIsPremium)
-    )
-  }
-
-  public isViewer(user: User, ownerIsPremium?: boolean): boolean {
-    return (
-      this.isWorker(user, ownerIsPremium) ||
-      this.hasCollaborator(this.viewerAddresses, user, ownerIsPremium)
-    )
-  }
-
-  /**
-   * Mirrors the SQL access filters in ProjectRepository: addresses match
-   * case-insensitively, and collaborator access only counts while the owner
-   * holds a premium plan. Kept in step with those filters deliberately - two
-   * different answers to "who may see this project" is how access bugs start.
-   */
-  private hasCollaborator(
-    addresses: string[] | undefined,
-    user: User,
-    ownerIsPremium?: boolean,
-  ): boolean {
-    // Defaults to the owner's stored flag so existing callers are unchanged.
-    // A self-hosted instance has no billing service to set it, so Entitlement
-    // passes `true` explicitly - see Entitlement.isPremium.
-    const entitled = ownerIsPremium ?? Boolean(this.user?.premium)
-
-    if (!entitled) {
-      return false
-    }
-
-    // Canonical on both sides: the two TON spellings of one account must
-    // compare equal, and lowercasing alone does not achieve that.
-    const target = WalletAddress.toCanonical(user.address ?? '')
-
-    return (addresses ?? []).some(
-      (address) => WalletAddress.toCanonical(address) === target,
-    )
-  }
-
-  public static accessParams(user: User) {
-    return {
-      accessUserId: user.id,
-      userAddress: WalletAddress.toCanonical(user.address),
-    }
   }
 }

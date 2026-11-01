@@ -79,6 +79,16 @@ export class WalletAddress {
   }
 
   /**
+   * `toCanonical` for a stored address, in SQL. A stored TON address is raw (see
+   * `toStorage`), so its friendly spellings have no case here.
+   */
+  public static canonicalSql(column: string): string {
+    const value = `btrim(${column})`
+
+    return `CASE WHEN ${value} ~ '^-?[0-9]+:[0-9A-Fa-f]{64}$' OR ${value} ~ '^0[Xx][0-9A-Fa-f]{40}$' THEN lower(${value}) ELSE ${value} END`
+  }
+
+  /**
    * The form shown to a person. Non-bounceable for TON.
    *
    * Non-bounceable (`UQ…`) rather than bounceable (`EQ…`) because these are

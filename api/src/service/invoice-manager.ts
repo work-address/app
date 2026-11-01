@@ -1,3 +1,4 @@
+import { ProjectAccess } from '@/service/project-access'
 import { Effect } from 'effect'
 import { inject, injectable } from 'inversify'
 import { BadRequestError } from 'routing-controllers'
@@ -29,6 +30,9 @@ import { InvoiceSnapshot } from '@/service/invoice-snapshot'
  */
 @injectable()
 export class InvoiceManager {
+  @inject('ProjectAccess')
+  protected access: ProjectAccess
+
   @inject('InvoiceRepository')
   protected invoiceRepository: InvoiceRepository
   @inject('ProjectRepository')
@@ -272,7 +276,7 @@ export class InvoiceManager {
         )
       }
 
-      if (!accessible.isWorker(author)) {
+      if (!this.access.canWork(accessible, author)) {
         return yield* Effect.fail(
           new AccessException(
             'Only a worker or the owner of a project can invoice for its time',

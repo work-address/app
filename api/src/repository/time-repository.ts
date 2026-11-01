@@ -11,19 +11,14 @@ import { fromPromise } from '@/service/effect-bridge'
 import { Time } from '@/entity/time'
 import { AppUsage } from '@/entity/app-usage'
 import { UsageResult } from '@/service/app-usage-policy'
-import { TimeVisibility } from '@/service/time-visibility'
+import { ProjectAccess } from '@/service/project-access'
 import { validate } from 'class-validator'
 import ConstraintsValidationException from '@/exception/constraints-validation-exception'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
 import { Invoice } from '@/entity/invoice'
 import { EProjectState } from '@/model/project'
-import {
-  Brackets,
-  ObjectLiteral,
-  OrderByCondition,
-  SelectQueryBuilder,
-} from 'typeorm'
+import { Brackets, OrderByCondition } from 'typeorm'
 
 import { ITimeTotals } from '@/model/time'
 import { Calc } from '@/service/calc'
@@ -40,6 +35,8 @@ const TIME_SORT_COLUMN_BY_KEY: Record<string, string> = {
 
 @injectable()
 export class TimeRepository extends AbstractRepositoryTemplate<Time> {
+  @inject('ProjectAccess')
+  protected access: ProjectAccess
   @inject('Filter')
   protected filter: Filter
   protected target = Time
@@ -52,7 +49,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       .innerJoinAndSelect('time.user', 'author')
       .andWhere('time.id = :timeId', { timeId: time.id })
 
-    this.applyViewAccessFilter(qb, 'owner', user)
+    this.access.filterEntries(qb, { project: 'project', owner: 'owner' }, user)
 
     return fromPromise(async () => {
       const timeEntry = await qb.select().getOne()
@@ -62,7 +59,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       }
 
       await this.loadUsage([timeEntry])
-      return TimeVisibility.redact(timeEntry, user)
+      return this.access.redact(timeEntry, user)
     })
   }
 
@@ -86,7 +83,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
           )
           .setLock('pessimistic_write', undefined, ['time'])
           .getOne()
-        const preserveUsage = existing && TimeVisibility.published(existing)
+        const preserveUsage = existing && this.access.published(existing)
         if (
           preserveUsage &&
           (+time.toAt !== +existing.toAt ||
@@ -188,9 +185,9 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       .innerJoin('project.user', 'owner')
       .andWhere('project.deletedAt IS NULL')
 
-    this.applyViewAccessFilter(qb, 'owner', user)
+    this.access.filterEntries(qb, { project: 'project', owner: 'owner' }, user)
 
-    const detail = TimeVisibility.detailSql()
+    const detail = this.access.detailSql()
     qb.setParameter('detailUser', user.id)
     qb.select([
       'project.id as projectId',
@@ -274,7 +271,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       .andWhere(`project.state = :state`, { state: EProjectState.ACTIVE })
       .andWhere('project.deletedAt IS NULL')
 
-    this.applyViewAccessFilter(qb, 'owner', user)
+    this.access.filterEntries(qb, { project: 'project', owner: 'owner' }, user)
 
     const privateSortColumns = [
       'time.note',
@@ -289,10 +286,10 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       // Sort the visible value, not the secret value that will be redacted later.
       const screenshotVisible =
         sortColumn === 'time.screenshot'
-          ? ` AND ${TimeVisibility.screenshotRetainedSql()}`
+          ? ` AND ${this.access.screenshotRetainedSql()}`
           : ''
       qb.addSelect(
-        `CASE WHEN ${TimeVisibility.detailSql()}${screenshotVisible} THEN ${sortColumn} ELSE NULL END`,
+        `CASE WHEN ${this.access.detailSql()}${screenshotVisible} THEN ${sortColumn} ELSE NULL END`,
         'visible_detail_sort',
       ).setParameter('detailUser', user.id)
       sort = { visible_detail_sort: sortDirection, 'time.id': 'ASC' }
@@ -313,7 +310,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       'mouseDistanceTo',
     ]
     if (detailFilters.some((key) => key in s.filter)) {
-      qb.andWhere(TimeVisibility.detailSql(), { detailUser: user.id })
+      qb.andWhere(this.access.detailSql(), { detailUser: user.id })
     }
     qb.andWhere(
       new Brackets((filterQb) => {
@@ -338,7 +335,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
           })
         }
         if ('screenshot' in s.filter) {
-          filterQb.andWhere(TimeVisibility.screenshotRetainedSql())
+          filterQb.andWhere(this.access.screenshotRetainedSql())
           filterQb.andWhere('time.screenshot ILIKE :screenshot', {
             screenshot: `%${s.filter.screenshot}%`,
           })
@@ -385,12 +382,12 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         }
         if ('withScreenshots' in s.filter) {
           if (s.filter.withScreenshots) {
-            filterQb.andWhere(TimeVisibility.screenshotRetainedSql())
+            filterQb.andWhere(this.access.screenshotRetainedSql())
             filterQb.andWhere('time.screenshot IS NOT NULL')
             filterQb.andWhere("time.screenshot != ''")
           } else {
             filterQb.andWhere(
-              `(time.screenshot IS NULL OR time.screenshot = '' OR NOT ${TimeVisibility.screenshotRetainedSql()})`,
+              `(time.screenshot IS NULL OR time.screenshot = '' OR NOT ${this.access.screenshotRetainedSql()})`,
             )
           }
         }
@@ -413,10 +410,10 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         .take(limit)
         .getManyAndCount()
       await this.loadUsage(times)
-      return [
-        times.map((time) => TimeVisibility.redact(time, user)),
-        count,
-      ] as [Time[], number]
+      return [times.map((time) => this.access.redact(time, user)), count] as [
+        Time[],
+        number,
+      ]
     })
   }
 
@@ -430,7 +427,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       .innerJoinAndSelect('time.user', 'author')
       .andWhere('time.id IN (:...ids)', { ids: uniqueIds })
 
-    this.applyViewAccessFilter(qb, 'owner', user)
+    this.access.filterEntries(qb, { project: 'project', owner: 'owner' }, user)
 
     return fromPromise(async () => {
       const times = await qb.getMany()
@@ -600,7 +597,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       .innerJoin('project.user', 'owner')
       .andWhere('project.id = :projectId', { projectId: project.id })
 
-    this.applyViewAccessFilter(qb, 'owner', user)
+    this.access.filterEntries(qb, { project: 'project', owner: 'owner' }, user)
 
     return fromPromise(() =>
       qb.select('time').orderBy('time.fromAt', 'DESC').getMany(),
@@ -805,29 +802,6 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         .andWhere('project.deletedAt IS NULL')
         .andWhere('COALESCE(time.isPaid, false) = false')
         .getMany(),
-    )
-  }
-
-  private applyViewAccessFilter(
-    qb: SelectQueryBuilder<ObjectLiteral>,
-    ownerAlias: string,
-    user: User,
-  ): void {
-    const { accessUserId, userAddress } = Project.accessParams(user)
-
-    qb.andWhere(
-      new Brackets((subQb) => {
-        subQb
-          .where(`${ownerAlias}.id = :accessUserId`, { accessUserId })
-          .orWhere(
-            `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`,
-            { userAddress },
-          )
-          .orWhere(
-            `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.viewerAddresses, '{}')) AS address)`,
-            { userAddress },
-          )
-      }),
     )
   }
 }

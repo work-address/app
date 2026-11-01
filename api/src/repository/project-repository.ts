@@ -1,7 +1,7 @@
 import { Effect } from 'effect'
 import * as _ from 'lodash'
 import { inject, injectable } from 'inversify'
-import { Brackets, ObjectLiteral, SelectQueryBuilder } from 'typeorm'
+import { SelectQueryBuilder } from 'typeorm'
 
 import { Filter } from '@/service/filter'
 import {
@@ -16,7 +16,7 @@ import ProjectUnavailableException from '@/exception/project-unavailable-excepti
 import { EProjectState } from '@/model/project'
 import { ProjectSearchDto } from '@/model/dto/project'
 import { UserRepository } from '@/repository/user-repository'
-import { Entitlement } from '@/service/entitlement'
+import { ProjectAccess } from '@/service/project-access'
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -27,8 +27,8 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
   protected filter: Filter
   @inject('UserRepository')
   protected userRepository: UserRepository
-  @inject('Entitlement')
-  protected entitlement: Entitlement
+  @inject('ProjectAccess')
+  protected access: ProjectAccess
   protected target = Project
 
   public findProjectAsOwner(
@@ -56,7 +56,12 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
       .innerJoinAndSelect('project.user', 'owner')
       .where('project.id = :projectId', { projectId: project.id })
 
-    this.applyViewAccessFilter(qb, 'owner', user)
+    this.access.filterProjects(
+      qb,
+      { project: 'project', owner: 'owner' },
+      user,
+      'viewer',
+    )
 
     return Effect.gen(this, function* () {
       const found = yield* fromPromise(() => qb.getOne())
@@ -82,7 +87,12 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
       .innerJoinAndSelect('project.user', 'owner')
       .where('project.deletedAt IS NULL')
 
-    this.applyViewAccessFilter(qb, 'owner', user)
+    this.access.filterProjects(
+      qb,
+      { project: 'project', owner: 'owner' },
+      user,
+      'viewer',
+    )
 
     return Effect.gen(this, function* () {
       const projects = yield* fromPromise(() => qb.getMany())
@@ -121,7 +131,12 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
       .where('project.id = :id', { id })
       .andWhere('project.state = :state', { state: EProjectState.ACTIVE })
 
-    this.applyWorkerAccessFilter(qb, 'owner', user)
+    this.access.filterProjects(
+      qb,
+      { project: 'project', owner: 'owner' },
+      user,
+      'worker',
+    )
 
     return fromPromise(() => qb.getOne()).pipe(
       Effect.flatMap((project) =>
@@ -169,7 +184,12 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
       .leftJoinAndSelect('project.user', 'user')
       .select()
       .where((qb: SelectQueryBuilder<Project>) => {
-        this.applyViewAccessFilter(qb, 'user', user)
+        this.access.filterProjects(
+          qb,
+          { project: 'project', owner: 'user' },
+          user,
+          'viewer',
+        )
 
         if ('userId' in s.filter) {
           qb.andWhere('user.id = :ownerId', {
@@ -241,7 +261,7 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
         // since the list also holds closed projects and viewer-only ones.
         project.canTrack =
           project.state === EProjectState.ACTIVE &&
-          project.isWorker(user, this.entitlement.isPremium(project.user))
+          this.access.canWork(project, user)
       }
       yield* this.attachAccessUsersToProjects(projects)
 
@@ -253,8 +273,7 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
     project.agents = (project.agentAttachments ?? []).filter(
       (attachment) =>
         project.isOwner(user) ||
-        (project.isWorker(user, this.entitlement.isPremium(project.user)) &&
-          attachment.workerId === user.id),
+        (this.access.canWork(project, user) && attachment.workerId === user.id),
     )
   }
 
@@ -302,73 +321,5 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
           .filter((u): u is User => u !== undefined)
       }
     })
-  }
-
-  private applyViewAccessFilter(
-    qb: SelectQueryBuilder<ObjectLiteral>,
-    ownerAlias: string,
-    user: User,
-  ): void {
-    const { accessUserId, userAddress } = Project.accessParams(user)
-
-    qb.andWhere(
-      new Brackets((subQb) => {
-        subQb
-          .where(`${ownerAlias}.id = :accessUserId`, { accessUserId })
-          .orWhere(
-            new Brackets((collaboratorQb) => {
-              const addresses = new Brackets((addressQb) => {
-                addressQb
-                  .where(
-                    `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`,
-                    { userAddress },
-                  )
-                  .orWhere(
-                    `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.viewerAddresses, '{}')) AS address)`,
-                    { userAddress },
-                  )
-              })
-
-              // Self-hosted instances omit the predicate rather than relying on
-              // column data - see Entitlement.shouldFilterByPremium.
-              if (this.entitlement.shouldFilterByPremium()) {
-                collaboratorQb
-                  .where(`${ownerAlias}.premium = true`)
-                  .andWhere(addresses)
-              } else {
-                collaboratorQb.where(addresses)
-              }
-            }),
-          )
-      }),
-    )
-  }
-
-  private applyWorkerAccessFilter(
-    qb: SelectQueryBuilder<ObjectLiteral>,
-    ownerAlias: string,
-    user: User,
-  ): void {
-    const { accessUserId, userAddress } = Project.accessParams(user)
-
-    qb.andWhere(
-      new Brackets((subQb) => {
-        subQb
-          .where(`${ownerAlias}.id = :accessUserId`, { accessUserId })
-          .orWhere(
-            new Brackets((collaboratorQb) => {
-              const isWorkerAddress = `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(project.workerAddresses, '{}')) AS address)`
-
-              if (this.entitlement.shouldFilterByPremium()) {
-                collaboratorQb
-                  .where(`${ownerAlias}.premium = true`)
-                  .andWhere(isWorkerAddress, { userAddress })
-              } else {
-                collaboratorQb.where(isWorkerAddress, { userAddress })
-              }
-            }),
-          )
-      }),
-    )
   }
 }

@@ -7,7 +7,7 @@ import {
   NotFoundError,
   UnauthorizedError,
 } from 'routing-controllers'
-import { Brackets, EntityManager } from 'typeorm'
+import { EntityManager } from 'typeorm'
 import { getDataSource } from '@/connector/data-source'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
@@ -21,7 +21,7 @@ import {
   WorkerAgent,
 } from '@/model/agent'
 import { AgentCredentialDto, AgentDto, AgentSearchDto } from '@/model/dto/agent'
-import { Entitlement } from '@/service/entitlement'
+import { ProjectAccess } from '@/service/project-access'
 import { AgentTimeNormalizer } from '@/service/agent-time-normalizer'
 import { AgentIdentity } from '@/service/agent-identity'
 import type {
@@ -88,7 +88,7 @@ function rejectionCode({
 
 @injectable()
 export class AgentRepository {
-  @inject('Entitlement') private entitlement: Entitlement
+  @inject('ProjectAccess') private access: ProjectAccess
 
   public async list(user: User): Promise<WorkerAgent[]> {
     const stored = await getDataSource()
@@ -201,10 +201,7 @@ export class AgentRepository {
         'p',
       ])
       .getOne()
-    return project &&
-      project.isWorker(user, this.entitlement.isPremium(project.user))
-      ? project
-      : null
+    return project && this.access.canWork(project, user) ? project : null
   }
 
   public async attachments(
@@ -740,9 +737,7 @@ export class AgentRepository {
         .skip(query.offset ?? 0)
         .take(100)
         .getManyAndCount()
-      const windows = new Map(
-        projects.map((p) => [p.id, (p.reviewWindowHours ?? 24) * 3600_000]),
-      )
+      const windows = new Map(projects.map((p) => [p.id, p.reviewWindowHours]))
       for (const run of runs) this.holdPrompt(run, user, windows, now)
       return [runs, count]
     })
@@ -755,12 +750,12 @@ export class AgentRepository {
   private holdPrompt(
     run: TimeAgent,
     user: User,
-    windows: Map<string, number>,
+    windows: Map<string, number | null | undefined>,
     now: number,
   ): void {
     if (run.userId === user.id || run.invoiceId) return
-    const window = windows.get(run.projectId) ?? 24 * 3600_000
-    if (new Date(run.toAt).getTime() + window <= now) return
+    if (this.access.reviewEnded(run.toAt, windows.get(run.projectId), now))
+      return
     if (run.prompt) run.promptPendingReview = true
     run.prompt = null
   }
@@ -770,25 +765,19 @@ export class AgentRepository {
     tx: EntityManager,
     user: User,
   ): Promise<Project[]> {
-    const { accessUserId, userAddress } = Project.accessParams(user)
-    const projects = await tx
+    const qb = tx
       .createQueryBuilder(Project, 'p')
       .innerJoinAndSelect('p.user', 'owner')
       .where('p.deletedAt IS NULL')
-      .andWhere(
-        new Brackets((qb) =>
-          qb
-            .where('owner.id = :accessUserId', { accessUserId })
-            .orWhere(
-              `:userAddress = ANY(SELECT lower(address) FROM unnest(COALESCE(p."workerAddresses", '{}')) AS address)`,
-              { userAddress },
-            ),
-        ),
-      )
-      .getMany()
-    return projects.filter((p) =>
-      p.isWorker(user, this.entitlement.isPremium(p.user)),
+
+    this.access.filterProjects(
+      qb,
+      { project: 'p', owner: 'owner' },
+      user,
+      'worker',
     )
+
+    return qb.getMany()
   }
 
   public async status(user: User) {

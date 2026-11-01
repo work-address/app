@@ -4,6 +4,7 @@ import { expect } from 'chai'
 import { AbstractDatabaseIntegration } from '@/test/abstract-database.integration'
 import { EProjectState } from '@/model/project'
 import { ProjectFixture } from '@/test/fixture/project-fixture'
+import { ProjectAccess } from '@/service/project-access'
 import { ProjectManager } from '@/service/project-manager'
 import { ProjectRepository } from '@/repository/project-repository'
 import { UserFixture } from '@/test/fixture/user-fixture'
@@ -60,9 +61,9 @@ export class CollaboratorAddressFormatTest extends AbstractDatabaseIntegration {
     // Exactly what a wallet puts on the clipboard.
     await runPromise(
       this.projectManager.editAndSave(project, {
-      ...project,
-      workerAddresses: [TON_FRIENDLY],
-      viewerAddresses: [],
+        ...project,
+        workerAddresses: [TON_FRIENDLY],
+        viewerAddresses: [],
       } as never),
     )
 
@@ -71,7 +72,8 @@ export class CollaboratorAddressFormatTest extends AbstractDatabaseIntegration {
     )
 
     expect(reloaded.workerAddresses).to.deep.equal([TON_RAW])
-    expect(reloaded.isWorker(worker)).to.be.true
+    const access = this.container.get<ProjectAccess>('ProjectAccess')
+    expect(access.canWork(reloaded, worker)).to.be.true
 
     const accessible = await runPromise(
       this.projectRepository.findProjectWithAccess(project, worker),
@@ -90,9 +92,9 @@ export class CollaboratorAddressFormatTest extends AbstractDatabaseIntegration {
 
     await runPromise(
       this.projectManager.editAndSave(project, {
-      ...project,
-      workerAddresses: [TON_FRIENDLY, TON_RAW],
-      viewerAddresses: [],
+        ...project,
+        workerAddresses: [TON_FRIENDLY, TON_RAW],
+        viewerAddresses: [],
       } as never),
     )
 
@@ -115,9 +117,9 @@ export class CollaboratorAddressFormatTest extends AbstractDatabaseIntegration {
 
     await runPromise(
       this.projectManager.editAndSave(project, {
-      ...project,
-      workerAddresses: [checksummed],
-      viewerAddresses: [],
+        ...project,
+        workerAddresses: [checksummed],
+        viewerAddresses: [],
       } as never),
     )
 

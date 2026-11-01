@@ -1,5 +1,5 @@
-import { TimeVisibility } from '@/service/time-visibility'
-import { injectable } from 'inversify'
+import { ProjectAccess } from '@/service/project-access'
+import { inject, injectable } from 'inversify'
 import { SelectQueryBuilder } from 'typeorm'
 import { AppUsage } from '@/entity/app-usage'
 import { TimeAgent } from '@/entity/time-agent'
@@ -20,6 +20,7 @@ export interface StatisticsScope {
 }
 @injectable()
 export class StatisticsRepository {
+  @inject('ProjectAccess') protected access: ProjectAccess
   private base(scope: StatisticsScope): SelectQueryBuilder<Time> {
     const q = getDataSource()
       .getRepository(Time)
@@ -59,7 +60,7 @@ export class StatisticsRepository {
     const seconds =
       'GREATEST(0, EXTRACT(EPOCH FROM (time.\"toAt\"-time.\"fromAt\")))'
     const active = `LEAST(${seconds}, GREATEST(0, COALESCE(time.\"minutesActive\",0)*60))`
-    const detail = TimeVisibility.detailSql()
+    const detail = this.access.detailSql()
     q.setParameter('detailUser', scope.user.id)
     return q
       .select('project.id', 'projectId')
@@ -86,7 +87,7 @@ export class StatisticsRepository {
   private visible(scope: StatisticsScope): SelectQueryBuilder<Time> {
     const q = this.base(scope)
     const shared = this.ownOr(scope, true)
-    const published = `(time.\"publishedAt\" IS NOT NULL OR time.\"invoiceId\" IS NOT NULL OR time.\"toAt\" + COALESCE(project.\"reviewWindowHours\",24) * INTERVAL '1 hour' <= NOW())`
+    const published = this.access.publishedSql()
     q.andWhere(
       shared.length
         ? `(time.\"userId\"=:user OR (project.id IN (:...shared) AND ${published}))`
@@ -263,7 +264,7 @@ export class StatisticsRepository {
     const seconds =
       'GREATEST(0, EXTRACT(EPOCH FROM (time."toAt"-time."fromAt")))'
     const active = `LEAST(${seconds}, GREATEST(0, COALESCE(time."minutesActive",0)*60))`
-    const detail = TimeVisibility.detailSql()
+    const detail = this.access.detailSql()
     return this.base({
       ...scope,
       projects: scope.projects.filter((p) => projectIds.includes(p.id)),

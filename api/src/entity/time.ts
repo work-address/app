@@ -1,4 +1,11 @@
-import { Column, Entity, JoinColumn, ManyToOne, Unique } from 'typeorm'
+import {
+  Column,
+  Entity,
+  JoinColumn,
+  ManyToOne,
+  Unique,
+  RelationId,
+} from 'typeorm'
 import { faker } from '@faker-js/faker'
 import { Exclude, Expose, Type } from 'class-transformer'
 import { JSONSchema } from 'class-validator-jsonschema'
@@ -66,6 +73,10 @@ export class Time extends AbstractBaseEntity implements ITime {
    */
   @ManyToOne(() => Invoice, { nullable: true, onDelete: 'SET NULL' })
   invoice?: Invoice | null
+
+  /** Read-only: `invoice` writes it, and it answers without joining the row. */
+  @RelationId((time: Time) => time.invoice)
+  invoiceId?: string | null
 
   @Expose({ groups: ['search', 'create', 'edit'] })
   @Column('text', { nullable: true })

@@ -1,3 +1,4 @@
+import { ProjectAccess } from '@/service/project-access'
 import { inject, injectable } from 'inversify'
 import moment from 'moment-timezone'
 import { BadRequestError } from 'routing-controllers'
@@ -20,9 +21,15 @@ const APP_KINDS = ['daily', 'ranking', 'titles', 'workers', 'projects']
 
 @injectable()
 export class StatisticsManager {
+  @inject('ProjectAccess') protected access: ProjectAccess
   @inject('ProjectRepository') protected projects: ProjectRepository
   @inject('InvoiceRepository') protected invoices: InvoiceRepository
   @inject('StatisticsRepository') protected repository: StatisticsRepository
+
+  /** By role, not plan: which report a reader gets once they can see the project. */
+  private works(project: Project, user: User): boolean {
+    return this.access.role(project, user) !== 'viewer'
+  }
 
   public async scope(
     query: StatisticsQueryDto,
@@ -56,11 +63,11 @@ export class StatisticsManager {
     if (
       query.userIds?.length &&
       projects.some((p) => !p.isOwner(user)) &&
-      (projects.some((p) => !p.isWorker(user, true)) ||
+      (projects.some((p) => !this.works(p, user)) ||
         query.userIds.some((id) => id !== user.id))
     )
       throw new AccessException()
-    if (query.invoiceId && projects.some((p) => !p.isWorker(user, true)))
+    if (query.invoiceId && projects.some((p) => !this.works(p, user)))
       throw new AccessException()
     if (query.invoiceId) {
       const invoice = await runPromise(
@@ -79,7 +86,7 @@ export class StatisticsManager {
       from: from.toDate(),
       to: to.toDate(),
       owners: projects.filter((p) => p.isOwner(user)).map((p) => p.id),
-      viewers: projects.filter((p) => !p.isWorker(user, true)).map((p) => p.id),
+      viewers: projects.filter((p) => !this.works(p, user)).map((p) => p.id),
     }
   }
   /**
@@ -92,7 +99,7 @@ export class StatisticsManager {
     if (!query.userIds?.length) return projects
     const onlySelf = query.userIds.every((id) => id === user.id)
     return projects.filter(
-      (p) => p.isOwner(user) || (onlySelf && p.isWorker(user, true)),
+      (p) => p.isOwner(user) || (onlySelf && this.works(p, user)),
     )
   }
 

@@ -2,7 +2,7 @@ import _ from 'lodash'
 import { inject, injectable } from 'inversify'
 
 import { Filter } from '@/service/filter'
-import { Entitlement } from '@/service/entitlement'
+import { ProjectAccess } from '@/service/project-access'
 import { Brackets, EntityManager, In } from 'typeorm'
 import { Time } from '@/entity/time'
 import { TimeAgent } from '@/entity/time-agent'
@@ -30,8 +30,8 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
   @inject('AgentRepository') protected agents: AgentRepository
   @inject('Filter')
   protected filter: Filter
-  @inject('Entitlement')
-  protected entitlement: Entitlement
+  @inject('ProjectAccess')
+  protected access: ProjectAccess
   protected target = Invoice
 
   /** Invoices are private to their issuer and the project owner. */
@@ -39,13 +39,11 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
     qb: SelectQueryBuilder<ObjectLiteral>,
     user: User,
   ): void {
-    const { accessUserId } = Project.accessParams(user)
-
     qb.andWhere(
       new Brackets((scope) => {
         scope
-          .where('issuer.id = :accessUserId', { accessUserId })
-          .orWhere('owner.id = :accessUserId', { accessUserId })
+          .where('issuer.id = :accessUserId', { accessUserId: user.id })
+          .orWhere('owner.id = :accessUserId', { accessUserId: user.id })
       }),
     )
   }
@@ -74,12 +72,7 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
           .where('project.id=:id', { id: invoice.project.id })
           .setLock('pessimistic_read', undefined, ['project'])
           .getOneOrFail()
-        if (
-          !project.isWorker(
-            invoice.user!,
-            this.entitlement.isPremium(project.user),
-          )
-        )
+        if (!this.access.canWork(project, invoice.user!))
           throw new AccessException()
         const times = selected.length
           ? await manager

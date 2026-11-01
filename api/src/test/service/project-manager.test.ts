@@ -303,25 +303,6 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     ).to.exist
   }
 
-  @test()
-  async isWorkerAndIsViewer_matchTheSqlAccessFilters() {
-    const owner = await this.userFixture.createPremiumUser()
-    const worker = await this.userFixture.createUser()
-    const project = await this.projectFixture.createPersonal(owner)
-    project.user = owner
-    project.workerAddresses = [worker.address.toUpperCase()]
-    project.viewerAddresses = []
-
-    // Address casing must not decide access.
-    expect(project.isWorker(worker)).to.be.true
-    expect(project.isViewer(worker)).to.be.true
-
-    owner.premium = false
-    expect(project.isWorker(worker)).to.be.false
-    expect(project.isViewer(worker)).to.be.false
-    expect(project.isOwner(owner)).to.be.true
-  }
-
   /**
    * A lapsed owner must still be able to take access away - the gate is on
    * granting, not on revoking.
