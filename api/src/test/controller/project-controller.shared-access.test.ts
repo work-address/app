@@ -229,7 +229,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
   }
 
   @test
-  async viewerCanReadTimeSearchAndTotals() {
+  async viewerReadsTotalsAndNoEntries() {
     const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
@@ -259,7 +259,6 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
       headers: {
         Authorization: this.authenticator.getTokens(viewer).accessToken,
       },
-      throwOnError: true,
     })
 
     const totalsRes = await timeControllerGetTotals({
@@ -271,8 +270,8 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    expect((searchRes.data[0] as Array<{ id: string }>).length).to.be.eq(1)
-    expect(readRes.data.id).to.be.equal(time.id)
+    expect((searchRes.data[0] as Array<{ id: string }>).length).to.be.eq(0)
+    expect(readRes.status).to.be.equal(403)
     expect(totalsRes.data).to.have.length(1)
   }
 
@@ -310,7 +309,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
 
     const fromAt = moment.utc().subtract(60, 'minutes').toDate()
     const toAt = moment.utc().toDate()
-    await this.timeFixture.create(project, fromAt, toAt)
+    await this.timeFixture.create(project, fromAt, toAt, worker)
 
     const totalsRes = await timeControllerGetTotals({
       client: this.apiClient(),
@@ -350,7 +349,7 @@ export class ProjectControllerSharedAccessTest extends BaseControllerTest {
     expect(res.data.length).to.be.eq(1)
     const row = res.data[0] as Record<string, unknown>
     expect(row.projectId).to.be.eq(project.id)
-    expect(row.minutesActive).to.be.eq(null)
+    expect(row).to.not.have.property('minutesActive')
     expect(row.minutes).to.be.eq(
       Math.round((+time.toAt - +time.fromAt) / 60000),
     )

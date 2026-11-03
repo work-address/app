@@ -65,7 +65,7 @@ const rowIdGetter = (row: ProjectWithStats) => row.id ?? ''
 
 export type ProjectsTablePeriodTotals = Record<
   string,
-  { minutes: number; minutesActive: number; paid: number }
+  { minutes: number; minutesActive?: number; paidCents?: number }
 >
 
 type ProjectsTableProps = {
@@ -133,12 +133,18 @@ export const ProjectsTable = ({
       return rows
     }
 
-    return rows.map((project) => ({
-      ...project,
-      minutes: periodTotals[project.id ?? '']?.minutes ?? 0,
-      minutesActive: periodTotals[project.id ?? '']?.minutesActive ?? 0,
-      paid: periodTotals[project.id ?? '']?.paid ?? 0,
-    }))
+    return rows.map((project) => {
+      const period = periodTotals[project.id ?? '']
+      // A viewer has no activity or money figures, in any period.
+      const seesDetail = project.role !== 'viewer'
+
+      return {
+        ...project,
+        minutes: period?.minutes ?? 0,
+        minutesActive: seesDetail ? (period?.minutesActive ?? 0) : undefined,
+        paidCents: seesDetail ? (period?.paidCents ?? 0) : undefined,
+      }
+    })
   }, [allProjects, projectIds, periodTotals])
 
   const renderingData = isProjectsLoading ? [] : projects
@@ -192,7 +198,8 @@ export const ProjectsTable = ({
         width: 76,
         headerText: t('dashboard.projectsTable.drawer.meta.rateHour'),
         description: t('common.metricDesc.rateHour'),
-        getValue: (data) => formatCurrency(data.rateHour),
+        getValue: (data) =>
+          data.rateHour === undefined ? '—' : formatCurrency(data.rateHour),
       },
       {
         customKey: 'timeTotal',
@@ -244,19 +251,28 @@ export const ProjectsTable = ({
               dataKey: 'keyboardKeys',
               headerText: t('dashboard.projectsTable.head.keyboardKeys'),
               description: t('common.metricDesc.keyboard'),
-              getValue: (data) => formatCount(data.keyboardKeys),
+              getValue: (data) =>
+                data.keyboardKeys === undefined
+                  ? '—'
+                  : formatCount(data.keyboardKeys),
             },
             {
               dataKey: 'mouseKeys',
               headerText: t('dashboard.projectsTable.head.mouseKeys'),
               description: t('common.metricDesc.mouse'),
-              getValue: (data) => formatCount(data.mouseKeys),
+              getValue: (data) =>
+                data.mouseKeys === undefined
+                  ? '—'
+                  : formatCount(data.mouseKeys),
             },
             {
               dataKey: 'mouseDistance',
               headerText: t('dashboard.projectsTable.head.mouseDistance'),
               description: t('common.metricDesc.mouseDistance'),
-              getValue: (data) => formatCount(data.mouseDistance),
+              getValue: (data) =>
+                data.mouseDistance === undefined
+                  ? '—'
+                  : formatCount(data.mouseDistance),
             },
           ] satisfies MobileDataTableConfig<ProjectWithStats>)),
     ],

@@ -10,10 +10,6 @@ export class Calc {
    */
   public static readonly trackerIntervalMinutes = 10
 
-  public static rateTotal(minutes: number, rateHour: number): number {
-    return Number(rateHour) * (Number(minutes) / 60)
-  }
-
   /**
    * Wall-clock minutes a set of entries covers, taken from each row's own
    * span so that entries recorded under different tracker intervals total

@@ -70,7 +70,7 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
         return undefined
       }
 
-      this.scopeAgents(found, user)
+      this.presentTo(found, user)
       return yield* this.attachAccessUsers(found)
     })
   }
@@ -99,7 +99,7 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
 
       yield* this.attachAccessUsersToProjects(projects)
       for (const project of projects) {
-        this.scopeAgents(project, user)
+        this.presentTo(project, user)
       }
       return projects
     })
@@ -214,6 +214,15 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
             text: `%${s.filter.text}%`,
           })
         }
+        // Filtering by rate would read it back through which projects match.
+        if ('rateHourFrom' in s.filter || 'rateHourTo' in s.filter) {
+          this.access.filterProjects(
+            qb,
+            { project: 'project', owner: 'user' },
+            user,
+            'worker',
+          )
+        }
         if ('rateHourFrom' in s.filter) {
           qb.andWhere('project.rateHour >= :rateHourFrom', {
             rateHourFrom: s.filter.rateHourFrom,
@@ -255,7 +264,7 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
       )
 
       for (const project of projects) {
-        this.scopeAgents(project, user)
+        this.presentTo(project, user)
         // Whether this user's time uploads to it are accepted: what
         // findProjectForTimeTracking checks. A tracker offers only these,
         // since the list also holds closed projects and viewer-only ones.
@@ -269,12 +278,18 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
     })
   }
 
-  private scopeAgents(project: Project, user: User): void {
+  /** The reader's role on a project, and what that role may not see of it. */
+  private presentTo(project: Project, user: User): void {
+    project.role = this.access.role(project, user)
     project.agents = (project.agentAttachments ?? []).filter(
       (attachment) =>
         project.isOwner(user) ||
         (this.access.canWork(project, user) && attachment.workerId === user.id),
     )
+    // A viewer gets time and no money: SPEC.md, "Who can see what".
+    if (project.role === 'viewer') {
+      delete (project as Partial<Project>).rateHour
+    }
   }
 
   private attachAccessUsers(project: Project): RepoEffect<Project> {

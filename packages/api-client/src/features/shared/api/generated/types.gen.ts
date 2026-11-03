@@ -104,6 +104,7 @@ export type Project = {
         [key: string]: unknown;
     }>;
     canTrack?: unknown;
+    role?: 'owner' | 'worker' | 'viewer';
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
@@ -473,6 +474,7 @@ export type ProjectSearch = {
     invoices?: InvoiceSearch;
     time?: TimeSearch;
     agents?: Array<unknown>;
+    role?: 'owner' | 'worker' | 'viewer';
 };
 
 /**
@@ -693,6 +695,7 @@ export type ProjectSearchWritable = {
     invoices?: InvoiceSearchWritable;
     time?: TimeSearchWritable;
     agents?: Array<unknown>;
+    role?: 'owner' | 'worker' | 'viewer';
 };
 
 /**

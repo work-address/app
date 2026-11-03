@@ -20,8 +20,6 @@ import { Invoice } from '@/entity/invoice'
 import { EProjectState } from '@/model/project'
 import { Brackets, OrderByCondition } from 'typeorm'
 
-import { ITimeTotals } from '@/model/time'
-import { Calc } from '@/service/calc'
 import AccessException from '@/exception/access-exception'
 import { TimeSearchDto } from '@/model/dto/time'
 import { BadRequestError } from 'routing-controllers'
@@ -177,64 +175,6 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       }
       time.apps = [...apps.values()].sort((a, b) => b.seconds - a.seconds)
     }
-  }
-
-  public getTotals(
-    user: User,
-    projectId: string | undefined,
-  ): RepoEffect<ITimeTotals[]> {
-    const qb = this.getRepo()
-      .createQueryBuilder('time')
-      .innerJoin('time.project', 'project')
-      .innerJoin('project.user', 'owner')
-      .andWhere('project.deletedAt IS NULL')
-
-    this.access.filterEntries(qb, { project: 'project', owner: 'owner' }, user)
-
-    const detail = this.access.detailSql()
-    qb.setParameter('detailUser', user.id)
-    qb.select([
-      'project.id as projectId',
-      'project.rateHour as rateHour',
-      // Wall-clock time covered, summed from each row's own span rather than
-      // inferred from the row count: the tracker's interval has changed over
-      // time, so a fixed multiplier would misread every row from before the
-      // change. Distinct from `minutesActive`, which is time actually worked.
-      'ROUND(SUM(EXTRACT(EPOCH FROM (time.toAt - time.fromAt)) / 60)) as minutes',
-      `SUM(CASE WHEN ${detail} THEN time.\"minutesActive\" ELSE NULL END) as minutesActive`,
-      'ROUND(SUM(CASE WHEN COALESCE(time.isPaid, false) = true THEN EXTRACT(EPOCH FROM (time."toAt" - time."fromAt"))/60 ELSE 0 END)) as minutesPaid',
-      'ROUND(SUM(CASE WHEN COALESCE(time.isPaid, false) = false THEN EXTRACT(EPOCH FROM (time."toAt" - time."fromAt"))/60 ELSE 0 END)) as minutesUnpaid',
-      `SUM(CASE WHEN ${detail} THEN time.\"keyboardKeys\" ELSE NULL END) as keyboardKeys`,
-      `SUM(CASE WHEN ${detail} THEN time.\"mouseKeys\" ELSE NULL END) as mouseKeys`,
-      `SUM(CASE WHEN ${detail} THEN time.\"mouseDistance\" ELSE NULL END) as mouseDistance`,
-    ])
-      .groupBy('project.id')
-      .orderBy('project.id', 'ASC')
-
-    if (projectId) {
-      qb.andWhere('project.id = :projectId', { projectId })
-    }
-
-    return fromPromise(async () => {
-      const result = await qb.getRawMany()
-
-      return result.map((r) => {
-        return {
-          projectId: r.projectid,
-          rateHour: r.ratehour,
-          rateTotal: Calc.rateTotal(Number(r.minutes), r.ratehour),
-          minutes: Number(r.minutes),
-          minutesActive:
-            r.minutesactive === null ? null : Number(r.minutesactive),
-          minutesPaid: Number(r.minutespaid),
-          minutesUnpaid: Number(r.minutesunpaid),
-          keyboardKeys: r.keyboardkeys === null ? null : Number(r.keyboardkeys),
-          mouseKeys: r.mousekeys === null ? null : Number(r.mousekeys),
-          mouseDistance:
-            r.mousedistance === null ? null : Number(r.mousedistance),
-        }
-      })
-    })
   }
 
   private buildTimeOrderByCondition(search: TimeSearchDto): OrderByCondition {
@@ -699,5 +639,4 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         .getMany(),
     )
   }
-
 }

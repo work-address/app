@@ -281,7 +281,10 @@ export class RecordingPolicyTest extends BaseControllerTest {
             page: 0,
           })
           expect(response.status).to.equal(200)
-          expect(response.data[1]).to.equal(4)
+          // A worker lists their own entries; a viewer lists none.
+          expect(response.data[1]).to.equal(
+            actor === owner ? 4 : actor === colleague ? 1 : 0,
+          )
           snapshots.push({
             actor,
             key,

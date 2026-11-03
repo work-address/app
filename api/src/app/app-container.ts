@@ -3,6 +3,7 @@ import { AgentManager } from '@/service/agent-manager'
 import { Container } from 'inversify'
 import { UserSettingsManager } from '@/service/user-settings-manager'
 import { StatisticsManager } from '@/service/statistics-manager'
+import { ProjectTotals } from '@/service/project-totals'
 import { StatisticsRepository } from '@/repository/statistics-repository'
 
 import { IConfigParameters } from '@/model/config'
@@ -61,6 +62,7 @@ export class AppContainer {
     container.bind<OpenApi>('OpenApi').to(OpenApi)
 
     container.bind<StatisticsManager>('StatisticsManager').to(StatisticsManager)
+    container.bind<ProjectTotals>('ProjectTotals').to(ProjectTotals)
     container
       .bind<StatisticsRepository>('StatisticsRepository')
       .to(StatisticsRepository)

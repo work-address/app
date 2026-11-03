@@ -10,6 +10,7 @@ import { spanMinutes } from './db'
 import { DEMO_ACCESS_TOKEN, DEMO_REFRESH_TOKEN, signInDemo } from './session'
 import { readDemoSettings, writeDemoSettings } from './settings'
 import {
+  canListEntry,
   hasDetail,
   isOwner,
   isViewer,
@@ -30,6 +31,7 @@ import {
   DemoHttpError,
   insightsMe,
   overview,
+  projectFigures,
   reportRefused,
   statisticsScope,
   team,
@@ -228,10 +230,8 @@ function applyProjectBody(
   return project
 }
 
-const visibleTimes = (db: Db, meId: string) => {
-  const projects = new Set(visibleProjects(db, meId).map((p) => p.id))
-  return db.times.filter((time) => projects.has(time.projectId))
-}
+const visibleTimes = (db: Db, meId: string) =>
+  db.times.filter((time) => canListEntry(db, time, meId))
 
 const DETAIL_FILTERS = [
   'screenshot',
@@ -562,40 +562,29 @@ export const handlers: HttpHandler[] = [
     if (!project || !isViewer(db, project, meId)) {
       fail(403, 'Access denied')
     }
-    const entries = db.times.filter((t) => t.projectId === params.id)
-    if (entries.length === 0) {
-      return []
+    const minutes = (value: unknown) =>
+      value === undefined ? undefined : Math.round(Number(value) / 60)
+    return projectFigures(db, meId, [project!]).map((row) => ({
+      projectId: row.projectId,
+      minutes: minutes(row.trackedSeconds),
+      rateHour: row.rateHour,
+      minutesActive: minutes(row.activeSeconds),
+      minutesPaid: minutes(row.paidSeconds),
+      minutesUnpaid: minutes(row.unpaidSeconds),
+      keyboardKeys: row.keyboardKeys,
+      mouseKeys: row.mouseKeys,
+      mouseDistance: row.mouseDistance,
+      earnedCents: row.earnedCents,
+      paidCents: row.paidCents,
+      unpaidCents: row.unpaidCents,
+    }))
+  }),
+  route('get', '/time/:id', ({ db, meId, params }) => {
+    const time = db.times.find((row) => row.id === params.id)
+    if (!time || !canListEntry(db, time, meId)) {
+      fail(403, 'Access denied')
     }
-    const minutes = (list: MockTime[]) =>
-      Math.round(
-        list.reduce(
-          (sum, t) =>
-            sum + (Date.parse(t.toAt) - Date.parse(t.fromAt)) / 60_000,
-          0,
-        ),
-      )
-    const detail = entries.filter((t) => hasDetail(t, project!, meId))
-    const sum = (
-      key: 'minutesActive' | 'keyboardKeys' | 'mouseKeys' | 'mouseDistance',
-    ) =>
-      detail.length > 0
-        ? detail.reduce((total, t) => total + (t[key] ?? 0), 0)
-        : null
-    const total = minutes(entries)
-    return [
-      {
-        projectId: project!.id,
-        rateHour: project!.rateHour,
-        rateTotal: (total / 60) * Number(project!.rateHour),
-        minutes: total,
-        minutesActive: sum('minutesActive'),
-        minutesPaid: minutes(entries.filter((t) => t.isPaid)),
-        minutesUnpaid: minutes(entries.filter((t) => !t.isPaid)),
-        keyboardKeys: sum('keyboardKeys'),
-        mouseKeys: sum('mouseKeys'),
-        mouseDistance: sum('mouseDistance'),
-      },
-    ]
+    return shapeTime(db, time!, meId)
   }),
   route('put', '/time/:id', ({ db, meId, params, body }) => {
     const [time] = editableTimes(db, meId, [params.id])

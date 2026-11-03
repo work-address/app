@@ -19,6 +19,7 @@ import { TimeRepository } from '@/repository/time-repository'
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { runPromise } from '@/service/effect-bridge'
 import { InvoiceManager } from '@/service/invoice-manager'
+import { TimeManager } from '@/service/time-manager'
 
 /** The real API over HTTP and Postgres: what the demo's mock is held to. */
 @suite()
@@ -53,13 +54,14 @@ export class ApiContractTest
       onto: typeof project,
       hoursAgo: number,
       note: string,
+      author: User = worker,
     ) => {
       const to = moment.utc().subtract(hoursAgo, 'hours')
       const time = await this.timeFixture.create(
         onto,
         to.clone().subtract(30, 'minutes').toDate(),
         to.toDate(),
-        worker,
+        author,
       )
       time.note = note
       return runPromise(times.saveSingle(time))
@@ -76,6 +78,21 @@ export class ApiContractTest
     const invoice = await runPromise(
       invoices.createFromTimeIds(project, worker, [invoiced.id]),
     )
+    const ownerEntry = await entry(project, 5, 'own', owner)
+    const settled = await entry(project, 300, 'settled')
+    await runPromise(
+      invoices.markPaid(
+        await runPromise(
+          invoices.createFromTimeIds(project, worker, [settled.id]),
+        ),
+        worker,
+      ),
+    )
+    await runPromise(
+      this.container
+        .get<TimeManager>('TimeManager')
+        .setIsPaidMany([settled.id], false, worker),
+    )
 
     return {
       project: project.id,
@@ -88,6 +105,8 @@ export class ApiContractTest
       invoicedEntry: invoiced.id,
       invoice: invoice.id,
       closedEntry: closedEntry.id,
+      ownerEntry: ownerEntry.id,
+      settledEntry: settled.id,
     }
   }
 

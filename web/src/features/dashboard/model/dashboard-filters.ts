@@ -196,8 +196,6 @@ export const $dashboardProjects = combine(
   },
 )
 
-type ProjectAccess = { user?: { id?: string }; workers?: unknown[] }
-
 /**
  * Everyone working on the reader's own projects. Empty for someone who owns
  * no project with workers, which hides the people filter: filtering by
@@ -213,8 +211,8 @@ export const $dashboardPeople = combine(
 
     const people = new Map<string, string>()
 
-    for (const project of projects as (ProjectWithStats & ProjectAccess)[]) {
-      if (project.user?.id !== user.id) {
+    for (const project of projects) {
+      if (project.role !== 'owner') {
         continue
       }
 
@@ -240,27 +238,15 @@ export const $dashboardPeople = combine(
  * never tracks, runs agents or takes screenshots, so the widgets about those
  * are left out rather than shown empty for good.
  */
-export const $dashboardCanTrack = combine($projects, $user, (projects, user) =>
-  Boolean(
-    user?.id &&
-      (projects as (ProjectWithStats & ProjectAccess)[]).some(
-        (project) =>
-          project.user?.id === user.id ||
-          (project.workers as { id?: string }[] | undefined)?.some(
-            (worker) => worker.id === user.id,
-          ),
-      ),
+export const $dashboardCanTrack = $projects.map((projects) =>
+  projects.some(
+    (project) => project.role === 'owner' || project.role === 'worker',
   ),
 )
 
 /** Whether the reader owns a project: the team list is theirs alone. */
-export const $isDashboardOwner = combine($projects, $user, (projects, user) =>
-  Boolean(
-    user?.id &&
-      (projects as (ProjectWithStats & ProjectAccess)[]).some(
-        (project) => project.user?.id === user.id,
-      ),
-  ),
+export const $isDashboardOwner = $projects.map((projects) =>
+  projects.some((project) => project.role === 'owner'),
 )
 
 const filtersApplied = merge([

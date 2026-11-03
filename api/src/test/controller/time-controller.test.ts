@@ -200,10 +200,10 @@ export class TimeControllerTest extends BaseControllerTest {
 
     const row = res.data[0] as Record<string, unknown>
     expect(row.projectId).to.be.eq(projectA.id)
-    expect(row.rateHour).to.be.eq(projectA.rateHour)
+    expect(row.rateHour).to.be.eq(Number(projectA.rateHour))
     // the entry spans a full hour, and minutes is now read from that span
     // rather than assumed from the row count, so an hour at 60/hour bills 60
-    expect(row.rateTotal).to.be.eq(60)
+    expect(row.earnedCents).to.be.eq(6000)
     expect(row.minutes).to.be.eq(60)
     expect(row.minutesActive).to.be.eq(timeA.minutesActive)
     expect(row.mouseKeys).to.be.eq(timeA.mouseKeys)
@@ -234,10 +234,16 @@ export class TimeControllerTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const time = await this.timeFixture.create(
+    await this.timeFixture.create(
+      project,
+      moment.utc().subtract(120, 'minutes').toDate(),
+      moment.utc().subtract(60, 'minutes').toDate(),
+    )
+    const own = await this.timeFixture.create(
       project,
       moment.utc().subtract(60, 'minutes').toDate(),
-      moment.utc().toDate(),
+      moment.utc().subtract(30, 'minutes').toDate(),
+      worker,
     )
 
     const res = await timeControllerGetTotals({
@@ -253,10 +259,8 @@ export class TimeControllerTest extends BaseControllerTest {
     expect(res.data.length).to.be.eq(1)
     const row = res.data[0] as Record<string, unknown>
     expect(row.projectId).to.be.eq(project.id)
-    expect(row.minutesActive).to.be.eq(null)
-    expect(row.minutes).to.be.eq(
-      Math.round((+time.toAt - +time.fromAt) / 60000),
-    )
+    expect(row.minutesActive).to.be.eq(own.minutesActive)
+    expect(row.minutes).to.be.eq(30)
   }
 
   @test

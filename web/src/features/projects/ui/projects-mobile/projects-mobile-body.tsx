@@ -29,7 +29,9 @@ export const ProjectsMobileBody = memo(
             </Flex>
           </Text>
           <Text align={'left'} size={'2'} weight={'medium'}>
-            {formatDurationFromMinutes(minutes, t)}
+            {minutes === undefined
+              ? '—'
+              : formatDurationFromMinutes(minutes, t)}
           </Text>
         </Grid>
       )

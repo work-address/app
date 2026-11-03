@@ -138,6 +138,7 @@ editProjectMutation.finished.success.watch(() => {
 })
 
 export {
+  type ProjectRole,
   type ProjectWithStats,
   type ProjectsFilter,
   type StatsPeriod,

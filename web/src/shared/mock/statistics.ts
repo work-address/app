@@ -25,6 +25,7 @@ import {
   isPublished,
   isWorker,
   projectOf,
+  roleOf,
   userOf,
   visibleProjects,
 } from './shape'
@@ -66,15 +67,6 @@ type Scope = {
 
 const DAY = /^\d{4}-\d{2}-\d{2}$/
 
-const roleOf = (project: MockProject, meId: string): ReaderRole =>
-  isOwner(project, meId)
-    ? 'owner'
-    : project.workerIds.includes(meId)
-      ? 'worker'
-      : project.viewerIds.includes(meId)
-        ? 'viewer'
-        : null
-
 /** Whether a report is refused to this scope's reader. */
 export const reportRefused = (scope: Scope, kind: string) =>
   refusesReport(
@@ -103,7 +95,7 @@ export function statisticsScope(
     )
   }
   const visible = visibleProjects(db, meId)
-  const role = (project: MockProject) => roleOf(project, meId)
+  const role = (project: MockProject): ReaderRole => roleOf(project, meId)
   let projects: MockProject[]
   if (query.projectIds?.length) {
     projects = [...new Set(query.projectIds)].map((id) => {
@@ -188,50 +180,138 @@ const bucketOf = (
     ? `${dayOf(iso, timeZone)}T${pad(zonedParts(Date.parse(iso), timeZone).hour)}`
     : dayOf(iso, timeZone)
 
-export function totals(scope: Scope) {
-  const rows = new Map<string, Record<string, number | string>>()
-  for (const time of baseEntries(scope)) {
-    if (!countable(scope, time)) {
+type TotalsSpan = {
+  from?: number
+  to?: number
+  userIds?: string[]
+  invoiceId?: string
+}
+
+/** Which figures a reader may see, on the terms of the API's `ProjectTotals`. */
+export function projectFigures(
+  db: Db,
+  meId: string,
+  projects: MockProject[],
+  span: TotalsSpan = {},
+  now = Date.now(),
+) {
+  const rows: Record<string, unknown>[] = []
+  for (const project of projects) {
+    const role = roleOf(project, meId)
+    if (!role) {
       continue
     }
-    const project = projectOf(scope.db, time.projectId)!
-    const detail = hasDetail(time, project, scope.meId, scope.now)
-    const row = rows.get(time.projectId) ?? {
-      projectId: time.projectId,
-      trackedSeconds: 0,
-      activeSeconds: 0,
-      idleSeconds: 0,
-      manualSeconds: 0,
-      paidSeconds: 0,
+    const entries = db.times.filter((time) => {
+      if (time.projectId !== project.id) {
+        return false
+      }
+      if (role === 'worker' && time.userId !== meId) {
+        return false
+      }
+      if (span.userIds?.length && !span.userIds.includes(time.userId)) {
+        return false
+      }
+      if (span.invoiceId) {
+        return time.invoiceId === span.invoiceId
+      }
+      return inSpan(time.fromAt, span)
+    })
+    const settled =
+      role === 'viewer'
+        ? []
+        : db.invoices.filter((invoice) => {
+            if (invoice.projectId !== project.id || invoice.state !== 'PAID') {
+              return false
+            }
+            if (role === 'worker' && invoice.userId !== meId) {
+              return false
+            }
+            if (
+              span.userIds?.length &&
+              !span.userIds.includes(invoice.userId)
+            ) {
+              return false
+            }
+            return span.invoiceId
+              ? invoice.id === span.invoiceId
+              : inSpan(invoice.fromAt, span)
+          })
+    if (entries.length === 0 && settled.length === 0) {
+      continue
     }
-    const s = seconds(time)
-    ;(row.trackedSeconds as number) += s
-    if (detail && time.source === 'desktop') {
-      ;(row.activeSeconds as number) += activeSeconds(time)
-      ;(row.idleSeconds as number) += s - activeSeconds(time)
+    const total = (list: MockTime[]) =>
+      list.reduce((sum, time) => sum + seconds(time), 0)
+    const tracked = total(entries)
+    if (role === 'viewer') {
+      rows.push({ projectId: project.id, trackedSeconds: Math.round(tracked) })
+      continue
     }
-    if (detail && time.source !== 'desktop') {
-      ;(row.manualSeconds as number) += s
-    }
-    if (time.isPaid) {
-      ;(row.paidSeconds as number) += s
-    }
-    rows.set(time.projectId, row)
+    const detail = entries.filter((time) => hasDetail(time, project, meId, now))
+    const desktop = detail.filter((time) => time.source === 'desktop')
+    const active = desktop.reduce((sum, time) => sum + activeSeconds(time), 0)
+    const sum = (key: 'keyboardKeys' | 'mouseKeys' | 'mouseDistance') =>
+      detail.reduce((all, time) => all + (time[key] ?? 0), 0)
+    const paid = total(entries.filter((time) => time.isPaid))
+    const handPaid = total(
+      entries.filter(
+        (time) => time.isPaid && !settledIds(db).has(time.invoiceId ?? ''),
+      ),
+    )
+    const unpaid = Math.max(0, tracked - paid)
+    const rateHourCents = Math.round(Number(project.rateHour) * 100)
+    const priced = (s: number) => Math.round((s * rateHourCents) / 3600)
+    rows.push({
+      projectId: project.id,
+      trackedSeconds: Math.round(tracked),
+      activeSeconds: Math.round(active),
+      idleSeconds: Math.round(total(desktop) - active),
+      manualSeconds: Math.round(
+        total(detail.filter((time) => time.source !== 'desktop')),
+      ),
+      keyboardKeys: sum('keyboardKeys'),
+      mouseKeys: sum('mouseKeys'),
+      mouseDistance: sum('mouseDistance'),
+      paidSeconds: Math.round(paid),
+      unpaidSeconds: Math.round(unpaid),
+      rateHour: Number(project.rateHour),
+      earnedCents: priced(tracked),
+      paidCents:
+        settled.reduce((sum, invoice) => sum + invoice.amountCents, 0) +
+        priced(handPaid),
+      unpaidCents: priced(unpaid),
+    })
   }
-  return [...rows.values()].map((row) => {
-    if (!scope.viewers.has(row.projectId as string)) {
-      return row
-    }
-    const {
-      activeSeconds: _a,
-      idleSeconds: _i,
-      manualSeconds: _m,
-      paidSeconds: _p,
-      ...rest
-    } = row
-    return rest
-  })
+  return rows
 }
+
+const inSpan = (iso: string, span: TotalsSpan) => {
+  const at = Date.parse(iso)
+  return (
+    (span.from === undefined || at >= span.from) &&
+    (span.to === undefined || at < span.to)
+  )
+}
+
+const settledIds = (db: Db) =>
+  new Set(
+    db.invoices
+      .filter((invoice) => invoice.state === 'PAID')
+      .map((invoice) => invoice.id),
+  )
+
+export const totals = (scope: Scope) =>
+  projectFigures(
+    scope.db,
+    scope.meId,
+    scope.projects,
+    {
+      from: scope.from,
+      to: scope.to,
+      userIds: scope.query.userIds,
+      invoiceId: scope.query.invoiceId,
+    },
+    scope.now,
+  )
 
 const APP_KINDS = new Set([
   'summary',

@@ -2,6 +2,8 @@
 
 Status: done on 1 November 2026 (`85adea3e`), on `feat/0-demo-mode`. Since then [google-sign-in.md](google-sign-in.md) removed TON and Solana, renamed `WalletAddress` to `AccountAddress` and added emails, so the TON and Solana parts below are history. Not checked: how many production collaborator addresses are stored in TON friendly form, which `canonicalSql` will not match. Check that, and backfill with `toStorage` if any exist.
 
+Since then `filterEntries` follows the role: an owner lists everyone's entries, a worker their own, a viewer none. It still reads no plan, so a lapsed owner's worker keeps their own entries. The rule table is `SPEC.md`; the sections below keep the design as it was made.
+
 One module answers who may do what to a project and its entries, as a query filter and as a per-row check. Today six copies answer it, and they disagree.
 
 Related documents: [`SPEC.md`](../SPEC.md) "Who can see what" is the rule table; `web/PRODUCT.md` §7 #2 and §13 G11, G17 record the known gaps; [invoice-lifecycle.md](invoice-lifecycle.md) and [demo-contract.md](demo-contract.md) build on this module.

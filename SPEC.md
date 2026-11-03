@@ -200,7 +200,9 @@ The build order and the measurement rules are in `docs/agent-time-tracking.md`.
 
 | | Project owner | Project worker | Project viewer |
 | --- | --- | --- | --- |
-| Project time, and who is tracking now | yes | yes | yes |
+| Project time | **every worker** | **own only** | **project total, no split by person** |
+| Who is tracking now | **every worker** | **own only** | **no** |
+| The rate, money, paid and unpaid time | **every worker** | **own only** | **no** |
 | Screenshots, apps, window titles, domains, idle and the day timeline | **every worker, after review** | **own only** | **project totals by app name** |
 | Time by the owner's categories and labels | **every worker, after review** | **own, and the published set** | **project totals by category, no labels** |
 | A person's own categories, labels and goals | **no** | **own only** | **no** |
@@ -211,11 +213,27 @@ The build order and the measurement rules are in `docs/agent-time-tracking.md`.
 A worker sees their own invoices only: one contractor's rate and hours are not
 another contractor's business.
 
-**A worker sees only their own entries' detail.** Another worker's entries show
-their time and nothing else: no screenshot, app names, window titles or
-domains. A screenshot says more about how someone works than a rate does, and
-the rate is already private. Viewers see project totals by app name and nothing
-per entry.
+**A worker sees only their own hours, everywhere.** Totals and charts count
+their own time, the entry list holds their own entries, and the money they see
+covers their own time and their own invoices. Another worker's entries do not
+reach them at all. Who is on the project is another matter: collaborators' names
+and emails stay visible to workers and viewers.
+
+**A viewer reads totals, not entries.** Viewers see project-wide time with no
+split by person, project totals by app name, and nothing per entry.
+
+**A figure a reader may not see is left out of the response,** not sent as null
+or zero. `ProjectTotals` answers which figures a reader may see for a project
+over a span, for every route that reports them.
+
+**Paid time and paid money are separate sums.** Paid time is every `isPaid`
+minute in the reader's scope. Paid money is the amounts of the paid invoices in
+their scope, agent lines included, plus hand-marked `isPaid` entries not on a
+paid invoice, at the project's current rate. So an entry un-marked by hand on a
+paid invoice still counts through the invoice, and an entry hand-marked on an
+unpaid invoice counts as its minutes at the rate. An owner's scope is every
+invoice on the project; a worker's is their own. Hand-marked money is an estimate
+until it is invoiced: it moves with the rate, where an invoice's amount does not.
 
 **Detail waits for the worker's review.** An entry's screenshot, apps, titles,
 domains and timeline reach the owner, and its apps reach the viewers' project
@@ -232,9 +250,9 @@ owner sees.
 more: an agent's runs show how a contractor works, not only what they charge.
 Project-wide agent totals are the owner's alone.
 
-**A viewer sees no invoices, no agents, and no detail beyond project totals by
-app name and by the owner's categories.** The role exists to watch progress,
-not money. The rate-privacy reason given above for workers applies to a viewer
+**A viewer sees no invoices, no agents, no rate, no money or paid and unpaid time,
+and no detail beyond project totals by app name and by the owner's categories.**
+The role exists to watch progress, not money. The rate-privacy reason given above for workers applies to a viewer
 more strongly, not less: a viewer added to a project with several contributors
 would otherwise read every contributor's rate, and a viewer is typically
 further from those contributors than a fellow worker is.

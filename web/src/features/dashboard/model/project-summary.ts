@@ -1,4 +1,4 @@
-import type { ProjectWithStats } from '@/entities/projects'
+import type { ProjectRole, ProjectWithStats } from '@/entities/projects'
 import type {
   StatisticsDailyRow,
   StatisticsProjectAppRow,
@@ -14,8 +14,6 @@ export type ProjectWithAccess = ProjectWithStats & {
   viewers?: unknown[]
 }
 
-export type ProjectRole = 'owner' | 'worker' | 'viewer'
-
 /** Everything the dashboard knows about one project, in minutes and money. */
 export type ProjectSummary = {
   role: ProjectRole
@@ -28,23 +26,24 @@ export type ProjectSummary = {
     activeShare: number | null
     paidMinutes: number | null
     unpaidMinutes: number | null
-    earned: number | null
-    unpaid: number | null
+    earnedCents: number | null
+    unpaidCents: number | null
     /** Days in the period with any time on the project. */
     days: number
   }
+  /** Past `minutes`, null where the reader only views. */
   allTime: {
     minutes: number
-    minutesActive: number
-    minutesPaid: number
-    minutesUnpaid: number
-    /** Paid for so far, in currency. */
-    paid: number
-    keyboardKeys: number
-    mouseKeys: number
-    mouseDistance: number
+    minutesActive: number | null
+    minutesPaid: number | null
+    minutesUnpaid: number | null
+    paidCents: number | null
+    keyboardKeys: number | null
+    mouseKeys: number | null
+    mouseDistance: number | null
   }
-  rate: number
+  /** Null where the reader only views. */
+  rate: number | null
   team: { owner: string; workers: string[]; viewers: number }
   /** The period's apps on the project, most time first. */
   apps: { name: string; minutes: number }[]
@@ -68,24 +67,15 @@ const personName = (person: unknown) => {
  */
 export function projectSummary(
   project: ProjectWithAccess,
-  meId: string | undefined,
   totals: StatisticsTotalsRow | undefined,
   apps: StatisticsProjectAppRow[],
   daily: StatisticsDailyRow[],
 ): ProjectSummary {
   const workers = project.workers ?? []
-  const role: ProjectRole =
-    project.user?.id && project.user.id === meId
-      ? 'owner'
-      : workers.some((worker) => (worker as Person).id === meId)
-        ? 'worker'
-        : 'viewer'
-  const rate = Number(project.rateHour) || 0
+  const detail = project.role !== 'viewer'
   const tracked = (totals?.trackedSeconds ?? 0) / 60
-  const detail = totals?.paidSeconds !== undefined
   const active = detail ? (totals?.activeSeconds ?? 0) / 60 : null
-  const paid = detail ? (totals?.paidSeconds ?? 0) / 60 : null
-  const unpaid = paid === null ? null : Math.max(0, tracked - paid)
+  const shown = (value: number | undefined) => (detail ? (value ?? 0) : null)
   const days = new Set(
     daily
       .filter((row) => row.projectId === project.id)
@@ -93,29 +83,29 @@ export function projectSummary(
   )
 
   return {
-    role,
+    role: project.role,
     status: project.state,
     period: {
       trackedMinutes: tracked,
       activeMinutes: active,
       activeShare: active !== null && tracked > 0 ? active / tracked : null,
-      paidMinutes: paid,
-      unpaidMinutes: unpaid,
-      earned: detail ? (tracked / 60) * rate : null,
-      unpaid: unpaid === null ? null : (unpaid / 60) * rate,
+      paidMinutes: detail ? (totals?.paidSeconds ?? 0) / 60 : null,
+      unpaidMinutes: detail ? (totals?.unpaidSeconds ?? 0) / 60 : null,
+      earnedCents: shown(totals?.earnedCents),
+      unpaidCents: shown(totals?.unpaidCents),
       days: days.size,
     },
     allTime: {
       minutes: project.minutes || 0,
-      minutesActive: project.minutesActive || 0,
-      minutesPaid: project.minutesPaid || 0,
-      minutesUnpaid: project.minutesUnpaid || 0,
-      paid: project.paid || 0,
-      keyboardKeys: project.keyboardKeys || 0,
-      mouseKeys: project.mouseKeys || 0,
-      mouseDistance: project.mouseDistance || 0,
+      minutesActive: shown(project.minutesActive),
+      minutesPaid: shown(project.minutesPaid),
+      minutesUnpaid: shown(project.minutesUnpaid),
+      paidCents: shown(project.paidCents),
+      keyboardKeys: shown(project.keyboardKeys),
+      mouseKeys: shown(project.mouseKeys),
+      mouseDistance: shown(project.mouseDistance),
     },
-    rate,
+    rate: project.rateHour ?? null,
     team: {
       owner: personName(project.user),
       workers: workers.map(personName).filter(Boolean),

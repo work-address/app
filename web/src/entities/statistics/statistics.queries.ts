@@ -41,6 +41,10 @@ const overviewHandler = async (
     idleSeconds: toNumber(row.idleSeconds),
     manualSeconds: toNumber(row.manualSeconds),
     paidSeconds: toNumber(row.paidSeconds),
+    unpaidSeconds: toNumber(row.unpaidSeconds),
+    earnedCents: toNumber(row.earnedCents),
+    paidCents: toNumber(row.paidCents),
+    unpaidCents: toNumber(row.unpaidCents),
   }))
 }
 

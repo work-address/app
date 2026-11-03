@@ -70,16 +70,34 @@ export class ProjectAccess {
   }
 
   /**
-   * The entries of the projects this person is on. Reads no plan: collaborators
-   * are decided to be free (web/PRODUCT.md §7 #2), and a worker keeps sight of
-   * their own record while they may still be owed money.
+   * The entries this person may list: an owner everyone's on the project, a
+   * worker their own, a viewer none, since viewers read totals and nothing per
+   * entry. Reads no plan: collaborators are decided to be free (web/PRODUCT.md
+   * §7 #2), and a worker keeps sight of their own record while they may still
+   * be owed money.
    */
   public filterEntries(
     qb: SelectQueryBuilder<ObjectLiteral>,
-    aliases: IAccessAliases,
+    { project, owner }: IAccessAliases,
     user: User,
   ): void {
-    this.applyFilter(qb, aliases, user, 'viewer', false)
+    qb.andWhere(
+      new Brackets((access) => {
+        access
+          .where(`${owner}.id = :accessUserId`, { accessUserId: user.id })
+          .orWhere(
+            new Brackets((own) => {
+              own
+                .where('time."userId" = :accessUserId', {
+                  accessUserId: user.id,
+                })
+                .andWhere(this.onList(project, 'workerAddresses'), {
+                  userAddress: AccountAddress.toCanonical(user.address),
+                })
+            }),
+          )
+      }),
+    )
   }
 
   /** Whether the review window of an entry ending at `toAt` is over. */
@@ -155,6 +173,10 @@ export class ProjectAccess {
     )
   }
 
+  private onList(project: string, list: string): string {
+    return `:userAddress = ANY(SELECT ${AccountAddress.canonicalSql('address')} FROM unnest(COALESCE(${project}.${list}, '{}')) AS address)`
+  }
+
   private applyFilter(
     qb: SelectQueryBuilder<ObjectLiteral>,
     { project, owner }: IAccessAliases,
@@ -163,8 +185,6 @@ export class ProjectAccess {
     gated: boolean,
   ): void {
     const userAddress = AccountAddress.toCanonical(user.address)
-    const isOnList = (list: string) =>
-      `:userAddress = ANY(SELECT ${AccountAddress.canonicalSql('address')} FROM unnest(COALESCE(${project}.${list}, '{}')) AS address)`
 
     qb.andWhere(
       new Brackets((access) => {
@@ -173,9 +193,13 @@ export class ProjectAccess {
           .orWhere(
             new Brackets((collaborator) => {
               const listed = new Brackets((lists) => {
-                lists.where(isOnList('workerAddresses'), { userAddress })
+                lists.where(this.onList(project, 'workerAddresses'), {
+                  userAddress,
+                })
                 if (atLeast === 'viewer') {
-                  lists.orWhere(isOnList('viewerAddresses'), { userAddress })
+                  lists.orWhere(this.onList(project, 'viewerAddresses'), {
+                    userAddress,
+                  })
                 }
               })
 

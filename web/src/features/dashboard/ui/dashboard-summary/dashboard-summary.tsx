@@ -8,7 +8,11 @@ import {
   dashboardStatisticsRequested,
 } from '../../model/dashboard-filters'
 
-import { $hasProjects, $projectsLoading } from '@/entities/projects'
+import {
+  $hasProjects,
+  $projectsLoading,
+  type ProjectRole,
+} from '@/entities/projects'
 import {
   statisticsAgentsQuery,
   statisticsOverviewQuery,
@@ -26,28 +30,27 @@ import {
 type Totals = {
   minutes: number
   minutesActive: number
-  earned: number
-  unpaid: number
+  earnedCents: number
+  unpaidCents: number
   minutesUnpaid: number
   /** False when every row is a project the reader only views. */
   hasDetail: boolean
 }
 
 /**
- * Sums the period's rows. A project the reader only views comes without its
- * detail; the activity and money figures leave it out rather than count it
- * as zero. Money is each project's tracked time at its own rate, so a cheap
- * project's backlog is never valued at an expensive one's.
+ * Sums the period's rows, which the API has priced. A project the reader only
+ * views comes without its detail; the activity and money figures leave it out
+ * rather than count it as zero.
  */
 const sumTotals = (
   rows: StatisticsTotalsRow[] | null,
-  rates: Map<string | undefined, number>,
+  roles: Map<string | undefined, ProjectRole>,
 ): Totals => {
   const acc: Totals = {
     minutes: 0,
     minutesActive: 0,
-    earned: 0,
-    unpaid: 0,
+    earnedCents: 0,
+    unpaidCents: 0,
     minutesUnpaid: 0,
     hasDetail: false,
   }
@@ -55,18 +58,15 @@ const sumTotals = (
   for (const row of rows ?? []) {
     acc.minutes += row.trackedSeconds / 60
 
-    if (row.paidSeconds === undefined) {
+    if (roles.get(row.projectId) === 'viewer') {
       continue
     }
 
-    const rate = rates.get(row.projectId) ?? 0
-    const unpaid = Math.max(0, row.trackedSeconds - row.paidSeconds) / 60
-
     acc.hasDetail = true
     acc.minutesActive += (row.activeSeconds ?? 0) / 60
-    acc.earned += (row.trackedSeconds / 3600) * rate
-    acc.unpaid += (unpaid * rate) / 60
-    acc.minutesUnpaid += unpaid
+    acc.earnedCents += row.earnedCents ?? 0
+    acc.unpaidCents += row.unpaidCents ?? 0
+    acc.minutesUnpaid += (row.unpaidSeconds ?? 0) / 60
   }
 
   return acc
@@ -102,17 +102,14 @@ export const DashboardSummary = () => {
     hasProjects: $hasProjects,
   })
 
-  const rates = useMemo(
-    () =>
-      new Map(
-        projects.map((project) => [project.id, Number(project.rateHour) || 0]),
-      ),
+  const roles = useMemo(
+    () => new Map(projects.map((project) => [project.id, project.role])),
     [projects],
   )
-  const totals = useMemo(() => sumTotals(rows, rates), [rows, rates])
+  const totals = useMemo(() => sumTotals(rows, roles), [rows, roles])
   const previous = useMemo(
-    () => (previousRows ? sumTotals(previousRows, rates) : null),
-    [previousRows, rates],
+    () => (previousRows ? sumTotals(previousRows, roles) : null),
+    [previousRows, roles],
   )
 
   const agentTotals = useMemo(
@@ -233,9 +230,9 @@ export const DashboardSummary = () => {
           <StatTile
             tone="green"
             label={t('dashboard.summary.earned.label')}
-            value={formatCurrency(totals.earned)}
+            value={formatCurrency(totals.earnedCents / 100)}
             hint={
-              change(totals.earned, previous?.earned) ??
+              change(totals.earnedCents, previous?.earnedCents) ??
               t('dashboard.summary.earned.hint')
             }
             loading={loading}
@@ -243,7 +240,7 @@ export const DashboardSummary = () => {
           <StatTile
             tone="amber"
             label={t('dashboard.summary.unpaid.label')}
-            value={formatCurrency(totals.unpaid)}
+            value={formatCurrency(totals.unpaidCents / 100)}
             hint={t('dashboard.summary.unpaid.hint', {
               time: duration(totals.minutesUnpaid),
             })}

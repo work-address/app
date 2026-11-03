@@ -32,38 +32,29 @@ export const mapProjectsAndStats = (
     const stats: TimeTotalsRow =
       project?.id && recordStats[project.id]
         ? recordStats[project.id]
-        : {
-            projectId: '',
-            rateHour: 0,
-            rateTotal: 0,
-            minutes: 0,
-            keyboardKeys: 0,
-            minutesActive: 0,
-            minutesPaid: 0,
-            minutesUnpaid: 0,
-            mouseDistance: 0,
-            mouseKeys: 0,
-          }
+        : { projectId: '', minutes: 0 }
 
+    const minutesActive = stats.minutesActive ?? 0
     const hoursTotal = (stats.minutes - (stats.minutes % 60)) / 60
     const minutesTotal = stats.minutes - hoursTotal * 60
-    const hoursActiveTotal =
-      (stats.minutesActive - (stats.minutesActive % 60)) / 60
-    const minutesActiveTotal = stats.minutesActive - hoursActiveTotal * 60
+    const hoursActiveTotal = (minutesActive - (minutesActive % 60)) / 60
+    const minutesActiveTotal = minutesActive - hoursActiveTotal * 60
 
     const computed: TimeTotalComputed = {
       hoursTotal,
       minutesTotal,
       minutesActiveTotal,
       hoursActiveTotal,
-      paid: Number(((stats.minutesPaid * stats.rateHour) / 60).toFixed(2)),
     }
+    const rate = project.rateHour ?? stats.rateHour
 
     return {
       ...stats,
       ...project,
       ...computed,
-      rateHour: Number(project.rateHour ?? stats.rateHour),
+      // The least a project in the list can be, and it shows the reader least.
+      role: project.role ?? 'viewer',
+      rateHour: rate === undefined ? undefined : Number(rate),
     }
   })
 }

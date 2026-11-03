@@ -23,17 +23,20 @@ export interface ITime {
   screenshot?: string | null
 }
 
+/** What `/time/totals` answers; a figure the reader may not see is absent. */
 export interface ITimeTotals {
   projectId: string
-  rateHour: number
-  rateTotal: number
   minutes: number
-  minutesActive: number | null
-  minutesPaid: number
-  minutesUnpaid: number
-  keyboardKeys: number | null
-  mouseKeys: number | null
-  mouseDistance: number | null
+  rateHour?: number
+  minutesActive?: number
+  minutesPaid?: number
+  minutesUnpaid?: number
+  keyboardKeys?: number
+  mouseKeys?: number
+  mouseDistance?: number
+  earnedCents?: number
+  paidCents?: number
+  unpaidCents?: number
 }
 
 /** One contractor's contribution to one project, for the employer report. */

@@ -6,6 +6,7 @@ import { ProjectFixture } from '@/test/fixture/project-fixture'
 import { TimeManager } from '@/service/time-manager'
 import { StatisticsManager } from '@/service/statistics-manager'
 import { TimeRepository } from '@/repository/time-repository'
+import AccessException from '@/exception/access-exception'
 import { AppUsage } from '@/entity/app-usage'
 import { Project } from '@/entity/project'
 import { Time } from '@/entity/time'
@@ -169,12 +170,15 @@ export class AppStatisticsTest extends AbstractDatabaseIntegration {
     expect(
       (await runPromise(repo.findOneConfirmUser(time, owner))).apps,
     ).to.have.length(1)
-    expect(
-      (await runPromise(repo.findOneConfirmUser(time, colleague))).apps,
-    ).to.equal(undefined)
-    expect(
-      (await runPromise(repo.findOneConfirmUser(time, viewer))).apps,
-    ).to.equal(undefined)
+    for (const refused of [colleague, viewer]) {
+      let error: unknown
+      try {
+        await runPromise(repo.findOneConfirmUser(time, refused))
+      } catch (e: unknown) {
+        error = e
+      }
+      expect(error).to.be.instanceOf(AccessException)
+    }
     const query = {
       projectIds: [project.id],
       from: new Date(Date.now() - 86400000).toISOString().slice(0, 10),

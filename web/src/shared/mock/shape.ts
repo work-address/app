@@ -2,7 +2,8 @@
  * Who may see what, and the rows as the API sends them. The rules follow the
  * API: `Project.isOwner/isWorker/isViewer` (collaborators count only while the
  * owner is premium) and `TimeVisibility` (another worker's detail reaches the
- * owner after their review window; viewers never get it).
+ * owner after their review window; viewers never get it). Which entries a
+ * reader may list follows `ProjectAccess.filterEntries`.
  */
 import { spanMinutes } from './db'
 import { demoScreenshots } from './images'
@@ -34,9 +35,37 @@ export const isWorker = (db: Db, project: MockProject, userId: string) =>
   isOwner(project, userId) ||
   (project.workerIds.includes(userId) && ownerPremium(db, project))
 
+/** What the lists say, whatever the owner's plan: `ProjectAccess.role`. */
+export const roleOf = (
+  project: MockProject,
+  userId: string,
+): 'owner' | 'worker' | 'viewer' | null =>
+  isOwner(project, userId)
+    ? 'owner'
+    : project.workerIds.includes(userId)
+      ? 'worker'
+      : project.viewerIds.includes(userId)
+        ? 'viewer'
+        : null
+
 export const isViewer = (db: Db, project: MockProject, userId: string) =>
   isWorker(db, project, userId) ||
   (project.viewerIds.includes(userId) && ownerPremium(db, project))
+
+/**
+ * The entries a reader may list: an owner everyone's, a worker their own, a
+ * viewer none. Reads no plan, like `ProjectAccess.filterEntries`.
+ */
+export const canListEntry = (
+  db: Db,
+  time: MockTime,
+  userId: string,
+): boolean => {
+  const project = projectOf(db, time.projectId)
+  const role = project ? roleOf(project, userId) : null
+
+  return role === 'owner' || (role === 'worker' && time.userId === userId)
+}
 
 /** Every live project the user owns, works on or views. */
 export const visibleProjects = (db: Db, userId: string) =>
@@ -86,19 +115,27 @@ const shapeProjectCore = (db: Db, project: MockProject) => {
   }
 }
 
-export const shapeProject = (db: Db, project: MockProject, meId: string) => ({
-  ...shapeProjectCore(db, project),
-  workers: project.workerIds
-    .map((id) => userOf(db, id))
-    .filter(Boolean)
-    .map((user) => shapeUser(user!)),
-  viewers: project.viewerIds
-    .map((id) => userOf(db, id))
-    .filter(Boolean)
-    .map((user) => shapeUser(user!)),
-  agents: [],
-  canTrack: isWorker(db, project, meId),
-})
+export const shapeProject = (db: Db, project: MockProject, meId: string) => {
+  const { rateHour, ...core } = shapeProjectCore(db, project)
+  const role = roleOf(project, meId)
+
+  return {
+    ...core,
+    // A viewer gets time and no money.
+    ...(role === 'viewer' ? {} : { rateHour }),
+    role,
+    workers: project.workerIds
+      .map((id) => userOf(db, id))
+      .filter(Boolean)
+      .map((user) => shapeUser(user!)),
+    viewers: project.viewerIds
+      .map((id) => userOf(db, id))
+      .filter(Boolean)
+      .map((user) => shapeUser(user!)),
+    agents: [],
+    canTrack: isWorker(db, project, meId),
+  }
+}
 
 /** A time entry as `TimeVisibility.redact` leaves it for this reader. */
 export const shapeTime = (

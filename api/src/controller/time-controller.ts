@@ -31,7 +31,8 @@ import { Project } from '@/entity/project'
 import AccessException from '@/exception/access-exception'
 import express from 'express'
 import { Effect } from 'effect'
-import { runPromise } from '@/service/effect-bridge'
+import { fromPromise, runPromise } from '@/service/effect-bridge'
+import { ProjectTotals } from '@/service/project-totals'
 
 @Authorized([EUserRole.ROLE_USER])
 @JsonController('/time')
@@ -39,11 +40,13 @@ export class TimeController {
   protected timeManager: TimeManager
   protected timeRepository: TimeRepository
   protected projectRepository: ProjectRepository
+  protected projectTotals: ProjectTotals
 
   constructor() {
     this.timeManager = App.container.get('TimeManager')
     this.timeRepository = App.container.get('TimeRepository')
     this.projectRepository = App.container.get('ProjectRepository')
+    this.projectTotals = App.container.get('ProjectTotals')
   }
 
   @Post('/publish')
@@ -220,8 +223,10 @@ export class TimeController {
       this.projectRepository
         .findProjectWithAccessOrFail(project, currentUser)
         .pipe(
-          Effect.flatMap(() =>
-            this.timeRepository.getTotals(currentUser, project.id),
+          Effect.flatMap((accessible) =>
+            fromPromise(() =>
+              this.projectTotals.readAllTime(accessible, currentUser),
+            ),
           ),
         ),
     )

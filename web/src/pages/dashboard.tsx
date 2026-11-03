@@ -116,23 +116,23 @@ export default function DashboardPage() {
   )
 
   // The table's time and money follow the period, like the figures above it.
-  const periodTotals = useMemo(() => {
-    const rates = new Map(
-      projects.map((project) => [project.id, Number(project.rateHour) || 0]),
-    )
-
-    return Object.fromEntries(
-      (periodRows ?? []).map((row) => [
-        row.projectId,
-        {
-          minutes: Math.round(row.trackedSeconds / 60),
-          minutesActive: Math.round((row.activeSeconds ?? 0) / 60),
-          paid:
-            ((row.paidSeconds ?? 0) / 3600) * (rates.get(row.projectId) ?? 0),
-        },
-      ]),
-    ) as ProjectsTablePeriodTotals
-  }, [periodRows, projects])
+  const periodTotals = useMemo(
+    () =>
+      Object.fromEntries(
+        (periodRows ?? []).map((row) => [
+          row.projectId,
+          {
+            minutes: Math.round(row.trackedSeconds / 60),
+            minutesActive:
+              row.activeSeconds === undefined
+                ? undefined
+                : Math.round(row.activeSeconds / 60),
+            paidCents: row.paidCents,
+          },
+        ]),
+      ) as ProjectsTablePeriodTotals,
+    [periodRows],
+  )
 
   // While loading, the projects table renders as skeletons so the layout does
   // not jump. Once loaded, an account with no projects gets the

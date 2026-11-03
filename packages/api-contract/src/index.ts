@@ -25,6 +25,10 @@ export interface ContractWorld {
   invoice: string
   /** The worker's, on a project that is closed. */
   closedEntry: string
+  /** The owner's, 30 minutes. */
+  ownerEntry: string
+  /** The worker's, 30 minutes, on a paid invoice of 3000 cents, un-marked by hand. */
+  settledEntry: string
 }
 
 export interface ContractRequest {
@@ -41,7 +45,10 @@ export interface ContractResponse {
 
 export interface ContractAdapter {
   seed(): Promise<ContractWorld>
-  send(person: ContractPerson, request: ContractRequest): Promise<ContractResponse>
+  send(
+    person: ContractPerson,
+    request: ContractRequest,
+  ): Promise<ContractResponse>
 }
 
 export interface ContractScenario {
@@ -73,9 +80,51 @@ const search = (): ContractRequest => ({
 /* eslint-disable @typescript-eslint/no-explicit-any */
 const entry = (body: any, id: string) =>
   (body[0] as any[]).find((row) => row.id === id)
+const rowOf = (rows: any, world: ContractWorld) =>
+  (rows as any[]).find((row) => row.projectId === world.project)
 /* eslint-enable @typescript-eslint/no-explicit-any */
 
-const noteIs = (id: keyof ContractWorld, note: string | null) =>
+/** What must differ from the row, or nothing. Absent fields must be absent. */
+const rowIs =
+  (expected: Record<string, unknown>) =>
+  (row: Record<string, unknown> | undefined, world: ContractWorld) => {
+    const want: Record<string, unknown> = {
+      ...expected,
+      projectId: world.project,
+    }
+    const keys = [...new Set([...Object.keys(want), ...Object.keys(row ?? {})])]
+    const wrong = keys.filter((key) => row?.[key] !== want[key])
+    return wrong.length
+      ? `${wrong.map((key) => `${key} is ${JSON.stringify(row?.[key])}`).join(', ')}, not ${JSON.stringify(wrong.map((key) => want[key]))}`
+      : undefined
+  }
+
+/** A row without its activity figures, which depend on the seed's entries. */
+const moneyOf = (row: Record<string, unknown> | undefined) => {
+  const { minutesActive, keyboardKeys, mouseKeys, mouseDistance, ...money } =
+    row ?? {}
+  return money
+}
+
+const allTime = (w: ContractWorld): ContractRequest => ({
+  method: 'get',
+  path: `/time/totals/${w.project}/project`,
+})
+
+const overview = (w: ContractWorld): ContractRequest => ({
+  method: 'post',
+  path: '/statistics/overview',
+  body: statistics({ projectIds: [w.project] }),
+})
+
+const projectRead = (w: ContractWorld): ContractRequest => ({
+  method: 'post',
+  path: '/project/search',
+  body: { filter: { projectId: w.project }, sort: { id: 'ASC' }, page: 0 },
+})
+
+const noteIs =
+  (id: keyof ContractWorld, note: string | null) =>
   // eslint-disable-next-line @typescript-eslint/no-explicit-any
   (body: any, world: ContractWorld) => {
     const row = entry(body, world[id] as string)
@@ -208,11 +257,46 @@ export const CONTRACT_SCENARIOS: ContractScenario[] = [
     check: noteIs('oldEntry', 'old'),
   },
   {
-    name: 'a viewer sees project time without detail',
+    name: 'a viewer lists no entries',
     as: 'viewer',
     request: search,
     status: 200,
-    check: noteIs('oldEntry', null),
+    check: (body) =>
+      body[0].length === 0 ? undefined : `lists ${body[0].length} entries`,
+  },
+  {
+    name: 'a viewer cannot read an entry',
+    as: 'viewer',
+    request: (w) => ({ method: 'get', path: `/time/${w.oldEntry}` }),
+    status: 403,
+  },
+  {
+    name: 'a worker lists their own entries and nobody else’s',
+    as: 'worker',
+    request: search,
+    status: 200,
+    check: (body, world) =>
+      entry(body, world.ownerEntry)
+        ? 'lists the owner’s entry'
+        : entry(body, world.oldEntry)
+          ? undefined
+          : 'does not list their own entry',
+  },
+  {
+    name: 'a worker cannot read someone else’s entry',
+    as: 'worker',
+    request: (w) => ({ method: 'get', path: `/time/${w.ownerEntry}` }),
+    status: 403,
+  },
+  {
+    name: 'the owner lists everyone’s entries',
+    as: 'owner',
+    request: search,
+    status: 200,
+    check: (body, world) =>
+      entry(body, world.ownerEntry) && entry(body, world.oldEntry)
+        ? undefined
+        : 'does not list both',
   },
   {
     name: 'an outsider sees nothing',
@@ -231,22 +315,111 @@ export const CONTRACT_SCENARIOS: ContractScenario[] = [
       entry(body, world.closedEntry) ? 'lists the closed entry' : undefined,
   },
 
-  // Reports: SPEC.md "Who can see what"
+  // Project totals: SPEC.md "Who can see what"
   {
-    name: 'a viewer’s totals carry no activity',
+    name: 'a viewer’s all-time totals are the project’s time and nothing else',
     as: 'viewer',
-    request: () => ({
-      method: 'post',
-      path: '/statistics/overview',
-      body: statistics(),
-    }),
+    request: allTime,
+    status: 200,
+    check: (body, world) => rowIs({ minutes: 210 })(rowOf(body, world), world),
+  },
+  {
+    name: 'a worker’s all-time totals count their own time and money',
+    as: 'worker',
+    request: allTime,
+    status: 200,
+    check: (body, world) =>
+      rowIs({
+        minutes: 180,
+        minutesPaid: 30,
+        minutesUnpaid: 150,
+        rateHour: 60,
+        earnedCents: 18000,
+        // The paid invoice, and one hand-marked half hour at $60/h.
+        paidCents: 6000,
+        unpaidCents: 15000,
+      })(moneyOf(rowOf(body, world)), world),
+  },
+  {
+    name: 'the owner’s all-time totals count everyone',
+    as: 'owner',
+    request: allTime,
+    status: 200,
+    check: (body, world) =>
+      rowIs({
+        minutes: 210,
+        minutesPaid: 30,
+        minutesUnpaid: 180,
+        rateHour: 60,
+        earnedCents: 21000,
+        paidCents: 6000,
+        unpaidCents: 18000,
+      })(moneyOf(rowOf(body, world)), world),
+  },
+  {
+    name: 'an outsider reads no totals',
+    as: 'outsider',
+    request: allTime,
+    status: 403,
+  },
+  {
+    name: 'a viewer’s project read says their role and leaves out the rate',
+    as: 'viewer',
+    request: projectRead,
     status: 200,
     check: (body) => {
-      if (!body.totals.length) return 'no totals'
-      // eslint-disable-next-line @typescript-eslint/no-explicit-any
-      return body.totals.some((row: any) => 'activeSeconds' in row)
-        ? 'a total carries activeSeconds'
-        : undefined
+      const [project] = body[0]
+      if (project?.role !== 'viewer') return `role is ${project?.role}`
+      return 'rateHour' in project ? 'carries rateHour' : undefined
+    },
+  },
+  ...(['owner', 'worker'] as const).map(
+    (role): ContractScenario => ({
+      name: `a ${role}’s project read says their role and carries the rate`,
+      as: role,
+      request: projectRead,
+      status: 200,
+      check: (body) => {
+        const [project] = body[0]
+        if (project?.role !== role) return `role is ${project?.role}`
+        return Number(project.rateHour) === 60
+          ? undefined
+          : `rateHour is ${project.rateHour}`
+      },
+    }),
+  ),
+
+  // Reports: SPEC.md "Who can see what"
+  {
+    name: 'a viewer’s period totals are the project’s time and nothing else',
+    as: 'viewer',
+    request: overview,
+    status: 200,
+    check: (body, world) =>
+      rowIs({ trackedSeconds: 12600 })(rowOf(body.totals, world), world),
+  },
+  {
+    name: 'a worker’s period totals count their own time and money',
+    as: 'worker',
+    request: overview,
+    status: 200,
+    check: (body, world) => {
+      const row = rowOf(body.totals, world)
+      return row?.trackedSeconds === 10800 && row?.paidCents === 6000
+        ? undefined
+        : `tracked ${row?.trackedSeconds}, paid ${row?.paidCents}`
+    },
+  },
+  {
+    name: 'the owner’s period totals count everyone',
+    as: 'owner',
+    request: overview,
+    status: 200,
+    check: (body, world) => {
+      const row = rowOf(body.totals, world)
+      return row?.trackedSeconds === 12600 && row?.paidCents === 6000
+        ? undefined
+        : `tracked ${row?.trackedSeconds}, paid ${row?.paidCents}`
     },
   },
   {

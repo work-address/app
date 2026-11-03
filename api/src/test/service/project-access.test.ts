@@ -1,11 +1,13 @@
 import { suite, test } from '@testdeck/mocha'
 import { expect } from 'chai'
+import moment from 'moment'
 
 import { AbstractDatabaseIntegration } from '@/test/abstract-database.integration'
 import { Project } from '@/entity/project'
 import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
 import { ProjectFixture } from '@/test/fixture/project-fixture'
+import { TimeFixture } from '@/test/fixture/time-fixture'
 import { UserFixture } from '@/test/fixture/user-fixture'
 import { InvoiceManager } from '@/service/invoice-manager'
 import { IConfigParameters } from '@/model/config'
@@ -95,6 +97,48 @@ export class ProjectAccessTest extends AbstractDatabaseIntegration {
     return (await qb.getCount()) === 1
   }
 
+  /** One entry by the owner, and one by the worker. */
+  private async entries(project: Project, people: Record<string, User>) {
+    const times = this.container.get<TimeFixture>('TimeFixture')
+    const end = moment.utc().subtract(1, 'hour')
+    const own = await times.create(
+      project,
+      end.clone().subtract(10, 'minutes').toDate(),
+      end.toDate(),
+      people.owner,
+    )
+    const worker = await times.create(
+      project,
+      end.clone().subtract(30, 'minutes').toDate(),
+      end.clone().subtract(20, 'minutes').toDate(),
+      people.worker,
+    )
+
+    return { own: own.id, worker: worker.id }
+  }
+
+  /** Which of `entries` the entries filter lists for this person. */
+  private async listedEntries(
+    project: Project,
+    user: User,
+    entries: Record<string, string>,
+  ): Promise<string[]> {
+    const qb = this.conn
+      .getRepository(Time)
+      .createQueryBuilder('time')
+      .innerJoin('time.project', 'project')
+      .innerJoin('project.user', 'owner')
+      .where('project.id = :id', { id: project.id })
+
+    this.access.filterEntries(qb, { project: 'project', owner: 'owner' }, user)
+
+    const listed = (await qb.getMany()).map((time) => time.id)
+
+    return Object.keys(entries)
+      .filter((name) => listed.includes(entries[name]))
+      .sort()
+  }
+
   private expected(
     role: (typeof ROLES)[number],
     plan: (typeof PLANS)[number],
@@ -113,6 +157,7 @@ export class ProjectAccessTest extends AbstractDatabaseIntegration {
       for (const plan of PLANS) {
         const { project, people } = await this.project(plan)
         const aliases = { project: 'project', owner: 'owner' }
+        const entries = await this.entries(project, people)
 
         for (const role of ROLES) {
           const user = people[role]
@@ -138,13 +183,17 @@ export class ProjectAccessTest extends AbstractDatabaseIntegration {
             ),
             `${label}: worker filter`,
           ).to.equal(expected === 'owner' || expected === 'worker')
-          // Entries read no plan: only being on the project decides them.
+          // Entries read no plan: a lapsed owner's worker keeps their own.
           expect(
-            await this.filtered(project, (qb) =>
-              this.access.filterEntries(qb, aliases, user),
-            ),
+            await this.listedEntries(project, user, entries),
             `${label}: entries filter`,
-          ).to.equal(role !== 'outsider')
+          ).to.deep.equal(
+            role === 'owner'
+              ? ['own', 'worker']
+              : role === 'worker'
+                ? ['worker']
+                : [],
+          )
         }
       }
     }

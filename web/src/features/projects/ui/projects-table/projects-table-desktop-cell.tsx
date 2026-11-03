@@ -75,7 +75,9 @@ export const ProjectsDesktopCell = React.memo(
         } else if (props.customKey === 'timeActive') {
           content = (
             <Text color={'gray'}>
-              {formatDurationFromMinutes(props.data.minutesActive, t)}
+              {props.data.minutesActive === undefined
+                ? '—'
+                : formatDurationFromMinutes(props.data.minutesActive, t)}
             </Text>
           )
         } else {

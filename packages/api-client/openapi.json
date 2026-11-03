@@ -218,7 +218,7 @@
           "lines"
         ],
         "example": {
-          "id": "1c1d569a-75bc-442f-a5ae-15e1d581762d"
+          "id": "ead174b6-7109-4013-b2c6-f3cc202b077f"
         }
       },
       "ProjectStatistics": {
@@ -279,7 +279,7 @@
           "period"
         ],
         "example": {
-          "id": "3c096e57-d5d5-401d-b0b4-f55a8d8b64fa"
+          "id": "468f80c4-12c5-4b70-b911-2663e54b89e1"
         }
       },
       "Time": {
@@ -430,7 +430,7 @@
           "toAt"
         ],
         "example": {
-          "id": "9c08a482-f24b-4d14-bc52-73af25f6da85"
+          "id": "0c62927f-417c-485d-93af-ce65738f895e"
         }
       },
       "Project": {
@@ -510,6 +510,14 @@
             "type": "array"
           },
           "canTrack": {},
+          "role": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "worker",
+              "viewer"
+            ]
+          },
           "id": {
             "minLength": 1,
             "type": "string",
@@ -547,7 +555,7 @@
           "state"
         ],
         "example": {
-          "id": "73786038-6d37-4135-8216-87966d239133"
+          "id": "f0e80334-65d0-41f2-ab05-87c66b4bf19d"
         }
       },
       "User": {
@@ -668,7 +676,7 @@
         },
         "type": "object",
         "example": {
-          "id": "97c7b9c1-1c3c-4060-9eb2-d8ddbe90bee6"
+          "id": "d35a6901-ec62-4a7d-8a97-ebd1ed0a920f"
         }
       },
       "AgentDto": {
@@ -1910,6 +1918,14 @@
               "type": "object"
             },
             "type": "array"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "owner",
+              "worker",
+              "viewer"
+            ]
           }
         }
       },
@@ -4607,7 +4623,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "75a9ab8f-205e-4266-a7ae-5a50c7ca5b13"
+                  "projectId": "37861c7c-839c-4345-9101-481c907a28c9"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -4675,8 +4691,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1793627116910,
-                "toUnix": 1793713516910
+                "fromUnix": 1793635069229,
+                "toUnix": 1793721469229
               }
             }
           },
@@ -5041,7 +5057,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "abe402d8-723e-4e8c-9d73-ce1c26e2de74"
+                "nonce": "3af6139d-48e1-4b9c-bd69-1cbafc0c5f6e"
               },
               "schema": {
                 "properties": {
@@ -5086,7 +5102,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "5bb06223-8c5a-45ed-a0e3-b5f5df126841"
+                "nonce": "31d7e5d4-c174-4049-a7ff-27d6ba6eb6cf"
               },
               "schema": {
                 "properties": {
@@ -5127,21 +5143,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "2c1eaa19-2471-456a-ac73-c9d4b305858c",
+                      "nonce": "6cf0fb99-f4bb-4d5c-89bb-6d40d32ab93b",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "3894238c-766c-4618-979b-effb18113da6",
+                      "nonce": "66fa9aa7-b021-41eb-a581-7ec9f66fd5ae",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "2968fc16-4857-40c2-8130-d5375ddc898f",
+                      "nonce": "c75115c7-485e-4e53-9ad9-33fcb5bf9845",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

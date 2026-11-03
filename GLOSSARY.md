@@ -40,6 +40,18 @@ _Avoid_: Evidence, activity data
 Of an entry: its detail has reached the owner, because its author released it, an invoice billed it, or the review window ended.
 _Avoid_: Reviewed, released, public
 
+**Project totals**:
+The figures a reader may see for a project over a span, answered by one module: a viewer the project's time, a worker their own time and money, an owner everyone's.
+_Avoid_: Stats, project summary
+
+**Paid time**:
+Every `isPaid` minute in the reader's scope, however it came to be marked.
+_Avoid_: Settled time, billed time
+
+**Paid money**:
+The reader's paid invoice amounts, plus hand-marked `isPaid` entries not on a paid invoice at the project's current rate. An estimate until those entries are invoiced.
+_Avoid_: Earnings, payout
+
 **Address**:
 What an account is called: an EVM address for a wallet account, the Google email for a Google account. Project lists hold these.
 _Avoid_: Wallet address, username

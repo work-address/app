@@ -6,7 +6,6 @@ export {
   type ZonedParts,
 } from './zoned.js'
 export {
-  VIEWER_HIDDEN_TOTALS,
   projectsForPeople,
   refusesQuery,
   refusesReport,

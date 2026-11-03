@@ -16,12 +16,12 @@ import AccessException from '@/exception/access-exception'
 import { StatisticsInsights } from '@/service/statistics-insights'
 import { Span, TimeSpans } from '@/service/time-spans'
 import {
-  VIEWER_HIDDEN_TOTALS,
   projectsForPeople,
   refusesQuery,
   refusesReport,
 } from '@work-address/statistics-core'
 import { ProjectAccess } from '@/service/project-access'
+import { ProjectTotals } from '@/service/project-totals'
 
 const APP_KINDS = ['daily', 'ranking', 'titles', 'workers', 'projects']
 
@@ -29,6 +29,7 @@ const APP_KINDS = ['daily', 'ranking', 'titles', 'workers', 'projects']
 export class StatisticsManager {
   @inject('ProjectAccess') protected access: ProjectAccess
   @inject('ProjectRepository') protected projects: ProjectRepository
+  @inject('ProjectTotals') protected totals: ProjectTotals
   @inject('InvoiceRepository') protected invoices: InvoiceRepository
   @inject('StatisticsRepository') protected repository: StatisticsRepository
 
@@ -117,15 +118,15 @@ export class StatisticsManager {
       throw new AccessException()
     if (kind === 'overview' || kind === 'summary') {
       const [totals, apps, gaps] = await Promise.all([
-        this.repository.totals(scope),
+        this.totals.read(scope.projects, user, {
+          from: scope.from,
+          to: scope.to,
+          userIds: query.userIds,
+          invoiceId: query.invoiceId,
+        }),
         this.repository.apps(scope, 'projects'),
         this.repository.gaps(scope),
       ])
-      for (const row of totals) {
-        if (scope.viewers.includes(row.projectId)) {
-          for (const field of VIEWER_HIDDEN_TOTALS) delete row[field]
-        }
-      }
       return { totals, apps, gaps: scope.viewers.length ? [] : gaps }
     }
     if (!APP_KINDS.includes(kind))

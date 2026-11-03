@@ -5,19 +5,34 @@ export type ProjectsFilter = {
   containsText: string
 }
 
+export type ProjectRole = NonNullable<baseApi.Project['role']>
+
+/**
+ * A project's all-time totals, as much of them as the reader may see. The API
+ * leaves out a figure rather than sending null, so a viewer's row holds
+ * `projectId` and `minutes` and nothing else.
+ */
 export type TimeTotalsRow = {
   projectId: string
-  rateHour: number
-  rateTotal: number
   minutes: number
-  minutesActive: number
-  /** Active minutes covered by a settled invoice. */
-  minutesPaid: number
-  /** Active minutes not yet covered by a settled invoice. */
-  minutesUnpaid: number
-  keyboardKeys: number
-  mouseKeys: number
-  mouseDistance: number
+  rateHour?: number
+  minutesActive?: number
+  /** Minutes marked paid, by an invoice or by their author by hand. */
+  minutesPaid?: number
+  /** Minutes not marked paid. */
+  minutesUnpaid?: number
+  keyboardKeys?: number
+  mouseKeys?: number
+  mouseDistance?: number
+  /** All the tracked time at the project's rate. */
+  earnedCents?: number
+  /**
+   * What has been paid for: paid invoices as billed, and time marked paid by
+   * hand at the project's rate, which is an estimate until it is invoiced.
+   */
+  paidCents?: number
+  /** The minutes not marked paid, at the project's rate. */
+  unpaidCents?: number
 }
 
 export type TimeTotalComputed = {
@@ -25,19 +40,14 @@ export type TimeTotalComputed = {
   minutesTotal: number
   hoursActiveTotal: number
   minutesActiveTotal: number
-  /**
-   * What has actually been paid for on this project, in currency units.
-   *
-   * Derived from `minutesPaid` - hours covered by a settled invoice - not from
-   * total tracked time. The column previously read "Earnings" while showing
-   * everything tracked, which is money hoped for rather than money received.
-   */
-  paid: number
 }
 
-export type ProjectWithStats = Omit<baseApi.Project, 'rateHour'> &
+export type ProjectWithStats = Omit<baseApi.Project, 'rateHour' | 'role'> &
   TimeTotalsRow &
-  TimeTotalComputed
+  TimeTotalComputed & {
+    /** What the project's lists say the reader is; unrelated to `canTrack`. */
+    role: ProjectRole
+  }
 
 export type StatsPeriod = NonNullable<baseApi.ProjectStatisticsSearch['period']>
 

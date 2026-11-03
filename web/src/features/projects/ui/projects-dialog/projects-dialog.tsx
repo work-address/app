@@ -82,7 +82,7 @@ export const ProjectsDialog = ({
             defaultValues={{
               title: row.title,
               state: row.state,
-              rateHour: row.rateHour.toString(),
+              rateHour: row.rateHour?.toString() ?? '',
               text: row.text,
               collaborators: mapAddressesToCollaborators(
                 row.workerAddresses,

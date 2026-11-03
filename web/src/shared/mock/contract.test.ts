@@ -91,6 +91,8 @@ const mock: ContractAdapter = {
       entry('paid', 101, { isPaid: true }),
       entry('invoiced', 200, { invoiceId: 'invoice' }),
       entry('closed', 2, { projectId: 'closed' }),
+      entry('own', 5, { userId: PEOPLE.owner }),
+      entry('settled', 300, { invoiceId: 'settled' }),
     ]
     const invoice: MockInvoice = {
       id: 'invoice',
@@ -108,7 +110,18 @@ const mock: ContractAdapter = {
       paidAt: null,
       timeIds: ['invoiced'],
     }
-    db.invoices = [invoice]
+    db.invoices = [
+      invoice,
+      {
+        ...invoice,
+        id: 'settled',
+        fromAt: new Date(Date.now() - 301 * HOUR).toISOString(),
+        toAt: new Date(Date.now() - 300 * HOUR).toISOString(),
+        state: 'PAID',
+        paidAt: new Date().toISOString(),
+        timeIds: ['settled'],
+      },
+    ]
     db.runs = []
 
     return {
@@ -122,6 +135,8 @@ const mock: ContractAdapter = {
       invoicedEntry: 'invoiced',
       invoice: 'invoice',
       closedEntry: 'closed',
+      ownerEntry: 'own',
+      settledEntry: 'settled',
     }
   },
 

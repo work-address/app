@@ -15,7 +15,6 @@ import {
   type ProjectWithAccess,
 } from '../../model/project-summary'
 
-import { $user } from '@/entities/profile'
 import { $projects } from '@/entities/projects'
 import {
   statisticsDailyQuery,
@@ -47,9 +46,8 @@ const NAMED = 5
 export const useDashboardProjectPopup = () => {
   const { t, i18n } = useTranslation()
 
-  const { projects, user, totals, apps, daily } = useUnit({
+  const { projects, totals, apps, daily } = useUnit({
     projects: $projects,
-    user: $user,
     totals: statisticsOverviewQuery.$data,
     apps: statisticsProjectAppsQuery.$data,
     daily: statisticsDailyQuery.$data,
@@ -74,7 +72,6 @@ export const useDashboardProjectPopup = () => {
 
       const summary = projectSummary(
         project as ProjectWithAccess,
-        user?.id,
         totals?.find((row) => row.projectId === projectId),
         apps ?? [],
         daily ?? [],
@@ -108,10 +105,14 @@ export const useDashboardProjectPopup = () => {
               { defaultValue: summary.status },
             ),
           },
-          {
-            label: t('dashboard.projectPopup.rate'),
-            value: formatCurrency(summary.rate),
-          },
+          ...(summary.rate === null
+            ? []
+            : [
+                {
+                  label: t('dashboard.projectPopup.rate'),
+                  value: formatCurrency(summary.rate),
+                },
+              ]),
           {
             label: t('dashboard.charts.popup.tracked'),
             value: duration(period.trackedMinutes),
@@ -133,11 +134,11 @@ export const useDashboardProjectPopup = () => {
                     ]),
                 {
                   label: t('dashboard.summary.earned.label'),
-                  value: formatCurrency(period.earned ?? 0),
+                  value: formatCurrency((period.earnedCents ?? 0) / 100),
                 },
                 {
                   label: t('dashboard.summary.unpaid.label'),
-                  value: formatCurrency(period.unpaid ?? 0),
+                  value: formatCurrency((period.unpaidCents ?? 0) / 100),
                 },
               ]),
           {
@@ -153,22 +154,26 @@ export const useDashboardProjectPopup = () => {
                 label: t('dashboard.charts.popup.tracked'),
                 value: duration(allTime.minutes),
               },
-              {
-                label: t('dashboard.insights.cell.active'),
-                value: duration(allTime.minutesActive),
-              },
-              {
-                label: t('dashboard.projectPopup.paid'),
-                value: formatCurrency(allTime.paid),
-              },
-              {
-                label: t('dashboard.projectPopup.paidTime'),
-                value: duration(allTime.minutesPaid),
-              },
-              {
-                label: t('dashboard.summary.unpaid.label'),
-                value: duration(allTime.minutesUnpaid),
-              },
+              ...(allTime.minutesActive === null
+                ? []
+                : [
+                    {
+                      label: t('dashboard.insights.cell.active'),
+                      value: duration(allTime.minutesActive),
+                    },
+                    {
+                      label: t('dashboard.projectPopup.paid'),
+                      value: formatCurrency((allTime.paidCents ?? 0) / 100),
+                    },
+                    {
+                      label: t('dashboard.projectPopup.paidTime'),
+                      value: duration(allTime.minutesPaid ?? 0),
+                    },
+                    {
+                      label: t('dashboard.summary.unpaid.label'),
+                      value: duration(allTime.minutesUnpaid ?? 0),
+                    },
+                  ]),
               {
                 label: t('dashboard.projectPopup.started'),
                 value: project.createdAt
@@ -214,23 +219,27 @@ export const useDashboardProjectPopup = () => {
               ...more(summary.apps.length),
             ],
           },
-          {
-            title: t('dashboard.projectPopup.activity'),
-            rows: [
-              {
-                label: t('dashboard.projectsTable.head.keyboardKeys'),
-                value: formatCount(allTime.keyboardKeys),
-              },
-              {
-                label: t('dashboard.projectsTable.head.mouseKeys'),
-                value: formatCount(allTime.mouseKeys),
-              },
-              {
-                label: t('dashboard.projectsTable.head.mouseDistance'),
-                value: formatCount(allTime.mouseDistance),
-              },
-            ],
-          },
+          ...(allTime.keyboardKeys === null
+            ? []
+            : [
+                {
+                  title: t('dashboard.projectPopup.activity'),
+                  rows: [
+                    {
+                      label: t('dashboard.projectsTable.head.keyboardKeys'),
+                      value: formatCount(allTime.keyboardKeys),
+                    },
+                    {
+                      label: t('dashboard.projectsTable.head.mouseKeys'),
+                      value: formatCount(allTime.mouseKeys),
+                    },
+                    {
+                      label: t('dashboard.projectsTable.head.mouseDistance'),
+                      value: formatCount(allTime.mouseDistance),
+                    },
+                  ],
+                },
+              ]),
           {
             title: t('dashboard.projectPopup.tracking'),
             rows: [
@@ -261,7 +270,7 @@ export const useDashboardProjectPopup = () => {
         ],
       }
     },
-    [projects, user, totals, apps, daily, t, started],
+    [projects, totals, apps, daily, t, started],
   )
 }
 

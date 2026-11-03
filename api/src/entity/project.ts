@@ -22,6 +22,7 @@ import { Invoice } from '@/entity/invoice'
 import { ProjectStatistics } from '@/entity/project-statistics'
 import { Time } from '@/entity/time'
 import { IProject } from '@/model/project'
+import type { ProjectRole } from '@/service/project-access'
 
 // Access lists are unnested on every access check, so they stay bounded.
 // An address may not have an account yet, which is why they need a ceiling.
@@ -178,6 +179,15 @@ export class Project extends AbstractBaseEntity implements IProject {
   @Expose({ groups: ['search'] })
   @IsOptional()
   canTrack?: boolean
+
+  /**
+   * Set on reads: what the project's lists say the caller is. Unlike `canTrack`
+   * it holds for a closed project too.
+   */
+  @Expose({ groups: ['search'] })
+  @IsOptional()
+  @JSONSchema({ type: 'string', enum: ['owner', 'worker', 'viewer'] })
+  role?: ProjectRole | null
 
   public isOwner(user: User): boolean {
     return this.user?.id === user.id

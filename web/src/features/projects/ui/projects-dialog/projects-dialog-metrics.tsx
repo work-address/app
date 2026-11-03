@@ -29,6 +29,7 @@ export const ProjectsDialogMetrics = ({ data }: ProjectsDialogMetricsProps) => {
   const { t } = useTranslation()
   const isDesktop = useBreakpoint('isDesktop')
   const statusKey = getProjectStatusTranslationKey(data.state)
+  const seesDetail = data.role !== 'viewer'
 
   return (
     <Grid
@@ -36,12 +37,14 @@ export const ProjectsDialogMetrics = ({ data }: ProjectsDialogMetricsProps) => {
       gap={isDesktop ? '4' : '3'}
       width="100%"
     >
-      <Metric
-        label={t('dashboard.projectsTable.head.paid')}
-        description={t('common.metricDesc.paid')}
-      >
-        {formatCurrency(data.paid)}
-      </Metric>
+      {seesDetail && (
+        <Metric
+          label={t('dashboard.projectsTable.head.paid')}
+          description={t('common.metricDesc.paid')}
+        >
+          {formatCurrency((data.paidCents ?? 0) / 100)}
+        </Metric>
+      )}
       <Metric label={t('dashboard.projectsTable.head.status')}>
         <Badge color={data.state === 'Active' ? 'green' : 'gray'}>
           {statusKey === null ? data.state : t(statusKey)}
@@ -53,32 +56,36 @@ export const ProjectsDialogMetrics = ({ data }: ProjectsDialogMetricsProps) => {
       >
         {formatDurationFromMinutes(data.minutes, t)}
       </Metric>
-      <Metric
-        label={t('dashboard.projectsTable.head.timeActive')}
-        description={t('common.metricDesc.timeActive')}
-      >
-        <Badge color="green">
-          {formatDurationFromMinutes(data.minutesActive, t)}
-        </Badge>
-      </Metric>
-      <Metric
-        label={t('dashboard.projectsTable.head.keyboardKeys')}
-        description={t('common.metricDesc.keyboard')}
-      >
-        {formatCount(data.keyboardKeys)}
-      </Metric>
-      <Metric
-        label={t('dashboard.projectsTable.head.mouseKeys')}
-        description={t('common.metricDesc.mouse')}
-      >
-        {formatCount(data.mouseKeys)}
-      </Metric>
-      <Metric
-        label={t('dashboard.projectsTable.head.mouseDistance')}
-        description={t('common.metricDesc.mouseDistance')}
-      >
-        {formatCount(data.mouseDistance)}
-      </Metric>
+      {seesDetail && (
+        <>
+          <Metric
+            label={t('dashboard.projectsTable.head.timeActive')}
+            description={t('common.metricDesc.timeActive')}
+          >
+            <Badge color="green">
+              {formatDurationFromMinutes(data.minutesActive ?? 0, t)}
+            </Badge>
+          </Metric>
+          <Metric
+            label={t('dashboard.projectsTable.head.keyboardKeys')}
+            description={t('common.metricDesc.keyboard')}
+          >
+            {formatCount(data.keyboardKeys)}
+          </Metric>
+          <Metric
+            label={t('dashboard.projectsTable.head.mouseKeys')}
+            description={t('common.metricDesc.mouse')}
+          >
+            {formatCount(data.mouseKeys)}
+          </Metric>
+          <Metric
+            label={t('dashboard.projectsTable.head.mouseDistance')}
+            description={t('common.metricDesc.mouseDistance')}
+          >
+            {formatCount(data.mouseDistance)}
+          </Metric>
+        </>
+      )}
     </Grid>
   )
 }

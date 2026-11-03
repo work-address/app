@@ -39,9 +39,11 @@ export const ProjectsMobileHeader = React.memo(
           </Badge>
         </TitleRow>
         <Flex align={'center'} gap={'3'}>
-          <Text color={'gray'} size={'2'}>
-            {formatCurrency(props.data.paid)}
-          </Text>
+          {props.data.paidCents !== undefined && (
+            <Text color={'gray'} size={'2'}>
+              {formatCurrency(props.data.paidCents / 100)}
+            </Text>
+          )}
           <InvoiceLink
             projectId={props.data.id ?? ''}
             onClick={(event) => event.stopPropagation()}

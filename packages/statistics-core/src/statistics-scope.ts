@@ -48,11 +48,3 @@ export function refusesReport(kind: string, roles: ReaderRole[]): boolean {
   if (kind === 'titles') return roles.some((role) => !works(role))
   return false
 }
-
-/** What a viewer's project totals leave out: SPEC.md, "Who can see what". */
-export const VIEWER_HIDDEN_TOTALS = [
-  'activeSeconds',
-  'idleSeconds',
-  'manualSeconds',
-  'paidSeconds',
-] as const

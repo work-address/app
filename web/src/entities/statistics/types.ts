@@ -11,9 +11,10 @@ export type StatisticsQuery = {
 }
 
 /**
- * One project's time in the period. The detail fields are missing for a
- * project the caller only views - the API leaves them out rather than
- * sending zeros.
+ * One project's time in the period, as much of it as the reader may see. All
+ * but `projectId` and `trackedSeconds` are missing for a project the caller only
+ * views - the API leaves them out rather than sending zeros. Money is priced by
+ * the API; `paidCents` holds an estimate for time marked paid by hand.
  */
 export type StatisticsTotalsRow = {
   projectId: string
@@ -22,6 +23,10 @@ export type StatisticsTotalsRow = {
   idleSeconds?: number
   manualSeconds?: number
   paidSeconds?: number
+  unpaidSeconds?: number
+  earnedCents?: number
+  paidCents?: number
+  unpaidCents?: number
 }
 
 /** Seconds spent in one app on one project. */

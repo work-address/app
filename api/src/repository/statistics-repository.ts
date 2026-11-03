@@ -48,42 +48,6 @@ export class StatisticsRepository {
   private ownOr(scope: StatisticsScope, includeViewers: boolean): string[] {
     return [...scope.owners, ...(includeViewers ? scope.viewers : [])]
   }
-  public totals(scope: StatisticsScope) {
-    const q = this.base(scope)
-    const shared = this.ownOr(scope, true)
-    q.andWhere(
-      shared.length
-        ? '(project.id IN (:...shared) OR time.\"userId\" = :user)'
-        : 'time.\"userId\" = :user',
-      { shared, user: scope.user.id },
-    )
-    const seconds =
-      'GREATEST(0, EXTRACT(EPOCH FROM (time.\"toAt\"-time.\"fromAt\")))'
-    const active = `LEAST(${seconds}, GREATEST(0, COALESCE(time.\"minutesActive\",0)*60))`
-    const detail = this.access.detailSql()
-    q.setParameter('detailUser', scope.user.id)
-    return q
-      .select('project.id', 'projectId')
-      .addSelect(`COALESCE(SUM(${seconds}),0)`, 'trackedSeconds')
-      .addSelect(
-        `COALESCE(SUM(CASE WHEN time.source='desktop' AND ${detail} THEN ${active} ELSE 0 END),0)`,
-        'activeSeconds',
-      )
-      .addSelect(
-        `COALESCE(SUM(CASE WHEN time.source='desktop' AND ${detail} THEN ${seconds}-${active} ELSE 0 END),0)`,
-        'idleSeconds',
-      )
-      .addSelect(
-        `COALESCE(SUM(CASE WHEN time.source<>'desktop' AND ${detail} THEN ${seconds} ELSE 0 END),0)`,
-        'manualSeconds',
-      )
-      .addSelect(
-        `COALESCE(SUM(CASE WHEN COALESCE(time.\"isPaid\", false) THEN ${seconds} ELSE 0 END),0)`,
-        'paidSeconds',
-      )
-      .groupBy('project.id')
-      .getRawMany()
-  }
   private visible(scope: StatisticsScope): SelectQueryBuilder<Time> {
     const q = this.base(scope)
     const shared = this.ownOr(scope, true)
@@ -123,7 +87,7 @@ export class StatisticsRepository {
       .orderBy('SUM(usage.seconds)', 'DESC')
       .getRawMany()
   }
-  /** Tracked time per day and project, on the same terms as `totals`. */
+  /** Tracked time per day and project, on the same terms as `ProjectTotals`. */
   public timeDaily(scope: StatisticsScope) {
     const q = this.base(scope)
     const shared = this.ownOr(scope, true)

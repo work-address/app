@@ -41,7 +41,7 @@ export const ProjectsDialogView = ({ data }: ProjectsDialogViewProps) => {
     values: {
       title: data.title ?? '',
       state: data.state ?? 'Active',
-      rateHour: data.rateHour.toString(),
+      rateHour: data.rateHour?.toString() ?? '',
       text: data.text ?? '',
       collaborators,
       trackScreenshots: data.trackScreenshots ?? false,
@@ -73,12 +73,16 @@ export const ProjectsDialogView = ({ data }: ProjectsDialogViewProps) => {
           <Text size="2" weight="medium">
             {dateFormatter.format(new Date(data.createdAt ?? new Date()))}
           </Text>
-          <Text color="gray" size="2">
-            {t(`dashboard.projectsTable.drawer.meta.rateHour`)}
-          </Text>
-          <Text size="2" weight="medium">
-            {formatCurrency(data.rateHour)}
-          </Text>
+          {data.rateHour !== undefined && (
+            <>
+              <Text color="gray" size="2">
+                {t(`dashboard.projectsTable.drawer.meta.rateHour`)}
+              </Text>
+              <Text size="2" weight="medium">
+                {formatCurrency(data.rateHour)}
+              </Text>
+            </>
+          )}
         </Grid>
         <Separator size="4" />
         <ProjectsDialogMetrics data={data} />
