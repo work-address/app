@@ -3,6 +3,8 @@ import { OAuth2Client, TokenPayload } from 'google-auth-library'
 
 import { IConfigParameters } from '@/model/config'
 import AuthenticationException from '@/exception/authentication-exception'
+import GoogleEmailUnverifiedException from '@/exception/google-email-unverified-exception'
+import GoogleUnavailableException from '@/exception/google-unavailable-exception'
 
 /** Validated identity extracted from a Google ID token. */
 export interface IGoogleAuthPayload {
@@ -26,6 +28,10 @@ export class GoogleAuthProvider {
    * Verifies the signature, issuer, audience and expiry with Google's official
    * library before using any identity claims. Verification errors never expose
    * the credential or the library's diagnostic token payload to the caller.
+   *
+   * The keys are fetched on their own first, so not reaching Google is never
+   * reported as a bad credential. The library caches them, so verifying doesn't
+   * fetch them a second time.
    */
   public async verifyCredential(
     credential: string,
@@ -38,6 +44,12 @@ export class GoogleAuthProvider {
 
     if (typeof credential !== 'string' || !credential.trim()) {
       throw new AuthenticationException('Google credential is not valid')
+    }
+
+    try {
+      await this.client.getFederatedSignonCertsAsync()
+    } catch {
+      throw new GoogleUnavailableException()
     }
 
     let payload: TokenPayload | undefined
@@ -73,7 +85,7 @@ export class GoogleAuthProvider {
     }
 
     if (payload.email_verified !== true) {
-      throw new AuthenticationException('Google account email is not verified')
+      throw new GoogleEmailUnverifiedException()
     }
 
     return {

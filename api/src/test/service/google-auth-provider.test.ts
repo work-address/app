@@ -4,6 +4,7 @@ import { expect } from 'chai'
 import nock from 'nock'
 
 import AuthenticationException from '@/exception/authentication-exception'
+import GoogleUnavailableException from '@/exception/google-unavailable-exception'
 import { IConfigParameters } from '@/model/config'
 import { GoogleAuthProvider } from '@/service/auth/google-auth-provider'
 import { GoogleAuthFixture } from '@/test/fixture/google-auth-fixture'
@@ -159,12 +160,21 @@ export class GoogleAuthProviderTest {
   }
 
   @test()
-  async rejectsWhenCertificateServiceIsUnavailable() {
+  async reportsUnavailableWhenCertificateServiceRefuses() {
     nock(GoogleAuthFixture.certificateHost)
       .get(GoogleAuthFixture.certificatePath)
       .reply(400, { error: 'Certificate service is unavailable' })
 
-    await this.expectRejected(GoogleAuthFixture.credential())
+    await this.expectUnavailable()
+  }
+
+  @test()
+  async reportsUnavailableWhenGoogleCannotBeReached() {
+    nock(GoogleAuthFixture.certificateHost)
+      .get(GoogleAuthFixture.certificatePath)
+      .replyWithError('connect ETIMEDOUT')
+
+    await this.expectUnavailable()
   }
 
   @test()
@@ -180,6 +190,19 @@ export class GoogleAuthProviderTest {
       GoogleAuthFixture.credential(),
       'Google sign-in is not configured',
     )
+  }
+
+  private async expectUnavailable(): Promise<void> {
+    let error: unknown
+
+    try {
+      await this.provider.verifyCredential(GoogleAuthFixture.credential())
+    } catch (caught) {
+      error = caught
+    }
+
+    expect(error).to.be.instanceOf(GoogleUnavailableException)
+    expect((error as GoogleUnavailableException).httpCode).to.equal(503)
   }
 
   private async expectRejected(

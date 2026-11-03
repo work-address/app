@@ -111,6 +111,23 @@ export class AuthGoogleControllerTest extends BaseControllerTest {
     const response = await this.postGoogle(this.credential({ email }))
 
     expect(response.status).to.equal(401)
+    expect(response.data.name).to.equal('GoogleEmailTakenException')
+  }
+
+  /** The sign-in page tells these apart, so each keeps its own name. */
+  @test()
+  async loginGoogle_namesWhyItRefused() {
+    const unverified = await this.postGoogle(
+      this.credential({ email_verified: false }),
+    )
+    const invalid = await this.postGoogle(
+      this.credential({ aud: 'another-client' }),
+    )
+
+    expect(unverified.status).to.equal(401)
+    expect(unverified.data.name).to.equal('GoogleEmailUnverifiedException')
+    expect(invalid.status).to.equal(401)
+    expect(invalid.data.name).to.equal('AuthenticationException')
   }
 
   /** Google accounts and wallet accounts are never linked. */

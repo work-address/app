@@ -12,6 +12,7 @@ import { EUserRole } from '@/model/user'
 import { IAuthTokens } from '@/model/auth'
 import { IConfigParameters } from '@/model/config'
 import AuthenticationException from '@/exception/authentication-exception'
+import GoogleEmailTakenException from '@/exception/google-email-taken-exception'
 import { UserManager } from '@/service/user-manager'
 import { RedisClient } from '@/service/redis-client'
 import { Signer } from '@/service/auth/signer'
@@ -130,11 +131,7 @@ export class Authenticator {
       const holder = yield* this.userRepository.findByAddressPublic(address)
 
       if (holder) {
-        return yield* Effect.fail(
-          new AuthenticationException(
-            'This email already belongs to another account',
-          ),
-        )
+        return yield* Effect.fail(new GoogleEmailTakenException())
       }
 
       const user = new User()
