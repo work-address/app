@@ -1,0 +1,10 @@
+{
+  "note": "Cross-repo contract for GET /api/auth/status. This file is duplicated byte-for-byte in work-address/app and work-address/web; they are separate repositories, so each owns a copy. app asserts it SENDS these fields with these types; web asserts it READS them. Changing one without the other breaks sign-in and mail in production in a way neither suite would otherwise catch, so change both in the same pull request or not at all.",
+  "body": {
+    "id": "3f2504e0-4f89-11d3-9a0c-0305e82c3301",
+    "address": "someone@example.com",
+    "name": "Someone",
+    "contactEmail": "someone@example.com",
+    "roles": ["ROLE_USER"]
+  }
+}
