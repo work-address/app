@@ -4,10 +4,9 @@ import { inject, injectable } from 'inversify'
 import { Filter } from '@/service/filter'
 import { InvoiceLines } from '@/service/invoice-lines'
 import { ProjectAccess } from '@/service/project-access'
-import { Brackets, EntityManager, In } from 'typeorm'
+import { Brackets, In } from 'typeorm'
 import { Time } from '@/entity/time'
-import { TimeAgent } from '@/entity/time-agent'
-import { AgentRepository } from '@/repository/agent-repository'
+import { AgentRunRecord } from '@/service/agent-run-record'
 import { EInvoiceState, IInvoiceLine } from '@/model/invoice'
 import { InvoiceSnapshot } from '@/service/invoice-snapshot'
 import { AgentInvoiceLines } from '@/service/agent-invoice-lines'
@@ -28,7 +27,7 @@ import { InvoiceSearchDto } from '@/model/dto/invoice'
 
 @injectable()
 export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
-  @inject('AgentRepository') protected agents: AgentRepository
+  @inject('AgentRunRecord') protected runs: AgentRunRecord
   @inject('Filter')
   protected filter: Filter
   @inject('ProjectAccess')
@@ -117,7 +116,14 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
         const runs =
           agentRuns === 'none'
             ? []
-            : await this.invoiceableRuns(manager, project, invoice, agentRuns)
+            : await this.runs.billable(
+                manager,
+                project,
+                invoice.user!.id,
+                agentRuns === 'all'
+                  ? 'all'
+                  : { from: invoice.fromAt, to: invoice.toAt },
+              )
         if (!times.length && !runs.length) {
           // A concurrent ensure already billed everything outstanding.
           const latest = reuseExisting
@@ -184,109 +190,9 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
             { id: In(times.map((t) => t.id)) },
             { invoice: saved, publishedAt: new Date() },
           )
-        if (runs.length)
-          await manager.update(
-            TimeAgent,
-            { id: In(runs.map((r) => r.id)) },
-            { invoiceId: saved.id },
-          )
+        await this.runs.bill(manager, runs, saved.id)
         return saved
       }),
-    )
-  }
-
-  /**
-   * Finished: terminal and unchanged for the 60 s grace, or stale, meaning a
-   * run the adapter observes continuously has had no evidence for 90 s. Both
-   * are measured from receipt (`updatedAt`), not source time: a backlog can
-   * arrive hours late, in several batches. A sparse hook run with no terminal
-   * stays open until its Stop reconciles it.
-   */
-  private static finishedRuns(
-    qb: SelectQueryBuilder<TimeAgent>,
-    now: number,
-  ): SelectQueryBuilder<TimeAgent> {
-    return qb.andWhere(
-      new Brackets((finished) =>
-        finished
-          .where('run.status IN (:...terminal) AND run.updatedAt <= :settled', {
-            terminal: ['completed', 'failed', 'cancelled'],
-            settled: new Date(now - 60000),
-          })
-          .orWhere(
-            `run.measurement->>'liveness' = 'true' AND run.updatedAt <= :stale`,
-            { stale: new Date(now - 90000) },
-          ),
-      ),
-    )
-  }
-
-  private uninvoicedRuns(
-    manager: EntityManager,
-    projectId: string,
-    userId: string,
-  ): SelectQueryBuilder<TimeAgent> {
-    return InvoiceRepository.finishedRuns(
-      manager
-        .createQueryBuilder(TimeAgent, 'run')
-        .where('run.userId=:user AND run.projectId=:project', {
-          user: userId,
-          project: projectId,
-        })
-        .andWhere('run.invoiceId IS NULL AND run.isPaid=false'),
-      Date.now(),
-    )
-  }
-
-  private async invoiceableRuns(
-    manager: EntityManager,
-    project: Project,
-    invoice: Invoice,
-    scope: 'period' | 'all',
-  ): Promise<TimeAgent[]> {
-    const select = () => {
-      const qb = this.uninvoicedRuns(manager, project.id, invoice.user!.id)
-      if (scope === 'period')
-        qb.andWhere('run.fromAt >= :from AND run.fromAt < :to', {
-          from: invoice.fromAt,
-          to: invoice.toAt,
-        })
-      return qb
-    }
-    // A detached agent's past runs stay invoiceable at its last rate.
-    const attached = (run: TimeAgent) =>
-      (project.agentAttachments ?? []).some(
-        (a) => a.agentId === run.agentId && a.workerId === run.userId,
-      )
-    const candidates = (await select().getMany()).filter(attached)
-    if (!candidates.length) return []
-    // Ingestion takes these run locks before row locks; keep the same order.
-    for (const key of candidates.map((run) => run.runKey).sort())
-      await manager.query(
-        'SELECT pg_advisory_xact_lock(hashtextextended($1, 0))',
-        [`agent:${key}`],
-      )
-    return (
-      await select()
-        .andWhere('run.id IN (:...ids)', { ids: candidates.map((r) => r.id) })
-        .orderBy('run.id')
-        .setLock('pessimistic_write')
-        .getMany()
-    ).filter(attached)
-  }
-
-  public hasInvoiceableAgentRuns(
-    project: Project,
-    author: User,
-  ): RepoEffect<boolean> {
-    return fromPromise(async () =>
-      Boolean(
-        await this.uninvoicedRuns(
-          this.getRepo().manager,
-          project.id,
-          author.id,
-        ).getCount(),
-      ),
     )
   }
 
@@ -325,7 +231,7 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
             ),
           ]
         }
-        await this.agents.releaseInvoice(manager, stored.id)
+        await this.runs.release(manager, stored.id)
         await manager.update(
           Time,
           { invoice: { id: stored.id } },
@@ -363,11 +269,7 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
         decide(current)
         const isPaid = current.state === EInvoiceState.PAID
         const scope = { user: { id: current.user!.id } }
-        await manager.update(
-          TimeAgent,
-          { invoiceId: invoice.id, userId: current.user!.id },
-          { isPaid },
-        )
+        await this.runs.setPaid(manager, invoice.id, current.user!.id, isPaid)
         await manager.update(
           Time,
           { invoice: { id: invoice.id }, ...scope },

@@ -27,31 +27,33 @@ import {
   AgentRateDto,
   AgentSearchDto,
 } from '@/model/dto/agent'
-import { AgentManager } from '@/service/agent-manager'
+import { AgentRepository } from '@/repository/agent-repository'
+import { AgentRunRecord } from '@/service/agent-run-record'
 
 const strict = { validate: { whitelist: true, forbidNonWhitelisted: true } }
 
 @JsonController()
 export class AgentController {
-  private manager = App.container.get<AgentManager>('AgentManager')
+  private agents = App.container.get<AgentRepository>('AgentRepository')
+  private runs = App.container.get<AgentRunRecord>('AgentRunRecord')
 
   @Authorized([EUserRole.ROLE_USER])
   @Get('/agents')
   list(@CurrentUser() user: User) {
-    return this.manager.list(user)
+    return this.agents.list(user)
   }
 
   @Authorized([EUserRole.ROLE_USER])
   @Post('/agents')
   @HttpCode(201)
   create(@CurrentUser() user: User, @Body(strict) data: AgentDto) {
-    return this.manager.save(user, data, true)
+    return this.agents.save(user, data, true)
   }
 
   @Authorized([EUserRole.ROLE_USER])
   @Put('/agents')
   edit(@CurrentUser() user: User, @Body(strict) data: AgentDto) {
-    return this.manager.save(user, data, false)
+    return this.agents.save(user, data, false)
   }
 
   @Authorized([EUserRole.ROLE_USER])
@@ -59,13 +61,13 @@ export class AgentController {
   @HttpCode(204)
   @OnUndefined(204)
   remove(@CurrentUser() user: User, @Body(strict) data: AgentIdDto) {
-    return this.manager.remove(user, data.id)
+    return this.agents.remove(user, data.id)
   }
 
   @Authorized([EUserRole.ROLE_USER])
   @Get('/project/:id/agents')
   attachments(@CurrentUser() user: User, @Param('id') id: string) {
-    return this.manager.attachments(user, AgentController.uuid(id))
+    return this.agents.attachments(user, AgentController.uuid(id))
   }
 
   @Authorized([EUserRole.ROLE_USER])
@@ -76,7 +78,7 @@ export class AgentController {
     @Param('agentId') agentId: string,
     @Body(strict) data: AgentRateDto,
   ) {
-    return this.manager.attach(
+    return this.agents.attach(
       user,
       AgentController.uuid(id),
       AgentController.uuid(agentId),
@@ -91,7 +93,7 @@ export class AgentController {
     @Param('id') id: string,
     @Param('agentId') agentId: string,
   ) {
-    return this.manager.attach(
+    return this.agents.attach(
       user,
       AgentController.uuid(id),
       AgentController.uuid(agentId),
@@ -103,13 +105,13 @@ export class AgentController {
   @Post('/agent-tracking/credentials')
   @HttpCode(201)
   issue(@CurrentUser() user: User, @Body(strict) data: AgentCredentialDto) {
-    return this.manager.issue(user, data)
+    return this.agents.issue(user, data)
   }
 
   @Authorized([EUserRole.ROLE_USER])
   @Get('/agent-tracking/credentials')
   credentials(@CurrentUser() user: User) {
-    return this.manager.credentials(user)
+    return this.agents.credentials(user)
   }
 
   @Authorized([EUserRole.ROLE_USER])
@@ -117,7 +119,7 @@ export class AgentController {
   @HttpCode(204)
   @OnUndefined(204)
   revoke(@CurrentUser() user: User, @Param('id') id: string) {
-    return this.manager.revoke(user, AgentController.uuid(id))
+    return this.agents.revoke(user, AgentController.uuid(id))
   }
 
   @OpenAPI({
@@ -133,7 +135,7 @@ export class AgentController {
     @Res() res: express.Response,
   ) {
     try {
-      return await this.manager.ingest(authorization, body)
+      return await this.runs.ingest(authorization, body)
     } catch (error) {
       if ((error as { httpCode?: number }).httpCode === 429)
         res.setHeader('Retry-After', '20')
@@ -145,13 +147,13 @@ export class AgentController {
   @Post('/agent-tracking/search')
   @HttpCode(200)
   search(@CurrentUser() user: User, @Body(strict) query: AgentSearchDto) {
-    return this.manager.search(user, query)
+    return this.runs.search(user, query)
   }
 
   @Authorized([EUserRole.ROLE_USER])
   @Get('/agent-tracking/status')
   status(@CurrentUser() user: User) {
-    return this.manager.status(user)
+    return this.runs.status(user)
   }
 
   private static uuid(value: string): string {

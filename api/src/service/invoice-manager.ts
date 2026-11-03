@@ -6,6 +6,7 @@ import moment from 'moment'
 import { Invoice } from '@/entity/invoice'
 import { InvoiceRepository } from '@/repository/invoice-repository'
 import { RepoEffect } from '@/repository/abstract-repository-template'
+import { fromPromise } from '@/service/effect-bridge'
 import { Project } from '@/entity/project'
 import { ProjectRepository } from '@/repository/project-repository'
 import { Time } from '@/entity/time'
@@ -16,6 +17,7 @@ import { InvoiceCreateDto } from '@/model/dto/invoice'
 import AccessException from '@/exception/access-exception'
 import { InvoiceSnapshot } from '@/service/invoice-snapshot'
 import { ProjectAccess } from '@/service/project-access'
+import { AgentRunRecord } from '@/service/agent-run-record'
 
 /**
  * Invoices are the money record; `Time` is the work record. Nothing else
@@ -31,6 +33,8 @@ export class InvoiceManager {
   @inject('ProjectAccess')
   protected access: ProjectAccess
 
+  @inject('AgentRunRecord')
+  protected runs: AgentRunRecord
   @inject('InvoiceRepository')
   protected invoiceRepository: InvoiceRepository
   @inject('ProjectRepository')
@@ -338,9 +342,8 @@ export class InvoiceManager {
 
       if (
         outstanding.length === 0 &&
-        !(yield* this.invoiceRepository.hasInvoiceableAgentRuns(
-          accessible,
-          author,
+        !(yield* fromPromise(() =>
+          this.runs.hasBillable(accessible.id, author.id),
         ))
       ) {
         return yield* this.invoiceRepository.findLatestForAuthor(

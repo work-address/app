@@ -481,7 +481,7 @@ Each event gets a result:
 
 **Local queues.** The Qt app's agent queue (timer mode) and the collector's queue (fixed mode) are each capped at 100 MiB or seven days, whichever comes first. Never discard without incrementing a visible loss counter. Keep lifecycle events ahead of content and enrichment; once required events are lost, mark affected runs incomplete. Files are owner-only; use OS-backed encryption where the platform supports it.
 
-**Retention.** `time_agent` follows the workspace's retention: on the hosted free plan, rows whose `fromAt` is older than 14 days are deleted, skipping rows linked to an invoice; self-hosted keeps everything. Run the purge when agent events are ingested, mirroring how human uploads trigger the human purge on `dev`. Invoiced rows are kept as the invoice's evidence. Project or user deletion removes runs, events and credentials; minimal hashed tombstones prevent replay resurrection within the correction horizon.
+**Retention.** `time_agent` follows the workspace's retention: on the hosted free plan, rows whose `fromAt` is older than 14 days are soft-deleted, skipping rows linked to an invoice; self-hosted keeps everything. Run the purge when agent events are ingested, mirroring how human uploads trigger the human purge on `dev`. A late event for a rotated run is accepted and does not bring it back. Invoiced rows are kept as the invoice's evidence. Project or user deletion removes runs, events and credentials; minimal hashed tombstones prevent replay resurrection within the correction horizon.
 
 Scope is user-authorized tracking. A signed or authenticated event proves its source credential, not that the duration is true. Disabling tracking and revoking credentials must be straightforward; uninstall removes only the integration's own hooks.
 
@@ -641,7 +641,7 @@ All schema changes are additive (new tables, new nullable columns, a new state v
 | Oversized ingestion request | Not logged by `PayloadLogger`; limits enforced before the global parser |
 | Collector credential on any other route | Rejected |
 | Revoked/expired credential and removed membership | No new writes accepted or processed |
-| Free-tier retention | Agent rows older than 14 days deleted on agent ingestion; invoiced rows kept; self-hosted keeps all |
+| Free-tier retention | Agent rows older than 14 days soft-deleted on agent ingestion; invoiced rows kept; self-hosted keeps all |
 | Deletion followed by replay | No resurrection inside the correction horizon |
 | Unknown product version | Laptops: no events, and the Agents page shows the unsupported version. Servers: tokens null, tracking continues |
 | Log file appended, truncated or rotated | Only new records read; no duplicated or lost runs |

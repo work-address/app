@@ -40,6 +40,10 @@ _Avoid_: Evidence, activity data
 Of an entry: its detail has reached the owner, because its author released it, an invoice billed it, or the review window ended.
 _Avoid_: Reviewed, released, public
 
+**Run record**:
+One agent run's whole life, kept by one module: credentialed events in, the run they project, frozen once billed, finished, released and rotated.
+_Avoid_: Agent timelog, agent entry
+
 **Project totals**:
 The figures a reader may see for a project over a span, answered by one module: a viewer the project's time, a worker their own time and money, an owner everyone's.
 _Avoid_: Stats, project summary

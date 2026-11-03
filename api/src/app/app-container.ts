@@ -1,5 +1,5 @@
 import { AgentRepository } from '@/repository/agent-repository'
-import { AgentManager } from '@/service/agent-manager'
+import { AgentRunRecord } from '@/service/agent-run-record'
 import { Container } from 'inversify'
 import { UserSettingsManager } from '@/service/user-settings-manager'
 import { StatisticsManager } from '@/service/statistics-manager'
@@ -72,7 +72,7 @@ export class AppContainer {
       .to(UserSettingsManager)
 
     container.bind<AgentRepository>('AgentRepository').to(AgentRepository)
-    container.bind<AgentManager>('AgentManager').to(AgentManager)
+    container.bind<AgentRunRecord>('AgentRunRecord').to(AgentRunRecord)
 
     // Repositories
     container.bind<UserRepository>('UserRepository').to(UserRepository)

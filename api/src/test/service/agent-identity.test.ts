@@ -1,7 +1,7 @@
 import { expect } from 'chai'
 import { parseEvent } from '@work-address/agent-tracking-contract'
 import { AgentIdentity } from '@/service/agent-identity'
-import { AgentRepository } from '@/repository/agent-repository'
+import { AgentRunRecord } from '@/service/agent-run-record'
 
 describe('AgentIdentity', () => {
   it('canonicalizes UUIDs without altering opaque IDs or mutating the submitted event', () => {
@@ -45,11 +45,11 @@ describe('AgentIdentity', () => {
       epoch: id.toLowerCase(),
     })
     expect(event.source.instanceId).to.equal(id)
-    expect(AgentRepository.runKey('worker', event)).to.equal(
-      AgentRepository.runKey('worker', normalized),
+    expect(AgentRunRecord.runKey('worker', event)).to.equal(
+      AgentRunRecord.runKey('worker', normalized),
     )
     expect(
-      AgentRepository.runKey('worker', { ...normalized, runId: 'runa' }),
-    ).not.to.equal(AgentRepository.runKey('worker', normalized))
+      AgentRunRecord.runKey('worker', { ...normalized, runId: 'runa' }),
+    ).not.to.equal(AgentRunRecord.runKey('worker', normalized))
   })
 })
