@@ -198,7 +198,7 @@ export class User extends AbstractBaseEntity implements IUser {
   @IsString()
   @IsOptional()
   @JSONSchema(() => ({ type: 'string', nullable: true, readOnly: true }))
-  get mailEmail(): string | null {
+  get contactEmail(): string | null {
     return AccountAddress.isEmail(this.address ?? '')
       ? this.address
       : (this.email ?? null)

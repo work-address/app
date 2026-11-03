@@ -133,7 +133,7 @@ export type User = {
     roles?: Array<'ROLE_USER'>;
     premium?: boolean;
     readonly payWallet?: string | null;
-    readonly mailEmail?: string | null;
+    readonly contactEmail?: string | null;
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;

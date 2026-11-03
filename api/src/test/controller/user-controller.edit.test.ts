@@ -237,7 +237,7 @@ export class UserControllerEditTest extends BaseControllerTest {
     )
 
     expect(updated.email).to.be.null
-    expect(updated.mailEmail).to.be.equal(user.address)
+    expect(updated.contactEmail).to.be.equal(user.address)
   }
 
   /** Setting these needs a signature, which the profile form must not skip. */

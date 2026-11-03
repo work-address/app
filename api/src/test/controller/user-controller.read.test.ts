@@ -217,7 +217,7 @@ export class UserControllerReadTest extends BaseControllerTest {
     expect(res.data).to.not.have.property('roles')
     expect(res.data).to.not.have.property('premium')
     expect(res.data).to.not.have.property('googleSub')
-    expect(res.data).to.not.have.property('mailEmail')
+    expect(res.data).to.not.have.property('contactEmail')
   }
 
   @test()

@@ -81,7 +81,7 @@ export class AuthGoogleControllerTest extends BaseControllerTest {
     })
 
     expect(status.data!.id).to.equal(user.id)
-    expect(status.data!.mailEmail).to.equal(email.toLowerCase())
+    expect(status.data!.contactEmail).to.equal(email.toLowerCase())
     expect(status.data).to.not.have.property('googleSub')
   }
 
