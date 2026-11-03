@@ -3,11 +3,17 @@ import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { AuthGoogleButton } from './auth-google-button'
+import { AuthMethod } from './auth-method'
+import { AuthSteps } from './auth-steps'
+
+import { GoogleIcon } from '@/shared'
 
 type Props = {
   /** Unknown until the deployment has said whether it offers Google. */
   clientId: string | null
 }
+
+const STEP_KEYS = ['step1', 'step2', 'step3']
 
 /**
  * The sign-in page's Google half. Holds its place while the deployment answers,
@@ -18,55 +24,35 @@ export const AuthGooglePanel = ({ clientId }: Props) => {
 
   if (!clientId) {
     return (
-      <Root aria-hidden="true">
-        <Header>
-          <Skeleton width="70%" height="32px" loading />
-          <Skeleton width="85%" height="20px" loading />
-        </Header>
+      <Placeholder aria-hidden="true">
+        <Skeleton width="70%" height="48px" loading />
+        <Skeleton width="85%" height="20px" loading />
         <Skeleton width="100%" height="40px" loading />
-      </Root>
+      </Placeholder>
     )
   }
 
   return (
-    <Root>
-      <Header>
-        <Title>{t('signIn.google.title')}</Title>
-        <Lead>{t('signIn.google.lead')}</Lead>
-      </Header>
+    <AuthMethod
+      iconUrl={GoogleIcon}
+      eyebrow={t('signIn.google.eyebrow')}
+      title={t('signIn.google.title')}
+      lead={t('signIn.google.lead')}
+      after={
+        <AuthSteps
+          label={t('signIn.next')}
+          steps={STEP_KEYS.map((key) => ({
+            text: t(`signIn.google.${key}`),
+          }))}
+        />
+      }
+    >
       <AuthGoogleButton clientId={clientId} />
-    </Root>
+    </AuthMethod>
   )
 }
 
-const Root = styled.div`
+const Placeholder = styled.div`
   display: grid;
-  gap: var(--space-5);
-`
-
-const Header = styled.header`
-  display: grid;
-  gap: var(--space-2);
-`
-
-const Title = styled.h2`
-  margin: 0;
-  font-size: var(--font-size-6);
-  font-weight: 700;
-  line-height: 1.25;
-  letter-spacing: -0.01em;
-  color: var(--ds-neutral-12);
-`
-
-const Lead = styled.p`
-  margin: 0;
-  font-size: var(--font-size-3);
-  line-height: 1.5;
-  color: var(--ds-neutral-11);
-
-  /* As tall as the wallet's two-line lead across the page, so the first button
-     on each side sits on one line. */
-  ${({ theme }) => theme.breakpoints.up('lg')} {
-    min-height: 3em;
-  }
+  gap: var(--space-4);
 `

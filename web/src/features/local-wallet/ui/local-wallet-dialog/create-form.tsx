@@ -50,6 +50,7 @@ export const CreateForm = ({
       <Actions>
         <Button
           type="button"
+          size="l"
           color="neutral"
           variant="soft"
           disabled={busy}
@@ -57,7 +58,7 @@ export const CreateForm = ({
         >
           {t('localWallet.actions.back')}
         </Button>
-        <Button type="submit" loading={busy}>
+        <Button type="submit" size="l" loading={busy}>
           {submitLabel}
         </Button>
       </Actions>

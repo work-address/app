@@ -1,3 +1,4 @@
+import { EyeOpenIcon, TrashIcon } from '@radix-ui/react-icons'
 import { useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 
@@ -8,7 +9,7 @@ import {
 } from '../local-wallet-fields'
 import { LocalWalletStatus } from '../local-wallet-status'
 
-import { Address, Form, LinkButton, Links, MoreLinks } from './styles'
+import { Address, Form, MoreActions, Prompt, TextAction } from './styles'
 
 import type { UnlockIntent } from './types'
 
@@ -73,31 +74,35 @@ export const UnlockForm = ({
       <Button type="submit" size="l" stretch loading={busy}>
         {submitLabel}
       </Button>
-      <Links>
-        {/* There is no password reset: the backup key is the only way back. */}
-        <LinkButton type="button" disabled={busy} onClick={onImport}>
+      {/* There is no password reset: the backup key is the only way back. */}
+      <Prompt>
+        {t('localWallet.unlock.forgot')}{' '}
+        <TextAction type="button" disabled={busy} onClick={onImport}>
           {t('localWallet.unlock.useAnother')}
-        </LinkButton>
-        <MoreLinks>
-          {/* The same password also opens the key for a backup, without
-              signing in. */}
-          <LinkButton
-            type="button"
-            disabled={busy}
-            onClick={handleSubmit((values) => onSubmit(values, 'reveal'))}
-          >
-            {t('localWallet.unlock.reveal')}
-          </LinkButton>
-          <LinkButton
-            type="button"
-            data-danger
-            disabled={busy}
-            onClick={onForget}
-          >
-            {t('localWallet.unlock.forget')}
-          </LinkButton>
-        </MoreLinks>
-      </Links>
+        </TextAction>
+      </Prompt>
+      <MoreActions>
+        {/* The same password also opens the key for a backup, without
+            signing in. */}
+        <Button
+          variant="ghost"
+          color="neutral"
+          disabled={busy}
+          onClick={handleSubmit((values) => onSubmit(values, 'reveal'))}
+        >
+          <EyeOpenIcon aria-hidden="true" />
+          {t('localWallet.unlock.reveal')}
+        </Button>
+        <Button
+          variant="ghost"
+          color="danger"
+          disabled={busy}
+          onClick={onForget}
+        >
+          <TrashIcon aria-hidden="true" />
+          {t('localWallet.unlock.forget')}
+        </Button>
+      </MoreActions>
     </Form>
   )
 }

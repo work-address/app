@@ -18,7 +18,7 @@ Related documents: `web/PRODUCT.md` §1, §4.1, §4.7 and G13 state the rules th
 | Area | Decision | Not chosen |
 | --- | --- | --- |
 | Sign-in screen | Google and Browser Wallet. Google shows only when `APP_GOOGLE_CLIENT_ID` is set, which is how an isolated deployment gets a wallet-only screen | Build-time flags, which need one image per deployment; an offline mode |
-| Screen layout | Two equal halves: Google on the left, the browser wallet run in place on the right. Without Google the wallet takes the screen. `/connect` keeps its card and dialog, on the same steps | A stacked form with a brand panel; marketing copy beside it; a dialog on the sign-in page |
+| Screen layout | A brand band saying what the product is and the path to a first invoice, over two equal halves: Google on the left, the browser wallet run in place on the right, each saying who it suits and what happens next. Without Google the wallet takes the room. On a phone the path follows the ways in. `/connect` keeps its card and dialog, on the same steps | A stacked form with a brand panel; bare halves with no guidance; a dialog on the sign-in page |
 | Sign-in failures | Shown in place under the Google button, told apart by the API's exception name: `GoogleEmailTakenException`, `GoogleEmailUnverifiedException`, `AuthenticationException` (invalid credential) and `GoogleUnavailableException` (503) | A toast; matching on message text |
 | Browser Wallet | The built-in EVM wallet only | Third-party wallets at sign-in |
 | Google flow | ID token: the browser posts Google's credential to `POST /auth/google`, and tokens come back in headers like the wallet login | Redirect flow, which needs a client secret and a callback, and has to carry the pairing nonce through Google |

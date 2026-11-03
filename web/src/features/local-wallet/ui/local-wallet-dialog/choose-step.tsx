@@ -1,7 +1,7 @@
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { LinkButton } from './styles'
+import { Prompt, TextAction } from './styles'
 
 import { Button } from '@/shared'
 
@@ -29,15 +29,17 @@ export const ChooseStep = ({ onCreate, onImport }: Props) => {
       >
         {t('localWallet.choose.create')}
       </Button>
-      <LinkButton type="button" onClick={onImport}>
-        {t('localWallet.choose.import')}
-      </LinkButton>
+      <Prompt>
+        {t('localWallet.choose.importPrompt')}{' '}
+        <TextAction type="button" onClick={onImport}>
+          {t('localWallet.choose.import')}
+        </TextAction>
+      </Prompt>
     </Root>
   )
 }
 
 const Root = styled.div`
   display: grid;
-  justify-items: center;
   gap: var(--space-3);
 `

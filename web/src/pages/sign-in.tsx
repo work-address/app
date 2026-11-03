@@ -1,7 +1,8 @@
+import { QuestionMarkCircledIcon } from '@radix-ui/react-icons'
 import { useUnit } from 'effector-react'
 import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Navigate, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 
 import {
@@ -11,16 +12,23 @@ import {
   fetchAuthMethodsFx,
   loginGoogleFx,
 } from '@/entities/profile'
-import { AuthGooglePanel, AuthSignInFoot } from '@/features/auth'
-import { LocalWalletPanel, useLocalWalletFlow } from '@/features/local-wallet'
+import {
+  AuthGooglePanel,
+  AuthJourney,
+  AuthSignInFoot,
+  AuthStyles,
+  AuthWalletPanel,
+} from '@/features/auth'
+import { useLocalWalletFlow } from '@/features/local-wallet'
 import { routes } from '@/routes'
 import { Button, LogoLabel, PageHelmet, StateNotice } from '@/shared'
 
 /**
- * Two equal halves, one for each way in: Google on the left, the browser wallet
- * run in place on the right. Where the deployment doesn't offer Google, the
- * wallet has the screen. While one way is busy the other is held back, and it
- * stays held back while a new wallet's key is on screen to be saved.
+ * A band that says what this is and where signing in leads, then two equal
+ * halves, one for each way in, centred in the room left: Google on the left,
+ * the browser wallet run in place on the right. Where the deployment doesn't
+ * offer Google, the wallet has the room. While one way is busy the other is held
+ * back, and it stays held back while a new wallet's key is on screen to be saved.
  */
 export default function SignInPage() {
   const { t } = useTranslation()
@@ -38,6 +46,7 @@ export default function SignInPage() {
     fetchMethods: fetchAuthMethodsFx,
   })
   const flow = useLocalWalletFlow()
+  const version = import.meta.env.VITE_GIT_COMMIT_SUFFIX
   const [searchParams] = useSearchParams()
   const nonce = searchParams.get('nonce')
 
@@ -64,10 +73,31 @@ export default function SignInPage() {
     <>
       <PageHelmet title={t('signIn.title')} description={t('signIn.meta')} />
       <Root data-layout={split ? 'split' : 'single'}>
-        <Header>
-          <Logo src={LogoLabel} alt={t('signIn.logoAlt')} />
-        </Header>
-        <Heading>{t('signIn.heading')}</Heading>
+        <Band>
+          <BandContent>
+            <BandTop>
+              <Logo src={LogoLabel} alt={t('signIn.logoAlt')} />
+              <BandActions>
+                {version && (
+                  <Version>
+                    {t('signIn.version')} {version}
+                  </Version>
+                )}
+                <Help to={routes.docs.build()} target={routes.docs.target}>
+                  <QuestionMarkCircledIcon aria-hidden="true" />
+                  {t('signIn.learnMore')}
+                </Help>
+              </BandActions>
+            </BandTop>
+            <BandBody>
+              <Intro>
+                <Title>{t('signIn.hero.title')}</Title>
+                <Subtitle>{t('signIn.hero.subtitle')}</Subtitle>
+              </Intro>
+              <BandJourney layout="row" />
+            </BandBody>
+          </BandContent>
+        </Band>
         <Panels>
           {failed ? (
             <Half>
@@ -101,95 +131,208 @@ export default function SignInPage() {
                 inert={googleSigningIn}
               >
                 <Column>
-                  <LocalWalletPanel flow={flow} />
+                  <AuthWalletPanel flow={flow} choosing={split} />
                 </Column>
               </Half>
             </>
           )}
         </Panels>
-        {!failed && <Foot googleOffered={!!googleClientId} />}
+        {/* On a phone the way in comes first, and this follows it. */}
+        <PageJourney />
+        {!failed && <AuthSignInFoot googleOffered={split} />}
       </Root>
     </>
   )
 }
 
 /* One column that scrolls on a phone. On a desktop the screen is pinned to the
-   viewport and a half scrolls by itself if its form outgrows a short window.
-   The tint is on the screen rather than the half so it also runs behind the
-   foot, which belongs to both. */
+   viewport, and only the panels scroll if a form outgrows a short window. */
 const Root = styled.div`
-  position: relative;
   width: 100%;
   min-height: 100dvh;
   display: grid;
-  grid-template-rows: auto 1fr auto;
+  grid-template-rows: auto 1fr auto auto;
   background: var(--white);
 
   ${({ theme }) => theme.breakpoints.up('lg')} {
     height: 100dvh;
     min-height: 0;
-    grid-template-rows: minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr) auto;
     overflow: hidden;
-
-    &[data-layout='split']::before {
-      content: '';
-      position: absolute;
-      inset: 0 0 0 50%;
-      background: var(--ds-neutral-2);
-    }
   }
 `
 
-const Header = styled.header`
+const Band = styled.header`
   padding: var(--space-4);
+  color: var(--white);
+  background: linear-gradient(
+    100deg,
+    var(--ds-accent-11) 0%,
+    var(--c-253854) 100%
+  );
 
   ${({ theme }) => theme.breakpoints.up('lg')} {
-    position: absolute;
-    top: 0;
-    left: 0;
-    z-index: 1;
-    padding: var(--space-5) var(--space-7);
+    padding: var(--space-5) var(--space-7) var(--space-6);
   }
 `
 
+const BandContent = styled(AuthStyles.Frame)`
+  display: grid;
+  gap: var(--space-5);
+`
+
+const BandTop = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-4);
+`
+
+/* The wordmark is one flat colour, so this turns it white for the band. */
 const Logo = styled.img`
   display: block;
   width: auto;
-  height: 32px;
+  height: 26px;
+  filter: brightness(0) invert(1);
 `
 
-const Heading = styled.h1`
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
+const BandActions = styled.div`
+  display: flex;
+  align-items: center;
+  gap: var(--space-4);
+`
+
+const Version = styled.span`
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  font-size: var(--font-size-0);
   white-space: nowrap;
+  color: var(--c-rgba-255-255-255-0_5);
+
+  ${({ theme }) => theme.breakpoints.down('lg')} {
+    display: none;
+  }
 `
 
-const Panels = styled.div`
-  position: relative;
+const Help = styled(Link)`
+  flex-shrink: 0;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  height: 32px;
+  padding: 0 var(--space-3);
+  border: 1px solid var(--c-rgba-255-255-255-0_5);
+  border-radius: var(--radius-2);
+  font-size: var(--font-size-2);
+  font-weight: 500;
+  color: var(--white);
+  text-decoration: none;
+  transition: background 0.15s ease;
+
+  &:hover {
+    background: var(--c-rgba-255-255-255-0_2);
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--white);
+    outline-offset: 2px;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+`
+
+const BandBody = styled.div`
+  display: grid;
+
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
+    align-items: center;
+    gap: var(--space-7);
+  }
+`
+
+const Intro = styled.div`
+  display: grid;
+  gap: var(--space-2);
+`
+
+const Title = styled.h1`
+  margin: 0;
+  font-size: 28px;
+  font-weight: 700;
+  line-height: 1.15;
+  letter-spacing: -0.02em;
+  color: var(--white);
+
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    /* Stays on one line in the band's first column at any desktop width. */
+    font-size: clamp(28px, 2.6vw, 36px);
+  }
+`
+
+const Subtitle = styled.p`
+  margin: 0;
+  max-width: 48ch;
+  font-size: var(--font-size-3);
+  line-height: 1.5;
+  color: var(--c-rgba-255-255-255-0_92);
+`
+
+/* In the band on a desktop, in white. */
+const BandJourney = styled(AuthJourney)`
+  --steps-label: var(--c-rgba-255-255-255-0_92);
+  --steps-title: var(--white);
+  --steps-text: var(--c-rgba-255-255-255-0_92);
+  --steps-badge-bg: var(--white);
+  --steps-badge-fg: var(--ds-accent-11);
+  --steps-tile-bg: color-mix(in srgb, var(--white) 8%, transparent);
+  --steps-tile-border: var(--c-rgba-255-255-255-0_2);
+
+  display: none;
+
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    display: grid;
+  }
+`
+
+/* Under the ways in on a phone, where it can't push them off the screen. */
+const PageJourney = styled(AuthJourney)`
+  padding: var(--space-6) var(--space-4);
+
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    display: none;
+  }
+`
+
+/* On a desktop the halves share one row, centred between two spacer rows that
+   collapse when a form outgrows a short window, which then scrolls. One row keeps
+   the two headings level, and centring it keeps them level whatever the wallet's
+   step. The tint is the background so it fills the height, whatever the row's. */
+const Panels = styled.main`
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  /* On a phone the wallet, stacked second, takes what's left, so its tint runs
-     down to the foot. */
+  /* On a phone the wallet, stacked second, takes what's left. */
   grid-template-rows: auto;
   grid-auto-rows: 1fr;
 
   ${({ theme }) => theme.breakpoints.up('lg')} {
     min-height: 0;
-    grid-template-rows: minmax(0, 1fr);
+    overflow-y: auto;
+    grid-template-rows: minmax(0, 1fr) auto minmax(0, 1fr);
+    grid-auto-rows: auto;
 
     ${Root}[data-layout='split'] & {
       grid-template-columns: repeat(2, minmax(0, 1fr));
+      background: linear-gradient(
+        to right,
+        transparent 50%,
+        var(--ds-neutral-2) 50%
+      );
     }
   }
 `
 
-/* Both halves start on one line rather than being centred, so the headings stay
-   level and the wallet's steps can change height without anything jumping. */
 const Half = styled.section`
   padding: var(--space-6) var(--space-4);
   transition: opacity 0.2s ease;
@@ -211,19 +354,13 @@ const Half = styled.section`
   }
 
   ${({ theme }) => theme.breakpoints.up('lg')} {
-    min-height: 0;
-    overflow-y: auto;
-    padding: clamp(96px, 24dvh, 240px) var(--space-7) var(--space-6);
+    grid-row: 2;
+    padding: var(--space-5) var(--space-7);
 
     &[data-side='wallet'] {
       background: none;
     }
   }
-`
-
-/* Above the screen's tint, which is what lets it run behind this. */
-const Foot = styled(AuthSignInFoot)`
-  position: relative;
 `
 
 const Column = styled.div`

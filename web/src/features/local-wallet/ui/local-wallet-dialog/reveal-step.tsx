@@ -37,6 +37,7 @@ export const RevealStep = ({
       <Actions>
         <Button
           type="button"
+          size="l"
           color="neutral"
           variant="soft"
           disabled={busy}
@@ -44,7 +45,7 @@ export const RevealStep = ({
         >
           {t('localWallet.actions.back')}
         </Button>
-        <Button loading={busy} onClick={onSignIn}>
+        <Button size="l" loading={busy} onClick={onSignIn}>
           {submitLabel}
         </Button>
       </Actions>

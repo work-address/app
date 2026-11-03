@@ -113,3 +113,13 @@ export const FootWalletLink = styled.a`
 export const ButtonRow = styled.div`
   display: none;
 `
+
+/* Sets a band's content to the outer edges of the sign-in page's two columns,
+   each 400px and centred in its half, so everything shares one left and right
+   edge. A phone has the one column, and needs no help. */
+export const Frame = styled.div`
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    width: min(100%, calc(50vw + 400px));
+    margin-inline: auto;
+  }
+`
