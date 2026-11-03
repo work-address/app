@@ -225,7 +225,6 @@
   "dashboard.worklogsTable.head.timeActive": "Time active",
   "dashboard.worklogsTable.loadMoreError": "Couldn’t load more worklogs. Scroll again to retry.",
   "dashboard.worklogsTable.paymentStatus.changed": "Payment status changed",
-  "dashboard.worklogsTable.paymentStatus.changeFailed": "The payment status didn't change. Time on an invoice changes with the invoice.",
   "dashboard.worklogsTable.paymentStatus.paid": "Paid",
   "dashboard.worklogsTable.paymentStatus.unpaid": "Unpaid",
   "dashboard.worklogsTable.removeProcesses": "Remove processes",

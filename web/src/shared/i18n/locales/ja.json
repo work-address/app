@@ -223,7 +223,6 @@
   "dashboard.worklogsTable.head.timeActive": "アクティブ時間",
   "dashboard.worklogsTable.loadMoreError": "作業ログを追加で読み込めませんでした。もう一度スクロールして再試行してください。",
   "dashboard.worklogsTable.paymentStatus.changed": "支払い状況が変更されました",
-  "dashboard.worklogsTable.paymentStatus.changeFailed": "支払いステータスは変更されませんでした。請求書に含まれる時間は請求書とともに変更されます。",
   "dashboard.worklogsTable.paymentStatus.paid": "支払済み",
   "dashboard.worklogsTable.paymentStatus.unpaid": "未払い",
   "dashboard.worklogsTable.removeProcesses": "プロセスを削除",

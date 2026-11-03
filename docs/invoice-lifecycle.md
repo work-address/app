@@ -2,6 +2,8 @@
 
 Status: done on 1 November 2026 (`411b04b6`, `e5bdeb9c`), on `feat/0-demo-mode`. The class stayed `InvoiceManager`, with the method names `SPEC.md` uses: renaming would have moved nothing. Not checked: how many production invoiced entries already disagree with their invoice.
 
+Hand corrections were reversed afterwards: an author may change `isPaid` by hand on an invoiced entry too, and `InvoicedTimeException` is gone. `SPEC.md` has the rule; the sections below keep the decision as it was made.
+
 One module owns issuing, settling and rejecting an invoice: who may, what it bills, and what happens to the entries behind it. The repository locks and persists.
 
 Related documents: [`SPEC.md`](../SPEC.md) "The rules that keep them consistent" is the rule set; `web/PRODUCT.md` §13 G4 and G8 record known gaps.

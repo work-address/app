@@ -50,7 +50,8 @@ Everything about work done and money owed resolves to these two:
   shapes — a keystroke slice is not a run with tokens, tools and wait states —
   not because they are different kinds of record.
 - **`Invoice` is the only record of money.** Nothing else stores an amount
-  owed, and nothing else decides whether an hour has been paid for.
+  owed. Whether an hour has been paid for is `Time.isPaid`, set by an invoice or
+  by the entry's author by hand, and the two can disagree.
 
 **Human and agent hours are never added together.** Parallel agents can log
 more hours than the wall clock holds, so a combined figure would describe no one's
@@ -81,14 +82,18 @@ agent's runs, nothing between them.
 worker and start, so two workers tracking the same minutes on one project both
 keep their time.
 
-**`Time.isPaid` is owned by `Invoice`, in both tables.** `InvoiceManager.markPaid`
-sets it and `markUnpaid` clears it, scoped to the issuer's own entries and runs
-on the invoice. Nothing else writes it except an author correcting their own
-human entries by hand — one at a time, or in bulk through `POST /time/paid` and
-`/time/unpaid` — and only while no invoice covers them. Once one does, those
-paths refuse with `InvoicedTimeException`. Agent runs have no hand-edit path.
+**`Time.isPaid` is set by an invoice or by its author by hand, and they can
+disagree.** `InvoiceManager.markPaid` sets it and `markUnpaid` and rejection clear
+it, scoped to the issuer's own entries and runs on the invoice. An author may also
+change their own human entries by hand, in both directions — one at a time, or in
+bulk through `POST /time/paid` and `/time/unpaid` — even when an invoice covers
+them. Only the author: not the owner, not a viewer. Agent runs have no hand-edit
+path.
 
-This is what stops the work record and the money record from drifting.
+A hand change never changes the invoice, even if every entry on it ends up marked
+paid. An invoice action overwrites hand-marks and the last action wins: marking an
+invoice paid sets all its entries paid; marking it unpaid or rejecting it sets them
+unpaid.
 
 **Only the issuer may mark an invoice paid.** The person owed the money is the
 one who knows whether it arrived; letting the payer self-certify would make the
@@ -102,7 +107,8 @@ It is the owner's protection against wrong hours or a wrong agent rate, which
 is why the owner needs no edit rights over a worker's agents.
 
 **Already-paid hours cannot be re-billed.** Invoice creation only considers
-unpaid, uninvoiced time, so the same hour cannot appear on two invoices. Only
+unpaid, uninvoiced time, so the same hour cannot appear on two invoices, and
+un-marking an invoiced entry by hand cannot bill it again. Only
 finished agent runs are invoiceable, and an invoiced run is frozen: late data
 for it is set aside, never applied, so the run cannot drift from the invoice
 that bills it.

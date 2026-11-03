@@ -331,13 +331,6 @@ function editableTimes(db: Db, meId: string, ids: unknown) {
   return rows
 }
 
-/** An invoice owns the paid state of what it bills. */
-function refuseInvoicedPaidChange(time: MockTime, isPaid: boolean) {
-  if (time.invoiceId && time.isPaid !== isPaid) {
-    fail(400, 'This time is on an invoice: change the invoice instead')
-  }
-}
-
 const visibleInvoices = (db: Db, meId: string) =>
   db.invoices.filter((invoice) => {
     const project = db.projects.find((p) => p.id === invoice.projectId)
@@ -609,9 +602,6 @@ export const handlers: HttpHandler[] = [
     if (!time) {
       fail(404, 'Time not found')
     }
-    if ('isPaid' in body) {
-      refuseInvoicedPaidChange(time, Boolean(body.isPaid))
-    }
     return shapeTime(
       db,
       saveRow('times', {
@@ -633,11 +623,7 @@ export const handlers: HttpHandler[] = [
   }),
   ...(['paid', 'unpaid'] as const).map((state) =>
     route('post', `/time/${state}`, ({ db, meId, body }) => {
-      const rows = editableTimes(db, meId, body.ids)
-      for (const time of rows) {
-        refuseInvoicedPaidChange(time, state === 'paid')
-      }
-      for (const time of rows) {
+      for (const time of editableTimes(db, meId, body.ids)) {
         saveRow('times', { ...time, isPaid: state === 'paid' })
       }
       return { success: true }

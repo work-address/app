@@ -19,13 +19,12 @@ import { ProjectAccess } from '@/service/project-access'
 
 /**
  * Invoices are the money record; `Time` is the work record. Nothing else
- * stores an amount owed, and nothing else decides whether an hour has been
- * paid for - the two together are the only sources of truth.
+ * stores an amount owed - the two together are the only sources of truth.
  *
  * An invoice is issued by whoever logged the hours: a worker bills the project
  * owner for their own time, an owner bills their client for theirs. Marking it
- * paid is what flips the underlying entries to `isPaid`, so the work record
- * can never drift from the money record.
+ * paid sets its entries `isPaid`, over any hand-mark; an author may change one
+ * by hand afterwards, which never changes the invoice (SPEC.md).
  */
 @injectable()
 export class InvoiceManager {

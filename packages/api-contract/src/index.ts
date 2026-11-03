@@ -133,7 +133,7 @@ export const CONTRACT_SCENARIOS: ContractScenario[] = [
         : `amountCents is ${body.amountCents}, not 3000`,
   },
 
-  // Entries: SPEC.md "Time.isPaid is owned by Invoice"
+  // Entries: SPEC.md "Time.isPaid is set by an invoice or by its author"
   {
     name: 'an author edits their own entry',
     as: 'worker',
@@ -165,14 +165,24 @@ export const CONTRACT_SCENARIOS: ContractScenario[] = [
     status: 200,
   },
   {
-    name: 'an entry on an invoice cannot be marked paid by hand',
+    name: 'an entry on an invoice can be marked paid by hand',
     as: 'worker',
     request: (w) => ({
       method: 'post',
       path: '/time/paid',
       body: { ids: [w.invoicedEntry] },
     }),
-    status: 400,
+    status: 200,
+  },
+  {
+    name: 'only its author can mark an entry paid by hand',
+    as: 'owner',
+    request: (w) => ({
+      method: 'post',
+      path: '/time/paid',
+      body: { ids: [w.invoicedEntry] },
+    }),
+    status: 403,
   },
 
   // Detail: SPEC.md "Detail waits for the worker's review"

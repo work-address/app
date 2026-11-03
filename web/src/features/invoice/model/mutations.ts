@@ -5,10 +5,9 @@ import { readInvoiceSettlement } from './invoice-feed'
 import { baseApi, runApiData } from '@/shared'
 
 /**
- * Marking an invoice paid is what marks the hours behind it paid - the server
- * cascades it onto `Time.isPaid`, so the work record and the money record
- * cannot disagree. Only the issuer may do it: the person owed the money is the
- * one who knows whether it arrived.
+ * Marking an invoice paid marks the hours behind it paid - the server cascades
+ * it onto `Time.isPaid`, over any hand-mark. Only the issuer may do it: the
+ * person owed the money is the one who knows whether it arrived.
  */
 export const markInvoicePaidMutation = createMutation({
   handler: async (id: string) => {
