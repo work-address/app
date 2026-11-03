@@ -134,7 +134,7 @@ export const ProfileViewDescriptionAndSkills = ({
                     onClick={() =>
                       navigate(
                         routes.profile.children.edit.build({
-                          walletAddress: user?.friendlyWalletAddress ?? '',
+                          id: user?.id ?? '',
                         }),
                       )
                     }

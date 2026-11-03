@@ -1,6 +1,6 @@
 # Project access
 
-Status: done on 1 November 2026 (`85adea3e`), on `feat/0-demo-mode`. Not checked: how many production collaborator addresses are stored in TON friendly form, which `canonicalSql` will not match. Check that, and backfill with `toStorage` if any exist.
+Status: done on 1 November 2026 (`85adea3e`), on `feat/0-demo-mode`. Since then [google-sign-in.md](google-sign-in.md) removed TON and Solana, renamed `WalletAddress` to `AccountAddress` and added emails, so the TON and Solana parts below are history. Not checked: how many production collaborator addresses are stored in TON friendly form, which `canonicalSql` will not match. Check that, and backfill with `toStorage` if any exist.
 
 One module answers who may do what to a project and its entries, as a query filter and as a per-row check. Today six copies answer it, and they disagree.
 

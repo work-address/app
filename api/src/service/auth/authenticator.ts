@@ -16,8 +16,11 @@ import { UserManager } from '@/service/user-manager'
 import { RedisClient } from '@/service/redis-client'
 import { Signer } from '@/service/auth/signer'
 import { TimeRepository } from '@/repository/time-repository'
-import { TonProofService } from '@/service/auth/ton-proof-service'
-import { IAuthTonPayload } from '@/model/auth'
+import {
+  GoogleAuthProvider,
+  IGoogleAuthPayload,
+} from '@/service/auth/google-auth-provider'
+import { AccountAddress } from '@/service/account-address'
 import { fromPromise } from '@/service/effect-bridge'
 
 /**
@@ -48,8 +51,8 @@ export class Authenticator {
   protected signer: Signer
   @inject('RedisClient')
   protected redis: RedisClient
-  @inject('TonProofService')
-  protected tonProofService: TonProofService
+  @inject('GoogleAuthProvider')
+  protected googleAuthProvider: GoogleAuthProvider
 
   public getNonce(address: string): AuthEffect<string> {
     // Effect.suspend: generating a nonce is a side effect, so it belongs to the
@@ -66,28 +69,6 @@ export class Authenticator {
     })
   }
 
-  public getTonNonce(): AuthEffect<string> {
-    return Effect.suspend(() => {
-      const nonce = this.signer.generateNonce()
-      const key = `nonce:ton:${nonce}`
-
-      return fromPromise(() =>
-        this.redis.setWithExpiry(key, nonce, Authenticator.nonceExpiresIn),
-      ).pipe(Effect.as(nonce))
-    })
-  }
-
-  /**
-   * The three wallet logins differ only in where the nonce is keyed and how the
-   * signature is checked; everything after that - consume the nonce, find or
-   * create the user, issue tokens - is identical, and used to be copied three
-   * times. Expressing it once as an Effect keeps the two failure modes
-   * (`AuthenticationException`) in the type instead of relying on each copy
-   * remembering to throw them.
-   *
-   * `verify` is an Effect rather than a boolean so a verifier can be async
-   * (TON reads the chain) without the shared pipeline caring which one it got.
-   */
   private authenticateWithNonce(
     address: string,
     key: string,
@@ -125,20 +106,55 @@ export class Authenticator {
     )
   }
 
-  public loginTon(payload: IAuthTonPayload): AuthEffect<IAuthTokens> {
-    return this.authenticateWithNonce(
-      payload.address,
-      `nonce:ton:${payload.proof.payload}`,
-      () => fromPromise(() => this.tonProofService.checkProof(payload)),
-    )
+  /**
+   * Matches on Google's subject, because a mailbox can change hands: `address`
+   * keeps the email it signed up with, and a later holder of that email has a
+   * different subject and is refused rather than handed this account.
+   */
+  public loginGoogle(credential: string): AuthEffect<IAuthTokens> {
+    return Effect.gen(this, function* () {
+      const payload = yield* fromPromise(() =>
+        this.googleAuthProvider.verifyCredential(credential),
+      )
+      const existing = yield* this.userRepository.findByGoogleSub(payload.sub)
+      const user = existing ?? (yield* this.createGoogleUser(payload))
+
+      return yield* Effect.sync(() => this.getTokens(user))
+    })
   }
 
-  public loginSolana(
-    signature: string,
-    address: string,
-  ): AuthEffect<IAuthTokens> {
-    return this.authenticateWithNonce(address, `nonce:${address}`, (nonce) =>
-      Effect.sync(() => this.signer.verifySolana(nonce, signature, address)),
+  private createGoogleUser(payload: IGoogleAuthPayload): AuthEffect<User> {
+    const address = AccountAddress.toStorage(payload.email)
+
+    return Effect.gen(this, function* () {
+      const holder = yield* this.userRepository.findByAddressPublic(address)
+
+      if (holder) {
+        return yield* Effect.fail(
+          new AuthenticationException(
+            'This email already belongs to another account',
+          ),
+        )
+      }
+
+      const user = new User()
+      user.address = address
+      user.googleSub = payload.sub
+      user.name = payload.name as string
+      user.roles = [EUserRole.ROLE_USER]
+
+      return yield* this.userManager.saveSingle(user)
+    }).pipe(
+      // A second tab can finish first. Its account has the same subject.
+      Effect.catchAll((error) =>
+        this.userRepository
+          .findByGoogleSub(payload.sub)
+          .pipe(
+            Effect.flatMap((user) =>
+              user ? Effect.succeed(user) : Effect.fail(error),
+            ),
+          ),
+      ),
     )
   }
 
@@ -192,38 +208,23 @@ export class Authenticator {
     return Effect.gen(this, function* () {
       const tokenData = this.decodeJwtToken(token)
 
-      if (tokenData.emailOrPhone) {
-        const user = yield* this.userRepository.findByEmailPhone(
-          tokenData.emailOrPhone,
-        )
-
-        if (user) {
-          return user
-        }
-      }
-      if (tokenData.address) {
-        const user = yield* this.userRepository.findByAddressPublic(
-          tokenData.address,
-        )
-
-        if (user) {
-          return user
-        }
+      // A refresh token has only an id, and must go through rotation rather
+      // than work as a long-lived access token.
+      if (!tokenData.address || !tokenData.id) {
+        return null
       }
 
-      return null
+      return (
+        (yield* this.userRepository.findOneBy({
+          where: { id: tokenData.id },
+        })) ?? null
+      )
     }).pipe(
       // A malformed or expired token is not an error to this caller - it just
       // does not identify anyone. Defects are caught too because decodeJwtToken
       // throws rather than failing.
       Effect.catchAllCause(() => Effect.succeed(null)),
     )
-  }
-
-  public getEmailOrPhoneOrThrowError(token: string): string {
-    const tokenData = this.decodeJwtToken(token)
-
-    return tokenData.emailOrPhone as string
   }
 
   public getJwtIatOrThrowError(token: string): string {
@@ -259,7 +260,6 @@ export class Authenticator {
     const data: IAuthTokenData = {
       id: user.id,
       address: user.address,
-      emailOrPhone: user.email || user.phone,
     }
 
     return jwt.sign(data, this.parameters.jwtSecret, {

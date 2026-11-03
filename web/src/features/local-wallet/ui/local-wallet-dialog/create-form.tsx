@@ -20,6 +20,7 @@ export const CreateForm = ({
   submitError,
   onBack,
   onSubmit,
+  submitLabel,
 }: FormProps<PasswordFormValues> & { onBack: () => void }) => {
   const { t } = useTranslation()
   const {
@@ -56,7 +57,7 @@ export const CreateForm = ({
           {t('localWallet.actions.back')}
         </Button>
         <Button type="submit" loading={busy}>
-          {t('localWallet.actions.create')}
+          {submitLabel}
         </Button>
       </Actions>
     </Form>

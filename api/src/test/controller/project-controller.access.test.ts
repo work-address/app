@@ -222,7 +222,7 @@ export class ProjectControllerAccessTest extends BaseControllerTest {
     )
     // A collaborator may be granted access before their wallet has ever
     // signed in — no matching user account is required at add-time.
-    const pendingAddress = faker.string.uuid()
+    const pendingAddress = faker.internet.email().toLowerCase()
 
     const res = await this.editProject(project, owner, {
       workerAddresses: [pendingAddress],

@@ -13,11 +13,10 @@ import { ProjectAccess, ProjectRole } from '@/service/project-access'
 import { runPromise } from '@/service/effect-bridge'
 import { UserManager } from '@/service/user-manager'
 
-const TON_RAW = `0:${'4a'.repeat(32)}`
-const SOLANA = '7EcDhSYGxXyscszYEp35KHN8vvw3svAuLKTzXwCFLtV'
+const EMAIL = 'worker@example.com'
 const EVM = '0x52908400098527886E0F7030069857D2E4169EE7'
 
-const ADDRESSES = { TON: TON_RAW, Solana: SOLANA, EVM }
+const ADDRESSES = { email: EMAIL, EVM }
 
 const ROLES = ['owner', 'worker', 'viewer', 'outsider'] as const
 const PLANS = ['premium', 'lapsed'] as const
@@ -171,7 +170,7 @@ export class ProjectAccessTest extends AbstractDatabaseIntegration {
   }
 
   @test()
-  async evmCaseDoesNotDecideAccessButSolanaCaseDoes() {
+  async caseDoesNotDecideAccess() {
     this.config.entitlementSecret = 'secret'
     const aliases = { project: 'project', owner: 'owner' }
     const agree = async (stored: string, address: string, want: boolean) => {
@@ -190,8 +189,33 @@ export class ProjectAccessTest extends AbstractDatabaseIntegration {
     }
 
     await agree(EVM.toUpperCase().replace('0X', '0x'), EVM, true)
-    await agree(SOLANA, SOLANA, true)
-    await agree(SOLANA.toLowerCase(), SOLANA, false)
+    await agree('Worker@Example.com', EMAIL, true)
+    await agree('other@example.com', EMAIL, false)
+  }
+
+  /** A connected wallet pays invoices. Access reads `address` only. */
+  @test()
+  async aConnectedWalletGrantsNoAccess() {
+    this.config.entitlementSecret = 'secret'
+    const { project, people } = await this.project('premium')
+    project.workerAddresses = [EVM]
+    await this.conn.getRepository(Project).save(project)
+    const google = Object.assign(new User(), people.outsider, {
+      address: 'someone@example.com',
+      connectedWallet: EVM,
+    })
+
+    expect(this.access.canWork(project, google)).to.be.false
+    expect(
+      await this.filtered(project, (qb) =>
+        this.access.filterProjects(
+          qb,
+          { project: 'project', owner: 'owner' },
+          google,
+          'worker',
+        ),
+      ),
+    ).to.be.false
   }
 
   @test()

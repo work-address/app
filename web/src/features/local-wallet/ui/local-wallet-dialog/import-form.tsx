@@ -12,7 +12,7 @@ import { Actions, Form, Notice } from './styles'
 
 import type { FormProps, ImportFormValues } from './types'
 
-import { Button, formatWalletAddress, Text, TextArea } from '@/shared'
+import { Button, formatAddress, Text, TextArea } from '@/shared'
 
 /** Brings an existing Ethereum key into this browser, behind a new password. */
 export const ImportForm = ({
@@ -21,6 +21,7 @@ export const ImportForm = ({
   replacing,
   onBack,
   onSubmit,
+  submitLabel,
 }: FormProps<ImportFormValues> & {
   replacing?: string
   onBack: () => void
@@ -43,7 +44,7 @@ export const ImportForm = ({
       {replacing && (
         <Notice>
           {t('localWallet.import.replaceWarning', {
-            address: formatWalletAddress(replacing),
+            address: formatAddress(replacing),
           })}
         </Notice>
       )}
@@ -84,7 +85,7 @@ export const ImportForm = ({
           {t('localWallet.actions.back')}
         </Button>
         <Button type="submit" loading={busy}>
-          {t('localWallet.actions.import')}
+          {submitLabel}
         </Button>
       </Actions>
     </Form>

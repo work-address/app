@@ -1,6 +1,6 @@
 # Google sign-in
 
-Status: agreed on 3 November 2026, nothing built. Covers `app`, `web` and `time-tracker`. The app has no users, so nothing here migrates, phases out or stays compatible.
+Status: built on 3 November 2026 on `feat/0-google-sign-in` in each repo. Google's verifier, its test fixture and the log and Sentry redaction come from `feat/0-google-login`. Not run: Google sign-in against real Google, tracker pairing against a real server, a fully isolated network, and Windows or Linux tracker builds. Covers `app`, `web` and `time-tracker`. The app has no users, so nothing here migrates, phases out or stays compatible.
 
 Sign-in becomes two options: Google, and the built-in browser wallet. Everything else that signs in goes.
 

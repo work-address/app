@@ -10,6 +10,7 @@ import { Actions } from './styles'
 import { Button } from '@/shared'
 
 type Props = {
+  submitLabel: string
   privateKey: string
   busy: boolean
   submitError: string | null
@@ -24,6 +25,7 @@ export const RevealStep = ({
   submitError,
   onBack,
   onSignIn,
+  submitLabel,
 }: Props) => {
   const { t } = useTranslation()
 
@@ -43,7 +45,7 @@ export const RevealStep = ({
           {t('localWallet.actions.back')}
         </Button>
         <Button loading={busy} onClick={onSignIn}>
-          {t('localWallet.unlock.submitShort')}
+          {submitLabel}
         </Button>
       </Actions>
     </Flex>

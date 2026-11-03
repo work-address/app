@@ -1,7 +1,6 @@
-import { Type } from 'class-transformer'
-import { IsNotEmpty, IsNumber, IsString, ValidateNested } from 'class-validator'
+import { IsNotEmpty, IsOptional, IsString, Matches } from 'class-validator'
 
-import { IAuthTonPayload } from '@/model/auth'
+const EVM_ADDRESS = /^0[Xx][\dA-Fa-f]{40}$/
 
 export class AuthForgotPasswordDto {
   @IsString()
@@ -14,24 +13,29 @@ export class AuthEthLoginDto {
   @IsNotEmpty()
   signature: string
 
+  // Only Google may put an email in `User.address`.
   @IsString()
-  @IsNotEmpty()
+  @Matches(EVM_ADDRESS)
   address: string
 }
 
-export class AuthSolanaLoginDto {
+export class AuthGoogleLoginDto {
+  /** The ID token Google's sign-in button gives the browser. */
   @IsString()
   @IsNotEmpty()
-  signature: string
+  credential: string
+}
 
+export class AuthMethodsDto {
+  /** Absent where this deployment doesn't offer Google sign-in. */
   @IsString()
-  @IsNotEmpty()
-  address: string
+  @IsOptional()
+  googleClientId?: string
 }
 
 export class AuthNonceRequestDto {
   @IsString()
-  @IsNotEmpty()
+  @Matches(EVM_ADDRESS)
   address: string
 }
 
@@ -39,52 +43,4 @@ export class AuthRefreshTokenDto {
   @IsString()
   @IsNotEmpty()
   refreshToken: string
-}
-
-export class AuthTonProofDomainDto {
-  @IsNumber()
-  lengthBytes: number
-
-  @IsString()
-  @IsNotEmpty()
-  value: string
-}
-
-export class AuthTonProofPayloadDto {
-  @IsNumber()
-  timestamp: number
-
-  @ValidateNested()
-  @Type(() => AuthTonProofDomainDto)
-  domain: AuthTonProofDomainDto
-
-  @IsString()
-  @IsNotEmpty()
-  payload: string
-
-  @IsString()
-  @IsNotEmpty()
-  signature: string
-
-  @IsString()
-  @IsNotEmpty()
-  state_init: string
-}
-
-export class AuthTonLoginDto implements IAuthTonPayload {
-  @IsString()
-  @IsNotEmpty()
-  address: string
-
-  @IsString()
-  @IsNotEmpty()
-  network: string
-
-  @IsString()
-  @IsNotEmpty()
-  public_key: string
-
-  @ValidateNested()
-  @Type(() => AuthTonProofPayloadDto)
-  proof: AuthTonProofPayloadDto
 }

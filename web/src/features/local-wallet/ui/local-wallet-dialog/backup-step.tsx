@@ -20,7 +20,9 @@ export const BackupStep = ({
   busy,
   submitError,
   onContinue,
+  submitLabel,
 }: {
+  submitLabel: string
   privateKey: string
   busy: boolean
   submitError: string | null
@@ -55,7 +57,7 @@ export const BackupStep = ({
         loading={busy}
         onClick={onContinue}
       >
-        {t('localWallet.backup.continue')}
+        {submitLabel}
       </Button>
     </Flex>
   )

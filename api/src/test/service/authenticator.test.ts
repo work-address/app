@@ -10,15 +10,6 @@ import { UserFixture } from '@/test/fixture/user-fixture'
 import { AbstractDatabaseIntegration } from '@/test/abstract-database.integration'
 import { UserRepository } from '@/repository/user-repository'
 import { RedisClient } from '@/service/redis-client'
-import {
-  buildSolanaAuthPayload,
-  buildSolanaAuthPayloadWithInvalidSignature,
-} from '@/test/fixture/solana-auth-fixture'
-import {
-  buildTonAuthPayload,
-  buildTonAuthPayloadWithInvalidSignature,
-  getTestTonDomain,
-} from '@/test/fixture/ton-auth-fixture'
 import { runPromise } from '@/service/effect-bridge'
 
 @suite()
@@ -70,6 +61,34 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
 
     expect(userFromToken).to.not.eq(null)
     expect(userFromToken!.id).to.be.equal(user.id)
+  }
+
+  /** Tokens resolve by id: whoever takes an old email doesn't get the token. */
+  @test()
+  async getUserFromJwtToken_doesNotFollowAnEmailToItsNextHolder() {
+    const email = faker.internet.email()
+    const first = await this.userFixture.createWithEmailAndPassword(email)
+    const token = this.authenticator.generateJwtToken(first)
+
+    first.email = faker.internet.email()
+    await runPromise(this.userRepository.saveSingle(first))
+    await this.userFixture.createWithEmailAndPassword(email)
+
+    const userFromToken = await runPromise(
+      this.authenticator.getUserFromJwtToken(token),
+    )
+
+    expect(userFromToken!.id).to.be.equal(first.id)
+  }
+
+  /** A refresh token has to go through rotation. */
+  @test()
+  async getUserFromJwtToken_refusesARefreshToken() {
+    const user = await this.userFixture.createUser()
+    const token = this.authenticator.generateRefreshToken(user)
+
+    expect(await runPromise(this.authenticator.getUserFromJwtToken(token))).to
+      .be.null
   }
 
   @test()
@@ -167,50 +186,6 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
         'Authentication error: User does not exist',
       )
     }
-  }
-
-  @test()
-  getEmailFromJwtOrThrowError_success() {
-    const user = new User()
-    user.email = faker.internet.email()
-
-    const token = this.authenticator.generateJwtToken(user)
-    const email = this.authenticator.getEmailOrPhoneOrThrowError(token)
-
-    expect(user.email).to.be.equal(email)
-  }
-
-  @test()
-  getEmailFromJwtOrThrowError_errorMalformed() {
-    let error: Error | undefined
-    const token = faker.string.uuid()
-
-    try {
-      this.authenticator.getEmailOrPhoneOrThrowError(token)
-    } catch (e: unknown) {
-      error = e as Error
-    }
-
-    expect(error).to.be.ok
-    expect(error!.name).to.be.eq('JsonWebTokenError')
-    expect(error!.message).to.be.eq('jwt malformed')
-  }
-
-  @test.skip()
-  getEmailFromJwtOrThrowError_errorExpired() {
-    let error: Error | undefined
-    const oldToken =
-      'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJlbWFpbE9yUGhvbmUiOiJPbGdhNTBAeWFob28uY29tIiwiaWF0IjoxNzAzNTg5NzE4LCJleHAiOjE3MDM2MDA1MTh9.Y2De_m7g_ZLmugywlDseKLmPPnJqek_CJl1VIfJe-2o'
-
-    try {
-      this.authenticator.getEmailOrPhoneOrThrowError(oldToken)
-    } catch (e: unknown) {
-      error = e as Error
-    }
-
-    expect(error).to.be.ok
-    expect(error!.name).to.be.eq('TokenExpiredError')
-    expect(error!.message).to.be.eq('jwt expired')
   }
 
   @test()
@@ -356,234 +331,6 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
       await runPromise(
         this.authenticator.loginEth(signature.signature, accountB.address),
       )
-    } catch (e: unknown) {
-      err = e as Error
-    }
-
-    expect(err).to.not.eq(null)
-    expect(err!.name).to.be.equal('AuthenticationException')
-    expect(err!.message).to.be.equal(
-      'Authentication error: Nonce is not available or expired',
-    )
-  }
-
-  @test()
-  async getTonNonce_storesNonceInRedis() {
-    const nonce = await runPromise(this.authenticator.getTonNonce())
-    const stored = await this.redisClient.get(`nonce:ton:${nonce}`)
-
-    expect(nonce.length).to.be.eq(32)
-    expect(stored).to.be.eq(nonce)
-  }
-
-  @test()
-  async loginTon_registersNewUser() {
-    const domain = getTestTonDomain(this.parameters)
-    const nonce = await runPromise(this.authenticator.getTonNonce())
-    const { payload } = await buildTonAuthPayload({ nonce, domain })
-
-    const tokens = await runPromise(this.authenticator.loginTon(payload))
-    const user = await runPromise(
-      this.userRepository.findByAddressPublicOrFail(payload.address),
-    )
-
-    expect(tokens).to.contain.keys(['accessToken', 'refreshToken'])
-    expect(user.address).to.be.eq(payload.address)
-  }
-
-  @test()
-  async loginTon_logsInExistingUser() {
-    const domain = getTestTonDomain(this.parameters)
-    const nonce = await runPromise(this.authenticator.getTonNonce())
-    const { payload } = await buildTonAuthPayload({ nonce, domain })
-
-    const existingUser = await this.userFixture.createUser()
-    existingUser.address = payload.address
-    await runPromise(this.userRepository.saveSingle(existingUser))
-
-    const tokens = await runPromise(this.authenticator.loginTon(payload))
-    const user = await runPromise(
-      this.userRepository.findByAddressPublicOrFail(payload.address),
-    )
-
-    expect(tokens).to.contain.keys(['accessToken', 'refreshToken'])
-    expect(user.id).to.be.eq(existingUser.id)
-  }
-
-  @test()
-  async loginTon_failsWhenNonceWasNeverRequested() {
-    const domain = getTestTonDomain(this.parameters)
-    const { payload } = await buildTonAuthPayload({
-      nonce: 'never-issued-ton-nonce',
-      domain,
-    })
-
-    let err: Error | null = null
-
-    try {
-      await runPromise(this.authenticator.loginTon(payload))
-    } catch (e: unknown) {
-      err = e as Error
-    }
-
-    expect(err).to.not.eq(null)
-    expect(err!.name).to.be.equal('AuthenticationException')
-    expect(err!.message).to.be.equal(
-      'Authentication error: Nonce is not available or expired',
-    )
-  }
-
-  @test()
-  async loginTon_failsWhenSignatureIsInvalid() {
-    const domain = getTestTonDomain(this.parameters)
-    const nonce = await runPromise(this.authenticator.getTonNonce())
-    const payload = await buildTonAuthPayloadWithInvalidSignature({
-      nonce,
-      domain,
-    })
-
-    let err: Error | null = null
-
-    try {
-      await runPromise(this.authenticator.loginTon(payload))
-    } catch (e: unknown) {
-      err = e as Error
-    }
-
-    expect(err).to.not.eq(null)
-    expect(err!.name).to.be.equal('AuthenticationException')
-    expect(err!.message).to.be.equal(
-      'Authentication error: Signature is not valid',
-    )
-  }
-
-  @test()
-  async loginTon_failsWhenNonceAlreadyConsumed() {
-    const domain = getTestTonDomain(this.parameters)
-    const nonce = await runPromise(this.authenticator.getTonNonce())
-    const { payload } = await buildTonAuthPayload({ nonce, domain })
-
-    await runPromise(this.authenticator.loginTon(payload))
-
-    let err: Error | null = null
-
-    try {
-      await runPromise(this.authenticator.loginTon(payload))
-    } catch (e: unknown) {
-      err = e as Error
-    }
-
-    expect(err).to.not.eq(null)
-    expect(err!.name).to.be.equal('AuthenticationException')
-    expect(err!.message).to.be.equal(
-      'Authentication error: Nonce is not available or expired',
-    )
-  }
-
-  @test()
-  async loginSolana_registersNewUser() {
-    const setup = buildSolanaAuthPayload({ nonce: 'setup' })
-    const nonce = await runPromise(this.authenticator.getNonce(setup.address))
-    const { address, signature } = buildSolanaAuthPayload({
-      nonce,
-      secretKey: setup.secretKey,
-    })
-
-    const tokens = await runPromise(
-      this.authenticator.loginSolana(signature, address),
-    )
-    const user = await runPromise(
-      this.userRepository.findByAddressPublicOrFail(address),
-    )
-
-    expect(tokens).to.contain.keys(['accessToken', 'refreshToken'])
-    expect(user.address).to.be.eq(address)
-  }
-
-  @test()
-  async loginSolana_logsInExistingUser() {
-    const setup = buildSolanaAuthPayload({ nonce: 'setup' })
-    const nonce = await runPromise(this.authenticator.getNonce(setup.address))
-    const { address, signature } = buildSolanaAuthPayload({
-      nonce,
-      secretKey: setup.secretKey,
-    })
-
-    const existingUser = await this.userFixture.createUser()
-    existingUser.address = address
-    await runPromise(this.userRepository.saveSingle(existingUser))
-
-    const tokens = await runPromise(
-      this.authenticator.loginSolana(signature, address),
-    )
-    const user = await runPromise(
-      this.userRepository.findByAddressPublicOrFail(address),
-    )
-
-    expect(tokens).to.contain.keys(['accessToken', 'refreshToken'])
-    expect(user.id).to.be.eq(existingUser.id)
-  }
-
-  @test()
-  async loginSolana_failsWhenNonceWasNeverRequested() {
-    const { address, signature } = buildSolanaAuthPayload({
-      nonce: 'never-issued-solana-nonce',
-    })
-
-    let err: Error | null = null
-
-    try {
-      await runPromise(this.authenticator.loginSolana(signature, address))
-    } catch (e: unknown) {
-      err = e as Error
-    }
-
-    expect(err).to.not.eq(null)
-    expect(err!.name).to.be.equal('AuthenticationException')
-    expect(err!.message).to.be.equal(
-      'Authentication error: Nonce is not available or expired',
-    )
-  }
-
-  @test()
-  async loginSolana_failsWhenSignatureIsInvalid() {
-    const setup = buildSolanaAuthPayload({ nonce: 'setup' })
-    const nonce = await runPromise(this.authenticator.getNonce(setup.address))
-    const { address, signature } = buildSolanaAuthPayloadWithInvalidSignature({
-      nonce,
-      secretKey: setup.secretKey,
-    })
-
-    let err: Error | null = null
-
-    try {
-      await runPromise(this.authenticator.loginSolana(signature, address))
-    } catch (e: unknown) {
-      err = e as Error
-    }
-
-    expect(err).to.not.eq(null)
-    expect(err!.name).to.be.equal('AuthenticationException')
-    expect(err!.message).to.be.equal(
-      'Authentication error: Signature is not valid',
-    )
-  }
-
-  @test()
-  async loginSolana_failsWhenNonceAlreadyConsumed() {
-    const setup = buildSolanaAuthPayload({ nonce: 'setup' })
-    const nonce = await runPromise(this.authenticator.getNonce(setup.address))
-    const { address, signature } = buildSolanaAuthPayload({
-      nonce,
-      secretKey: setup.secretKey,
-    })
-
-    await runPromise(this.authenticator.loginSolana(signature, address))
-
-    let err: Error | null = null
-
-    try {
-      await runPromise(this.authenticator.loginSolana(signature, address))
     } catch (e: unknown) {
       err = e as Error
     }

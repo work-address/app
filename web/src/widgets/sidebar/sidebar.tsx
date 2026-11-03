@@ -125,7 +125,7 @@ export const Sidebar = () => {
     match(schema)
       .with(routes.profile.schema, () =>
         routes.profile.build({
-          walletAddress: user?.friendlyWalletAddress || '',
+          id: user?.id ?? '',
         }),
       )
       .otherwise(() => schema)

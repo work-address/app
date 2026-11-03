@@ -1,9 +1,11 @@
 import {
   Authorized,
   Body,
+  Delete,
   Get,
   HttpCode,
   JsonController,
+  Post,
   Put,
   Res,
 } from 'routing-controllers'
@@ -19,6 +21,11 @@ import express from 'express'
 import { runPromise } from '@/service/effect-bridge'
 import { UserSettingsManager } from '@/service/user-settings-manager'
 import { UserSettingsDto } from '@/model/dto/user-settings'
+import {
+  ConnectedWalletConfirmDto,
+  ConnectedWalletNonceDto,
+} from '@/model/dto/connected-wallet'
+import { ConnectedWallet } from '@/service/connected-wallet'
 
 @JsonController('/user')
 export class UserController {
@@ -56,18 +63,86 @@ export class UserController {
   }
 
   @OpenAPIExtended({
-    summary: 'Public profile by wallet address',
+    summary: 'Profile by account id',
     response: {
       schema: User,
       options: { serializationGroup: 'search' },
     },
   })
-  @Get('/:address/address')
+  @Get('/:id')
+  @Authorized([EUserRole.ROLE_USER])
   public async read(
-    @EntityFromParam({ paramName: 'address', lookupField: 'address' })
+    @EntityFromParam({ paramName: 'id' })
     user: User,
   ): Promise<User> {
     return user
+  }
+
+  @OpenAPIExtended({
+    summary: 'Start connecting a wallet: the message it has to sign',
+    body: { schema: ConnectedWalletNonceDto },
+    response: { schema: String, options: {} },
+  })
+  @Post('/connected-wallet/nonce')
+  @HttpCode(200)
+  @Authorized([EUserRole.ROLE_USER])
+  connectedWalletNonce(
+    @CurrentUser() user: User,
+    @Body() payload: ConnectedWalletNonceDto,
+  ): Promise<string> {
+    return runPromise(
+      App.container
+        .get<ConnectedWallet>('ConnectedWallet')
+        .message(user, payload.address),
+    )
+  }
+
+  @OpenAPIExtended({
+    summary: 'Finish connecting a wallet with its signature',
+    body: { schema: ConnectedWalletConfirmDto },
+    response: {
+      schema: {},
+      options: { emptyBody: true, statusCode: 204 },
+    },
+  })
+  @Post('/connected-wallet')
+  @HttpCode(204)
+  @Authorized([EUserRole.ROLE_USER])
+  public async connectWallet(
+    @CurrentUser() user: User,
+    @Body() payload: ConnectedWalletConfirmDto,
+    @Res() res: express.Response,
+  ): Promise<express.Response> {
+    await runPromise(
+      App.container
+        .get<ConnectedWallet>('ConnectedWallet')
+        .connect(user, payload.address, payload.signature),
+    )
+
+    res.status(204).end()
+    return res
+  }
+
+  @OpenAPIExtended({
+    summary: 'Disconnect the connected wallet',
+    response: {
+      schema: {},
+      options: { emptyBody: true, statusCode: 204 },
+    },
+  })
+  @Delete('/connected-wallet')
+  @HttpCode(204)
+  @Authorized([EUserRole.ROLE_USER])
+  public async disconnectWallet(
+    @CurrentUser() user: User,
+    @Res() res: express.Response,
+  ): Promise<express.Response> {
+    await runPromise(
+      App.container.get<ConnectedWallet>('ConnectedWallet').disconnect(user),
+    )
+
+    res.status(204).end()
+    return res
   }
 
   @OpenAPIExtended({

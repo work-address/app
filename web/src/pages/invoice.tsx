@@ -94,7 +94,7 @@ export default function InvoicePage() {
   return (
     <Root width="document">
       <InvoicePrintGlobalStyle />
-      <PageHelmet title={head.title} description={head.description} noindex />
+      <PageHelmet title={head.title} description={head.description} />
       {failureKind === 'not-found' ? (
         <StateNotice
           size="page"
@@ -151,6 +151,13 @@ export default function InvoicePage() {
             ) : (
               <InvoiceTotalAmountDesktop />
             )}
+            {/* A Google account with no connected wallet is paid some other
+                way, and an invoice has nothing to say about it here. */}
+            {invoice?.user?.payWallet && (
+              <PayTo color={'gray'} size={'2'}>
+                {t('invoice.fields.payTo')}: {invoice.user.payWallet}
+              </PayTo>
+            )}
           </motion.div>
           <motion.div variants={reveal.item}>
             <InvoiceLines />
@@ -163,6 +170,12 @@ export default function InvoicePage() {
     </Root>
   )
 }
+
+const PayTo = styled(Text)`
+  display: block;
+  margin-top: var(--space-2);
+  overflow-wrap: anywhere;
+`
 
 const REVEAL = {
   list: { shown: { transition: { staggerChildren: 0.06 } } },

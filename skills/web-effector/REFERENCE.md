@@ -56,7 +56,7 @@ Split state by responsibility. Typical files inside `entities/*` or `features/*/
 | `*.effects.ts` | `createEffect` — side effects without farfetched (localStorage, subscriptions) |
 | `*.queries.ts` | `createQuery` handlers — API reads |
 | `*.mutations.ts` | `createMutation` handlers — API writes |
-| `*.model.ts` | Wallet/provider sub-domains (eth, ton, solana) |
+| `*.model.ts` | Sign-in sub-domains (eth, google) |
 | `index.ts` | `sample()` wiring, re-exports public API |
 
 ### Naming
@@ -164,8 +164,8 @@ Use `createGate` when state depends on component mount params:
 
 ```typescript
 // features/profile/model/index.ts
-const ProfileGate = createGate<{ friendlyWalletAddress: string | null }>({
-  defaultState: { friendlyWalletAddress: null },
+const ProfileGate = createGate<{ id: string | null }>({
+  defaultState: { id: null },
 })
 
 sample({
@@ -174,10 +174,8 @@ sample({
   target: profileQuery.start,
 })
 
-// Component: <ProfileGate friendlyWalletAddress={address} />
+// Component: <ProfileGate id={id} />
 ```
-
-Solana wallet uses `SolanaWalletGate` similarly.
 
 ### Patronum debounce
 

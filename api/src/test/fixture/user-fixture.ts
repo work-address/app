@@ -47,6 +47,17 @@ export class UserFixture {
     return runPromise(this.userManager.saveSingle(user))
   }
 
+  public createGoogleUser(): Promise<User> {
+    const user = new User()
+
+    user.address = this.faker.email().toLowerCase()
+    user.googleSub = faker.string.numeric(21)
+    user.tz = 'UTC'
+    user.roles = [EUserRole.ROLE_USER]
+
+    return runPromise(this.userManager.saveSingle(user))
+  }
+
   public createUser(): Promise<User> {
     const account = web3.eth.accounts.create()
     const user = new User()

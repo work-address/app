@@ -6,13 +6,10 @@ import * as web3 from 'web3'
 import { suite, test } from '@testdeck/mocha'
 
 import {
-  authControllerCheckProofHandler,
   authControllerLoginEth,
-  authControllerLoginSolana,
   authControllerNonce,
   authControllerRefresh,
   authControllerStatus,
-  authControllerTonNonce,
 } from '@app/api-client'
 
 import { UserRepository } from '@/repository/user-repository'
@@ -21,15 +18,6 @@ import { RedisClient } from '@/service/redis-client'
 import { AuthenticatorTimeTracker } from '@/service/auth/authenticator-time-tracker'
 import { ProjectRepository } from '@/repository/project-repository'
 import { IConfigParameters } from '@/model/config'
-import {
-  buildSolanaAuthPayload,
-  buildSolanaAuthPayloadWithInvalidSignature,
-} from '@/test/fixture/solana-auth-fixture'
-import {
-  buildTonAuthPayload,
-  buildTonAuthPayloadWithInvalidSignature,
-  getTestTonDomain,
-} from '@/test/fixture/ton-auth-fixture'
 import { runPromise } from '@/service/effect-bridge'
 
 @suite()
@@ -200,149 +188,6 @@ export class AuthControllerTest extends BaseControllerTest {
   }
 
   @test()
-  async loginSolana() {
-    const client = this.apiClient()
-    const setup = buildSolanaAuthPayload({ nonce: 'setup' })
-    const nonce = await runPromise(this.authenticator.getNonce(setup.address))
-    const { address, signature } = buildSolanaAuthPayload({
-      nonce,
-      secretKey: setup.secretKey,
-    })
-
-    const res = await authControllerLoginSolana({
-      client,
-      body: { signature, address },
-      throwOnError: true,
-    })
-
-    const user = await runPromise(
-      this.userRepository.findByAddressPublicOrFail(address),
-    )
-    const projects = await runPromise(
-      this.projectRepository.findBy({ where: { user: { id: user.id } } }),
-    )
-
-    expect(res.status).to.be.equal(200)
-    this.expectEmptyResponseBody(res.data)
-    expect(res.headers).to.contain.keys(['authorization', 'refresh-token'])
-    // A new account starts empty; nothing is seeded on first sign-in.
-    expect(projects.length).to.be.equal(0)
-  }
-
-  @test()
-  async loginSolana_failsWhenNonceWasNeverRequested() {
-    const client = this.apiClient()
-    const { address, signature } = buildSolanaAuthPayload({
-      nonce: 'never-issued-solana-nonce',
-    })
-
-    let error: unknown
-
-    try {
-      await authControllerLoginSolana({
-        client,
-        body: { signature, address },
-        throwOnError: true,
-      })
-    } catch (e: unknown) {
-      error = e
-    }
-
-    if (!axios.isAxiosError(error)) throw error
-    expect(error).to.be.ok
-    expect(error.response?.status).to.be.equal(401)
-    expect(String(error.response?.data?.message ?? '')).to.match(/nonce/i)
-  }
-
-  @test()
-  async loginSolana_failsWhenSignatureIsInvalid() {
-    const client = this.apiClient()
-    const setup = buildSolanaAuthPayload({ nonce: 'setup' })
-    const nonce = await runPromise(this.authenticator.getNonce(setup.address))
-    const { address, signature } = buildSolanaAuthPayloadWithInvalidSignature({
-      nonce,
-      secretKey: setup.secretKey,
-    })
-
-    let error: unknown
-
-    try {
-      await authControllerLoginSolana({
-        client,
-        body: { signature, address },
-        throwOnError: true,
-      })
-    } catch (e: unknown) {
-      error = e
-    }
-
-    if (!axios.isAxiosError(error)) throw error
-    expect(error).to.be.ok
-    expect(error.response?.status).to.be.equal(401)
-    expect(String(error.response?.data?.message ?? '')).to.match(/signature/i)
-  }
-
-  @test()
-  async loginSolana_failsWhenNonceAlreadyConsumed() {
-    const client = this.apiClient()
-    const setup = buildSolanaAuthPayload({ nonce: 'setup' })
-    const nonce = await runPromise(this.authenticator.getNonce(setup.address))
-    const { address, signature } = buildSolanaAuthPayload({
-      nonce,
-      secretKey: setup.secretKey,
-    })
-    const body = { signature, address }
-
-    await authControllerLoginSolana({
-      client,
-      body,
-      throwOnError: true,
-    })
-
-    let error: unknown
-
-    try {
-      await authControllerLoginSolana({
-        client,
-        body,
-        throwOnError: true,
-      })
-    } catch (e: unknown) {
-      error = e
-    }
-
-    if (!axios.isAxiosError(error)) throw error
-    expect(error).to.be.ok
-    expect(error.response?.status).to.be.equal(401)
-    expect(String(error.response?.data?.message ?? '')).to.match(/nonce/i)
-  }
-
-  @test()
-  async loginSolana_failsValidationForEmptyFields() {
-    const client = this.apiClient()
-
-    let error: unknown
-
-    try {
-      await authControllerLoginSolana({
-        client,
-        body: {
-          signature: '',
-          address: '',
-        },
-        throwOnError: true,
-      })
-    } catch (e: unknown) {
-      error = e
-    }
-
-    if (!axios.isAxiosError(error)) throw error
-    expect(error).to.be.ok
-    expect(error.response?.status).to.be.equal(400)
-    expect(error.response?.data).to.have.property('errors')
-  }
-
-  @test()
   async nonce() {
     const client = this.apiClient()
     const account = web3.eth.accounts.create()
@@ -357,134 +202,6 @@ export class AuthControllerTest extends BaseControllerTest {
 
     expect(res.status).to.be.equal(200)
     expect(res.data.length).to.be.eq(32)
-  }
-
-  @test()
-  async tonNonce() {
-    const client = this.apiClient()
-
-    const res = await authControllerTonNonce({
-      client,
-      throwOnError: true,
-    })
-
-    expect(res.status).to.be.equal(200)
-    expect(res.data.length).to.be.eq(32)
-  }
-
-  @test()
-  async loginTon() {
-    const client = this.apiClient()
-    const domain = getTestTonDomain(this.parameters)
-    const nonce = await runPromise(this.authenticator.getTonNonce())
-    const { payload } = await buildTonAuthPayload({ nonce, domain })
-
-    const res = await authControllerCheckProofHandler({
-      client,
-      body: payload,
-      throwOnError: true,
-    })
-
-    const user = await runPromise(
-      this.userRepository.findByAddressPublicOrFail(payload.address),
-    )
-    const projects = await runPromise(
-      this.projectRepository.findBy({ where: { user: { id: user.id } } }),
-    )
-
-    expect(res.status).to.be.equal(200)
-    this.expectEmptyResponseBody(res.data)
-    expect(res.headers).to.contain.keys(['authorization', 'refresh-token'])
-    // A new account starts empty; nothing is seeded on first sign-in.
-    expect(projects.length).to.be.equal(0)
-  }
-
-  @test()
-  async loginTon_failsWhenNonceWasNeverRequested() {
-    const client = this.apiClient()
-    const domain = getTestTonDomain(this.parameters)
-    const { payload } = await buildTonAuthPayload({
-      nonce: 'never-issued-ton-nonce-http',
-      domain,
-    })
-
-    let error: unknown
-
-    try {
-      await authControllerCheckProofHandler({
-        client,
-        body: payload,
-        throwOnError: true,
-      })
-    } catch (e: unknown) {
-      error = e
-    }
-
-    if (!axios.isAxiosError(error)) throw error
-    expect(error).to.be.ok
-    expect(error.response?.status).to.be.equal(401)
-    expect(String(error.response?.data?.message ?? '')).to.match(/nonce/i)
-  }
-
-  @test()
-  async loginTon_failsWhenSignatureIsInvalid() {
-    const client = this.apiClient()
-    const domain = getTestTonDomain(this.parameters)
-    const nonce = await runPromise(this.authenticator.getTonNonce())
-    const payload = await buildTonAuthPayloadWithInvalidSignature({
-      nonce,
-      domain,
-    })
-
-    let error: unknown
-
-    try {
-      await authControllerCheckProofHandler({
-        client,
-        body: payload,
-        throwOnError: true,
-      })
-    } catch (e: unknown) {
-      error = e
-    }
-
-    if (!axios.isAxiosError(error)) throw error
-    expect(error).to.be.ok
-    expect(error.response?.status).to.be.equal(401)
-    expect(String(error.response?.data?.message ?? '')).to.match(/signature/i)
-  }
-
-  @test()
-  async loginTon_failsValidationForEmptyFields() {
-    const client = this.apiClient()
-
-    let error: unknown
-
-    try {
-      await authControllerCheckProofHandler({
-        client,
-        body: {
-          address: '',
-          network: '',
-          public_key: '',
-          proof: {
-            timestamp: 0,
-            domain: { lengthBytes: 0, value: '' },
-            payload: '',
-            signature: '',
-            state_init: '',
-          },
-        },
-        throwOnError: true,
-      })
-    } catch (e: unknown) {
-      error = e
-    }
-
-    if (!axios.isAxiosError(error)) throw error
-    expect(error).to.be.ok
-    expect(error.response?.status).to.be.equal(400)
-    expect(error.response?.data).to.have.property('errors')
   }
 
   @test()

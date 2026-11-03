@@ -4,150 +4,23 @@
  * Pure business logic - all state lives in auth.stores.ts, events in auth.events.
  */
 
-import { combine, sample, split } from 'effector'
+import { sample } from 'effector'
 import i18n from 'i18next'
 
-import {
-  ethConnectedPub,
-  loginEthFx,
-  openEthModalFx,
-  signEthFx,
-  disconnectEthFx,
-} from './eth.model'
+import { loginEthFx } from './eth.model'
+import { loginGoogleFx } from './google.model'
 import {
   clearTokensFx,
   fetchStatusFx,
-  getNonceFx,
   LOCAL_STORAGE_ACCESS_TOKEN,
   saveTokensFx,
   writeAuthenticatedToLsFx,
 } from './profile.effects'
-import { initAuth, login, logout, setInitialized } from './profile.events'
+import { initAuth, logout, setInitialized } from './profile.events'
 import { saveProfileMutation } from './profile.mutations'
-import {
-  $authenticated,
-  $ethProviderData,
-  $initialized,
-  $loginMode,
-} from './profile.stores'
-import {
-  disconnectSolanaFx,
-  loginSolanaFx,
-  openSolanaModalFx,
-  signSolanaFx,
-  solanaConnectedPub,
-  solanaConnectError,
-} from './solana.model'
-import {
-  disconnectTonFx,
-  loginTonFx,
-  openTonModalFx,
-  tonAuthError,
-  tonAuthSuccess,
-} from './ton.model'
+import { $authenticated, $initialized } from './profile.stores'
 
-import type { SolanaNonceParams } from './types'
-
-import { getErrorMessage, showToast, suppressGlobalErrorToast } from '@/shared'
-
-/**
- * Route login event to the appropriate wallet flow based on selected provider.
- * ETH: open wallet modal first, nonce fetched after connection established.
- * TON: fetch nonce first, then open modal with proof request attached.
- */
-split({
-  source: login,
-  match: {
-    eth: (mode) => mode === 'eth',
-    ton: (mode) => mode === 'ton',
-    solana: (mode) => mode === 'solana',
-  },
-  cases: {
-    eth: openEthModalFx,
-    ton: getNonceFx.prepend(() => ({
-      mode: 'ton',
-    })),
-    solana: openSolanaModalFx,
-  },
-})
-
-/**
- * TON flow: after nonce received, open wallet modal with proof parameters.
- * Wallet will sign the nonce and return proof payload.
- */
-sample({
-  clock: getNonceFx.done,
-  filter: ({ params }) => params.mode === 'ton',
-  fn: ({ result }) => ({ nonce: result }),
-  target: openTonModalFx,
-})
-
-/**
- * ETH flow: after wallet connects, and we're in login mode (no provider data yet),
- * fetch nonce for the connected address to sign.
- */
-sample({
-  clock: ethConnectedPub,
-  source: combine($ethProviderData, $authenticated),
-  filter: ([ethProviderData, authenticated]) =>
-    ethProviderData === null && !authenticated,
-  fn: (_, eventData) => ({
-    mode: 'eth' as const,
-    address: eventData.address,
-    signer: eventData.signer,
-  }),
-  target: [getNonceFx, $ethProviderData],
-})
-
-/**
- * ETH flow: after nonce received, sign it with the connected wallet.
- */
-sample({
-  clock: getNonceFx.done,
-  filter: (_, { params }) => params.mode === 'eth',
-  source: $ethProviderData,
-  fn: (providerData, { result }) => ({
-    nonce: result,
-    signer: providerData?.signer,
-    ethersProvider: providerData?.ethersProvider,
-  }),
-  target: [signEthFx],
-})
-
-/**
- * ETH flow: after message signed, send signature to backend for verification.
- */
-sample({
-  clock: signEthFx.done,
-  source: $ethProviderData,
-  filter: (ethProviderData, { result: signature }) =>
-    Boolean(ethProviderData?.address && signature),
-  fn: (ethProviderData, { result: signature }) => ({
-    address: ethProviderData?.address || '',
-    signature,
-  }),
-  target: loginEthFx,
-})
-
-/**
- * Solana flow: after wallet connected (and user intends to log in),
- * fetch nonce for the connected address, sign it, then verify on backend.
- */
-sample({
-  clock: solanaConnectedPub,
-  source: combine($authenticated, $loginMode),
-  filter: ([authenticated, mode]) => !authenticated && mode === 'solana',
-  fn: (_, { address }): SolanaNonceParams => ({ address, mode: 'solana' }),
-  target: getNonceFx,
-})
-
-/**
- * TON flow: after wallet provides valid proof, verify it on backend.
- */
-sample({
-  clock: tonAuthSuccess,
-  target: loginTonFx,
-})
+import { showToast, suppressGlobalErrorToast } from '@/shared'
 
 /**
  * Persist auth flag to localStorage for backward compatibility.
@@ -158,18 +31,11 @@ sample({
   target: writeAuthenticatedToLsFx,
 })
 
-sample({
-  clock: initAuth,
-  source: $authenticated,
-  filter: (auth) => !auth,
-  target: [disconnectEthFx, disconnectTonFx, disconnectSolanaFx],
-})
-
 /**
- * After successful login (either provider), persist tokens to localStorage.
+ * After successful login, persist tokens to localStorage.
  */
 sample({
-  clock: [loginEthFx.doneData, loginTonFx.doneData, loginSolanaFx.doneData],
+  clock: [loginEthFx.doneData, loginGoogleFx.doneData],
   target: saveTokensFx,
 })
 
@@ -182,46 +48,15 @@ sample({
 })
 
 /**
- * Logout flow: disconnect both wallet providers, clear tokens
+ * Logout flow: clear tokens
  */
 sample({
   clock: logout,
-  target: [disconnectTonFx, disconnectEthFx, disconnectSolanaFx, clearTokensFx],
+  target: clearTokensFx,
 })
 
 sample({
-  clock: getNonceFx.done,
-  filter: ({ params }) => params.mode === 'solana',
-  fn: ({ result }) => result,
-  target: signSolanaFx,
-})
-
-sample({
-  clock: signSolanaFx.doneData,
-  target: loginSolanaFx,
-})
-
-sample({
-  clock: signSolanaFx.fail,
-  target: solanaConnectError,
-})
-
-sample({
-  clock: [
-    // A nonce that cannot be fetched is a failed login, not a silent stall:
-    // getNonceFx used to swallow HTTP errors and resolve with undefined.
-    getNonceFx.fail,
-    signEthFx.fail,
-    loginEthFx.fail,
-    tonAuthError,
-    openTonModalFx.fail,
-    openEthModalFx.fail,
-    openSolanaModalFx.fail,
-    loginTonFx.fail,
-    signSolanaFx.fail,
-    loginSolanaFx.fail,
-    solanaConnectError,
-  ],
+  clock: [loginEthFx.fail, loginGoogleFx.fail],
   target: logout,
 })
 
@@ -255,88 +90,10 @@ saveProfileMutation.finished.failure.watch(({ error }) => {
   suppressGlobalErrorToast(error)
 })
 
-/**
- * Toast notifications for auth events.
- * Replace with proper UI feedback or remove if handled by components.
- */
-
-loginTonFx.done.watch(() => {
-  showToast('success', {
-    message: 'Ton login successful.',
-    position: 'top-center',
-  })
-})
-
-for (const effect of [openEthModalFx, openSolanaModalFx]) {
-  effect.fail.watch(() => {
-    showToast('error', {
-      message: i18n.t('signIn.walletLoadFailed'),
-      position: 'top-center',
-    })
-  })
-}
-
-openTonModalFx.fail.watch(({ error }) => {
-  const message = getErrorMessage(error, 'Ton login error')
-
-  if (!message) {
-    return
-  }
-
+loginGoogleFx.fail.watch(({ error }) => {
+  suppressGlobalErrorToast(error)
   showToast('error', {
-    message,
-    position: 'top-center',
-  })
-})
-
-loginTonFx.fail.watch(({ error }) => {
-  const message = getErrorMessage(error, 'Ton login error')
-
-  if (!message) {
-    return
-  }
-
-  showToast('error', {
-    message,
-    position: 'top-center',
-  })
-})
-
-tonAuthError.watch(() => {
-  showToast('error', {
-    message: 'Ton auth error.',
-    position: 'top-center',
-  })
-})
-
-loginEthFx.done.watch(() => {
-  showToast('success', {
-    message: 'Ethereum login successful.',
-    position: 'top-center',
-  })
-})
-
-sample({
-  clock: [signEthFx.fail, loginEthFx.fail],
-}).watch(() => {
-  showToast('error', {
-    message: 'Ethereum login error.',
-    position: 'top-center',
-  })
-})
-
-loginSolanaFx.done.watch(() => {
-  showToast('success', {
-    message: 'Solana login successful.',
-    position: 'top-center',
-  })
-})
-
-sample({
-  clock: [signSolanaFx.fail, loginSolanaFx.fail, solanaConnectError],
-}).watch(() => {
-  showToast('error', {
-    message: 'Solana connection error.',
+    message: i18n.t('signIn.errors.google'),
     position: 'top-center',
   })
 })
@@ -344,24 +101,21 @@ sample({
 // eslint-disable-next-line
 ;(window as any)['logout'] = logout
 
-export { type LoginMode, type SolanaWalletState } from './types'
-export {
-  SolanaWalletGate,
-  $solanaWalletMounted,
-  solanaWalletLoadFailed,
-} from './solana.model'
-
-export { initAuth, login, logout } from './profile.events'
+export { initAuth, logout } from './profile.events'
 export { clearTokensFx, fetchStatusFx, saveTokensFx } from './profile.effects'
-export {
-  $authenticated,
-  $initialized,
-  $pending,
-  $normalizedUser as $user,
-} from './profile.stores'
+export { $authenticated, $initialized, $pending, $user } from './profile.stores'
 export { saveProfileMutation } from './profile.mutations'
-// `loginEthFx` is the shared tail of every Ethereum sign-in: the browser
-// wallet feature signs the nonce itself and hands the signature here, so it
-// gets the same token handling, status fetch and failure path as a wallet app.
-export { loginEthFx, subscribeEthEventsFx } from './eth.model'
-export { subscribeTonUiEventsFx } from './ton.model'
+// `loginEthFx` is the tail of the browser wallet's sign-in: that feature signs
+// the nonce itself and hands the signature here, so it gets the same token
+// handling, status fetch and failure path as Google.
+export { loginEthFx } from './eth.model'
+export {
+  $googleClientId,
+  $googleScriptAttempt,
+  $googleScriptState,
+  fetchAuthMethodsFx,
+  googleScriptLoaded,
+  googleScriptLoadFailed,
+  loginGoogleFx,
+  retryGoogleScript,
+} from './google.model'

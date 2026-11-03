@@ -111,6 +111,7 @@ export type Project = {
 
 export type User = {
     address?: string;
+    connectedWallet?: string | null;
     email?: string | null;
     phone?: string;
     name?: string;
@@ -131,6 +132,8 @@ export type User = {
     country?: string;
     roles?: Array<'ROLE_USER'>;
     premium?: boolean;
+    readonly payWallet?: string | null;
+    readonly mailEmail?: string | null;
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
@@ -160,20 +163,21 @@ export type AgentCredentialDto = {
 };
 
 export type AgentSearchDto = {
-    projectId: string;
+    projectId?: string;
     fromAt?: string | string;
     toAt?: string | string;
     offset?: number;
 };
 
 export type StatisticsQueryDto = {
-    projectIds: Array<string>;
+    projectIds?: Array<string>;
     from: string;
     to: string;
     timeZone: string;
     userIds?: Array<string>;
     invoiceId?: string;
     app?: string;
+    bucket?: 'day' | 'hour';
 };
 
 export type AuthForgotPasswordDto = {
@@ -185,9 +189,12 @@ export type AuthEthLoginDto = {
     address: string;
 };
 
-export type AuthSolanaLoginDto = {
-    signature: string;
-    address: string;
+export type AuthGoogleLoginDto = {
+    credential: string;
+};
+
+export type AuthMethodsDto = {
+    googleClientId?: string;
 };
 
 export type AuthNonceRequestDto = {
@@ -198,26 +205,6 @@ export type AuthRefreshTokenDto = {
     refreshToken: string;
 };
 
-export type AuthTonProofDomainDto = {
-    lengthBytes: number;
-    value: string;
-};
-
-export type AuthTonProofPayloadDto = {
-    timestamp: number;
-    domain: AuthTonProofDomainDto;
-    payload: string;
-    signature: string;
-    state_init: string;
-};
-
-export type AuthTonLoginDto = {
-    address: string;
-    network: string;
-    public_key: string;
-    proof: AuthTonProofPayloadDto;
-};
-
 export type RedactionRuleDto = {
     field: 'title' | 'domain';
     match: 'contains' | 'regex';
@@ -226,6 +213,15 @@ export type RedactionRuleDto = {
 
 export type UserSettingsDto = {
     personalRedactionRules: Array<RedactionRuleDto>;
+};
+
+export type ConnectedWalletNonceDto = {
+    address: string;
+};
+
+export type ConnectedWalletConfirmDto = {
+    address: string;
+    signature: string;
 };
 
 export type SearchDto = {
@@ -406,6 +402,7 @@ export type UserSearch = {
     createdAt?: string | string;
     updatedAt?: string | string;
     address?: string;
+    connectedWallet?: string | null;
     email?: string | null;
     phone?: string;
     name?: string;
@@ -423,8 +420,7 @@ export type UserSearch = {
     tz?: string;
     city?: string;
     country?: string;
-    roles?: Array<'ROLE_USER'>;
-    premium?: boolean;
+    readonly payWallet?: string | null;
 };
 
 /**
@@ -448,7 +444,6 @@ export type UserEdit = {
     tz?: string;
     city?: string;
     country?: string;
-    roles?: Array<'ROLE_USER'>;
 };
 
 /**
@@ -477,9 +472,7 @@ export type ProjectSearch = {
     user?: UserSearch;
     invoices?: InvoiceSearch;
     time?: TimeSearch;
-    agents?: Array<{
-        [key: string]: unknown;
-    }>;
+    agents?: Array<unknown>;
 };
 
 /**
@@ -588,6 +581,165 @@ export type InvoiceSearch = {
     updatedAt?: string | string;
     project?: ProjectSearch;
     user?: UserSearch;
+    fromAt?: string | string;
+    toAt?: string | string;
+    amountCents?: string;
+    state?: string;
+    lines?: Array<{
+        kind: 'human' | 'agent';
+        agentId?: string;
+        name: string;
+        basis: 'tracked' | 'active';
+        minutes: number;
+        activeMinutes?: number;
+        manualMinutes?: number;
+        assistedMinutes?: number;
+        waitMinutes?: number;
+        unclassifiedMinutes?: number;
+        rateHourCents: number | null;
+        amountCents: number;
+        rateChanges: Array<{
+            at?: string;
+            fromCents?: number;
+            toCents?: number;
+            minutesBefore?: number;
+        }>;
+    }> | null;
+    rejectionReason?: string;
+    rejectedAt?: string | string;
+    paidAt?: string | string;
+};
+
+export type UserWritable = {
+    address?: string;
+    connectedWallet?: string | null;
+    email?: string | null;
+    phone?: string;
+    name?: string;
+    title?: string;
+    company?: string;
+    bio?: string;
+    rate?: string;
+    skills?: string;
+    facebook?: string;
+    linkedIn?: string;
+    twitter?: string;
+    instagram?: string;
+    youtube?: string;
+    telegram?: string;
+    whatsapp?: string;
+    tz?: string;
+    city?: string;
+    country?: string;
+    roles?: Array<'ROLE_USER'>;
+    premium?: boolean;
+    id?: string;
+    createdAt?: string | string;
+    updatedAt?: string | string;
+};
+
+/**
+ * Subset of User serialized with class-transformer group "search".
+ */
+export type UserSearchWritable = {
+    id?: string;
+    createdAt?: string | string;
+    updatedAt?: string | string;
+    address?: string;
+    connectedWallet?: string | null;
+    email?: string | null;
+    phone?: string;
+    name?: string;
+    title?: string;
+    company?: string;
+    bio?: string;
+    rate?: string;
+    skills?: string;
+    facebook?: string;
+    linkedIn?: string;
+    twitter?: string;
+    instagram?: string;
+    youtube?: string;
+    telegram?: string;
+    tz?: string;
+    city?: string;
+    country?: string;
+};
+
+/**
+ * Subset of Project serialized with class-transformer group "search".
+ */
+export type ProjectSearchWritable = {
+    id?: string;
+    createdAt?: string | string;
+    updatedAt?: string | string;
+    title?: string;
+    workerAddresses?: Array<string>;
+    viewerAddresses?: Array<string>;
+    workers?: Array<UserSearchWritable>;
+    viewers?: Array<UserSearchWritable>;
+    trackScreenshots?: boolean;
+    trackProcesses?: boolean;
+    trackAgents?: boolean;
+    trackWindowTitles?: boolean;
+    trackBrowserDomains?: boolean;
+    allowManualTime?: boolean;
+    reviewWindowHours?: number;
+    screenshotRetentionDays?: number | null;
+    text?: string;
+    rateHour?: string;
+    state?: string;
+    user?: UserSearchWritable;
+    invoices?: InvoiceSearchWritable;
+    time?: TimeSearchWritable;
+    agents?: Array<unknown>;
+};
+
+/**
+ * Subset of Time serialized with class-transformer group "search".
+ */
+export type TimeSearchWritable = {
+    id?: string;
+    createdAt?: string | string;
+    updatedAt?: string | string;
+    project?: ProjectSearchWritable;
+    user?: UserSearchWritable;
+    isPaid?: boolean;
+    note?: string;
+    screenshot?: string;
+    processes?: Array<unknown>;
+    appsStatus?: string | null;
+    appsReason?: string | null;
+    appsTruncated?: boolean | null;
+    source?: string | null;
+    publishedAt?: string | null;
+    detailPendingReview?: boolean | null;
+    apps?: Array<{
+        name?: string;
+        seconds?: number;
+        titles?: Array<{
+            title?: string | null;
+            domain?: string | null;
+            seconds?: number;
+        }>;
+    }>;
+    keyboardKeys?: number;
+    minutesActive?: number;
+    mouseKeys?: number;
+    mouseDistance?: number;
+    fromAt?: string | string;
+    toAt?: string | string;
+};
+
+/**
+ * Subset of Invoice serialized with class-transformer group "search".
+ */
+export type InvoiceSearchWritable = {
+    id?: string;
+    createdAt?: string | string;
+    updatedAt?: string | string;
+    project?: ProjectSearchWritable;
+    user?: UserSearchWritable;
     fromAt?: string | string;
     toAt?: string | string;
     amountCents?: string;
@@ -844,6 +996,76 @@ export type StatisticsControllerOverviewResponses = {
     200: unknown;
 };
 
+export type StatisticsControllerTimeDailyData = {
+    body: StatisticsQueryDto;
+    path?: never;
+    query?: never;
+    url: '/api/statistics/time/daily';
+};
+
+export type StatisticsControllerTimeDailyResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type StatisticsControllerTimeHourlyData = {
+    body: StatisticsQueryDto;
+    path?: never;
+    query?: never;
+    url: '/api/statistics/time/hourly';
+};
+
+export type StatisticsControllerTimeHourlyResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type StatisticsControllerInsightsMeData = {
+    body: StatisticsQueryDto;
+    path?: never;
+    query?: never;
+    url: '/api/statistics/insights/me';
+};
+
+export type StatisticsControllerInsightsMeResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type StatisticsControllerAgentsDailyData = {
+    body: StatisticsQueryDto;
+    path?: never;
+    query?: never;
+    url: '/api/statistics/agents/daily';
+};
+
+export type StatisticsControllerAgentsDailyResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type StatisticsControllerTeamData = {
+    body: StatisticsQueryDto;
+    path?: never;
+    query?: never;
+    url: '/api/statistics/team';
+};
+
+export type StatisticsControllerTeamResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
 export type StatisticsControllerAppsData = {
     body: StatisticsQueryDto;
     path: {
@@ -885,27 +1107,29 @@ export type AuthControllerLoginEthResponses = {
     200: unknown;
 };
 
-export type AuthControllerLoginSolanaData = {
-    body: AuthSolanaLoginDto;
+export type AuthControllerLoginGoogleData = {
+    body: AuthGoogleLoginDto;
     path?: never;
     query?: never;
-    url: '/api/auth/solana';
+    url: '/api/auth/google';
 };
 
-export type AuthControllerLoginSolanaResponses = {
+export type AuthControllerLoginGoogleResponses = {
     200: unknown;
 };
 
-export type AuthControllerCheckProofHandlerData = {
-    body: AuthTonLoginDto;
+export type AuthControllerMethodsData = {
+    body?: never;
     path?: never;
     query?: never;
-    url: '/api/auth/ton';
+    url: '/api/auth/methods';
 };
 
-export type AuthControllerCheckProofHandlerResponses = {
-    200: unknown;
+export type AuthControllerMethodsResponses = {
+    200: AuthMethodsDto;
 };
+
+export type AuthControllerMethodsResponse = AuthControllerMethodsResponses[keyof AuthControllerMethodsResponses];
 
 export type AuthControllerNonceData = {
     body: AuthNonceRequestDto;
@@ -919,19 +1143,6 @@ export type AuthControllerNonceResponses = {
 };
 
 export type AuthControllerNonceResponse = AuthControllerNonceResponses[keyof AuthControllerNonceResponses];
-
-export type AuthControllerTonNonceData = {
-    body?: never;
-    path?: never;
-    query?: never;
-    url: '/api/auth/ton/nonce';
-};
-
-export type AuthControllerTonNonceResponses = {
-    200: string;
-};
-
-export type AuthControllerTonNonceResponse = AuthControllerTonNonceResponses[keyof AuthControllerTonNonceResponses];
 
 export type AuthControllerRefreshData = {
     body: AuthRefreshTokenDto;
@@ -992,10 +1203,10 @@ export type UserControllerSaveSettingsResponse = UserControllerSaveSettingsRespo
 export type UserControllerReadData = {
     body?: never;
     path: {
-        address: User;
+        id: UserWritable;
     };
     query?: never;
-    url: '/api/user/{address}/address';
+    url: '/api/user/{id}';
 };
 
 export type UserControllerReadErrors = {
@@ -1015,6 +1226,45 @@ export type UserControllerReadResponses = {
 };
 
 export type UserControllerReadResponse = UserControllerReadResponses[keyof UserControllerReadResponses];
+
+export type UserControllerConnectedWalletNonceData = {
+    body: ConnectedWalletNonceDto;
+    path?: never;
+    query?: never;
+    url: '/api/user/connected-wallet/nonce';
+};
+
+export type UserControllerConnectedWalletNonceResponses = {
+    200: string;
+};
+
+export type UserControllerConnectedWalletNonceResponse = UserControllerConnectedWalletNonceResponses[keyof UserControllerConnectedWalletNonceResponses];
+
+export type UserControllerDisconnectWalletData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/user/connected-wallet';
+};
+
+export type UserControllerDisconnectWalletResponses = {
+    204: void;
+};
+
+export type UserControllerDisconnectWalletResponse = UserControllerDisconnectWalletResponses[keyof UserControllerDisconnectWalletResponses];
+
+export type UserControllerConnectWalletData = {
+    body: ConnectedWalletConfirmDto;
+    path?: never;
+    query?: never;
+    url: '/api/user/connected-wallet';
+};
+
+export type UserControllerConnectWalletResponses = {
+    204: void;
+};
+
+export type UserControllerConnectWalletResponse = UserControllerConnectWalletResponses[keyof UserControllerConnectWalletResponses];
 
 export type UserControllerEditData = {
     body: UserEdit;

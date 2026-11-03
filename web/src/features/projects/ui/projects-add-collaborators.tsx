@@ -19,7 +19,7 @@ import {
   Button,
   Hint,
   Input,
-  isValidWalletAddress,
+  isValidAccountAddress,
   normalizeAddress,
   Text,
   Tooltip,
@@ -93,7 +93,7 @@ export const ProjectsAddCollaborators = ({
       return t('project.createModal.collaborators.errorRequired')
     }
 
-    if (!isValidWalletAddress(address)) {
+    if (!isValidAccountAddress(address)) {
       return t('project.createModal.collaborators.errorInvalid')
     }
 

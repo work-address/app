@@ -5,7 +5,7 @@ import { Project } from '@/entity/project'
 import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
 import { Entitlement } from '@/service/entitlement'
-import { WalletAddress } from '@/service/wallet-address'
+import { AccountAddress } from '@/service/account-address'
 
 export type ProjectRole = 'owner' | 'worker' | 'viewer'
 
@@ -148,12 +148,10 @@ export class ProjectAccess {
   }
 
   private isListed(addresses: string[] | undefined, user: User): boolean {
-    // Canonical on both sides: the two TON spellings of one account must
-    // compare equal, and lowercasing alone does not achieve that.
-    const target = WalletAddress.toCanonical(user.address ?? '')
+    const target = AccountAddress.toCanonical(user.address ?? '')
 
     return (addresses ?? []).some(
-      (address) => WalletAddress.toCanonical(address) === target,
+      (address) => AccountAddress.toCanonical(address) === target,
     )
   }
 
@@ -164,9 +162,9 @@ export class ProjectAccess {
     atLeast: 'worker' | 'viewer',
     gated: boolean,
   ): void {
-    const userAddress = WalletAddress.toCanonical(user.address)
+    const userAddress = AccountAddress.toCanonical(user.address)
     const isOnList = (list: string) =>
-      `:userAddress = ANY(SELECT ${WalletAddress.canonicalSql('address')} FROM unnest(COALESCE(${project}.${list}, '{}')) AS address)`
+      `:userAddress = ANY(SELECT ${AccountAddress.canonicalSql('address')} FROM unnest(COALESCE(${project}.${list}, '{}')) AS address)`
 
     qb.andWhere(
       new Brackets((access) => {

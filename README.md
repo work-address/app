@@ -34,7 +34,7 @@ You will be asked for:
 
 | Prompt | Default | Notes |
 |---|---|---|
-| `APP_PUBLIC_URL` | `http://localhost:8000` | Browser URL this install is served at. Sets the allowed TON wallet-proof domain. |
+| `APP_PUBLIC_URL` | `http://localhost:8000` | Browser URL this install is served at. |
 | `APP_DB_HOST` | `host.docker.internal` | |
 | `APP_DB_PORT` | `5432` | |
 | `APP_DB_USERNAME` | `postgres` | |
@@ -42,6 +42,8 @@ You will be asked for:
 | `APP_DB_NAME` | `address_work` | Must already exist. |
 | `APP_JWT_SECRET` | — | Required, min 32 chars. Input is hidden. |
 | `APP_SENTRY` | empty | Optional. |
+
+Google sign-in is off unless you set `APP_GOOGLE_CLIENT_ID` in the environment before running the installer. Without it, sign-in offers only the browser wallet, which needs nothing outside this deployment. To turn it on, create an OAuth client in Google Cloud and add `APP_PUBLIC_URL` as an allowed JavaScript origin.
 
 The web bundle is always built with an empty `VITE_API_URL`, so the browser calls `/api` on whatever origin served the page. That makes the install work at any hostname or port without a rebuild.
 

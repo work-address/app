@@ -4,11 +4,9 @@ import {
   ValidatorConstraintInterface,
   isEmail,
 } from 'class-validator'
-import { Not } from 'typeorm'
-import { getDataSource } from '@/connector/data-source'
 import { User } from '@/entity/user'
 
-@ValidatorConstraint({ name: 'EmailConstraint', async: true })
+@ValidatorConstraint({ name: 'EmailConstraint' })
 export class EmailConstraint implements ValidatorConstraintInterface {
   private message: string
 
@@ -22,28 +20,7 @@ export class EmailConstraint implements ValidatorConstraintInterface {
         return false
       }
 
-      // Uniqueness is only decidable against a known account. The request
-      // body is validated before it is merged onto the current user, and at
-      // that point the account's own row would read as a clash and refuse a
-      // save that changed nothing about the email. The merged entity is
-      // validated again with its id in UserManager, which is where the lookup
-      // can exclude the right row.
-      if (!(args.object as User).id) {
-        return true
-      }
-
-      return getDataSource()
-        .getRepository(User)
-        .find({
-          where: this.buildWhere(value, args),
-        })
-        .then((searchResult) => {
-          if (searchResult.length > 0) {
-            this.message = 'Email address is already taken'
-            return false
-          }
-          return true
-        })
+      return true
     }
 
     if (phone) {
@@ -55,12 +32,5 @@ export class EmailConstraint implements ValidatorConstraintInterface {
 
   defaultMessage() {
     return this.message
-  }
-
-  private buildWhere(value: string, args: ValidationArguments) {
-    return {
-      email: value,
-      id: Not((args.object as User).id),
-    }
   }
 }

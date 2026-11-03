@@ -3,15 +3,13 @@ import {
   ValidatorConstraint,
   ValidatorConstraintInterface,
 } from 'class-validator'
-import { Not } from 'typeorm'
-import { getDataSource } from '@/connector/data-source'
 import { User } from '@/entity/user'
 
-@ValidatorConstraint({ name: 'PhoneConstraint', async: true })
+@ValidatorConstraint({ name: 'PhoneConstraint' })
 export class PhoneConstraint implements ValidatorConstraintInterface {
   private message: string
 
-  validate(value: string, args: ValidationArguments) {
+  validate(_value: string, args: ValidationArguments) {
     const phone = (args.object as User).phone
 
     // E.164 Notation for Phone Numbers
@@ -24,18 +22,7 @@ export class PhoneConstraint implements ValidatorConstraintInterface {
         return false
       }
 
-      return getDataSource()
-        .getRepository(User)
-        .find({
-          where: this.buildWhere(value, args),
-        })
-        .then((searchResult) => {
-          if (searchResult.length > 0) {
-            this.message = 'Phone number already exists.'
-            return false
-          }
-          return true
-        })
+      return true
     }
 
     this.message = 'Phone number is required.'
@@ -44,20 +31,5 @@ export class PhoneConstraint implements ValidatorConstraintInterface {
 
   defaultMessage() {
     return this.message
-  }
-
-  private buildWhere(value: string, args: ValidationArguments) {
-    const userId = (args.object as User).id
-
-    if (userId) {
-      return {
-        phone: value,
-        id: Not(userId),
-      }
-    }
-
-    return {
-      phone: value,
-    }
   }
 }

@@ -9,7 +9,7 @@ import { User } from '@/entity/user'
 import { ProjectAccessAddresses } from '@/model/dto/project'
 import { RepoEffect } from '@/repository/abstract-repository-template'
 import { Entitlement } from '@/service/entitlement'
-import { WalletAddress } from '@/service/wallet-address'
+import { AccountAddress } from '@/service/account-address'
 
 @injectable()
 export class ProjectManager {
@@ -112,21 +112,27 @@ export class ProjectManager {
     data: ProjectAccessAddresses,
     current: ProjectAccessAddresses,
   ): void {
-    // Canonicalised on the way in, so an address pasted straight out of a
-    // wallet works. TON shows people the friendly form (`UQ…`) while access is
-    // granted by comparing against the raw form stored on User.address - before
-    // this, such an entry validated, saved, and then granted nothing at all.
-    const ownerAddress = WalletAddress.toCanonical(project.user.address)
-    // Stored as typed apart from TON, which collapses to raw. Deduped on the
-    // canonical form so the same account entered twice in two spellings is one
-    // entry, while the surviving string keeps an EVM address's checksum casing.
+    const ownerAddress = AccountAddress.toCanonical(project.user.address)
+    // Deduped on the canonical form, so one account entered twice is one entry,
+    // while the surviving string keeps an EVM address's checksum casing.
     const forStorage = (addresses: string[]): string[] => {
       const seen = new Set<string>()
 
       return addresses
-        .map((address) => WalletAddress.toStorage(address))
+        .map((address) => {
+          if (
+            !AccountAddress.isEvm(address) &&
+            !AccountAddress.isEmail(address)
+          ) {
+            throw new BadRequestError(
+              'A collaborator is an EVM address or an email',
+            )
+          }
+
+          return AccountAddress.toStorage(address)
+        })
         .filter((address) => {
-          const key = WalletAddress.toCanonical(address)
+          const key = AccountAddress.toCanonical(address)
 
           if (seen.has(key) || key === ownerAddress) {
             return false
@@ -162,11 +168,11 @@ export class ProjectManager {
 
   private static addsAddress(next: string[], current: string[]): boolean {
     const existing = new Set(
-      current.map((address) => WalletAddress.toCanonical(address)),
+      current.map((address) => AccountAddress.toCanonical(address)),
     )
 
     return next.some(
-      (address) => !existing.has(WalletAddress.toCanonical(address)),
+      (address) => !existing.has(AccountAddress.toCanonical(address)),
     )
   }
 

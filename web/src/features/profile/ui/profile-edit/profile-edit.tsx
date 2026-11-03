@@ -19,6 +19,7 @@ import { type ProfileEditFormState } from './profile-edit-field'
 import { ProfileEditLinks } from './profile-edit-links'
 
 import { saveProfileMutation } from '@/entities/profile'
+import { ConnectedWalletCard } from '@/features/connected-wallet'
 import { LocalWalletCard } from '@/features/local-wallet'
 import { routes } from '@/routes'
 import {
@@ -165,7 +166,7 @@ export const ProfileEdit = () => {
     if (location.key === 'default') {
       navigate(
         routes.profile.build({
-          walletAddress: user?.friendlyWalletAddress ?? '',
+          id: user?.id ?? '',
         }),
       )
     } else {
@@ -236,6 +237,7 @@ export const ProfileEdit = () => {
               />
             </Sections>
           </form>
+          <ConnectedWalletCard />
           <LocalWalletCard />
         </>
       )}

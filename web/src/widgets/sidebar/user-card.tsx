@@ -1,9 +1,10 @@
+import { PersonIcon } from '@radix-ui/react-icons'
 import { QRCodeSVG } from 'qrcode.react'
 import { NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { routes } from '@/routes'
-import { NoPremiumBadge, PremiumBadge, formatWalletAddress } from '@/shared'
+import { NoPremiumBadge, PremiumBadge, formatAddress } from '@/shared'
 
 type Props = {
   /** Brings the dismissed premium banner back. */
@@ -11,7 +12,9 @@ type Props = {
   user: {
     name?: string | null
     title?: string | null
-    friendlyWalletAddress?: string | null
+    id?: string
+    address?: string | null
+    payWallet?: string | null
     premium?: boolean | null
   } | null
   userAlt: string
@@ -44,20 +47,22 @@ export const UserCard = ({
       <ProfileCard>
         <UserBox>
           <UserAvatar role="img" aria-label={userAlt}>
-            <QRCodeSVG
-              value={user?.friendlyWalletAddress || ''}
-              size={32}
-              level="M"
-              fgColor="var(--ds-accent-11)"
-              bgColor="transparent"
-              marginSize={0}
-            />
+            {user?.payWallet ? (
+              <QRCodeSVG
+                value={user.payWallet}
+                size={32}
+                level="M"
+                fgColor="var(--ds-accent-11)"
+                bgColor="transparent"
+                marginSize={0}
+              />
+            ) : (
+              <PersonIcon width={24} height={24} />
+            )}
           </UserAvatar>
           <UserText hidden={compact}>
             <UserSubRow>
-              <UserSub>
-                {formatWalletAddress(user?.friendlyWalletAddress || '')}
-              </UserSub>
+              <UserSub>{formatAddress(user?.address || '')}</UserSub>
               {/* With no name below it the second row would sit empty, so the
                 badge drops into it rather than crowding the address. */}
               {displayName ? badge : null}
@@ -70,7 +75,7 @@ export const UserCard = ({
       </ProfileCard>
       <StretchedLink
         to={routes.profile.build({
-          walletAddress: user?.friendlyWalletAddress ?? '',
+          id: user?.id ?? '',
         })}
         aria-label={userAlt}
       />
@@ -209,6 +214,11 @@ const UserSubRow = styled.span`
 `
 
 const UserSub = styled.span`
+  /* An email can be long; the badge beside it keeps its room. */
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
   font-size: var(--font-size-1);
   line-height: 14px;
   font-weight: 400;

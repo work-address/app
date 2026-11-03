@@ -32,17 +32,10 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
     )
   }
 
-  public findByEmailPhone(emailOrPhone: string): RepoEffect<User | undefined> {
+  public findByGoogleSub(googleSub: string): RepoEffect<User | undefined> {
     return fromPromise(
       async () =>
-        (await this.getRepo()
-          .createQueryBuilder('u')
-          .select()
-          .where('lower(u.email) = :email', {
-            email: emailOrPhone.toLocaleLowerCase(),
-          })
-          .orWhere('u.phone = :phone', { phone: emailOrPhone })
-          .getOne()) ?? undefined,
+        (await this.getRepo().findOne({ where: { googleSub } })) ?? undefined,
     )
   }
 

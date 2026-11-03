@@ -191,76 +191,79 @@ export class UserControllerEditTest extends BaseControllerTest {
     expect(updated.title).to.equal('Updated title')
   }
 
+  /** Unconfirmed, so one account must not be able to block another's. */
   @test()
-  async duplicatePhoneException() {
-    const phoneA = this.faker.phone()
-    const phoneB = this.faker.phone()
-    const userA = await this.userFixture.createUserWithPhone(phoneA)
-    const userB = await this.userFixture.createUserWithPhone(phoneB)
+  async emailAndPhoneCanBeShared() {
+    const first = await this.userFixture.createUser()
+    const second = await this.userFixture.createUser()
+    const client = this.apiClient()
+    const shared = { email: this.faker.email(), phone: this.faker.phone() }
 
-    userB.phone = userA.phone
-
-    let error: unknown
-
-    try {
+    for (const user of [first, second]) {
       await userControllerEdit({
-        client: this.apiClient(),
+        client,
         headers: {
-          Authorization: this.authenticator.getTokens(userB).accessToken,
+          Authorization: this.authenticator.getTokens(user).accessToken,
         },
-        body: userB as unknown as UserEdit,
+        body: shared as never,
         throwOnError: true,
       })
-    } catch (e: unknown) {
-      error = e
     }
 
-    if (!axios.isAxiosError(error)) throw error
-    expect(error).to.be.ok
-    expect(error.response?.status).to.be.equal(400)
-    expect(error.response?.data.name).to.be.equal('BadRequestError')
-    expect(
-      error.response?.data.errors?.[0].constraints.PhoneConstraint,
-    ).to.be.equal('Phone number already exists.')
+    const updated = await runPromise(
+      this.userRepository.findOneByIdOrFail(second.id),
+    )
+
+    expect(updated.email).to.be.equal(shared.email)
+    expect(updated.phone).to.be.equal(shared.phone)
   }
 
+  /** Mail for a Google account goes to the address Google proved. */
   @test()
-  async duplicateEmailException() {
-    const emailA = faker.internet.email()
-    const emailB = faker.internet.email()
-    const userA = await this.userFixture.createWithEmailAndPassword(emailA)
-    const userB = await this.userFixture.createWithEmailAndPassword(emailB)
+  async aGoogleAccountCannotSetAnEmail() {
+    const user = await this.userFixture.createGoogleUser()
 
-    // Minted before the email is swapped: the token carries the email, and
-    // the request resolves its user from it. A token minted afterwards would
-    // authenticate as userA, who is allowed to keep their own address.
-    const authorization = this.authenticator.getTokens(userB).accessToken
+    await userControllerEdit({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
+      body: { email: this.faker.email() } as never,
+      throwOnError: true,
+    })
 
-    userB.email = userA.email
-
-    let error: unknown
-
-    try {
-      await userControllerEdit({
-        client: this.apiClient(),
-        headers: { Authorization: authorization },
-        body: userB as unknown as UserEdit,
-        throwOnError: true,
-      })
-    } catch (e: unknown) {
-      error = e
-    }
-
-    if (!axios.isAxiosError(error)) throw error
-    expect(error).to.be.ok
-    expect(error.response?.status).to.be.equal(400)
-    // Uniqueness is decided once the body is merged onto the current user,
-    // so the refusal comes from the manager rather than from body validation.
-    expect(error.response?.data.name).to.be.equal(
-      'ConstraintsValidationException',
+    const updated = await runPromise(
+      this.userRepository.findOneByIdOrFail(user.id),
     )
-    expect(
-      error.response?.data.errors?.[0].constraints.EmailConstraint,
-    ).to.be.equal('Email address is already taken')
+
+    expect(updated.email).to.be.null
+    expect(updated.mailEmail).to.be.equal(user.address)
+  }
+
+  /** Setting these needs a signature, which the profile form must not skip. */
+  @test()
+  async theProfileFormCannotSetIdentity() {
+    const user = await this.userFixture.createGoogleUser()
+
+    await userControllerEdit({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
+      body: {
+        address: this.faker.email(),
+        googleSub: 'someone-else',
+        connectedWallet: '0x52908400098527886E0F7030069857D2E4169EE7',
+      } as never,
+      throwOnError: true,
+    })
+
+    const updated = await runPromise(
+      this.userRepository.findOneByIdOrFail(user.id),
+    )
+
+    expect(updated.address).to.be.equal(user.address)
+    expect(updated.googleSub).to.be.equal(user.googleSub)
+    expect(updated.connectedWallet).to.be.null
   }
 }

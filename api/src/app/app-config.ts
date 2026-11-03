@@ -41,10 +41,7 @@ export class AppConfig {
       jwtSecret: process.env.APP_JWT_SECRET as string,
       entitlementSecret: (process.env.APP_ENTITLEMENT_SECRET ?? '').trim(),
       loggly: (process.env.APP_LOGGLY ?? '').trim(),
-      tonAllowedDomains: (process.env.APP_TON_ALLOWED_DOMAINS ?? '')
-        .split(',')
-        .map((domain) => domain.trim())
-        .filter((domain) => domain.length > 0),
+      googleClientId: (process.env.APP_GOOGLE_CLIENT_ID ?? '').trim(),
       database: {
         type: 'postgres',
         host: isolated ? '127.0.0.1' : (process.env.APP_DB_HOST as string),

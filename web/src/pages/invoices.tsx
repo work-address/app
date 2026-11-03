@@ -33,11 +33,7 @@ import {
   type InvoiceStateFilter,
 } from '@/features/invoice'
 import { routes } from '@/routes'
-import {
-  formatCurrency,
-  getFriendlyWalletAddress,
-  useDateFormatter,
-} from '@/shared'
+import { formatCurrency, useDateFormatter } from '@/shared'
 import {
   Button,
   LoadFailure,
@@ -157,7 +153,6 @@ export default function InvoicesPage() {
       <PageHelmet
         title={t('invoices.page.title')}
         description={t('invoices.page.meta')}
-        noindex
       />
       <Flex direction="column" gap="5" pb="2">
         <PageHeader
@@ -320,9 +315,7 @@ export default function InvoicesPage() {
               const rateHour = invoiceRateHour(invoice)
               const issuer =
                 invoice.user?.name ||
-                shortenAddress(
-                  getFriendlyWalletAddress(invoice.user?.address) ?? '',
-                )
+                shortenAddress(invoice.user?.address ?? '')
 
               return (
                 <Row key={invoice.id}>

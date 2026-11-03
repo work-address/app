@@ -1,9 +1,12 @@
 import { ChevronDownIcon } from '@radix-ui/react-icons'
+import { useUnit } from 'effector-react'
 import { useId, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-export type SignInGuideMode = 'default' | 'ton' | 'solana' | 'eth' | 'local'
+import { $googleClientId } from '@/entities/profile'
+
+export type SignInGuideMode = 'default' | 'google' | 'local'
 
 type PanelSpec = {
   mode: SignInGuideMode
@@ -12,9 +15,7 @@ type PanelSpec = {
 
 const PANELS: PanelSpec[] = [
   { mode: 'default', stepCount: 3 },
-  { mode: 'ton', stepCount: 4 },
-  { mode: 'solana', stepCount: 4 },
-  { mode: 'eth', stepCount: 4 },
+  { mode: 'google', stepCount: 3 },
   { mode: 'local', stepCount: 4 },
 ]
 
@@ -51,9 +52,6 @@ export const AuthSignInGuide = ({ mode, tone = 'light' }: Props) => {
                 </Step>
               ))}
             </Steps>
-            {/* No wallet list here: the caption under the panel already names
-                every supported wallet, and saying it twice on one screen read
-                as clutter. */}
             <Note>{t('signIn.guide.free')}</Note>
           </Panel>
         )
@@ -65,12 +63,14 @@ export const AuthSignInGuide = ({ mode, tone = 'light' }: Props) => {
 const MOBILE_STEP_COUNT = 3
 
 // Touch screens have no hover, so below `lg` the guide becomes this
-// tap-to-expand primer inside the sign-in card. The steps skip the QR code:
-// on a phone the wallet opens directly instead of being scanned.
+// tap-to-expand primer inside the sign-in card.
 export const AuthSignInGuideMobile = () => {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
   const contentId = useId()
+  // Where Google isn't offered, the browser wallet's steps are all there is.
+  const googleClientId = useUnit($googleClientId)
+  const guide = googleClientId ? 'mobile' : 'local'
 
   return (
     <MobileRoot>
@@ -80,7 +80,11 @@ export const AuthSignInGuideMobile = () => {
         aria-controls={contentId}
         onClick={() => setOpen((value) => !value)}
       >
-        {t('signIn.guide.default.title')}
+        {t(
+          googleClientId
+            ? 'signIn.guide.default.title'
+            : 'signIn.guide.local.title',
+        )}
         <MobileChevron $open={open} aria-hidden />
       </MobileToggle>
       <MobileCollapse id={contentId} $open={open}>
@@ -89,7 +93,9 @@ export const AuthSignInGuideMobile = () => {
             {Array.from({ length: MOBILE_STEP_COUNT }, (_, index) => (
               <Step key={index}>
                 <StepBadge>{index + 1}</StepBadge>
-                <StepText>{t(`signIn.guide.mobile.step${index + 1}`)}</StepText>
+                <StepText>
+                  {t(`signIn.guide.${guide}.step${index + 1}`)}
+                </StepText>
               </Step>
             ))}
           </Steps>

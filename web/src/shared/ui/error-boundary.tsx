@@ -17,7 +17,7 @@ export const ErrorBoundary = () => {
 
   return (
     <Root>
-      <PageHelmet title={t('crash.documentTitle')} noindex />
+      <PageHelmet title={t('crash.documentTitle')} />
       <StateNotice
         size="page"
         tone="error"

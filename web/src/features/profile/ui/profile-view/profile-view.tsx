@@ -10,7 +10,7 @@ import { ProfileViewLinks } from './profile-view-links'
 import { ProfileViewQrCode } from './profile-view-qr-code'
 
 import {
-  formatWalletAddress,
+  formatAddress,
   showToast,
   copyToClipboard,
   useBreakpoint,
@@ -25,14 +25,12 @@ export const ProfileView = () => {
   // The cards show the name as the page's h1. A profile without one still
   // needs a heading for screen readers, and the address is what names it.
   const unnamedTitle =
-    user && !(user.name || user.title) && user.friendlyWalletAddress ? (
-      <HiddenTitle>
-        {formatWalletAddress(user.friendlyWalletAddress)}
-      </HiddenTitle>
+    user && !(user.name || user.title) && user.address ? (
+      <HiddenTitle>{formatAddress(user.address)}</HiddenTitle>
     ) : null
 
   const handleCopyWalletAddress = () => {
-    copyToClipboard(user?.friendlyWalletAddress || '').then(() => {
+    copyToClipboard(user?.address || '').then(() => {
       showToast('info', {
         message: t('profile.view.addressCopied'),
         position: 'top-center',

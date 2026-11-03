@@ -13,6 +13,7 @@ import { $user } from '@/entities/profile'
 import {
   Button,
   Card,
+  isEmailAddress,
   normalizeAddress,
   showToast,
   Text,
@@ -40,9 +41,10 @@ export const LocalWalletCard = () => {
     return null
   }
 
-  const isCurrentAccount =
-    Boolean(user?.address) &&
-    normalizeAddress(user?.address ?? '') === normalizeAddress(wallet.address)
+  const isCurrentAccount = [user?.address, user?.connectedWallet].some(
+    (address) =>
+      address && normalizeAddress(address) === normalizeAddress(wallet.address),
+  )
 
   const handleRemove = () => {
     confirm({
@@ -77,7 +79,7 @@ export const LocalWalletCard = () => {
           <Text size="2" weight="medium" $themeVariant="primary">
             {wallet.address}
           </Text>
-          {!isCurrentAccount && (
+          {!isCurrentAccount && !isEmailAddress(user?.address ?? '') && (
             <Text size="1" color="amber">
               {t('localWallet.card.mismatch')}
             </Text>

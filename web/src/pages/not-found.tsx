@@ -23,7 +23,6 @@ export default function NotFoundPage() {
       <PageHelmet
         title={t('notFound.documentTitle')}
         description={t('notFound.description')}
-        noindex
       />
       <StateNotice
         size="page"

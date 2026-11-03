@@ -15,10 +15,10 @@ import {
 } from '@/decorator/openapi/openapi-extended'
 import {
   AuthEthLoginDto,
+  AuthGoogleLoginDto,
+  AuthMethodsDto,
   AuthNonceRequestDto,
   AuthRefreshTokenDto,
-  AuthSolanaLoginDto,
-  AuthTonLoginDto,
 } from '@/model/dto/auth'
 import { User } from '@/entity/user'
 import { App } from '@/app/app'
@@ -84,18 +84,18 @@ export class AuthController {
   }
 
   @OpenAPIExtended({
-    summary: 'Login with Solana wallet',
-    body: { schema: AuthSolanaLoginDto },
+    summary: 'Login with Google',
+    body: { schema: AuthGoogleLoginDto },
     response: authSessionJsonHeadersResponse,
   })
-  @Post('/solana')
+  @Post('/google')
   @HttpCode(200)
-  public async loginSolana(
-    @Body() payload: AuthSolanaLoginDto,
+  public async loginGoogle(
+    @Body() payload: AuthGoogleLoginDto,
     @Res() res: express.Response,
   ): Promise<express.Response> {
     const tokens = await runPromise(
-      this.authenticator.loginSolana(payload.signature, payload.address),
+      this.authenticator.loginGoogle(payload.credential),
     )
 
     res.setHeader('Authorization', tokens.accessToken)
@@ -106,23 +106,14 @@ export class AuthController {
   }
 
   @OpenAPIExtended({
-    summary: 'Login with TON Connect proof',
-    body: { schema: AuthTonLoginDto },
-    response: authSessionJsonHeadersResponse,
+    summary: 'Sign-in methods this deployment offers',
+    response: { schema: AuthMethodsDto },
   })
-  @HttpCode(200)
-  @Post('/ton')
-  public async checkProofHandler(
-    @Body() payload: AuthTonLoginDto,
-    @Res() res: express.Response,
-  ): Promise<express.Response> {
-    const tokens = await runPromise(this.authenticator.loginTon(payload))
+  @Get('/methods')
+  public methods(): AuthMethodsDto {
+    const { googleClientId } = this.parameters
 
-    res.setHeader('Authorization', tokens.accessToken)
-    res.setHeader('Refresh-Token', tokens.refreshToken)
-
-    res.end()
-    return res
+    return googleClientId ? { googleClientId } : {}
   }
 
   @OpenAPIExtended({
@@ -138,20 +129,6 @@ export class AuthController {
   @Post('/nonce')
   public nonce(@Body() payload: AuthNonceRequestDto): Promise<string> {
     return runPromise(this.authenticator.getNonce(payload.address))
-  }
-
-  @OpenAPIExtended({
-    summary: 'Request nonce for TON Connect login',
-    response: {
-      schema: String,
-      options: {},
-      example: '550e8400-e29b-41d4-a716-446655440000',
-    },
-  })
-  @HttpCode(200)
-  @Post('/ton/nonce')
-  public tonNonce(): Promise<string> {
-    return runPromise(this.authenticator.getTonNonce())
   }
 
   @OpenAPIExtended({

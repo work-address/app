@@ -26,6 +26,7 @@ import {
   RichEditor,
   getCountryOptions,
   BASE_CURRENCY,
+  isEmailAddress,
   type CardProps,
 } from '@/shared'
 
@@ -82,9 +83,9 @@ export const ProfileEditDetails = ({
             <Input
               label={t('profile.form.address')}
               labelWidth={INPUT_LABEL_WIDTH}
-              value={user?.friendlyWalletAddress || ''}
+              value={user?.address || ''}
               disabled
-              id={'friendlyWalletAddress'}
+              id={'address'}
             />
           </Skeleton>
         </Cell>
@@ -101,25 +102,27 @@ export const ProfileEditDetails = ({
             />
           </Cell>
         ))}
-        <Cell>
-          <ProfileEditField
-            name="email"
-            label={t('profile.form.email')}
-            placeholder={t('profile.form.emailPlaceholder')}
-            register={register}
-            rules={{
-              pattern: {
-                value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
-                message: t('profile.form.errors.email'),
-              },
-            }}
-            error={Boolean(errors.email)}
-            errorMessage={errors.email?.message}
-            loading={profileLoading}
-            disabled={profileSaving}
-            inputMode="email"
-          />
-        </Cell>
+        {!isEmailAddress(user?.address ?? '') && (
+          <Cell>
+            <ProfileEditField
+              name="email"
+              label={t('profile.form.email')}
+              placeholder={t('profile.form.emailPlaceholder')}
+              register={register}
+              rules={{
+                pattern: {
+                  value: /^[^\s@]+@[^\s@]+\.[^\s@]+$/,
+                  message: t('profile.form.errors.email'),
+                },
+              }}
+              error={Boolean(errors.email)}
+              errorMessage={errors.email?.message}
+              loading={profileLoading}
+              disabled={profileSaving}
+              inputMode="email"
+            />
+          </Cell>
+        )}
         <Cell>
           <Controller
             control={control}

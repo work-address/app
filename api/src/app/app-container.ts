@@ -33,7 +33,8 @@ import { InvoiceRepository } from '@/repository/invoice-repository'
 import { TimeManager } from '@/service/time-manager'
 import { InvoiceManager } from '@/service/invoice-manager'
 import { AuthenticatorTimeTracker } from '@/service/auth/authenticator-time-tracker'
-import { TonProofService } from '@/service/auth/ton-proof-service'
+import { GoogleAuthProvider } from '@/service/auth/google-auth-provider'
+import { ConnectedWallet } from '@/service/connected-wallet'
 import { ImageResizer } from '@/service/image-resizer'
 import { ProjectFixture } from '@/test/fixture/project-fixture'
 import { WinstonClient } from '@/service/winston-client'
@@ -108,7 +109,11 @@ export class AppContainer {
     container
       .bind<ProjectStatisticsManager>('ProjectStatisticsManager')
       .to(ProjectStatisticsManager)
-    container.bind<TonProofService>('TonProofService').to(TonProofService)
+    container
+      .bind<GoogleAuthProvider>('GoogleAuthProvider')
+      .to(GoogleAuthProvider)
+      .inSingletonScope()
+    container.bind<ConnectedWallet>('ConnectedWallet').to(ConnectedWallet)
     container.bind<Faker>('Faker').to(Faker)
 
     // Fixture

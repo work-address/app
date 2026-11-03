@@ -45,7 +45,7 @@ export class HelpControllerTest extends BaseControllerTest {
       spec.paths['/api/user']?.put?.responses?.['204'],
     ).to.not.have.property('content')
 
-    const userReadGet = spec.paths['/api/user/{address}/address']?.get as
+    const userReadGet = spec.paths['/api/user/{id}']?.get as
       | {
           responses?: Record<
             string,

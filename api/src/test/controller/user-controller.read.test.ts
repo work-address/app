@@ -4,7 +4,11 @@ import * as web3 from 'web3'
 import { faker } from '@faker-js/faker'
 import { suite, test } from '@testdeck/mocha'
 
-import { userControllerEdit, userControllerRead } from '@app/api-client'
+import {
+  authControllerStatus,
+  userControllerEdit,
+  userControllerRead,
+} from '@app/api-client'
 import type { UserEdit } from '@app/api-client'
 
 import { UserRepository } from '@/repository/user-repository'
@@ -14,13 +18,16 @@ import { runPromise } from '@/service/effect-bridge'
 @suite()
 export class UserControllerReadTest extends BaseControllerTest {
   @test()
-  async read_returnsProfileForExistingAddress() {
+  async read_returnsProfileById() {
     const user = await this.userFixture.createUser()
     const client = this.apiClient()
 
     const res = await userControllerRead({
       client,
-      path: { address: user.address as never },
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
+      path: { id: user.id as never },
       throwOnError: true,
     })
 
@@ -40,7 +47,6 @@ export class UserControllerReadTest extends BaseControllerTest {
     expect(res.data!.instagram).to.be.eq(user.instagram)
     expect(res.data!.youtube).to.be.eq(user.youtube)
     expect(res.data!.telegram).to.be.eq(user.telegram)
-    expect(res.data!.roles).to.deep.eq(user.roles)
     expect(res.data!.tz).to.be.eq(user.tz)
     expect(res.data!.city).to.be.eq(user.city)
     expect(res.data!.country).to.be.eq(user.country)
@@ -58,16 +64,19 @@ export class UserControllerReadTest extends BaseControllerTest {
   }
 
   @test()
-  async read_notFoundForUnknownAddress() {
+  async read_notFoundForUnknownId() {
     const client = this.apiClient()
-    const ghost = web3.eth.accounts.create()
+    const reader = await this.userFixture.createUser()
 
     let error: unknown
 
     try {
       await userControllerRead({
         client,
-        path: { address: ghost.address as never },
+        headers: {
+          Authorization: this.authenticator.getTokens(reader).accessToken,
+        },
+        path: { id: faker.string.uuid() as never },
         throwOnError: true,
       })
     } catch (e: unknown) {
@@ -80,7 +89,7 @@ export class UserControllerReadTest extends BaseControllerTest {
   }
 
   @test()
-  async read_returnsExtendedPublicProfileFields() {
+  async read_returnsExtendedProfileFields() {
     const user = await this.userFixture.createUser()
     const client = this.apiClient()
 
@@ -112,7 +121,10 @@ export class UserControllerReadTest extends BaseControllerTest {
 
     const readRes = await userControllerRead({
       client,
-      path: { address: user.address as never },
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
+      path: { id: user.id as never },
       throwOnError: true,
     })
     const profile = readRes.data as unknown as {
@@ -148,38 +160,96 @@ export class UserControllerReadTest extends BaseControllerTest {
     expect(readRes.data).to.not.have.property('whatsapp')
   }
 
+  /** Anything readable anonymously can be scraped, and profiles hold emails. */
   @test()
-  async read_exposesPremiumFlag() {
+  async read_refusesAnAnonymousReader() {
     const user = await this.userFixture.createUser()
-    const userRepository = this.container.get<UserRepository>('UserRepository')
 
-    user.premium = true
-    await runPromise(userRepository.saveSingle(user))
-
-    const client = this.apiClient()
-    const res = await userControllerRead({
-      client,
-      path: { address: user.address as never },
-      throwOnError: true,
+    const res = await axios.get(`${this.url}/api/user/${user.id}`, {
+      validateStatus: () => true,
     })
 
-    expect((res.data as unknown as { premium: boolean }).premium).to.be.eq(true)
+    expect(res.status).to.be.equal(401)
+  }
+
+  /** The address route let anyone test whether an email has an account. */
+  @test()
+  async read_hasNoAddressLookup() {
+    const user = await this.userFixture.createGoogleUser()
+
+    const res = await axios.get(
+      `${this.url}/api/user/${user.address}/address`,
+      {
+        headers: {
+          Authorization: this.authenticator.getTokens(user).accessToken,
+        },
+        validateStatus: () => true,
+      },
+    )
+
+    expect(res.status).to.be.equal(404)
   }
 
   @test()
-  async read_premiumDefaultsFalse() {
-    const user = await this.userFixture.createUser()
-    const client = this.apiClient()
+  async read_showsAnotherReaderEverythingFilledInButNotRolesOrPremium() {
+    const user = await this.userFixture.createGoogleUser()
+    const reader = await this.userFixture.createUser()
+    const userRepository = this.container.get<UserRepository>('UserRepository')
+
+    user.premium = true
+    user.name = faker.person.fullName()
+    user.connectedWallet = web3.eth.accounts.create().address
+    await runPromise(userRepository.saveSingle(user))
 
     const res = await userControllerRead({
-      client,
-      path: { address: user.address as never },
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(reader).accessToken,
+      },
+      path: { id: user.id as never },
       throwOnError: true,
     })
 
-    expect((res.data as unknown as { premium: boolean }).premium).to.be.eq(
-      false,
-    )
+    expect(res.data!.address).to.be.eq(user.address)
+    expect(res.data!.name).to.be.eq(user.name)
+    expect(res.data!.connectedWallet).to.be.eq(user.connectedWallet)
+    expect(res.data!.payWallet).to.be.eq(user.connectedWallet)
+    expect(res.data).to.not.have.property('roles')
+    expect(res.data).to.not.have.property('premium')
+    expect(res.data).to.not.have.property('googleSub')
+    expect(res.data).to.not.have.property('mailEmail')
+  }
+
+  @test()
+  async read_paysAWalletAccountAtItsOwnAddress() {
+    const user = await this.userFixture.createUser()
+
+    const res = await userControllerRead({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
+      path: { id: user.id as never },
+      throwOnError: true,
+    })
+
+    expect(res.data!.payWallet).to.be.eq(user.address)
+  }
+
+  @test()
+  async read_paysAGoogleAccountWithoutAWalletNowhere() {
+    const user = await this.userFixture.createGoogleUser()
+
+    const res = await userControllerRead({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
+      path: { id: user.id as never },
+      throwOnError: true,
+    })
+
+    expect(res.data!.payWallet).to.be.null
   }
 
   @test()
@@ -196,13 +266,15 @@ export class UserControllerReadTest extends BaseControllerTest {
       throwOnError: true,
     })
 
-    const readRes = await userControllerRead({
+    const status = await authControllerStatus({
       client,
-      path: { address: user.address as never },
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
       throwOnError: true,
     })
 
-    expect((readRes.data as unknown as { premium: boolean }).premium).to.be.eq(
+    expect((status.data as unknown as { premium: boolean }).premium).to.be.eq(
       false,
     )
   }

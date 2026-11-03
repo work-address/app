@@ -1,24 +1,30 @@
 import { CheckIcon } from '@radix-ui/react-icons'
+import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-const POINTS = ['point1', 'point2', 'point3'] as const
+import { $googleClientId } from '@/entities/profile'
 
 /**
  * The brand half of the sign-in screen: what the product is, in three lines,
- * on the panel a visitor sees before they pick a wallet. Rendered in the same
- * slot as the per-network guide, which takes over while a sign-in option is
- * hovered.
+ * on the panel a visitor sees before they sign in. Rendered in the same slot
+ * as the per-method guide, which takes over while a sign-in option is hovered.
  */
 export const AuthHero = () => {
   const { t } = useTranslation()
+  const googleClientId = useUnit($googleClientId)
+  const points = [
+    'point1',
+    'point2',
+    googleClientId ? 'point3' : 'point3WalletOnly',
+  ]
 
   return (
     <Root>
       <Title>{t('signIn.hero.title')}</Title>
       <Subtitle>{t('signIn.hero.subtitle')}</Subtitle>
       <Points>
-        {POINTS.map((point) => (
+        {points.map((point) => (
           <Point key={point}>
             <PointIcon aria-hidden="true">
               <CheckIcon width={14} height={14} />

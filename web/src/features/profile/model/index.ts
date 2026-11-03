@@ -10,8 +10,6 @@ import {
 import { routes } from '@/routes'
 import {
   baseApi,
-  getFriendlyWalletAddress,
-  decodeFriendWalletAddress,
   getLoadFailureKind,
   navigateFx,
   runApiData,
@@ -20,16 +18,16 @@ import {
   type LoadFailureKind,
 } from '@/shared'
 
-const ProfileGate = createGate<{ friendlyWalletAddress: string | null }>({
-  defaultState: { friendlyWalletAddress: null },
+const ProfileGate = createGate<{ id: string | null }>({
+  defaultState: { id: null },
 })
 
 const profileQuery = createQuery({
-  handler: async (walletAddress: string) => {
+  handler: async (id: string) => {
     return runApiData(() =>
       baseApi.userControllerRead({
         path: {
-          address: walletAddress as never,
+          id: id as never,
         },
       }),
     )
@@ -39,24 +37,20 @@ const profileQuery = createQuery({
 const $isAuthenticatedUserProfile = combine(
   $user,
   ProfileGate.state,
-  (user, gateState) =>
-    Boolean(user) &&
-    user?.friendlyWalletAddress === gateState.friendlyWalletAddress,
+  (user, gateState) => Boolean(user) && user?.id === gateState.id,
 )
 
-const $gateAddress = ProfileGate.state.map(
-  (gateState) => gateState.friendlyWalletAddress,
-)
+const $gateId = ProfileGate.state.map((gateState) => gateState.id)
 
 sample({
-  clock: $gateAddress,
+  clock: $gateId,
   target: profileQuery.reset,
 })
 
 sample({
-  clock: $gateAddress,
+  clock: $gateId,
   filter: Boolean,
-  fn: (address) => decodeFriendWalletAddress(address as string),
+  fn: (id) => id as string,
   target: profileQuery.start,
 })
 
@@ -68,25 +62,19 @@ sample({
 const $profile = combine(
   $user,
   profileQuery.$data,
-  $gateAddress,
-  (user, loadedProfileData, gateAddress) => {
-    if (!gateAddress) {
+  $gateId,
+  (user, loadedProfileData, gateId) => {
+    if (!gateId) {
       return null
     }
 
-    if (loadedProfileData) {
-      return {
-        ...loadedProfileData,
-        friendlyWalletAddress:
-          getFriendlyWalletAddress(loadedProfileData.address) ?? gateAddress,
-      }
-    }
-
-    if (user?.friendlyWalletAddress === gateAddress) {
+    // Your own account is the fuller answer: other people's reads leave out
+    // what only the account's owner gets, such as premium.
+    if (user?.id === gateId) {
       return user
     }
 
-    return null
+    return loadedProfileData ?? null
   },
 )
 
@@ -95,7 +83,7 @@ const $pending = combine(profileQuery.$pending, $profilePending, (...args) =>
 )
 
 /**
- * Why the profile did not load. An address nobody has signed in with is a
+ * Why the profile did not load. An id no account has is a
  * 404 - "no profile here yet", not an empty profile with a $0.00 rate - and
  * anything else is worth a retry.
  */
@@ -111,9 +99,9 @@ const retryProfile = createEvent()
 
 sample({
   clock: retryProfile,
-  source: $gateAddress,
+  source: $gateId,
   filter: Boolean,
-  fn: (address) => decodeFriendWalletAddress(address as string),
+  fn: (id) => id as string,
   target: profileQuery.start,
 })
 
@@ -157,7 +145,7 @@ sample({
   source: $profile,
   fn: (profile) => ({
     to: routes.profile.build({
-      walletAddress: profile?.friendlyWalletAddress ?? '',
+      id: profile?.id ?? '',
     }),
     options: { viewTransition: true },
   }),

@@ -7,38 +7,29 @@ import styled from 'styled-components'
 
 import type { SignInGuideMode } from '@/features/auth'
 
-import { $authenticated, $pending } from '@/entities/profile'
+import { $authenticated, $googleClientId, $pending } from '@/entities/profile'
 import {
   AuthStyles as S,
-  ETHEREUM_WALLETS,
   AuthHero,
   AuthProviders,
   AuthSignInGuide,
   AuthSignInGuideMobile,
-  SOLANA_WALLETS,
-  TON_WALLETS,
-  AuthWalletList,
 } from '@/features/auth'
 import { routes } from '@/routes'
 import { Logo as LogoImage, PageHelmet, Spinner } from '@/shared'
 
-const WALLET_LINES = [
-  { labelKey: 'signIn.footer.ethereumWallets', wallets: ETHEREUM_WALLETS },
-  { labelKey: 'signIn.footer.tonWallets', wallets: TON_WALLETS },
-  { labelKey: 'signIn.footer.solanaWallets', wallets: SOLANA_WALLETS },
-]
-
 /**
- * Split sign-in: the choice of network on the left, laid out like a sign-in
- * form, and the brand panel on the right. Hovering a network swaps the brand
- * panel for that network's steps, so the explanation sits beside the button
- * it explains rather than under it. Below `lg` the brand panel goes and the
- * steps become the collapsible primer under the buttons.
+ * Split sign-in: the choice of method on the left, laid out like a sign-in
+ * form, and the brand panel on the right. Hovering a method swaps the brand
+ * panel for its steps, so the explanation sits beside the button it explains
+ * rather than under it. Below `lg` the brand panel goes and the steps become
+ * the collapsible primer under the buttons.
  */
 export default function SignInPage() {
   const { t } = useTranslation()
   const loading = useUnit($pending)
   const authenticated = useUnit($authenticated)
+  const googleClientId = useUnit($googleClientId)
   const [searchParams] = useSearchParams()
   const [guideMode, setGuideMode] = useState<SignInGuideMode>('default')
   const nonce = searchParams.get('nonce')
@@ -53,28 +44,15 @@ export default function SignInPage() {
 
   const showHero = guideMode === 'default'
 
-  const walletsFooter = (
-    <>
-      <FootTitle>{t('signIn.supportedWallets')}</FootTitle>
-      {WALLET_LINES.map((line) => (
-        <FootLine key={line.labelKey}>
-          <S.FootLabel>{t(line.labelKey)}</S.FootLabel>{' '}
-          <AuthWalletList wallets={line.wallets} breakAfter={Infinity} />
-        </FootLine>
-      ))}
-      <Version>
-        {t('signIn.version')}: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}
-      </Version>
-    </>
+  const versionFooter = (
+    <Version>
+      {t('signIn.version')}: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}
+    </Version>
   )
 
   return (
     <>
-      <PageHelmet
-        title={t('signIn.title')}
-        description={t('signIn.meta')}
-        noindex
-      />
+      <PageHelmet title={t('signIn.title')} description={t('signIn.meta')} />
       <Screen>
         <Panel>
           {loading && (
@@ -98,8 +76,10 @@ export default function SignInPage() {
             }}
           >
             <Heading>{t('signIn.heading')}</Heading>
-            <Lead>{t('signIn.lead')}</Lead>
-            <FieldLabel>{t('signIn.chooseNetwork')}</FieldLabel>
+            <Lead>
+              {t(googleClientId ? 'signIn.lead' : 'signIn.leadWalletOnly')}
+            </Lead>
+            <FieldLabel>{t('signIn.chooseMethod')}</FieldLabel>
             <Providers>
               <AuthProviders onGuideChange={setGuideMode} />
             </Providers>
@@ -117,7 +97,7 @@ export default function SignInPage() {
           {/* Under the form while the page is one column; the brand panel
               carries it once there is one, so the form column never has to
               scroll on a desktop. */}
-          <PanelFoot>{walletsFooter}</PanelFoot>
+          <PanelFoot>{versionFooter}</PanelFoot>
         </Panel>
         <Brand>
           <BrandInner>
@@ -136,7 +116,7 @@ export default function SignInPage() {
               <AuthSignInGuide mode={guideMode} tone="dark" />
             </BrandLayer>
           </BrandInner>
-          <BrandFoot>{walletsFooter}</BrandFoot>
+          <BrandFoot>{versionFooter}</BrandFoot>
         </Brand>
       </Screen>
     </>
@@ -398,19 +378,6 @@ const PanelFoot = styled.footer`
   ${({ theme }) => theme.breakpoints.up('lg')} {
     display: none;
   }
-`
-
-const FootTitle = styled.div`
-  font-size: var(--font-size-1);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: inherit;
-  margin-bottom: 8px;
-`
-
-const FootLine = styled.div`
-  margin-top: 2px;
 `
 
 const Version = styled.div`

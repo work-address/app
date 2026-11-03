@@ -9,12 +9,32 @@ import { UnlockForm } from './unlock-form'
 import { useLocalWalletFlow } from './use-local-wallet-flow'
 
 import type { Step } from './types'
+import type { UnlockedLocalWallet } from '../../model'
 
 import { AdaptiveDialog, DIALOG_WIDTH_STANDARD } from '@/shared'
 
 type Props = {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** Connects the unlocked key to the signed-in account instead of signing in. */
+  onConnect?: (wallet: UnlockedLocalWallet) => Promise<unknown>
+}
+
+const SUBMIT_KEYS = {
+  signIn: {
+    create: 'localWallet.actions.create',
+    import: 'localWallet.actions.import',
+    backup: 'localWallet.backup.continue',
+    unlock: 'localWallet.unlock.submit',
+    reveal: 'localWallet.unlock.submitShort',
+  },
+  connect: {
+    create: 'localWallet.connect.create',
+    import: 'localWallet.connect.import',
+    backup: 'localWallet.connect.backup',
+    unlock: 'localWallet.connect.unlock',
+    reveal: 'localWallet.connect.reveal',
+  },
 }
 
 const TITLE_KEY: Record<Step, string> = {
@@ -27,7 +47,8 @@ const TITLE_KEY: Record<Step, string> = {
 }
 
 /**
- * The sign-in path for someone with no wallet app.
+ * The browser wallet: the sign-in path that needs nothing outside this
+ * deployment, and one way for a Google account to connect a wallet.
  *
  * Opens on "unlock" when this browser already holds a wallet, and on the
  * create/import choice when it does not. A freshly created key is shown once
@@ -35,9 +56,14 @@ const TITLE_KEY: Record<Step, string> = {
  * browser alone, and without a copy of the key the account is lost with it.
  * The unlock step can also show the key again, behind the password.
  */
-export const LocalWalletDialog = ({ open, onOpenChange }: Props) => {
+export const LocalWalletDialog = ({ open, onOpenChange, onConnect }: Props) => {
   const { t } = useTranslation()
-  const flow = useLocalWalletFlow({ open, onOpenChange })
+  const flow = useLocalWalletFlow({
+    open,
+    onOpenChange,
+    onUnlocked: onConnect,
+  })
+  const submit = SUBMIT_KEYS[onConnect ? 'connect' : 'signIn']
   const { step, busy, submitError, unlocked, wallet } = flow
 
   return (
@@ -62,6 +88,7 @@ export const LocalWalletDialog = ({ open, onOpenChange }: Props) => {
       )}
       {step === 'create' && (
         <CreateForm
+          submitLabel={t(submit.create)}
           busy={busy}
           submitError={submitError}
           onBack={() => flow.setStep('choose')}
@@ -70,6 +97,7 @@ export const LocalWalletDialog = ({ open, onOpenChange }: Props) => {
       )}
       {step === 'backup' && unlocked && (
         <BackupStep
+          submitLabel={t(submit.backup)}
           privateKey={unlocked.privateKey}
           busy={busy}
           submitError={submitError}
@@ -78,6 +106,7 @@ export const LocalWalletDialog = ({ open, onOpenChange }: Props) => {
       )}
       {step === 'import' && (
         <ImportForm
+          submitLabel={t(submit.import)}
           busy={busy}
           submitError={submitError}
           replacing={wallet?.address}
@@ -87,6 +116,7 @@ export const LocalWalletDialog = ({ open, onOpenChange }: Props) => {
       )}
       {step === 'unlock' && wallet && (
         <UnlockForm
+          submitLabel={t(submit.unlock)}
           address={wallet.address}
           busy={busy}
           submitError={submitError}
@@ -97,6 +127,7 @@ export const LocalWalletDialog = ({ open, onOpenChange }: Props) => {
       )}
       {step === 'reveal' && unlocked && (
         <RevealStep
+          submitLabel={t(submit.reveal)}
           privateKey={unlocked.privateKey}
           busy={busy}
           submitError={submitError}

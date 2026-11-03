@@ -33,10 +33,6 @@ const router = createBrowserRouter([
     errorElement: <ErrorBoundary />,
     children: [
       {
-        path: routes.profile.schema,
-        element: <ProfilePage />,
-      },
-      {
         // Anything unknown, signed in or not. It renders inside the shell so
         // the navigation is still there; MainLayout would bounce a guest to
         // sign-in before they learned the link was wrong.
@@ -49,6 +45,10 @@ const router = createBrowserRouter([
     element: <Layouts.MainLayout />,
     errorElement: <ErrorBoundary />,
     children: [
+      {
+        path: routes.profile.schema,
+        element: <ProfilePage />,
+      },
       {
         path: routes.dashboard.schema,
         element: <DashboardPage />,

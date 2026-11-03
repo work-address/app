@@ -1,4 +1,4 @@
-import { Entity, Column, Index, OneToMany } from 'typeorm'
+import { Entity, Column, OneToMany } from 'typeorm'
 import { faker } from '@faker-js/faker'
 import { JSONSchema } from 'class-validator-jsonschema'
 import { Exclude, Expose } from 'class-transformer'
@@ -17,6 +17,7 @@ import { EmailConstraint } from '@/entity/constraint/email-constraint'
 import { EUserRole } from '@/model/user'
 import { IUser } from '@/model/user'
 import { Project } from '@/entity/project'
+import { AccountAddress } from '@/service/account-address'
 
 // TODO: add profile visibility flag, so user can hide their profile from the public
 @JSONSchema({
@@ -34,14 +35,29 @@ export class User extends AbstractBaseEntity implements IUser {
   @Column('jsonb', { default: () => "'[]'::jsonb" })
   personalRedactionRules: import('@/model/dto/user-settings').RedactionRuleDto[]
 
+  // An EVM address for a wallet account, the Google email for a Google account.
   @Expose({ groups: ['search', 'register'] })
   @Column('text', { unique: true })
   @IsString()
   @IsOptional()
   address: string
 
+  // What sign-in matches for a Google account, because a mailbox can change
+  // hands. Never returned.
+  @Column('text', { nullable: true, unique: true })
+  googleSub?: string | null
+
+  // A Google account's proven wallet, set only by ConnectedWallet: shown on the
+  // profile and paid on invoices. It signs nobody in and grants no access.
+  @Expose({ groups: ['search'] })
+  @Column('text', { nullable: true })
+  @IsString()
+  @IsOptional()
+  @JSONSchema(() => ({ type: 'string', nullable: true }))
+  connectedWallet?: string | null
+
+  // Unconfirmed, and so neither unique nor anything sign-in may read.
   @Expose({ groups: ['search', 'edit'] })
-  @Index({ unique: true })
   @Validate(EmailConstraint, [], {
     groups: ['search', 'edit'],
   })
@@ -60,7 +76,6 @@ export class User extends AbstractBaseEntity implements IUser {
   @IsOptional({ groups: ['edit'] })
   @IsString()
   @IsOptional()
-  @Index({ unique: true })
   phone: string
 
   // Professional Information
@@ -151,7 +166,7 @@ export class User extends AbstractBaseEntity implements IUser {
 
   @OneToMany(() => Project, (project) => project.user)
   projects: Project[]
-  @Expose({ groups: ['search', 'edit'] })
+  @Expose({ groups: ['me'] })
   @Column('text', { array: true })
   @IsArray()
   @IsEnum(EUserRole, { each: true })
@@ -160,9 +175,32 @@ export class User extends AbstractBaseEntity implements IUser {
 
   // Not exposed to the 'edit' group - premium is granted by billing, not
   // self-editable via PUT /user.
-  @Expose({ groups: ['search'] })
+  @Expose({ groups: ['me'] })
   @Column('bool', { nullable: true, default: false })
   @IsBoolean()
   @IsOptional()
   premium?: boolean | null
+
+  /** Where an invoice from this account is paid, if anywhere. */
+  @Expose({ groups: ['search'] })
+  @IsString()
+  @IsOptional()
+  @JSONSchema(() => ({ type: 'string', nullable: true, readOnly: true }))
+  get payWallet(): string | null {
+    return (
+      this.connectedWallet ??
+      (AccountAddress.isEvm(this.address ?? '') ? this.address : null)
+    )
+  }
+
+  /** Where mail for this account goes: a Google email is proven, `email` isn't. */
+  @Expose({ groups: ['me'] })
+  @IsString()
+  @IsOptional()
+  @JSONSchema(() => ({ type: 'string', nullable: true, readOnly: true }))
+  get mailEmail(): string | null {
+    return AccountAddress.isEmail(this.address ?? '')
+      ? this.address
+      : (this.email ?? null)
+  }
 }

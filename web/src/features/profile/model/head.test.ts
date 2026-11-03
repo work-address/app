@@ -10,7 +10,6 @@ describe('buildProfileHead', () => {
     expect(buildProfileHead({ name: 'Gudrun', isOwn: false }, t)).toEqual({
       title: 'Gudrun',
       description: 'profile.head.description {"name":"Gudrun"}',
-      noindex: false,
     })
   })
 
@@ -27,7 +26,6 @@ describe('buildProfileHead', () => {
     expect(buildProfileHead({ name: 'Gudrun', isOwn: true }, t)).toEqual({
       title: 'profile.title',
       description: 'profile.head.descriptionOwn',
-      noindex: true,
     })
   })
 
@@ -43,7 +41,6 @@ describe('buildProfileHead', () => {
     ).toEqual({
       title: 'profile.loadFailure.title',
       description: 'profile.head.descriptionGeneric',
-      noindex: true,
     })
   })
 
@@ -54,6 +51,5 @@ describe('buildProfileHead', () => {
     )
 
     expect(head.title).toBe('profile.notFound.documentTitle')
-    expect(head.noindex).toBe(true)
   })
 })

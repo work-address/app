@@ -71,8 +71,7 @@ export class Calc {
 | Authorization callback | `middleware/validate-roles.ts` | `export const ValidateRoles = async (action, roles) => …` |
 | Decorator factories | `decorator/*.ts`, `decorator/openapi/*.ts` | `CurrentUser()`, `EntityFromParam()`, `OpenAPIExtended()` |
 | OpenAPI internals | `decorator/openapi/*.ts` | private module functions |
-| Crypto/auth helpers | `service/auth/ton-wallets.ts` | `loadWalletV1Data()`, `tryParsePublicKey()` |
-| Test fixtures | `test/fixture/*.ts` | `buildTonAuthPayload()` |
+| Test fixtures | `test/fixture/*.ts` | `GoogleAuthFixture.credential()` |
 | Type-only exports | `model/dto/search.ts` | `SORT_DIRECTIONS`, `type SortDirection` |
 
 Anything that is domain or reusable business logic must be in a class, not a loose function.

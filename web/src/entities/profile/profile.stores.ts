@@ -1,46 +1,18 @@
 import { combine, createStore } from 'effector'
 
-import {
-  disconnectEthFx,
-  ethDisconnectedPub,
-  loginEthFx,
-  openEthModalFx,
-  signEthFx,
-} from './eth.model'
-import {
-  fetchStatusFx,
-  getNonceFx,
-  LOCAL_STORAGE_AUTH_KEY,
-} from './profile.effects'
-import { login, logout, setInitialized } from './profile.events'
+import { loginEthFx } from './eth.model'
+import { loginGoogleFx } from './google.model'
+import { fetchStatusFx, LOCAL_STORAGE_AUTH_KEY } from './profile.effects'
+import { logout, setInitialized } from './profile.events'
 import { saveProfileMutation } from './profile.mutations'
-import { loginSolanaFx, openSolanaModalFx, signSolanaFx } from './solana.model'
-import {
-  disconnectTonFx,
-  loginTonFx,
-  openTonModalFx,
-  tonDisconnected,
-} from './ton.model'
 
-import type { EthModalResult, LoginMode } from './types'
-
-import { getFriendlyWalletAddress, type baseApi } from '@/shared'
-
-export const $loginMode = createStore<LoginMode | null>(null)
-  .on(login, (_, payload) => payload)
-  .reset(logout)
-
-export const $ethProviderData = createStore<EthModalResult | null>(null).reset(
-  loginEthFx.done,
-  logout,
-)
+import type { baseApi } from '@/shared'
 
 export const $authenticated = createStore(
   Boolean(localStorage.getItem(LOCAL_STORAGE_AUTH_KEY)),
 )
   .on(logout, () => false)
-  .on([ethDisconnectedPub, tonDisconnected], () => false)
-  .on([loginEthFx.done, loginTonFx.done, loginSolanaFx.done], () => true)
+  .on([loginEthFx.done, loginGoogleFx.done], () => true)
   .on(fetchStatusFx.done, () => true)
 
 export const $user = createStore<baseApi.User | null>(null)
@@ -55,29 +27,10 @@ export const $user = createStore<baseApi.User | null>(null)
   }))
   .reset(logout)
 
-export const $normalizedUser = $user.map((user) =>
-  user
-    ? {
-        ...user,
-        // TODO: set chain property on backend after authentication
-        friendlyWalletAddress: getFriendlyWalletAddress(user?.address),
-      }
-    : null,
-)
-
 export const $initialized = createStore(false).on(setInitialized, () => true)
 
 export const $pending = combine(
-  getNonceFx.pending,
-  openTonModalFx.pending,
-  openEthModalFx.pending,
-  openSolanaModalFx.pending,
-  signEthFx.pending,
-  disconnectEthFx.pending,
-  disconnectTonFx.pending,
   fetchStatusFx.pending,
   loginEthFx.pending,
-  loginTonFx.pending,
-  signSolanaFx.pending,
-  loginSolanaFx.pending,
+  loginGoogleFx.pending,
 ).map((state) => state.some(Boolean))

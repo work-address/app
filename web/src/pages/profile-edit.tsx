@@ -10,7 +10,7 @@ import { PageHelmet } from '@/shared'
 export default function ProfileEditPage() {
   const { t } = useTranslation()
 
-  const { walletAddress } = useParams()
+  const { id } = useParams()
 
   const { user } = useUnit({
     user: $user,
@@ -20,11 +20,11 @@ export default function ProfileEditPage() {
     return null
   }
 
-  if (user.friendlyWalletAddress !== walletAddress) {
+  if (user.id !== id) {
     return (
       <Navigate
         to={routes.profile.build({
-          walletAddress: user.friendlyWalletAddress ?? '',
+          id: user.id ?? '',
         })}
       />
     )
@@ -32,11 +32,10 @@ export default function ProfileEditPage() {
 
   return (
     <>
-      <ProfileGate friendlyWalletAddress={walletAddress || ''} />
+      <ProfileGate id={id || ''} />
       <PageHelmet
         title={t('app.documentTitle.profileEdit')}
         description={t('profile.form.edit.description')}
-        noindex
       />
       <ProfileEdit />
     </>

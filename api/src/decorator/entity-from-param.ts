@@ -1,7 +1,6 @@
 import { getMetadataArgsStorage, NotFoundError } from 'routing-controllers'
 
-import { WalletAddress } from '@/service/wallet-address'
-import { EntityTarget, FindOptionsWhere, Raw } from 'typeorm'
+import { EntityTarget, FindOptionsWhere } from 'typeorm'
 import 'reflect-metadata'
 
 import { getDataSource } from '@/connector/data-source'
@@ -96,16 +95,6 @@ async function entityTransform(
 ) {
   if (value === null || value === undefined) return Promise.resolve(value)
 
-  // A wallet address in a URL is whatever the user copied out of their wallet,
-  // which for TON is the friendly form while the column holds the raw one. So
-  // TON is collapsed to raw, and the comparison is case-insensitive because an
-  // EVM address is stored with its EIP-55 checksum casing but may be typed in
-  // any case - /profile/UQBKXR… and /profile/0xABC… both resolve.
-  const isAddressLookup = lookupField === 'address' && typeof value === 'string'
-  const lookupValue = isAddressLookup
-    ? WalletAddress.toStorage(value as string)
-    : value
-
   const repository = getDataSource().getRepository(target)
 
   let res
@@ -115,21 +104,11 @@ async function entityTransform(
       AbstractRepositoryTemplate.prototype.findOneByQueryBuilder.bind({
         target,
         getRepo: () => repository,
-      })({ [lookupField]: lookupValue }, selectOptions, relations),
+      })({ [lookupField]: value }, selectOptions, relations),
     )
   } else {
     res = await repository.findOne({
-      // Case-insensitive for an address: an EVM address is stored with its
-      // EIP-55 checksum casing but may legitimately be typed in any case, and
-      // the checksum is advisory rather than part of the identity.
-      where: (isAddressLookup
-        ? {
-            [lookupField]: Raw(
-              (alias) => `LOWER(${alias}) = LOWER(:addressValue)`,
-              { addressValue: lookupValue },
-            ),
-          }
-        : { [lookupField]: lookupValue }) as FindOptionsWhere<object>,
+      where: { [lookupField]: value } as FindOptionsWhere<object>,
     })
   }
 

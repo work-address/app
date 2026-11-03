@@ -177,7 +177,7 @@ export class ProjectControllerReadTest extends BaseControllerTest {
     ).user
     expect(ownerInResponse?.id).to.be.equal(owner.id)
     expect(ownerInResponse?.address).to.be.equal(owner.address)
-    expect(ownerInResponse?.roles).to.deep.equal(owner.roles)
+    expect(ownerInResponse).to.not.have.property('roles')
   }
 
   @test

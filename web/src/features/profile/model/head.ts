@@ -2,9 +2,6 @@
 export type ProfileHead = {
   title: string
   description: string
-  /** Someone else's profile is public; your own view of it is not indexed
-   * twice, and a missing one is not indexed at all. */
-  noindex: boolean
 }
 
 type Translate = (key: string, params?: Record<string, unknown>) => string
@@ -30,7 +27,6 @@ export function buildProfileHead(
     return {
       title: t('profile.notFound.documentTitle'),
       description: t('profile.head.descriptionGeneric'),
-      noindex: true,
     }
   }
 
@@ -38,7 +34,6 @@ export function buildProfileHead(
     return {
       title: t('profile.loadFailure.title'),
       description: t('profile.head.descriptionGeneric'),
-      noindex: true,
     }
   }
 
@@ -48,7 +43,6 @@ export function buildProfileHead(
     return {
       title: t('profile.title'),
       description: t('profile.head.descriptionOwn'),
-      noindex: true,
     }
   }
 
@@ -57,6 +51,5 @@ export function buildProfileHead(
     description: who
       ? t('profile.head.description', { name: who })
       : t('profile.head.descriptionGeneric'),
-    noindex: false,
   }
 }

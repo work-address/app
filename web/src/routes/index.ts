@@ -13,7 +13,7 @@ type MainRoutes =
   & Route<'/', 'dashboard'>
   & Route<'/time', 'time'>
   & Route<'/sign-in', 'signIn'>
-  & Route<'/profile/:walletAddress', 'profile', ProfileRoutes, { walletAddress: string }>
+  & Route<'/profile/:id', 'profile', ProfileRoutes, IdRouteParams>
   & Route<'https://address.work/docs', 'docs'>
   & Route<'/connect', 'connect', NoChildRoutes, { nonce?: string }>
   & Route<'/download', 'download'>
@@ -27,7 +27,7 @@ type MainRoutes =
   & Route<'https://youtube.com/:userId', 'youtube', NoChildRoutes, { userId: string }>
 
 type ProfileRoutes =
-  & Route<'/profile/:walletAddress/edit', 'edit', NoChildRoutes, { walletAddress: string }>
+  & Route<'/profile/:id/edit', 'edit', NoChildRoutes, IdRouteParams>
 
 /* eslint-enable */
 
@@ -59,8 +59,8 @@ export const routes: MainRoutes = {
   },
 
   profile: {
-    schema: '/profile/:walletAddress',
-    build: ({ walletAddress }) => `/profile/${walletAddress}`,
+    schema: '/profile/:id',
+    build: ({ id }) => `/profile/${id}`,
 
     desktopOrder: 3,
     mobileOrder: 3,
@@ -71,8 +71,8 @@ export const routes: MainRoutes = {
     translateKeyMobile: 'header.nav.profile',
     children: {
       edit: {
-        schema: '/profile/:walletAddress/edit',
-        build: ({ walletAddress }) => `/profile/${walletAddress}/edit`,
+        schema: '/profile/:id/edit',
+        build: ({ id }) => `/profile/${id}/edit`,
       },
     },
   },

@@ -15,7 +15,7 @@ import {
 import { routes } from '@/routes'
 import {
   Button,
-  formatWalletAddress,
+  formatAddress,
   LoadFailure,
   PageHelmet,
   StateNotice,
@@ -26,7 +26,7 @@ export default function ProfilePage() {
   const { t } = useTranslation()
   const navigate = useNavigate()
 
-  const { walletAddress } = useParams<{ walletAddress: string }>()
+  const { id } = useParams<{ id: string }>()
 
   const { profile, isOwn, failure, retry, authenticated } = useUnit({
     profile: $profile,
@@ -36,11 +36,11 @@ export default function ProfilePage() {
     authenticated: $authenticated,
   })
 
-  if (!walletAddress) {
+  if (!id) {
     return <Navigate to={routes.signIn.build()} />
   }
 
-  const shortAddress = formatWalletAddress(walletAddress)
+  const shortAddress = profile?.address ? formatAddress(profile.address) : ''
   const head = buildProfileHead(
     {
       name: profile?.name || profile?.title,
@@ -53,11 +53,10 @@ export default function ProfilePage() {
 
   return (
     <>
-      <ProfileGate friendlyWalletAddress={walletAddress} />
+      <ProfileGate id={id} />
       <PageHelmet
         title={head.title}
         description={head.description}
-        noindex={head.noindex}
         ogType="profile"
       />
       {failure === 'not-found' ? (
@@ -65,9 +64,7 @@ export default function ProfilePage() {
           <StateNotice
             size="page"
             title={t('profile.notFound.title')}
-            description={t('profile.notFound.description', {
-              address: shortAddress,
-            })}
+            description={t('profile.notFound.description')}
             actions={
               <Button
                 size="l"

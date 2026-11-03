@@ -157,7 +157,6 @@ export default function DashboardPage() {
       <PageHelmet
         title={t('dashboard.page.title')}
         description={t('dashboard.page.meta')}
-        noindex
       />
       <Wrapper>
         <DashboardPremiumBanner />

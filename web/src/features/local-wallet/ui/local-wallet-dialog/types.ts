@@ -13,6 +13,7 @@ export type ImportFormValues = PasswordFormValues & { privateKey: string }
 export type UnlockIntent = 'signIn' | 'reveal'
 
 export type FormProps<T> = {
+  submitLabel: string
   busy: boolean
   submitError: string | null
   onSubmit: (values: T) => void

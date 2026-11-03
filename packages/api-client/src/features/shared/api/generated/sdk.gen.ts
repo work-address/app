@@ -2,7 +2,7 @@
 
 import type { Client, Options as Options2, TDataShape } from './client';
 import { client } from './client.gen';
-import type { AgentControllerAttachData, AgentControllerAttachmentsData, AgentControllerAttachmentsResponses, AgentControllerAttachResponses, AgentControllerCreateData, AgentControllerCreateResponses, AgentControllerCredentialsData, AgentControllerCredentialsResponses, AgentControllerDetachData, AgentControllerDetachResponses, AgentControllerEditData, AgentControllerEditResponses, AgentControllerIngestData, AgentControllerIngestResponses, AgentControllerIssueData, AgentControllerIssueResponses, AgentControllerListData, AgentControllerListResponses, AgentControllerRemoveData, AgentControllerRemoveResponses, AgentControllerRevokeData, AgentControllerRevokeResponses, AgentControllerSearchData, AgentControllerSearchResponses, AgentControllerStatusData, AgentControllerStatusResponses, AuthControllerCheckProofHandlerData, AuthControllerCheckProofHandlerResponses, AuthControllerLoginEthData, AuthControllerLoginEthResponses, AuthControllerLoginSolanaData, AuthControllerLoginSolanaResponses, AuthControllerNonceData, AuthControllerNonceResponses, AuthControllerRefreshData, AuthControllerRefreshResponses, AuthControllerStatusData, AuthControllerStatusResponses, AuthControllerTonNonceData, AuthControllerTonNonceResponses, AuthTimeTrackerControllerTimeTrackerConnectData, AuthTimeTrackerControllerTimeTrackerConnectResponses, AuthTimeTrackerControllerTimeTrackerLoginData, AuthTimeTrackerControllerTimeTrackerLoginResponses, AuthTimeTrackerControllerTimeTrackerNonceGenerateData, AuthTimeTrackerControllerTimeTrackerNonceGenerateResponses, AuthTimeTrackerControllerTimeTrackerNonceGetData, AuthTimeTrackerControllerTimeTrackerNonceGetResponses, EntitlementControllerPushData, EntitlementControllerPushResponses, HelpControllerSwaggerData, HelpControllerSwaggerResponses, InvoiceControllerCreateData, InvoiceControllerCreateErrors, InvoiceControllerCreateResponses, InvoiceControllerMarkPaidData, InvoiceControllerMarkPaidErrors, InvoiceControllerMarkPaidResponses, InvoiceControllerMarkUnpaidData, InvoiceControllerMarkUnpaidErrors, InvoiceControllerMarkUnpaidResponses, InvoiceControllerReadData, InvoiceControllerReadErrors, InvoiceControllerReadResponses, InvoiceControllerRejectData, InvoiceControllerRejectErrors, InvoiceControllerRejectResponses, InvoiceControllerSearchData, InvoiceControllerSearchResponses, ProjectControllerCloseData, ProjectControllerCloseErrors, ProjectControllerCloseResponses, ProjectControllerCreateData, ProjectControllerCreateResponses, ProjectControllerDeleteData, ProjectControllerDeleteErrors, ProjectControllerDeleteResponses, ProjectControllerEditData, ProjectControllerEditErrors, ProjectControllerEditResponses, ProjectControllerGetStatsData, ProjectControllerGetStatsErrors, ProjectControllerGetStatsResponses, ProjectControllerReadData, ProjectControllerReadErrors, ProjectControllerReadResponses, ProjectControllerSearchData, ProjectControllerSearchResponses, StatisticsControllerAppsData, StatisticsControllerAppsResponses, StatisticsControllerOverviewData, StatisticsControllerOverviewResponses, TimeControllerCreateOrUpdateManyData, TimeControllerCreateOrUpdateManyResponses, TimeControllerDeleteData, TimeControllerDeleteResponses, TimeControllerEditData, TimeControllerEditErrors, TimeControllerEditResponses, TimeControllerGetTotalsData, TimeControllerGetTotalsErrors, TimeControllerGetTotalsResponses, TimeControllerMarkPaidData, TimeControllerMarkPaidResponses, TimeControllerMarkUnpaidData, TimeControllerMarkUnpaidResponses, TimeControllerPublishData, TimeControllerPublishResponses, TimeControllerReadData, TimeControllerReadErrors, TimeControllerReadResponses, TimeControllerRemoveProcessesData, TimeControllerRemoveProcessesResponses, TimeControllerRemoveScreenshotsData, TimeControllerRemoveScreenshotsResponses, TimeControllerSearchData, TimeControllerSearchResponses, UserControllerEditData, UserControllerEditResponses, UserControllerReadData, UserControllerReadErrors, UserControllerReadResponses, UserControllerSaveSettingsData, UserControllerSaveSettingsResponses, UserControllerSettingsData, UserControllerSettingsResponses } from './types.gen';
+import type { AgentControllerAttachData, AgentControllerAttachmentsData, AgentControllerAttachmentsResponses, AgentControllerAttachResponses, AgentControllerCreateData, AgentControllerCreateResponses, AgentControllerCredentialsData, AgentControllerCredentialsResponses, AgentControllerDetachData, AgentControllerDetachResponses, AgentControllerEditData, AgentControllerEditResponses, AgentControllerIngestData, AgentControllerIngestResponses, AgentControllerIssueData, AgentControllerIssueResponses, AgentControllerListData, AgentControllerListResponses, AgentControllerRemoveData, AgentControllerRemoveResponses, AgentControllerRevokeData, AgentControllerRevokeResponses, AgentControllerSearchData, AgentControllerSearchResponses, AgentControllerStatusData, AgentControllerStatusResponses, AuthControllerLoginEthData, AuthControllerLoginEthResponses, AuthControllerLoginGoogleData, AuthControllerLoginGoogleResponses, AuthControllerMethodsData, AuthControllerMethodsResponses, AuthControllerNonceData, AuthControllerNonceResponses, AuthControllerRefreshData, AuthControllerRefreshResponses, AuthControllerStatusData, AuthControllerStatusResponses, AuthTimeTrackerControllerTimeTrackerConnectData, AuthTimeTrackerControllerTimeTrackerConnectResponses, AuthTimeTrackerControllerTimeTrackerLoginData, AuthTimeTrackerControllerTimeTrackerLoginResponses, AuthTimeTrackerControllerTimeTrackerNonceGenerateData, AuthTimeTrackerControllerTimeTrackerNonceGenerateResponses, AuthTimeTrackerControllerTimeTrackerNonceGetData, AuthTimeTrackerControllerTimeTrackerNonceGetResponses, EntitlementControllerPushData, EntitlementControllerPushResponses, HelpControllerSwaggerData, HelpControllerSwaggerResponses, InvoiceControllerCreateData, InvoiceControllerCreateErrors, InvoiceControllerCreateResponses, InvoiceControllerMarkPaidData, InvoiceControllerMarkPaidErrors, InvoiceControllerMarkPaidResponses, InvoiceControllerMarkUnpaidData, InvoiceControllerMarkUnpaidErrors, InvoiceControllerMarkUnpaidResponses, InvoiceControllerReadData, InvoiceControllerReadErrors, InvoiceControllerReadResponses, InvoiceControllerRejectData, InvoiceControllerRejectErrors, InvoiceControllerRejectResponses, InvoiceControllerSearchData, InvoiceControllerSearchResponses, ProjectControllerCloseData, ProjectControllerCloseErrors, ProjectControllerCloseResponses, ProjectControllerCreateData, ProjectControllerCreateResponses, ProjectControllerDeleteData, ProjectControllerDeleteErrors, ProjectControllerDeleteResponses, ProjectControllerEditData, ProjectControllerEditErrors, ProjectControllerEditResponses, ProjectControllerGetStatsData, ProjectControllerGetStatsErrors, ProjectControllerGetStatsResponses, ProjectControllerReadData, ProjectControllerReadErrors, ProjectControllerReadResponses, ProjectControllerSearchData, ProjectControllerSearchResponses, StatisticsControllerAgentsDailyData, StatisticsControllerAgentsDailyResponses, StatisticsControllerAppsData, StatisticsControllerAppsResponses, StatisticsControllerInsightsMeData, StatisticsControllerInsightsMeResponses, StatisticsControllerOverviewData, StatisticsControllerOverviewResponses, StatisticsControllerTeamData, StatisticsControllerTeamResponses, StatisticsControllerTimeDailyData, StatisticsControllerTimeDailyResponses, StatisticsControllerTimeHourlyData, StatisticsControllerTimeHourlyResponses, TimeControllerCreateOrUpdateManyData, TimeControllerCreateOrUpdateManyResponses, TimeControllerDeleteData, TimeControllerDeleteResponses, TimeControllerEditData, TimeControllerEditErrors, TimeControllerEditResponses, TimeControllerGetTotalsData, TimeControllerGetTotalsErrors, TimeControllerGetTotalsResponses, TimeControllerMarkPaidData, TimeControllerMarkPaidResponses, TimeControllerMarkUnpaidData, TimeControllerMarkUnpaidResponses, TimeControllerPublishData, TimeControllerPublishResponses, TimeControllerReadData, TimeControllerReadErrors, TimeControllerReadResponses, TimeControllerRemoveProcessesData, TimeControllerRemoveProcessesResponses, TimeControllerRemoveScreenshotsData, TimeControllerRemoveScreenshotsResponses, TimeControllerSearchData, TimeControllerSearchResponses, UserControllerConnectedWalletNonceData, UserControllerConnectedWalletNonceResponses, UserControllerConnectWalletData, UserControllerConnectWalletResponses, UserControllerDisconnectWalletData, UserControllerDisconnectWalletResponses, UserControllerEditData, UserControllerEditResponses, UserControllerReadData, UserControllerReadErrors, UserControllerReadResponses, UserControllerSaveSettingsData, UserControllerSaveSettingsResponses, UserControllerSettingsData, UserControllerSettingsResponses } from './types.gen';
 
 export type Options<TData extends TDataShape = TDataShape, ThrowOnError extends boolean = boolean, TResponse = unknown> = Options2<TData, ThrowOnError, TResponse> & {
     /**
@@ -191,6 +191,76 @@ export const statisticsControllerOverview = <ThrowOnError extends boolean = fals
 });
 
 /**
+ * Tracked time per day and project
+ */
+export const statisticsControllerTimeDaily = <ThrowOnError extends boolean = false>(options: Options<StatisticsControllerTimeDailyData, ThrowOnError>) => (options.client ?? client).post<StatisticsControllerTimeDailyResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/statistics/time/daily',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The caller's active time by weekday and hour
+ */
+export const statisticsControllerTimeHourly = <ThrowOnError extends boolean = false>(options: Options<StatisticsControllerTimeHourlyData, ThrowOnError>) => (options.client ?? client).post<StatisticsControllerTimeHourlyResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/statistics/time/hourly',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * The caller's focus sessions, productive hours, active ratio and input per active hour
+ */
+export const statisticsControllerInsightsMe = <ThrowOnError extends boolean = false>(options: Options<StatisticsControllerInsightsMeData, ThrowOnError>) => (options.client ?? client).post<StatisticsControllerInsightsMeResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/statistics/insights/me',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Agent time per day and product, assisted and autonomous, and run counts
+ */
+export const statisticsControllerAgentsDaily = <ThrowOnError extends boolean = false>(options: Options<StatisticsControllerAgentsDailyData, ThrowOnError>) => (options.client ?? client).post<StatisticsControllerAgentsDailyResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/statistics/agents/daily',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Each person's time on the caller's own projects, sorted by name
+ */
+export const statisticsControllerTeam = <ThrowOnError extends boolean = false>(options: Options<StatisticsControllerTeamData, ThrowOnError>) => (options.client ?? client).post<StatisticsControllerTeamResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/statistics/team',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
  * App summary, daily, ranking, titles, workers or projects
  */
 export const statisticsControllerApps = <ThrowOnError extends boolean = false>(options: Options<StatisticsControllerAppsData, ThrowOnError>) => (options.client ?? client).post<StatisticsControllerAppsResponses, unknown, ThrowOnError>({
@@ -226,10 +296,10 @@ export const authControllerLoginEth = <ThrowOnError extends boolean = false>(opt
 });
 
 /**
- * Login with Solana wallet
+ * Login with Google
  */
-export const authControllerLoginSolana = <ThrowOnError extends boolean = false>(options: Options<AuthControllerLoginSolanaData, ThrowOnError>) => (options.client ?? client).post<AuthControllerLoginSolanaResponses, unknown, ThrowOnError>({
-    url: '/api/auth/solana',
+export const authControllerLoginGoogle = <ThrowOnError extends boolean = false>(options: Options<AuthControllerLoginGoogleData, ThrowOnError>) => (options.client ?? client).post<AuthControllerLoginGoogleResponses, unknown, ThrowOnError>({
+    url: '/api/auth/google',
     ...options,
     headers: {
         'Content-Type': 'application/json',
@@ -238,15 +308,12 @@ export const authControllerLoginSolana = <ThrowOnError extends boolean = false>(
 });
 
 /**
- * Login with TON Connect proof
+ * Sign-in methods this deployment offers
  */
-export const authControllerCheckProofHandler = <ThrowOnError extends boolean = false>(options: Options<AuthControllerCheckProofHandlerData, ThrowOnError>) => (options.client ?? client).post<AuthControllerCheckProofHandlerResponses, unknown, ThrowOnError>({
-    url: '/api/auth/ton',
-    ...options,
-    headers: {
-        'Content-Type': 'application/json',
-        ...options.headers
-    }
+export const authControllerMethods = <ThrowOnError extends boolean = false>(options?: Options<AuthControllerMethodsData, ThrowOnError>) => (options?.client ?? client).get<AuthControllerMethodsResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    url: '/api/auth/methods',
+    ...options
 });
 
 /**
@@ -260,15 +327,6 @@ export const authControllerNonce = <ThrowOnError extends boolean = false>(option
         'Content-Type': 'application/json',
         ...options.headers
     }
-});
-
-/**
- * Request nonce for TON Connect login
- */
-export const authControllerTonNonce = <ThrowOnError extends boolean = false>(options?: Options<AuthControllerTonNonceData, ThrowOnError>) => (options?.client ?? client).post<AuthControllerTonNonceResponses, unknown, ThrowOnError>({
-    responseType: 'json',
-    url: '/api/auth/ton/nonce',
-    ...options
 });
 
 /**
@@ -317,12 +375,49 @@ export const userControllerSaveSettings = <ThrowOnError extends boolean = false>
 });
 
 /**
- * Public profile by wallet address
+ * Profile by account id
  */
 export const userControllerRead = <ThrowOnError extends boolean = false>(options: Options<UserControllerReadData, ThrowOnError>) => (options.client ?? client).get<UserControllerReadResponses, UserControllerReadErrors, ThrowOnError>({
     responseType: 'json',
-    url: '/api/user/{address}/address',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/user/{id}',
     ...options
+});
+
+/**
+ * Start connecting a wallet: the message it has to sign
+ */
+export const userControllerConnectedWalletNonce = <ThrowOnError extends boolean = false>(options: Options<UserControllerConnectedWalletNonceData, ThrowOnError>) => (options.client ?? client).post<UserControllerConnectedWalletNonceResponses, unknown, ThrowOnError>({
+    responseType: 'json',
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/user/connected-wallet/nonce',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
+});
+
+/**
+ * Disconnect the connected wallet
+ */
+export const userControllerDisconnectWallet = <ThrowOnError extends boolean = false>(options?: Options<UserControllerDisconnectWalletData, ThrowOnError>) => (options?.client ?? client).delete<UserControllerDisconnectWalletResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/user/connected-wallet',
+    ...options
+});
+
+/**
+ * Finish connecting a wallet with its signature
+ */
+export const userControllerConnectWallet = <ThrowOnError extends boolean = false>(options: Options<UserControllerConnectWalletData, ThrowOnError>) => (options.client ?? client).post<UserControllerConnectWalletResponses, unknown, ThrowOnError>({
+    security: [{ scheme: 'bearer', type: 'http' }],
+    url: '/api/user/connected-wallet',
+    ...options,
+    headers: {
+        'Content-Type': 'application/json',
+        ...options.headers
+    }
 });
 
 /**

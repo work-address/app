@@ -39,3 +39,11 @@ _Avoid_: Evidence, activity data
 **Published**:
 Of an entry: its detail has reached the owner, because its author released it, an invoice billed it, or the review window ended.
 _Avoid_: Reviewed, released, public
+
+**Address**:
+What an account is called: an EVM address for a wallet account, the Google email for a Google account. Project lists hold these.
+_Avoid_: Wallet address, username
+
+**Connected wallet**:
+A wallet a Google account has proved is its own, shown on its profile and paid on its invoices. It signs nobody in and grants no access.
+_Avoid_: Linked wallet, payout address

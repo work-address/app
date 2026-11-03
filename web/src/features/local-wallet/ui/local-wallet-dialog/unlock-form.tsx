@@ -25,7 +25,9 @@ export const UnlockForm = ({
   onImport,
   onForget,
   onSubmit,
+  submitLabel,
 }: {
+  submitLabel: string
   address: string
   busy: boolean
   submitError: string | null
@@ -67,7 +69,7 @@ export const UnlockForm = ({
       <LocalWalletStatus />
       {submitError && <FieldError>{submitError}</FieldError>}
       <Button type="submit" size="l" stretch loading={busy}>
-        {t('localWallet.unlock.submit')}
+        {submitLabel}
       </Button>
       {/* The same password also opens the key for a backup, without signing in. */}
       <Button

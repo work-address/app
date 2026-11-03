@@ -410,10 +410,9 @@ export const handlers: HttpHandler[] = [
   route('post', '/auth/nonce', () => ({ nonce: crypto.randomUUID() }), {
     auth: false,
   }),
-  route('post', '/auth/ton/nonce', () => ({ nonce: crypto.randomUUID() }), {
-    auth: false,
-  }),
-  ...['/auth/eth', '/auth/solana', '/auth/ton'].map((path) =>
+  // The demo signs in with its browser wallet; Google is not offered.
+  route('get', '/auth/methods', () => ({}), { auth: false }),
+  ...['/auth/eth', '/auth/google'].map((path) =>
     route(
       'post',
       path,
@@ -441,18 +440,13 @@ export const handlers: HttpHandler[] = [
   })),
 
   // Profile.
-  route(
-    'get',
-    '/user/:address/address',
-    ({ db, params }) => {
-      const user = userByAddress(db, params.address)
-      if (!user) {
-        fail(404, 'User does not exist')
-      }
-      return shapeUser(user!)
-    },
-    { auth: false },
-  ),
+  route('get', '/user/:id', ({ db, params }) => {
+    const user = userOf(db, params.id)
+    if (!user) {
+      fail(404, 'User does not exist')
+    }
+    return shapeUser(user!)
+  }),
   route('put', '/user', ({ me, body }) => {
     const { id: _id, address: _a, roles: _r, premium: _p, ...fields } = body
     return shapeUser(

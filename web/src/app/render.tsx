@@ -9,7 +9,6 @@ import { ThemeProvider } from 'styled-components'
 
 import { App } from './app'
 
-import { AuthSolanaWalletMount } from '@/features/auth'
 import {
   ToastStyle,
   theme,
@@ -28,7 +27,6 @@ export const render = (root: HTMLElement) =>
   createRoot(root).render(
     <AppWrapper>
       <MotionConfig reducedMotion="user">
-        <AuthSolanaWalletMount />
         <Theme>
           <ThemeProvider theme={theme}>
             <Confirm />

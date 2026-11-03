@@ -231,7 +231,7 @@ export class ProjectControllerSearchTest extends BaseControllerTest {
     expect(rows[0].state).to.be.eq(EProjectState.ACTIVE)
     expect(rows[0].user?.id).to.be.eq(user.id)
     expect(rows[0].user?.address).to.be.eq(user.address)
-    expect(rows[0].user?.roles).to.deep.eq(user.roles)
+    expect(rows[0].user).to.not.have.property('roles')
   }
 
   @test()

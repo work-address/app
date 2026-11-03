@@ -24,11 +24,11 @@ import { Time } from '@/entity/time'
 import { IProject } from '@/model/project'
 
 // Access lists are unnested on every access check, so they stay bounded.
-// Addresses are free-form strings (a wallet may not have an account yet),
-// which is exactly why they need a ceiling. Module scope, not static fields:
+// An address may not have an account yet, which is why they need a ceiling.
+// 254 is the longest an email can be. Module scope, not static fields:
 // decorator arguments are evaluated before static initializers run.
 export const MAX_COLLABORATORS = 100
-export const MAX_ADDRESS_LENGTH = 128
+export const MAX_ADDRESS_LENGTH = 254
 
 @JSONSchema({
   example: {

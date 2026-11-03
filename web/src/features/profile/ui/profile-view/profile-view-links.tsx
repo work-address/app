@@ -1,4 +1,10 @@
-import { Pencil1Icon, CopyIcon, Share1Icon } from '@radix-ui/react-icons'
+import {
+  CopyIcon,
+  EnvelopeClosedIcon,
+  Pencil1Icon,
+  Share1Icon,
+  TokensIcon,
+} from '@radix-ui/react-icons'
 import { Flex, Grid, Skeleton, type FlexProps } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
@@ -31,7 +37,7 @@ import {
   Text,
   TwitterIcon,
   YoutubeIcon,
-  formatWalletAddress,
+  formatAddress,
   getCountryLabel,
   useBreakpoint,
 } from '@/shared'
@@ -104,17 +110,20 @@ export const ProfileViewLinks = ({
   })
 
   const displayName = user?.name || user?.title
-  const walletAddress = user?.friendlyWalletAddress
-    ? formatWalletAddress(user.friendlyWalletAddress)
-    : null
+  const shownAddress = user?.address ? formatAddress(user.address) : null
 
   const infoRowGap: FlexProps['gap'] = {
     initial: '0',
   }
 
   const hasLinks =
-    Boolean(user?.company || user?.city || user?.country) ||
-    SOCIAL_LINKS.some(({ name }) => Boolean(user?.[name]))
+    Boolean(
+      user?.company ||
+        user?.city ||
+        user?.country ||
+        user?.email ||
+        user?.connectedWallet,
+    ) || SOCIAL_LINKS.some(({ name }) => Boolean(user?.[name]))
 
   // On a phone the name and the buttons live in the QR card, so this card is
   // only the links - and with none to show it has nothing to say.
@@ -142,7 +151,7 @@ export const ProfileViewLinks = ({
                   {profileLoading ? (
                     <Skeleton width={'150px'} height={'20px'} loading />
                   ) : (
-                    walletAddress && (
+                    shownAddress && (
                       <Button
                         variant="ghost"
                         color="neutral"
@@ -153,18 +162,22 @@ export const ProfileViewLinks = ({
                           size={'3'}
                           weight={'medium'}
                         >
-                          {walletAddress}
+                          {shownAddress}
                         </Text>
                         <CopyIcon />
                       </Button>
                     )
                   )}
-                  {user?.premium && <PremiumBadge />}
+                  {user && 'premium' in user && Boolean(user.premium) && (
+                    <PremiumBadge />
+                  )}
                 </Flex>
               </Flex>
               <Flex gap={'2'} align={'center'}>
                 {isAuthenticatedUserProfile && (
-                  <LocalWalletRevealButton address={user?.address} />
+                  <LocalWalletRevealButton
+                    address={user?.connectedWallet ?? user?.address}
+                  />
                 )}
                 <Button
                   variant="outline"
@@ -177,7 +190,7 @@ export const ProfileViewLinks = ({
                 {isAuthenticatedUserProfile && (
                   <Link
                     to={routes.profile.children.edit.build({
-                      walletAddress: user?.friendlyWalletAddress || '',
+                      id: user?.id ?? '',
                     })}
                     viewTransition
                   >
@@ -200,6 +213,34 @@ export const ProfileViewLinks = ({
                 <Flex gap={{ initial: '5px', md: '6px' }}>
                   <Text color={'gray'}>{t('profile.view.worksAt')}</Text>
                   <Text weight={'medium'}>{user.company}</Text>
+                </Flex>
+              }
+            />
+          )}
+          {user?.email && (
+            <ProfileViewInfoRow
+              hoverEffects={false}
+              icon={<EnvelopeClosedIcon />}
+              text={
+                <Flex gap={{ initial: '5px', md: '6px' }}>
+                  <Text color={'gray'}>{t('profile.view.email')}</Text>
+                  <Text weight={'medium'}>{user.email}</Text>
+                </Flex>
+              }
+            />
+          )}
+          {user?.connectedWallet && (
+            <ProfileViewInfoRow
+              hoverEffects={false}
+              icon={<TokensIcon />}
+              text={
+                <Flex gap={{ initial: '5px', md: '6px' }}>
+                  <Text color={'gray'}>
+                    {t('profile.view.connectedWallet')}
+                  </Text>
+                  <Text weight={'medium'}>
+                    {formatAddress(user.connectedWallet)}
+                  </Text>
                 </Flex>
               }
             />

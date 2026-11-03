@@ -95,11 +95,7 @@ export default function ConnectPage() {
 
   return (
     <>
-      <PageHelmet
-        title={t('connect.title')}
-        description={t('connect.meta')}
-        noindex
-      />
+      <PageHelmet title={t('connect.title')} description={t('connect.meta')} />
       <IconButton asChild variant="ghost" radius="full" color="gray" size="4">
         <CloseLink to={closeHref} aria-label={t('connect.close')}>
           <Cross1Icon aria-hidden="true" />
@@ -115,7 +111,6 @@ export default function ConnectPage() {
           <Progress aria-hidden="true">
             {checkingLink ? (
               <>
-                <Skeleton width="100%" height="52px" loading />
                 <Skeleton width="100%" height="52px" loading />
                 <Skeleton width="100%" height="52px" loading />
               </>
@@ -152,7 +147,7 @@ export default function ConnectPage() {
             ? t('connect.status.authenticated')
             : t('connect.status.unauthenticated')}
           <br />
-          {t('connect.status.address')}: {user?.friendlyWalletAddress ?? ''}
+          {t('connect.status.address')}: {user?.address ?? ''}
           <br />
           {t('connect.status.nonce')}: {nonce ?? ''}
           {errorMessage && (

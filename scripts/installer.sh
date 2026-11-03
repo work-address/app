@@ -36,6 +36,7 @@ set -e
 #   APP_REPO_URL, APP_REPO_REF, APP_INSTALL_DIR  - where to clone from/to
 #   APP_PUBLIC_URL          - URL this install is served at (default http://localhost:8000)
 #   APP_DB_*, APP_JWT_SECRET, APP_SENTRY         - app config (prompted if unset)
+#   APP_GOOGLE_CLIENT_ID    - offers Google sign-in (default: browser wallet only)
 #   APP_BUILD_NO_CACHE=1    - force a cache-free rebuild
 #   APP_SKIP_SMOKE_TEST=1   - skip the post-start HTTP check
 # =============================================================================
@@ -434,9 +435,7 @@ fi
 # Trailing slashes would show up doubled in every URL printed at the end.
 APP_PUBLIC_URL="$(printf '%s' "$APP_PUBLIC_URL" | sed 's#/*$##')"
 
-# The web bundle and the TON proof check both need to know the public origin.
-# Strip the scheme and any path so what's left is host[:port] - the exact shape
-# APP_TON_ALLOWED_DOMAINS expects (comma-separated, no scheme).
+# Strip the scheme and any path so what's left is host[:port].
 PUBLIC_HOST="$(printf '%s' "$APP_PUBLIC_URL" | sed -e 's#^[a-zA-Z][a-zA-Z0-9+.-]*://##' -e 's#/.*$##')"
 if [ -z "$PUBLIC_HOST" ]; then
   log_error "APP_PUBLIC_URL ($APP_PUBLIC_URL) doesn't contain a hostname."
@@ -495,10 +494,9 @@ write_env_var APP_PUBLIC_URL "$APP_PUBLIC_URL"
 printf '\n# Same-origin API calls - see docker-compose.yml.\n' >> "$ENV_FILE"
 write_env_var VITE_API_URL ""
 
-# TON wallet proofs carry the domain the wallet signed for; the API rejects a
-# proof whose domain is not listed here. Left empty the check is skipped
-# entirely, so pinning it to the public host is what makes wallet login safe.
-write_env_var APP_TON_ALLOWED_DOMAINS "$PUBLIC_HOST"
+# Left empty, sign-in offers only the browser wallet, as a network that can't
+# reach Google needs.
+write_env_var APP_GOOGLE_CLIENT_ID "${APP_GOOGLE_CLIENT_ID:-}"
 
 log_info "Wrote $ENV_FILE"
 

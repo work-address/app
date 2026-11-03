@@ -22,11 +22,16 @@ export class UserManager {
 
   public editValidateAndSave(user: User, data: User): RepoEffect<User> {
     return Effect.gen(this, function* () {
+      const { roles } = user
       const edited = Object.assign(user, data)
+      // Not editable, and the body's entity carries the class's empty default.
+      edited.roles = roles
       // These have their own transactional endpoints. A stale profile save must
       // not overwrite a simultaneous agent or privacy-settings update.
       delete (edited as Partial<User>).agents
       delete (edited as Partial<User>).personalRedactionRules
+      // Mail for a Google account goes to the address Google proved.
+      if (user.googleSub) edited.email = null
 
       const errors = yield* fromPromise(() =>
         validate(edited, { groups: ['edit'] }),

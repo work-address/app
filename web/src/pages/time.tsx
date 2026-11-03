@@ -22,7 +22,6 @@ export default function TimePage() {
       <PageHelmet
         title={t('time.page.title')}
         description={t('time.page.meta')}
-        noindex
       />
       <TimeWorklogs />
     </Wrapper>

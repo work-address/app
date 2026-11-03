@@ -1,61 +1,8 @@
-import { createEffect, createEvent, createStore, sample } from 'effector'
+import { createEffect } from 'effector'
 
-import type { AuthorizationHeaders, EthModalResult } from './types'
+import type { AuthorizationHeaders } from './types'
 
-import {
-  baseApi,
-  getBrowserProvider,
-  getReownProvider,
-  getLoadedReownProvider,
-  runApi,
-} from '@/shared'
-
-export const ethConnected = createEvent<EthModalResult>()
-
-export const ethConnectedPub = createEvent<EthModalResult>()
-
-export const ethDisconnected = createEvent()
-
-export const ethDisconnectedPub = createEvent()
-
-export const ethConnectError = createEvent()
-
-export const $ethConnectionStatus = createStore<'connected' | 'disconnected'>(
-  'disconnected',
-)
-  .on(ethConnectedPub, () => 'connected')
-  .on(ethDisconnectedPub, () => 'disconnected')
-
-sample({
-  clock: ethConnected,
-  source: $ethConnectionStatus,
-  filter: (status) => status === 'disconnected',
-  fn: (_, data) => data,
-  target: ethConnectedPub,
-})
-
-sample({
-  clock: ethDisconnected,
-  source: $ethConnectionStatus,
-  filter: (status) => status === 'connected',
-  target: ethDisconnectedPub,
-})
-
-export const openEthModalFx = createEffect(async () => {
-  const reownProvider = await getReownProvider()
-  await subscribeEthEventsFx()
-  await reownProvider?.open({ namespace: 'eip155' })
-})
-
-export const signEthFx = createEffect(
-  async (params: { signer?: EthModalResult['signer']; nonce: string }) => {
-    if (!params.signer) {
-      throw new Error('Signer is null. Check the provider data exists.')
-    }
-
-    return params.signer.signMessage(params.nonce)
-  },
-)
+import { baseApi, runApi } from '@/shared'
 
 export const loginEthFx = createEffect(
   async (params: {
@@ -77,50 +24,3 @@ export const loginEthFx = createEffect(
     }
   },
 )
-
-export const disconnectEthFx = createEffect(async () => {
-  await getLoadedReownProvider()?.disconnect()
-})
-
-let subscription: Promise<() => void> | null = null
-
-export const subscribeEthEventsFx = createEffect(async () => {
-  subscription ??= getReownProvider()
-    .then((reown) =>
-      reown.subscribeEvents(async (event) => {
-        if (event.data.event === 'CONNECT_SUCCESS') {
-          const caipAddress = reown.getCaipAddress()
-          const isEvm = caipAddress?.startsWith('eip155:')
-
-          if (!isEvm) {
-            return
-          }
-
-          const walletProvider = reown.getWalletProvider()
-
-          if (!walletProvider) {
-            // eslint-disable-next-line no-console
-            return console.error(
-              'Wallet is not connected. Check the ethUI resolve status.',
-            )
-          }
-
-          const BrowserProvider = await getBrowserProvider()
-          const ethersProvider = new BrowserProvider(walletProvider as never)
-          const signer = await ethersProvider.getSigner()
-          const address = await signer.getAddress()
-
-          ethConnected({ signer, address, ethersProvider })
-        } else if (event.data.event === 'CONNECT_ERROR') {
-          ethConnectError()
-        } else if (event.data.event === 'DISCONNECT_SUCCESS') {
-          ethDisconnected()
-        }
-      }),
-    )
-    .catch((error) => {
-      subscription = null
-      throw error
-    })
-  return subscription
-})

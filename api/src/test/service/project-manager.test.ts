@@ -115,13 +115,13 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     project.user = owner
     // A collaborator may be granted access before their wallet has ever
     // signed in — the address is stored as-is, no matching user required.
-    project.workerAddresses = ['0x000000000000000000000000000000deadbeef']
+    project.workerAddresses = ['0x00000000000000000000000000000000deadbeef']
     project.viewerAddresses = []
 
     const saved = await runPromise(this.projectManager.createAndSave(project))
 
     expect(saved.workerAddresses).to.deep.equal([
-      '0x000000000000000000000000000000deadbeef',
+      '0x00000000000000000000000000000000deadbeef',
     ])
   }
 

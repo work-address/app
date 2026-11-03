@@ -218,7 +218,7 @@
           "lines"
         ],
         "example": {
-          "id": "ace488b4-4a52-409a-9056-4e056267218e"
+          "id": "1ff68a74-087c-4304-95da-2cf332589b5f"
         }
       },
       "ProjectStatistics": {
@@ -279,7 +279,7 @@
           "period"
         ],
         "example": {
-          "id": "2de9a710-3979-48a5-a38d-ff993164aa04"
+          "id": "7c785b6b-b8e1-449a-9d44-a763e7ebb0d2"
         }
       },
       "Time": {
@@ -430,7 +430,7 @@
           "toAt"
         ],
         "example": {
-          "id": "e220d32f-a656-439e-ac74-bf98c7f52412"
+          "id": "3ed43e55-2580-458a-971b-997c3343b71b"
         }
       },
       "Project": {
@@ -441,7 +441,7 @@
           },
           "workerAddresses": {
             "items": {
-              "maxLength": 128,
+              "maxLength": 254,
               "type": "string"
             },
             "type": "array",
@@ -449,7 +449,7 @@
           },
           "viewerAddresses": {
             "items": {
-              "maxLength": 128,
+              "maxLength": 254,
               "type": "string"
             },
             "type": "array",
@@ -547,13 +547,17 @@
           "state"
         ],
         "example": {
-          "id": "e9e72262-2e81-4cea-bbab-c25ba5a0ee6c"
+          "id": "fc7688d4-9a2a-4dfa-9f62-bc8ad0a2af13"
         }
       },
       "User": {
         "properties": {
           "address": {
             "type": "string"
+          },
+          "connectedWallet": {
+            "type": "string",
+            "nullable": true
           },
           "email": {
             "type": "string",
@@ -622,6 +626,16 @@
           "premium": {
             "type": "boolean"
           },
+          "payWallet": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
+          "mailEmail": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
+          },
           "id": {
             "minLength": 1,
             "type": "string",
@@ -654,7 +668,7 @@
         },
         "type": "object",
         "example": {
-          "id": "9af9d2c5-dc2c-4ad4-994e-5bf16c5d6126"
+          "id": "e23c5545-c6ed-47d6-a0c4-92a902b13bb7"
         }
       },
       "AgentDto": {
@@ -835,6 +849,13 @@
           "app": {
             "maxLength": 200,
             "type": "string"
+          },
+          "bucket": {
+            "type": "string",
+            "enum": [
+              "day",
+              "hour"
+            ]
           }
         },
         "type": "object",
@@ -863,7 +884,7 @@
             "type": "string"
           },
           "address": {
-            "minLength": 1,
+            "pattern": "^0[Xx][\\dA-Fa-f]{40}$",
             "type": "string"
           }
         },
@@ -873,27 +894,30 @@
           "address"
         ]
       },
-      "AuthSolanaLoginDto": {
+      "AuthGoogleLoginDto": {
         "properties": {
-          "signature": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "address": {
+          "credential": {
             "minLength": 1,
             "type": "string"
           }
         },
         "type": "object",
         "required": [
-          "signature",
-          "address"
+          "credential"
         ]
+      },
+      "AuthMethodsDto": {
+        "properties": {
+          "googleClientId": {
+            "type": "string"
+          }
+        },
+        "type": "object"
       },
       "AuthNonceRequestDto": {
         "properties": {
           "address": {
-            "minLength": 1,
+            "pattern": "^0[Xx][\\dA-Fa-f]{40}$",
             "type": "string"
           }
         },
@@ -912,78 +936,6 @@
         "type": "object",
         "required": [
           "refreshToken"
-        ]
-      },
-      "AuthTonProofDomainDto": {
-        "properties": {
-          "lengthBytes": {
-            "type": "number"
-          },
-          "value": {
-            "minLength": 1,
-            "type": "string"
-          }
-        },
-        "type": "object",
-        "required": [
-          "lengthBytes",
-          "value"
-        ]
-      },
-      "AuthTonProofPayloadDto": {
-        "properties": {
-          "timestamp": {
-            "type": "number"
-          },
-          "domain": {
-            "$ref": "#/components/schemas/AuthTonProofDomainDto"
-          },
-          "payload": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "signature": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "state_init": {
-            "minLength": 1,
-            "type": "string"
-          }
-        },
-        "type": "object",
-        "required": [
-          "timestamp",
-          "domain",
-          "payload",
-          "signature",
-          "state_init"
-        ]
-      },
-      "AuthTonLoginDto": {
-        "properties": {
-          "address": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "network": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "public_key": {
-            "minLength": 1,
-            "type": "string"
-          },
-          "proof": {
-            "$ref": "#/components/schemas/AuthTonProofPayloadDto"
-          }
-        },
-        "type": "object",
-        "required": [
-          "address",
-          "network",
-          "public_key",
-          "proof"
         ]
       },
       "RedactionRuleDto": {
@@ -1028,6 +980,35 @@
         "type": "object",
         "required": [
           "personalRedactionRules"
+        ]
+      },
+      "ConnectedWalletNonceDto": {
+        "properties": {
+          "address": {
+            "pattern": "^0[Xx][\\dA-Fa-f]{40}$",
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "address"
+        ]
+      },
+      "ConnectedWalletConfirmDto": {
+        "properties": {
+          "address": {
+            "pattern": "^0[Xx][\\dA-Fa-f]{40}$",
+            "type": "string"
+          },
+          "signature": {
+            "minLength": 1,
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "address",
+          "signature"
         ]
       },
       "SearchDto": {
@@ -1689,6 +1670,10 @@
           "address": {
             "type": "string"
           },
+          "connectedWallet": {
+            "type": "string",
+            "nullable": true
+          },
           "email": {
             "type": "string",
             "nullable": true
@@ -1741,17 +1726,10 @@
           "country": {
             "type": "string"
           },
-          "roles": {
-            "items": {
-              "enum": [
-                "ROLE_USER"
-              ],
-              "type": "string"
-            },
-            "type": "array"
-          },
-          "premium": {
-            "type": "boolean"
+          "payWallet": {
+            "type": "string",
+            "nullable": true,
+            "readOnly": true
           }
         }
       },
@@ -1810,15 +1788,6 @@
           },
           "country": {
             "type": "string"
-          },
-          "roles": {
-            "items": {
-              "enum": [
-                "ROLE_USER"
-              ],
-              "type": "string"
-            },
-            "type": "array"
           }
         }
       },
@@ -1861,7 +1830,7 @@
           },
           "workerAddresses": {
             "items": {
-              "maxLength": 128,
+              "maxLength": 254,
               "type": "string"
             },
             "type": "array",
@@ -1869,7 +1838,7 @@
           },
           "viewerAddresses": {
             "items": {
-              "maxLength": 128,
+              "maxLength": 254,
               "type": "string"
             },
             "type": "array",
@@ -1959,7 +1928,7 @@
           },
           "workerAddresses": {
             "items": {
-              "maxLength": 128,
+              "maxLength": 254,
               "type": "string"
             },
             "type": "array",
@@ -1967,7 +1936,7 @@
           },
           "viewerAddresses": {
             "items": {
-              "maxLength": 128,
+              "maxLength": 254,
               "type": "string"
             },
             "type": "array",
@@ -2079,7 +2048,7 @@
           },
           "workerAddresses": {
             "items": {
-              "maxLength": 128,
+              "maxLength": 254,
               "type": "string"
             },
             "type": "array",
@@ -2087,7 +2056,7 @@
           },
           "viewerAddresses": {
             "items": {
-              "maxLength": 128,
+              "maxLength": 254,
               "type": "string"
             },
             "type": "array",
@@ -2955,6 +2924,171 @@
         ]
       }
     },
+    "/api/statistics/time/daily": {
+      "post": {
+        "operationId": "StatisticsController.timeDaily",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatisticsQueryDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Tracked time per day and project",
+        "tags": [
+          "Statistics"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/statistics/time/hourly": {
+      "post": {
+        "operationId": "StatisticsController.timeHourly",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatisticsQueryDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "The caller's active time by weekday and hour",
+        "tags": [
+          "Statistics"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/statistics/insights/me": {
+      "post": {
+        "operationId": "StatisticsController.insightsMe",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatisticsQueryDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "The caller's focus sessions, productive hours, active ratio and input per active hour",
+        "tags": [
+          "Statistics"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/statistics/agents/daily": {
+      "post": {
+        "operationId": "StatisticsController.agentsDaily",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatisticsQueryDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Agent time per day and product, assisted and autonomous, and run counts",
+        "tags": [
+          "Statistics"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/statistics/team": {
+      "post": {
+        "operationId": "StatisticsController.team",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StatisticsQueryDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Each person's time on the caller's own projects, sorted by name",
+        "tags": [
+          "Statistics"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/statistics/apps/{kind}": {
       "post": {
         "operationId": "StatisticsController.apps",
@@ -3055,14 +3189,14 @@
         ]
       }
     },
-    "/api/auth/solana": {
+    "/api/auth/google": {
       "post": {
-        "operationId": "AuthController.loginSolana",
+        "operationId": "AuthController.loginGoogle",
         "requestBody": {
           "content": {
             "application/json": {
               "schema": {
-                "$ref": "#/components/schemas/AuthSolanaLoginDto"
+                "$ref": "#/components/schemas/AuthGoogleLoginDto"
               }
             }
           },
@@ -3088,46 +3222,28 @@
             }
           }
         },
-        "summary": "Login with Solana wallet",
+        "summary": "Login with Google",
         "tags": [
           "Auth"
         ]
       }
     },
-    "/api/auth/ton": {
-      "post": {
-        "operationId": "AuthController.checkProofHandler",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/AuthTonLoginDto"
-              }
-            }
-          },
-          "description": "",
-          "required": true
-        },
+    "/api/auth/methods": {
+      "get": {
+        "operationId": "AuthController.methods",
         "responses": {
           "200": {
-            "description": "",
-            "headers": {
-              "Authorization": {
-                "required": true,
+            "content": {
+              "application/json": {
                 "schema": {
-                  "type": "string"
-                }
-              },
-              "Refresh-Token": {
-                "required": true,
-                "schema": {
-                  "type": "string"
+                  "$ref": "#/components/schemas/AuthMethodsDto"
                 }
               }
-            }
+            },
+            "description": ""
           }
         },
-        "summary": "Login with TON Connect proof",
+        "summary": "Sign-in methods this deployment offers",
         "tags": [
           "Auth"
         ]
@@ -3161,28 +3277,6 @@
           }
         },
         "summary": "Request nonce for Ethereum login",
-        "tags": [
-          "Auth"
-        ]
-      }
-    },
-    "/api/auth/ton/nonce": {
-      "post": {
-        "operationId": "AuthController.tonNonce",
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "string",
-                  "example": "550e8400-e29b-41d4-a716-446655440000"
-                }
-              }
-            },
-            "description": ""
-          }
-        },
-        "summary": "Request nonce for TON Connect login",
         "tags": [
           "Auth"
         ]
@@ -3329,13 +3423,13 @@
         ]
       }
     },
-    "/api/user/{address}/address": {
+    "/api/user/{id}": {
       "get": {
         "operationId": "UserController.read",
         "parameters": [
           {
             "in": "path",
-            "name": "address",
+            "name": "id",
             "required": true,
             "schema": {
               "$ref": "#/components/schemas/User"
@@ -3374,9 +3468,98 @@
             }
           }
         },
-        "summary": "Public profile by wallet address",
+        "summary": "Profile by account id",
         "tags": [
           "User"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/user/connected-wallet/nonce": {
+      "post": {
+        "operationId": "UserController.connectedWalletNonce",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectedWalletNonceDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "string"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Start connecting a wallet: the message it has to sign",
+        "tags": [
+          "User"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/user/connected-wallet": {
+      "post": {
+        "operationId": "UserController.connectWallet",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ConnectedWalletConfirmDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Finish connecting a wallet with its signature",
+        "tags": [
+          "User"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "delete": {
+        "operationId": "UserController.disconnectWallet",
+        "responses": {
+          "204": {
+            "description": ""
+          }
+        },
+        "summary": "Disconnect the connected wallet",
+        "tags": [
+          "User"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
         ]
       }
     },
@@ -4424,7 +4607,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "0e38040f-f40b-4ede-9db6-a2eaf5a6c537"
+                  "projectId": "5a169e17-6f72-45fe-a6b0-137466c66f30"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -4492,8 +4675,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1792772827609,
-                "toUnix": 1792859227609
+                "fromUnix": 1793625659936,
+                "toUnix": 1793712059937
               }
             }
           },
@@ -4858,7 +5041,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "cef34c37-82ec-41b8-8bdd-be2f64ee4f1f"
+                "nonce": "b09c2cc8-e1f9-4392-bbc0-5bb096632dfe"
               },
               "schema": {
                 "properties": {
@@ -4903,7 +5086,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "ec21c31e-cfc7-4f9a-b041-63f17519bb61"
+                "nonce": "f58f38f5-c84f-4e25-bf3d-2102d1aab41d"
               },
               "schema": {
                 "properties": {
@@ -4944,21 +5127,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "6ab34598-f1b4-4a1c-ad81-eba183a08825",
+                      "nonce": "21188f23-8657-4b5f-8d80-a31d9e355310",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "3baa9f27-0fd3-4b41-bea3-0943d2519304",
+                      "nonce": "f48cdc0a-f120-4c9d-be28-d01e773d3b84",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "73e6a1d3-9c86-4429-ad74-d3cf9c774a7a",
+                      "nonce": "6ba5bfca-92ba-4619-8972-5321b054d784",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {
@@ -5001,171 +5184,6 @@
         "summary": "Poll time-tracker auth state by nonce",
         "tags": [
           "Auth Time Tracker"
-        ]
-      }
-    },
-    "/api/statistics/time/daily": {
-      "post": {
-        "operationId": "StatisticsController.timeDaily",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StatisticsQueryDto"
-              }
-            }
-          },
-          "description": "",
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {}
-            },
-            "description": "Successful response"
-          }
-        },
-        "summary": "Tracked time per day and project",
-        "tags": [
-          "Statistics"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/api/statistics/time/hourly": {
-      "post": {
-        "operationId": "StatisticsController.timeHourly",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StatisticsQueryDto"
-              }
-            }
-          },
-          "description": "",
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {}
-            },
-            "description": "Successful response"
-          }
-        },
-        "summary": "The caller's active time by weekday and hour",
-        "tags": [
-          "Statistics"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/api/statistics/insights/me": {
-      "post": {
-        "operationId": "StatisticsController.insightsMe",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StatisticsQueryDto"
-              }
-            }
-          },
-          "description": "",
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {}
-            },
-            "description": "Successful response"
-          }
-        },
-        "summary": "The caller's focus sessions, productive hours, active ratio and input per active hour",
-        "tags": [
-          "Statistics"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/api/statistics/agents/daily": {
-      "post": {
-        "operationId": "StatisticsController.agentsDaily",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StatisticsQueryDto"
-              }
-            }
-          },
-          "description": "",
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {}
-            },
-            "description": "Successful response"
-          }
-        },
-        "summary": "Agent time per day and product, assisted and autonomous, and run counts",
-        "tags": [
-          "Statistics"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
-        ]
-      }
-    },
-    "/api/statistics/team": {
-      "post": {
-        "operationId": "StatisticsController.team",
-        "requestBody": {
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/StatisticsQueryDto"
-              }
-            }
-          },
-          "description": "",
-          "required": true
-        },
-        "responses": {
-          "200": {
-            "content": {
-              "application/json": {}
-            },
-            "description": "Successful response"
-          }
-        },
-        "summary": "Each person's time on the caller's own projects, sorted by name",
-        "tags": [
-          "Statistics"
-        ],
-        "security": [
-          {
-            "bearerAuth": []
-          }
         ]
       }
     }

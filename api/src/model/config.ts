@@ -12,7 +12,8 @@ export interface IConfigParameters {
   entitlementSecret: string
   /** Loggly credentials as `subdomain/customer-token`. Empty disables Loggly. */
   loggly: string
-  tonAllowedDomains: string[]
+  /** Empty hides Google sign-in, as on a network that can't reach Google. */
+  googleClientId: string
   database: {
     type: string
     host: string

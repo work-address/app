@@ -22,6 +22,8 @@ import { showToast, useConfirm } from '@/shared'
 type Params = {
   open: boolean
   onOpenChange: (open: boolean) => void
+  /** What an unlocked key is for, if not signing in. */
+  onUnlocked?: (wallet: UnlockedLocalWallet) => Promise<unknown>
 }
 
 /**
@@ -32,7 +34,11 @@ type Params = {
  * and signing in (or while it is on screen for a backup), and is dropped the
  * moment the dialog closes.
  */
-export const useLocalWalletFlow = ({ open, onOpenChange }: Params) => {
+export const useLocalWalletFlow = ({
+  open,
+  onOpenChange,
+  onUnlocked,
+}: Params) => {
   const { t } = useTranslation()
   const { confirm } = useConfirm()
 
@@ -81,7 +87,7 @@ export const useLocalWalletFlow = ({ open, onOpenChange }: Params) => {
     setSubmitError(null)
 
     try {
-      await signInWithLocalWalletFx(target)
+      await (onUnlocked ?? signInWithLocalWalletFx)(target)
       setUnlocked(null)
       onOpenChange(false)
     } catch (error) {
