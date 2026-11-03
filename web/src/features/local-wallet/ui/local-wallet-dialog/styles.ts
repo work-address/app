@@ -49,10 +49,15 @@ export const ConfirmRow = styled.div`
 `
 
 export const Links = styled.div`
+  display: grid;
+  justify-items: start;
+  gap: var(--space-2);
+`
+
+export const MoreLinks = styled.div`
   display: flex;
-  justify-content: space-between;
-  gap: var(--space-3);
   flex-wrap: wrap;
+  gap: var(--space-2) var(--space-4);
 `
 
 export const LinkButton = styled.button`

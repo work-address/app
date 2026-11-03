@@ -5,7 +5,6 @@
  */
 
 import { sample } from 'effector'
-import i18n from 'i18next'
 
 import { loginEthFx } from './eth.model'
 import { loginGoogleFx } from './google.model'
@@ -20,7 +19,7 @@ import { initAuth, logout, setInitialized } from './profile.events'
 import { saveProfileMutation } from './profile.mutations'
 import { $authenticated, $initialized } from './profile.stores'
 
-import { showToast, suppressGlobalErrorToast } from '@/shared'
+import { suppressGlobalErrorToast } from '@/shared'
 
 /**
  * Persist auth flag to localStorage for backward compatibility.
@@ -90,13 +89,8 @@ saveProfileMutation.finished.failure.watch(({ error }) => {
   suppressGlobalErrorToast(error)
 })
 
-loginGoogleFx.fail.watch(({ error }) => {
-  suppressGlobalErrorToast(error)
-  showToast('error', {
-    message: i18n.t('signIn.errors.google'),
-    position: 'top-center',
-  })
-})
+// The Google button shows these in place, in `$googleSignInError`'s words.
+loginGoogleFx.failData.watch(suppressGlobalErrorToast)
 
 // eslint-disable-next-line
 ;(window as any)['logout'] = logout
@@ -110,12 +104,16 @@ export { saveProfileMutation } from './profile.mutations'
 // handling, status fetch and failure path as Google.
 export { loginEthFx } from './eth.model'
 export {
+  $authMethodsState,
   $googleClientId,
   $googleScriptAttempt,
   $googleScriptState,
+  $googleSignInError,
   fetchAuthMethodsFx,
+  googleButtonFailed,
   googleScriptLoaded,
   googleScriptLoadFailed,
   loginGoogleFx,
   retryGoogleScript,
 } from './google.model'
+export type { GoogleSignInError } from './google.model'

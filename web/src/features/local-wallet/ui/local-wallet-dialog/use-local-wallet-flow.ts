@@ -20,8 +20,9 @@ import type { PasswordFormValues } from '../local-wallet-fields'
 import { showToast, useConfirm } from '@/shared'
 
 type Params = {
-  open: boolean
-  onOpenChange: (open: boolean) => void
+  /** Whether a dialog is showing it. An inline flow is always open. */
+  open?: boolean
+  onOpenChange?: (open: boolean) => void
   /** What an unlocked key is for, if not signing in. */
   onUnlocked?: (wallet: UnlockedLocalWallet) => Promise<unknown>
 }
@@ -35,10 +36,10 @@ type Params = {
  * moment the dialog closes.
  */
 export const useLocalWalletFlow = ({
-  open,
+  open = true,
   onOpenChange,
   onUnlocked,
-}: Params) => {
+}: Params = {}) => {
   const { t } = useTranslation()
   const { confirm } = useConfirm()
 
@@ -60,14 +61,16 @@ export const useLocalWalletFlow = ({
   const busy = creating || importing || unlocking || signingIn
 
   // Each opening starts from the state of the browser, not from wherever the
-  // last attempt left off.
+  // last attempt left off. Not on a change of wallet: that is this flow's own
+  // create, import or forget, and each of those says where it goes next.
   useEffect(() => {
     if (open) {
       setStep(wallet ? 'unlock' : 'choose')
       setSubmitError(null)
       setUnlocked(null)
     }
-  }, [open, wallet])
+    // eslint-disable-next-line react-hooks/exhaustive-deps
+  }, [open])
 
   const describeError = (error: unknown) => {
     if (isLocalWalletError(error)) {
@@ -89,7 +92,7 @@ export const useLocalWalletFlow = ({
     try {
       await (onUnlocked ?? signInWithLocalWalletFx)(target)
       setUnlocked(null)
-      onOpenChange(false)
+      onOpenChange?.(false)
     } catch (error) {
       setSubmitError(describeError(error))
     }
@@ -182,3 +185,5 @@ export const useLocalWalletFlow = ({
     backFromReveal,
   }
 }
+
+export type LocalWalletFlow = ReturnType<typeof useLocalWalletFlow>

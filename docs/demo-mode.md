@@ -25,7 +25,7 @@ Related documents: [dashboard-rework.md](dashboard-rework.md) defines the statis
 | Statistics | The mock applies the API's scope, visibility and review-window rules; the pure rules live in `packages/statistics-core`, shared by API and mock | Simplified figures in the mock |
 | Presets | Two independent choices: Role × Data world | A flat list of named presets |
 | Roles | Owner, Worker, Viewer, Mixed (owns some projects, works on others) | Pure roles only |
-| Session | Starts signed in as the chosen role; sign-out works; a wallet sign-in signs in as the role; `/connect` succeeds at once | Starting signed out |
+| Session | Starts signed in as the chosen role; sign-out works; a wallet or Google sign-in signs in as the role, Google through a stand-in for its button that a plain build drops; `/connect` succeeds at once | Starting signed out |
 | Edits | Persist in localStorage per role and world until Reset | Lost on reload |
 | Timeline | Relative to today, stable within the day, in the browser's timezone; weekends get a quarter of a weekday's work, so a week starting on Sunday is never empty on its first day | Fixed dates; weekdays only |
 | Images | Generated in the browser: screenshot-like canvases, initial avatars | Remote image hosts |
@@ -40,8 +40,9 @@ A "Demo" pill in the bottom-left corner, above the app, expands into:
 3. **Profile** - Fresh (wallet only) or Finished (name, title, company, bio, rate, skills, socials).
 4. **Plan** - Premium or Free.
 5. **Network** - speed (instant, fast, slow), failure (none, every request), and fail the next request.
-6. **Scenarios** - a worker uploads time now; an agent run finishes with a prompt; the owner marks an invoice paid; a review window passes.
-7. **Reset demo data.**
+6. **Sign-in screen** - Google offered, wallet only, methods failed, script failed, and each way Google sign-in can be refused. Takes effect on a reload, without signing in.
+7. **Scenarios** - a worker uploads time now; an agent run finishes with a prompt; the owner marks an invoice paid; a review window passes.
+8. **Reset demo data.**
 
 ## Worlds
 

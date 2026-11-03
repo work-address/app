@@ -7,24 +7,17 @@ import styled from 'styled-components'
 import { AuthGoogleButton } from './auth-google-button'
 import { AuthProviderButton } from './auth-provider-button'
 
-import type { SignInGuideMode } from './auth-sign-in-guide'
-
 import { $googleClientId, fetchAuthMethodsFx } from '@/entities/profile'
 import { $localWallet, LocalWalletDialog } from '@/features/local-wallet'
 import { formatAddress } from '@/shared'
 
-type Props = {
-  /** Told which option the pointer or focus is on, to explain that one. */
-  onGuideChange?: (mode: SignInGuideMode) => void
-}
-
 /**
- * Every way to sign in: Google where this deployment offers it, then the
- * browser-kept wallet, which needs nothing outside the deployment. Rendered
- * bare, so each page lays the options out in its own column, and shared, so
- * sign-in and connect never drift.
+ * Every way to sign in, stacked for a page with one narrow column: Google where
+ * this deployment offers it, then the browser-kept wallet in a dialog, which
+ * needs nothing outside the deployment. Tracker pairing shows these; the
+ * sign-in page has room to give each its own half, and runs the same steps.
  */
-export const AuthProviders = ({ onGuideChange }: Props) => {
+export const AuthProviders = () => {
   const { t } = useTranslation()
   const [localWalletOpen, setLocalWalletOpen] = useState(false)
   const { localWallet, googleClientId, fetchMethods } = useUnit({
@@ -41,10 +34,7 @@ export const AuthProviders = ({ onGuideChange }: Props) => {
     <>
       {googleClientId && (
         <>
-          <AuthGoogleButton
-            clientId={googleClientId}
-            onMouseEnter={() => onGuideChange?.('google')}
-          />
+          <AuthGoogleButton clientId={googleClientId} />
           <OrRow aria-hidden="true">
             <span>{t('signIn.local.or')}</span>
           </OrRow>
@@ -56,8 +46,6 @@ export const AuthProviders = ({ onGuideChange }: Props) => {
         variant={googleClientId ? 'default' : 'primary'}
         icon={<LockClosedIcon width={16} height={16} />}
         onClick={() => setLocalWalletOpen(true)}
-        onMouseEnter={() => onGuideChange?.('local')}
-        onFocus={() => onGuideChange?.('local')}
       >
         {localWallet
           ? t('signIn.local.option.continue', {

@@ -16,5 +16,6 @@ export type FormProps<T> = {
   submitLabel: string
   busy: boolean
   submitError: string | null
+  autoFocus?: boolean
   onSubmit: (values: T) => void
 }

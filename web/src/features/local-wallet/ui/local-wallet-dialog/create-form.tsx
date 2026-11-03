@@ -18,6 +18,7 @@ import { Button, Text } from '@/shared'
 export const CreateForm = ({
   busy,
   submitError,
+  autoFocus,
   onBack,
   onSubmit,
   submitLabel,
@@ -42,7 +43,7 @@ export const CreateForm = ({
         errors={errors}
         disabled={busy}
         getPassword={() => getValues('password')}
-        autoFocus
+        autoFocus={autoFocus}
       />
       <LocalWalletStatus />
       {submitError && <FieldError>{submitError}</FieldError>}

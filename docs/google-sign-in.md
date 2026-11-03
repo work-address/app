@@ -18,6 +18,8 @@ Related documents: `web/PRODUCT.md` §1, §4.1, §4.7 and G13 state the rules th
 | Area | Decision | Not chosen |
 | --- | --- | --- |
 | Sign-in screen | Google and Browser Wallet. Google shows only when `APP_GOOGLE_CLIENT_ID` is set, which is how an isolated deployment gets a wallet-only screen | Build-time flags, which need one image per deployment; an offline mode |
+| Screen layout | Two equal halves: Google on the left, the browser wallet run in place on the right. Without Google the wallet takes the screen. `/connect` keeps its card and dialog, on the same steps | A stacked form with a brand panel; marketing copy beside it; a dialog on the sign-in page |
+| Sign-in failures | Shown in place under the Google button, told apart by the API's exception name: `GoogleEmailTakenException`, `GoogleEmailUnverifiedException`, `AuthenticationException` (invalid credential) and `GoogleUnavailableException` (503) | A toast; matching on message text |
 | Browser Wallet | The built-in EVM wallet only | Third-party wallets at sign-in |
 | Google flow | ID token: the browser posts Google's credential to `POST /auth/google`, and tokens come back in headers like the wallet login | Redirect flow, which needs a client secret and a callback, and has to carry the pairing nonce through Google |
 | Google identity | `address` holds the lowercase Google email. `googleSub`, in its own column, is what sign-in matches | Generated IDs in `address`; matching on email, which hands a reassigned mailbox the old account |
@@ -72,12 +74,15 @@ Related documents: `web/PRODUCT.md` §1, §4.1, §4.7 and G13 state the rules th
 - **Emails stay out of URLs and logs.** That includes the site's profile link (`web/web/src/shared/lib/account-nav.ts:96`) and the tracker's "JWT parse" log line (`AccountSession.cpp:221`).
 - **Length:** `MAX_ADDRESS_LENGTH` goes from 128 to 254 to fit any email.
 - **One key per browser.** The built-in wallet keeps its single slot, so a Google user connecting from a browser that already holds a key uses that key, or replaces it through the existing warning.
-- **Google failing to load** disables its button, and Browser Wallet still works.
+- **Google failing to load** swaps its button for a retry, and Browser Wallet still works.
+- **Not reaching Google isn't a bad credential.** The API fetches Google's signing keys before verifying, so a network failure answers 503 rather than refusing the person.
+- **`/auth/methods` failing isn't "no Google".** The sign-in page shows a retry rather than a wallet-only screen, because the wallet needs the same API. It holds the Google half with a skeleton until the answer arrives.
+- **A new key on screen holds Google back.** During the backup step the Google half is inert, and leaving the tab warns.
 - **Deposits are untouched.** `EDepositChain`, `web/web/src/features/billing/model/chains.ts` and `deposit-uri.ts` keep TON and Solana. TON handling for account addresses goes, so check what deposits use before removing any of it.
 
 ## Tests
 
-- **Google sign-in:** new account, returning account, unverified email, wrong audience, an email held under another `googleSub`, and a Google email that changed.
+- **Google sign-in:** new account, returning account, unverified email, wrong audience, an email held under another `googleSub`, a Google email that changed, each failure's exception name, and Google's keys being out of reach.
 - **Connected wallet:** a valid signature, a login signature replayed, another user's nonce, a wallet account refused, two accounts sharing one wallet, and disconnecting.
 - **Access:** in `test/service/project-access.test.ts`, email rows replace the TON and Solana rows, and a connected wallet grants nothing.
 - **Profiles:** an anonymous read is refused, and other users don't get `roles` or `premium`.

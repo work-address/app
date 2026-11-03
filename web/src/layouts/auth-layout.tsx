@@ -14,7 +14,10 @@ export const AuthLayout = () => {
   return (
     <Root $fullScreen={fullScreen}>
       <Stage $fullScreen={fullScreen}>
-        <Suspense fallback={<RouteSkeleton variant="auth" />}>
+        {/* The skeleton draws a card, which the sign-in page doesn't have. */}
+        <Suspense
+          fallback={fullScreen ? null : <RouteSkeleton variant="auth" />}
+        >
           <Outlet />
         </Suspense>
       </Stage>

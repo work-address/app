@@ -1,8 +1,8 @@
-// import { expect, userEvent, within } from 'storybook/test'
-
 import { SignInPage } from './sign-in-page'
 
 import type { Meta, StoryObj } from '@storybook/react-vite'
+
+import { fetchAuthMethodsFx } from '@/entities/profile'
 
 const meta = {
   title: 'Pages/SignIn',
@@ -16,18 +16,25 @@ const meta = {
 export default meta
 type Story = StoryObj<typeof meta>
 
-export const LoggedOut: Story = {}
+/** Storybook has no API, so each story answers what the deployment offers. */
+const methods = (answer: () => Promise<{ googleClientId?: string }>) => () => {
+  fetchAuthMethodsFx.use(answer as never)
+}
 
-// More on component testing: https://storybook.js.org/docs/writing-tests/interaction-testing
-/* export const LoggedIn: Story = {
-    play: async ({ canvasElement }) => {
-      const canvas = within(canvasElement)
-      const loginButton = canvas.getByRole('button', { name: /log in/i })
-      await expect(loginButton).toBeInTheDocument()
-      await userEvent.click(loginButton)
-      await expect(loginButton).not.toBeInTheDocument()
+export const GoogleAndWallet: Story = {
+  beforeEach: methods(async () => ({ googleClientId: 'storybook-client-id' })),
+}
 
-      const logoutButton = canvas.getByRole('button', { name: /log out/i })
-      await expect(logoutButton).toBeInTheDocument()
-    },
-}*/
+export const WaitingForTheDeployment: Story = {
+  beforeEach: methods(() => new Promise(() => {})),
+}
+
+export const WalletOnly: Story = {
+  beforeEach: methods(async () => ({})),
+}
+
+export const MethodsFailed: Story = {
+  beforeEach: methods(async () => {
+    throw new Error('The API did not answer')
+  }),
+}

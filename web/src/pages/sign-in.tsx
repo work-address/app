@@ -1,38 +1,51 @@
 import { useUnit } from 'effector-react'
-import { useState } from 'react'
+import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Navigate } from 'react-router-dom'
-import { useSearchParams } from 'react-router-dom'
+import { Navigate, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 
-import type { SignInGuideMode } from '@/features/auth'
-
-import { $authenticated, $googleClientId, $pending } from '@/entities/profile'
 import {
-  AuthStyles as S,
-  AuthHero,
-  AuthProviders,
-  AuthSignInGuide,
-  AuthSignInGuideMobile,
-} from '@/features/auth'
+  $authMethodsState,
+  $authenticated,
+  $googleClientId,
+  fetchAuthMethodsFx,
+  loginGoogleFx,
+} from '@/entities/profile'
+import { AuthGooglePanel, AuthSignInFoot } from '@/features/auth'
+import { LocalWalletPanel, useLocalWalletFlow } from '@/features/local-wallet'
 import { routes } from '@/routes'
-import { Logo as LogoImage, PageHelmet, Spinner } from '@/shared'
+import { Button, LogoLabel, PageHelmet, StateNotice } from '@/shared'
 
 /**
- * Split sign-in: the choice of method on the left, laid out like a sign-in
- * form, and the brand panel on the right. Hovering a method swaps the brand
- * panel for its steps, so the explanation sits beside the button it explains
- * rather than under it. Below `lg` the brand panel goes and the steps become
- * the collapsible primer under the buttons.
+ * Two equal halves, one for each way in: Google on the left, the browser wallet
+ * run in place on the right. Where the deployment doesn't offer Google, the
+ * wallet has the screen. While one way is busy the other is held back, and it
+ * stays held back while a new wallet's key is on screen to be saved.
  */
 export default function SignInPage() {
   const { t } = useTranslation()
-  const loading = useUnit($pending)
-  const authenticated = useUnit($authenticated)
-  const googleClientId = useUnit($googleClientId)
+  const {
+    authenticated,
+    googleClientId,
+    methodsState,
+    googleSigningIn,
+    fetchMethods,
+  } = useUnit({
+    authenticated: $authenticated,
+    googleClientId: $googleClientId,
+    methodsState: $authMethodsState,
+    googleSigningIn: loginGoogleFx.pending,
+    fetchMethods: fetchAuthMethodsFx,
+  })
+  const flow = useLocalWalletFlow()
   const [searchParams] = useSearchParams()
-  const [guideMode, setGuideMode] = useState<SignInGuideMode>('default')
   const nonce = searchParams.get('nonce')
+
+  const loadMethods = useCallback(() => {
+    fetchMethods().catch(() => {})
+  }, [fetchMethods])
+
+  useEffect(loadMethods, [loadMethods])
 
   if (nonce) {
     return <Navigate to={routes.connect.build({ nonce })} replace />
@@ -42,347 +55,179 @@ export default function SignInPage() {
     return <Navigate to={routes.dashboard.build()} />
   }
 
-  const showHero = guideMode === 'default'
-
-  const versionFooter = (
-    <Version>
-      {t('signIn.version')}: {import.meta.env.VITE_GIT_COMMIT_SUFFIX}
-    </Version>
-  )
+  const failed = methodsState === 'failed'
+  const split =
+    methodsState === 'loading' || (methodsState === 'ready' && !!googleClientId)
+  const googleHeld = flow.busy || flow.step === 'backup'
 
   return (
     <>
       <PageHelmet title={t('signIn.title')} description={t('signIn.meta')} />
-      <Screen>
-        <Panel>
-          {loading && (
-            <S.Overlay align={'center'} justify={'center'}>
-              <Spinner size={80} />
-            </S.Overlay>
+      <Root data-layout={split ? 'split' : 'single'}>
+        <Header>
+          <Logo src={LogoLabel} alt={t('signIn.logoAlt')} />
+        </Header>
+        <Heading>{t('signIn.heading')}</Heading>
+        <Panels>
+          {failed ? (
+            <Half>
+              <Column>
+                {/* The wallet signs in through the same API, so it can't be
+                    offered as a way round this. */}
+                <StateNotice
+                  tone="error"
+                  title={t('signIn.unavailable.title')}
+                  description={t('signIn.unavailable.description')}
+                  actions={
+                    <Button onClick={loadMethods}>
+                      {t('signIn.googleRetry')}
+                    </Button>
+                  }
+                />
+              </Column>
+            </Half>
+          ) : (
+            <>
+              {split && (
+                <Half data-held={googleHeld || undefined} inert={googleHeld}>
+                  <Column>
+                    <AuthGooglePanel clientId={googleClientId} />
+                  </Column>
+                </Half>
+              )}
+              <Half
+                data-side="wallet"
+                data-held={googleSigningIn || undefined}
+                inert={googleSigningIn}
+              >
+                <Column>
+                  <LocalWalletPanel flow={flow} />
+                </Column>
+              </Half>
+            </>
           )}
-          <PanelTop>
-            <Logo src={LogoImage} alt={t('signIn.logoAlt')} />
-          </PanelTop>
-          <Form
-            onMouseLeave={(event) => {
-              if (!event.currentTarget.contains(document.activeElement)) {
-                setGuideMode('default')
-              }
-            }}
-            onBlur={(event) => {
-              if (!event.currentTarget.contains(event.relatedTarget)) {
-                setGuideMode('default')
-              }
-            }}
-          >
-            <Heading>{t('signIn.heading')}</Heading>
-            <Lead>
-              {t(googleClientId ? 'signIn.lead' : 'signIn.leadWalletOnly')}
-            </Lead>
-            <FieldLabel>{t('signIn.chooseMethod')}</FieldLabel>
-            <Providers>
-              <AuthProviders onGuideChange={setGuideMode} />
-            </Providers>
-            <Primer>
-              <AuthSignInGuideMobile />
-            </Primer>
-            <Divider role="separator" />
-            <Secondary>
-              {t('signIn.noAccount')}{' '}
-              <S.Learn to={routes.docs.build()} target={routes.docs.target}>
-                {t('signIn.learnMore')}
-              </S.Learn>
-            </Secondary>
-          </Form>
-          {/* Under the form while the page is one column; the brand panel
-              carries it once there is one, so the form column never has to
-              scroll on a desktop. */}
-          <PanelFoot>{versionFooter}</PanelFoot>
-        </Panel>
-        <Brand>
-          <BrandInner>
-            <BrandLayer
-              data-visible={showHero || undefined}
-              aria-hidden={!showHero}
-              inert={!showHero}
-            >
-              <AuthHero />
-            </BrandLayer>
-            <BrandLayer
-              data-visible={!showHero || undefined}
-              aria-hidden={showHero}
-              inert={showHero}
-            >
-              <AuthSignInGuide mode={guideMode} tone="dark" />
-            </BrandLayer>
-          </BrandInner>
-          <BrandFoot>{versionFooter}</BrandFoot>
-        </Brand>
-      </Screen>
+        </Panels>
+        {!failed && <Foot googleOffered={!!googleClientId} />}
+      </Root>
     </>
   )
 }
 
-/* One column that scrolls on small screens; on a desktop the two panels are
-   pinned to the viewport and nothing scrolls. */
-const Screen = styled.div`
+/* One column that scrolls on a phone. On a desktop the screen is pinned to the
+   viewport and a half scrolls by itself if its form outgrows a short window.
+   The tint is on the screen rather than the half so it also runs behind the
+   foot, which belongs to both. */
+const Root = styled.div`
+  position: relative;
   width: 100%;
   min-height: 100dvh;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
   background: var(--white);
 
   ${({ theme }) => theme.breakpoints.up('lg')} {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
     height: 100dvh;
     min-height: 0;
+    grid-template-rows: minmax(0, 1fr) auto;
     overflow: hidden;
-  }
-`
 
-/* Hidden below `lg`: on a phone the brand copy would push the sign-in
-   options below the fold, and the primer under the buttons covers the how-to. */
-const Brand = styled.section`
-  display: none;
-
-  ${({ theme }) => theme.breakpoints.up('lg')} {
-    position: relative;
-    display: flex;
-    flex-direction: column;
-    justify-content: center;
-    min-height: 0;
-    padding: 48px 64px;
-    overflow: hidden;
-    color: var(--white);
-    background: linear-gradient(
-      160deg,
-      var(--ds-accent-9) 0%,
-      var(--c-253854) 100%
-    );
-
-    /* Two soft arcs, the way the reference panel breaks up a flat field of
-       colour without an illustration to maintain. */
-    &::before,
-    &::after {
+    &[data-layout='split']::before {
       content: '';
       position: absolute;
-      border-radius: 50%;
-      background: var(--c-rgba-255-255-255-0_2);
-      opacity: 0.35;
-      pointer-events: none;
-    }
-
-    &::before {
-      width: 620px;
-      height: 620px;
-      right: -260px;
-      top: -300px;
-    }
-
-    &::after {
-      width: 420px;
-      height: 420px;
-      left: -200px;
-      bottom: -240px;
-      opacity: 0.25;
+      inset: 0 0 0 50%;
+      background: var(--ds-neutral-2);
     }
   }
 `
 
-/* The hero and the guide share one grid cell, so the block is as tall as the
-   taller of the two and the footer under it never moves when they swap. Both
-   sit at the bottom of the cell, right above the footer. */
-const BrandInner = styled.div`
-  position: relative;
-  display: grid;
-  width: 100%;
-  max-width: 520px;
-  margin: 0 auto;
-`
-
-/* The wallet list at the foot of the brand panel, in the panel's own ink. */
-/* Compact, and set on the same left edge as the hero so the two read as one
-   block. Each network is one short line. */
-const BrandFoot = styled.footer`
-  position: relative;
-  width: 100%;
-  max-width: 520px;
-  margin: 28px auto 0;
-  padding-top: 16px;
-  border-top: 1px solid var(--c-rgba-255-255-255-0_2);
-  text-align: left;
-  font-size: var(--font-size-0);
-  line-height: 16px;
-  color: var(--c-rgba-255-255-255-0_92);
-
-  ${({ theme }) => theme.breakpoints.down('lg')} {
-    display: none;
-  }
-
-  & span {
-    color: var(--c-rgba-255-255-255-0_5);
-  }
-
-  a:hover {
-    color: var(--white);
-  }
-`
-
-/* The hero and the guide share one slot and crossfade, so the panel never
-   jumps in height when the hover target changes. */
-const BrandLayer = styled.div`
-  grid-area: 1 / 1;
-  display: flex;
-  flex-direction: column;
-  justify-content: flex-end;
-  opacity: 0;
-  transition: opacity 0.2s ease;
-
-  @media (prefers-reduced-motion: reduce) {
-    transition: none;
-  }
-  pointer-events: none;
-
-  &[data-visible] {
-    opacity: 1;
-    pointer-events: auto;
-  }
-`
-
-const Panel = styled.section`
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  min-height: 100dvh;
-  padding: 24px 16px 28px;
-
-  ${({ theme }) => theme.breakpoints.up('md')} {
-    padding: 28px 40px 32px;
-  }
+const Header = styled.header`
+  padding: var(--space-4);
 
   ${({ theme }) => theme.breakpoints.up('lg')} {
-    min-height: 0;
-    height: 100%;
-    padding: 24px 48px;
-    /* The column itself scrolls only if a very short window cannot hold the
-       form; the page never does. */
-    overflow-y: auto;
-  }
-`
-
-const PanelTop = styled.div`
-  display: flex;
-  justify-content: center;
-
-  ${({ theme }) => theme.breakpoints.up('lg')} {
-    justify-content: flex-start;
+    position: absolute;
+    top: 0;
+    left: 0;
+    z-index: 1;
+    padding: var(--space-5) var(--space-7);
   }
 `
 
 const Logo = styled.img`
   display: block;
-  width: 64px;
-  height: 64px;
-
-  ${({ theme }) => theme.breakpoints.up('lg')} {
-    width: 56px;
-    height: 56px;
-  }
-`
-
-/* Under the logo on a phone, the way a form follows a header; centred in the
-   panel on a desktop, level with the brand copy beside it. */
-const Form = styled.div`
-  width: 100%;
-  max-width: 456px;
-  margin: 36px auto 0;
-  display: flex;
-  flex-direction: column;
-  text-align: left;
-
-  ${({ theme }) => theme.breakpoints.up('lg')} {
-    flex: 1;
-    justify-content: center;
-    margin-top: 24px;
-  }
+  width: auto;
+  height: 32px;
 `
 
 const Heading = styled.h1`
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-  color: var(--ds-neutral-12);
-  margin: 0 0 10px;
-
-  ${({ theme }) => theme.breakpoints.up('md')} {
-    font-size: 32px;
-  }
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  margin: -1px;
+  padding: 0;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
 `
 
-const Lead = styled.p`
-  font-size: var(--font-size-3);
-  line-height: 1.5;
-  color: var(--ds-neutral-11);
-  margin: 0 0 28px;
-`
-
-/* The reference's uppercase field caption - here it names the choice below. */
-const FieldLabel = styled.div`
-  font-size: var(--font-size-1);
-  font-weight: 600;
-  letter-spacing: 0.08em;
-  text-transform: uppercase;
-  color: var(--ds-neutral-11);
-  margin-bottom: 8px;
-`
-
-const Providers = styled.div`
-  display: flex;
-  flex-direction: column;
-  gap: 10px;
-`
-
-const Primer = styled.div`
-  margin-top: 14px;
+const Panels = styled.div`
+  position: relative;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  /* On a phone the wallet, stacked second, takes what's left, so its tint runs
+     down to the foot. */
+  grid-template-rows: auto;
+  grid-auto-rows: 1fr;
 
   ${({ theme }) => theme.breakpoints.up('lg')} {
-    display: none;
+    min-height: 0;
+    grid-template-rows: minmax(0, 1fr);
+
+    ${Root}[data-layout='split'] & {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+    }
   }
 `
 
-const Divider = styled.hr`
-  border: 0;
-  border-top: 1px solid var(--ds-neutral-alpha-6);
-  margin: 22px 0;
+/* Both halves start on one line rather than being centred, so the headings stay
+   level and the wallet's steps can change height without anything jumping. */
+const Half = styled.section`
+  padding: var(--space-6) var(--space-4);
+  transition: opacity 0.2s ease;
+
+  &[data-side='wallet'] {
+    background: var(--ds-neutral-2);
+  }
+
+  ${Root}[data-layout='single'] &[data-side='wallet'] {
+    background: none;
+  }
+
+  &[data-held] {
+    opacity: 0.45;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
+  }
+
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    min-height: 0;
+    overflow-y: auto;
+    padding: clamp(96px, 24dvh, 240px) var(--space-7) var(--space-6);
+
+    &[data-side='wallet'] {
+      background: none;
+    }
+  }
 `
 
-const Secondary = styled.p`
-  margin: 0;
-  text-align: center;
-  font-size: var(--font-size-2);
-  line-height: 1.5;
-  color: var(--ds-neutral-11);
+/* Above the screen's tint, which is what lets it run behind this. */
+const Foot = styled(AuthSignInFoot)`
+  position: relative;
 `
 
-const PanelFoot = styled.footer`
+const Column = styled.div`
   width: 100%;
-  max-width: 456px;
-  margin: auto auto 0;
-  padding-top: 36px;
-  text-align: center;
-  font-size: var(--font-size-1);
-  line-height: 18px;
-  color: var(--ds-neutral-11);
-
-  ${({ theme }) => theme.breakpoints.up('lg')} {
-    display: none;
-  }
-`
-
-const Version = styled.div`
-  margin-top: 8px;
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: var(--font-size-0);
-  opacity: 0.6;
+  max-width: 400px;
+  margin-inline: auto;
 `

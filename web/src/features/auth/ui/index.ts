@@ -1,5 +1,5 @@
 export * as AuthStyles from './auth-styles'
+export * from './auth-google-panel'
 export * from './auth-provider-button'
-export * from './auth-sign-in-guide'
-export * from './auth-hero'
 export * from './auth-providers'
+export * from './auth-sign-in-foot'

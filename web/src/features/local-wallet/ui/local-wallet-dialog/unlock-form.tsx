@@ -8,7 +8,7 @@ import {
 } from '../local-wallet-fields'
 import { LocalWalletStatus } from '../local-wallet-status'
 
-import { Address, Form, LinkButton, Links } from './styles'
+import { Address, Form, LinkButton, Links, MoreLinks } from './styles'
 
 import type { UnlockIntent } from './types'
 
@@ -22,6 +22,7 @@ export const UnlockForm = ({
   address,
   busy,
   submitError,
+  autoFocus,
   onImport,
   onForget,
   onSubmit,
@@ -31,6 +32,7 @@ export const UnlockForm = ({
   address: string
   busy: boolean
   submitError: string | null
+  autoFocus?: boolean
   onImport: () => void
   onForget: () => void
   onSubmit: (values: PasswordFormValues, intent: UnlockIntent) => void
@@ -64,37 +66,37 @@ export const UnlockForm = ({
         disabled={busy}
         getPassword={() => getValues('password')}
         confirm={false}
-        autoFocus
+        autoFocus={autoFocus}
       />
       <LocalWalletStatus />
       {submitError && <FieldError>{submitError}</FieldError>}
       <Button type="submit" size="l" stretch loading={busy}>
         {submitLabel}
       </Button>
-      {/* The same password also opens the key for a backup, without signing in. */}
-      <Button
-        type="button"
-        size="l"
-        stretch
-        variant="outline"
-        color="neutral"
-        disabled={busy}
-        onClick={handleSubmit((values) => onSubmit(values, 'reveal'))}
-      >
-        {t('localWallet.unlock.reveal')}
-      </Button>
       <Links>
+        {/* There is no password reset: the backup key is the only way back. */}
         <LinkButton type="button" disabled={busy} onClick={onImport}>
           {t('localWallet.unlock.useAnother')}
         </LinkButton>
-        <LinkButton
-          type="button"
-          data-danger
-          disabled={busy}
-          onClick={onForget}
-        >
-          {t('localWallet.unlock.forget')}
-        </LinkButton>
+        <MoreLinks>
+          {/* The same password also opens the key for a backup, without
+              signing in. */}
+          <LinkButton
+            type="button"
+            disabled={busy}
+            onClick={handleSubmit((values) => onSubmit(values, 'reveal'))}
+          >
+            {t('localWallet.unlock.reveal')}
+          </LinkButton>
+          <LinkButton
+            type="button"
+            data-danger
+            disabled={busy}
+            onClick={onForget}
+          >
+            {t('localWallet.unlock.forget')}
+          </LinkButton>
+        </MoreLinks>
       </Links>
     </Form>
   )

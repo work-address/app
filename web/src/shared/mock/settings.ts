@@ -15,6 +15,19 @@ export const DEMO_WORLDS = [
 ] as const
 export type DemoWorldId = (typeof DEMO_WORLDS)[number]
 
+/** What the sign-in screen meets: which ways in, and how Google answers. */
+export const DEMO_SIGN_INS = [
+  'google',
+  'wallet-only',
+  'methods-failed',
+  'script-failed',
+  'google-email-taken',
+  'google-email-unverified',
+  'google-invalid',
+  'google-unavailable',
+] as const
+export type DemoSignIn = (typeof DEMO_SIGN_INS)[number]
+
 export type DemoNetwork = {
   speed: 'instant' | 'fast' | 'slow'
   failure: 'none' | 'all'
@@ -29,6 +42,7 @@ export type DemoSettings = {
   seed: number
   profile: 'fresh' | 'finished'
   plan: 'premium' | 'free'
+  signIn: DemoSignIn
   network: DemoNetwork
   /** Set by a demo sign-out, cleared by any sign-in. */
   signedOut: boolean
@@ -40,6 +54,7 @@ export const DEFAULT_DEMO_SETTINGS: DemoSettings = {
   seed: 0,
   profile: 'finished',
   plan: 'premium',
+  signIn: 'google',
   network: { speed: 'fast', failure: 'none', failNext: false },
   signedOut: false,
 }
@@ -68,6 +83,7 @@ export function readDemoSettings(): DemoSettings {
     seed: Number.isFinite(saved.seed) ? Number(saved.seed) : d.seed,
     profile: pick(saved.profile, ['fresh', 'finished'] as const, d.profile),
     plan: pick(saved.plan, ['premium', 'free'] as const, d.plan),
+    signIn: pick(saved.signIn, DEMO_SIGN_INS, d.signIn),
     network: {
       speed: pick(network.speed, ['instant', 'fast', 'slow'] as const, 'fast'),
       failure: pick(network.failure, ['none', 'all'] as const, 'none'),

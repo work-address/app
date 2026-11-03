@@ -14,6 +14,7 @@ import { DEMO_SCENARIOS } from '../scenarios'
 import { signInDemo, signOutDemo } from '../session'
 import {
   DEMO_ROLES,
+  DEMO_SIGN_INS,
   DEMO_WORLDS,
   readDemoSettings,
   writeDemoSettings,
@@ -37,6 +38,17 @@ const WORLD_LABELS: Record<DemoSettings['world'], [string, string]> = {
   typical: ['Typical', '3-5 projects, a few weeks'],
   busy: ['Busy', 'Dozens of projects, months, 25 workers'],
   random: ['Random', 'A typical shape, redrawn'],
+}
+
+const SIGN_IN_LABELS: Record<DemoSettings['signIn'], [string, string]> = {
+  google: ['Google offered', 'Both ways in, and both work'],
+  'wallet-only': ['Wallet only', 'A deployment with no Google'],
+  'methods-failed': ['Methods failed', "The API doesn't answer"],
+  'script-failed': ['Script failed', "Google's script doesn't load"],
+  'google-email-taken': ['Email taken', 'Another Google account holds it'],
+  'google-email-unverified': ['Email unverified', 'Google has not verified it'],
+  'google-invalid': ['Invalid credential', 'The API refuses the credential'],
+  'google-unavailable': ['Google unavailable', "The API can't reach Google"],
 }
 
 const OPEN_KEY = 'wa.demo.panel-open'
@@ -162,6 +174,26 @@ export const DemoPanel = () => {
               ]}
               onChange={(plan) => restart({ plan })}
             />
+          </Section>
+          <Section title="Sign-in screen">
+            <List>
+              {DEMO_SIGN_INS.map((signIn) => (
+                <Choice
+                  key={signIn}
+                  type="button"
+                  data-active={settings.signIn === signIn || undefined}
+                  onClick={() => {
+                    // Reloaded but not signed in, unlike the settings above:
+                    // this one is only seen from the sign-in screen.
+                    writeDemoSettings({ signIn })
+                    window.location.reload()
+                  }}
+                >
+                  <b>{SIGN_IN_LABELS[signIn][0]}</b>
+                  <small>{SIGN_IN_LABELS[signIn][1]}</small>
+                </Choice>
+              ))}
+            </List>
           </Section>
           <Section title="Network">
             <Segmented

@@ -15,8 +15,6 @@ type Props = {
   variant?: 'default' | 'primary'
   children: string
   onClick?: () => void
-  onMouseEnter?: () => void
-  onFocus?: () => void
 }
 
 /**
@@ -31,17 +29,9 @@ export const AuthProviderButton = ({
   icon,
   variant = 'default',
   onClick,
-  onMouseEnter,
-  onFocus,
 }: Props) => {
   return (
-    <Button
-      data-variant={variant}
-      onClick={onClick}
-      onMouseEnter={onMouseEnter}
-      onFocus={onFocus}
-      type={'button'}
-    >
+    <Button data-variant={variant} onClick={onClick} type={'button'}>
       {iconUrl ? (
         <Icon src={iconUrl} alt={iconAlt ?? ''} aria-hidden="true" />
       ) : (

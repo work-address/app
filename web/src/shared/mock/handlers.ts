@@ -8,7 +8,11 @@ import { http, HttpResponse, delay, type HttpHandler } from 'msw'
 
 import { spanMinutes } from './db'
 import { DEMO_ACCESS_TOKEN, DEMO_REFRESH_TOKEN, signInDemo } from './session'
-import { readDemoSettings, writeDemoSettings } from './settings'
+import {
+  readDemoSettings,
+  writeDemoSettings,
+  type DemoSignIn,
+} from './settings'
 import {
   canListEntry,
   hasDetail,
@@ -397,24 +401,77 @@ const statistics = (
   answer: (ctx: Ctx, query: StatisticsQuery) => unknown,
 ) => route('post', path, (ctx) => answer(ctx, ctx.body as StatisticsQuery))
 
+/** How the API answers each Google failure the demo can be set to. */
+const DEMO_GOOGLE_REFUSALS: Partial<
+  Record<DemoSignIn, { name: string; status: number }>
+> = {
+  'google-email-taken': { name: 'GoogleEmailTakenException', status: 401 },
+  'google-email-unverified': {
+    name: 'GoogleEmailUnverifiedException',
+    status: 401,
+  },
+  'google-invalid': { name: 'AuthenticationException', status: 401 },
+  'google-unavailable': { name: 'GoogleUnavailableException', status: 503 },
+}
+
 export const handlers: HttpHandler[] = [
   // Auth: any sign-in signs in as the demo's chosen role.
   route('get', '/auth/status', ({ me }) => shapeUser(me)),
-  route('post', '/auth/nonce', () => ({ nonce: crypto.randomUUID() }), {
+  route('post', '/auth/nonce', () => crypto.randomUUID(), {
     auth: false,
   }),
-  // The demo signs in with its browser wallet; Google is not offered.
-  route('get', '/auth/methods', () => ({}), { auth: false }),
-  ...['/auth/eth', '/auth/google'].map((path) =>
-    route(
-      'post',
-      path,
-      ({ db }) => {
-        signInDemo()
-        return withTokens(shapeUser(userOf(db, db.meId)!))
-      },
-      { auth: false },
-    ),
+  // The demo panel picks what the sign-in screen meets. Its made-up client IDs
+  // stop at the demo's stand-in for Google's button.
+  route(
+    'get',
+    '/auth/methods',
+    () => {
+      const { signIn } = readDemoSettings()
+
+      if (signIn === 'methods-failed') {
+        return HttpResponse.json(
+          { message: 'Demo: sign-in methods fail' },
+          { status: 500 },
+        )
+      }
+
+      if (signIn === 'wallet-only') {
+        return {}
+      }
+
+      return {
+        googleClientId:
+          signIn === 'script-failed' ? 'demo-script-failed' : 'demo-client-id',
+      }
+    },
+    { auth: false },
+  ),
+  route(
+    'post',
+    '/auth/eth',
+    ({ db }) => {
+      signInDemo()
+      return withTokens(shapeUser(userOf(db, db.meId)!))
+    },
+    { auth: false },
+  ),
+  route(
+    'post',
+    '/auth/google',
+    ({ db }) => {
+      const refusal = DEMO_GOOGLE_REFUSALS[readDemoSettings().signIn]
+
+      if (refusal) {
+        return HttpResponse.json(
+          { name: refusal.name, message: `Demo: ${refusal.name}` },
+          { status: refusal.status },
+        )
+      }
+
+      signInDemo()
+      return withTokens(shapeUser(userOf(db, db.meId)!))
+    },
+    { auth: false },
   ),
   route(
     'post',
@@ -425,9 +482,12 @@ export const handlers: HttpHandler[] = [
         : withTokens({}),
     { auth: false },
   ),
-  route('get', '/auth/timeTracker/:nonce', ({ params }) => ({
-    nonce: params.nonce,
-  })),
+  route(
+    'get',
+    '/auth/timeTracker/:nonce',
+    ({ params }) => ({ nonce: params.nonce }),
+    { auth: false },
+  ),
   route('post', '/auth/timeTracker/:nonce/connect', () => ({
     connected: true,
   })),
