@@ -754,8 +754,6 @@
   "signIn.google.lead": "最快的登录方式，无需安装任何内容。",
   "signIn.wallet.title": "使用浏览器钱包登录",
   "signIn.wallet.lead": "无需钱包应用。你的密钥以密码加密后保存在此浏览器中。",
-  "signIn.foot.separate": "Google 账户和浏览器钱包账户不共享数据。",
-  "signIn.foot.free": "登录不会转移资金，也不会产生手续费。",
   "signIn.errors.googleEmailTaken": "此邮箱已被其他账户使用，无法在此登录。",
   "signIn.errors.googleEmailUnverified": "请先在 Google 验证你的邮箱，然后重试。",
   "signIn.errors.googleUnavailable": "登录暂时不可用，请稍后重试。",
@@ -763,13 +761,6 @@
   "signIn.unavailable.description": "请稍后重试。",
   "signIn.hero.title": "欢迎使用 Address Work",
   "signIn.hero.subtitle": "面向自由职业者的时间记录和开票工具，也可以用钱包作为你的身份。",
-  "signIn.journey.label": "从这里到你的第一张发票",
-  "signIn.journey.signIn.title": "登录",
-  "signIn.journey.signIn.text": "首次登录时创建账户。",
-  "signIn.journey.setUp.title": "设置",
-  "signIn.journey.setUp.text": "创建项目并配对 TimeTracker 应用。",
-  "signIn.journey.track.title": "记录并开票",
-  "signIn.journey.track.text": "记录时间，然后向客户开具发票。",
   "signIn.next": "接下来会发生什么",
   "signIn.google.eyebrow": "适合大多数人",
   "signIn.google.step1": "选择你的 Google 账户",
@@ -780,7 +771,5 @@
   "signIn.wallet.step2": "保存你的私钥：如果此浏览器的数据被清除，这是唯一的恢复方式",
   "signIn.wallet.step3": "之后访问时用密码解锁",
   "localWallet.choose.importPrompt": "已有密钥？",
-  "localWallet.unlock.forgot": "忘记密码？",
-  "signIn.foot.separateTitle": "两个独立账户",
-  "signIn.foot.freeTitle": "免费登录"
+  "localWallet.unlock.forgot": "忘记密码？"
 }

@@ -767,8 +767,6 @@
   "signIn.google.lead": "Самый быстрый способ. Ничего не нужно устанавливать.",
   "signIn.wallet.title": "Войти через кошелёк в браузере",
   "signIn.wallet.lead": "Приложение не нужно. Ключ зашифрован паролем и хранится в этом браузере.",
-  "signIn.foot.separate": "Аккаунты Google и кошелька в браузере не делят данные.",
-  "signIn.foot.free": "Вход не переводит средства и не требует комиссии.",
   "signIn.errors.googleEmailTaken": "Этот адрес уже используется другим аккаунтом, поэтому войти с ним нельзя.",
   "signIn.errors.googleEmailUnverified": "Подтвердите адрес почты в Google и попробуйте ещё раз.",
   "signIn.errors.googleUnavailable": "Вход сейчас недоступен. Попробуйте ещё раз чуть позже.",
@@ -776,13 +774,6 @@
   "signIn.unavailable.description": "Попробуйте ещё раз чуть позже.",
   "signIn.hero.title": "Добро пожаловать в Address Work",
   "signIn.hero.subtitle": "Учёт времени и счета для фрилансеров, а при желании кошелёк как ваша личность.",
-  "signIn.journey.label": "Путь к первому счёту",
-  "signIn.journey.signIn.title": "Вход",
-  "signIn.journey.signIn.text": "Аккаунт создаётся при первом входе.",
-  "signIn.journey.setUp.title": "Настройка",
-  "signIn.journey.setUp.text": "Создайте проект и подключите приложение TimeTracker.",
-  "signIn.journey.track.title": "Учёт и счета",
-  "signIn.journey.track.text": "Учитывайте время и выставляйте счёт клиенту.",
   "signIn.next": "Что будет дальше",
   "signIn.google.eyebrow": "Подойдёт большинству",
   "signIn.google.step1": "Выберите аккаунт Google",
@@ -793,7 +784,5 @@
   "signIn.wallet.step2": "Сохраните приватный ключ: без него не вернуться, если данные браузера очистятся",
   "signIn.wallet.step3": "В следующий раз разблокируйте его паролем",
   "localWallet.choose.importPrompt": "Уже есть ключ?",
-  "localWallet.unlock.forgot": "Забыли пароль?",
-  "signIn.foot.separateTitle": "Два отдельных аккаунта",
-  "signIn.foot.freeTitle": "Вход бесплатный"
+  "localWallet.unlock.forgot": "Забыли пароль?"
 }

@@ -12,20 +12,14 @@ import {
   fetchAuthMethodsFx,
   loginGoogleFx,
 } from '@/entities/profile'
-import {
-  AuthGooglePanel,
-  AuthJourney,
-  AuthSignInFoot,
-  AuthStyles,
-  AuthWalletPanel,
-} from '@/features/auth'
+import { AuthGooglePanel, AuthStyles, AuthWalletPanel } from '@/features/auth'
 import { useLocalWalletFlow } from '@/features/local-wallet'
 import { routes } from '@/routes'
 import { Button, LogoLabel, PageHelmet, StateNotice } from '@/shared'
 
 /**
- * A band that says what this is and where signing in leads, then two equal
- * halves, one for each way in, centred in the room left: Google on the left,
+ * A band that says what this is, then two equal halves, one for each way in,
+ * centred in the room left: Google on the left,
  * the browser wallet run in place on the right. Where the deployment doesn't
  * offer Google, the wallet has the room. While one way is busy the other is held
  * back, and it stays held back while a new wallet's key is on screen to be saved.
@@ -89,13 +83,10 @@ export default function SignInPage() {
                 </Help>
               </BandActions>
             </BandTop>
-            <BandBody>
-              <Intro>
-                <Title>{t('signIn.hero.title')}</Title>
-                <Subtitle>{t('signIn.hero.subtitle')}</Subtitle>
-              </Intro>
-              <BandJourney layout="row" />
-            </BandBody>
+            <Intro>
+              <Title>{t('signIn.hero.title')}</Title>
+              <Subtitle>{t('signIn.hero.subtitle')}</Subtitle>
+            </Intro>
           </BandContent>
         </Band>
         <Panels>
@@ -137,9 +128,6 @@ export default function SignInPage() {
             </>
           )}
         </Panels>
-        {/* On a phone the way in comes first, and this follows it. */}
-        <PageJourney />
-        {!failed && <AuthSignInFoot googleOffered={split} />}
       </Root>
     </>
   )
@@ -151,13 +139,13 @@ const Root = styled.div`
   width: 100%;
   min-height: 100dvh;
   display: grid;
-  grid-template-rows: auto 1fr auto auto;
+  grid-template-rows: auto 1fr;
   background: var(--white);
 
   ${({ theme }) => theme.breakpoints.up('lg')} {
     height: 100dvh;
     min-height: 0;
-    grid-template-rows: auto minmax(0, 1fr) auto;
+    grid-template-rows: auto minmax(0, 1fr);
     overflow: hidden;
   }
 `
@@ -242,19 +230,11 @@ const Help = styled(Link)`
   }
 `
 
-const BandBody = styled.div`
-  display: grid;
-
-  ${({ theme }) => theme.breakpoints.up('lg')} {
-    grid-template-columns: minmax(0, 5fr) minmax(0, 7fr);
-    align-items: center;
-    gap: var(--space-7);
-  }
-`
-
 const Intro = styled.div`
   display: grid;
+  justify-items: center;
   gap: var(--space-2);
+  text-align: center;
 `
 
 const Title = styled.h1`
@@ -273,36 +253,11 @@ const Title = styled.h1`
 
 const Subtitle = styled.p`
   margin: 0;
-  max-width: 48ch;
+  max-width: 72ch;
+  text-wrap: balance;
   font-size: var(--font-size-3);
   line-height: 1.5;
   color: var(--c-rgba-255-255-255-0_92);
-`
-
-/* In the band on a desktop, in white. */
-const BandJourney = styled(AuthJourney)`
-  --steps-label: var(--c-rgba-255-255-255-0_92);
-  --steps-title: var(--white);
-  --steps-text: var(--c-rgba-255-255-255-0_92);
-  --steps-badge-bg: var(--white);
-  --steps-badge-fg: var(--ds-accent-11);
-  --steps-tile-bg: color-mix(in srgb, var(--white) 8%, transparent);
-  --steps-tile-border: var(--c-rgba-255-255-255-0_2);
-
-  display: none;
-
-  ${({ theme }) => theme.breakpoints.up('lg')} {
-    display: grid;
-  }
-`
-
-/* Under the ways in on a phone, where it can't push them off the screen. */
-const PageJourney = styled(AuthJourney)`
-  padding: var(--space-6) var(--space-4);
-
-  ${({ theme }) => theme.breakpoints.up('lg')} {
-    display: none;
-  }
 `
 
 /* On a desktop the halves share one row, centred between two spacer rows that

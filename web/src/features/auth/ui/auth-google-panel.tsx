@@ -41,9 +41,7 @@ export const AuthGooglePanel = ({ clientId }: Props) => {
       after={
         <AuthSteps
           label={t('signIn.next')}
-          steps={STEP_KEYS.map((key) => ({
-            text: t(`signIn.google.${key}`),
-          }))}
+          steps={STEP_KEYS.map((key) => t(`signIn.google.${key}`))}
         />
       }
     >

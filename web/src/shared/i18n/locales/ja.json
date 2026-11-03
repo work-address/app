@@ -754,8 +754,6 @@
   "signIn.google.lead": "いちばん手早い方法です。インストールは不要です。",
   "signIn.wallet.title": "ブラウザウォレットでサインイン",
   "signIn.wallet.lead": "ウォレットアプリは不要です。鍵はパスワードで暗号化され、このブラウザに保管されます。",
-  "signIn.foot.separate": "Google とブラウザウォレットのアカウントはデータを共有しません。",
-  "signIn.foot.free": "サインインで資金が動いたり手数料がかかったりすることはありません。",
   "signIn.errors.googleEmailTaken": "このメールアドレスは別のアカウントで使用されているため、ここではサインインできません。",
   "signIn.errors.googleEmailUnverified": "Google でメールアドレスを確認してから、もう一度お試しください。",
   "signIn.errors.googleUnavailable": "現在サインインをご利用いただけません。しばらくしてからもう一度お試しください。",
@@ -763,13 +761,6 @@
   "signIn.unavailable.description": "しばらくしてからもう一度お試しください。",
   "signIn.hero.title": "Address Work へようこそ",
   "signIn.hero.subtitle": "フリーランスのための時間記録と請求。希望すればウォレットを ID にできます。",
-  "signIn.journey.label": "最初の請求書まで",
-  "signIn.journey.signIn.title": "サインイン",
-  "signIn.journey.signIn.text": "初回にアカウントが作成されます。",
-  "signIn.journey.setUp.title": "準備",
-  "signIn.journey.setUp.text": "プロジェクトを作成し、TimeTracker アプリを接続します。",
-  "signIn.journey.track.title": "記録と請求",
-  "signIn.journey.track.text": "時間を記録し、クライアントに請求します。",
   "signIn.next": "この後の流れ",
   "signIn.google.eyebrow": "ほとんどの方におすすめ",
   "signIn.google.step1": "Google アカウントを選びます",
@@ -780,7 +771,5 @@
   "signIn.wallet.step2": "秘密鍵を保存します。このブラウザのデータが消えたときの唯一の復元手段です",
   "signIn.wallet.step3": "次回からはパスワードでロックを解除します",
   "localWallet.choose.importPrompt": "鍵をお持ちですか？",
-  "localWallet.unlock.forgot": "パスワードをお忘れですか？",
-  "signIn.foot.separateTitle": "アカウントは別々です",
-  "signIn.foot.freeTitle": "サインインは無料"
+  "localWallet.unlock.forgot": "パスワードをお忘れですか？"
 }

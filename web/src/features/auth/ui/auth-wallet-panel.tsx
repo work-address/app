@@ -59,9 +59,7 @@ export const AuthWalletPanel = ({ flow, choosing }: Props) => {
         step === 'choose' ? (
           <AuthSteps
             label={t('signIn.next')}
-            steps={STEP_KEYS.map((key) => ({
-              text: t(`signIn.wallet.${key}`),
-            }))}
+            steps={STEP_KEYS.map((key) => t(`signIn.wallet.${key}`))}
           />
         ) : undefined
       }
