@@ -12,6 +12,7 @@ import { bindNavigate, ErrorBoundary } from '@/shared'
 const DashboardPage = lazy(() => import('@/pages/dashboard'))
 const TimePage = lazy(() => import('@/pages/time'))
 const ProfilePage = lazy(() => import('@/pages/profile'))
+const OwnProfilePage = lazy(() => import('@/pages/own-profile'))
 const ProfileEditPage = lazy(() => import('@/pages/profile-edit'))
 const SignInPage = lazy(() => import('@/pages/sign-in'))
 const ConnectPage = lazy(() => import('@/pages/connect'))
@@ -45,6 +46,11 @@ const router = createBrowserRouter([
     element: <Layouts.MainLayout />,
     errorElement: <ErrorBoundary />,
     children: [
+      {
+        // The website's account menu links here: it has no id to put in the URL.
+        path: '/profile',
+        element: <OwnProfilePage />,
+      },
       {
         path: routes.profile.schema,
         element: <ProfilePage />,
