@@ -9,12 +9,14 @@ import { IconButton, Text, Tooltip, useBreakpoint } from '@/shared'
 type ProjectsDialogTitleProps = {
   title?: string
   mode: ProjectsDialogMode
+  canDelete: boolean
   onDelete: () => void
 }
 
 export const ProjectsDialogTitle = ({
   title,
   mode,
+  canDelete,
   onDelete,
 }: ProjectsDialogTitleProps) => {
   const { t } = useTranslation()
@@ -38,19 +40,21 @@ export const ProjectsDialogTitle = ({
       <Text as="span" style={{ minWidth: 0 }}>
         {heading}
       </Text>
-      <Flex align="center" gap="2" style={{ flexShrink: 0 }}>
-        <Tooltip content={t('dashboard.projectsTable.deleteHint')}>
-          <IconButton
-            color="red"
-            variant="outline"
-            onClick={onDelete}
-            type="button"
-            aria-label={t('dashboard.projectsTable.actions.delete')}
-          >
-            <TrashIcon />
-          </IconButton>
-        </Tooltip>
-      </Flex>
+      {canDelete && (
+        <Flex align="center" gap="2" style={{ flexShrink: 0 }}>
+          <Tooltip content={t('dashboard.projectsTable.deleteHint')}>
+            <IconButton
+              color="red"
+              variant="outline"
+              onClick={onDelete}
+              type="button"
+              aria-label={t('dashboard.projectsTable.actions.delete')}
+            >
+              <TrashIcon />
+            </IconButton>
+          </Tooltip>
+        </Flex>
+      )}
     </Flex>
   )
 }

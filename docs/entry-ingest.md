@@ -10,7 +10,7 @@ Deletes dead code from `TimeRepository`, then gives the rules for accepting an u
 
 | Concern | Where | What happens to it |
 | --- | --- | --- |
-| Search and totals | `findAndCount` (170 lines), `getTotals` | Stays |
+| Search and totals | `findAndCount` (170 lines), `getTotals` | Stays. `getTotals` later moved to `service/project-totals.ts` |
 | Access filter | `:811` | Leaves with [project-access.md](project-access.md) |
 | Invoice eligibility | `:657,710,742` | Consolidated by [invoice-lifecycle.md](invoice-lifecycle.md) |
 | Ingest | `saveWithUsage` (`:69-136`), `softDeleteExpiredEntriesForProjects` (`:515`), plus `TimeManager.createOrUpdateMany` | This brief |

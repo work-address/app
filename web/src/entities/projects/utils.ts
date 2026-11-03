@@ -1,9 +1,17 @@
 import type {
+  ProjectRole,
   TimeTotalComputed,
   ProjectWithStats,
   TimeTotalsRow,
 } from './types'
 import type { baseApi } from '@/shared'
+
+/** Only the owner changes a project (SPEC.md, "Who can see what"). */
+export const canManageProject = (role?: ProjectRole) => role === 'owner'
+
+/** An owner or a worker can invoice; a viewer sees no invoices at all. */
+export const canInvoiceProject = (role?: ProjectRole) =>
+  role === 'owner' || role === 'worker'
 
 // Sentinel that cannot collide with a real process name from the tracker.
 export const OTHER_PROCESS_NAME = '__other__'

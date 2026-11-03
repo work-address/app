@@ -10,7 +10,12 @@ import { ProjectsDialogView } from './projects-dialog-view'
 
 import type { ProjectsDialogMode } from '../../model'
 
-import { editProjectMutation, type ProjectWithStats } from '@/entities/projects'
+import {
+  canInvoiceProject,
+  canManageProject,
+  editProjectMutation,
+  type ProjectWithStats,
+} from '@/entities/projects'
 import { AdaptiveDialog, DIALOG_WIDTH_WIDE } from '@/shared'
 
 type ProjectsDialogProps = {
@@ -56,6 +61,7 @@ export const ProjectsDialog = ({
         <ProjectsDialogTitle
           title={row?.title}
           mode={modalMode}
+          canDelete={canManageProject(row?.role)}
           onDelete={() => onDeleteClick(row)}
         />
       }
@@ -67,6 +73,8 @@ export const ProjectsDialog = ({
           mode={modalMode}
           projectId={row?.id}
           isPending={editingStatus === 'pending'}
+          canManage={canManageProject(row?.role)}
+          canInvoice={canInvoiceProject(row?.role)}
           onDelete={() => row && onDeleteClick(row)}
           onEdit={() => setModalMode('edit')}
           onCancel={() => setModalMode('view')}

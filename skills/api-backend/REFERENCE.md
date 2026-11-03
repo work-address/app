@@ -59,7 +59,7 @@ export class Helper {
 
 // service/calc.ts
 export class Calc {
-  public static rateTotal(/* ... */) { /* ... */ }
+  public static spanMinutes(/* ... */) { /* ... */ }
 }
 ```
 

@@ -2,6 +2,7 @@ import { attach, combine, createEvent, createStore, sample } from 'effector'
 
 import {
   $filteredProjects,
+  canManageProject,
   changeProjectStateFilter,
   deleteProjectMutation,
   type ProjectsFilter,
@@ -52,7 +53,8 @@ export const $canDeleteAllProjects = combine(
     return (
       selected.length > 0 &&
       projects.length === selected.length &&
-      selected.every(Boolean)
+      selected.every(Boolean) &&
+      projects.every((project) => canManageProject(project.role))
     )
   },
 )
