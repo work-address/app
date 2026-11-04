@@ -327,6 +327,13 @@ const Root = styled.div`
   display: flex;
   flex-direction: column;
   align-items: flex-end;
+
+  /* A page's fixed action bar holds its primary button right where the pill
+     sits; the demo must not stop it being pressed. */
+  body:has([data-bottom-sheet]) & {
+    bottom: calc(68px + env(safe-area-inset-bottom, 0px));
+  }
+
   gap: 8px;
   font-family:
     Inter,
