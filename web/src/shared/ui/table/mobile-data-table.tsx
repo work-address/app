@@ -31,6 +31,7 @@ export type MobileDataTableProps<T extends AnyRecord> = {
   expandedId?: string
   loading?: boolean
   mockDataLength?: number
+  className?: string
 } & DataProps<T>
 
 export const MobileDataTable = <T extends AnyRecord>(
@@ -47,6 +48,7 @@ export const MobileDataTable = <T extends AnyRecord>(
     allowSelection,
     mockDataLength = MOCK_DATA_LENGTH,
     loading,
+    className,
   } = props
 
   const { t } = useTranslation()
@@ -109,7 +111,7 @@ export const MobileDataTable = <T extends AnyRecord>(
   }
 
   return (
-    <Root shadow={false}>
+    <Root shadow={false} className={className}>
       {isDataExists &&
         data.map((row, rowIndex) => {
           const rowId = getRowId(row)
@@ -152,7 +154,7 @@ export const MobileDataTable = <T extends AnyRecord>(
                       }
                       DefaultHeaderCellComponent={MobileHeaderComponent}
                     />
-                    <Flex alignSelf={'end'}>
+                    <Flex alignSelf={'center'}>
                       <IconButton
                         variant={'ghost'}
                         size={'2'}
@@ -243,7 +245,7 @@ export const MobileDataTable = <T extends AnyRecord>(
               <Header>
                 <Flex justify={'between'} align={'center'}>
                   <Skeleton width="150px" height="20px" />
-                  <Flex alignSelf={'end'}>
+                  <Flex alignSelf={'center'}>
                     <IconButton
                       variant={'ghost'}
                       size={'2'}
