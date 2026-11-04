@@ -79,7 +79,9 @@ export const RichEditor = ({
       return
     }
 
-    editor.commands.setContent(value ?? '')
+    // Loading a value is not an edit. Emitting here would hand the form the
+    // editor's normalized HTML, so a plain-text bio made the form dirty on load.
+    editor.commands.setContent(value ?? '', { emitUpdate: false })
   }, [value, editor])
 
   return (
