@@ -288,39 +288,63 @@ export const DashboardAgents = () => {
           emptyLabel={t('dashboard.agents.tooltipEmpty')}
           describe={describe}
         />
-        <Table>
-          <colgroup>
-            {COLUMN_WIDTHS.map((width, index) => (
-              <col key={index} style={{ width }} />
-            ))}
-          </colgroup>
-          <thead>
-            <tr>
-              <th>{t('dashboard.agents.product')}</th>
-              <th>{t('dashboard.agents.runs')}</th>
-              <th>{t('dashboard.agents.assisted')}</th>
-              <th>{t('dashboard.agents.autonomous')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {view.products.map((row) => (
-              <tr key={row.product}>
-                <td>{row.product}</td>
-                <td>{row.runs}</td>
-                <td>{duration(row.assisted)}</td>
-                <td>{duration(row.autonomous)}</td>
+        {/* Focusable so the rows can be scrolled from the keyboard too. */}
+        <TableScroll tabIndex={0} aria-label={t('dashboard.agents.product')}>
+          <Table>
+            <colgroup>
+              {COLUMN_WIDTHS.map((width, index) => (
+                <col key={index} style={{ width }} />
+              ))}
+            </colgroup>
+            <thead>
+              <tr>
+                <th>{t('dashboard.agents.product')}</th>
+                <th>{t('dashboard.agents.runs')}</th>
+                <th>{t('dashboard.agents.assisted')}</th>
+                <th>{t('dashboard.agents.autonomous')}</th>
               </tr>
-            ))}
-          </tbody>
-        </Table>
+            </thead>
+            <tbody>
+              {view.products.map((row) => (
+                <tr key={row.product}>
+                  <td>{row.product}</td>
+                  <td>{row.runs}</td>
+                  <td>{duration(row.assisted)}</td>
+                  <td>{duration(row.autonomous)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </TableScroll>
       </Layout>
     </DashboardWidget>
   )
 }
 
+/* On a desktop the figures and chart hold still and the table takes what is
+   left of the tile, scrolling its rows. A phone stacks the figures, which
+   leaves the table no room of its own, so the whole tile scrolls instead. */
 const Layout = styled.div`
   display: grid;
   gap: var(--space-4);
+
+  ${(p) => p.theme.breakpoints.up('md')} {
+    grid-template-rows: auto auto minmax(0, 1fr);
+    height: 100%;
+  }
+`
+
+const TableScroll = styled.div`
+  min-height: 0;
+
+  ${(p) => p.theme.breakpoints.up('md')} {
+    overflow-y: auto;
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ds-accent-9);
+    outline-offset: 2px;
+  }
 `
 
 /* Four cells of the same size, each a small tile of its own, so the strip
@@ -369,7 +393,9 @@ const Figure = styled.div`
 const Table = styled.table`
   width: 100%;
   table-layout: fixed;
-  border-collapse: collapse;
+  /* Separate: a collapsed border stays behind when its sticky header moves. */
+  border-collapse: separate;
+  border-spacing: 0;
   font-size: var(--font-size-2);
   line-height: var(--line-height-2);
   font-variant-numeric: tabular-nums;
@@ -382,6 +408,10 @@ const Table = styled.table`
     font-weight: 400;
     text-align: left;
     border-bottom: 1px solid var(--ds-neutral-alpha-6);
+    /* The tile's own surface: the rows scroll under it. */
+    position: sticky;
+    top: 0;
+    background: var(--color-panel-solid);
   }
 
   td {
