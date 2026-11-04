@@ -4,11 +4,13 @@ import { applyInvoiceSettlement } from './invoice-feed'
 import { invoiceListQuery, invoiceSummaryQuery } from './queries'
 import { invoiceSettlementApplied } from './settlement.events'
 
+import type { InvoiceListParams } from './queries'
 import type { baseApi } from '@/shared'
 
 export const fetchInvoiceList = createEvent()
 export const retryInvoiceSummary = createEvent()
 export const loadMoreInvoices = createEvent()
+export const retryInvoiceList = createEvent()
 export const invoiceProjectFilterChanged = createEvent<string>()
 
 /** Empty string means "every state" - the tab the list opens on. */
@@ -42,8 +44,8 @@ type InvoiceFeed = {
 const emptyFeed: InvoiceFeed = { items: [], endReached: false }
 
 /**
- * Pages accumulate here rather than replacing one another, so "load more"
- * grows the list instead of swapping it.
+ * Pages accumulate here rather than replacing one another, so scrolling to the
+ * end grows the list instead of swapping it.
  *
  * Changing the project filter resets it: the pages already loaded describe a
  * different query, and appending the new ones would mix two filters in one
@@ -98,13 +100,21 @@ export const $hasMoreInvoices = combine(
 
 /**
  * Distinguishes the first load from a later page: the first shows skeletons in
- * place of the list, a later one only disables the button at the bottom.
+ * place of the list, a later one only a spinner at the bottom.
  */
 // A failed prefix reload remembers its span, so retry preserves loaded pages.
 export const $invoiceReloadThroughPage = createStore<number | null>(null)
   .on(invoiceListQuery.start, (_, params) => params.reloadThroughPage ?? null)
   .on(invoiceListQuery.finished.success, () => null)
   .reset(invoiceFilterChanged)
+
+/**
+ * What the list last asked for, so a retry asks for exactly that again: the page
+ * that failed, under the filter it failed with, and not the first page over.
+ */
+export const $invoiceLastListParams = createStore<InvoiceListParams | null>(
+  null,
+).on(invoiceListQuery.start, (_, params) => params)
 
 const $invoiceRequestedPage = createStore({ page: 0, reload: false })
   .on(invoiceListQuery.start, (_, params) => ({

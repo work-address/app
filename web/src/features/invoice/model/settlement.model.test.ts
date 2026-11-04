@@ -14,6 +14,7 @@ import {
   invoiceSettlementRequested,
   invoiceStateFilterChanged,
   loadMoreInvoices,
+  retryInvoiceList,
 } from './index'
 
 const { paid, unpaid, search, toast, suppressed } = vi.hoisted(() => ({
@@ -250,5 +251,63 @@ describe('invoice settlement model', () => {
     expect(scope.getState($invoicePage)).toBe(1)
     expect(scope.getState($invoiceReloadThroughPage)).toBeNull()
     expect(scope.getState($invoicesTotal)).toBe(59)
+  })
+})
+
+describe('invoice list retry', () => {
+  const offline = () =>
+    Promise.resolve(new AxiosError('Offline', 'ERR_NETWORK'))
+  const paged = (server: ReturnType<typeof row>[]) => {
+    search.mockImplementation(({ body }) =>
+      Promise.resolve({
+        data: [
+          server.slice(body.page * body.limit, (body.page + 1) * body.limit),
+          server.length,
+        ],
+      }),
+    )
+  }
+
+  it('keeps the loaded rows when a later page fails, and retries only that page', async () => {
+    const scope = fork()
+    const server = Array.from({ length: 60 }, (_, index) => row(String(index)))
+    paged(server)
+    await allSettled(fetchInvoiceList, { scope })
+
+    search.mockImplementation(offline)
+    await allSettled(loadMoreInvoices, { scope })
+    expect(scope.getState(invoiceListQuery.$failed)).toBe(true)
+    expect(scope.getState($invoices)).toHaveLength(20)
+
+    paged(server)
+    search.mockClear()
+    await allSettled(retryInvoiceList, { scope })
+    expect(search.mock.calls.map(([{ body }]) => body.page)).toEqual([1])
+    expect(scope.getState(invoiceListQuery.$failed)).toBe(false)
+    expect(scope.getState($invoices).map((item) => item.id)).toEqual(
+      server.slice(0, 40).map((item) => item.id),
+    )
+
+    await allSettled(loadMoreInvoices, { scope })
+    expect(scope.getState($invoices)).toHaveLength(60)
+  })
+
+  it('retries a failed filter with that filter, not the one before it', async () => {
+    const scope = fork()
+    paged(Array.from({ length: 30 }, (_, index) => row(String(index))))
+    await allSettled(fetchInvoiceList, { scope })
+
+    search.mockImplementation(offline)
+    await allSettled(invoiceStateFilterChanged, { scope, params: 'PAID' })
+    expect(scope.getState($invoices)).toHaveLength(0)
+
+    search.mockClear()
+    search.mockResolvedValue({ data: [[row('paid', 'PAID')], 1] })
+    await allSettled(retryInvoiceList, { scope })
+    expect(search.mock.calls[0][0].body).toMatchObject({
+      page: 0,
+      filter: { state: 'PAID' },
+    })
+    expect(scope.getState($invoices).map((item) => item.id)).toEqual(['paid'])
   })
 })

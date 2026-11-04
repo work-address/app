@@ -3,11 +3,13 @@ import { sample } from 'effector'
 import { fetchInvoice, resetInvoice } from './events'
 import {
   $hasMoreInvoices,
+  $invoiceLastListParams,
   $invoicePage,
   $invoiceProjectFilter,
   $invoiceReloadThroughPage,
   $invoiceStateFilter,
   fetchInvoiceList,
+  retryInvoiceList,
   retryInvoiceSummary,
   invoiceFilterChanged,
   invoiceProjectFilterChanged,
@@ -87,7 +89,7 @@ sample({
     pending: invoiceListQuery.$pending,
     failed: invoiceListQuery.$failed,
   },
-  // Guarded rather than trusted to the button's disabled state: a double click
+  // Guarded rather than trusted to the page: reaching the end again mid-request
   // would otherwise fire the same page twice.
   filter: ({ hasMore, pending, failed }) => hasMore && !pending && !failed,
   fn: ({ projectId, state, page }) => ({
@@ -95,6 +97,13 @@ sample({
     state: state || undefined,
     page: page + 1,
   }),
+  target: invoiceListQuery.start,
+})
+
+sample({
+  clock: retryInvoiceList,
+  source: $invoiceLastListParams,
+  filter: Boolean,
   target: invoiceListQuery.start,
 })
 
@@ -156,6 +165,7 @@ export {
   $invoicesTotal,
   $isLoadingMoreInvoices,
   fetchInvoiceList,
+  retryInvoiceList,
   retryInvoiceSummary,
   invoiceProjectFilterChanged,
   invoiceStateFilterChanged,

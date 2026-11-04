@@ -19,6 +19,7 @@ import {
   InvoicePaymentActions,
   canSettleInvoice,
   fetchInvoiceList,
+  retryInvoiceList,
   retryInvoiceSummary,
   formatCents,
   invoiceListQuery,
@@ -40,6 +41,7 @@ import {
   PageHeader,
   PageHelmet,
   Select,
+  Spinner,
   StateNotice,
   StatStrip,
   StatTile,
@@ -49,6 +51,7 @@ import {
   Text,
   Wrapper,
   useBreakpoint,
+  useReachEnd,
 } from '@/shared'
 
 /** The tab values: the two server states plus "every state". */
@@ -83,6 +86,7 @@ export default function InvoicesPage() {
     loadingMore,
     failed,
     fetchList,
+    retryList,
     loadMore,
     projectId,
     changeProject,
@@ -104,6 +108,7 @@ export default function InvoicesPage() {
     loadingMore: $isLoadingMoreInvoices,
     failed: invoiceListQuery.$failed,
     fetchList: fetchInvoiceList,
+    retryList: retryInvoiceList,
     loadMore: loadMoreInvoices,
     projectId: $invoiceProjectFilter,
     changeProject: invoiceProjectFilterChanged,
@@ -147,6 +152,14 @@ export default function InvoicesPage() {
   const isFiltered = Boolean(projectId || stateFilter)
   const showSkeleton = pending && !loadingMore && rows.length === 0
   const showEmpty = !pending && !failed && rows.length === 0
+
+  // Withheld while a request runs, so the observer re-arms when it lands: a
+  // screen tall enough to still show the end asks for the next page by itself,
+  // even after a reload that left the row count as it was.
+  const sentinelRef = useReachEnd({
+    onReachEnd: hasMore && !pending && !failed ? loadMore : undefined,
+    resetKey: rows.length,
+  })
 
   return (
     <Wrapper>
@@ -245,8 +258,9 @@ export default function InvoicesPage() {
         </Toolbar>
         {/* A failed request is not an empty list. Saying "no invoices yet"
             when the truth is "could not load them" sends someone looking for
-            an invoice they know exists. */}
-        {failed ? (
+            an invoice they know exists. With rows on screen they stay, and the
+            failure sits under them. */}
+        {failed && rows.length === 0 ? (
           <LoadFailure
             title={t('invoices.page.error.title')}
             description={t('invoices.page.error.description')}
@@ -392,21 +406,22 @@ export default function InvoicesPage() {
             })}
           </List>
         )}
-        {hasMore ? (
-          <Flex direction="column" gap="2" align="center" py="2">
-            <Button
-              size="l"
-              variant="outline"
-              disabled={loadingMore || failed}
-              onClick={() => loadMore()}
-            >
-              {t(
-                loadingMore
-                  ? 'invoices.page.loadingMore'
-                  : 'invoices.page.loadMore',
-              )}
-            </Button>
-          </Flex>
+        {failed && rows.length > 0 ? (
+          <LoadFailure
+            title={t('invoices.page.error.moreTitle')}
+            description={t('invoices.page.error.description')}
+            onRetry={() => retryList()}
+          />
+        ) : null}
+        {hasMore && !failed ? (
+          <>
+            {loadingMore ? (
+              <LoadingMore>
+                <Spinner size={32} />
+              </LoadingMore>
+            ) : null}
+            <Sentinel ref={sentinelRef} aria-hidden />
+          </>
         ) : null}
       </Flex>
     </Wrapper>
@@ -496,6 +511,16 @@ const List = styled.div`
   border-radius: var(--radius-3);
   background: var(--color-panel-solid);
   overflow: hidden;
+`
+
+const LoadingMore = styled.div`
+  display: grid;
+  place-items: center;
+  padding: var(--space-2) 0;
+`
+
+const Sentinel = styled.div`
+  height: 1px;
 `
 
 const FilterBar = styled.div`
