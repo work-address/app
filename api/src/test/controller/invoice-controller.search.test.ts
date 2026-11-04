@@ -9,15 +9,18 @@ import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { EProjectState } from '@/model/project'
 import { EInvoiceState } from '@/model/invoice'
 import { InvoiceRepository } from '@/repository/invoice-repository'
+import { ProjectRepository } from '@/repository/project-repository'
 import { runPromise } from '@/service/effect-bridge'
 
 @suite()
 export class InvoiceControllerSearchTest extends BaseControllerTest {
   protected invoiceRepository: InvoiceRepository
+  protected projectRepository: ProjectRepository
 
   constructor() {
     super()
     this.invoiceRepository = this.container.get('InvoiceRepository')
+    this.projectRepository = this.container.get('ProjectRepository')
   }
 
   @test()
@@ -79,6 +82,79 @@ export class InvoiceControllerSearchTest extends BaseControllerTest {
     const rows = res.data[0] as Array<{ id: string }>
     expect(rows.map((row) => row.id)).to.deep.eq([visible.id])
     expect(rows.length).to.be.eq(1)
+  }
+
+  @test()
+  async search_sortsByTheColumnsTheListOffers() {
+    const owner = await this.userFixture.createUser()
+    const zebra = await this.projectFixture.create(owner, EProjectState.ACTIVE)
+    const apple = await this.projectFixture.create(owner, EProjectState.ACTIVE)
+    zebra.title = 'Zebra'
+    apple.title = 'Apple'
+    await runPromise(this.projectRepository.saveSingle(zebra))
+    await runPromise(this.projectRepository.saveSingle(apple))
+    const cheap = await this.invoiceFixture.create(
+      zebra,
+      10,
+      EInvoiceState.PAID,
+    )
+    const dear = await this.invoiceFixture.create(apple, 90, EInvoiceState.PAID)
+
+    const idsSortedBy = async (sort: Record<string, 'ASC' | 'DESC'>) => {
+      const res = await invoiceControllerSearch({
+        client: this.apiClient(),
+        headers: {
+          Authorization: this.authenticator.getTokens(owner).accessToken,
+        },
+        body: { filter: {}, sort, page: 0 },
+        throwOnError: true,
+      })
+
+      return (res.data[0] as Array<{ id: string }>).map((row) => row.id)
+    }
+
+    expect(await idsSortedBy({ amountCents: 'DESC' })).to.deep.eq([
+      dear.id,
+      cheap.id,
+    ])
+    expect(await idsSortedBy({ projectName: 'ASC' })).to.deep.eq([
+      dear.id,
+      cheap.id,
+    ])
+    expect(await idsSortedBy({ projectName: 'DESC' })).to.deep.eq([
+      cheap.id,
+      dear.id,
+    ])
+    // Same issuer on both, so the tie-break settles it the same way each time.
+    const byIssuer = await idsSortedBy({ issuedBy: 'ASC' })
+    expect(byIssuer).to.have.members([cheap.id, dear.id])
+    expect(await idsSortedBy({ issuedBy: 'DESC' })).to.deep.eq(byIssuer)
+  }
+
+  @test()
+  async search_refusesASortItDoesNotOffer() {
+    const owner = await this.userFixture.createUser()
+    let error: unknown
+
+    try {
+      await invoiceControllerSearch({
+        client: this.apiClient(),
+        headers: {
+          Authorization: this.authenticator.getTokens(owner).accessToken,
+        },
+        body: {
+          filter: {},
+          sort: { 'id; DROP TABLE invoice': 'ASC' },
+          page: 0,
+        },
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
+    }
+
+    if (!axios.isAxiosError(error)) throw error
+    expect(error.response?.status).to.be.equal(400)
   }
 
   @test()

@@ -700,7 +700,17 @@ export const handlers: HttpHandler[] = [
         (!filter.state || i.state === filter.state),
     )
     const [items, total] = page(
-      sortBy(rows, body.sort, (i, key) => (i as Record<string, unknown>)[key]),
+      sortBy(rows, body.sort, (i, key) => {
+        // The two the API sorts from a joined table rather than a column.
+        if (key === 'projectName') {
+          return db.projects.find((p) => p.id === i.projectId)?.title
+        }
+        if (key === 'issuedBy') {
+          const issuer = db.users.find((u) => u.id === i.userId)
+          return issuer?.name || issuer?.address
+        }
+        return (i as Record<string, unknown>)[key]
+      }),
       body,
     )
     return [

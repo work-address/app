@@ -5,7 +5,13 @@ import { flushSync } from 'react-dom'
 import { useTranslation } from 'react-i18next'
 import styled, { css } from 'styled-components'
 
-import { $invoiceTime, $invoiceLoading } from '../model'
+import {
+  $invoiceTime,
+  $invoiceLoading,
+  DEFAULT_WORKLOG_SORT,
+  sortInvoiceWorklogs,
+  type WorklogSort,
+} from '../model'
 
 import { InvoiceTimeContext } from './invoice-time-context'
 
@@ -39,6 +45,12 @@ export const InvoiceTime = () => {
   })
 
   const [expanded, setExpanded] = useState(false)
+  const [sort, setSort] = useState<WorklogSort>(DEFAULT_WORKLOG_SORT)
+
+  const sortedEntries = useMemo(
+    () => sortInvoiceWorklogs(timeEntries, sort),
+    [timeEntries, sort],
+  )
 
   // Paper gets every entry: an invoice printed with a "show all" button in
   // place of most of its rows is not a record of anything. flushSync renders
@@ -52,8 +64,8 @@ export const InvoiceTime = () => {
   }, [])
 
   const visibleEntries = expanded
-    ? timeEntries
-    : timeEntries.slice(0, INVOICE_TIME_PREVIEW_ROWS)
+    ? sortedEntries
+    : sortedEntries.slice(0, INVOICE_TIME_PREVIEW_ROWS)
   const hiddenCount = timeEntries.length - visibleEntries.length
 
   const contextValue = useMemo<InvoiceTimeContextProps>(
@@ -77,34 +89,40 @@ export const InvoiceTime = () => {
         dataKey: 'createdAt',
         width: 200,
         headerText: t('dashboard.worklogsTable.head.date'),
+        sortable: true,
       },
       {
         dataKey: 'note',
         width: 240,
         headerText: t('dashboard.worklogsTable.head.note'),
+        sortable: true,
       },
       {
         customKey: 'timeActive',
         width: 120,
         headerText: t('dashboard.worklogsTable.head.timeActive'),
+        sortable: true,
       },
       {
         dataKey: 'keyboardKeys',
         width: 110,
         headerText: t('dashboard.worklogsTable.head.keyboard'),
         getValue: (row) => formatCount(row.keyboardKeys),
+        sortable: true,
       },
       {
         dataKey: 'mouseKeys',
         width: 110,
         headerText: t('dashboard.worklogsTable.head.mouse'),
         getValue: (row) => formatCount(row.mouseKeys),
+        sortable: true,
       },
       {
         dataKey: 'mouseDistance',
         width: 140,
         headerText: t('dashboard.worklogsTable.head.mouseDistance'),
         getValue: (row) => formatCount(row.mouseDistance),
+        sortable: true,
       },
     ],
     [t],
@@ -127,6 +145,8 @@ export const InvoiceTime = () => {
           data={visibleEntries}
           config={tableConfig}
           getRowId={rowIdGetter}
+          sort={sort}
+          onSortChange={setSort}
           verticalAlign={'middle'}
           BodyComponent={Cell}
           nowrap

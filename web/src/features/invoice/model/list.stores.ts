@@ -1,6 +1,7 @@
 import { combine, createEvent, createStore } from 'effector'
 
 import { applyInvoiceSettlement } from './invoice-feed'
+import { DEFAULT_INVOICE_SORT, type InvoiceSort } from './invoice-sort'
 import { invoiceListQuery, invoiceSummaryQuery } from './queries'
 import { invoiceSettlementApplied } from './settlement.events'
 
@@ -12,6 +13,7 @@ export const retryInvoiceSummary = createEvent()
 export const loadMoreInvoices = createEvent()
 export const retryInvoiceList = createEvent()
 export const invoiceProjectFilterChanged = createEvent<string>()
+export const invoiceSortChanged = createEvent<InvoiceSort>()
 
 /** Empty string means "every state" - the tab the list opens on. */
 export type InvoiceStateFilter = '' | 'PAID' | 'Requested' | 'REJECTED'
@@ -27,6 +29,16 @@ export const $invoiceProjectFilter = createStore('').on(
 export const $invoiceStateFilter = createStore<InvoiceStateFilter>('').on(
   invoiceStateFilterChanged,
   (_, state) => state,
+)
+
+/**
+ * Not one of the filters below: the same invoices in another order. The rows
+ * stay on screen until the new first page replaces them, as they do when the
+ * worklogs are re-sorted, rather than dropping to skeletons.
+ */
+export const $invoiceSort = createStore<InvoiceSort>(DEFAULT_INVOICE_SORT).on(
+  invoiceSortChanged,
+  (_, sort) => sort,
 )
 
 /** Either filter describes a different query, so both start the list over. */
@@ -106,7 +118,8 @@ export const $hasMoreInvoices = combine(
 export const $invoiceReloadThroughPage = createStore<number | null>(null)
   .on(invoiceListQuery.start, (_, params) => params.reloadThroughPage ?? null)
   .on(invoiceListQuery.finished.success, () => null)
-  .reset(invoiceFilterChanged)
+  // The new order starts from its first page, whatever the old one had loaded.
+  .reset([...invoiceFilterChanged, invoiceSortChanged])
 
 /**
  * What the list last asked for, so a retry asks for exactly that again: the page

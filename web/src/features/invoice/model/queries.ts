@@ -1,6 +1,7 @@
 import { concurrency, createQuery } from '@farfetched/core'
 
 import { readLoadedInvoicePages } from './invoice-feed'
+import { DEFAULT_INVOICE_SORT, type InvoiceSort } from './invoice-sort'
 
 import type { InvoiceRead } from './types'
 
@@ -36,6 +37,7 @@ export const INVOICE_PAGE_SIZE = 20
 export type InvoiceListParams = {
   projectId?: string
   state?: 'PAID' | 'Requested' | 'REJECTED'
+  sort?: InvoiceSort
   page: number
   /** Preserve the already-loaded prefix after a state change shifts offsets. */
   reloadThroughPage?: number
@@ -45,6 +47,7 @@ export const invoiceListQuery = createQuery({
   handler: async ({
     projectId,
     state,
+    sort = DEFAULT_INVOICE_SORT,
     page,
     reloadThroughPage,
   }: InvoiceListParams): Promise<{
@@ -60,7 +63,7 @@ export const invoiceListQuery = createQuery({
               ...(projectId ? { projectId } : {}),
               ...(state ? { state } : {}),
             },
-            sort: { createdAt: 'DESC' },
+            sort,
             page,
             limit: INVOICE_PAGE_SIZE,
           },

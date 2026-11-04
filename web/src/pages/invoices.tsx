@@ -9,6 +9,7 @@ import { $user } from '@/entities/profile'
 import {
   $hasMoreInvoices,
   $invoiceProjectFilter,
+  $invoiceSort,
   $invoiceStateFilter,
   $invoiceSummary,
   $invoiceSummaryLoading,
@@ -16,7 +17,9 @@ import {
   $invoices,
   $invoicesTotal,
   $isLoadingMoreInvoices,
+  INVOICE_SORT_FIELDS,
   InvoicePaymentActions,
+  InvoicesTable,
   canSettleInvoice,
   fetchInvoiceList,
   retryInvoiceList,
@@ -26,21 +29,25 @@ import {
   invoiceProjectFilterChanged,
   invoiceProjectsQuery,
   invoiceRateHour,
+  invoiceSortChanged,
   invoiceStateColor,
   invoiceStateFilterChanged,
   invoiceStateLabelKey,
   loadMoreInvoices,
   shortenAddress,
+  type InvoiceSortField,
+  type InvoiceSortOrder,
   type InvoiceStateFilter,
 } from '@/features/invoice'
 import { routes } from '@/routes'
-import { formatCurrency, useDateFormatter } from '@/shared'
+import { formatCurrency, useDateFormatter, type baseApi } from '@/shared'
 import {
   Button,
   LoadFailure,
   PageHeader,
   PageHelmet,
   Select,
+  SortSelect,
   Spinner,
   StateNotice,
   StatStrip,
@@ -51,6 +58,7 @@ import {
   Text,
   Wrapper,
   useBreakpoint,
+  usePageBusy,
   useReachEnd,
 } from '@/shared'
 
@@ -74,7 +82,6 @@ const ALL_TAB = 'all'
  */
 export default function InvoicesPage() {
   const { t } = useTranslation()
-  const dateFormatter = useDateFormatter()
   const isDesktop = useBreakpoint('isDesktop')
   const navigate = useNavigate()
 
@@ -92,6 +99,8 @@ export default function InvoicesPage() {
     changeProject,
     stateFilter,
     changeState,
+    sort,
+    changeSort,
     summary,
     summaryLoading,
     summaryFailed,
@@ -99,7 +108,6 @@ export default function InvoicesPage() {
     projectsFailed,
     projects,
     loadProjects,
-    user,
   } = useUnit({
     rows: $invoices,
     total: $invoicesTotal,
@@ -114,6 +122,8 @@ export default function InvoicesPage() {
     changeProject: invoiceProjectFilterChanged,
     stateFilter: $invoiceStateFilter,
     changeState: invoiceStateFilterChanged,
+    sort: $invoiceSort,
+    changeSort: invoiceSortChanged,
     summary: $invoiceSummary,
     summaryLoading: $invoiceSummaryLoading,
     summaryFailed: $invoiceSummaryFailed,
@@ -121,7 +131,6 @@ export default function InvoicesPage() {
     projectsFailed: invoiceProjectsQuery.$failed,
     projects: invoiceProjectsQuery.$data,
     loadProjects: invoiceProjectsQuery.start,
-    user: $user,
   })
 
   useEffect(() => {
@@ -143,15 +152,26 @@ export default function InvoicesPage() {
     [projects, t],
   )
 
-  const formatDate = (value: string | undefined) =>
-    value ? dateFormatter.format(new Date(value)) : '—'
+  const sortOptions = useMemo(
+    () =>
+      INVOICE_SORT_FIELDS.map((entry) => ({
+        value: entry.field,
+        label: t(entry.labelKey),
+      })),
+    [t],
+  )
 
-  const formatPeriod = (from: string | undefined, to: string | undefined) =>
-    from && to ? dateFormatter.formatRange(new Date(from), new Date(to)) : '—'
+  const [sortField, sortOrder] = Object.entries(sort)[0] as [
+    InvoiceSortField,
+    InvoiceSortOrder,
+  ]
 
   const isFiltered = Boolean(projectId || stateFilter)
   const showSkeleton = pending && !loadingMore && rows.length === 0
   const showEmpty = !pending && !failed && rows.length === 0
+
+  // A re-sort keeps the old rows until the new ones land; the bar says it's on.
+  usePageBusy(pending && !loadingMore && rows.length > 0)
 
   // Withheld while a request runs, so the observer re-arms when it lands: a
   // screen tall enough to still show the end asks for the next page by itself,
@@ -250,6 +270,15 @@ export default function InvoicesPage() {
               ))}
             </TabsList>
           </TabsRoot>
+          {/* A phone's cards have no column headers to sort from. */}
+          {!isDesktop && rows.length > 1 ? (
+            <SortSelect
+              options={sortOptions}
+              field={sortField}
+              order={sortOrder}
+              onChange={(field, order) => changeSort({ [field]: order })}
+            />
+          ) : null}
           {total > 0 && !showSkeleton ? (
             <Text size="2" color="gray">
               {t('invoices.page.shownOfTotal', { shown: rows.length, total })}
@@ -301,110 +330,14 @@ export default function InvoicesPage() {
               )
             }
           />
+        ) : isDesktop ? (
+          <InvoicesTable rows={rows} loading={showSkeleton} />
         ) : (
-          <List aria-label={t('invoices.page.title')} aria-busy={pending}>
-            {isDesktop ? (
-              <HeadRow aria-hidden>
-                <HeadCell $area="project">
-                  {t('invoices.item.project')}
-                </HeadCell>
-                <HeadCell $area="status">{t('invoices.item.status')}</HeadCell>
-                <HeadCell $area="issuedBy">
-                  {t('invoices.item.issuedBy')}
-                </HeadCell>
-                <HeadCell $area="period">{t('invoices.item.period')}</HeadCell>
-                <HeadCell $area="issued">{t('invoices.item.issued')}</HeadCell>
-                <HeadCell $area="amount" $align="end">
-                  {t('invoices.item.amount')}
-                </HeadCell>
-                <HeadCell $area="action" />
-              </HeadRow>
-            ) : null}
-            {showSkeleton
-              ? [0, 1, 2].map((row) => <SkeletonRow key={row} />)
-              : null}
-            {rows.map((invoice) => {
-              const isPaid = invoice.state === 'PAID'
-              const canSettle = canSettleInvoice(invoice, user)
-              const rateHour = invoiceRateHour(invoice)
-              const issuer =
-                invoice.user?.name ||
-                shortenAddress(invoice.user?.address ?? '')
-
-              return (
-                <Row key={invoice.id}>
-                  <Cell $area="project">
-                    <ProjectLink
-                      to={routes.invoice.build({ id: invoice.id as string })}
-                    >
-                      <Text size="3" weight="medium" truncate>
-                        {invoice.project?.title ?? '—'}
-                      </Text>
-                    </ProjectLink>
-                    <Text size="1" color="gray" truncate>
-                      {t('invoices.item.reference')}{' '}
-                      {shortenAddress(invoice.id ?? '')}
-                    </Text>
-                  </Cell>
-                  <Cell $area="status" label={t('invoices.item.status')}>
-                    <Flex direction="column" align="start" gap="1">
-                      <Badge
-                        size="2"
-                        variant="soft"
-                        color={invoiceStateColor(invoice)}
-                      >
-                        {t(invoiceStateLabelKey(invoice))}
-                      </Badge>
-                      {isPaid ? (
-                        <Text size="1" color="gray">
-                          {formatDate(invoice.paidAt)}
-                        </Text>
-                      ) : null}
-                    </Flex>
-                  </Cell>
-                  <Cell $area="issuedBy" label={t('invoices.item.issuedBy')}>
-                    <Text size="2" truncate>
-                      {issuer}
-                    </Text>
-                  </Cell>
-                  <Cell $area="period" label={t('invoices.item.period')}>
-                    <Text size="2">
-                      {formatPeriod(invoice.fromAt, invoice.toAt)}
-                    </Text>
-                  </Cell>
-                  <Cell $area="issued" label={t('invoices.item.issued')}>
-                    <Text size="2">{formatDate(invoice.createdAt)}</Text>
-                  </Cell>
-                  <Cell
-                    $area="amount"
-                    $align="end"
-                    label={t('invoices.item.amount')}
-                  >
-                    <Text size="4" weight="medium">
-                      {formatCents(Number(invoice.amountCents ?? 0))}
-                    </Text>
-                    {/* The frozen line rate, or the project's rate for an
-                      invoice issued before lines were stored. */}
-                    {rateHour != null && (
-                      <Text size="1" color="gray">
-                        {t('invoices.item.perHour', {
-                          rate: formatCurrency(rateHour),
-                        })}
-                      </Text>
-                    )}
-                  </Cell>
-                  <Cell $area="action" $align="end">
-                    <InvoicePaymentActions
-                      invoiceId={invoice.id as string}
-                      isPaid={isPaid}
-                      canSettle={canSettle}
-                      stretch={!isDesktop}
-                    />
-                  </Cell>
-                </Row>
-              )
-            })}
-          </List>
+          <InvoiceCards
+            rows={rows}
+            showSkeleton={showSkeleton}
+            pending={pending}
+          />
         )}
         {failed && rows.length > 0 ? (
           <LoadFailure
@@ -428,10 +361,111 @@ export default function InvoicesPage() {
   )
 }
 
+/** What a phone gets instead of the table: one card per invoice. */
+const InvoiceCards = ({
+  rows,
+  showSkeleton,
+  pending,
+}: {
+  rows: baseApi.InvoiceSearch[]
+  showSkeleton: boolean
+  pending: boolean
+}) => {
+  const { t } = useTranslation()
+  const dateFormatter = useDateFormatter()
+  const user = useUnit($user)
+
+  const formatDate = (value: string | undefined) =>
+    value ? dateFormatter.format(new Date(value)) : '—'
+
+  const formatPeriod = (from: string | undefined, to: string | undefined) =>
+    from && to ? dateFormatter.formatRange(new Date(from), new Date(to)) : '—'
+
+  return (
+    <List aria-label={t('invoices.page.title')} aria-busy={pending}>
+      {showSkeleton ? [0, 1, 2].map((row) => <SkeletonRow key={row} />) : null}
+      {rows.map((invoice) => {
+        const isPaid = invoice.state === 'PAID'
+        const canSettle = canSettleInvoice(invoice, user)
+        const rateHour = invoiceRateHour(invoice)
+        const issuer =
+          invoice.user?.name || shortenAddress(invoice.user?.address ?? '')
+
+        return (
+          <Row key={invoice.id}>
+            <Cell $area="project">
+              <ProjectLink
+                to={routes.invoice.build({ id: invoice.id as string })}
+              >
+                <Text size="3" weight="medium" truncate>
+                  {invoice.project?.title ?? '—'}
+                </Text>
+              </ProjectLink>
+              <Text size="1" color="gray" truncate>
+                {t('invoices.item.reference')}{' '}
+                {shortenAddress(invoice.id ?? '')}
+              </Text>
+            </Cell>
+            <Cell $area="status" label={t('invoices.item.status')}>
+              <Flex direction="column" align="start" gap="1">
+                <Badge
+                  size="2"
+                  variant="soft"
+                  color={invoiceStateColor(invoice)}
+                >
+                  {t(invoiceStateLabelKey(invoice))}
+                </Badge>
+                {isPaid ? (
+                  <Text size="1" color="gray">
+                    {formatDate(invoice.paidAt)}
+                  </Text>
+                ) : null}
+              </Flex>
+            </Cell>
+            <Cell $area="issuedBy" label={t('invoices.item.issuedBy')}>
+              <Text size="2" truncate>
+                {issuer}
+              </Text>
+            </Cell>
+            <Cell $area="period" label={t('invoices.item.period')}>
+              <Text size="2">{formatPeriod(invoice.fromAt, invoice.toAt)}</Text>
+            </Cell>
+            <Cell $area="issued" label={t('invoices.item.issued')}>
+              <Text size="2">{formatDate(invoice.createdAt)}</Text>
+            </Cell>
+            <Cell $area="amount" $align="end" label={t('invoices.item.amount')}>
+              <Text size="4" weight="medium">
+                {formatCents(Number(invoice.amountCents ?? 0))}
+              </Text>
+              {/* The frozen line rate, or the project's rate for an
+                      invoice issued before lines were stored. */}
+              {rateHour != null && (
+                <Text size="1" color="gray">
+                  {t('invoices.item.perHour', {
+                    rate: formatCurrency(rateHour),
+                  })}
+                </Text>
+              )}
+            </Cell>
+            <Cell $area="action" $align="end">
+              <InvoicePaymentActions
+                invoiceId={invoice.id as string}
+                isPaid={isPaid}
+                canSettle={canSettle}
+                stretch
+              />
+            </Cell>
+          </Row>
+        )
+      })}
+    </List>
+  )
+}
+
 /**
- * The loading state is a real row with its text covered rather than a plain
+ * The loading state is a real card with its text covered rather than a plain
  * block, so the skeleton and the invoice that replaces it have the same height
- * and the same column positions - the list does not reflow when data lands.
+ * and the same layout - the list does not reflow when data lands.
  */
 const SkeletonRow = () => (
   <Row aria-hidden>
@@ -479,7 +513,7 @@ const SkeletonRow = () => (
 type CellProps = {
   $area: string
   $align?: 'start' | 'end'
-  /** Shown above the value on a phone, where there is no header row. */
+  /** Shown above the value, as a phone has no header row. */
   label?: string
   children?: ReactNode
 }
@@ -491,11 +525,8 @@ const Cell = ({ $area, $align, label, children }: CellProps) => (
   </CellRoot>
 )
 
-/* Desktop columns, and the card layout the same cells fall into on a phone. */
-const COLUMNS =
-  'minmax(0, 1.6fr) 150px minmax(0, 1fr) minmax(0, 1.4fr) 120px 130px 150px'
-const AREAS = '"project status issuedBy period issued amount action"'
-const MOBILE_AREAS = `
+/* The card a phone gets instead of the table's columns. */
+const AREAS = `
   "project project"
   "status amount"
   "issuedBy issued"
@@ -541,35 +572,15 @@ const Toolbar = styled.div`
   flex-wrap: wrap;
 `
 
-const HeadRow = styled.div`
-  display: grid;
-  grid-template-columns: ${COLUMNS};
-  grid-template-areas: ${AREAS};
-  gap: var(--space-4);
-  padding: var(--space-3) var(--space-4);
-  border-bottom: 1px solid var(--ds-neutral-alpha-6);
-`
-
-/* Set like DataTable's header cells, so this list and the tables around it
-   read as one family. */
-const HeadCell = styled.div<{ $area: string; $align?: 'start' | 'end' }>`
-  grid-area: ${(p) => p.$area};
-  font-size: var(--font-size-2);
-  font-weight: 600;
-  line-height: 20px;
-  color: var(--ds-neutral-12);
-  text-align: ${(p) => (p.$align === 'end' ? 'right' : 'left')};
-`
-
 /* Positioned so ProjectLink's overlay can stretch across the whole row: the
    entire row opens the invoice, not just the title. */
 const Row = styled.div`
   position: relative;
   display: grid;
-  grid-template-columns: ${COLUMNS};
+  grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   grid-template-areas: ${AREAS};
-  align-items: center;
-  gap: var(--space-4);
+  align-items: start;
+  gap: var(--space-3);
   padding: var(--space-3) var(--space-4);
   transition: background-color 0.15s ease;
 
@@ -579,13 +590,6 @@ const Row = styled.div`
 
   &:hover {
     background-color: var(--ds-neutral-2);
-  }
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    grid-template-areas: ${MOBILE_AREAS};
-    align-items: start;
-    gap: var(--space-3);
   }
 `
 
@@ -615,10 +619,6 @@ const CellRoot = styled.div<{ $area: string; $align?: 'start' | 'end' }>`
 const CellLabel = styled.span`
   font-size: var(--font-size-1);
   color: var(--ds-neutral-11);
-
-  ${(p) => p.theme.breakpoints.up('md')} {
-    display: none;
-  }
 `
 
 /* One real link for the card. The overlay gives it the row's whole hit area

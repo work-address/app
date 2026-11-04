@@ -11,7 +11,16 @@ export {
   type UsagePeriod,
 } from './project-usage-chart'
 export {
+  DEFAULT_PROJECT_SORT,
+  PROJECT_SORT_FIELDS,
+  sortProjects,
+  type ProjectSort,
+  type ProjectSortField,
+} from './projects-sort'
+export {
   $canDeleteAllProjects,
+  $projectSort,
+  projectSortChanged,
   $isProjectCreateDialogOpen,
   $isProjectDialogOpen,
   $projectSelection,

@@ -4,7 +4,8 @@ import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { $timeView, timeViewChanged, type TimeView } from '../../model'
-import { ToolbarSegment, ToolbarShell } from '../common'
+
+import { ToolbarSegment, ToolbarShell } from '@/shared'
 
 const ICON_SIZE = 14
 

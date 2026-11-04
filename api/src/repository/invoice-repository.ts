@@ -12,7 +12,11 @@ import { InvoiceSnapshot } from '@/service/invoice-snapshot'
 import { AgentInvoiceLines } from '@/service/agent-invoice-lines'
 import { BadRequestError } from 'routing-controllers'
 
-import type { ObjectLiteral, SelectQueryBuilder } from 'typeorm'
+import type {
+  ObjectLiteral,
+  OrderByCondition,
+  SelectQueryBuilder,
+} from 'typeorm'
 import { Project } from '@/entity/project'
 import {
   AbstractRepositoryTemplate,
@@ -24,6 +28,48 @@ import { Invoice } from '@/entity/invoice'
 import { User } from '@/entity/user'
 import AccessException from '@/exception/access-exception'
 import { InvoiceSearchDto } from '@/model/dto/invoice'
+
+/** What the issuer column shows: the name, or the address of someone unnamed. */
+const ISSUER_LABEL_SQL = `COALESCE(NULLIF(issuer.name, ''), issuer.address)`
+const ISSUER_LABEL_ALIAS = 'issuer_label'
+
+/**
+ * Every order the list can ask for, by the name it asks with. A list rather
+ * than `invoice.${key}`, because the key comes from the request and TypeORM
+ * writes it into the SQL as given.
+ */
+const INVOICE_SORT_COLUMN_BY_KEY = new Map([
+  ['id', 'invoice.id'],
+  ['createdAt', 'invoice.createdAt'],
+  ['updatedAt', 'invoice.updatedAt'],
+  ['fromAt', 'invoice.fromAt'],
+  ['toAt', 'invoice.toAt'],
+  ['amountCents', 'invoice.amountCents'],
+  ['state', 'invoice.state'],
+  ['paidAt', 'invoice.paidAt'],
+  ['projectName', 'project.title'],
+  ['issuedBy', ISSUER_LABEL_ALIAS],
+])
+
+const buildInvoiceOrderBy = (sort: OrderByCondition): OrderByCondition => {
+  const [key, direction] = Object.entries(sort)[0] ?? []
+
+  if (!key) {
+    return {}
+  }
+
+  const column = INVOICE_SORT_COLUMN_BY_KEY.get(key)
+
+  if (!column || (direction !== 'ASC' && direction !== 'DESC')) {
+    throw new BadRequestError(`Cannot sort invoices by ${key}`)
+  }
+
+  // Pages are offsets, and many invoices share a project or a state: without a
+  // unique tie-break a row could repeat on one page and go missing from another.
+  return key === 'id'
+    ? { [column]: direction }
+    : { [column]: direction, 'invoice.id': 'ASC' }
+}
 
 @injectable()
 export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
@@ -338,16 +384,16 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
       },
       search,
     )
-    const sort = this.filter.buildOrderByCondition('invoice', s)
     const limit = this.filter.buildLimit(search)
 
-    return fromPromise(() =>
+    return fromPromise(async () =>
       this.getRepo()
         .createQueryBuilder('invoice')
         .innerJoinAndSelect('invoice.project', 'project')
         .innerJoinAndSelect('project.user', 'owner')
         .leftJoinAndSelect('invoice.user', 'issuer')
         .select()
+        .addSelect(ISSUER_LABEL_SQL, ISSUER_LABEL_ALIAS)
         // `.where()` REPLACES every condition set before it, so the access
         // filter has to be applied after the filter block opens it - applying it
         // first silently drops it and returns every invoice in the table.
@@ -385,7 +431,7 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
             })
           }
         })
-        .orderBy(sort)
+        .orderBy(buildInvoiceOrderBy(s.sort))
         .skip(limit * s.page)
         .take(limit)
         .getManyAndCount(),

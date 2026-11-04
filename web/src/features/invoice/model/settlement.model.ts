@@ -4,6 +4,7 @@ import { matchesInvoiceFilter } from './invoice-feed'
 import {
   $invoicePage,
   $invoiceProjectFilter,
+  $invoiceSort,
   $invoiceStateFilter,
   $invoices,
 } from './list.stores'
@@ -90,12 +91,15 @@ sample({
   source: {
     projectId: $invoiceProjectFilter,
     state: $invoiceStateFilter,
+    sort: $invoiceSort,
     page: $invoicePage,
   },
-  filter: ({ state }) => Boolean(state),
-  fn: ({ projectId, state, page }) => ({
+  // Sorted by status, a settled row belongs elsewhere in the list too.
+  filter: ({ state, sort }) => Boolean(state) || Boolean(sort.state),
+  fn: ({ projectId, state, sort, page }) => ({
     projectId: projectId || undefined,
     state: state || undefined,
+    sort,
     page: 0,
     reloadThroughPage: page,
   }),

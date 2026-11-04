@@ -11,13 +11,19 @@ import {
   $isProjectCreateDialogOpen,
   $isProjectDialogOpen,
   $projectSelection,
+  $projectSort,
   $selectedProject,
+  PROJECT_SORT_FIELDS,
   projectCreateDialogOpenChanged,
   projectDeleteRequested,
   projectDialogOpenChanged,
   projectEditRequested,
   projectSelectionChanged,
+  projectSortChanged,
   projectStateTabChanged,
+  sortProjects,
+  type ProjectSort,
+  type ProjectSortField,
 } from '../../model'
 import { ProjectsCreateModal } from '../projects-create-modal'
 import { ProjectsDialog } from '../projects-dialog/projects-dialog'
@@ -56,6 +62,7 @@ import {
   TabsTrigger,
   Button,
   IconButton,
+  SortSelect,
   Tooltip,
   useBreakpoint,
   ProjectsEmptyState,
@@ -104,6 +111,8 @@ export const ProjectsTable = ({
     isCreateDialogOpen,
     setCreateDialogOpen,
     allowDeleteAll,
+    sort,
+    changeSort,
   } = useUnit({
     projects: $filteredProjects,
     isProjectsLoading: $projectsLoading,
@@ -121,6 +130,8 @@ export const ProjectsTable = ({
     isCreateDialogOpen: $isProjectCreateDialogOpen,
     setCreateDialogOpen: projectCreateDialogOpenChanged,
     allowDeleteAll: $canDeleteAllProjects,
+    sort: $projectSort,
+    changeSort: projectSortChanged,
   })
 
   const projects = useMemo(() => {
@@ -130,22 +141,26 @@ export const ProjectsTable = ({
       : allProjects
 
     if (!periodTotals) {
-      return rows
+      return sortProjects(rows, sort)
     }
 
-    return rows.map((project) => {
-      const period = periodTotals[project.id ?? '']
-      // A viewer has no activity or money figures, in any period.
-      const seesDetail = project.role !== 'viewer'
+    // Sorted after the period is applied, so the order follows the hours shown.
+    return sortProjects(
+      rows.map((project) => {
+        const period = periodTotals[project.id ?? '']
+        // A viewer has no activity or money figures, in any period.
+        const seesDetail = project.role !== 'viewer'
 
-      return {
-        ...project,
-        minutes: period?.minutes ?? 0,
-        minutesActive: seesDetail ? (period?.minutesActive ?? 0) : undefined,
-        paidCents: seesDetail ? (period?.paidCents ?? 0) : undefined,
-      }
-    })
-  }, [allProjects, projectIds, periodTotals])
+        return {
+          ...project,
+          minutes: period?.minutes ?? 0,
+          minutesActive: seesDetail ? (period?.minutesActive ?? 0) : undefined,
+          paidCents: seesDetail ? (period?.paidCents ?? 0) : undefined,
+        }
+      }),
+      sort,
+    )
+  }, [allProjects, projectIds, periodTotals, sort])
 
   const renderingData = isProjectsLoading ? [] : projects
 
@@ -183,12 +198,14 @@ export const ProjectsTable = ({
         dataKey: 'title',
         width: 148,
         headerText: t('dashboard.projectsTable.head.projectName'),
+        sortable: true,
       },
       {
         dataKey: 'state',
         width: 68,
         horizontalAlign: 'center',
         headerText: t('dashboard.projectsTable.head.status'),
+        sortable: true,
       },
       {
         // `mapProjectsAndStats` prefers the project's own rate over the totals
@@ -200,12 +217,14 @@ export const ProjectsTable = ({
         description: t('common.metricDesc.rateHour'),
         getValue: (data) =>
           data.rateHour === undefined ? '—' : formatCurrency(data.rateHour),
+        sortable: true,
       },
       {
         customKey: 'timeTotal',
         width: 108,
         headerText: t('dashboard.projectsTable.head.timeTotal'),
         description: t('common.metricDesc.timeTotal'),
+        sortable: true,
       },
       // {
       //   dataKey: 'keyboardKeys',
@@ -279,6 +298,20 @@ export const ProjectsTable = ({
     [t, periodTotals],
   )
 
+  const sortOptions = useMemo(
+    () =>
+      PROJECT_SORT_FIELDS.map((entry) => ({
+        value: entry.field,
+        label: t(entry.labelKey),
+      })),
+    [t],
+  )
+
+  const [sortField, sortOrder] = Object.entries(sort)[0] as [
+    ProjectSortField,
+    NonNullable<ProjectSort[ProjectSortField]>,
+  ]
+
   const projectsContextValues = useMemo(
     (): ProjectsTableContextValues => ({
       handleActionClick,
@@ -348,6 +381,17 @@ export const ProjectsTable = ({
           )}
         </Flex>
       </Flex>
+      {/* A phone's cards have no column headers to sort from. */}
+      {isMobile && projects.length > 1 && (
+        <Flex pb={'3'}>
+          <SortSelect
+            options={sortOptions}
+            field={sortField}
+            order={sortOrder}
+            onChange={(field, order) => changeSort({ [field]: order })}
+          />
+        </Flex>
+      )}
       <Root>
         <AnimatePresence mode={'wait'}>
           <motion.div
@@ -394,6 +438,8 @@ export const ProjectsTable = ({
                     skeletonHeight="31px"
                     mockDataLength={4}
                     isFiltering={isProjectDeleting || isProjectsFiltering}
+                    sort={sort}
+                    onSortChange={changeSort}
                     onRowClick={handleActionClick}
                   />
                 )}

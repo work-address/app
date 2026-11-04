@@ -7,12 +7,14 @@ import {
   $invoicePage,
   $invoiceProjectFilter,
   $invoiceReloadThroughPage,
+  $invoiceSort,
   $invoiceStateFilter,
   fetchInvoiceList,
   retryInvoiceList,
   retryInvoiceSummary,
   invoiceFilterChanged,
   invoiceProjectFilterChanged,
+  invoiceSortChanged,
   loadMoreInvoices,
 } from './list.stores'
 import {
@@ -64,15 +66,17 @@ invoiceProjectsQuery.finished.failure.watch(({ error }) => {
 
 // A first load, and every change of filter, start again from page 0.
 sample({
-  clock: [fetchInvoiceList, ...invoiceFilterChanged],
+  clock: [fetchInvoiceList, invoiceSortChanged, ...invoiceFilterChanged],
   source: {
     projectId: $invoiceProjectFilter,
     state: $invoiceStateFilter,
+    sort: $invoiceSort,
     reloadThroughPage: $invoiceReloadThroughPage,
   },
-  fn: ({ projectId, state, reloadThroughPage }) => ({
+  fn: ({ projectId, state, sort, reloadThroughPage }) => ({
     projectId: projectId || undefined,
     state: state || undefined,
+    sort,
     page: 0,
     ...(reloadThroughPage === null ? {} : { reloadThroughPage }),
   }),
@@ -84,6 +88,7 @@ sample({
   source: {
     projectId: $invoiceProjectFilter,
     state: $invoiceStateFilter,
+    sort: $invoiceSort,
     page: $invoicePage,
     hasMore: $hasMoreInvoices,
     pending: invoiceListQuery.$pending,
@@ -92,9 +97,10 @@ sample({
   // Guarded rather than trusted to the page: reaching the end again mid-request
   // would otherwise fire the same page twice.
   filter: ({ hasMore, pending, failed }) => hasMore && !pending && !failed,
-  fn: ({ projectId, state, page }) => ({
+  fn: ({ projectId, state, sort, page }) => ({
     projectId: projectId || undefined,
     state: state || undefined,
+    sort,
     page: page + 1,
   }),
   target: invoiceListQuery.start,
@@ -157,6 +163,7 @@ export {
   $hasMoreInvoices,
   $invoicePage,
   $invoiceProjectFilter,
+  $invoiceSort,
   $invoiceStateFilter,
   $invoiceSummary,
   $invoiceSummaryLoading,
@@ -168,11 +175,25 @@ export {
   retryInvoiceList,
   retryInvoiceSummary,
   invoiceProjectFilterChanged,
+  invoiceSortChanged,
   invoiceStateFilterChanged,
   loadMoreInvoices,
   type InvoiceStateFilter,
   type InvoiceSummary,
 } from './list.stores'
+export {
+  INVOICE_SORT_FIELDS,
+  type InvoiceSort,
+  type InvoiceSortField,
+  type InvoiceSortOrder,
+} from './invoice-sort'
+export {
+  DEFAULT_WORKLOG_SORT,
+  WORKLOG_SORT_FIELDS,
+  sortInvoiceWorklogs,
+  type WorklogSort,
+  type WorklogSortField,
+} from './worklog-sort'
 export * from './format'
 export * from './mutations'
 export * from './settlement.model'

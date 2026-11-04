@@ -4,6 +4,7 @@ import { combine, createEvent, sample } from 'effector'
 import {
   $invoicePage,
   $invoiceProjectFilter,
+  $invoiceSort,
   $invoiceStateFilter,
   $invoices,
 } from './list.stores'
@@ -59,12 +60,14 @@ sample({
     items: $invoices,
     projectId: $invoiceProjectFilter,
     state: $invoiceStateFilter,
+    sort: $invoiceSort,
     page: $invoicePage,
   },
   filter: ({ items }) => items.length > 0,
-  fn: ({ projectId, state, page }) => ({
+  fn: ({ projectId, state, sort, page }) => ({
     projectId: projectId || undefined,
     state: state || undefined,
+    sort,
     page: 0,
     reloadThroughPage: page,
   }),

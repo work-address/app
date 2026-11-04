@@ -1,5 +1,7 @@
 import { attach, combine, createEvent, createStore, sample } from 'effector'
 
+import { DEFAULT_PROJECT_SORT, type ProjectSort } from './projects-sort'
+
 import {
   $filteredProjects,
   canManageProject,
@@ -24,6 +26,13 @@ export const projectEditRequested = createEvent<ProjectWithStats>()
 export const projectDeleteRequested = createEvent<ProjectWithStats>()
 export const projectDialogOpenChanged = createEvent<boolean>()
 export const projectCreateDialogOpenChanged = createEvent<boolean>()
+export const projectSortChanged = createEvent<ProjectSort>()
+
+/** Shared by the table's headers and the phone's picker, so they cannot differ. */
+export const $projectSort = createStore<ProjectSort>(DEFAULT_PROJECT_SORT).on(
+  projectSortChanged,
+  (_, sort) => sort,
+)
 
 export const $projectSelection = createStore<Record<string, boolean>>({})
   .on(projectSelectionChanged, (_, selection) => selection)
