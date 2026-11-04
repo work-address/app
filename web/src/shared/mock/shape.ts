@@ -95,7 +95,12 @@ export const hasDetail = (
   time.userId === userId ||
   (project.ownerId === userId && isPublished(time, project, now))
 
-export const shapeUser = (user: MockUser) => ({ ...user })
+export const shapeUser = (user: MockUser) => ({
+  ...user,
+  // The API derives this too: where an EVM account is paid. Without it the
+  // demo could never draw a profile's QR code or an invoice's "Pay to".
+  payWallet: user.address.startsWith('0x') ? user.address : null,
+})
 
 const shapeProjectCore = (db: Db, project: MockProject) => {
   const owner = userOf(db, project.ownerId)

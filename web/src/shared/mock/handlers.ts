@@ -119,7 +119,12 @@ function route(
     } catch (error) {
       if (error instanceof DemoHttpError) {
         return HttpResponse.json(
-          { message: error.message, name: 'DemoError' },
+          {
+            message: error.message,
+            // The name the API gives a missing record: it is what the pages
+            // tell "not found" from "failed" by (getLoadFailureKind).
+            name: error.status === 404 ? 'NotFoundError' : 'DemoError',
+          },
           { status: error.status },
         )
       }
