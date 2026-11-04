@@ -4,9 +4,12 @@ import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
+import { canRemoveAgentPrompt } from '../../model/agent-prompt.model'
+import { AgentPromptRemoveButton } from '../agent-prompt-remove-button'
+
 import type { Time, TimeAgentRun, TimeAgentSegment } from '@/entities/time'
 
-import { timeAgentRunsQuery } from '@/entities/time'
+import { $removedPromptRunKeys, timeAgentRunsQuery } from '@/entities/time'
 import { formatDurationFromMinutes, Text } from '@/shared'
 
 // The names the desktop tracker and server collectors report products by.
@@ -57,6 +60,8 @@ const STATE_COLORS: Record<SegmentState, string> = {
 
 type TimeDialogAgentsProps = {
   items: EntryAgentRun[]
+  /** The reader, who may remove the prompts of their own runs. */
+  userId?: string
 }
 
 export type EntryAgentRun = {
@@ -169,8 +174,9 @@ export const useEntryAgentRuns = (time: Time | null): EntryAgentRun[] => {
  * Everything is on the card: nothing waits behind a hover, which a touch
  * screen does not have.
  */
-export const TimeDialogAgents = ({ items }: TimeDialogAgentsProps) => {
+export const TimeDialogAgents = ({ items, userId }: TimeDialogAgentsProps) => {
   const { t, i18n } = useTranslation()
+  const removed = useUnit($removedPromptRunKeys)
 
   if (items.length === 0) {
     return null
@@ -251,11 +257,16 @@ export const TimeDialogAgents = ({ items }: TimeDialogAgentsProps) => {
                   </Text>
                 </Flex>
               </Flex>
-              {run.prompt && (
-                <RunPrompt
-                  label={t('dashboard.worklogsTable.agents.prompt')}
-                  text={run.prompt}
-                />
+              {run.prompt && !removed.has(run.runKey) && (
+                <PromptRow>
+                  <RunPrompt
+                    label={t('dashboard.worklogsTable.agents.prompt')}
+                    text={run.prompt}
+                  />
+                  {canRemoveAgentPrompt(run, userId) && (
+                    <AgentPromptRemoveButton runKey={run.runKey} />
+                  )}
+                </PromptRow>
               )}
               <Timeline
                 role="img"
@@ -342,6 +353,13 @@ const Avatar = styled.span`
   color: var(--ds-accent-11);
   font-size: var(--font-size-2);
   font-weight: 600;
+`
+
+const PromptRow = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: start;
+  gap: var(--space-2);
 `
 
 const Prompt = styled.button`

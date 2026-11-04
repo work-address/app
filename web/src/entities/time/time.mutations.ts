@@ -41,6 +41,14 @@ export const removeTimeScreenshotMutation = createMutation({
   },
 })
 
+export const removeAgentPromptMutation = createMutation({
+  handler: async (runKey: string) => {
+    return runApi(() =>
+      baseApi.agentControllerRemovePrompt({ path: { runKey } }),
+    )
+  },
+})
+
 export const setTimePaidStatusMutation = createMutation({
   handler: async ({ ids, isPaid }: { ids: string[]; isPaid: boolean }) => {
     return runApi(() =>

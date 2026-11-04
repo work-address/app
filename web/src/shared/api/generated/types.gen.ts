@@ -971,6 +971,22 @@ export type AgentControllerSearchResponses = {
     200: unknown;
 };
 
+export type AgentControllerRemovePromptData = {
+    body?: never;
+    path: {
+        runKey: string;
+    };
+    query?: never;
+    url: '/api/agent-tracking/runs/{runKey}/prompt';
+};
+
+export type AgentControllerRemovePromptResponses = {
+    /**
+     * Successful response
+     */
+    204: unknown;
+};
+
 export type AgentControllerStatusData = {
     body?: never;
     path?: never;

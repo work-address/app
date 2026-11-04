@@ -1,3 +1,7 @@
+export {
+  agentPromptRemoveRequested,
+  canRemoveAgentPrompt,
+} from './agent-prompt.model'
 export { formatTrackedCount } from './format-tracked-count'
 export { getTimeNavigationState, getTimeSiblingId } from './get-time-sibling-id'
 export {

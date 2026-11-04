@@ -843,6 +843,24 @@ export const handlers: HttpHandler[] = [
       rows.length,
     ]
   }),
+  route(
+    'delete',
+    '/agent-tracking/runs/:runKey/prompt',
+    ({ db, meId, params }) => {
+      const run = db.runs.find((row) => row.runKey === params.runKey)
+      if (!run) {
+        throw new DemoHttpError(404, 'RUN_NOT_FOUND')
+      }
+      if (run.userId !== meId) {
+        fail(403, 'Forbidden')
+      }
+      if (run.invoiceId) {
+        fail(409, 'RUN_INVOICED')
+      }
+      saveRow('runs', { ...run, prompt: null })
+      return { success: true }
+    },
+  ),
 
   // Statistics, on the API's terms.
   statistics('/statistics/overview', ({ db, meId }, q) =>

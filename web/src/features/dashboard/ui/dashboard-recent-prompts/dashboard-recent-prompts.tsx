@@ -13,7 +13,9 @@ import {
 } from '../../model/dashboard-filters'
 import { DashboardWidget } from '../dashboard-widget'
 
-import { recentAgentRunsQuery } from '@/entities/time'
+import { $user } from '@/entities/profile'
+import { $removedPromptRunKeys, recentAgentRunsQuery } from '@/entities/time'
+import { AgentPromptRemoveButton, canRemoveAgentPrompt } from '@/features/time'
 import { routes } from '@/routes'
 import { formatDurationFromMinutes, toDay } from '@/shared'
 
@@ -56,14 +58,17 @@ const avatarColor = (product: string) => {
 export const DashboardRecentPrompts = () => {
   const { t, i18n } = useTranslation()
 
-  const { runs, projects, userIds, pending, failed, retry } = useUnit({
-    runs: recentAgentRunsQuery.$data,
-    projects: $dashboardProjects,
-    userIds: $dashboardUserIds,
-    pending: recentAgentRunsQuery.$pending,
-    failed: recentAgentRunsQuery.$failed,
-    retry: dashboardStatisticsRequested,
-  })
+  const { runs, removed, user, projects, userIds, pending, failed, retry } =
+    useUnit({
+      runs: recentAgentRunsQuery.$data,
+      removed: $removedPromptRunKeys,
+      user: $user,
+      projects: $dashboardProjects,
+      userIds: $dashboardUserIds,
+      pending: recentAgentRunsQuery.$pending,
+      failed: recentAgentRunsQuery.$failed,
+      retry: dashboardStatisticsRequested,
+    })
 
   const titles = useMemo(
     () => new Map(projects.map((project) => [project.id, project.title])),
@@ -75,10 +80,11 @@ export const DashboardRecentPrompts = () => {
 
     return (runs ?? [])
       .filter((run) => run.prompt || run.promptPendingReview)
+      .filter((run) => !removed.has(run.runKey))
       .filter((run) => titles.has(run.projectId))
       .filter((run) => people.size === 0 || people.has(run.userId))
       .slice(0, VISIBLE_PROMPTS)
-  }, [runs, titles, userIds])
+  }, [runs, removed, titles, userIds])
 
   const when = useMemo(
     () =>
@@ -111,10 +117,12 @@ export const DashboardRecentPrompts = () => {
           const day = toDay(new Date(run.fromAt))
           const minutes =
             (Date.parse(run.toAt) - Date.parse(run.fromAt)) / 60_000
+          const removable = canRemoveAgentPrompt(run, user?.id)
 
           return (
-            <li key={run.runKey}>
+            <Row key={run.runKey}>
               <Item
+                data-removable={removable || undefined}
                 to={`${routes.time.build()}?${new URLSearchParams({
                   from: day,
                   to: day,
@@ -152,7 +160,14 @@ export const DashboardRecentPrompts = () => {
                 </Body>
                 <Chevron aria-hidden="true" />
               </Item>
-            </li>
+              {/* Beside the link, not inside it: the row is an anchor, and a
+                  button nested in one is invalid HTML. */}
+              {removable && (
+                <RemoveSlot>
+                  <AgentPromptRemoveButton runKey={run.runKey} />
+                </RemoveSlot>
+              )}
+            </Row>
           )
         })}
       </List>
@@ -172,8 +187,20 @@ const List = styled.ul`
   }
 `
 
+const Row = styled.li`
+  position: relative;
+`
+
+const RemoveSlot = styled.div`
+  position: absolute;
+  top: 50%;
+  right: var(--space-3);
+  display: flex;
+  transform: translateY(-50%);
+`
+
 /* The whole row is the link: a tint says so on hover, and the chevron says
-   where it goes. */
+   where it goes. A removable row leaves room for the button over its end. */
 const Item = styled(Link)`
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
@@ -183,6 +210,10 @@ const Item = styled(Link)`
   color: inherit;
   text-decoration: none;
   transition: background-color 0.15s ease;
+
+  &[data-removable] {
+    padding-right: calc(var(--space-3) + 32px);
+  }
 
   &:hover,
   &:focus-visible {

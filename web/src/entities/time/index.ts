@@ -140,6 +140,7 @@ export {
 export {
   deleteTimeMutation,
   editTimeMutation,
+  removeAgentPromptMutation,
   removeTimeProcessesMutation,
   removeTimeScreenshotMutation,
   setTimePaidStatusMutation,
@@ -147,6 +148,7 @@ export {
 
 export {
   $allTime,
+  $removedPromptRunKeys,
   $timeFilters,
   $hasActiveTimeFilters,
   $timeSort,

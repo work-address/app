@@ -13,6 +13,7 @@ import {
 import {
   deleteTimeMutation,
   editTimeMutation,
+  removeAgentPromptMutation,
   removeTimeProcessesMutation,
   removeTimeScreenshotMutation,
   setTimePaidStatusMutation,
@@ -20,6 +21,16 @@ import {
 import { timeQuery, type TimeQueryParams } from './time.queries'
 
 import type { Time, TimeFilters, TimeSort } from './types'
+
+/**
+ * Runs whose prompt was removed since their lists loaded. Those lists are
+ * query results, kept as they arrived; the next load has the prompt gone.
+ */
+export const $removedPromptRunKeys = createStore<ReadonlySet<string>>(
+  new Set(),
+).on(removeAgentPromptMutation.finished.success, (runKeys, { params }) =>
+  new Set(runKeys).add(params),
+)
 
 const DEFAULT_TIME_FILTERS: TimeFilters = {
   fromAt: null,

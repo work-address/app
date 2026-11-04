@@ -18,6 +18,7 @@ import { getTimeApps, TimeDialogProcesses } from './time-dialog-processes'
 
 import type { Time } from '@/entities/time'
 
+import { $user } from '@/entities/profile'
 import {
   deleteTimeMutation,
   editTimeMutation,
@@ -98,7 +99,9 @@ export const TimeDialog = ({
     isEditing,
     isRemovingScreenshot,
     isRemovingProcesses,
+    reader,
   } = useUnit({
+    reader: $user,
     requestDelete: timeEntryDeleteRequested,
     editTimeEntry: editTimeMutation.start,
     requestRemoveScreenshot: timeScreenshotRemoveRequested,
@@ -345,7 +348,7 @@ export const TimeDialog = ({
             </DetailsColumn>
             {hasAgents && (
               <AgentsColumn>
-                <TimeDialogAgents items={agentRuns} />
+                <TimeDialogAgents items={agentRuns} userId={reader?.id} />
               </AgentsColumn>
             )}
           </Content>
