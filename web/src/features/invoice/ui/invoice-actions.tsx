@@ -14,6 +14,7 @@ import {
 } from '../model'
 
 import { InvoicePaymentActions } from './invoice-payment-actions'
+import { InvoiceRejectAction } from './invoice-reject-action'
 
 import { Button } from '@/shared'
 
@@ -42,7 +43,7 @@ export const InvoiceActions = ({ layout = 'desktop', className }: Props) => {
       className={className}
     >
       {invoice?.id && canSettle ? (
-        <Settlement>
+        <FullRow>
           <InvoicePaymentActions
             invoiceId={invoice.id}
             isPaid={isPaid}
@@ -52,7 +53,7 @@ export const InvoiceActions = ({ layout = 'desktop', className }: Props) => {
             disabled={disabled}
             variant={isPaid ? 'outline' : 'solid'}
           />
-        </Settlement>
+        </FullRow>
       ) : null}
       <Button
         variant={canSettle && !isPaid ? 'soft' : 'solid'}
@@ -74,6 +75,7 @@ export const InvoiceActions = ({ layout = 'desktop', className }: Props) => {
       >
         {t('invoice.actions.savePdf')}
       </Button>
+      <InvoiceRejectAction Slot={FullRow} stretch={layout === 'mobile'} />
     </Root>
   )
 }
@@ -95,7 +97,7 @@ const Root = styled.div`
   }
 `
 
-const Settlement = styled.div`
+const FullRow = styled.div`
   ${Root}[data-layout='mobile'] & {
     grid-column: 1 / -1;
   }

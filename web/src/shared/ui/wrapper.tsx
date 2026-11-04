@@ -3,10 +3,11 @@ import styled from 'styled-components'
 import type { ReactNode } from 'react'
 
 /**
- * `full` is for the data pages (dashboard, invoices) that want every column
- * they can get; `document` is the reading column for one record (a profile,
- * an invoice, a form). Both share the same insets, so the first line of every
- * page starts at the same height and switching tabs does not jump.
+ * `full` is for the data pages (dashboard, invoices, an invoice with its
+ * worklog tables) that want every column they can get; `document` is the
+ * reading column for one record (a profile, a form). Both share the same
+ * insets, so the first line of every page starts at the same height and
+ * switching tabs does not jump.
  */
 export type WrapperWidth = 'full' | 'document'
 

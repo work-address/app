@@ -9,32 +9,39 @@ import {
   $invoiceTime,
   $invoiceLoading,
   DEFAULT_WORKLOG_SORT,
+  nextWorklogCount,
   sortInvoiceWorklogs,
+  WORKLOG_PAGE_ROWS,
+  WORKLOG_SORT_FIELDS,
   type WorklogSort,
+  type WorklogSortField,
 } from '../model'
 
+import { InvoiceSection } from './invoice-section'
 import { InvoiceTimeContext } from './invoice-time-context'
 
 import type { InvoiceTimeContextProps } from './invoice-time-context'
 import type { InvoiceRead } from '../model'
-import type { DesktopBodyCellRenderProps, DataTableConfig } from '@/shared'
+import type {
+  DataTableConfig,
+  DesktopBodyCellRenderProps,
+  MobileBodyRenderProps,
+  MobileDataTableConfig,
+  MobileHeaderRenderProps,
+  SortOrder,
+} from '@/shared'
 
 import {
-  Button,
   DataTable,
-  SectionTitle,
   formatCount,
   formatDurationFromMinutes,
   getTimeActiveColor,
+  MobileDataTable,
+  SortSelect,
   Text,
+  useBreakpoint,
+  useReachEnd,
 } from '@/shared'
-
-/**
- * How many entries the screen shows before "Show all". A month of 10-minute
- * entries runs to hundreds of rows - tens of thousands of pixels of evidence
- * under a summary that already answers the question.
- */
-export const INVOICE_TIME_PREVIEW_ROWS = 25
 
 export const InvoiceTime = () => {
   const { t, i18n } = useTranslation()
@@ -44,7 +51,10 @@ export const InvoiceTime = () => {
     loading: $invoiceLoading,
   })
 
-  const [expanded, setExpanded] = useState(false)
+  const isMobile = useBreakpoint('isMobile')
+
+  const [shownCount, setShownCount] = useState(WORKLOG_PAGE_ROWS)
+  const [printing, setPrinting] = useState(false)
   const [sort, setSort] = useState<WorklogSort>(DEFAULT_WORKLOG_SORT)
 
   const sortedEntries = useMemo(
@@ -52,21 +62,52 @@ export const InvoiceTime = () => {
     [timeEntries, sort],
   )
 
-  // Paper gets every entry: an invoice printed with a "show all" button in
-  // place of most of its rows is not a record of anything. flushSync renders
-  // the rest before the browser lays the page out for print.
+  const sortOptions = useMemo(
+    () =>
+      WORKLOG_SORT_FIELDS.map((entry) => ({
+        value: entry.field,
+        label: t(entry.labelKey),
+      })),
+    [t],
+  )
+
+  const [sortField, sortOrder] = Object.entries(sort)[0] as [
+    WorklogSortField,
+    SortOrder,
+  ]
+
+  // Another invoice's entries, or another order, start from the top again.
+  useEffect(() => setShownCount(WORKLOG_PAGE_ROWS), [timeEntries, sort])
+
+  // Paper gets every entry: an invoice printed with only the rows scrolled to
+  // so far is not a record of anything - and gets them as the table, even from
+  // a phone, where the screen shows collapsed rows. flushSync renders the rest
+  // before the browser lays the page out for print.
   useEffect(() => {
-    const expandForPrint = () => flushSync(() => setExpanded(true))
+    const beforePrint = () => flushSync(() => setPrinting(true))
+    const afterPrint = () => setPrinting(false)
 
-    window.addEventListener('beforeprint', expandForPrint)
+    window.addEventListener('beforeprint', beforePrint)
+    window.addEventListener('afterprint', afterPrint)
 
-    return () => window.removeEventListener('beforeprint', expandForPrint)
+    return () => {
+      window.removeEventListener('beforeprint', beforePrint)
+      window.removeEventListener('afterprint', afterPrint)
+    }
   }, [])
 
-  const visibleEntries = expanded
+  const visibleEntries = printing
     ? sortedEntries
-    : sortedEntries.slice(0, INVOICE_TIME_PREVIEW_ROWS)
-  const hiddenCount = timeEntries.length - visibleEntries.length
+    : sortedEntries.slice(0, shownCount)
+  const hasMore = visibleEntries.length < timeEntries.length
+
+  const sentinelRef = useReachEnd({
+    onReachEnd: hasMore
+      ? () =>
+          setShownCount((shown) => nextWorklogCount(shown, timeEntries.length))
+      : undefined,
+    resetKey: visibleEntries.length,
+  })
 
   const contextValue = useMemo<InvoiceTimeContextProps>(
     () => ({
@@ -128,46 +169,91 @@ export const InvoiceTime = () => {
     [t],
   )
 
+  // The time and the active minutes are the row; the rest is one tap away. A
+  // table this wide would leave a phone scrolling sideways for its figures.
+  const mobileConfig = useMemo(
+    (): MobileDataTableConfig<InvoiceTimeRow> => [
+      { customKey: 'entry', isTitle: true },
+      {
+        dataKey: 'note',
+        headerText: t('dashboard.worklogsTable.head.note'),
+      },
+      {
+        dataKey: 'keyboardKeys',
+        headerText: t('dashboard.worklogsTable.head.keyboard'),
+        getValue: (row) => formatCount(row.keyboardKeys),
+      },
+      {
+        dataKey: 'mouseKeys',
+        headerText: t('dashboard.worklogsTable.head.mouse'),
+        getValue: (row) => formatCount(row.mouseKeys),
+      },
+      {
+        dataKey: 'mouseDistance',
+        headerText: t('dashboard.worklogsTable.head.mouseDistance'),
+        getValue: (row) => formatCount(row.mouseDistance),
+      },
+    ],
+    [t],
+  )
+
+  // A rejected invoice releases its entries: nothing left to evidence, so no
+  // heading over an empty table.
+  if (!loading && timeEntries.length === 0) {
+    return null
+  }
+
   return (
-    <>
-      <Heading>
-        <SectionTitle>{t('dashboard.page.worklogs.title')}</SectionTitle>
-        {!loading && timeEntries.length > 0 ? (
+    <InvoiceSection
+      title={t('dashboard.page.worklogs.title')}
+      meta={
+        !loading && timeEntries.length > 0 ? (
           <Text size="2" color="gray">
             {t('invoice.worklogs.count', { count: timeEntries.length })}
           </Text>
-        ) : null}
-      </Heading>
+        ) : null
+      }
+    >
       <InvoiceTimeContext value={contextValue}>
-        <InvoiceTimeTable
-          shadow={false}
-          loading={loading}
-          data={visibleEntries}
-          config={tableConfig}
-          getRowId={rowIdGetter}
-          sort={sort}
-          onSortChange={setSort}
-          verticalAlign={'middle'}
-          BodyComponent={Cell}
-          nowrap
-          height={timeEntries.length > 0 ? '' : '340px'}
-        />
+        {/* A phone's rows have no column headers to sort from. */}
+        {isMobile && !printing && timeEntries.length > 1 ? (
+          <Flex pb="3">
+            <SortSelect
+              options={sortOptions}
+              field={sortField}
+              order={sortOrder}
+              onChange={(field, order) => setSort({ [field]: order })}
+            />
+          </Flex>
+        ) : null}
+        {isMobile && !printing ? (
+          <InvoiceTimeRows
+            loading={loading}
+            data={visibleEntries}
+            config={mobileConfig}
+            getRowId={rowIdGetter}
+            HeaderComponent={MobileEntryHeader}
+            BodyComponent={MobileEntryBody}
+          />
+        ) : (
+          <InvoiceTimeTable
+            shadow={false}
+            loading={loading}
+            data={visibleEntries}
+            config={tableConfig}
+            getRowId={rowIdGetter}
+            sort={sort}
+            onSortChange={setSort}
+            verticalAlign={'middle'}
+            BodyComponent={Cell}
+            nowrap
+            height={timeEntries.length > 0 ? '' : '340px'}
+          />
+        )}
       </InvoiceTimeContext>
-      {hiddenCount > 0 ||
-      (expanded && timeEntries.length > INVOICE_TIME_PREVIEW_ROWS) ? (
-        <More>
-          <Button
-            size="l"
-            variant="outline"
-            onClick={() => setExpanded((value) => !value)}
-          >
-            {expanded
-              ? t('invoice.worklogs.showFewer')
-              : t('invoice.worklogs.showAll', { count: timeEntries.length })}
-          </Button>
-        </More>
-      ) : null}
-    </>
+      {/* Rendered only with more to come, so a finished list asks for nothing. */}
+      {hasMore && <Sentinel ref={sentinelRef} aria-hidden="true" />}
+    </InvoiceSection>
   )
 }
 
@@ -204,6 +290,34 @@ const Cell = memo((props: DesktopBodyCellRenderProps<InvoiceTimeRow>) => {
   )
 })
 
+const MobileEntryHeader = (props: MobileHeaderRenderProps<InvoiceTimeRow>) => {
+  const { t } = useTranslation()
+  const { dateFormatter, timeFormatter } = useContext(InvoiceTimeContext)
+
+  return (
+    <MobileEntry>
+      <div>
+        <Text as="div" size="2" weight="medium">
+          {formatDate(timeFormatter, props.data.fromAt)} -{' '}
+          {formatDate(timeFormatter, props.data.toAt)}
+        </Text>
+        <Text as="div" size="1" color="gray">
+          {formatDate(dateFormatter, props.data.createdAt)}
+        </Text>
+      </div>
+      <Badge color={getTimeActiveColor(props.data.minutesActive ?? 0)}>
+        {formatDurationFromMinutes(props.data.minutesActive ?? 0, t)}
+      </Badge>
+    </MobileEntry>
+  )
+}
+
+/** Most entries have no note, and a label over nothing is noise. */
+const MobileEntryBody = (props: MobileBodyRenderProps<InvoiceTimeRow>) =>
+  props.dataKey === 'note' && !props.data.note ? null : (
+    <props.DefaultBodyComponent {...props} />
+  )
+
 /** Blank beats "Invalid Date" on a printed invoice. */
 const formatDate = (
   formatter: Intl.DateTimeFormat,
@@ -215,7 +329,7 @@ const CreatedAtCell = memo(
     const { dateFormatter, timeFormatter } = useContext(InvoiceTimeContext)
 
     return (
-      <Flex gap={'2'}>
+      <EntryWhen gap={'2'}>
         <Text size="2">
           {formatDate(timeFormatter, props.data.fromAt)} -{' '}
           {formatDate(timeFormatter, props.data.toAt)}
@@ -223,22 +337,31 @@ const CreatedAtCell = memo(
         <Text size="2" color={'gray'}>
           {formatDate(dateFormatter, props.data.createdAt)}
         </Text>
-      </Flex>
+      </EntryWhen>
     )
   },
 )
 
-const Heading = styled.div`
-  display: grid;
-  grid-auto-flow: column;
-  justify-content: start;
-  align-items: baseline;
-  gap: var(--space-3);
+/* One line on screen; a printed column is narrow, and a date broken in the
+   middle of its digits is unreadable, so paper moves it below the time whole. */
+const EntryWhen = styled(Flex)`
+  @media print {
+    flex-wrap: wrap;
+    row-gap: 0;
+  }
 `
 
-const More = styled.div`
+const MobileEntry = styled.div`
   display: grid;
-  justify-content: center;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--space-2);
+  padding-right: var(--space-2);
+  flex: 1;
+`
+
+const Sentinel = styled.div`
+  height: 1px;
 
   @media print {
     display: none;
@@ -266,6 +389,13 @@ const printColumnWidths = css`
   )}
 `
 
+/* The section's header carries the inset on a phone; rows keep to it. */
+const InvoiceTimeRows = styled(MobileDataTable<InvoiceTimeRow>)`
+  && {
+    padding: 0;
+  }
+`
+
 const InvoiceTimeTable = styled(DataTable<InvoiceTimeRow>)`
   /* DataTable's shared Tr (src/shared/ui/table/data-table.tsx) applies a 0.25s
      transition and an rgb(242, 242, 242) hover background to every row; this
@@ -276,6 +406,19 @@ const InvoiceTimeTable = styled(DataTable<InvoiceTimeRow>)`
 
   && tr:hover td {
     background-color: var(--white) !important;
+  }
+
+  /* The outer cells keep to the card's inset, level with the title above. */
+  @media screen {
+    && th:first-child,
+    && td:first-child {
+      padding-left: var(--space-5);
+    }
+
+    && th:last-child,
+    && td:last-child {
+      padding-right: var(--space-5);
+    }
   }
 
   @media print {

@@ -1,5 +1,3 @@
-import { ArrowLeftIcon } from '@radix-ui/react-icons'
-import { Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { useEffect } from 'react'
@@ -11,27 +9,20 @@ import {
   fetchInvoice,
   $invoice,
   $invoiceFailure,
-  $invoiceLoading,
   buildInvoiceHead,
   resetInvoice,
-  InvoiceTotalAmountDesktop,
-  InvoiceTotalAmountMobile,
+  InvoiceOverview,
   InvoiceTime,
   InvoiceLines,
 } from '@/features/invoice'
 import { routes } from '@/routes'
 import {
   Button,
-  Card,
   formatCurrency,
-  IconButton,
   isRecordId,
   LoadFailure,
   PageHelmet,
-  PageTitle,
   StateNotice,
-  Text,
-  useBreakpoint,
   Wrapper,
 } from '@/shared'
 
@@ -41,20 +32,17 @@ export default function InvoicePage() {
   // which answers one with a 500 rather than a 404.
   const validId = isRecordId(id)
 
-  const { fetchInvoiceEvent, invoice, loading, failure, resetInvoiceEvent } =
-    useUnit({
-      fetchInvoiceEvent: fetchInvoice,
-      invoice: $invoice,
-      loading: $invoiceLoading,
-      failure: $invoiceFailure,
-      resetInvoiceEvent: resetInvoice,
-    })
+  const { fetchInvoiceEvent, invoice, failure, resetInvoiceEvent } = useUnit({
+    fetchInvoiceEvent: fetchInvoice,
+    invoice: $invoice,
+    failure: $invoiceFailure,
+    resetInvoiceEvent: resetInvoice,
+  })
 
   const { t } = useTranslation()
   const navigate = useNavigate()
   const location = useLocation()
 
-  const isMobile = useBreakpoint('isMobile')
   // The blocks arrive one after another, as the dashboard's do; with reduced
   // motion they simply appear.
   const reducedMotion = useReducedMotion()
@@ -92,7 +80,7 @@ export default function InvoicePage() {
   }
 
   return (
-    <Root width="document">
+    <Root>
       <InvoicePrintGlobalStyle />
       <PageHelmet title={head.title} description={head.description} />
       {failureKind === 'not-found' ? (
@@ -114,50 +102,8 @@ export default function InvoicePage() {
         />
       ) : (
         <Body initial="hidden" animate="shown" variants={reveal.list}>
-          {/* The back arrow shares a row with the title rather than sitting
-              alone above it, and the title is set like the other pages'. */}
-          {isMobile && (
-            <MobileHead>
-              <TitleRow>
-                <BackButton
-                  variant={'ghost'}
-                  radius={'full'}
-                  color={'gray'}
-                  aria-label={t('common.back')}
-                  onClick={goBack}
-                >
-                  <ArrowLeftIcon />
-                </BackButton>
-                {loading ? (
-                  <Skeleton width="150px" height="24px" />
-                ) : (
-                  <PageTitle>{invoice?.title}</PageTitle>
-                )}
-              </TitleRow>
-              {loading ? (
-                <Skeleton width="200px" height="20px" />
-              ) : (
-                <Reference color={'gray'} size={'2'}>
-                  {t('invoices.item.reference')} {invoice?.id}
-                </Reference>
-              )}
-            </MobileHead>
-          )}
           <motion.div variants={reveal.item}>
-            {isMobile ? (
-              <InvoiceCard shadow={false}>
-                <InvoiceTotalAmountMobile />
-              </InvoiceCard>
-            ) : (
-              <InvoiceTotalAmountDesktop />
-            )}
-            {/* A Google account with no connected wallet is paid some other
-                way, and an invoice has nothing to say about it here. */}
-            {invoice?.user?.payWallet && (
-              <PayTo color={'gray'} size={'2'}>
-                {t('invoice.fields.payTo')}: {invoice.user.payWallet}
-              </PayTo>
-            )}
+            <InvoiceOverview onBack={goBack} />
           </motion.div>
           <motion.div variants={reveal.item}>
             <InvoiceLines />
@@ -170,12 +116,6 @@ export default function InvoicePage() {
     </Root>
   )
 }
-
-const PayTo = styled(Text)`
-  display: block;
-  margin-top: var(--space-2);
-  overflow-wrap: anywhere;
-`
 
 const REVEAL = {
   list: { shown: { transition: { staggerChildren: 0.06 } } },
@@ -227,43 +167,6 @@ const Body = styled(motion.div)`
   min-width: 0;
 `
 
-/* The heading and its table keep the gap they had inside the page's grid. */
 const Worklogs = styled(motion.div)`
-  display: grid;
-  gap: var(--space-5);
   min-width: 0;
-`
-
-const MobileHead = styled.div`
-  display: grid;
-  gap: var(--space-1);
-`
-
-const TitleRow = styled.div`
-  display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
-  align-items: center;
-  gap: var(--space-2);
-
-  @media print {
-    grid-template-columns: minmax(0, 1fr);
-  }
-`
-
-const BackButton = styled(IconButton)`
-  @media print {
-    display: none;
-  }
-`
-
-const InvoiceCard = styled(Card)`
-  ${(p) => p.theme.breakpoints.down('md')} {
-    padding: var(--space-3);
-  }
-`
-
-/* An id has no break opportunities of its own; without this a long one
-   pushes the page wider than the phone. */
-const Reference = styled(Text)`
-  overflow-wrap: anywhere;
 `

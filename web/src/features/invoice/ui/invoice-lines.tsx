@@ -1,25 +1,15 @@
 import { useUnit } from 'effector-react'
-import { useState } from 'react'
+import { useId } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { invoiceStateLabelKey } from '../lib'
 import { formatCents } from '../model/format'
-import {
-  $invoiceCanReject,
-  invoiceRejectionRequested,
-  rejectInvoiceMutation,
-} from '../model/rejection.model'
 import { $invoice } from '../model/stores'
 
-import {
-  Button,
-  formatDurationFromMinutes,
-  SectionTitle,
-  Text,
-  TextArea,
-  useDateFormatter,
-} from '@/shared'
+import { InvoiceSection } from './invoice-section'
+
+import { formatDurationFromMinutes, Text, useDateFormatter } from '@/shared'
 
 type InvoiceLine = NonNullable<
   NonNullable<ReturnType<typeof $invoice.getState>>['lines']
@@ -29,14 +19,8 @@ type InvoiceLine = NonNullable<
 export const InvoiceLines = () => {
   const { t } = useTranslation()
   const dateFormatter = useDateFormatter()
-  const { invoice, canReject, reject, pending, failed } = useUnit({
-    invoice: $invoice,
-    canReject: $invoiceCanReject,
-    reject: invoiceRejectionRequested,
-    pending: rejectInvoiceMutation.$pending,
-    failed: rejectInvoiceMutation.$failed,
-  })
-  const [reason, setReason] = useState('')
+  const invoice = useUnit($invoice)
+  const titleId = useId()
   if (!invoice) {
     return null
   }
@@ -75,82 +59,54 @@ export const InvoiceLines = () => {
   }
   return (
     <Root>
-      {invoice.state === 'REJECTED' && (
-        <Text role="status">
-          {t(invoiceStateLabelKey(invoice))}
-          {invoice.rejectionReason ? `: ${invoice.rejectionReason}` : ''}
-        </Text>
+      {/* The badge already says it was rejected; this says why, if anyone did. */}
+      {invoice.state === 'REJECTED' && invoice.rejectionReason && (
+        <Rejection role="status" size="2">
+          {t(invoiceStateLabelKey(invoice))}: {invoice.rejectionReason}
+        </Rejection>
       )}
-      <TableWrap>
-        <Table>
-          {/* The table's own caption, set like the page's other section
-              titles, so "Billed time" and "Worklogs" match. */}
-          <Caption as="caption">{t('invoice.lines.heading')}</Caption>
-          <thead>
-            <tr>
-              <th>{t('invoice.lines.work')}</th>
-              <th>{t('invoice.lines.hours')}</th>
-              <th>{t('invoice.lines.rate')}</th>
-              <th>{t('invoice.lines.amount')}</th>
-            </tr>
-          </thead>
-          <tbody>
-            {invoice.lines?.map((line, index) => (
-              <tr key={line.agentId ?? index}>
-                <td>
-                  {line.name}
-                  <Detail>{details(line).join(' · ')}</Detail>
-                  {line.rateChanges?.map((change, position) =>
-                    change.at && change.fromCents != null ? (
-                      <Detail key={position}>
-                        {t('invoice.lines.rateChanged', {
-                          date: dateFormatter.format(new Date(change.at)),
-                          before: hours(change.minutesBefore),
-                          from: formatCents(change.fromCents),
-                        })}
-                      </Detail>
-                    ) : null,
-                  )}
-                </td>
-                <td>{hours(line.minutes)}</td>
-                <td>
-                  {line.rateHourCents == null
-                    ? '—'
-                    : formatCents(line.rateHourCents)}
-                </td>
-                <td>{formatCents(line.amountCents)}</td>
+      <InvoiceSection title={t('invoice.lines.heading')} titleId={titleId}>
+        <TableWrap>
+          <Table aria-labelledby={titleId}>
+            <thead>
+              <tr>
+                <th>{t('invoice.lines.work')}</th>
+                <th>{t('invoice.lines.hours')}</th>
+                <th>{t('invoice.lines.rate')}</th>
+                <th>{t('invoice.lines.amount')}</th>
               </tr>
-            ))}
-          </tbody>
-        </Table>
-      </TableWrap>
-      {canReject && (
-        <RejectForm
-          onSubmit={(event) => {
-            event.preventDefault()
-            reject(reason)
-          }}
-        >
-          <TextArea
-            label={t('invoice.reject.reasonLabel')}
-            value={reason}
-            maxLength={500}
-            rows={3}
-            onChange={(event) => setReason(event.target.value)}
-          />
-          <Text size="2" color="gray">
-            {t('invoice.reject.notice')}
-          </Text>
-          <Button type="submit" variant="outline" loading={pending}>
-            {t('invoice.reject.action')}
-          </Button>
-          {failed && (
-            <Text size="2" color="red" role="alert">
-              {t('invoice.reject.failed')}
-            </Text>
-          )}
-        </RejectForm>
-      )}
+            </thead>
+            <tbody>
+              {invoice.lines?.map((line, index) => (
+                <tr key={line.agentId ?? index}>
+                  <td>
+                    {line.name}
+                    <Detail>{details(line).join(' · ')}</Detail>
+                    {line.rateChanges?.map((change, position) =>
+                      change.at && change.fromCents != null ? (
+                        <Detail key={position}>
+                          {t('invoice.lines.rateChanged', {
+                            date: dateFormatter.format(new Date(change.at)),
+                            before: hours(change.minutesBefore),
+                            from: formatCents(change.fromCents),
+                          })}
+                        </Detail>
+                      ) : null,
+                    )}
+                  </td>
+                  <td>{hours(line.minutes)}</td>
+                  <td>
+                    {line.rateHourCents == null
+                      ? '—'
+                      : formatCents(line.rateHourCents)}
+                  </td>
+                  <td>{formatCents(line.amountCents)}</td>
+                </tr>
+              ))}
+            </tbody>
+          </Table>
+        </TableWrap>
+      </InvoiceSection>
     </Root>
   )
 }
@@ -160,16 +116,19 @@ const Root = styled.section`
   min-width: 0;
 `
 
+const Rejection = styled(Text)`
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-3);
+  background: var(--red-a3);
+  color: var(--red-11);
+  overflow-wrap: anywhere;
+`
+
 const TableWrap = styled.div`
   overflow-x: auto;
 `
 
-const Caption = styled(SectionTitle)`
-  text-align: left;
-  padding-bottom: var(--space-4);
-`
-
-/* Set like DataTable: a bold, dark header over hairline rows. */
+/* Set like DataTable: a medium, dark header over hairline rows. */
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
@@ -184,7 +143,7 @@ const Table = styled.table`
   }
 
   th {
-    font-weight: 600;
+    font-weight: 500;
     color: var(--ds-neutral-12);
   }
 
@@ -202,10 +161,53 @@ const Table = styled.table`
     white-space: nowrap;
   }
 
-  ${(p) => p.theme.breakpoints.down('md')} {
-    th,
-    td {
-      padding: var(--space-2) var(--space-1);
+  tbody tr:last-child td {
+    border-bottom: 0;
+  }
+
+  /* The outer cells keep to the card's inset, level with the title above. */
+  @media screen {
+    th:first-child,
+    td:first-child {
+      padding-left: var(--space-5);
+    }
+
+    th:last-child,
+    td:last-child {
+      padding-right: var(--space-5);
+    }
+  }
+
+  /* Four columns squeeze the work to a word a line on a phone, so it takes a
+     row of its own over the three figures. On screen only: paper is wide. */
+  @media screen {
+    ${(p) => p.theme.breakpoints.down('md')} {
+      thead tr,
+      tbody tr {
+        display: grid;
+        grid-template-columns: repeat(3, minmax(0, 1fr));
+        border-bottom: 1px solid var(--ds-neutral-alpha-6);
+      }
+
+      && th,
+      && td {
+        padding: var(--space-2) 0;
+        border-bottom: 0;
+      }
+
+      th:first-child {
+        display: none;
+      }
+
+      && td:first-child {
+        grid-column: 1 / -1;
+        padding-bottom: 0;
+      }
+
+      th:nth-child(2),
+      td:nth-child(2) {
+        text-align: left;
+      }
     }
   }
 `
@@ -214,19 +216,4 @@ const Detail = styled.div`
   font-size: var(--font-size-1);
   line-height: var(--line-height-1);
   color: var(--ds-neutral-11);
-`
-
-/* The field fills the form; only the button keeps to its own width. */
-const RejectForm = styled.form`
-  display: grid;
-  gap: var(--space-2);
-  width: min(480px, 100%);
-
-  & > button {
-    justify-self: start;
-  }
-
-  @media print {
-    display: none;
-  }
 `
