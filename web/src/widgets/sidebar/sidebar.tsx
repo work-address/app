@@ -209,8 +209,12 @@ export const Sidebar = () => {
           to={authenticated ? routes.dashboard.build() : routes.signIn.build()}
           viewTransition
         >
-          <BrandMark src={Logo} alt={t('header.logoAlt')} />
-          <BrandLabel src={LogoWordmark} alt="" aria-hidden="true" />
+          {/* The wordmark does not fit the collapsed rail, so the mark stands
+              in for it there. */}
+          <BrandImage
+            src={collapsed ? Logo : LogoWordmark}
+            alt={t('header.logoAlt')}
+          />
         </Brand>
         <BrandDivider />
         <Nav aria-label={t('sidebar.navAria')}>
@@ -355,7 +359,6 @@ const Aside = styled.aside`
 const Brand = styled(Link)`
   display: flex;
   align-items: center;
-  gap: 10px;
   height: 40px;
   /* Centers the 32px mark in the 40px icon column the items below share. */
   padding-left: 4px;
@@ -368,22 +371,11 @@ const Brand = styled(Link)`
   }
 `
 
-const BrandMark = styled.img`
-  width: 32px;
+const BrandImage = styled.img`
   height: 32px;
+  width: auto;
   flex-shrink: 0;
   display: block;
-`
-
-const BrandLabel = styled.img`
-  height: 16px;
-  width: auto;
-  display: block;
-  transition: opacity 0.15s ease;
-
-  [data-collapsed] & {
-    opacity: 0;
-  }
 `
 
 const Nav = styled.nav`
