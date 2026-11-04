@@ -737,7 +737,6 @@
   "signIn.errors.googleLoad": "Google sign-in could not load. You can try again, or use a browser wallet.",
   "signIn.googleRetry": "Try again",
   "signIn.googleLoading": "Loading Google sign-in…",
-  "profile.view.noPayWallet": "No wallet connected",
   "profile.view.email": "Email",
   "profile.view.connectedWallet": "Verified wallet",
   "localWallet.connect.create": "Create and connect",

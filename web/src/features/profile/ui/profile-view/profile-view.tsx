@@ -3,7 +3,7 @@ import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { $profile } from '../../model'
+import { $profile, $profileLoading } from '../../model'
 
 import { ProfileViewDescriptionAndSkills } from './profile-view-description-and-skills'
 import { ProfileViewLinks } from './profile-view-links'
@@ -20,7 +20,14 @@ import {
 export const ProfileView = () => {
   const { t } = useTranslation()
   const isDesktop = useBreakpoint('isDesktop')
-  const { user } = useUnit({ user: $profile })
+  const { user, profileLoading } = useUnit({
+    user: $profile,
+    profileLoading: $profileLoading,
+  })
+
+  // With no wallet there is no QR code, and on a desktop that is all the card
+  // holds, so it goes. On a phone it stays for the name, address and actions.
+  const hasQrCode = Boolean(user?.payWallet) || profileLoading
 
   // The cards show the name as the page's h1. A profile without one still
   // needs a heading for screen readers, and the address is what names it.
@@ -75,15 +82,22 @@ export const ProfileView = () => {
       {unnamedTitle}
       <Grid
         areas={{
-          initial: `
+          initial: hasQrCode
+            ? `
           "qrcode profile"
           "description description"
+        `
+            : `
+          "profile"
+          "description"
         `,
         }}
         /* The QR card keeps its square; the profile card takes the rest of
            the reading column every document page shares. */
         columns={{
-          initial: 'minmax(0, 246px) minmax(0, 1fr)',
+          initial: hasQrCode
+            ? 'minmax(0, 246px) minmax(0, 1fr)'
+            : 'minmax(0, 1fr)',
         }}
         rows={{
           initial: `auto auto`,
@@ -92,11 +106,13 @@ export const ProfileView = () => {
           initial: '20px',
         }}
       >
-        <ProfileViewQrCode
-          gridArea={'qrcode'}
-          onWalletAddressCopy={handleCopyWalletAddress}
-          onShareProfile={handleShareProfile}
-        />
+        {hasQrCode && (
+          <ProfileViewQrCode
+            gridArea={'qrcode'}
+            onWalletAddressCopy={handleCopyWalletAddress}
+            onShareProfile={handleShareProfile}
+          />
+        )}
         <ProfileViewLinks
           gridArea={'profile'}
           onWalletAddressCopy={handleCopyWalletAddress}

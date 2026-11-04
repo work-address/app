@@ -734,7 +734,6 @@
   "signIn.errors.googleLoad": "无法加载 Google 登录。你可以重试，或使用浏览器钱包。",
   "signIn.googleRetry": "重试",
   "signIn.googleLoading": "正在加载 Google 登录…",
-  "profile.view.noPayWallet": "未连接钱包",
   "profile.view.email": "邮箱",
   "profile.view.connectedWallet": "已验证钱包",
   "localWallet.connect.create": "创建并连接",

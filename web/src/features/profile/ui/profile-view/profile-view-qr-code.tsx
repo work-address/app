@@ -102,7 +102,7 @@ export const ProfileViewQrCode = ({
               </Flex>
             </Flex>
           )}
-          {payWallet || profileLoading ? (
+          {(payWallet || profileLoading) && (
             <Tooltip content={t('profile.view.qrOpenHint')}>
               <QrCodeWrapper
                 $size={qrCodeSize}
@@ -123,10 +123,6 @@ export const ProfileViewQrCode = ({
                 </Skeleton>
               </QrCodeWrapper>
             </Tooltip>
-          ) : (
-            <Text size="2" color="gray" align="center">
-              {t('profile.view.noPayWallet')}
-            </Text>
           )}
           {isMobile && (
             <Flex gap={'2'} direction={'column'} width={'100%'}>

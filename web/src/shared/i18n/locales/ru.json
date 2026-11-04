@@ -747,7 +747,6 @@
   "signIn.errors.googleLoad": "Не удалось загрузить вход через Google. Попробуйте снова или используйте браузерный кошелёк.",
   "signIn.googleRetry": "Повторить",
   "signIn.googleLoading": "Загружаем вход через Google…",
-  "profile.view.noPayWallet": "Кошелёк не подключён",
   "profile.view.email": "Email",
   "profile.view.connectedWallet": "Подтверждённый кошелёк",
   "localWallet.connect.create": "Создать и подключить",

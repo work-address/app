@@ -739,7 +739,6 @@
   "signIn.errors.googleLoad": "No se pudo cargar Google. Puedes reintentarlo o usar una billetera de navegador.",
   "signIn.googleRetry": "Reintentar",
   "signIn.googleLoading": "Cargando Google…",
-  "profile.view.noPayWallet": "Sin billetera conectada",
   "profile.view.email": "Correo",
   "profile.view.connectedWallet": "Billetera verificada",
   "localWallet.connect.create": "Crear y conectar",

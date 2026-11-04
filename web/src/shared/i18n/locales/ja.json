@@ -734,7 +734,6 @@
   "signIn.errors.googleLoad": "Google サインインを読み込めませんでした。再試行するか、ブラウザウォレットをご利用ください。",
   "signIn.googleRetry": "再試行",
   "signIn.googleLoading": "Google サインインを読み込み中…",
-  "profile.view.noPayWallet": "ウォレット未接続",
   "profile.view.email": "メール",
   "profile.view.connectedWallet": "確認済みウォレット",
   "localWallet.connect.create": "作成して接続",
