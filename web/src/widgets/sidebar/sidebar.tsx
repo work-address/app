@@ -1,5 +1,4 @@
 import {
-  ArrowTopRightIcon,
   DoubleArrowLeftIcon,
   DoubleArrowRightIcon,
   EnterIcon,
@@ -11,8 +10,6 @@ import { useTranslation } from 'react-i18next'
 import { Link, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 import { match } from 'ts-pattern'
-
-import { UserCard } from './user-card'
 
 import { $authenticated, $user, logout } from '@/entities/profile'
 import { showPremiumBanner } from '@/features/dashboard'
@@ -26,6 +23,7 @@ import {
   Logo,
   LogoWordmark,
   navigateFx,
+  NoPremiumBadge,
   Tooltip,
   useBreakpoint,
 } from '@/shared'
@@ -116,14 +114,14 @@ export const Sidebar = () => {
     void navigateFx({ to: routes.dashboard.build() })
   }
 
-  const { mainItems, footerItems } = useMemo(() => {
+  const { mainItems, externalItems } = useMemo(() => {
     const sorted = defaultMappedRoutes
       .filter((route) => typeof route.desktopOrder === 'number')
       .sort((a, b) => (a.desktopOrder || 0) - (b.desktopOrder || 0))
 
     return {
       mainItems: sorted.filter((route) => route.target !== '_blank'),
-      footerItems: sorted.filter((route) => route.target === '_blank'),
+      externalItems: sorted.filter((route) => route.target === '_blank'),
     }
   }, [])
 
@@ -149,7 +147,7 @@ export const Sidebar = () => {
       !isExternal && (url === '/' ? pathname === url : pathname.startsWith(url))
 
     return (
-      <li key={key}>
+      <Row key={key}>
         <WithTooltip label={label} enabled={collapsed}>
           <Item
             as={Link}
@@ -165,12 +163,19 @@ export const Sidebar = () => {
               <Icon width={ICON_SIZE} height={ICON_SIZE} aria-hidden="true" />
             )}
             <Label>{label}</Label>
-            {isExternal && (
-              <External width={12} height={12} aria-hidden="true" />
-            )}
           </Item>
         </WithTooltip>
-      </li>
+        {/* A sibling of the link, not inside it: the badge is a button, and
+            nesting one in an anchor is invalid HTML. */}
+        {schema === routes.profile.schema &&
+          user &&
+          !user.premium &&
+          !collapsed && (
+            <RowBadge>
+              <NoPremiumBadge onClick={revealPremiumBanner} />
+            </RowBadge>
+          )}
+      </Row>
     )
   }
 
@@ -207,39 +212,27 @@ export const Sidebar = () => {
           <BrandMark src={Logo} alt={t('header.logoAlt')} />
           <BrandLabel src={LogoWordmark} alt="" aria-hidden="true" />
         </Brand>
+        <BrandDivider />
         <Nav aria-label={t('sidebar.navAria')}>
           <List>{mainItems.map(renderItem)}</List>
         </Nav>
         <Footer>
-          <List>{footerItems.map(renderItem)}</List>
-          <Divider />
+          <List>{externalItems.map(renderItem)}</List>
           {authenticated ? (
-            <>
-              <WithTooltip label={t('header.userAlt')} enabled={collapsed}>
-                <div>
-                  <UserCard
-                    user={user}
-                    userAlt={t('header.userAlt')}
-                    compact={collapsed}
-                    onNoPremiumClick={revealPremiumBanner}
-                  />
-                </div>
-              </WithTooltip>
-              <WithTooltip label={t('header.exitHint')} enabled={collapsed}>
-                <Item
-                  type="button"
-                  aria-label={t('header.exitHint')}
-                  onClick={() => logoutEvent()}
-                >
-                  <ExitIcon
-                    width={ICON_SIZE}
-                    height={ICON_SIZE}
-                    aria-hidden="true"
-                  />
-                  <Label>{t('header.exit')}</Label>
-                </Item>
-              </WithTooltip>
-            </>
+            <WithTooltip label={t('header.exitHint')} enabled={collapsed}>
+              <Item
+                type="button"
+                aria-label={t('header.exitHint')}
+                onClick={() => logoutEvent()}
+              >
+                <ExitIcon
+                  width={ICON_SIZE}
+                  height={ICON_SIZE}
+                  aria-hidden="true"
+                />
+                <Label>{t('header.exit')}</Label>
+              </Item>
+            </WithTooltip>
           ) : (
             <WithTooltip label={t('signIn.title')} enabled={collapsed}>
               <Item
@@ -257,6 +250,7 @@ export const Sidebar = () => {
               </Item>
             </WithTooltip>
           )}
+          <Divider />
           <WithTooltip label={toggleLabel} enabled={collapsed}>
             <Item
               type="button"
@@ -405,6 +399,18 @@ const List = styled.ul`
   gap: 2px;
 `
 
+const Row = styled.li`
+  position: relative;
+`
+
+const RowBadge = styled.div`
+  position: absolute;
+  top: 50%;
+  right: 8px;
+  display: flex;
+  transform: translateY(-50%);
+`
+
 const Footer = styled.div`
   display: flex;
   flex-direction: column;
@@ -416,6 +422,12 @@ const Divider = styled.div`
   height: 1px;
   margin: 8px 4px;
   background: var(--sidebar-border);
+`
+
+/** A direct child of the sidebar, whose own gap already spaces it vertically. */
+const BrandDivider = styled(Divider)`
+  flex-shrink: 0;
+  margin-block: 0;
 `
 
 const Label = styled.span`
@@ -480,15 +492,5 @@ const Item = styled.button`
 
   &[data-muted]:hover {
     color: var(--ds-neutral-12);
-  }
-`
-
-const External = styled(ArrowTopRightIcon)`
-  flex-shrink: 0;
-  color: var(--muted);
-  transition: opacity 0.15s ease;
-
-  [data-collapsed] & {
-    opacity: 0;
   }
 `
