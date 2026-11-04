@@ -304,7 +304,7 @@
   "invoices.page.description": "Every invoice you have issued, plus those on projects you own or view.",
   "invoices.page.empty.action": "Go to your projects",
   "invoices.page.empty.description": "Create one from a project to bill for the time you have tracked.",
-  "invoices.page.empty.filtered.description": "Nothing here for this project and status. Try another combination.",
+  "invoices.page.empty.filtered.description": "Nothing here for these filters. Try another combination.",
   "invoices.page.empty.filtered.reset": "Show all invoices",
   "invoices.page.empty.filtered.title": "No invoices match",
   "invoices.page.empty.title": "No invoices yet",

@@ -3,6 +3,11 @@ import type { baseApi } from '@/shared'
 export type InvoiceFilter = {
   projectId?: string
   state?: 'PAID' | 'Requested' | 'REJECTED'
+  fromAt?: string
+  toAt?: string
+  /** Cents, matching the invoice's amountCents. */
+  amountFrom?: number
+  amountTo?: number
 }
 export type InvoiceSettlement = baseApi.InvoiceSearch & {
   id: string
@@ -27,6 +32,7 @@ export const readInvoiceSettlement = (
   }
 }
 
+/** Settling changes neither period nor amount, so a listed row still fits those. */
 export const matchesInvoiceFilter = (
   invoice: baseApi.InvoiceSearch,
   filter: InvoiceFilter,

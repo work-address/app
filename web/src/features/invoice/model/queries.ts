@@ -3,6 +3,7 @@ import { concurrency, createQuery } from '@farfetched/core'
 import { readLoadedInvoicePages } from './invoice-feed'
 import { DEFAULT_INVOICE_SORT, type InvoiceSort } from './invoice-sort'
 
+import type { InvoiceFilter } from './invoice-feed'
 import type { InvoiceRead } from './types'
 
 import { baseApi, collectSearchPages, runApiData } from '@/shared'
@@ -34,9 +35,7 @@ export const invoiceQuery = createQuery({
 /** One page of invoices. Matches the server's own default. */
 export const INVOICE_PAGE_SIZE = 20
 
-export type InvoiceListParams = {
-  projectId?: string
-  state?: 'PAID' | 'Requested' | 'REJECTED'
+export type InvoiceListParams = InvoiceFilter & {
   sort?: InvoiceSort
   page: number
   /** Preserve the already-loaded prefix after a state change shifts offsets. */
@@ -45,11 +44,10 @@ export type InvoiceListParams = {
 
 export const invoiceListQuery = createQuery({
   handler: async ({
-    projectId,
-    state,
     sort = DEFAULT_INVOICE_SORT,
     page,
     reloadThroughPage,
+    ...filter
   }: InvoiceListParams): Promise<{
     items: baseApi.InvoiceSearch[]
     total: number
@@ -59,10 +57,7 @@ export const invoiceListQuery = createQuery({
       const [items, total] = (await runApiData(() =>
         baseApi.invoiceControllerSearch({
           body: {
-            filter: {
-              ...(projectId ? { projectId } : {}),
-              ...(state ? { state } : {}),
-            },
+            filter,
             sort,
             page,
             limit: INVOICE_PAGE_SIZE,

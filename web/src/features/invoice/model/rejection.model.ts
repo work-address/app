@@ -2,10 +2,10 @@ import { createMutation } from '@farfetched/core'
 import { combine, createEvent, sample } from 'effector'
 
 import {
+  $invoiceListFilter,
   $invoicePage,
   $invoiceProjectFilter,
   $invoiceSort,
-  $invoiceStateFilter,
   $invoices,
 } from './list.stores'
 import { invoiceListQuery, invoiceQuery, invoiceSummaryQuery } from './queries'
@@ -53,20 +53,18 @@ sample({
   target: invoiceQuery.start,
 })
 // A loaded list rebuilds every page it holds, as settlement does, so the row
-// leaves the Awaiting tab; the owed totals are re-read either way.
+// leaves the Awaiting filter; the owed totals are re-read either way.
 sample({
   clock: rejectInvoiceMutation.finished.success,
   source: {
     items: $invoices,
-    projectId: $invoiceProjectFilter,
-    state: $invoiceStateFilter,
+    filter: $invoiceListFilter,
     sort: $invoiceSort,
     page: $invoicePage,
   },
   filter: ({ items }) => items.length > 0,
-  fn: ({ projectId, state, sort, page }) => ({
-    projectId: projectId || undefined,
-    state: state || undefined,
+  fn: ({ filter, sort, page }) => ({
+    ...filter,
     sort,
     page: 0,
     reloadThroughPage: page,

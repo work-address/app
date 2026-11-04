@@ -2,10 +2,9 @@ import { merge, sample } from 'effector'
 
 import { matchesInvoiceFilter } from './invoice-feed'
 import {
+  $invoiceListFilter,
   $invoicePage,
-  $invoiceProjectFilter,
   $invoiceSort,
-  $invoiceStateFilter,
   $invoices,
 } from './list.stores'
 import { markInvoicePaidMutation, markInvoiceUnpaidMutation } from './mutations'
@@ -63,24 +62,14 @@ sample({
 })
 sample({
   clock: settlementSucceeded,
-  source: {
-    items: $invoices,
-    projectId: $invoiceProjectFilter,
-    state: $invoiceStateFilter,
-  },
-  fn: ({ items, projectId, state }, { result }) => {
-    const filter = {
-      projectId: projectId || undefined,
-      state: state || undefined,
-    }
-    return {
-      invoice: result,
-      filter,
-      removed:
-        items.some((item) => item.id === result.id) &&
-        !matchesInvoiceFilter(result, filter),
-    }
-  },
+  source: { items: $invoices, filter: $invoiceListFilter },
+  fn: ({ items, filter }, { result }) => ({
+    invoice: result,
+    filter,
+    removed:
+      items.some((item) => item.id === result.id) &&
+      !matchesInvoiceFilter(result, filter),
+  }),
   target: invoiceSettlementApplied,
 })
 
@@ -89,16 +78,14 @@ sample({
 sample({
   clock: settlementSucceeded,
   source: {
-    projectId: $invoiceProjectFilter,
-    state: $invoiceStateFilter,
+    filter: $invoiceListFilter,
     sort: $invoiceSort,
     page: $invoicePage,
   },
   // Sorted by status, a settled row belongs elsewhere in the list too.
-  filter: ({ state, sort }) => Boolean(state) || Boolean(sort.state),
-  fn: ({ projectId, state, sort, page }) => ({
-    projectId: projectId || undefined,
-    state: state || undefined,
+  filter: ({ filter, sort }) => Boolean(filter.state) || Boolean(sort.state),
+  fn: ({ filter, sort, page }) => ({
+    ...filter,
     sort,
     page: 0,
     reloadThroughPage: page,

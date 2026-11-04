@@ -302,7 +302,7 @@
   "invoices.page.description": "あなたが発行したすべての請求書と、所有または閲覧しているプロジェクトの請求書です。",
   "invoices.page.empty.action": "プロジェクトへ",
   "invoices.page.empty.description": "プロジェクトから作成して、記録した時間を請求しましょう。",
-  "invoices.page.empty.filtered.description": "このプロジェクトと状態に該当するものはありません。別の組み合わせをお試しください。",
+  "invoices.page.empty.filtered.description": "このフィルターに該当するものはありません。別の組み合わせをお試しください。",
   "invoices.page.empty.filtered.reset": "すべての請求書を表示",
   "invoices.page.empty.filtered.title": "該当する請求書はありません",
   "invoices.page.empty.title": "請求書はまだありません",

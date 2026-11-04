@@ -1,6 +1,15 @@
-import { combine, createEvent, createStore } from 'effector'
+import { combine, createEvent, createStore, sample } from 'effector'
+import { debounce } from 'patronum/debounce'
 
 import { applyInvoiceSettlement } from './invoice-feed'
+import {
+  buildInvoiceListFilter,
+  EMPTY_INVOICE_AMOUNT,
+  EMPTY_INVOICE_PERIOD,
+  isSameInvoiceAmount,
+  type InvoiceAmountFilter,
+  type InvoicePeriodFilter,
+} from './invoice-filter'
 import { DEFAULT_INVOICE_SORT, type InvoiceSort } from './invoice-sort'
 import { invoiceListQuery, invoiceSummaryQuery } from './queries'
 import { invoiceSettlementApplied } from './settlement.events'
@@ -15,20 +24,72 @@ export const retryInvoiceList = createEvent()
 export const invoiceProjectFilterChanged = createEvent<string>()
 export const invoiceSortChanged = createEvent<InvoiceSort>()
 
-/** Empty string means "every state" - the tab the list opens on. */
+/** Empty string means "every state" - what the list opens on. */
 export type InvoiceStateFilter = '' | 'PAID' | 'Requested' | 'REJECTED'
 
 export const invoiceStateFilterChanged = createEvent<InvoiceStateFilter>()
+export const invoicePeriodFilterChanged =
+  createEvent<Partial<InvoicePeriodFilter>>()
+export const invoiceAmountFilterChanged =
+  createEvent<Partial<InvoiceAmountFilter>>()
+export const invoiceFiltersReset = createEvent()
 
 /** Empty string means "every project" - the filter's default. */
-export const $invoiceProjectFilter = createStore('').on(
-  invoiceProjectFilterChanged,
-  (_, projectId) => projectId,
+export const $invoiceProjectFilter = createStore('')
+  .on(invoiceProjectFilterChanged, (_, projectId) => projectId)
+  .reset(invoiceFiltersReset)
+
+export const $invoiceStateFilter = createStore<InvoiceStateFilter>('')
+  .on(invoiceStateFilterChanged, (_, state) => state)
+  .reset(invoiceFiltersReset)
+
+export const $invoicePeriodFilter = createStore(EMPTY_INVOICE_PERIOD)
+  .on(invoicePeriodFilterChanged, (period, change) => ({
+    ...period,
+    ...change,
+  }))
+  .reset(invoiceFiltersReset)
+
+/** What the inputs show, updated on every key. */
+export const $invoiceAmountFilter = createStore(EMPTY_INVOICE_AMOUNT)
+  .on(invoiceAmountFilterChanged, (amount, change) => ({
+    ...amount,
+    ...change,
+  }))
+  .reset(invoiceFiltersReset)
+
+const INVOICE_AMOUNT_DEBOUNCE_MS = 400
+
+/** What the list asks for: the amount once typing stops. */
+const $invoiceAppliedAmount = createStore(EMPTY_INVOICE_AMOUNT)
+
+// Reads the inputs when the wait ends rather than carrying what was typed, so
+// typing cut short by a reset cannot bring the old amount back; and only a
+// different figure counts, so "12" to "12." or that same reset reload nothing.
+const invoiceAmountFilterSettled = sample({
+  clock: debounce(invoiceAmountFilterChanged, INVOICE_AMOUNT_DEBOUNCE_MS),
+  source: { typed: $invoiceAmountFilter, applied: $invoiceAppliedAmount },
+  filter: ({ typed, applied }) => !isSameInvoiceAmount(typed, applied),
+  fn: ({ typed }) => typed,
+})
+
+$invoiceAppliedAmount
+  .on(invoiceAmountFilterSettled, (_, amount) => amount)
+  .reset(invoiceFiltersReset)
+
+/** Every filter as the search endpoint takes it. */
+export const $invoiceListFilter = combine(
+  {
+    projectId: $invoiceProjectFilter,
+    state: $invoiceStateFilter,
+    period: $invoicePeriodFilter,
+    amount: $invoiceAppliedAmount,
+  },
+  buildInvoiceListFilter,
 )
 
-export const $invoiceStateFilter = createStore<InvoiceStateFilter>('').on(
-  invoiceStateFilterChanged,
-  (_, state) => state,
+export const $invoiceHasActiveFilters = $invoiceListFilter.map(
+  (filter) => Object.keys(filter).length > 0,
 )
 
 /**
@@ -41,10 +102,13 @@ export const $invoiceSort = createStore<InvoiceSort>(DEFAULT_INVOICE_SORT).on(
   (_, sort) => sort,
 )
 
-/** Either filter describes a different query, so both start the list over. */
+/** Any filter describes a different query, so each starts the list over. */
 export const invoiceFilterChanged = [
   invoiceProjectFilterChanged,
   invoiceStateFilterChanged,
+  invoicePeriodFilterChanged,
+  invoiceAmountFilterSettled,
+  invoiceFiltersReset,
 ]
 
 type InvoiceFeed = {
@@ -59,9 +123,8 @@ const emptyFeed: InvoiceFeed = { items: [], endReached: false }
  * Pages accumulate here rather than replacing one another, so scrolling to the
  * end grows the list instead of swapping it.
  *
- * Changing the project filter resets it: the pages already loaded describe a
- * different query, and appending the new ones would mix two filters in one
- * list.
+ * Changing a filter resets it: the pages already loaded describe a different
+ * query, and appending the new ones would mix two filters in one list.
  */
 export const $invoiceFeed = createStore<InvoiceFeed>(emptyFeed)
   .on(invoiceListQuery.finished.success, (feed, { params, result }) => {
@@ -166,8 +229,7 @@ const emptySummary: InvoiceSummary = {
  * Reduced from its own unpaged query rather than from the list, which holds
  * one page at a time: a total built from the first twenty rows would be
  * wrong the moment there was a twenty-first. Follows the project filter but
- * not the state tab - the tab narrows the rows, the strip is what they narrow
- * from.
+ * not the others - they narrow the rows, the strip is what they narrow from.
  */
 export const $invoiceSummary = invoiceSummaryQuery.$data.map(
   (items): InvoiceSummary =>

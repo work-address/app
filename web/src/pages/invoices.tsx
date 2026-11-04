@@ -8,9 +8,8 @@ import styled from 'styled-components'
 import { $user } from '@/entities/profile'
 import {
   $hasMoreInvoices,
-  $invoiceProjectFilter,
+  $invoiceHasActiveFilters,
   $invoiceSort,
-  $invoiceStateFilter,
   $invoiceSummary,
   $invoiceSummaryLoading,
   $invoiceSummaryFailed,
@@ -18,6 +17,8 @@ import {
   $invoicesTotal,
   $isLoadingMoreInvoices,
   INVOICE_SORT_FIELDS,
+  InvoiceFilters,
+  InvoiceMobileFilters,
   InvoicePaymentActions,
   InvoicesTable,
   canSettleInvoice,
@@ -25,19 +26,17 @@ import {
   retryInvoiceList,
   retryInvoiceSummary,
   formatCents,
+  invoiceFiltersReset,
   invoiceListQuery,
-  invoiceProjectFilterChanged,
   invoiceProjectsQuery,
   invoiceRateHour,
   invoiceSortChanged,
   invoiceStateColor,
-  invoiceStateFilterChanged,
   invoiceStateLabelKey,
   loadMoreInvoices,
   shortenAddress,
   type InvoiceSortField,
   type InvoiceSortOrder,
-  type InvoiceStateFilter,
 } from '@/features/invoice'
 import { routes } from '@/routes'
 import { formatCurrency, useDateFormatter, type baseApi } from '@/shared'
@@ -46,32 +45,17 @@ import {
   LoadFailure,
   PageHeader,
   PageHelmet,
-  Select,
   SortSelect,
   Spinner,
   StateNotice,
   StatStrip,
   StatTile,
-  TabsList,
-  TabsRoot,
-  TabsTrigger,
   Text,
   Wrapper,
   useBreakpoint,
   usePageBusy,
   useReachEnd,
 } from '@/shared'
-
-/** The tab values: the two server states plus "every state". */
-const STATE_TABS: { value: InvoiceStateFilter; labelKey: string }[] = [
-  { value: '', labelKey: 'invoices.filter.state.all' },
-  { value: 'Requested', labelKey: 'invoices.filter.state.awaiting' },
-  { value: 'REJECTED', labelKey: 'invoices.filter.state.rejected' },
-  { value: 'PAID', labelKey: 'invoices.filter.state.paid' },
-]
-
-// Radix tabs need a non-empty value; "all" stands in for the empty filter.
-const ALL_TAB = 'all'
 
 /**
  * Every invoice the signed-in user can see, newest first.
@@ -95,18 +79,13 @@ export default function InvoicesPage() {
     fetchList,
     retryList,
     loadMore,
-    projectId,
-    changeProject,
-    stateFilter,
-    changeState,
-    sort,
-    changeSort,
+    isFiltered,
+    resetFilters,
     summary,
     summaryLoading,
     summaryFailed,
     retrySummary,
     projectsFailed,
-    projects,
     loadProjects,
   } = useUnit({
     rows: $invoices,
@@ -118,18 +97,13 @@ export default function InvoicesPage() {
     fetchList: fetchInvoiceList,
     retryList: retryInvoiceList,
     loadMore: loadMoreInvoices,
-    projectId: $invoiceProjectFilter,
-    changeProject: invoiceProjectFilterChanged,
-    stateFilter: $invoiceStateFilter,
-    changeState: invoiceStateFilterChanged,
-    sort: $invoiceSort,
-    changeSort: invoiceSortChanged,
+    isFiltered: $invoiceHasActiveFilters,
+    resetFilters: invoiceFiltersReset,
     summary: $invoiceSummary,
     summaryLoading: $invoiceSummaryLoading,
     summaryFailed: $invoiceSummaryFailed,
     retrySummary: retryInvoiceSummary,
     projectsFailed: invoiceProjectsQuery.$failed,
-    projects: invoiceProjectsQuery.$data,
     loadProjects: invoiceProjectsQuery.start,
   })
 
@@ -141,32 +115,6 @@ export default function InvoicesPage() {
     loadProjects()
   }, [loadProjects])
 
-  const projectOptions = useMemo(
-    () => [
-      { value: '', label: t('invoices.filter.allProjects') },
-      ...(projects ?? []).map((project) => ({
-        value: project.id ?? '',
-        label: project.title ?? '',
-      })),
-    ],
-    [projects, t],
-  )
-
-  const sortOptions = useMemo(
-    () =>
-      INVOICE_SORT_FIELDS.map((entry) => ({
-        value: entry.field,
-        label: t(entry.labelKey),
-      })),
-    [t],
-  )
-
-  const [sortField, sortOrder] = Object.entries(sort)[0] as [
-    InvoiceSortField,
-    InvoiceSortOrder,
-  ]
-
-  const isFiltered = Boolean(projectId || stateFilter)
   const showSkeleton = pending && !loadingMore && rows.length === 0
   const showEmpty = !pending && !failed && rows.length === 0
 
@@ -192,22 +140,14 @@ export default function InvoicesPage() {
           title={t('invoices.page.title')}
           description={t('invoices.page.description')}
           actions={
-            projectsFailed ? null : (
-              <FilterBar>
-                <Select
-                  options={projectOptions}
-                  value={projectId}
-                  placeholder={t('invoices.filter.allProjects')}
-                  onChange={(value) => {
-                    if (Array.isArray(value)) {
-                      return
-                    }
-
-                    changeProject(value)
-                  }}
-                />
-              </FilterBar>
-            )
+            <>
+              <ShownCount
+                shown={rows.length}
+                total={total}
+                loading={showSkeleton}
+              />
+              {isDesktop ? null : <InvoiceMobileFilters />}
+            </>
           }
         />
         {projectsFailed && (
@@ -248,43 +188,9 @@ export default function InvoicesPage() {
             />
           </StatStrip>
         )}
-        <Toolbar>
-          <TabsRoot
-            value={stateFilter || ALL_TAB}
-            onValueChange={(value) =>
-              changeState(
-                value === ALL_TAB
-                  ? ''
-                  : (value as Exclude<InvoiceStateFilter, ''>),
-              )
-            }
-          >
-            <TabsList>
-              {STATE_TABS.map((tab) => (
-                <TabsTrigger
-                  key={tab.value || ALL_TAB}
-                  value={tab.value || ALL_TAB}
-                >
-                  {t(tab.labelKey)}
-                </TabsTrigger>
-              ))}
-            </TabsList>
-          </TabsRoot>
-          {/* A phone's cards have no column headers to sort from. */}
-          {!isDesktop && rows.length > 1 ? (
-            <SortSelect
-              options={sortOptions}
-              field={sortField}
-              order={sortOrder}
-              onChange={(field, order) => changeSort({ [field]: order })}
-            />
-          ) : null}
-          {total > 0 && !showSkeleton ? (
-            <Text size="2" color="gray">
-              {t('invoices.page.shownOfTotal', { shown: rows.length, total })}
-            </Text>
-          ) : null}
-        </Toolbar>
+        {isDesktop ? <InvoiceFilters /> : null}
+        {/* A phone's cards have no column headers to sort from. */}
+        {!isDesktop && rows.length > 1 ? <InvoiceSort /> : null}
         {/* A failed request is not an empty list. Saying "no invoices yet"
             when the truth is "could not load them" sends someone looking for
             an invoice they know exists. With rows on screen they stay, and the
@@ -312,10 +218,7 @@ export default function InvoicesPage() {
                 <Button
                   size="l"
                   variant="outline"
-                  onClick={() => {
-                    changeProject('')
-                    changeState('')
-                  }}
+                  onClick={() => resetFilters()}
                 >
                   {t('invoices.page.empty.filtered.reset')}
                 </Button>
@@ -358,6 +261,61 @@ export default function InvoicesPage() {
         ) : null}
       </Flex>
     </Wrapper>
+  )
+}
+
+const ShownCount = ({
+  shown,
+  total,
+  loading,
+}: {
+  shown: number
+  total: number
+  loading: boolean
+}) => {
+  const { t } = useTranslation()
+
+  if (total === 0 || loading) {
+    return null
+  }
+
+  return (
+    <Text size="2" color="gray" wrap="nowrap">
+      {t('invoices.page.shownOfTotal', { shown, total })}
+    </Text>
+  )
+}
+
+const InvoiceSort = () => {
+  const { t } = useTranslation()
+  const { sort, changeSort } = useUnit({
+    sort: $invoiceSort,
+    changeSort: invoiceSortChanged,
+  })
+
+  const sortOptions = useMemo(
+    () =>
+      INVOICE_SORT_FIELDS.map((entry) => ({
+        value: entry.field,
+        label: t(entry.labelKey),
+      })),
+    [t],
+  )
+
+  const [sortField, sortOrder] = Object.entries(sort)[0] as [
+    InvoiceSortField,
+    InvoiceSortOrder,
+  ]
+
+  return (
+    <Flex>
+      <SortSelect
+        options={sortOptions}
+        field={sortField}
+        order={sortOrder}
+        onChange={(field, order) => changeSort({ [field]: order })}
+      />
+    </Flex>
   )
 }
 
@@ -552,24 +510,6 @@ const LoadingMore = styled.div`
 
 const Sentinel = styled.div`
   height: 1px;
-`
-
-const FilterBar = styled.div`
-  display: grid;
-  width: 260px;
-  max-width: 100%;
-
-  @container (max-width: 560px) {
-    width: 100%;
-  }
-`
-
-const Toolbar = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: var(--space-3);
-  flex-wrap: wrap;
 `
 
 /* Positioned so ProjectLink's overlay can stretch across the whole row: the

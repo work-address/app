@@ -306,7 +306,7 @@
   "invoices.page.description": "Todas las facturas que has emitido, más las de los proyectos que posees o consultas.",
   "invoices.page.empty.action": "Ir a tus proyectos",
   "invoices.page.empty.description": "Crea una desde un proyecto para facturar el tiempo que has registrado.",
-  "invoices.page.empty.filtered.description": "No hay nada para este proyecto y estado. Prueba otra combinación.",
+  "invoices.page.empty.filtered.description": "No hay nada con estos filtros. Prueba otra combinación.",
   "invoices.page.empty.filtered.reset": "Mostrar todas las facturas",
   "invoices.page.empty.filtered.title": "Ninguna factura coincide",
   "invoices.page.empty.title": "Aún no hay facturas",

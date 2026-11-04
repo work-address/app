@@ -310,7 +310,7 @@
   "invoices.page.description": "Все выставленные вами счета, а также счета по проектам, которыми вы владеете или которые просматриваете.",
   "invoices.page.empty.action": "К проектам",
   "invoices.page.empty.description": "Создайте счёт из проекта, чтобы выставить его за учтённое время.",
-  "invoices.page.empty.filtered.description": "Для этого проекта и статуса счетов нет. Попробуйте другое сочетание.",
+  "invoices.page.empty.filtered.description": "По этим фильтрам счетов нет. Попробуйте другое сочетание.",
   "invoices.page.empty.filtered.reset": "Показать все счета",
   "invoices.page.empty.filtered.title": "Ничего не найдено",
   "invoices.page.empty.title": "Счетов пока нет",

@@ -702,7 +702,14 @@ export const handlers: HttpHandler[] = [
     const rows = visibleInvoices(db, meId).filter(
       (i) =>
         (!filter.projectId || i.projectId === filter.projectId) &&
-        (!filter.state || i.state === filter.state),
+        (!filter.state || i.state === filter.state) &&
+        (!filter.fromAt ||
+          new Date(i.fromAt) >= new Date(filter.fromAt as string)) &&
+        (!filter.toAt || new Date(i.toAt) <= new Date(filter.toAt as string)) &&
+        (filter.amountFrom === undefined ||
+          i.amountCents >= (filter.amountFrom as number)) &&
+        (filter.amountTo === undefined ||
+          i.amountCents <= (filter.amountTo as number)),
     )
     const [items, total] = page(
       sortBy(rows, body.sort, (i, key) => {

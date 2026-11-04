@@ -6,13 +6,14 @@ import {
   $invoiceLastListParams,
   $invoicePage,
   $invoiceProjectFilter,
+  $invoiceListFilter,
   $invoiceReloadThroughPage,
   $invoiceSort,
-  $invoiceStateFilter,
   fetchInvoiceList,
   retryInvoiceList,
   retryInvoiceSummary,
   invoiceFilterChanged,
+  invoiceFiltersReset,
   invoiceProjectFilterChanged,
   invoiceSortChanged,
   loadMoreInvoices,
@@ -68,14 +69,12 @@ invoiceProjectsQuery.finished.failure.watch(({ error }) => {
 sample({
   clock: [fetchInvoiceList, invoiceSortChanged, ...invoiceFilterChanged],
   source: {
-    projectId: $invoiceProjectFilter,
-    state: $invoiceStateFilter,
+    filter: $invoiceListFilter,
     sort: $invoiceSort,
     reloadThroughPage: $invoiceReloadThroughPage,
   },
-  fn: ({ projectId, state, sort, reloadThroughPage }) => ({
-    projectId: projectId || undefined,
-    state: state || undefined,
+  fn: ({ filter, sort, reloadThroughPage }) => ({
+    ...filter,
     sort,
     page: 0,
     ...(reloadThroughPage === null ? {} : { reloadThroughPage }),
@@ -86,8 +85,7 @@ sample({
 sample({
   clock: loadMoreInvoices,
   source: {
-    projectId: $invoiceProjectFilter,
-    state: $invoiceStateFilter,
+    filter: $invoiceListFilter,
     sort: $invoiceSort,
     page: $invoicePage,
     hasMore: $hasMoreInvoices,
@@ -97,9 +95,8 @@ sample({
   // Guarded rather than trusted to the page: reaching the end again mid-request
   // would otherwise fire the same page twice.
   filter: ({ hasMore, pending, failed }) => hasMore && !pending && !failed,
-  fn: ({ projectId, state, sort, page }) => ({
-    projectId: projectId || undefined,
-    state: state || undefined,
+  fn: ({ filter, sort, page }) => ({
+    ...filter,
     sort,
     page: page + 1,
   }),
@@ -113,7 +110,7 @@ sample({
   target: invoiceListQuery.start,
 })
 
-// The strip follows the project filter only; the state tab narrows the rows
+// The strip follows the project filter only; the others narrow the rows
 // underneath it, not the totals they are a slice of. Settling an invoice moves
 // money from one figure to the other, so that re-reads it too.
 sample({
@@ -121,6 +118,7 @@ sample({
     fetchInvoiceList,
     retryInvoiceSummary,
     invoiceProjectFilterChanged,
+    invoiceFiltersReset,
     markInvoicePaidMutation.finished.success,
     markInvoiceUnpaidMutation.finished.success,
   ],
@@ -161,7 +159,10 @@ export {
 } from './queries'
 export {
   $hasMoreInvoices,
+  $invoiceAmountFilter,
+  $invoiceHasActiveFilters,
   $invoicePage,
+  $invoicePeriodFilter,
   $invoiceProjectFilter,
   $invoiceSort,
   $invoiceStateFilter,
@@ -174,6 +175,9 @@ export {
   fetchInvoiceList,
   retryInvoiceList,
   retryInvoiceSummary,
+  invoiceAmountFilterChanged,
+  invoiceFiltersReset,
+  invoicePeriodFilterChanged,
   invoiceProjectFilterChanged,
   invoiceSortChanged,
   invoiceStateFilterChanged,
@@ -181,6 +185,7 @@ export {
   type InvoiceStateFilter,
   type InvoiceSummary,
 } from './list.stores'
+export { isInvoiceAmountInput } from './invoice-filter'
 export {
   INVOICE_SORT_FIELDS,
   type InvoiceSort,
