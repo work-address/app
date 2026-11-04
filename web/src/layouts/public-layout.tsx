@@ -80,7 +80,7 @@ const PageContent = memo(({ scrollRef }: PageContentProps) => {
 
 /**
  * The viewport, not the document: the sheet below fills it and the page
- * scrolls inside, so the sheet's rounded frame stays put as the page moves.
+ * scrolls inside, so the sheet stays put as the page moves.
  */
 const Root = styled.div`
   display: flex;
@@ -95,10 +95,9 @@ const Root = styled.div`
 `
 
 /**
- * The page sits on the sidebar's grey as one white sheet, rounded where it
- * meets the sidebar and flush with the viewport's other three edges. The
- * sheet itself does not scroll: the page indicator sits on it, above the
- * mask the scroller below wears.
+ * The page sits beside the sidebar's grey as one white sheet, flush with the
+ * viewport's edges. The sheet itself does not scroll: the page indicator sits
+ * on it, above the mask the scroller below wears.
  */
 const Main = styled.main`
   flex: 1;
@@ -106,7 +105,6 @@ const Main = styled.main`
   position: relative;
   display: flex;
   flex-direction: column;
-  border-radius: 40px 0 0 40px;
   overflow: hidden;
   background: var(--white);
   box-shadow: var(--shadow-4);
@@ -118,7 +116,6 @@ const Main = styled.main`
   }
 
   @media print {
-    border-radius: 0;
     overflow: visible;
     box-shadow: none;
   }
