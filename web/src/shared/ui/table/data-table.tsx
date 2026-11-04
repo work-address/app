@@ -501,7 +501,7 @@ const HeaderTd = styled.th<{ $width?: number; $truncate?: boolean }>`
   background: var(--white);
   padding: 12px var(--space-3);
   font-size: var(--font-size-2);
-  font-weight: 600;
+  font-weight: 500;
   color: var(--ds-neutral-12);
   position: sticky;
   top: 0;

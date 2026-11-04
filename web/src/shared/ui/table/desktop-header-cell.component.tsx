@@ -88,6 +88,6 @@ export const DesktopHeaderCellComponent = <T extends AnyRecord>(
  * sortable and plain titles came out differently.
  */
 const Title = styled(Text)`
-  font-weight: 600;
+  font-weight: 500;
   color: var(--ds-neutral-12);
 `
