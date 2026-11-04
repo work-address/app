@@ -22,7 +22,13 @@ import {
   routes,
   type MappingRoute,
 } from '@/routes'
-import { Logo, LogoLabel, navigateFx, Tooltip, useBreakpoint } from '@/shared'
+import {
+  Logo,
+  LogoWordmark,
+  navigateFx,
+  Tooltip,
+  useBreakpoint,
+} from '@/shared'
 
 /** Collapsed: the icon column alone. Expanded: icons with their labels. */
 const WIDTH_COLLAPSED = 64
@@ -199,7 +205,7 @@ export const Sidebar = () => {
           viewTransition
         >
           <BrandMark src={Logo} alt={t('header.logoAlt')} />
-          <BrandLabel src={LogoLabel} alt="" aria-hidden="true" />
+          <BrandLabel src={LogoWordmark} alt="" aria-hidden="true" />
         </Brand>
         <Nav aria-label={t('sidebar.navAria')}>
           <List>{mainItems.map(renderItem)}</List>
