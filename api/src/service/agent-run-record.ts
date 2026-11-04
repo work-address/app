@@ -4,6 +4,7 @@ import {
   BadRequestError,
   ForbiddenError,
   HttpError,
+  NotFoundError,
   UnauthorizedError,
 } from 'routing-controllers'
 import { Brackets, EntityManager, In, SelectQueryBuilder } from 'typeorm'
@@ -493,7 +494,11 @@ export class AgentRunRecord {
         runKey,
         workerAgentId: assigned!.id,
         mode: credential.mode,
-        payload: event,
+        // payloadHash above still names what was sent, so a retry of this
+        // event stays a duplicate rather than a conflict.
+        payload: (await AgentRunRecord.promptRemoved(tx, runKey))
+          ? AgentRunRecord.withoutPrompt(event)
+          : event,
         status: row?.invoiceId ? 'quarantined' : 'pending',
         code: row?.invoiceId ? 'RUN_INVOICED' : null,
       }),
@@ -822,6 +827,56 @@ export class AgentRunRecord {
       return
     if (run.prompt) run.promptPendingReview = true
     run.prompt = null
+  }
+
+  /**
+   * Erases the prompt that started a run, for everyone. Only its author may,
+   * and only until the run is billed, when the prompt becomes part of what the
+   * owner is asked to pay for. The run's time is untouched.
+   *
+   * A run is rebuilt from its events, so they lose the text too, and the mark
+   * keeps it out of any event that arrives later.
+   */
+  public async removePrompt(user: User, runKey: string): Promise<void> {
+    await getDataSource().transaction(async (tx) => {
+      await this.lock(tx, `agent:${runKey}`)
+      const run = await tx.findOne(TimeAgent, {
+        where: { runKey },
+        lock: { mode: 'pessimistic_write' },
+      })
+      if (!run) throw new NotFoundError('RUN_NOT_FOUND')
+      if (run.userId !== user.id) throw new ForbiddenError()
+      if (run.invoiceId) throw new HttpError(409, 'RUN_INVOICED')
+      await tx.update(
+        TimeAgent,
+        { id: run.id },
+        { prompt: null, promptRemovedAt: new Date() },
+      )
+      for (const event of await tx.findBy(AgentEvent, { runKey })) {
+        if ('prompt' in event.payload) {
+          event.payload = AgentRunRecord.withoutPrompt(event.payload)
+          await tx.save(AgentEvent, event)
+        }
+      }
+    })
+  }
+
+  private static async promptRemoved(
+    tx: EntityManager,
+    runKey: string,
+  ): Promise<boolean> {
+    return tx
+      .createQueryBuilder(TimeAgent, 'run')
+      .withDeleted()
+      .where('run.runKey = :runKey', { runKey })
+      .andWhere('run.promptRemovedAt IS NOT NULL')
+      .getExists()
+  }
+
+  private static withoutPrompt(event: AgentEventV1): AgentEventV1 {
+    const copy: AgentEventV1 & { prompt?: string } = { ...event }
+    delete copy.prompt
+    return copy
   }
 
   /** Every live project `user` owns or works on. */

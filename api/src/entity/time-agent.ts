@@ -36,6 +36,12 @@ export class TimeAgent extends AbstractBaseEntity {
    * their review window passes or the run is invoiced.
    */
   promptPendingReview?: boolean
+  /**
+   * When the run's author erased its prompt. Never selected by default, since
+   * a removal leaves no trace for anyone reading the run.
+   */
+  @Column('timestamptz', { nullable: true, select: false })
+  promptRemovedAt: Date | null
   @Column('jsonb') measurement: {
     coverage: 'run'
     mode: 'timer' | 'fixed'

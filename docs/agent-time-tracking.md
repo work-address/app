@@ -26,7 +26,7 @@ This plan covers Claude Code, Codex, Cursor, Gemini CLI, GitHub Copilot (CLI and
 - Never add human hours and agent hours into one figure. Money may be added: dashboards show human, agent and combined amounts.
 - Only the worker adds, edits, removes or detaches their agents. The project owner sees every agent, rate and run on the project but cannot change them. The owner's protections are rejecting an invoice and removing the worker.
 - Other workers see nothing of another worker's agents: not the agent, its time, its rate or its content. Viewers see nothing about agents.
-- Capture tokens, model, timings, outcome, tool names with counts and durations, commit SHAs, a count of changed files, and the prompt that started the run (up to 4,000 characters; the worker can turn this off). Do not capture response text, file paths, tool arguments or results, file contents, command output or model reasoning. Agents never trigger screenshots or input-activity capture.
+- Capture tokens, model, timings, outcome, tool names with counts and durations, commit SHAs, a count of changed files, and the prompt that started the run (up to 4,000 characters; the worker can turn this off, or erase a run's prompt until the run is invoiced). Do not capture response text, file paths, tool arguments or results, file contents, command output or model reasoning. Agents never trigger screenshots or input-activity capture.
 - Agent records are produced by the worker's own collector. Detailed statistics are the evidence; no tamper-proof labour claim is made. The owner's remedy for a wrong invoice is rejection.
 - A manual timer is a fallback where automatic tracking does not qualify. Manual time is billable and flagged `manual` on the invoice line.
 

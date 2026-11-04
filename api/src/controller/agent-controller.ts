@@ -150,6 +150,19 @@ export class AgentController {
     return this.runs.search(user, query)
   }
 
+  @OpenAPI({
+    summary:
+      "Erase the prompt that started one of the caller's own runs, until it is invoiced",
+  })
+  @Authorized([EUserRole.ROLE_USER])
+  @Delete('/agent-tracking/runs/:runKey/prompt')
+  @HttpCode(204)
+  @OnUndefined(204)
+  removePrompt(@CurrentUser() user: User, @Param('runKey') runKey: string) {
+    if (!/^[0-9a-f]{64}$/.test(runKey)) throw new BadRequestError('INVALID_ID')
+    return this.runs.removePrompt(user, runKey)
+  }
+
   @Authorized([EUserRole.ROLE_USER])
   @Get('/agent-tracking/status')
   status(@CurrentUser() user: User) {

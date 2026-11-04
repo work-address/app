@@ -234,6 +234,24 @@ export class AgentControllerTest extends BaseControllerTest {
         .status,
     ).to.equal(403)
   }
+  @test() async aPromptIsRemovedThroughItsRun() {
+    const s = await this.scenario()
+    await s.uploader.post('/agent-tracking/events', {
+      events: [s.event('run.started', 0, 0, { prompt: 'Fix the login bug' })],
+    })
+    const search = () =>
+      s.client.post('/agent-tracking/search', { projectId: s.project.id })
+    const { runKey } = (await search()).data[0][0]
+    const path = `/agent-tracking/runs/${runKey}/prompt`
+
+    expect(
+      (await s.client.delete('/agent-tracking/runs/not-a-run/prompt')).status,
+    ).to.equal(400)
+    expect((await this.client(s.owner).delete(path)).status).to.equal(403)
+    expect((await s.client.delete(path)).status).to.equal(204)
+    expect((await search()).data[0][0].prompt).to.equal(null)
+  }
+
   @test() async aBatchIsAcknowledgedAndItsRunsAreSearchable() {
     const s = await this.scenario()
     const events = [

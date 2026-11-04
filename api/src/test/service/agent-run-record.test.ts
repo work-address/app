@@ -918,6 +918,127 @@ export class AgentRunRecordTest extends AbstractDatabaseIntegration {
     expect(+corrected.toAt - +corrected.fromAt).to.equal(60000)
   }
 
+  // Removing a prompt
+
+  private async promptedRun(s: Awaited<ReturnType<typeof this.scenario>>) {
+    const start = s.event('run.started', 0, 0, { prompt: 'Fix the login bug' })
+    await s.upload([start])
+    const [[run]] = await this.record.search(s.worker, {
+      projectId: s.project.id,
+    })
+    return { start, run }
+  }
+
+  private async storedPrompts() {
+    return (await this.conn.manager.find(AgentEvent)).filter(
+      (event) => 'prompt' in event.payload,
+    )
+  }
+
+  @test() async removingAPromptErasesItAndLeavesTheRunsTime() {
+    const s = await this.scenario()
+    const { run } = await this.promptedRun(s)
+    await s.upload([s.event('run.completed', 1, 60000)])
+    const before = await this.conn.manager.findOneByOrFail(TimeAgent, {
+      id: run.id,
+    })
+
+    await this.record.removePrompt(s.worker, run.runKey)
+
+    const after = await this.conn.manager.findOneByOrFail(TimeAgent, {
+      id: run.id,
+    })
+    expect(after.prompt).to.equal(null)
+    expect(after.segments).to.deep.equal(before.segments)
+    expect(+after.toAt).to.equal(+before.toAt)
+    expect(await this.storedPrompts()).to.deep.equal([])
+
+    // No trace for the author, or for an owner it was still held from.
+    const [[own]] = await this.record.search(s.worker, {
+      projectId: s.project.id,
+    })
+    const [[owned]] = await this.record.search(s.owner, {
+      projectId: s.project.id,
+    })
+    expect(own.prompt).to.equal(null)
+    expect(own).to.not.have.property('promptRemovedAt')
+    expect(owned.prompt).to.equal(null)
+    expect(owned.promptPendingReview).to.equal(undefined)
+    expect(owned).to.not.have.property('promptRemovedAt')
+
+    // Removing it again changes nothing.
+    await this.record.removePrompt(s.worker, run.runKey)
+  }
+
+  @test() async aRemovedPromptDoesNotComeBack() {
+    const s = await this.scenario()
+    const { start, run } = await this.promptedRun(s)
+    await this.record.removePrompt(s.worker, run.runKey)
+    const promptOf = async () =>
+      (await this.conn.manager.findOneByOrFail(TimeAgent, { id: run.id }))
+        .prompt
+
+    // A collector retrying the event it already sent.
+    expect((await s.upload([start]))[0].status).to.equal('duplicate')
+    // A second start for the same moment, carrying the text again.
+    const again = s.event('run.started', 1, 0, { prompt: 'Fix the login bug' })
+    expect((await s.upload([again]))[0].status).to.equal('accepted')
+    expect(await promptOf()).to.equal(null)
+    // A late event makes the run rebuild itself from its events.
+    await s.upload([s.event('run.completed', 2, 60000)])
+    expect(await promptOf()).to.equal(null)
+    expect(await this.storedPrompts()).to.deep.equal([])
+  }
+
+  @test() async onlyItsAuthorCanRemoveAPromptWhileItIsUnbilled() {
+    const s = await this.scenario()
+    const { run } = await this.promptedRun(s)
+    const remove = (user: User, runKey = run.runKey) =>
+      this.refusal(() => this.record.removePrompt(user, runKey))
+
+    expect(await remove(s.owner)).to.equal(403)
+    expect(await remove(s.viewer)).to.equal(403)
+    expect(await remove(s.worker, 'f'.repeat(64))).to.equal(404)
+    expect(
+      (await this.conn.manager.findOneByOrFail(TimeAgent, { id: run.id }))
+        .prompt,
+    ).to.equal('Fix the login bug')
+
+    const invoice = await this.container
+      .get<InvoiceFixture>('InvoiceFixture')
+      .create(s.project, 0, EInvoiceState.REQUESTED)
+    await this.conn.manager.update(TimeAgent, run.id, {
+      invoiceId: invoice.id,
+    })
+    expect(await remove(s.worker)).to.equal(409)
+    expect((await this.storedPrompts()).length).to.equal(1)
+
+    // A rejected invoice hands the run back, prompt included, to remove again.
+    await runPromise(this.invoices.reject(invoice, s.owner))
+    expect(await remove(s.worker)).to.equal(undefined)
+    expect(await this.storedPrompts()).to.deep.equal([])
+  }
+
+  @test() async aRemovedPromptStaysGoneThroughARejectedInvoice() {
+    const s = await this.scenario()
+    const { run } = await this.promptedRun(s)
+    await this.record.removePrompt(s.worker, run.runKey)
+    const invoice = await this.container
+      .get<InvoiceFixture>('InvoiceFixture')
+      .create(s.project, 0, EInvoiceState.REQUESTED)
+    await this.conn.manager.update(TimeAgent, run.id, {
+      invoiceId: invoice.id,
+    })
+
+    await runPromise(this.invoices.reject(invoice, s.owner))
+
+    const released = await this.conn.manager.findOneByOrFail(TimeAgent, {
+      id: run.id,
+    })
+    expect(released.invoiceId).to.equal(null)
+    expect(released.prompt).to.equal(null)
+  }
+
   private async bothRuns(s: Awaited<ReturnType<typeof this.scenario>>) {
     await s.upload(
       (

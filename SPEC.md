@@ -173,6 +173,12 @@ the run, up to 4,000 characters, so the owner sees what the billed time was
 asked to do. The worker can keep prompts on their machine; response text is
 never sent.
 
+**A worker can erase a run's prompt until the run is invoiced.** It goes for
+everyone and leaves no trace, the same as a removed screenshot, while the run
+and its time stay as they are. Only the run's author can do it. Once a run is
+on an invoice its prompt stays, unless that invoice is rejected. The owner may
+already have read it, and the worker's own machine may still hold it.
+
 **The owner decides whether a project records agent time at all.** A
 per-project switch, off by default like screenshots and apps. Off means no
 agent run on that project is collected anywhere, laptop or server; the

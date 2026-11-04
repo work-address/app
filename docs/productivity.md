@@ -272,6 +272,8 @@ Builds on app-statistics Phase 1 (the Statistics domain) and Phase 2 (foreground
 | Worker publishes early or the window passes | Owner sees the detail |
 | Invoice created for unpublished entries | Their detail is published |
 | Worker removes a screenshot before publishing | Owner never sees it |
+| Worker removes a prompt from an uninvoiced run | Erased for everyone, with no trace; the run's time is unchanged |
+| Worker tries to remove a prompt from an invoiced run | Refused until the invoice is rejected |
 | Owner changes a category rule | History reclassified on next read |
 | Worker's personal categories, labels, goals | Never returned to an owner or viewer |
 | Owner views a worker | Time by owner categories with labels; no score or ranking anywhere |
