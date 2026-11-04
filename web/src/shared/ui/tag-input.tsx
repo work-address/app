@@ -222,7 +222,7 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
             size={'2'}
             weight={'medium'}
             htmlFor={id}
-            style={{ marginTop: '8px' }}
+            style={{ marginTop: '6px' }}
           >
             {label}
           </Text>
