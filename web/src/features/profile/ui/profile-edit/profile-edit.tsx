@@ -1,6 +1,8 @@
 import { ArrowLeftIcon } from '@radix-ui/react-icons'
 import { useUnit } from 'effector-react'
+import { motion, useReducedMotion } from 'motion/react'
 import { useEffect } from 'react'
+import { createPortal } from 'react-dom'
 import { type SubmitHandler, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
@@ -59,6 +61,9 @@ export const ProfileEdit = () => {
   const { confirm } = useConfirm()
   const navigate = useNavigate()
   const location = useLocation()
+
+  const reducedMotion = useReducedMotion()
+  const reveal = reducedMotion ? REVEAL_STILL : REVEAL
 
   const user = useUnit($profile)
 
@@ -174,6 +179,8 @@ export const ProfileEdit = () => {
     }
   }
 
+  const sheetHost = document.querySelector('main')
+
   return (
     <Root width="document">
       <PageHeader
@@ -215,34 +222,67 @@ export const ProfileEdit = () => {
             onSubmit={handleSubmit(onSubmit)}
             aria-busy={profileLoading || profileSaving || undefined}
           >
-            <Sections>
-              <ProfileEditDetails
-                user={user}
-                isDesktop={isDesktop}
-                profileLoading={profileLoading}
-                profileSaving={profileSaving || profileLoading}
-                register={register}
-                control={control}
-                errors={errors}
-              />
-              <ProfileEditLinks
-                isDesktop={isDesktop}
-                profileLoading={profileLoading}
-                isDirty={isDirty && !profileLoading}
-                profileSaving={profileSaving || profileLoading}
-                onReset={onReset}
-                register={register}
-                errors={errors}
-                setValue={setValue}
-              />
+            <Sections initial="hidden" animate="shown" variants={reveal.list}>
+              <motion.div variants={reveal.item}>
+                <ProfileEditDetails
+                  user={user}
+                  isDesktop={isDesktop}
+                  profileLoading={profileLoading}
+                  profileSaving={profileSaving || profileLoading}
+                  register={register}
+                  control={control}
+                  errors={errors}
+                />
+              </motion.div>
+              <motion.div variants={reveal.item}>
+                <ProfileEditLinks
+                  isDesktop={isDesktop}
+                  profileLoading={profileLoading}
+                  profileSaving={profileSaving || profileLoading}
+                  register={register}
+                  errors={errors}
+                  setValue={setValue}
+                />
+              </motion.div>
             </Sections>
           </form>
           <ConnectedWalletCard />
           <LocalWalletCard />
+          {/* The page scrolls under a mask that dissolves its last 40px, and
+              the mask takes anything inside the scroller with it, fixed or
+              not. So the bar goes on the sheet itself, as the page indicator
+              does, which also keeps it clear of the phone's sidebar rail. */}
+          {!isDesktop &&
+            sheetHost &&
+            createPortal(
+              <BottomSheet data-bottom-sheet>
+                <ProfileEditActions
+                  isDirty={isDirty && !profileLoading}
+                  profileSaving={profileSaving || profileLoading}
+                  onReset={onReset}
+                  formId={FORM_ID}
+                  stretch
+                />
+              </BottomSheet>,
+              sheetHost,
+            )}
         </>
       )}
     </Root>
   )
+}
+
+const REVEAL = {
+  list: { shown: { transition: { staggerChildren: 0.06 } } },
+  item: {
+    hidden: { opacity: 0 },
+    shown: { opacity: 1, transition: { duration: 0.24 } },
+  },
+}
+
+const REVEAL_STILL = {
+  list: {},
+  item: { hidden: { opacity: 1 }, shown: { opacity: 1 } },
 }
 
 const Root = styled(Wrapper)`
@@ -257,7 +297,7 @@ const Root = styled(Wrapper)`
   }
 `
 
-const Sections = styled.div`
+const Sections = styled(motion.div)`
   display: grid;
   gap: 20px;
 
@@ -267,4 +307,19 @@ const Sections = styled.div`
   ${(p) => p.theme.breakpoints.down('md')} {
     gap: 0;
   }
+`
+
+const BottomSheet = styled.div`
+  position: absolute;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-2);
+  /* Clears the home indicator on phones without a hardware button. */
+  padding: var(--space-2) var(--space-4)
+    calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
+  background: var(--white);
+  border-top: 1px solid var(--ds-neutral-alpha-6);
 `

@@ -1,4 +1,4 @@
-import { Grid, Skeleton } from '@radix-ui/themes'
+import { Skeleton } from '@radix-ui/themes'
 import {
   type FieldErrors,
   type UseFormRegister,
@@ -15,7 +15,6 @@ import {
   type SocialLinkField,
 } from '../../model'
 
-import { ProfileEditActions } from './profile-edit-actions'
 import {
   INPUT_LABEL_WIDTH,
   type ProfileEditFormState,
@@ -29,9 +28,7 @@ import { Card, Input, showToast, type CardProps } from '@/shared'
 type Props = {
   isDesktop: boolean
   profileLoading: boolean
-  isDirty: boolean
   profileSaving: boolean
-  onReset: () => void
   register: UseFormRegister<ProfileEditFormState>
   errors: FieldErrors<ProfileEditFormState>
   setValue: UseFormSetValue<ProfileEditFormState>
@@ -40,9 +37,7 @@ type Props = {
 export const ProfileEditLinks = ({
   isDesktop,
   profileLoading,
-  isDirty,
   profileSaving,
-  onReset,
   register,
   errors,
   setValue,
@@ -95,39 +90,32 @@ export const ProfileEditLinks = ({
             />
           </Skeleton>
         ))}
-        {!isDesktop && (
-          <BottomSheet columns={'1fr 1fr'} gap={'var(--space-4)'}>
-            <ProfileEditActions
-              isDirty={isDirty}
-              profileSaving={profileSaving}
-              onReset={onReset}
-              stretch
-            />
-          </BottomSheet>
-        )}
       </Links>
     </Root>
   )
 }
 
 const Root = styled(Card)<CardProps>`
-  box-shadow: none;
   display: grid;
   gap: var(--space-5);
 
   /* Edge to edge on a phone, so the card is the page and a shadow under it
-     reads as a stray band. The attribute selector is what Card's own shadow
-     rule uses, so this is what it takes to outrank it. The rule on top is
-     then the only thing separating this section from the account form above -
-     without it the two run together as one undivided list of fields. */
+     reads as a stray band. The attribute selectors are what Card's own rules
+     use, so this is what it takes to outrank them; a rounded corner would bend
+     the rule on top. That rule is the only thing separating this section from
+     the account form above - without it the two run together as one undivided
+     list of fields. */
   ${(p) => p.theme.breakpoints.down('md')} {
-    border: none;
     border-top: 1px solid var(--ds-neutral-alpha-6);
     padding: var(--space-5) 0 0;
     gap: var(--space-3);
 
     &[data-shadow] {
       box-shadow: none;
+    }
+
+    &[data-rounded] {
+      border-radius: 0;
     }
   }
 `
@@ -142,18 +130,6 @@ const Links = styled.div`
     grid-template-columns: repeat(2, minmax(0, 1fr));
     gap: var(--space-5) var(--space-6);
   }
-`
-
-const BottomSheet = styled(Grid)`
-  position: fixed;
-  /* Clears the home indicator on phones without a hardware button. */
-  padding: var(--space-2) var(--space-5)
-    calc(14px + env(safe-area-inset-bottom, 0px));
-  left: 0;
-  right: 0;
-  bottom: 0;
-  background: var(--white);
-  border-top: 1px solid var(--ds-neutral-alpha-6);
 `
 
 const LinkInput = styled(Input)`

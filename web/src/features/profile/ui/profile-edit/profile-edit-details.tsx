@@ -1,4 +1,4 @@
-import { Flex, Separator, Skeleton, Text } from '@radix-ui/themes'
+import { Flex, Skeleton, Text } from '@radix-ui/themes'
 import { useMemo } from 'react'
 import {
   Controller,
@@ -73,6 +73,7 @@ export const ProfileEditDetails = ({
   const { t, i18n } = useTranslation()
   const language = i18n.resolvedLanguage ?? i18n.language
   const countryOptions = useMemo(() => getCountryOptions(language), [language])
+  const hasEmailField = !isEmailAddress(user?.address ?? '')
 
   return (
     <Root>
@@ -102,7 +103,7 @@ export const ProfileEditDetails = ({
             />
           </Cell>
         ))}
-        {!isEmailAddress(user?.address ?? '') && (
+        {hasEmailField && (
           <Cell>
             <ProfileEditField
               name="email"
@@ -165,28 +166,6 @@ export const ProfileEditDetails = ({
             disabled={profileSaving}
           />
         </Cell>
-        <Cell data-span="full">
-          <Controller
-            control={control}
-            name="skills"
-            render={({ field }) => (
-              <TagInput
-                label={t('profile.form.skills')}
-                placeholder={t('profile.form.skillsPlaceholder')}
-                labelWidth={INPUT_LABEL_WIDTH}
-                id={'skills'}
-                disabled={profileSaving}
-                showSkeleton={profileLoading}
-                state={errors.skills ? 'error' : undefined}
-                suggestions={SKILLS_SUGGESTIONS}
-                {...field}
-              />
-            )}
-          />
-        </Cell>
-        <Cell data-span="full">
-          <Separator size={'4'} />
-        </Cell>
         <Cell>
           <ProfileEditField
             name="rate"
@@ -211,8 +190,24 @@ export const ProfileEditDetails = ({
             }
           />
         </Cell>
-        <Cell data-span="full">
-          <Separator size={'4'} />
+        <Cell data-span={hasEmailField ? undefined : 'full'}>
+          <Controller
+            control={control}
+            name="skills"
+            render={({ field }) => (
+              <TagInput
+                label={t('profile.form.skills')}
+                placeholder={t('profile.form.skillsPlaceholder')}
+                labelWidth={INPUT_LABEL_WIDTH}
+                id={'skills'}
+                disabled={profileSaving}
+                showSkeleton={profileLoading}
+                state={errors.skills ? 'error' : undefined}
+                suggestions={SKILLS_SUGGESTIONS}
+                {...field}
+              />
+            )}
+          />
         </Cell>
         <Cell data-span="full">
           <Controller
@@ -244,14 +239,12 @@ export const ProfileEditDetails = ({
 }
 
 const Root = styled(Card)<CardProps>`
-  box-shadow: none;
   display: grid;
   gap: var(--space-5);
 
   /* See profile-edit-links.tsx: the shadow has to be switched off through
      the same attribute selector Card turns it on with. */
   ${(p) => p.theme.breakpoints.down('md')} {
-    border: none;
     /* The page already insets by the phone gutter; a second inset inside
        an invisible card would push the fields in twice. */
     padding: 0 0 var(--space-5);
@@ -263,12 +256,15 @@ const Root = styled(Card)<CardProps>`
 `
 
 /* One column until there is room for two: name beside title, company beside
-   email, country beside city. The long fields - address, skills, bio - span
-   both. Halves the height of the form without shrinking any field below a
-   comfortable width. */
+   email, country beside city, rate beside skills. The long fields - address,
+   bio - span both, and so do the skills when an account has no email field to
+   pair the row with. Halves the height of the form without shrinking any field
+   below a comfortable width. Start-aligned, because skills grow as they wrap
+   and the rate beside them should not float down to their middle. */
 const Fields = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr);
+  align-items: start;
   gap: var(--space-4) var(--space-6);
 
   ${(p) => p.theme.breakpoints.up('lg')} {

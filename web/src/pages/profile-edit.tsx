@@ -5,7 +5,7 @@ import { useParams, Navigate } from 'react-router-dom'
 import { $user } from '@/entities/profile'
 import { ProfileEdit, ProfileGate } from '@/features/profile'
 import { routes } from '@/routes'
-import { PageHelmet } from '@/shared'
+import { PageHelmet, RouteSkeleton } from '@/shared'
 
 export default function ProfileEditPage() {
   const { t } = useTranslation()
@@ -16,8 +16,9 @@ export default function ProfileEditPage() {
     user: $user,
   })
 
+  // The signed-in user is still loading; a blank sheet would read as broken.
   if (!user) {
-    return null
+    return <RouteSkeleton variant="document" />
   }
 
   if (user.id !== id) {
