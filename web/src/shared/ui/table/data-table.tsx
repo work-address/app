@@ -8,8 +8,9 @@ import {
   type ReactNode,
 } from 'react'
 import { useTranslation } from 'react-i18next'
-import styled, { keyframes } from 'styled-components'
+import styled from 'styled-components'
 
+import { usePageBusy } from '../../hooks/use-page-busy'
 import { useReachEnd } from '../../hooks/use-reach-end'
 import { Card } from '../card'
 import { Checkbox } from '../checkbox'
@@ -91,6 +92,8 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
 
   const { t } = useTranslation()
   const scrollRef = useRef<HTMLDivElement>(null)
+
+  usePageBusy(isFiltering)
 
   const hasReachEndHandler = Boolean(onReachEnd)
 
@@ -182,7 +185,6 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
       $height={height}
       $minHeight={minHeight}
       $maxHeight={maxHeight}
-      data-filtering={isFiltering || undefined}
       data-overflows-right={overflowsRight || undefined}
     >
       <TableScroll ref={scrollRef}>
@@ -385,23 +387,6 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
   )
 }
 
-const pulseAnimation = keyframes`
-  0% {
-    offset-distance: 0%;
-    opacity: 0;
-  }
-  10% {
-    opacity: 1;
-  }
-  90% {
-    opacity: 1;
-  }
-  100% {
-    offset-distance: 100%;
-    opacity: 0;
-  }
-`
-
 const TableCard = styled(Card)<{
   $height: DataTableProps<never>['height']
   $minHeight: DataTableProps<never>['minHeight']
@@ -416,39 +401,6 @@ const TableCard = styled(Card)<{
   ${(p) => p.$height && `height: ${p.$height};`}
   ${(p) => p.$minHeight && `min-height: ${p.$minHeight};`}
   ${(p) => p.$maxHeight && `max-height: ${p.$maxHeight};`}
-
-  &::before {
-    content: '';
-    display: none;
-    position: absolute;
-    width: 120px;
-    height: 4px;
-    background: linear-gradient(
-      90deg,
-      transparent,
-      var(--ds-accent-9),
-      transparent
-    );
-    filter: blur(1px);
-    z-index: 10;
-    pointer-events: none;
-    offset-path: rect(0% 100% 100% 0% round var(--radius-4));
-    animation: ${pulseAnimation} 2s ease-in-out infinite;
-  }
-
-  &[data-filtering]::before {
-    display: block;
-  }
-
-  @media (prefers-reduced-motion: reduce) {
-    &::before {
-      animation: none;
-    }
-
-    &[data-filtering]::before {
-      display: none;
-    }
-  }
 
   /* The scroll cue: a fade over the right edge while columns continue past
      it. Phones only - on a desktop the table fits, and when it does not, a

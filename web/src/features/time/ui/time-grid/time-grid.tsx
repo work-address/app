@@ -19,7 +19,7 @@ import {
   $timeLoading,
   loadMoreTime,
 } from '@/entities/time'
-import { Spinner, useReachEnd } from '@/shared'
+import { Spinner, usePageBusy, useReachEnd } from '@/shared'
 
 export const TimeGrid = () => {
   const {
@@ -41,6 +41,8 @@ export const TimeGrid = () => {
     changeSelection: timeSelectionChanged,
     openEntry: timeRowClicked,
   })
+
+  usePageBusy(isFiltering)
 
   const groups = useMemo(() => groupTimeByDay(entries), [entries])
 

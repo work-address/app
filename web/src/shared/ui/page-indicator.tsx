@@ -1,6 +1,9 @@
+import { useUnit } from 'effector-react'
 import { useEffect, useState } from 'react'
 import { useLocation, useViewTransitionState } from 'react-router-dom'
 import styled, { keyframes } from 'styled-components'
+
+import { $pageBusy } from '../model/page-busy.model'
 
 export type PageIndicatorState = 'idle' | 'running' | 'finished'
 
@@ -11,27 +14,29 @@ type PageIndicatorProps = {
 export const PageIndicator = ({ className }: PageIndicatorProps) => {
   const location = useLocation()
   const transition = useViewTransitionState(location.pathname)
+  const busy = useUnit($pageBusy)
+  const active = transition || busy
 
   const [animationStarted, setAnimationStarted] = useState(false)
 
   useEffect(() => {
-    if (transition) {
+    if (active) {
       setAnimationStarted(true)
     }
-  }, [transition])
+  }, [active])
 
   useEffect(() => {
-    if (!transition) {
+    if (!active) {
       const timer = setTimeout(() => {
         setAnimationStarted(false)
       }, 1000)
 
       return () => clearTimeout(timer)
     }
-  }, [transition])
+  }, [active])
 
-  const showAnimation = transition || animationStarted
-  const animationFinished = !transition && animationStarted
+  const showAnimation = active || animationStarted
+  const animationFinished = !active && animationStarted
 
   const state: PageIndicatorState = animationFinished
     ? 'finished'
@@ -110,6 +115,9 @@ const Bar = styled.div`
     animation-name: ${pageIndicatorAnimation};
     animation-duration: 10s;
     animation-iteration-count: 1;
+    /* A slow reload outlasts the climb; the bar waits at the top of it rather
+       than vanishing while the data is still on its way. */
+    animation-fill-mode: forwards;
   }
 
   &[data-state='finished'] {
