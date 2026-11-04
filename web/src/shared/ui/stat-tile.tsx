@@ -8,7 +8,7 @@ import type { ReactNode } from 'react'
 export type StatTileTone = 'neutral' | 'accent' | 'green' | 'amber'
 
 export type StatTileProps = {
-  label: string
+  label: ReactNode
   value: ReactNode
   /** One line under the value that says what it is measured against. */
   hint?: ReactNode
