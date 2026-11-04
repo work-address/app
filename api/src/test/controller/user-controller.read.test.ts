@@ -18,6 +18,26 @@ import { runPromise } from '@/service/effect-bridge'
 @suite()
 export class UserControllerReadTest extends BaseControllerTest {
   @test()
+  async read_cleansABioSavedBeforeBiosWereCleaned() {
+    const user = await this.userFixture.createUser()
+    const repository = this.container.get<UserRepository>('UserRepository')
+
+    user.bio = '<p>Hi</p><img src=x onerror="alert(1)">'
+    await runPromise(repository.saveSingle(user))
+
+    const res = await userControllerRead({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
+      path: { id: user.id as never },
+      throwOnError: true,
+    })
+
+    expect(res.data!.bio).to.be.eq('<p>Hi</p>')
+  }
+
+  @test()
   async read_returnsProfileById() {
     const user = await this.userFixture.createUser()
     const client = this.apiClient()

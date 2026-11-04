@@ -14,7 +14,13 @@ import {
 import { ProfileViewCard } from './profile-view-styles'
 
 import { routes } from '@/routes'
-import { Button, formatCurrency, Text, useBreakpoint } from '@/shared'
+import {
+  Button,
+  formatCurrency,
+  sanitizeRichText,
+  Text,
+  useBreakpoint,
+} from '@/shared'
 
 type ProfileViewDescriptionAndSkillsProps = {
   gridArea?: string
@@ -48,7 +54,10 @@ export const ProfileViewDescriptionAndSkills = ({
         .filter(Boolean) ?? [],
     [user?.skills],
   )
-  const hasDetails = Boolean(jobTitle || user?.bio) || skills.length > 0
+  // The API cleans a bio as well, but this is the line that puts someone else's
+  // text into the page, so it does not take anyone's word for it.
+  const bio = useMemo(() => sanitizeRichText(user?.bio ?? ''), [user?.bio])
+  const hasDetails = Boolean(jobTitle || bio) || skills.length > 0
 
   return (
     <Root $gridArea={gridArea} shadow={false}>
@@ -94,10 +103,10 @@ export const ProfileViewDescriptionAndSkills = ({
           </>
         ) : (
           <>
-            {user?.bio && (
+            {bio && (
               <>
                 <Separator size={'4'} />
-                <Text dangerouslySetInnerHTML={{ __html: user.bio }} />
+                <Text dangerouslySetInnerHTML={{ __html: bio }} />
               </>
             )}
             {skills.length > 0 && (

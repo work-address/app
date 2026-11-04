@@ -105,6 +105,37 @@ export class UserControllerEditTest extends BaseControllerTest {
   }
 
   @test()
+  async edit_stripsWhatCouldRunFromBio() {
+    const user = await this.userFixture.createUser()
+    const phone = this.faker.phone()
+
+    await userControllerEdit({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
+      body: {
+        phone,
+        bio: [
+          '<p onclick="alert(1)">Hi</p>',
+          '<img src=x onerror="alert(1)">',
+          '<script>alert(1)</script>',
+          '<a href="javascript:alert(1)">bad</a>',
+          '<iframe src="https://example.com"></iframe>',
+        ].join(''),
+      } as unknown as UserEdit,
+      throwOnError: true,
+    })
+    const updated = await runPromise(
+      this.userRepository.findByEmailPhoneOrFail(phone),
+    )
+
+    expect(updated.bio).to.include('Hi')
+    expect(updated.bio).to.not.match(/onerror|onclick|<img|<script|<iframe/)
+    expect(updated.bio).to.not.include('javascript:')
+  }
+
+  @test()
   async validationErrors() {
     const user = await this.userFixture.createUser()
 

@@ -1,7 +1,7 @@
 import { Entity, Column, OneToMany } from 'typeorm'
 import { faker } from '@faker-js/faker'
 import { JSONSchema } from 'class-validator-jsonschema'
-import { Exclude, Expose } from 'class-transformer'
+import { Exclude, Expose, Transform } from 'class-transformer'
 
 import {
   IsArray,
@@ -18,6 +18,7 @@ import { EUserRole } from '@/model/user'
 import { IUser } from '@/model/user'
 import { Project } from '@/entity/project'
 import { AccountAddress } from '@/service/account-address'
+import { sanitizeRichText } from '@/service/rich-text'
 
 // TODO: add profile visibility flag, so user can hide their profile from the public
 @JSONSchema({
@@ -94,7 +95,12 @@ export class User extends AbstractBaseEntity implements IUser {
   @IsString()
   @IsOptional()
   company: string
+  // Rendered as HTML on other people's screens. Cleaned on the way in, and on
+  // the way out too, so a row saved before this existed reaches no client as is.
   @Expose({ groups: ['search', 'edit'] })
+  @Transform(({ value }) =>
+    typeof value === 'string' ? sanitizeRichText(value) : value,
+  )
   @Column('text', { nullable: true })
   @IsString()
   @IsOptional()
