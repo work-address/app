@@ -44,14 +44,8 @@ const PageContent = memo(({ scrollRef }: PageContentProps) => {
   const motionProps = useMemo(() => {
     if (isDesktop && !reducedMotion) {
       return {
-        initial: {
-          opacity: 0,
-          x: -100,
-        },
-        animate: {
-          opacity: 1,
-          x: 0,
-        },
+        initial: { opacity: 0 },
+        animate: { opacity: 1 },
         transition: { duration: 0.3, ease: 'easeInOut' },
       } satisfies MotionProps
     } else {
@@ -148,7 +142,7 @@ const Scroller = styled.div`
 `
 
 const Content = styled.div`
-  /* Clips the route's slide-in at the sheet's edge without becoming a scroll
+  /* Clips anything wider than the sheet at its edge without becoming a scroll
      container the way overflow: hidden would. */
   overflow-x: clip;
   border-radius: inherit;
