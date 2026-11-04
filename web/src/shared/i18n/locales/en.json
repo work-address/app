@@ -435,7 +435,6 @@
   "profile.notFound.title": "No profile at this address yet",
   "profile.title": "My account",
   "profile.view.addressCopied": "Address copied to clipboard",
-  "profile.view.alt.case": "Case",
   "profile.view.copyAddressHint": "Copy this address",
   "profile.view.empty.addDetails": "Add details",
   "profile.view.empty.details": "This profile has no details yet.",

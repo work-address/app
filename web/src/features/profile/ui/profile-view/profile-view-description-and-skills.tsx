@@ -1,4 +1,4 @@
-import { Separator, Flex, Badge, Skeleton } from '@radix-ui/themes'
+import { Badge, Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -11,25 +11,12 @@ import {
   $profileLoading,
 } from '../../model'
 
-import { ProfileViewCard } from './profile-view-styles'
+import { ProfileViewSection } from './profile-view-section'
 
 import { routes } from '@/routes'
-import {
-  Button,
-  formatCurrency,
-  sanitizeRichText,
-  Text,
-  useBreakpoint,
-} from '@/shared'
+import { Button, sanitizeRichText, SectionTitle, Text } from '@/shared'
 
-type ProfileViewDescriptionAndSkillsProps = {
-  gridArea?: string
-}
-
-export const ProfileViewDescriptionAndSkills = ({
-  gridArea,
-}: ProfileViewDescriptionAndSkillsProps) => {
-  const isMobile = useBreakpoint('isMobile')
+export const ProfileViewDescriptionAndSkills = () => {
   const { t } = useTranslation()
 
   const navigate = useNavigate()
@@ -40,12 +27,6 @@ export const ProfileViewDescriptionAndSkills = ({
     isOwn: $isAuthenticatedUserProfile,
   })
 
-  // A rate of zero is an unset rate, not a free service: "$0.00 per hour"
-  // on a public profile reads as a broken page.
-  const hasRate = Number(user?.rate ?? 0) > 0
-
-  const displayName = user?.name || user?.title
-  const jobTitle = user?.title && user.title !== displayName ? user.title : null
   const skills = useMemo(
     () =>
       user?.skills
@@ -57,118 +38,121 @@ export const ProfileViewDescriptionAndSkills = ({
   // The API cleans a bio as well, but this is the line that puts someone else's
   // text into the page, so it does not take anyone's word for it.
   const bio = useMemo(() => sanitizeRichText(user?.bio ?? ''), [user?.bio])
-  const hasDetails = Boolean(jobTitle || bio) || skills.length > 0
+  const name = user?.name || user?.title
+  const hasJobTitle = Boolean(user?.title && user.title !== name)
+  const hasDetails = hasJobTitle || Boolean(bio) || skills.length > 0
+
+  if (profileLoading) {
+    return (
+      <>
+        <ProfileViewSection>
+          <Skeleton width="80px" height="30px" />
+          <Skeleton width="100%" height="48px" />
+        </ProfileViewSection>
+        <ProfileViewSection>
+          <Skeleton width="80px" height="30px" />
+          <Skeleton width="240px" height="24px" />
+        </ProfileViewSection>
+      </>
+    )
+  }
 
   return (
-    <Root $gridArea={gridArea} shadow={false}>
-      <Flex gap={'4'} direction={'column'}>
-        <div>
-          <Flex
-            justify={{ md: 'between' }}
-            direction={{ initial: 'column', md: 'row' }}
-            gap={{ initial: '1', md: '0' }}
-          >
-            {jobTitle && (
-              <Text size={isMobile ? '5' : '6'} weight={'medium'}>
-                {jobTitle}
-              </Text>
-            )}
-            {hasRate || profileLoading ? (
-              <Text color={'blue'} $themeVariant={'primary'}>
-                <Flex gap={'1'} align={'end'}>
-                  <Skeleton loading={profileLoading}>
-                    <Text size={isMobile ? '4' : '8'} weight={'medium'}>
-                      {formatCurrency(user?.rate)}
-                    </Text>
-                  </Skeleton>
-                  <Text size={isMobile ? '2' : '5'}>
-                    {t('profile.view.usdtUnit')}
-                  </Text>
-                </Flex>
-              </Text>
-            ) : (
-              <Text color={'gray'} size={isMobile ? '3' : '4'}>
-                {t('profile.view.rateUnset')}
-              </Text>
-            )}
-          </Flex>
-        </div>
-        {profileLoading ? (
-          <>
-            <Separator size={'4'} />
-            <Skeleton width={'100%'} height={'72px'} loading />
-            <Separator size={'4'} />
-            <Skeleton width={'120px'} height={'20px'} loading />
-            <Skeleton width={'100%'} height={'48px'} loading />
-          </>
-        ) : (
-          <>
-            {bio && (
-              <>
-                <Separator size={'4'} />
-                <Text dangerouslySetInnerHTML={{ __html: bio }} />
-              </>
-            )}
-            {skills.length > 0 && (
-              <>
-                <Separator size={'4'} />
-                <div>
-                  <Text size={isMobile ? '3' : '4'} weight={'medium'}>
-                    {t('profile.form.skills')}
-                  </Text>
-                </div>
-                <Flex gap={'2'} wrap={'wrap'} mb={{ initial: '0', md: '2' }}>
-                  {skills.map((skill) => (
-                    <Badge
-                      key={skill}
-                      color={'gray'}
-                      size={isMobile ? '1' : '2'}
-                    >
-                      <Text weight={'medium'} size={'1'}>
-                        {skill}
-                      </Text>
-                    </Badge>
-                  ))}
-                </Flex>
-              </>
-            )}
-            {!hasDetails &&
-              (isOwn ? (
-                <EmptyOwn>
-                  <Text color={'gray'}>
-                    {t('profile.view.empty.detailsOwn')}
-                  </Text>
-                  <Button
-                    variant="outline"
-                    onClick={() =>
-                      navigate(
-                        routes.profile.children.edit.build({
-                          id: user?.id ?? '',
-                        }),
-                      )
-                    }
-                  >
-                    {t('profile.view.empty.addDetails')}
-                  </Button>
-                </EmptyOwn>
-              ) : (
-                <Text color={'gray'}>{t('profile.view.empty.details')}</Text>
-              ))}
-          </>
-        )}
-      </Flex>
-    </Root>
+    <>
+      {bio && (
+        <ProfileViewSection>
+          <SectionTitle>{t('profile.form.bio')}</SectionTitle>
+          <Bio dangerouslySetInnerHTML={{ __html: bio }} />
+        </ProfileViewSection>
+      )}
+      {skills.length > 0 && (
+        <ProfileViewSection>
+          <SectionTitle>{t('profile.form.skills')}</SectionTitle>
+          <Skills>
+            {skills.map((skill) => (
+              <Badge key={skill} color="gray" size={{ initial: '1', md: '2' }}>
+                <Text weight="medium" size="1">
+                  {skill}
+                </Text>
+              </Badge>
+            ))}
+          </Skills>
+        </ProfileViewSection>
+      )}
+      {!hasDetails && (
+        <ProfileViewSection>
+          {isOwn ? (
+            <EmptyOwn>
+              <Text color="gray">{t('profile.view.empty.detailsOwn')}</Text>
+              <Button
+                variant="outline"
+                onClick={() =>
+                  navigate(
+                    routes.profile.children.edit.build({
+                      id: user?.id ?? '',
+                    }),
+                  )
+                }
+              >
+                {t('profile.view.empty.addDetails')}
+              </Button>
+            </EmptyOwn>
+          ) : (
+            <Text color="gray">{t('profile.view.empty.details')}</Text>
+          )}
+        </ProfileViewSection>
+      )}
+    </>
   )
 }
 
-const Root = styled(ProfileViewCard)`
-  ${(p) => p.theme.breakpoints.up('md')} {
-    padding: var(--space-5);
+const Bio = styled.div`
+  font-size: var(--font-size-3);
+  line-height: var(--line-height-3);
+  color: var(--ds-neutral-12);
+  overflow-wrap: anywhere;
+
+  p {
+    margin: 0;
+  }
+
+  /* Doubled: it has to outrank the zero margins set on p, ul and ol here. */
+  && > * + * {
+    margin-top: var(--space-2);
+  }
+
+  /* What the editor's toolbar can produce: the app's reset strips these. */
+  a {
+    color: var(--ds-accent-11);
+    text-decoration: underline;
+  }
+
+  ul,
+  ol {
+    margin-block: 0;
+    padding-left: var(--space-5);
+  }
+
+  ul {
+    list-style: disc;
+  }
+
+  ol {
+    list-style: decimal;
   }
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    padding: var(--space-5);
+    font-size: var(--font-size-2);
+    line-height: var(--line-height-2);
   }
+`
+
+const Skills = styled.div`
+  display: flex;
+  /* Chips of any width, each row as full as it can get: auto-fill would force
+     them into equal columns. */
+  flex-wrap: wrap;
+  gap: var(--space-2);
 `
 
 const EmptyOwn = styled.div`

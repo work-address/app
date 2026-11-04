@@ -1,40 +1,20 @@
-import { Grid } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
+import { motion } from 'motion/react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
-import { $profile, $profileLoading } from '../../model'
+import { $profile } from '../../model'
 
 import { ProfileViewDescriptionAndSkills } from './profile-view-description-and-skills'
+import { ProfileViewHead } from './profile-view-head'
 import { ProfileViewLinks } from './profile-view-links'
-import { ProfileViewQrCode } from './profile-view-qr-code'
+import { PROFILE_VIEW_REVEAL_LIST } from './profile-view-section'
 
-import {
-  formatAddress,
-  showToast,
-  copyToClipboard,
-  useBreakpoint,
-  Wrapper,
-} from '@/shared'
+import { Card, copyToClipboard, showToast, Wrapper } from '@/shared'
 
 export const ProfileView = () => {
   const { t } = useTranslation()
-  const isDesktop = useBreakpoint('isDesktop')
-  const { user, profileLoading } = useUnit({
-    user: $profile,
-    profileLoading: $profileLoading,
-  })
-
-  // With no wallet there is no QR code, and on a desktop that is all the card
-  // holds, so it goes. On a phone it stays for the name, address and actions.
-  const hasQrCode = Boolean(user?.payWallet) || profileLoading
-
-  // The cards show the name as the page's h1. A profile without one still
-  // needs a heading for screen readers, and the address is what names it.
-  const unnamedTitle =
-    user && !(user.name || user.title) && user.address ? (
-      <HiddenTitle>{formatAddress(user.address)}</HiddenTitle>
-    ) : null
+  const user = useUnit($profile)
 
   const handleCopyWalletAddress = () => {
     copyToClipboard(user?.address || '').then(() => {
@@ -54,93 +34,46 @@ export const ProfileView = () => {
     })
   }
 
-  // A plain stack on a phone rather than the named-area grid: the links card
-  // renders nothing there when the profile has no links, and an empty named
-  // area still costs a row plus its gaps. In a stack a missing card costs
-  // nothing.
-  if (!isDesktop) {
-    return (
-      <Root>
-        {unnamedTitle}
-        <Stack>
-          <ProfileViewQrCode
-            onWalletAddressCopy={handleCopyWalletAddress}
-            onShareProfile={handleShareProfile}
-          />
-          <ProfileViewLinks
-            onWalletAddressCopy={handleCopyWalletAddress}
-            onShareProfile={handleShareProfile}
-          />
-          <ProfileViewDescriptionAndSkills />
-        </Stack>
-      </Root>
-    )
-  }
-
   return (
     <Root>
-      {unnamedTitle}
-      <Grid
-        areas={{
-          initial: hasQrCode
-            ? `
-          "qrcode profile"
-          "description description"
-        `
-            : `
-          "profile"
-          "description"
-        `,
-        }}
-        /* The QR card keeps its square; the profile card takes the rest of
-           the reading column every document page shares. */
-        columns={{
-          initial: hasQrCode
-            ? 'minmax(0, 246px) minmax(0, 1fr)'
-            : 'minmax(0, 1fr)',
-        }}
-        rows={{
-          initial: `auto auto`,
-        }}
-        gap={{
-          initial: '20px',
-        }}
-      >
-        {hasQrCode && (
-          <ProfileViewQrCode
-            gridArea={'qrcode'}
+      <ProfileCard>
+        <Sections
+          initial="hidden"
+          animate="shown"
+          variants={PROFILE_VIEW_REVEAL_LIST}
+        >
+          <ProfileViewHead
             onWalletAddressCopy={handleCopyWalletAddress}
             onShareProfile={handleShareProfile}
           />
-        )}
-        <ProfileViewLinks
-          gridArea={'profile'}
-          onWalletAddressCopy={handleCopyWalletAddress}
-          onShareProfile={handleShareProfile}
-        />
-        <ProfileViewDescriptionAndSkills gridArea={'description'} />
-      </Grid>
+          <ProfileViewLinks />
+          <ProfileViewDescriptionAndSkills />
+        </Sections>
+      </ProfileCard>
     </Root>
   )
 }
 
-/* The document column every record page shares, so the profile, its edit
-   form and an invoice start at the same place. */
+/* The document column the record pages share, so the profile and its edit
+   form start at the same place. */
 const Root = styled(Wrapper).attrs({ width: 'document' as const })``
 
-const Stack = styled.div`
-  display: grid;
-  gap: var(--space-3);
+/* One card with one edge, set like the edit form's. On a phone the card is
+   the page, as that form's are: the sheet already insets by the gutter. */
+const ProfileCard = styled(Card)`
+  /* The bands lay out by the card's own width: with the sidebar open a small
+     desktop has less room than a phone-width rule would ever notice. */
+  container-type: inline-size;
+  padding: 0;
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    &[data-shadow] {
+      box-shadow: none;
+    }
+  }
 `
 
-const HiddenTitle = styled.h1`
-  position: absolute;
-  width: 1px;
-  height: 1px;
-  margin: -1px;
-  padding: 0;
-  overflow: hidden;
-  clip-path: inset(50%);
-  white-space: nowrap;
-  border: 0;
+const Sections = styled(motion.div)`
+  display: grid;
+  min-width: 0;
 `

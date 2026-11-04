@@ -1,52 +1,39 @@
-import {
-  CopyIcon,
-  EnvelopeClosedIcon,
-  Pencil1Icon,
-  Share1Icon,
-  TokensIcon,
-} from '@radix-ui/react-icons'
-import { Flex, Grid, Skeleton, type FlexProps } from '@radix-ui/themes'
+import { EnvelopeClosedIcon, TokensIcon } from '@radix-ui/react-icons'
+import { Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
-import { Link, NavLink } from 'react-router-dom'
+import { NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
 import {
   $profile,
-  $isAuthenticatedUserProfile,
   $profileLoading,
   SOCIAL_LINKS,
   type SocialLinkField,
 } from '../../model'
 
 import { ProfileViewInfoRow } from './profile-view-info-row'
-import { ProfileViewCard } from './profile-view-styles'
+import { ProfileViewSection } from './profile-view-section'
 
-import { LocalWalletRevealButton } from '@/features/local-wallet'
+import type { ReactNode } from 'react'
+
 import { routes } from '@/routes'
 import {
-  Button,
   CaseIcon,
   FacebookIcon,
   InstagramIcon,
   LinkedinIcon,
-  PageTitle,
   PersonIcon,
-  PremiumBadge,
   TelegramIcon,
   Text,
   TwitterIcon,
   YoutubeIcon,
   formatAddress,
   getCountryLabel,
-  useBreakpoint,
 } from '@/shared'
 
-type ProfileViewLinksProps = {
-  gridArea?: string
-  onWalletAddressCopy?: () => void
-  onShareProfile?: () => void
-}
+/** Rows the skeleton holds while the profile loads. */
+const SKELETON_ROWS = 4
 
 const SOCIAL_LINK_VIEW_CONFIG: Record<
   SocialLinkField,
@@ -95,218 +82,133 @@ const SOCIAL_LINK_VIEW_CONFIG: Record<
   },
 }
 
-export const ProfileViewLinks = ({
-  gridArea,
-  onWalletAddressCopy,
-  onShareProfile,
-}: ProfileViewLinksProps) => {
-  const isDesktop = useBreakpoint('isDesktop')
+/** Where this person works and lives, and where else to find them. */
+export const ProfileViewLinks = () => {
   const { t, i18n } = useTranslation()
 
-  const { user, isAuthenticatedUserProfile, profileLoading } = useUnit({
+  const { user, loading } = useUnit({
     user: $profile,
-    isAuthenticatedUserProfile: $isAuthenticatedUserProfile,
-    profileLoading: $profileLoading,
+    loading: $profileLoading,
   })
 
-  const displayName = user?.name || user?.title
-  const shownAddress = user?.address ? formatAddress(user.address) : null
-
-  const infoRowGap: FlexProps['gap'] = {
-    initial: '0',
+  if (loading) {
+    return (
+      <ProfileViewSection>
+        <Rows>
+          {Array.from({ length: SKELETON_ROWS }, (_, index) => (
+            <Skeleton key={index} width="220px" height="24px" />
+          ))}
+        </Rows>
+      </ProfileViewSection>
+    )
   }
 
-  const hasLinks =
-    Boolean(
-      user?.company ||
-        user?.city ||
-        user?.country ||
-        user?.email ||
-        user?.connectedWallet,
-    ) || SOCIAL_LINKS.some(({ name }) => Boolean(user?.[name]))
+  const location = [
+    user?.city,
+    getCountryLabel(user?.country, i18n.resolvedLanguage ?? i18n.language),
+  ]
+    .filter(Boolean)
+    .join(', ')
 
-  // On a phone the name and the buttons live in the QR card, so this card is
-  // only the links - and with none to show it has nothing to say.
-  if (!isDesktop && !hasLinks) {
+  const facts = [
+    user?.company && {
+      key: 'company',
+      icon: <img src={CaseIcon} alt="" />,
+      label: t('profile.view.worksAt'),
+      value: user.company,
+    },
+    user?.email && {
+      key: 'email',
+      icon: <EnvelopeClosedIcon aria-hidden />,
+      label: t('profile.view.email'),
+      value: user.email,
+    },
+    user?.connectedWallet && {
+      key: 'wallet',
+      icon: <TokensIcon aria-hidden />,
+      label: t('profile.view.connectedWallet'),
+      value: formatAddress(user.connectedWallet),
+    },
+    location && {
+      key: 'location',
+      icon: <img src={PersonIcon} alt="" />,
+      label: t('profile.view.location'),
+      value: location,
+    },
+  ].filter((fact) => Boolean(fact)) as {
+    key: string
+    icon: ReactNode
+    label: string
+    value: string
+  }[]
+
+  const socials = SOCIAL_LINKS.filter(({ name }) => Boolean(user?.[name]))
+
+  // With nothing to list the band would be a hairline around nothing.
+  if (facts.length === 0 && socials.length === 0) {
     return null
   }
 
   return (
-    <Root $gridArea={gridArea} shadow={false}>
-      <Flex
-        gap={{ initial: '4', md: '5' }}
-        direction={'column'}
-        style={{ height: '100%' }}
-      >
-        {isDesktop && (
-          <Flex justify={'between'} gap={'5'} align={'center'}>
-            <>
-              <Flex direction={'column'} gap={'2'}>
-                {profileLoading ? (
-                  <Skeleton width={'220px'} height={'32px'} loading />
-                ) : (
-                  displayName && <PageTitle>{displayName}</PageTitle>
-                )}
-                <Flex gap={'2'} align={'center'}>
-                  {profileLoading ? (
-                    <Skeleton width={'150px'} height={'20px'} loading />
-                  ) : (
-                    shownAddress && (
-                      <Button
-                        variant="ghost"
-                        color="neutral"
-                        onClick={onWalletAddressCopy}
-                      >
-                        <Text
-                          $themeVariant={'primary'}
-                          size={'3'}
-                          weight={'medium'}
-                        >
-                          {shownAddress}
-                        </Text>
-                        <CopyIcon />
-                      </Button>
-                    )
-                  )}
-                  {user && 'premium' in user && Boolean(user.premium) && (
-                    <PremiumBadge />
-                  )}
-                </Flex>
-              </Flex>
-              <Flex gap={'2'} align={'center'}>
-                {isAuthenticatedUserProfile && (
-                  <LocalWalletRevealButton
-                    address={user?.connectedWallet ?? user?.address}
-                  />
-                )}
-                <Button
-                  variant="outline"
-                  color="neutral"
-                  onClick={onShareProfile}
+    <ProfileViewSection>
+      <Rows>
+        {facts.map(({ key, icon, label, value }) => (
+          <ProfileViewInfoRow
+            key={key}
+            hoverEffects={false}
+            icon={icon}
+            text={
+              <>
+                <InlineText color="gray">{label}</InlineText>{' '}
+                <InlineText weight="medium">{value}</InlineText>
+              </>
+            }
+          />
+        ))}
+        {socials.map(({ name }) => {
+          const value = user?.[name] as string
+          const config = SOCIAL_LINK_VIEW_CONFIG[name]
+
+          return (
+            <ProfileViewInfoRow
+              key={name}
+              icon={<img src={config.icon} alt={t(config.altKey)} />}
+              text={
+                <NavLink
+                  to={config.route.build({ userId: value })}
+                  target="_blank"
+                  rel="noreferrer"
                 >
-                  {t('common.share')}
-                  <Share1Icon />
-                </Button>
-                {isAuthenticatedUserProfile && (
-                  <Link
-                    to={routes.profile.children.edit.build({
-                      id: user?.id ?? '',
-                    })}
-                    viewTransition
-                  >
-                    <Button>
-                      {t('common.edit')}
-                      <Pencil1Icon />
-                    </Button>
-                  </Link>
-                )}
-              </Flex>
-            </>
-          </Flex>
-        )}
-        <Flex direction={'column'} gap={{ initial: '3', md: '4' }}>
-          {user?.company && (
-            <ProfileViewInfoRow
-              hoverEffects={false}
-              icon={<img src={CaseIcon} alt={t('profile.view.alt.case')} />}
-              text={
-                <Flex gap={{ initial: '5px', md: '6px' }}>
-                  <Text color={'gray'}>{t('profile.view.worksAt')}</Text>
-                  <Text weight={'medium'}>{user.company}</Text>
-                </Flex>
+                  <InlineText color="gray">{t(config.prefixKey)}</InlineText>
+                  <InlineText weight="medium">{value}</InlineText>
+                </NavLink>
               }
             />
-          )}
-          {user?.email && (
-            <ProfileViewInfoRow
-              hoverEffects={false}
-              icon={<EnvelopeClosedIcon />}
-              text={
-                <Flex gap={{ initial: '5px', md: '6px' }}>
-                  <Text color={'gray'}>{t('profile.view.email')}</Text>
-                  <Text weight={'medium'}>{user.email}</Text>
-                </Flex>
-              }
-            />
-          )}
-          {user?.connectedWallet && (
-            <ProfileViewInfoRow
-              hoverEffects={false}
-              icon={<TokensIcon />}
-              text={
-                <Flex gap={{ initial: '5px', md: '6px' }}>
-                  <Text color={'gray'}>
-                    {t('profile.view.connectedWallet')}
-                  </Text>
-                  <Text weight={'medium'}>
-                    {formatAddress(user.connectedWallet)}
-                  </Text>
-                </Flex>
-              }
-            />
-          )}
-          {(user?.city || user?.country) && (
-            <ProfileViewInfoRow
-              hoverEffects={false}
-              icon={<img src={PersonIcon} alt={t('profile.view.location')} />}
-              text={
-                <Flex gap={{ initial: '5px', md: '6px' }}>
-                  <Text color={'gray'}>{t('profile.view.location')}</Text>
-                  <Text weight={'medium'}>
-                    {[
-                      user.city,
-                      getCountryLabel(
-                        user.country,
-                        i18n.resolvedLanguage ?? i18n.language,
-                      ),
-                    ]
-                      .filter(Boolean)
-                      .join(', ')}
-                  </Text>
-                </Flex>
-              }
-            />
-          )}
-          <Grid
-            columns={{ initial: '1', md: '2' }}
-            gap={{ initial: '3', md: '4' }}
-          >
-            {SOCIAL_LINKS.map(({ name }) => {
-              const value = user?.[name]
-
-              if (!value) {
-                return null
-              }
-
-              const config = SOCIAL_LINK_VIEW_CONFIG[name]
-
-              return (
-                <ProfileViewInfoRow
-                  key={name}
-                  icon={<img src={config.icon} alt={t(config.altKey)} />}
-                  text={
-                    <NavLink
-                      to={config.route.build({ userId: value })}
-                      target="_blank"
-                    >
-                      <Flex gap={infoRowGap}>
-                        <Text color={'gray'}>{t(config.prefixKey)}</Text>
-                        <Text weight={'medium'}>{value}</Text>
-                      </Flex>
-                    </NavLink>
-                  }
-                />
-              )
-            })}
-          </Grid>
-        </Flex>
-      </Flex>
-    </Root>
+          )
+        })}
+      </Rows>
+    </ProfileViewSection>
   )
 }
 
-const Root = styled(ProfileViewCard)`
-  ${(p) => p.theme.breakpoints.up('md')} {
-    padding-inline: var(--space-4);
+/* Text is inline-block here, which would drop a long value onto a line of its
+   own as one block; inline, it follows its label and wraps like a sentence.
+   Doubled to outrank that rule. */
+const InlineText = styled(Text)`
+  && {
+    display: inline;
+  }
+`
+
+/* Every fact and link on one two-column grid, so a row never leaves half the
+   card empty. */
+const Rows = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-3) var(--space-5);
+
+  @container (max-width: 640px) {
+    grid-template-columns: minmax(0, 1fr);
+    gap: var(--space-2);
   }
 `
