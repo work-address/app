@@ -96,7 +96,6 @@ const Root = styled.article`
   &:hover,
   &:focus-within {
     border-color: var(--ds-accent-9);
-    box-shadow: var(--shadow-4);
   }
 
   &[data-selected] {

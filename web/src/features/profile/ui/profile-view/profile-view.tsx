@@ -65,11 +65,10 @@ const ProfileCard = styled(Card)`
      desktop has less room than a phone-width rule would ever notice. */
   container-type: inline-size;
   padding: 0;
+  border: 1px solid var(--ds-neutral-alpha-6);
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    &[data-shadow] {
-      box-shadow: none;
-    }
+    border: 0;
   }
 `
 

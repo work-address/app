@@ -195,17 +195,14 @@ const Root = styled(Card)`
   display: grid;
   min-width: 0;
   padding: 0;
+  border: 1px solid var(--ds-neutral-alpha-6);
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    &[data-shadow] {
-      box-shadow: none;
-    }
+    border: 0;
   }
 
   @media print {
-    &[data-shadow] {
-      box-shadow: none;
-    }
+    border: 0;
   }
 `
 

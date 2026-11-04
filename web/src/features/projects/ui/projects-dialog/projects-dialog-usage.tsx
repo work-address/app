@@ -137,7 +137,7 @@ export const ProjectsDialogUsage = ({ data }: ProjectsDialogUsageProps) => {
           />
         </PeriodSelect>
       </Head>
-      <Body>
+      <Body shadow>
         <Plot>{renderBody()}</Plot>
       </Body>
     </Root>

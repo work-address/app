@@ -241,17 +241,13 @@ export const ProfileEditDetails = ({
 const Root = styled(Card)<CardProps>`
   display: grid;
   gap: var(--space-5);
+  border: 1px solid var(--ds-neutral-alpha-6);
 
-  /* See profile-edit-links.tsx: the shadow has to be switched off through
-     the same attribute selector Card turns it on with. */
   ${(p) => p.theme.breakpoints.down('md')} {
     /* The page already insets by the phone gutter; a second inset inside
        an invisible card would push the fields in twice. */
     padding: 0 0 var(--space-5);
-
-    &[data-shadow] {
-      box-shadow: none;
-    }
+    border: 0;
   }
 `
 

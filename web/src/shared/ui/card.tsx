@@ -11,7 +11,9 @@ export type CardProps = {
 }
 
 export const Card = ({
-  shadow = true,
+  // Off unless asked for: the page body carries no shadows, and a card there
+  // draws its edge with a hairline border.
+  shadow = false,
   rounded = true,
   ...props
 }: CardProps) => {
