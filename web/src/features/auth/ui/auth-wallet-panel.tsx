@@ -1,31 +1,20 @@
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
-import { AuthMethod } from './auth-method'
-import { AuthSteps } from './auth-steps'
-
-import {
-  LOCAL_WALLET_STEP_TITLE_KEY,
-  LocalWalletSteps,
-  type LocalWalletFlow,
-} from '@/features/local-wallet'
-import { useBreakpoint, WalletIcon } from '@/shared'
+import { LocalWalletSteps, type LocalWalletFlow } from '@/features/local-wallet'
+import { useBreakpoint } from '@/shared'
 
 type Props = {
-  /** Owned by the page, which holds its other sign-in option back at times. */
+  /** Owned by the page, which shows less around the wallet's later steps. */
   flow: LocalWalletFlow
-  /** Only beside Google is there a choice to help with. */
-  choosing: boolean
 }
 
-const STEP_KEYS = ['step1', 'step2', 'step3']
-
 /**
- * The browser wallet run in place. The two steps a visitor lands on share one
- * heading, and the rest name what they do. Only someone with no wallet yet needs
- * telling what's ahead.
+ * The browser wallet run in place. The two steps a visitor lands on introduce
+ * it; the page's heading names the rest.
  */
-export const AuthWalletPanel = ({ flow, choosing }: Props) => {
+export const AuthWalletPanel = ({ flow }: Props) => {
   const { t } = useTranslation()
   const isDesktop = useBreakpoint('isDesktop')
   const { step } = flow
@@ -48,23 +37,39 @@ export const AuthWalletPanel = ({ flow, choosing }: Props) => {
   }, [step])
 
   return (
-    <AuthMethod
-      iconUrl={WalletIcon}
-      eyebrow={landing && choosing ? t('signIn.wallet.eyebrow') : undefined}
-      title={t(
-        landing ? 'signIn.wallet.title' : LOCAL_WALLET_STEP_TITLE_KEY[step],
+    <Root>
+      {landing && (
+        <Header>
+          <Title>{t('signIn.wallet.title')}</Title>
+          {step === 'choose' && <Lead>{t('signIn.wallet.lead')}</Lead>}
+        </Header>
       )}
-      lead={step === 'choose' ? t('signIn.wallet.lead') : undefined}
-      after={
-        step === 'choose' ? (
-          <AuthSteps
-            label={t('signIn.next')}
-            steps={STEP_KEYS.map((key) => t(`signIn.wallet.${key}`))}
-          />
-        ) : undefined
-      }
-    >
       <LocalWalletSteps flow={flow} autoFocus={isDesktop} />
-    </AuthMethod>
+    </Root>
   )
 }
+
+const Root = styled.div`
+  display: grid;
+  gap: var(--space-4);
+`
+
+const Header = styled.header`
+  display: grid;
+  gap: var(--space-1);
+`
+
+const Title = styled.h2`
+  margin: 0;
+  font-size: var(--font-size-4);
+  font-weight: 600;
+  line-height: 1.3;
+  color: var(--ds-neutral-12);
+`
+
+const Lead = styled.p`
+  margin: 0;
+  font-size: var(--font-size-2);
+  line-height: 20px;
+  color: var(--ds-neutral-11);
+`

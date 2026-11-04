@@ -1,56 +1,57 @@
 import { Skeleton } from '@radix-ui/themes'
+import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { AuthGoogleButton } from './auth-google-button'
-import { AuthMethod } from './auth-method'
-import { AuthSteps } from './auth-steps'
 
-import { GoogleIcon } from '@/shared'
+import { $googleScriptState, $googleSignInError } from '@/entities/profile'
 
 type Props = {
   /** Unknown until the deployment has said whether it offers Google. */
   clientId: string | null
 }
 
-const STEP_KEYS = ['step1', 'step2', 'step3']
-
 /**
- * The sign-in page's Google half. Holds its place while the deployment answers,
- * so the page doesn't draw a wallet-only screen and then snap into two halves.
+ * The sign-in screen's Google option. Holds its place while the deployment
+ * answers, so the form doesn't draw wallet-only and then jump down.
  */
 export const AuthGooglePanel = ({ clientId }: Props) => {
   const { t } = useTranslation()
+  const { scriptState, error } = useUnit({
+    scriptState: $googleScriptState,
+    error: $googleSignInError,
+  })
+  // Selling the quick way in would read wrongly under a failure of it.
+  const working = scriptState !== 'failed' && !error
 
   if (!clientId) {
     return (
-      <Placeholder aria-hidden="true">
-        <Skeleton width="70%" height="48px" loading />
-        <Skeleton width="85%" height="20px" loading />
+      <Root aria-hidden="true">
         <Skeleton width="100%" height="40px" loading />
-      </Placeholder>
+        <Skeleton width="60%" height="20px" loading />
+      </Root>
     )
   }
 
   return (
-    <AuthMethod
-      iconUrl={GoogleIcon}
-      eyebrow={t('signIn.google.eyebrow')}
-      title={t('signIn.google.title')}
-      lead={t('signIn.google.lead')}
-      after={
-        <AuthSteps
-          label={t('signIn.next')}
-          steps={STEP_KEYS.map((key) => t(`signIn.google.${key}`))}
-        />
-      }
-    >
+    <Root>
       <AuthGoogleButton clientId={clientId} />
-    </AuthMethod>
+      {working && <Lead>{t('signIn.google.lead')}</Lead>}
+    </Root>
   )
 }
 
-const Placeholder = styled.div`
+const Root = styled.div`
   display: grid;
-  gap: var(--space-4);
+  justify-items: center;
+  gap: var(--space-2);
+`
+
+const Lead = styled.p`
+  margin: 0;
+  text-align: center;
+  font-size: var(--font-size-2);
+  line-height: 20px;
+  color: var(--ds-neutral-11);
 `
