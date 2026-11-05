@@ -1,4 +1,5 @@
 export * from './chart-palette'
+export * from './chart-popup'
 export * from './chart-tooltip'
 export * from './chart-legend'
 export * from './bucket-bar-chart'

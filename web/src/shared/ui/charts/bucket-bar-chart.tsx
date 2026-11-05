@@ -1,4 +1,4 @@
-import { useLayoutEffect, useRef, useState } from 'react'
+import { useRef } from 'react'
 import {
   Bar,
   BarChart,
@@ -11,6 +11,7 @@ import {
 import styled from 'styled-components'
 
 import { ChartLegend } from './chart-legend'
+import { ChartPopup, pointInside } from './chart-popup'
 import { ChartTooltip, type ChartTooltipContent } from './chart-tooltip'
 
 export type BucketSeries = { key: string; label: string; color: string }
@@ -45,7 +46,7 @@ type Props = {
 
 const SURFACE = 'var(--white)'
 
-/** A breakdown popup's width where the plot has room for it. */
+/** A breakdown popup's width, for its columns to sit side by side in. */
 const POPUP_WIDTH = 600
 
 /**
@@ -66,26 +67,6 @@ export const BucketBarChart = ({
   describe,
 }: Props) => {
   const plotRef = useRef<HTMLDivElement>(null)
-  const [plotWidth, setPlotWidth] = useState(0)
-
-  // The popup's width follows the plot's, which only the DOM knows.
-  useLayoutEffect(() => {
-    const plot = plotRef.current
-    if (!plot) {
-      return
-    }
-    const observer = new ResizeObserver(([entry]) =>
-      setPlotWidth(entry.contentRect.width),
-    )
-    observer.observe(plot)
-    return () => observer.disconnect()
-  }, [])
-
-  // Too narrow for a breakdown beside the pointer: pin it to the plot's
-  // left edge at the plot's width, and let its columns wrap.
-  const narrow =
-    Boolean(describe) && plotWidth > 0 && plotWidth < POPUP_WIDTH * 1.4
-  const popupWidth = narrow ? plotWidth : POPUP_WIDTH
   const data = buckets.map((bucket) => ({
     key: bucket.key,
     label: bucket.label,
@@ -130,8 +111,7 @@ export const BucketBarChart = ({
             />
             <Tooltip
               cursor={{ fill: 'var(--ds-neutral-alpha-3)' }}
-              position={narrow ? { x: 0 } : undefined}
-              content={({ active, payload }) => {
+              content={({ active, payload, coordinate }) => {
                 if (!active || !payload?.length) {
                   return null
                 }
@@ -141,10 +121,12 @@ export const BucketBarChart = ({
                   title: string
                 }
                 const detail = describe?.(row.key)
+                // Recharts measures from the plot, the popup from the screen.
+                const anchor = () => pointInside(plotRef.current, coordinate)
 
                 if (detail) {
                   return (
-                    <Wide data-wide style={{ width: popupWidth }}>
+                    <ChartPopup anchor={anchor} width={POPUP_WIDTH}>
                       <ChartTooltip
                         title={detail.title ?? row.title}
                         rows={detail.rows}
@@ -152,7 +134,7 @@ export const BucketBarChart = ({
                         note={detail.note}
                         layout="horizontal"
                       />
-                    </Wide>
+                    </ChartPopup>
                   )
                 }
 
@@ -169,16 +151,18 @@ export const BucketBarChart = ({
                 )
 
                 return (
-                  <ChartTooltip
-                    title={row.title}
-                    rows={rows}
-                    empty={emptyLabel}
-                    total={
-                      totalLabel && rows.length > 1
-                        ? { label: totalLabel, value: formatValue(total) }
-                        : undefined
-                    }
-                  />
+                  <ChartPopup anchor={anchor}>
+                    <ChartTooltip
+                      title={row.title}
+                      rows={rows}
+                      empty={emptyLabel}
+                      total={
+                        totalLabel && rows.length > 1
+                          ? { label: totalLabel, value: formatValue(total) }
+                          : undefined
+                      }
+                    />
+                  </ChartPopup>
                 )
               }}
             />
@@ -234,8 +218,3 @@ const Plot = styled.div`
     outline: none;
   }
 `
-
-/* A breakdown needs a width for its columns to sit side by side; recharts
-   keeps the popup inside the chart, and the columns wrap on a narrow one. */
-/* Its width is set from the plot, so it never floats out of the card. */
-const Wide = styled.div``

@@ -1,3 +1,4 @@
+import { useRef, type RefObject } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Bar,
@@ -18,7 +19,7 @@ import type {
 } from 'recharts/types/component/DefaultTooltipContent'
 
 import { OTHER_PROCESS_NAME } from '@/entities/projects'
-import { formatDurationFromHoursFloat } from '@/shared'
+import { ChartPopup, formatDurationFromHoursFloat, pointInside } from '@/shared'
 
 // Geometry shared with the dialog's skeleton and empty state so the plot area
 // keeps its size whichever of the three is on screen. Keep them in sync.
@@ -49,6 +50,7 @@ export const ProjectsDialogUsageChart = ({
   yAxis,
 }: Pick<ProjectUsageChart, 'data' | 'yAxis'>) => {
   const { t } = useTranslation()
+  const plotRef = useRef<HTMLDivElement>(null)
   const isScrollable = data.length > VISIBLE_BARS_COUNT
 
   const resolveName = (processName: string) =>
@@ -87,6 +89,7 @@ export const ProjectsDialogUsageChart = ({
       </YAxisGutter>
       <Scroller>
         <ChartWrap
+          ref={plotRef}
           style={
             isScrollable
               ? { width: `${(data.length / VISIBLE_BARS_COUNT) * 100}%` }
@@ -115,9 +118,8 @@ export const ProjectsDialogUsageChart = ({
                   not yet identified, so the tooltip stays — it is what carries
                   the full app name behind a truncated axis label. */}
               <Tooltip
-                content={<ProjectsDialogUsageTooltip />}
+                content={<ProjectsDialogUsageTooltip plotRef={plotRef} />}
                 cursor={{ fill: 'var(--c-rgba-0-52-130-0_06)' }}
-                wrapperStyle={{ pointerEvents: 'auto' }}
               />
               {/* One series colored per bar through `shape`: recharts takes
                   only a single fill per series, and <Cell> children stop <Bar>
@@ -141,7 +143,11 @@ export const ProjectsDialogUsageChart = ({
 const ProjectsDialogUsageTooltip = ({
   active,
   payload,
-}: Partial<TooltipContentProps<ValueType, NameType>>) => {
+  coordinate,
+  plotRef,
+}: Partial<TooltipContentProps<ValueType, NameType>> & {
+  plotRef: RefObject<HTMLDivElement | null>
+}) => {
   const { t } = useTranslation()
 
   const datum = payload?.[0]?.payload as
@@ -153,16 +159,18 @@ const ProjectsDialogUsageTooltip = ({
   }
 
   return (
-    <TooltipRoot>
-      <TooltipTitle>
-        {datum.processName === OTHER_PROCESS_NAME
-          ? t('dashboard.applicationsUsage.tooltip.apps.other')
-          : datum.processName}
-      </TooltipTitle>
-      <TooltipValue>
-        {formatDurationFromHoursFloat(datum.hours, t)}
-      </TooltipValue>
-    </TooltipRoot>
+    <ChartPopup anchor={() => pointInside(plotRef.current, coordinate)}>
+      <TooltipRoot role="tooltip">
+        <TooltipTitle>
+          {datum.processName === OTHER_PROCESS_NAME
+            ? t('dashboard.applicationsUsage.tooltip.apps.other')
+            : datum.processName}
+        </TooltipTitle>
+        <TooltipValue>
+          {formatDurationFromHoursFloat(datum.hours, t)}
+        </TooltipValue>
+      </TooltipRoot>
+    </ChartPopup>
   )
 }
 

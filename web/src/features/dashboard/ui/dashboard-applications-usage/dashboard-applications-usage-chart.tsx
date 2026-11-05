@@ -1,4 +1,4 @@
-import { useState } from 'react'
+import { useRef, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import {
   Bar,
@@ -19,12 +19,19 @@ import {
 } from '../../model'
 import { DashboardProjectPopup } from '../dashboard-project-popup'
 
+import { ChartPopup } from '@/shared'
+
 // Projects visible in the chart area before horizontal scroll kicks in.
 const VISIBLE_PROJECTS_COUNT = 4
 
 // Chosen so four labels fit the aside's plot width without touching; the full
 // name is always available in the tooltip.
 const MAX_LABEL_LENGTH = 8
+
+// A project's breakdown is too wide for the card it opens from.
+const POPUP_WIDTH = 640
+// Clears the card's own padding, so the popup stands apart from its edge.
+const POPUP_GAP = 24
 
 /* The plot fills its tile; this is only the floor, for a tile with little beside it. */
 const MIN_CHART_HEIGHT = 240
@@ -52,13 +59,14 @@ export const DashboardApplicationsUsageChart = ({
   yAxis,
 }: ApplicationsUsageChart) => {
   const { t } = useTranslation()
-  // The hovered project, drawn outside the scroller so it is never clipped.
+  const rootRef = useRef<HTMLDivElement>(null)
+  // The hovered project, whose popup opens beside the chart, over the table.
   const [active, setActive] = useState<number | null>(null)
   const hovered = active === null ? undefined : data[active]
   const isScrollable = data.length > VISIBLE_PROJECTS_COUNT
 
   return (
-    <Root>
+    <Root ref={rootRef}>
       {/* Rendered outside the scroller so the hour scale stays put while the
           bars scroll; the in-chart axis is hidden but still owns the domain. */}
       <YAxisGutter aria-hidden>
@@ -109,8 +117,7 @@ export const DashboardApplicationsUsageChart = ({
                 tickFormatter={truncateLabel}
               />
               <YAxis domain={[0, yAxis.max]} ticks={yAxis.ticks} hide />
-              {/* Only the bar highlight: the project's popup is drawn
-                  beside the card, below. */}
+              {/* Only the bar highlight: the project's popup is its own. */}
               <Tooltip
                 content={() => null}
                 cursor={{ fill: 'var(--c-rgba-0-52-130-0_06)' }}
@@ -146,9 +153,13 @@ export const DashboardApplicationsUsageChart = ({
         </ChartWrap>
       </Scroller>
       {hovered?.projectId ? (
-        <Popup>
+        <ChartPopup
+          anchor={() => rootRef.current?.getBoundingClientRect()}
+          gap={POPUP_GAP}
+          width={POPUP_WIDTH}
+        >
           <DashboardProjectPopup projectId={hovered.projectId} />
-        </Popup>
+        </ChartPopup>
       ) : null}
     </Root>
   )
@@ -159,24 +170,6 @@ const Root = styled.div`
   display: flex;
   height: 100%;
   min-height: ${MIN_CHART_HEIGHT}px;
-`
-
-/* Beside the card on a desktop, over the projects table, since the card is
-   too narrow for the details; under the chart on a phone. */
-const Popup = styled.div`
-  position: absolute;
-  top: 0;
-  right: calc(100% + var(--space-5));
-  z-index: 2;
-  width: min(640px, calc(100vw - 48px));
-  pointer-events: none;
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    top: calc(100% + var(--space-2));
-    right: auto;
-    left: 0;
-    width: 100%;
-  }
 `
 
 const YAxisGutter = styled.div`
