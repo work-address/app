@@ -14,13 +14,12 @@ import { $user } from '@/entities/profile'
 import { LocalWalletDialog } from '@/features/local-wallet'
 import {
   Button,
-  Card,
   findInjectedWallets,
   isEmailAddress,
+  PageSection,
   showToast,
   Text,
   useConfirm,
-  type CardProps,
   type InjectedWallet,
 } from '@/shared'
 
@@ -93,7 +92,7 @@ export const ConnectedWalletCard = () => {
   }
 
   return (
-    <Root shadow={false}>
+    <PageSection>
       <Flex direction="column" gap="3">
         <Text size={{ initial: '4', md: '6' }} weight="medium">
           {t('connectedWallet.title')}
@@ -162,23 +161,9 @@ export const ConnectedWalletCard = () => {
           })
         }
       />
-    </Root>
+    </PageSection>
   )
 }
-
-/* Set like the browser wallet card beneath it. */
-const Root = styled(Card)<CardProps>`
-  box-shadow: none;
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    border: none;
-    border-top: 1px solid var(--ds-neutral-alpha-6);
-
-    &[data-shadow] {
-      box-shadow: none;
-    }
-  }
-`
 
 const AddressBox = styled.div`
   display: flex;

@@ -22,7 +22,7 @@ export const RouteSkeleton = ({ variant = 'document', className }: Props) => {
       role="status"
       aria-live="polite"
     >
-      <Wrapper width={variant === 'document' ? 'document' : 'full'}>
+      <Wrapper>
         <span className="sr-only">{t('ui.routeSkeleton.loading')}</span>
         <Content aria-hidden="true">
           <Header>

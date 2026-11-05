@@ -12,13 +12,12 @@ import { LocalWalletExportDialog } from './local-wallet-export-dialog'
 import { $user } from '@/entities/profile'
 import {
   Button,
-  Card,
   isEmailAddress,
   normalizeAddress,
+  PageSection,
   showToast,
   Text,
   useConfirm,
-  type CardProps,
 } from '@/shared'
 
 /**
@@ -64,7 +63,7 @@ export const LocalWalletCard = () => {
   }
 
   return (
-    <Root shadow={false}>
+    <PageSection>
       <Flex direction="column" gap="3">
         <Text size={{ initial: '4', md: '6' }} weight="medium">
           {t('localWallet.card.title')}
@@ -100,25 +99,9 @@ export const LocalWalletCard = () => {
         </Actions>
       </Flex>
       <LocalWalletExportDialog open={exportOpen} onOpenChange={setExportOpen} />
-    </Root>
+    </PageSection>
   )
 }
-
-/* Set like the other sections of the profile form it sits under - same rule
-   on top, same heading size - so the wallet reads as the last section rather
-   than a block appended to the page. */
-const Root = styled(Card)<CardProps>`
-  box-shadow: none;
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    border: none;
-    border-top: 1px solid var(--ds-neutral-alpha-6);
-
-    &[data-shadow] {
-      box-shadow: none;
-    }
-  }
-`
 
 const AddressBox = styled.div`
   display: flex;

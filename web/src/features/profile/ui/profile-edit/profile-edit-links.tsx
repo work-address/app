@@ -23,7 +23,7 @@ import { SectionHeading } from './profile-edit-styles'
 
 import type { ClipboardEvent } from 'react'
 
-import { Card, Input, showToast, type CardProps } from '@/shared'
+import { Input, PageSection, showToast } from '@/shared'
 
 type Props = {
   isDesktop: boolean
@@ -95,25 +95,12 @@ export const ProfileEditLinks = ({
   )
 }
 
-const Root = styled(Card)<CardProps>`
+const Root = styled(PageSection)`
   display: grid;
   gap: var(--space-5);
-  border: 1px solid var(--ds-neutral-alpha-6);
 
-  /* Edge to edge on a phone, so the card is the page. The attribute selector is
-     what Card's own rule uses, so this is what it takes to outrank it; a rounded
-     corner would bend the rule on top. That rule is the only thing separating
-     this section from the account form above - without it the two run together
-     as one undivided list of fields. */
   ${(p) => p.theme.breakpoints.down('md')} {
-    border: 0;
-    border-top: 1px solid var(--ds-neutral-alpha-6);
-    padding: var(--space-5) 0 0;
     gap: var(--space-3);
-
-    &[data-rounded] {
-      border-radius: 0;
-    }
   }
 `
 

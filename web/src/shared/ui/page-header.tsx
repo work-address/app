@@ -18,7 +18,7 @@ type Props = {
 /**
  * The one page heading: an `h1` at the same size on every page, an optional
  * badge, a description underneath and actions on the right. Pages that put
- * their title inside a card of their own (a profile, an invoice) use
+ * their title inside a band of their own (a profile, an invoice) use
  * `PageTitle` alone so the size still matches.
  */
 export const PageHeader = ({

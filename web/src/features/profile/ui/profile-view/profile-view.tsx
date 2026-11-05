@@ -10,7 +10,7 @@ import { ProfileViewHead } from './profile-view-head'
 import { ProfileViewLinks } from './profile-view-links'
 import { PROFILE_VIEW_REVEAL_LIST } from './profile-view-section'
 
-import { Card, copyToClipboard, showToast, Wrapper } from '@/shared'
+import { copyToClipboard, showToast, Wrapper } from '@/shared'
 
 export const ProfileView = () => {
   const { t } = useTranslation()
@@ -35,44 +35,27 @@ export const ProfileView = () => {
   }
 
   return (
-    <Root>
-      <ProfileCard>
-        <Sections
-          initial="hidden"
-          animate="shown"
-          variants={PROFILE_VIEW_REVEAL_LIST}
-        >
-          <ProfileViewHead
-            onWalletAddressCopy={handleCopyWalletAddress}
-            onShareProfile={handleShareProfile}
-          />
-          <ProfileViewLinks />
-          <ProfileViewDescriptionAndSkills />
-        </Sections>
-      </ProfileCard>
-    </Root>
+    <Wrapper>
+      <Sections
+        initial="hidden"
+        animate="shown"
+        variants={PROFILE_VIEW_REVEAL_LIST}
+      >
+        <ProfileViewHead
+          onWalletAddressCopy={handleCopyWalletAddress}
+          onShareProfile={handleShareProfile}
+        />
+        <ProfileViewLinks />
+        <ProfileViewDescriptionAndSkills />
+      </Sections>
+    </Wrapper>
   )
 }
 
-/* The document column the record pages share, so the profile and its edit
-   form start at the same place. */
-const Root = styled(Wrapper).attrs({ width: 'document' as const })``
-
-/* One card with one edge, set like the edit form's. On a phone the card is
-   the page, as that form's are: the sheet already insets by the gutter. */
-const ProfileCard = styled(Card)`
-  /* The bands lay out by the card's own width: with the sidebar open a small
-     desktop has less room than a phone-width rule would ever notice. */
-  container-type: inline-size;
-  padding: 0;
-  border: 1px solid var(--ds-neutral-alpha-6);
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    border: 0;
-  }
-`
-
+/* The bands lay out by the page's own width: with the sidebar open a small
+   desktop has less room than a phone-width rule would ever notice. */
 const Sections = styled(motion.div)`
+  container-type: inline-size;
   display: grid;
   min-width: 0;
 `

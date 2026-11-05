@@ -8,7 +8,7 @@ type Props = {
   className?: string
 }
 
-/** Stagger for the sections inside the profile's card. */
+/** Stagger for the sections of the profile. */
 export const PROFILE_VIEW_REVEAL_LIST = {
   shown: { transition: { staggerChildren: 0.06 } },
 }
@@ -21,8 +21,8 @@ const REVEAL = {
 const REVEAL_STILL = { hidden: { opacity: 1 }, shown: { opacity: 1 } }
 
 /**
- * One band of the profile's card. A hairline parts it from the band above, so
- * a band with nothing to say costs nothing by rendering nothing.
+ * One band of the profile. A hairline parts it from the band above, so a band
+ * with nothing to say costs nothing by rendering nothing.
  */
 export const ProfileViewSection = ({ children, className }: Props) => {
   const reducedMotion = useReducedMotion()
@@ -41,15 +41,18 @@ const Root = styled(motion.div)`
   display: grid;
   gap: var(--space-3);
   min-width: 0;
-  padding: var(--space-5);
+  padding-block: var(--space-5);
 
   & + & {
     border-top: 1px solid var(--ds-neutral-alpha-6);
   }
 
-  /* The card has no chrome on a phone (see profile-view.tsx), so a second
-     inset inside it would push the content in twice. */
   ${(p) => p.theme.breakpoints.down('md')} {
-    padding: var(--space-4) 0;
+    padding-block: var(--space-4);
+  }
+
+  /* The page already insets its first line. */
+  &:first-child {
+    padding-top: 0;
   }
 `

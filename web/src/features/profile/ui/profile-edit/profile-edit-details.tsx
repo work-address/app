@@ -19,15 +19,14 @@ import {
 import { SectionHeading } from './profile-edit-styles'
 
 import {
-  Card,
   Input,
+  PageSection,
   TagInput,
   Select,
   RichEditor,
   getCountryOptions,
   BASE_CURRENCY,
   isEmailAddress,
-  type CardProps,
 } from '@/shared'
 
 // Every profile field is optional on the API - `PUT /user` validates only the
@@ -238,17 +237,9 @@ export const ProfileEditDetails = ({
   )
 }
 
-const Root = styled(Card)<CardProps>`
+const Root = styled(PageSection)`
   display: grid;
   gap: var(--space-5);
-  border: 1px solid var(--ds-neutral-alpha-6);
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    /* The page already insets by the phone gutter; a second inset inside
-       an invisible card would push the fields in twice. */
-    padding: 0 0 var(--space-5);
-    border: 0;
-  }
 `
 
 /* One column until there is room for two: name beside title, company beside

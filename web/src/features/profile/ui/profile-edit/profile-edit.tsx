@@ -182,8 +182,8 @@ export const ProfileEdit = () => {
   const sheetHost = document.querySelector('main')
 
   return (
-    <Root width="document">
-      <PageHeader
+    <Root>
+      <Header
         leading={
           <Tooltip content={t('profile.aria.back')}>
             <IconButton
@@ -222,7 +222,7 @@ export const ProfileEdit = () => {
             onSubmit={handleSubmit(onSubmit)}
             aria-busy={profileLoading || profileSaving || undefined}
           >
-            <Sections initial="hidden" animate="shown" variants={reveal.list}>
+            <motion.div initial="hidden" animate="shown" variants={reveal.list}>
               <motion.div variants={reveal.item}>
                 <ProfileEditDetails
                   user={user}
@@ -244,7 +244,7 @@ export const ProfileEdit = () => {
                   setValue={setValue}
                 />
               </motion.div>
-            </Sections>
+            </motion.div>
           </form>
           <ConnectedWalletCard />
           <LocalWalletCard />
@@ -286,26 +286,18 @@ const REVEAL_STILL = {
 }
 
 const Root = styled(Wrapper)`
-  display: grid;
-  gap: 20px;
-
   /* Clears the fixed Cancel/Save sheet on phones, so the last field can
      scroll out from under it. */
   ${(p) => p.theme.breakpoints.down('md')} {
-    gap: var(--space-4);
     padding-bottom: 96px;
   }
 `
 
-const Sections = styled(motion.div)`
-  display: grid;
-  gap: 20px;
+const Header = styled(PageHeader)`
+  padding-bottom: var(--space-5);
 
-  /* No gap on a phone. The sections carry neither border nor shadow there,
-     so a blank band between two white blocks read as one form with a hole
-     in it. Each section rules its own top edge instead. */
   ${(p) => p.theme.breakpoints.down('md')} {
-    gap: 0;
+    padding-bottom: var(--space-4);
   }
 `
 

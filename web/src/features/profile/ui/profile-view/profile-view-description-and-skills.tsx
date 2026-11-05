@@ -106,7 +106,9 @@ export const ProfileViewDescriptionAndSkills = () => {
   )
 }
 
+/* The page runs full width; a paragraph that did too would be hard to read. */
 const Bio = styled.div`
+  max-width: 80ch;
   font-size: var(--font-size-3);
   line-height: var(--line-height-3);
   color: var(--ds-neutral-12);
