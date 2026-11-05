@@ -156,7 +156,7 @@ const Field = styled.div`
   border-radius: var(--radius-2);
   background: var(--color-surface);
   &:focus-within {
-    outline: 2px solid var(--ds-accent-8);
+    outline: 2px solid var(--ds-accent-9);
     outline-offset: 2px;
   }
   ${(p) => p.theme.breakpoints.down('md')} {

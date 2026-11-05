@@ -108,7 +108,7 @@ const Name = styled.span`
   border-radius: var(--radius-1);
 
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-8);
+    outline: 2px solid var(--ds-accent-9);
     outline-offset: 2px;
   }
 `

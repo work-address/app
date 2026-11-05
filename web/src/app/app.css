@@ -9,8 +9,15 @@
 }
 
 body {
-  font-family: 'Inter', sans-serif;
+  font-family: 'Inter 24pt', sans-serif;
   background-color: var(--ds-neutral-2);
+}
+
+/* Radix sets the family on its own theme root, which is everything on screen
+   but the body. Two selectors, as its stylesheet loads after this one. */
+:root .radix-themes {
+  --default-font-family: 'Inter 24pt', -apple-system, BlinkMacSystemFont,
+    'Segoe UI', Roboto, sans-serif;
 }
 
 /* The app owns its scrolling - the page sheet scrolls, not the document - so
@@ -35,10 +42,13 @@ a {
   color: inherit;
 }
 
+/* The family is inherited because a browser's default for a button is its own
+   (Arial in Chrome), not the page's. */
 button {
   border: none;
   background: none;
   cursor: pointer;
+  font-family: inherit;
 }
 
 /**

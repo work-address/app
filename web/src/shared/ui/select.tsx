@@ -262,7 +262,7 @@ const Trigger = styled.button`
     border-color: var(--gray-a9);
   }
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-8);
+    outline: 2px solid var(--ds-accent-9);
     outline-offset: 2px;
   }
   &[data-placeholder] {
@@ -326,7 +326,7 @@ const MenuItem = styled(ListBoxItem)`
     background: var(--ds-neutral-alpha-3);
   }
   &[data-focus-visible] {
-    outline: 2px solid var(--ds-accent-8);
+    outline: 2px solid var(--ds-accent-9);
     outline-offset: -2px;
   }
   &[aria-selected='true'] {

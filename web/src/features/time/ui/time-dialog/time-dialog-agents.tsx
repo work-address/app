@@ -379,7 +379,7 @@ const Prompt = styled.button`
   }
 
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-8);
+    outline: 2px solid var(--ds-accent-9);
     outline-offset: 1px;
   }
 `

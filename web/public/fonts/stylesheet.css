@@ -25,6 +25,24 @@
     font-display: swap;
 }
 
+/* The two below are the 14pt cut from the Inter 4.1 release, which ships no
+   24pt files, so they run about 3% wider than the faces above. */
+@font-face {
+    font-family: 'Inter 24pt';
+    src: url('Inter-SemiBold.woff2') format('woff2');
+    font-weight: 600;
+    font-style: normal;
+    font-display: swap;
+}
+
+@font-face {
+    font-family: 'Inter 24pt';
+    src: url('Inter-Bold.woff2') format('woff2');
+    font-weight: 700;
+    font-style: normal;
+    font-display: swap;
+}
+
 @font-face {
     font-family: 'SF Pro Display';
     src: url('SFProDisplay-Thin.woff2') format('woff2'),

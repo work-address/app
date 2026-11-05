@@ -271,7 +271,7 @@ const ProjectLink = styled(NavLink)`
 
   &:focus-visible {
     border-radius: var(--radius-1);
-    outline: 2px solid var(--ds-accent-8);
+    outline: 2px solid var(--ds-accent-9);
     outline-offset: 2px;
   }
 `

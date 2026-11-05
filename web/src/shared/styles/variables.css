@@ -25,10 +25,13 @@
 
   --ds-neutral-2: #F9F9FB;
   --ds-neutral-4: #E8E8EC;
+  --ds-neutral-9: #8B8D98;
   --ds-neutral-11: #60646C;
   --ds-neutral-12: #1C2024;
 
   --ds-neutral-alpha-3: rgba(0, 0, 51, 0.06);
+  --ds-neutral-alpha-4: rgba(0, 0, 45, 0.09);
+  --ds-neutral-alpha-5: rgba(0, 9, 50, 0.12);
   --ds-neutral-alpha-6: rgba(0, 0, 47, 0.15);
   --ds-neutral-alpha-8: #00083046;
 
