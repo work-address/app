@@ -750,6 +750,7 @@
   "connectedWallet.disconnect.success": "钱包已断开连接",
   "invoice.fields.payTo": "付款至",
   "signIn.google.lead": "最快的登录方式，无需安装任何内容。",
+  "signIn.lastUsed": "上次使用",
   "signIn.wallet.title": "使用浏览器钱包登录",
   "signIn.wallet.lead": "无需钱包应用。你的密钥以密码加密后保存在此浏览器中。",
   "signIn.errors.googleEmailTaken": "此邮箱已被其他账户使用，无法在此登录。",

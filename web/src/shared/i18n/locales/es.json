@@ -755,6 +755,7 @@
   "connectedWallet.disconnect.success": "Billetera desconectada",
   "invoice.fields.payTo": "Pagar a",
   "signIn.google.lead": "La forma más rápida de entrar. No hay nada que instalar.",
+  "signIn.lastUsed": "Usado la última vez",
   "signIn.wallet.title": "Entrar con una wallet del navegador",
   "signIn.wallet.lead": "Sin app de wallet. Tu clave se guarda cifrada en este navegador, con una contraseña.",
   "signIn.errors.googleEmailTaken": "Este correo ya lo usa otra cuenta, así que no puede iniciar sesión aquí.",

@@ -11,7 +11,7 @@ import { Link, useLocation } from 'react-router-dom'
 import styled from 'styled-components'
 import { match } from 'ts-pattern'
 
-import { $authenticated, $user, logout } from '@/entities/profile'
+import { $authenticated, $user, signOut } from '@/entities/profile'
 import { showPremiumBanner } from '@/features/dashboard'
 import {
   AUTH_REQUIRED_ROUTES,
@@ -57,10 +57,10 @@ export const Sidebar = () => {
   const { t } = useTranslation()
   const { pathname } = useLocation()
   const isMobile = useBreakpoint('isMobile')
-  const { user, authenticated, logoutEvent, showBanner } = useUnit({
+  const { user, authenticated, signOutEvent, showBanner } = useUnit({
     user: $user,
     authenticated: $authenticated,
-    logoutEvent: logout,
+    signOutEvent: signOut,
     showBanner: showPremiumBanner,
   })
 
@@ -227,7 +227,7 @@ export const Sidebar = () => {
               <Item
                 type="button"
                 aria-label={t('header.exitHint')}
-                onClick={() => logoutEvent()}
+                onClick={() => signOutEvent()}
               >
                 <ExitIcon
                   width={ICON_SIZE}

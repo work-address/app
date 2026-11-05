@@ -763,6 +763,7 @@
   "connectedWallet.disconnect.success": "Кошелёк отключён",
   "invoice.fields.payTo": "Оплатить на",
   "signIn.google.lead": "Самый быстрый способ. Ничего не нужно устанавливать.",
+  "signIn.lastUsed": "В прошлый раз",
   "signIn.wallet.title": "Войти через кошелёк в браузере",
   "signIn.wallet.lead": "Приложение не нужно. Ключ зашифрован паролем и хранится в этом браузере.",
   "signIn.errors.googleEmailTaken": "Этот адрес уже используется другим аккаунтом, поэтому войти с ним нельзя.",

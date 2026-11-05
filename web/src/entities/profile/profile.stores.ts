@@ -2,8 +2,13 @@ import { combine, createStore } from 'effector'
 
 import { loginEthFx } from './eth.model'
 import { loginGoogleFx } from './google.model'
-import { fetchStatusFx, LOCAL_STORAGE_AUTH_KEY } from './profile.effects'
-import { logout, setInitialized } from './profile.events'
+import {
+  fetchStatusFx,
+  LOCAL_STORAGE_AUTH_KEY,
+  readLastSignInMethod,
+  type SignInMethod,
+} from './profile.effects'
+import { logout, setInitialized, signOut } from './profile.events'
 import { saveProfileMutation } from './profile.mutations'
 
 import type { baseApi } from '@/shared'
@@ -14,6 +19,18 @@ export const $authenticated = createStore(
   .on(logout, () => false)
   .on([loginEthFx.done, loginGoogleFx.done], () => true)
   .on(fetchStatusFx.done, () => true)
+
+// Someone who chose to leave starts over at the dashboard next time; a session
+// that ran out goes back to where it was.
+export const $signedOutOnPurpose = createStore(false)
+  .on(signOut, () => true)
+  .reset([loginEthFx.done, loginGoogleFx.done])
+
+export const $lastSignInMethod = createStore<SignInMethod | null>(
+  readLastSignInMethod(),
+)
+  .on(loginEthFx.done, () => 'wallet')
+  .on(loginGoogleFx.done, () => 'google')
 
 export const $user = createStore<baseApi.User | null>(null)
   .on(fetchStatusFx.doneData, (_, user) => user)

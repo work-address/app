@@ -753,6 +753,7 @@
   "connectedWallet.disconnect.success": "Wallet disconnected",
   "invoice.fields.payTo": "Pay to",
   "signIn.google.lead": "The quickest way in. Nothing to install.",
+  "signIn.lastUsed": "Last used",
   "signIn.wallet.title": "Sign in with a browser wallet",
   "signIn.wallet.lead": "No wallet app needed. Your key stays encrypted in this browser, behind a password.",
   "signIn.errors.googleEmailTaken": "This email is already used by another account, so it can’t sign in here.",

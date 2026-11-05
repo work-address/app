@@ -14,10 +14,15 @@ import {
   LOCAL_STORAGE_ACCESS_TOKEN,
   saveTokensFx,
   writeAuthenticatedToLsFx,
+  writeLastSignInMethodFx,
 } from './profile.effects'
-import { initAuth, logout, setInitialized } from './profile.events'
+import { initAuth, logout, setInitialized, signOut } from './profile.events'
 import { saveProfileMutation } from './profile.mutations'
-import { $authenticated, $initialized } from './profile.stores'
+import {
+  $authenticated,
+  $initialized,
+  $lastSignInMethod,
+} from './profile.stores'
 
 import { suppressGlobalErrorToast } from '@/shared'
 
@@ -44,6 +49,17 @@ sample({
 sample({
   clock: saveTokensFx.done,
   target: fetchStatusFx,
+})
+
+sample({
+  clock: $lastSignInMethod,
+  filter: Boolean,
+  target: writeLastSignInMethodFx,
+})
+
+sample({
+  clock: signOut,
+  target: logout,
 })
 
 /**
@@ -95,9 +111,16 @@ loginGoogleFx.failData.watch(suppressGlobalErrorToast)
 // eslint-disable-next-line
 ;(window as any)['logout'] = logout
 
-export { initAuth, logout } from './profile.events'
+export { initAuth, logout, signOut } from './profile.events'
 export { clearTokensFx, fetchStatusFx, saveTokensFx } from './profile.effects'
-export { $authenticated, $initialized, $pending, $user } from './profile.stores'
+export {
+  $authenticated,
+  $initialized,
+  $lastSignInMethod,
+  $pending,
+  $signedOutOnPurpose,
+  $user,
+} from './profile.stores'
 export { saveProfileMutation } from './profile.mutations'
 // `loginEthFx` is the tail of the browser wallet's sign-in: that feature signs
 // the nonce itself and hands the signature here, so it gets the same token

@@ -750,6 +750,7 @@
   "connectedWallet.disconnect.success": "ウォレットの接続を解除しました",
   "invoice.fields.payTo": "支払い先",
   "signIn.google.lead": "いちばん手早い方法です。インストールは不要です。",
+  "signIn.lastUsed": "前回使用",
   "signIn.wallet.title": "ブラウザウォレットでサインイン",
   "signIn.wallet.lead": "ウォレットアプリは不要です。鍵はパスワードで暗号化され、このブラウザに保管されます。",
   "signIn.errors.googleEmailTaken": "このメールアドレスは別のアカウントで使用されているため、ここではサインインできません。",

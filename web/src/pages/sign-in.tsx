@@ -2,13 +2,14 @@ import { QuestionMarkCircledIcon } from '@radix-ui/react-icons'
 import { useUnit } from 'effector-react'
 import { useCallback, useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
-import { Link, Navigate, useSearchParams } from 'react-router-dom'
+import { Link, Navigate, useLocation, useSearchParams } from 'react-router-dom'
 import styled from 'styled-components'
 
 import {
   $authMethodsState,
   $authenticated,
   $googleClientId,
+  $lastSignInMethod,
   fetchAuthMethodsFx,
   loginGoogleFx,
 } from '@/entities/profile'
@@ -21,7 +22,7 @@ import {
   LOCAL_WALLET_STEP_TITLE_KEY,
   useLocalWalletFlow,
 } from '@/features/local-wallet'
-import { routes } from '@/routes'
+import { returnPathFrom, routes } from '@/routes'
 import { Button, LogoLabel, PageHelmet, StateNotice } from '@/shared'
 
 /**
@@ -36,17 +37,20 @@ export default function SignInPage() {
     authenticated,
     googleClientId,
     methodsState,
+    lastMethod,
     googleSigningIn,
     fetchMethods,
   } = useUnit({
     authenticated: $authenticated,
     googleClientId: $googleClientId,
     methodsState: $authMethodsState,
+    lastMethod: $lastSignInMethod,
     googleSigningIn: loginGoogleFx.pending,
     fetchMethods: fetchAuthMethodsFx,
   })
   const flow = useLocalWalletFlow()
   const version = import.meta.env.VITE_GIT_COMMIT_SUFFIX
+  const location = useLocation()
   const [searchParams] = useSearchParams()
   const nonce = searchParams.get('nonce')
 
@@ -61,13 +65,21 @@ export default function SignInPage() {
   }
 
   if (authenticated) {
-    return <Navigate to={routes.dashboard.build()} />
+    return (
+      <Navigate
+        to={returnPathFrom(location.state) ?? routes.dashboard.build()}
+        replace
+      />
+    )
   }
 
   const failed = methodsState === 'failed'
   const landing = flow.step === 'choose' || flow.step === 'unlock'
   const googleOffered =
     methodsState === 'loading' || (methodsState === 'ready' && !!googleClientId)
+  // Only worth saying when there is a choice. A forgotten wallet can't be used
+  // again, so it isn't marked over the offer to make a new one.
+  const hasChoice = methodsState === 'ready' && !!googleClientId
 
   return (
     <>
@@ -120,7 +132,10 @@ export default function SignInPage() {
                       data-held={flow.busy || undefined}
                       inert={flow.busy}
                     >
-                      <AuthGooglePanel clientId={googleClientId} />
+                      <AuthGooglePanel
+                        clientId={googleClientId}
+                        lastUsed={hasChoice && lastMethod === 'google'}
+                      />
                     </Option>
                     <Or aria-hidden="true">
                       <span>{t('signIn.local.or')}</span>
@@ -131,7 +146,12 @@ export default function SignInPage() {
                   data-held={googleSigningIn || undefined}
                   inert={googleSigningIn}
                 >
-                  <AuthWalletPanel flow={flow} />
+                  <AuthWalletPanel
+                    flow={flow}
+                    lastUsed={
+                      hasChoice && lastMethod === 'wallet' && !!flow.wallet
+                    }
+                  />
                 </Option>
               </>
             )}

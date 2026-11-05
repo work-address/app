@@ -2,19 +2,22 @@ import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
+import { AuthLastUsed } from './auth-last-used'
+
 import { LocalWalletSteps, type LocalWalletFlow } from '@/features/local-wallet'
 import { useBreakpoint } from '@/shared'
 
 type Props = {
   /** Owned by the page, which shows less around the wallet's later steps. */
   flow: LocalWalletFlow
+  lastUsed?: boolean
 }
 
 /**
  * The browser wallet run in place. The two steps a visitor lands on introduce
  * it; the page's heading names the rest.
  */
-export const AuthWalletPanel = ({ flow }: Props) => {
+export const AuthWalletPanel = ({ flow, lastUsed }: Props) => {
   const { t } = useTranslation()
   const isDesktop = useBreakpoint('isDesktop')
   const { step } = flow
@@ -40,7 +43,10 @@ export const AuthWalletPanel = ({ flow }: Props) => {
     <Root>
       {landing && (
         <Header>
-          <Title>{t('signIn.wallet.title')}</Title>
+          <TitleRow>
+            <Title>{t('signIn.wallet.title')}</Title>
+            {lastUsed && <AuthLastUsed />}
+          </TitleRow>
           {step === 'choose' && <Lead>{t('signIn.wallet.lead')}</Lead>}
         </Header>
       )}
@@ -57,6 +63,13 @@ const Root = styled.div`
 const Header = styled.header`
   display: grid;
   gap: var(--space-1);
+`
+
+const TitleRow = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-2);
 `
 
 const Title = styled.h2`

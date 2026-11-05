@@ -4,19 +4,21 @@ import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { AuthGoogleButton } from './auth-google-button'
+import { AuthLastUsed } from './auth-last-used'
 
 import { $googleScriptState, $googleSignInError } from '@/entities/profile'
 
 type Props = {
   /** Unknown until the deployment has said whether it offers Google. */
   clientId: string | null
+  lastUsed?: boolean
 }
 
 /**
  * The sign-in screen's Google option. Holds its place while the deployment
  * answers, so the form doesn't draw wallet-only and then jump down.
  */
-export const AuthGooglePanel = ({ clientId }: Props) => {
+export const AuthGooglePanel = ({ clientId, lastUsed }: Props) => {
   const { t } = useTranslation()
   const { scriptState, error } = useUnit({
     scriptState: $googleScriptState,
@@ -37,7 +39,12 @@ export const AuthGooglePanel = ({ clientId }: Props) => {
   return (
     <Root>
       <AuthGoogleButton clientId={clientId} />
-      {working && <Lead>{t('signIn.google.lead')}</Lead>}
+      {working && (
+        <Note>
+          {lastUsed && <AuthLastUsed />}
+          <Lead>{t('signIn.google.lead')}</Lead>
+        </Note>
+      )}
     </Root>
   )
 }
@@ -45,6 +52,14 @@ export const AuthGooglePanel = ({ clientId }: Props) => {
 const Root = styled.div`
   display: grid;
   justify-items: center;
+  gap: var(--space-2);
+`
+
+const Note = styled.div`
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: center;
   gap: var(--space-2);
 `
 

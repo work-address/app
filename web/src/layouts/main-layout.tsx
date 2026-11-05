@@ -1,20 +1,28 @@
 import { useUnit } from 'effector-react'
-import { Navigate } from 'react-router-dom'
+import { Navigate, useLocation } from 'react-router-dom'
 
 import { PublicLayout } from './public-layout'
 
-import { $authenticated } from '@/entities/profile'
-import { routes } from '@/routes'
+import { $authenticated, $signedOutOnPurpose } from '@/entities/profile'
+import { returnState, routes } from '@/routes'
 
 export { PublicLayout } from './public-layout'
 
 export const MainLayout = () => {
-  const { authenticated } = useUnit({
+  const location = useLocation()
+  const { authenticated, signedOutOnPurpose } = useUnit({
     authenticated: $authenticated,
+    signedOutOnPurpose: $signedOutOnPurpose,
   })
 
   if (!authenticated) {
-    return <Navigate to={routes.signIn.build()} />
+    return (
+      <Navigate
+        to={routes.signIn.build()}
+        state={signedOutOnPurpose ? undefined : returnState(location)}
+        replace
+      />
+    )
   }
 
   return <PublicLayout />

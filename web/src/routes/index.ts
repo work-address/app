@@ -199,4 +199,6 @@ export const openDocs = () => {
 
 export type { MainRoutes }
 
+export { returnPathFrom, returnState } from './return-path'
+
 export { type MappingRoute } from './types'
