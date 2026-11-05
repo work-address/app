@@ -2,7 +2,7 @@ import styled from 'styled-components'
 
 import type { ReactNode } from 'react'
 
-import { Card, SectionTitle } from '@/shared'
+import { PageSection, SectionTitle } from '@/shared'
 
 type Props = {
   title: ReactNode
@@ -13,7 +13,7 @@ type Props = {
   children: ReactNode
 }
 
-/** A titled band over its content, one card with one edge. */
+/** A titled band over its content, a hairline parting it from the one above. */
 export const InvoiceSection = ({ title, titleId, meta, children }: Props) => (
   <Root>
     <Header>
@@ -24,18 +24,13 @@ export const InvoiceSection = ({ title, titleId, meta, children }: Props) => (
   </Root>
 )
 
-/* On a phone the card is the page, as the profile's and the edit form's are. */
-const Root = styled(Card)`
+/* Paper spaces its sections from the page's body instead, with no rule. */
+const Root = styled(PageSection)`
   min-width: 0;
-  padding: 0;
-  border: 1px solid var(--ds-neutral-alpha-6);
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    border: 0;
-  }
 
   @media print {
-    border: 0;
+    padding-block: 0;
+    border-top: 0;
   }
 `
 
@@ -45,14 +40,14 @@ const Header = styled.header`
   justify-content: start;
   align-items: baseline;
   gap: var(--space-3);
-  padding: var(--space-4) var(--space-5);
-  border-bottom: 1px solid var(--ds-neutral-alpha-6);
+  padding: 0 0 var(--space-3);
 
-  ${(p) => p.theme.breakpoints.down('md')} {
-    padding: 0 0 var(--space-3);
-  }
-
+  /* The table's own header rule is the line under this. */
   @media print {
-    padding: 0 0 var(--space-2);
+    --font-size-4: 14px;
+    --font-size-6: 14px;
+
+    padding: 0 0 var(--space-1);
+    break-after: avoid;
   }
 `

@@ -342,6 +342,10 @@ const Root = styled.div`
     sans-serif;
   font-size: 13px;
   color: #0f172a;
+
+  @media print {
+    display: none;
+  }
 `
 
 const Pill = styled.button`

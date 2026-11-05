@@ -130,11 +130,14 @@ const REVEAL_STILL = {
   item: { hidden: { opacity: 1 }, shown: { opacity: 1 } },
 }
 
+/* The side margins are the page's own padding (see Root below), not @page's: a
+   print dialog left on "Margins: None" drops @page's and runs the invoice into
+   the paper's edge. */
 const InvoicePrintGlobalStyle = createGlobalStyle`
   @media print {
     @page {
       size: A4;
-      margin: 12mm 12mm;
+      margin: 12mm 0;
     }
 
     html,
@@ -145,7 +148,6 @@ const InvoicePrintGlobalStyle = createGlobalStyle`
       background: var(--white);
     }
 
-    header,
     ol[data-sonner-toaster] {
       display: none;
     }
@@ -154,17 +156,40 @@ const InvoicePrintGlobalStyle = createGlobalStyle`
 
 const Root = styled(Wrapper)`
   @media print {
-    max-width: none;
-    margin: 0;
-    padding: 0;
-    border-radius: 0;
+    /* Paper reads closer than a screen, so the type comes down a step for all
+       of the invoice at once. Everything set in these sizes follows. */
+    --font-size-1: 10px;
+    --line-height-1: 14px;
+    --font-size-2: 11px;
+    --line-height-2: 15px;
+    --font-size-3: 12px;
+    --line-height-3: 16px;
+
+    /* Inherited, so the state badge and the rejection notice keep their colour
+       with the dialog's "Background graphics" off. */
+    print-color-adjust: exact;
+
+    && {
+      max-width: none;
+      margin: 0;
+      padding: 0 12mm;
+      border-radius: 0;
+    }
   }
 `
 
 const Body = styled(motion.div)`
   display: grid;
-  gap: var(--space-5);
   min-width: 0;
+
+  /* Blocks, not a grid: only blocks break across pages in every browser. */
+  @media print {
+    display: block;
+
+    > * + * {
+      margin-top: var(--space-5);
+    }
+  }
 `
 
 const Worklogs = styled(motion.div)`

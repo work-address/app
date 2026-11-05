@@ -82,7 +82,10 @@ const Root = styled.div`
   overflow: hidden;
   background: var(--sidebar-bg);
 
+  /* Blocks all the way down: a page break inside a flex column is up to the
+     browser, and some cut the page there rather than carry it over. */
   @media print {
+    display: block;
     height: auto;
     overflow: visible;
   }
@@ -110,6 +113,7 @@ const Main = styled.main`
   }
 
   @media print {
+    display: block;
     overflow: visible;
     box-shadow: none;
   }
@@ -146,4 +150,8 @@ const Content = styled.div`
      container the way overflow: hidden would. */
   overflow-x: clip;
   border-radius: inherit;
+
+  @media print {
+    overflow: visible;
+  }
 `

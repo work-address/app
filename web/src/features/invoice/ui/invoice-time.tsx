@@ -342,12 +342,11 @@ const CreatedAtCell = memo(
   },
 )
 
-/* One line on screen; a printed column is narrow, and a date broken in the
-   middle of its digits is unreadable, so paper moves it below the time whole. */
+/* One line on paper too: the column is sized for it, and two lines a row would
+   double the pages. */
 const EntryWhen = styled(Flex)`
   @media print {
-    flex-wrap: wrap;
-    row-gap: 0;
+    white-space: nowrap;
   }
 `
 
@@ -376,7 +375,7 @@ const NoteText = styled(Text)`
 
 // Print column widths, in the same order as `tableConfig` above:
 // date | note | time | keyboard | mouse | distance
-const PRINT_COLUMN_WIDTHS = ['20%', '28%', '15%', '12%', '12%', '12%']
+const PRINT_COLUMN_WIDTHS = ['28%', '34%', '10%', '9%', '7%', '12%']
 
 const printColumnWidths = css`
   ${PRINT_COLUMN_WIDTHS.map(
@@ -408,33 +407,51 @@ const InvoiceTimeTable = styled(DataTable<InvoiceTimeRow>)`
     background-color: var(--white) !important;
   }
 
-  /* The outer cells keep to the card's inset, level with the title above. */
+  /* The outer cells reach the page's edge, level with the title above. The
+     sort buttons drop their inset too, or every label would sit right of the
+     values in its column. */
   @media screen {
     && th:first-child,
     && td:first-child {
-      padding-left: var(--space-5);
+      padding-left: 0;
     }
 
     && th:last-child,
     && td:last-child {
-      padding-right: var(--space-5);
+      padding-right: 0;
+    }
+
+    && th button {
+      padding-inline: 0;
     }
   }
 
   @media print {
-    overflow: visible;
-    max-height: none;
-    height: auto;
-    box-shadow: none;
-    break-inside: auto;
-
     /* DataTable's base rules (fixed sticky headers/cells, nowrap, flex-based
        scroll container) target screen rendering; double the class here to win
-       over them and lay the table out for paper instead. */
+       over them and lay the table out for paper instead. A scroll container
+       clips the last column and stops the header repeating on each page. */
+    && {
+      display: block;
+      overflow: visible;
+      max-height: none;
+      height: auto;
+      box-shadow: none;
+      border-radius: 0;
+    }
+
+    &&::after {
+      display: none;
+    }
+
+    && > div {
+      display: block;
+      overflow: visible;
+    }
+
     && table {
       table-layout: fixed;
       width: 100%;
-      font-size: 11px;
       white-space: normal;
     }
 
@@ -442,28 +459,63 @@ const InvoiceTimeTable = styled(DataTable<InvoiceTimeRow>)`
     && td {
       position: static;
       min-width: 0;
-      padding: 6px 8px;
-      white-space: normal;
-      word-break: break-word;
-      line-height: 1.3;
-      break-inside: avoid;
-      page-break-inside: avoid;
+      padding: var(--space-1) var(--space-2);
+      overflow-wrap: anywhere;
+      vertical-align: top;
+      border-bottom: 1px solid var(--ds-neutral-alpha-3);
+    }
+
+    && th {
+      white-space: nowrap;
+      border-bottom-color: var(--ds-neutral-alpha-8);
+    }
+
+    && th:first-child,
+    && td:first-child {
+      padding-left: 0;
+    }
+
+    && th:last-child,
+    && td:last-child {
+      padding-right: 0;
     }
 
     ${printColumnWidths}
 
+    /* The figures line up on the right, as they do in the bill above. */
+    && th:nth-child(n + 3) > div,
+    && td:nth-child(n + 3) > div {
+      justify-content: flex-end;
+    }
+
+    /* A sort control does nothing on paper, so only its label prints. Chromium
+       leaves a button blank in the header it repeats on later pages, and the
+       button's padding would put the label out of line with its column. */
+    && th button {
+      display: contents;
+      font: inherit;
+    }
+
+    && th svg {
+      display: none;
+    }
+
+    /* A coloured pill per row is seventy-eight spots on the page. */
+    && td .rt-Badge {
+      padding: 0;
+      background: none;
+      color: inherit;
+      font-size: var(--font-size-2);
+      line-height: var(--line-height-2);
+      font-weight: inherit;
+    }
+
     && tr {
       break-inside: avoid;
-      page-break-inside: avoid;
     }
 
     && thead {
       display: table-header-group;
-    }
-
-    && * {
-      -webkit-print-color-adjust: exact;
-      print-color-adjust: exact;
     }
   }
 `

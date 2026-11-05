@@ -16,10 +16,10 @@ import { $invoice, $invoiceLoading, getInvoicePageUrl } from '../model'
 import { InvoiceActions } from './invoice-actions'
 
 import {
-  Card,
   formatCurrency,
   Hint,
   IconButton,
+  LogoWordmark,
   PageHeader,
   StatStrip,
   StatTile,
@@ -74,6 +74,14 @@ export const InvoiceOverview = ({ onBack }: Props) => {
 
   return (
     <Root>
+      {/* On paper nothing else says what this is or whose: the app around it,
+          with its name in the sidebar, did not print. */}
+      <Masthead>
+        <img src={LogoWordmark} alt={t('header.logoAlt')} />
+        <Text size="3" color="gray">
+          {t('app.documentTitle.invoice')}
+        </Text>
+      </Masthead>
       <Band>
         <PageHeader
           leading={
@@ -186,36 +194,51 @@ export const InvoiceOverview = ({ onBack }: Props) => {
   )
 }
 
-/* One card with one edge, its bands parted by hairlines. They lay out by the
-   card's own width, not the viewport's: with the sidebar open a small desktop
-   has less room than a phone-width rule would ever notice. On a phone the card
-   is the page, as the profile's is. */
-const Root = styled(Card)`
+/* Bands parted by hairlines. They lay out by the page's own width, not the
+   viewport's: with the sidebar open a small desktop has less room than a
+   phone-width rule would ever notice. */
+const Root = styled.section`
   container-type: inline-size;
   display: grid;
   min-width: 0;
-  padding: 0;
-  border: 1px solid var(--ds-neutral-alpha-6);
 
-  ${(p) => p.theme.breakpoints.down('md')} {
-    border: 0;
+  /* Blocks, and no container: the rules below that go by the page's width are
+     for the screen's sidebar, and paper always lays out the one way. */
+  @media print {
+    container-type: normal;
+    display: block;
   }
+`
+
+const Masthead = styled.div`
+  display: none;
 
   @media print {
-    border: 0;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding-bottom: var(--space-4);
+
+    img {
+      display: block;
+      height: 20px;
+    }
   }
 `
 
 const Band = styled.div`
   min-width: 0;
-  padding: var(--space-4) var(--space-5);
+  padding: 0 0 var(--space-4);
 
   ${(p) => p.theme.breakpoints.down('md')} {
     padding: 0 0 var(--space-3);
   }
 
   @media print {
-    padding: 0 0 var(--space-2);
+    --font-size-5: 22px;
+    --font-size-7: 22px;
+
+    padding: 0 0 var(--space-3);
   }
 `
 
@@ -232,45 +255,41 @@ const Stats = styled(StatStrip)`
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
+
+  @media print {
+    --font-size-5: 16px;
+    --font-size-6: 16px;
+
+    && {
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+    }
+  }
 `
 
-/* A column of the band rather than a box inside it: a border inside the card's
-   edge would be a second card. */
+/* A column of the band rather than a box inside it, starting on the column's
+   own left edge so the first figure sits level with the title. */
 const Tile = styled(StatTile)`
   && {
     border: 0;
     border-radius: 0;
     background: none;
-    padding: var(--space-3) var(--space-5);
-  }
-
-  & + & {
-    border-left: 1px solid var(--ds-neutral-alpha-6);
-  }
-
-  @container (max-width: 720px) {
-    &&:nth-child(odd) {
-      border-left: 0;
-    }
-
-    &&:nth-child(n + 3) {
-      border-top: 1px solid var(--ds-neutral-alpha-6);
-    }
+    padding: var(--space-3) var(--space-5) var(--space-3) 0;
   }
 
   ${(p) => p.theme.breakpoints.down('md')} {
     && {
-      padding: var(--space-2) var(--space-3);
-    }
-
-    &&:nth-child(odd) {
-      padding-left: 0;
+      padding: var(--space-2) var(--space-3) var(--space-2) 0;
     }
   }
 
+  /* The first keeps to the paper's left edge, under the title. */
   @media print {
-    && {
+    &&& {
       padding: var(--space-2) var(--space-3);
+    }
+
+    &&&:first-child {
+      padding-left: 0;
     }
   }
 `
@@ -301,16 +320,17 @@ const TileLabel = styled.span`
   gap: var(--space-1);
 `
 
-/* The code beside the facts. */
+/* The code beside the facts; on paper it moves to the far side, so the facts
+   stay on the left edge every other line of the invoice starts from. */
 const Details = styled.div`
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
   gap: var(--space-3) var(--space-5);
-  padding: var(--space-4) var(--space-5);
+  padding: var(--space-4) 0 var(--space-5);
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    padding: var(--space-3) 0 0;
+    padding: var(--space-3) 0 var(--space-5);
   }
 
   @container (max-width: 480px) {
@@ -318,7 +338,9 @@ const Details = styled.div`
   }
 
   @media print {
-    padding: var(--space-2) 0 0;
+    grid-template-columns: minmax(0, 1fr) auto;
+    align-items: start;
+    padding: var(--space-3) 0 0;
   }
 `
 
@@ -336,6 +358,18 @@ const Qr = styled.div`
   @container (max-width: 480px) {
     order: 1;
   }
+
+  /* As wide as the code, so the caption wraps under it instead of pushing it
+     off the right edge. */
+  @media print {
+    order: 1;
+    width: 88px;
+
+    svg {
+      width: 88px;
+      height: 88px;
+    }
+  }
 `
 
 const Body = styled.div`
@@ -345,7 +379,7 @@ const Body = styled.div`
 `
 
 /* Columns filled down the first, so the values of each line up on one edge
-   however long the labels beside them are: three when the card is wide, two
+   however long the labels beside them are: three when the page is wide, two
    when it is not, and one when even that would squeeze them. */
 const Facts = styled.dl`
   display: grid;
@@ -365,6 +399,13 @@ const Facts = styled.dl`
     grid-template-rows: none;
     grid-auto-flow: row;
   }
+
+  @media print {
+    grid-template-columns: repeat(2, max-content minmax(0, 1fr));
+    grid-template-rows: repeat(3, auto);
+    grid-auto-flow: column;
+    gap: 0 var(--space-3);
+  }
 `
 
 const Fact = styled.div`
@@ -378,6 +419,10 @@ const Fact = styled.div`
   dd {
     margin: 0;
     min-width: 0;
+  }
+
+  @media print {
+    min-height: 22px;
   }
 `
 
@@ -396,6 +441,10 @@ const PayTo = styled(Text)`
   padding-top: var(--space-3);
   border-top: 1px solid var(--ds-neutral-alpha-6);
   overflow-wrap: anywhere;
+
+  @media print {
+    padding-top: var(--space-2);
+  }
 `
 
 /* Inline, so the address follows its label and wraps there rather than

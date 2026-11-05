@@ -114,6 +114,12 @@ const Root = styled.section`
   display: grid;
   gap: var(--space-4);
   min-width: 0;
+
+  /* The bill stays whole on one page, its heading with it. */
+  @media print {
+    display: block;
+    break-inside: avoid;
+  }
 `
 
 const Rejection = styled(Text)`
@@ -122,10 +128,19 @@ const Rejection = styled(Text)`
   background: var(--red-a3);
   color: var(--red-11);
   overflow-wrap: anywhere;
+
+  @media print {
+    display: block;
+    margin-bottom: var(--space-3);
+  }
 `
 
 const TableWrap = styled.div`
   overflow-x: auto;
+
+  @media print {
+    overflow: visible;
+  }
 `
 
 /* Set like DataTable: a medium, dark header over hairline rows. */
@@ -165,16 +180,16 @@ const Table = styled.table`
     border-bottom: 0;
   }
 
-  /* The outer cells keep to the card's inset, level with the title above. */
+  /* The outer cells reach the page's edge, level with the title above. */
   @media screen {
     th:first-child,
     td:first-child {
-      padding-left: var(--space-5);
+      padding-left: 0;
     }
 
     th:last-child,
     td:last-child {
-      padding-right: var(--space-5);
+      padding-right: 0;
     }
   }
 
@@ -187,6 +202,11 @@ const Table = styled.table`
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
         border-bottom: 1px solid var(--ds-neutral-alpha-6);
+      }
+
+      /* The next section's rule closes the table. */
+      tbody tr:last-child {
+        border-bottom: 0;
       }
 
       && th,
@@ -208,6 +228,30 @@ const Table = styled.table`
       td:nth-child(2) {
         text-align: left;
       }
+    }
+  }
+
+  /* Set like the worklogs under it, flush with the headings on the left and
+     the paper's margin on the right. */
+  @media print {
+    th,
+    td {
+      padding: var(--space-1) var(--space-2);
+      border-bottom: 1px solid var(--ds-neutral-alpha-3);
+    }
+
+    th {
+      border-bottom: 1px solid var(--ds-neutral-alpha-8);
+    }
+
+    th:first-child,
+    td:first-child {
+      padding-left: 0;
+    }
+
+    th:last-child,
+    td:last-child {
+      padding-right: 0;
     }
   }
 `
