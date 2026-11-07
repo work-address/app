@@ -66,6 +66,19 @@ const Root = styled.div`
   ${(p) => p.theme.breakpoints.down('sm')} {
     padding-inline: var(--ui-space-3);
   }
+
+  /* Stacked on a phone, metrics part with a rule above, not a divider
+     beside. */
+  ${(p) => p.theme.breakpoints.down('md')} {
+    dl[data-columns] > & {
+      border-inline-start: 0;
+    }
+
+    dl[data-columns] > & + & {
+      padding-top: var(--ui-section-gap);
+      border-top: var(--ui-border-width) solid var(--ui-line);
+    }
+  }
 `
 
 const Label = styled.dt`

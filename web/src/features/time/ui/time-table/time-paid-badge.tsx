@@ -7,7 +7,7 @@ import { TimeContext } from '../time-context'
 import type { Time } from '@/entities/time'
 
 import { setTimePaidStatusMutation } from '@/entities/time'
-import { Tooltip } from '@/shared'
+import { Tooltip, WorkspaceStatus } from '@/shared'
 
 type Props = {
   entry: Time
@@ -37,9 +37,8 @@ export const TimePaidBadge = ({ entry }: Props) => {
     <Tooltip content={t('common.metricDesc.paymentStatus')}>
       <Root
         type="button"
-        // Gray rather than red: unpaid is the ordinary state of freshly
-        // tracked time, not a fault to flag.
-        data-paid={entry.isPaid || undefined}
+        // Unpaid is the ordinary state of fresh time, so it reads as
+        // "waiting" rather than as a fault.
         aria-busy={status === 'pending' || undefined}
         onClick={(event) => {
           event.stopPropagation()
@@ -51,37 +50,23 @@ export const TimePaidBadge = ({ entry }: Props) => {
           setPaidStatus({ ids: [entry.id], isPaid: !entry.isPaid })
         }}
       >
-        {label}
+        <WorkspaceStatus tone={entry.isPaid ? 'positive' : 'attention'}>
+          {label}
+        </WorkspaceStatus>
       </Root>
     </Tooltip>
   )
 }
 
+/* The pill is the button: no chrome of its own beyond the status. */
 const Root = styled.button`
-  --paid-color: var(--ui-muted);
-  --paid-background: var(--ui-inset);
-
   display: inline-grid;
-  align-items: center;
   /* Above a stretched row trigger, where one sits behind it. */
   position: relative;
   z-index: var(--ui-layer-foreground);
-  min-height: var(--ui-space-6);
-  padding-inline: var(--ui-space-3);
   border-radius: var(--ui-pill-radius);
-  background: var(--paid-background);
-  color: var(--paid-color);
-  font-size: var(--ui-meta-size);
-  line-height: var(--ui-meta-line-height);
-  font-weight: var(--ui-weight-medium);
-  white-space: nowrap;
   cursor: pointer;
   transition: filter var(--ui-transition);
-
-  &[data-paid] {
-    --paid-color: var(--green-11);
-    --paid-background: var(--green-a3);
-  }
 
   &:hover {
     filter: brightness(0.96);

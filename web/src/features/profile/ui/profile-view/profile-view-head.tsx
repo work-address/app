@@ -20,12 +20,12 @@ import {
   Button,
   formatAddress,
   formatCurrency,
+  getCountryLabel,
   IconButton,
-  PageTitle,
   PremiumBadge,
-  Text,
   Tooltip,
   useBreakpoint,
+  WorkspacePageHeader,
 } from '@/shared'
 
 type Props = {
@@ -33,12 +33,15 @@ type Props = {
   onShareProfile: () => void
 }
 
-/** Who this is, what they charge, and what can be done with the profile. */
+/**
+ * The page heading with what can be done with the profile, then who this is
+ * and what they charge, on one white sheet.
+ */
 export const ProfileViewHead = ({
   onWalletAddressCopy,
   onShareProfile,
 }: Props) => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
   const isMobile = useBreakpoint('isMobile')
   const navigate = useNavigate()
 
@@ -56,63 +59,23 @@ export const ProfileViewHead = ({
   // profile reads as a broken page.
   const hasRate = Number(user?.rate ?? 0) > 0
   const hasQrCode = Boolean(user?.payWallet) || loading
+  const location = [
+    user?.city,
+    getCountryLabel(user?.country, i18n.resolvedLanguage ?? i18n.language),
+  ]
+    .filter(Boolean)
+    .join(', ')
+  const facts = [location, user?.company].filter(Boolean).join(' · ')
 
   const copyLabel = t('profile.view.copyAddressHint')
 
   return (
-    <ProfileViewSection surface={false}>
-      <Root data-qr={hasQrCode || undefined}>
-        {hasQrCode && <QrCode />}
-        <Identity>
-          {loading ? (
-            <Skeleton width="220px" height="35px" />
-          ) : (
-            <TitleRow>
-              {/* With no name the address is what names the profile, and it
-                  is then only said once, here. */}
-              <PageTitle>{name || shortAddress}</PageTitle>
-              {!name && shortAddress && (
-                <Tooltip content={copyLabel}>
-                  <IconButton
-                    variant="ghost"
-                    radius="full"
-                    color="gray"
-                    aria-label={copyLabel}
-                    onClick={onWalletAddressCopy}
-                  >
-                    <CopyIcon />
-                  </IconButton>
-                </Tooltip>
-              )}
-              {isPremium && <PremiumBadge />}
-            </TitleRow>
-          )}
-          {jobTitle && (
-            <Text color="gray" size={{ initial: '2', md: '3' }}>
-              {jobTitle}
-            </Text>
-          )}
-          {loading ? (
-            <Skeleton width="150px" height="20px" />
-          ) : (
-            name &&
-            shortAddress && (
-              <Tooltip content={copyLabel}>
-                <AddressButton
-                  type="button"
-                  aria-label={copyLabel}
-                  onClick={onWalletAddressCopy}
-                >
-                  <Text $themeVariant="primary" size="2" weight="medium">
-                    {shortAddress}
-                  </Text>
-                  <CopyIcon />
-                </AddressButton>
-              </Tooltip>
-            )
-          )}
-        </Identity>
-        <Side>
+    <>
+      <WorkspacePageHeader
+        eyebrow={isOwn ? t('profile.page.eyebrow') : undefined}
+        title={t('header.nav.profile')}
+        description={isOwn ? t('profile.page.description') : undefined}
+        actions={
           <Actions>
             {isOwn && (
               <LocalWalletRevealButton
@@ -124,14 +87,15 @@ export const ProfileViewHead = ({
               variant="outline"
               color="neutral"
               stretch={isMobile}
+              iconLeft={<Share1Icon />}
               onClick={onShareProfile}
             >
               {t('common.share')}
-              <Share1Icon />
             </Button>
             {isOwn && (
               <Button
                 stretch={isMobile}
+                iconLeft={<Pencil1Icon />}
                 onClick={() =>
                   navigate(
                     routes.profile.children.edit.build({ id: user?.id ?? '' }),
@@ -140,67 +104,119 @@ export const ProfileViewHead = ({
                 }
               >
                 {t('common.edit')}
-                <Pencil1Icon />
               </Button>
             )}
           </Actions>
-          {hasRate || loading ? (
-            <Rate>
-              <Skeleton loading={loading}>
-                <Text
-                  $themeVariant="primary"
-                  size={{ initial: '5', md: '6' }}
-                  weight="medium"
-                >
-                  {formatCurrency(user?.rate)}
-                </Text>
-              </Skeleton>
-              <Text $themeVariant="primary" size="2">
-                {t('profile.view.usdtUnit')}
-              </Text>
-            </Rate>
-          ) : (
-            <Text color="gray" size="2">
-              {t('profile.view.rateUnset')}
-            </Text>
-          )}
-        </Side>
-      </Root>
-    </ProfileViewSection>
+        }
+      />
+      <ProfileViewSection>
+        <Root data-qr={hasQrCode || undefined}>
+          {hasQrCode && <QrCode />}
+          <Identity>
+            {loading ? (
+              <Skeleton width="220px" height="32px" />
+            ) : (
+              <NameRow>
+                {/* With no name the address is what names the profile, and
+                    it is then only said once, here. */}
+                <Name>{name || shortAddress}</Name>
+                {!name && shortAddress && (
+                  <Tooltip content={copyLabel}>
+                    <IconButton
+                      variant="ghost"
+                      radius="full"
+                      color="gray"
+                      aria-label={copyLabel}
+                      onClick={onWalletAddressCopy}
+                    >
+                      <CopyIcon />
+                    </IconButton>
+                  </Tooltip>
+                )}
+                {isPremium && <PremiumBadge />}
+              </NameRow>
+            )}
+            {jobTitle && <JobTitle>{jobTitle}</JobTitle>}
+            {facts && <Facts>{facts}</Facts>}
+            {loading ? (
+              <Skeleton width="150px" height="20px" />
+            ) : (
+              name &&
+              shortAddress && (
+                <Tooltip content={copyLabel}>
+                  <AddressButton
+                    type="button"
+                    aria-label={copyLabel}
+                    onClick={onWalletAddressCopy}
+                  >
+                    {shortAddress}
+                    <CopyIcon aria-hidden />
+                  </AddressButton>
+                </Tooltip>
+              )
+            )}
+          </Identity>
+          <Rate>
+            {hasRate || loading ? (
+              <>
+                <Skeleton loading={loading}>
+                  <RateValue>{formatCurrency(user?.rate)}</RateValue>
+                </Skeleton>
+                <RateUnit>{t('profile.view.usdtUnit')}</RateUnit>
+              </>
+            ) : (
+              <RateUnit>{t('profile.view.rateUnset')}</RateUnit>
+            )}
+          </Rate>
+        </Root>
+      </ProfileViewSection>
+    </>
   )
 }
 
-const QrCode = styled(ProfileViewQrCode)`
-  grid-area: qr;
+const Actions = styled.div`
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: end;
+  gap: var(--ui-space-3);
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    grid-auto-columns: minmax(0, 1fr);
+    justify-content: stretch;
+  }
 `
 
 const Root = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
-  grid-template-areas: 'identity side';
+  grid-template-areas: 'identity rate';
   align-items: center;
-  gap: var(--ui-space-4) var(--ui-space-5);
+  gap: var(--ui-space-4) var(--ui-section-gap);
 
   &[data-qr] {
     grid-template-columns: auto minmax(0, 1fr) auto;
-    grid-template-areas: 'qr identity side';
+    grid-template-areas: 'qr identity rate';
   }
 
-  /* The QR code keeps beside the name when narrow, where it would otherwise
-     cost a screenful; the buttons and the rate get the full width below. */
+  /* Narrow: the code stays beside the name, the rate takes its own line. */
   @container (max-width: 720px) {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
       'identity'
-      'side';
+      'rate';
 
     &[data-qr] {
       grid-template-columns: minmax(0, 1fr) auto;
       grid-template-areas:
         'identity qr'
-        'side side';
+        'rate rate';
     }
   }
+`
+
+const QrCode = styled(ProfileViewQrCode)`
+  grid-area: qr;
 `
 
 const Identity = styled.div`
@@ -211,14 +227,40 @@ const Identity = styled.div`
   min-width: 0;
 `
 
-const TitleRow = styled.div`
+const NameRow = styled.div`
   display: grid;
   grid-auto-flow: column;
-  grid-auto-columns: auto;
   justify-content: start;
   align-items: center;
   gap: var(--ui-space-2);
   min-width: 0;
+`
+
+const Name = styled.h2`
+  margin: 0;
+  min-width: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-metric-min-size);
+  line-height: var(--ui-heading-line-height);
+  font-weight: var(--ui-title-weight);
+  letter-spacing: var(--ui-heading-tracking);
+  overflow-wrap: anywhere;
+`
+
+const JobTitle = styled.p`
+  margin: 0;
+  color: var(--ui-text);
+  font-size: var(--ui-body-size);
+  line-height: var(--ui-body-line-height);
+  overflow-wrap: anywhere;
+`
+
+const Facts = styled.p`
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+  overflow-wrap: anywhere;
 `
 
 /* A link in all but tag: a bare line of text with a copy icon, on the column's
@@ -228,51 +270,62 @@ const AddressButton = styled.button`
   grid-auto-flow: column;
   align-items: center;
   gap: var(--ui-space-1);
+  margin-top: var(--ui-space-1);
   padding: 0;
   border: 0;
-  background: none;
-  color: var(--ui-muted);
-  cursor: pointer;
   border-radius: var(--ui-inline-radius);
+  background: none;
+  color: var(--ui-blue);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+  font-weight: var(--ui-weight-medium);
+  cursor: pointer;
+
+  &:hover {
+    text-decoration: underline;
+  }
 
   &:focus-visible {
-    outline: 2px solid var(--ui-blue);
-    outline-offset: 2px;
+    outline: var(--ui-focus-width) solid var(--ui-blue);
+    outline-offset: var(--ui-focus-offset);
   }
 `
 
-const Side = styled.div`
-  grid-area: side;
+/* The rate, set off from the identity by a rule, as the sheet's headline
+   figure. */
+const Rate = styled.div`
+  grid-area: rate;
   display: grid;
   justify-items: end;
-  gap: var(--ui-space-2);
-  min-width: 0;
+  align-content: center;
+  gap: var(--ui-space-1);
+  padding-inline-start: var(--ui-section-gap);
+  border-inline-start: var(--ui-border-width) solid var(--ui-line);
 
   @container (max-width: 720px) {
     justify-items: start;
-    gap: var(--ui-space-3);
-  }
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    justify-items: stretch;
-  }
-`
-
-const Actions = styled.div`
-  display: grid;
-  grid-auto-flow: column;
-  align-items: center;
-  gap: var(--ui-space-2);
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    grid-auto-columns: minmax(0, 1fr);
+    padding-inline-start: 0;
+    padding-top: var(--ui-space-4);
+    border-inline-start: 0;
+    border-top: var(--ui-border-width) solid var(--ui-line);
   }
 `
 
-const Rate = styled.div`
-  display: grid;
-  grid-auto-flow: column;
-  justify-content: start;
-  align-items: baseline;
-  gap: var(--ui-space-1);
+const RateValue = styled.span`
+  color: var(--ui-ink);
+  font-size: var(--ui-metric-size);
+  line-height: var(--ui-metric-line-height);
+  font-weight: var(--ui-metric-weight);
+  letter-spacing: var(--ui-metric-tracking);
+  font-variant-numeric: tabular-nums;
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    font-size: var(--ui-metric-min-size);
+  }
+`
+
+const RateUnit = styled.span`
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
 `

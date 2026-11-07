@@ -25,18 +25,16 @@ import {
 } from '@/entities/time'
 import { type DataTableConfig, DataTable } from '@/shared'
 
-/* Column widths hold each header with its sort arrow and hint. The date
-   column stays put while a narrower window scrolls the figures beside it. */
+/* The session column takes what the fixed columns leave, so the list fits a
+   1280px window without scrolling sideways. Every other fact the old
+   per-metric columns showed sits in the activity column, and the sort picker
+   still sorts by each of them. */
 const COLUMN_WIDTHS = {
-  date: 196,
-  project: 176,
-  payment: 124,
   timeActive: 136,
-  note: 168,
-  screenshot: 128,
-  keyboard: 120,
-  mouse: 100,
-  mouseDistance: 156,
+  activity: 208,
+  screenshot: 120,
+  payment: 136,
+  open: 48,
 } as const
 
 /** The list presentation of the worklogs feed. */
@@ -95,23 +93,7 @@ export const TimeTable = () => {
     (): DataTableConfig<Time> => [
       {
         dataKey: 'fromAt',
-        headerText: t('dashboard.worklogsTable.head.date'),
-        width: COLUMN_WIDTHS.date,
-        sortable: true,
-        sticky: 'left',
-      },
-      {
-        customKey: 'projectName',
-        getValue: (row: Time) => row.project?.title ?? '',
-        headerText: t('dashboard.worklogsTable.head.projectName'),
-        width: COLUMN_WIDTHS.project,
-        sortable: true,
-      },
-      {
-        customKey: 'paidStatus',
-        headerText: t('dashboard.worklogsTable.head.paymentStatus'),
-        description: t('common.metricDesc.paymentStatus'),
-        width: COLUMN_WIDTHS.payment,
+        headerText: t('time.list.session'),
         sortable: true,
       },
       {
@@ -122,11 +104,9 @@ export const TimeTable = () => {
         sortable: true,
       },
       {
-        dataKey: 'note',
-        headerText: t('dashboard.worklogsTable.head.note'),
-        width: COLUMN_WIDTHS.note,
-        sortable: true,
-        truncate: true,
+        customKey: 'activity',
+        headerText: t('dashboard.worklogsTable.head.activeMetrics'),
+        width: COLUMN_WIDTHS.activity,
       },
       {
         dataKey: 'screenshot',
@@ -136,25 +116,18 @@ export const TimeTable = () => {
         sortable: true,
       },
       {
-        dataKey: 'keyboardKeys',
-        headerText: t('dashboard.worklogsTable.head.keyboard'),
-        description: t('common.metricDesc.keyboard'),
-        width: COLUMN_WIDTHS.keyboard,
+        customKey: 'paidStatus',
+        headerText: t('dashboard.worklogsTable.head.paymentStatus'),
+        description: t('common.metricDesc.paymentStatus'),
+        width: COLUMN_WIDTHS.payment,
         sortable: true,
       },
       {
-        dataKey: 'mouseKeys',
-        headerText: t('dashboard.worklogsTable.head.mouse'),
-        description: t('common.metricDesc.mouse'),
-        width: COLUMN_WIDTHS.mouse,
-        sortable: true,
-      },
-      {
-        dataKey: 'mouseDistance',
-        headerText: t('dashboard.worklogsTable.head.mouseDistance'),
-        description: t('common.metricDesc.mouseDistance'),
-        width: COLUMN_WIDTHS.mouseDistance,
-        sortable: true,
+        // The row opens the entry; the arrow only says so.
+        customKey: 'open',
+        headerText: '',
+        horizontalAlign: 'end',
+        width: COLUMN_WIDTHS.open,
       },
     ],
     [t],

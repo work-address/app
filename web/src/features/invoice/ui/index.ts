@@ -1,4 +1,8 @@
-export { InvoiceFilters, InvoiceMobileFilters } from './invoice-filters'
+export {
+  InvoiceFilters,
+  InvoiceMobileFilters,
+  InvoiceScopeFilters,
+} from './invoice-filters'
 export { InvoiceOverview } from './invoice-overview'
 export * from './invoice-time'
 export { InvoicesTable } from './invoices-table'

@@ -264,6 +264,19 @@ and a final odd metric spanning the row. Use `detail={false}` for the one-metric
 viewer summary. A new page with another metric count needs an intentional
 matching grid; do not copy a divider layout that assumes a different count.
 
+### Status
+
+Use `WorkspaceStatus` for a real state: a pill with its tone's icon
+(`positive` check, `attention` clock, `critical` cross, `neutral` none).
+Map the domain state to a tone in the feature (as `invoiceStateTone` does);
+a control that is both a status and an action, such as the Time payment
+toggle, wraps the pill in its own button.
+
+`WorkspaceFreshness` is the page's "Up to date" / "Updating…" pill. Feed it the
+page's own request state (pending, failed); it shows nothing after a failure
+and never claims that tracking or syncing succeeded. `WorkspaceSummary` takes
+`columns` for a strip of two to four metrics, which phones then stack.
+
 ### Lists and tables
 
 Use flat rows with pale separators. Put the name first and metadata directly

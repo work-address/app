@@ -1,4 +1,3 @@
-import { Badge, Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { memo, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -8,8 +7,8 @@ import styled from 'styled-components'
 import {
   canSettleInvoice,
   invoiceRateHour,
-  invoiceStateColor,
   invoiceStateLabelKey,
+  invoiceStateTone,
 } from '../lib'
 import {
   $invoiceSort,
@@ -28,14 +27,21 @@ import type {
 
 import { $user } from '@/entities/profile'
 import { routes } from '@/routes'
-import { DataTable, formatCurrency, Text, useDateFormatter } from '@/shared'
+import {
+  DataTable,
+  formatCurrency,
+  useDateFormatter,
+  WorkspaceStatus,
+} from '@/shared'
 
 type InvoiceRow = baseApi.InvoiceSearch
 
-const PROJECT_COLUMN_WIDTH = 200
-const ISSUER_COLUMN_WIDTH = 136
-/** What's left of a truncated column once the cell's own padding is out. */
-const CELL_INSET = 24
+const COLUMN_WIDTHS = {
+  period: 196,
+  status: 176,
+  amount: 148,
+  action: 136,
+} as const
 
 const rowIdGetter = (row: InvoiceRow) => row.id ?? ''
 
@@ -60,54 +66,40 @@ export const InvoicesTable = ({
     changeSort: invoiceSortChanged,
   })
 
+  // The project column takes what the others leave, so the list fits a 1280px
+  // window. The issuer and the issue date ride under the project and the
+  // period, as in the reference; the sort picker above still sorts by both.
   const config = useMemo(
     (): DataTableConfig<InvoiceRow> => [
       {
         customKey: 'projectName',
         headerText: t('invoices.item.project'),
-        width: PROJECT_COLUMN_WIDTH,
-        truncate: true,
-        sortable: true,
-        // The invoice's name stays in view while a narrow window scrolls.
-        sticky: 'left',
-      },
-      {
-        dataKey: 'state',
-        headerText: t('invoices.item.status'),
-        width: 150,
-        sortable: true,
-      },
-      {
-        customKey: 'issuedBy',
-        headerText: t('invoices.item.issuedBy'),
-        width: ISSUER_COLUMN_WIDTH,
-        truncate: true,
         sortable: true,
       },
       {
         dataKey: 'fromAt',
         headerText: t('invoices.item.period'),
-        width: 168,
+        width: COLUMN_WIDTHS.period,
         sortable: true,
       },
       {
-        dataKey: 'createdAt',
-        headerText: t('invoices.item.issued'),
-        width: 120,
+        dataKey: 'state',
+        headerText: t('invoices.item.status'),
+        width: COLUMN_WIDTHS.status,
         sortable: true,
       },
       {
         dataKey: 'amountCents',
         headerText: t('invoices.item.amount'),
         horizontalAlign: 'end',
-        width: 124,
+        width: COLUMN_WIDTHS.amount,
         sortable: true,
       },
       {
         customKey: 'action',
         headerText: '',
         horizontalAlign: 'end',
-        width: 120,
+        width: COLUMN_WIDTHS.action,
       },
     ],
     [t],
@@ -141,75 +133,59 @@ const InvoiceCell = memo((props: DesktopBodyCellRenderProps<InvoiceRow>) => {
 
   switch (props.dataKey ?? props.customKey) {
     case 'projectName': {
+      const issuer =
+        invoice.user?.name || shortenAddress(invoice.user?.address ?? '')
+
       return (
-        <Stack $width={PROJECT_COLUMN_WIDTH}>
+        <Stack>
           {/* A real link inside the clickable row, for the keyboard and for
               opening an invoice in a new tab. */}
           <ProjectLink
             to={routes.invoice.build({ id: invoice.id as string })}
             onClick={(event) => event.stopPropagation()}
           >
-            <Text size="3" weight="medium" truncate>
-              {invoice.project?.title ?? '—'}
-            </Text>
+            {invoice.project?.title ?? '—'}
           </ProjectLink>
-          <Text size="2" color="gray" truncate>
-            {t('invoices.item.reference')} {shortenAddress(invoice.id ?? '')}
-          </Text>
+          {/* Who issued it first: the reference is the long, opaque part. */}
+          <Meta title={`${t('invoices.item.reference')} ${invoice.id ?? ''}`}>
+            {issuer ? `${issuer} · ` : null}
+            {shortenAddress(invoice.id ?? '')}
+          </Meta>
         </Stack>
       )
     }
 
     case 'state': {
       return (
-        <Flex direction="column" align="start" gap="1">
-          <Badge
-            size="2"
-            radius="full"
-            variant="soft"
-            color={invoiceStateColor(invoice)}
-          >
+        <Stack data-align="start">
+          <WorkspaceStatus tone={invoiceStateTone(invoice)}>
             {t(invoiceStateLabelKey(invoice))}
-          </Badge>
+          </WorkspaceStatus>
           {invoice.state === 'PAID' && invoice.paidAt ? (
-            <Text size="2" color="gray">
-              {dateFormatter.format(new Date(invoice.paidAt))}
-            </Text>
+            <Meta>{dateFormatter.format(new Date(invoice.paidAt))}</Meta>
           ) : null}
-        </Flex>
-      )
-    }
-
-    case 'issuedBy': {
-      return (
-        <Stack $width={ISSUER_COLUMN_WIDTH}>
-          <Text size="2" truncate>
-            {invoice.user?.name || shortenAddress(invoice.user?.address ?? '')}
-          </Text>
         </Stack>
       )
     }
 
     case 'fromAt': {
       return (
-        <Text size="2">
-          {invoice.fromAt && invoice.toAt
-            ? dateFormatter.formatRange(
-                new Date(invoice.fromAt),
-                new Date(invoice.toAt),
-              )
-            : '—'}
-        </Text>
-      )
-    }
-
-    case 'createdAt': {
-      return (
-        <Text size="2">
-          {invoice.createdAt
-            ? dateFormatter.format(new Date(invoice.createdAt))
-            : '—'}
-        </Text>
+        <Stack>
+          <Value>
+            {invoice.fromAt && invoice.toAt
+              ? dateFormatter.formatRange(
+                  new Date(invoice.fromAt),
+                  new Date(invoice.toAt),
+                )
+              : '—'}
+          </Value>
+          {invoice.createdAt ? (
+            <Meta>
+              {t('invoices.item.issued')}{' '}
+              {dateFormatter.format(new Date(invoice.createdAt))}
+            </Meta>
+          ) : null}
+        </Stack>
       )
     }
 
@@ -217,18 +193,16 @@ const InvoiceCell = memo((props: DesktopBodyCellRenderProps<InvoiceRow>) => {
       const rateHour = invoiceRateHour(invoice)
 
       return (
-        <Flex direction="column" align="end">
-          <Amount size="3" weight="bold">
-            {formatCents(Number(invoice.amountCents ?? 0))}
-          </Amount>
+        <Stack data-align="end">
+          <Amount>{formatCents(Number(invoice.amountCents ?? 0))}</Amount>
           {/* The frozen line rate, or the project's rate for an invoice issued
               before lines were stored. */}
           {rateHour != null && (
-            <Text size="2" color="gray">
+            <Meta>
               {t('invoices.item.perHour', { rate: formatCurrency(rateHour) })}
-            </Text>
+            </Meta>
           )}
-        </Flex>
+        </Stack>
       )
     }
 
@@ -257,28 +231,58 @@ const InvoiceActionCell = ({ invoice }: { invoice: InvoiceRow }) => {
   )
 }
 
-/* The cell is as wide as its text wants, so the limit truncation needs is set
-   here, from the column it sits in. */
-const Stack = styled.div<{ $width: number }>`
+const Stack = styled.div`
   display: grid;
-  gap: 2px;
+  justify-items: start;
+  gap: var(--ui-space-1);
   min-width: 0;
-  max-width: ${(p) => p.$width - CELL_INSET}px;
+
+  &[data-align='end'] {
+    justify-items: end;
+    text-align: end;
+  }
+`
+
+const Value = styled.span`
+  color: var(--ui-text);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+`
+
+const Meta = styled.span`
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+  text-overflow: ellipsis;
+  white-space: nowrap;
 `
 
 /* Amounts line up digit for digit down the column. */
-const Amount = styled(Text)`
+const Amount = styled.span`
   color: var(--ui-ink);
+  font-size: var(--ui-body-size);
+  line-height: var(--ui-body-line-height);
+  font-weight: var(--ui-weight-semibold);
   font-variant-numeric: tabular-nums;
 `
 
+/* The project names the invoice: navy and strong, blue only as a link. */
 const ProjectLink = styled(NavLink)`
   display: block;
-  min-width: 0;
-  color: var(--ui-blue);
+  max-width: 100%;
+  overflow: hidden;
+  color: var(--ui-ink);
+  font-size: var(--ui-body-size);
+  line-height: var(--ui-body-line-height);
+  font-weight: var(--ui-weight-semibold);
   text-decoration: none;
+  text-overflow: ellipsis;
+  white-space: nowrap;
 
   &:hover {
+    color: var(--ui-blue);
     text-decoration: underline;
   }
 

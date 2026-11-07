@@ -2,6 +2,7 @@ import {
   ClockIcon,
   DashboardIcon,
   FileTextIcon,
+  MixerHorizontalIcon,
   PersonIcon,
   QuestionMarkCircledIcon,
 } from '@radix-ui/react-icons'
@@ -19,6 +20,7 @@ type MainRoutes =
   & Route<'/download', 'download'>
   & Route<'/invoice/:id', 'invoice', NoChildRoutes, IdRouteParams>
   & Route<'/invoice', 'invoices'>
+  & Route<'/settings', 'settings'>
   & Route<'https://facebook.com/:userId', 'facebook', NoChildRoutes, { userId: string }>
   & Route<'https://t.me/:userId', 'telegram', NoChildRoutes, { userId: string }>
   & Route<'https://linkedin.com/in/:userId', 'linkedin', NoChildRoutes, { userId: string }>
@@ -93,6 +95,21 @@ export const routes: MainRoutes = {
     icon: FileTextIcon,
   },
 
+  // The profile editor under its own name: the same form as
+  // `/profile/:id/edit`, reached without knowing one's id.
+  settings: {
+    schema: '/settings',
+    build: () => '/settings',
+
+    desktopOrder: 3.5,
+    mobileOrder: 3.5,
+
+    showInMenu: true,
+    translateKeyDesktop: 'header.nav.settings',
+    translateKeyMobile: 'header.nav.settings',
+    icon: MixerHorizontalIcon,
+  },
+
   docs: {
     schema: 'https://address.work/docs',
     build: () => 'https://address.work/docs',
@@ -165,6 +182,7 @@ export const AUTH_REQUIRED_ROUTES = new Set<string>([
   routes.time.schema,
   routes.profile.schema,
   routes.invoices.schema,
+  routes.settings.schema,
 ])
 
 // eslint-disable-next-line

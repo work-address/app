@@ -45,6 +45,7 @@ import {
   Button,
   IconButton,
   PageHelmet,
+  WorkspaceFreshness,
   WorkspacePage,
   WorkspacePageHeader,
   workspaceDesign,
@@ -65,6 +66,7 @@ export default function DashboardPage() {
     projectsLoading,
     projectsFailed,
     periodFailed,
+    periodPending,
     retryPeriod,
     hasProjects,
     projects,
@@ -79,6 +81,7 @@ export default function DashboardPage() {
     projectsLoading: $projectsLoading,
     projectsFailed: $projectsFailed,
     periodFailed: statisticsOverviewQuery.$failed,
+    periodPending: statisticsOverviewQuery.$pending,
     retryPeriod: dashboardStatisticsRequested,
     hasProjects: $hasProjects,
     projects: $projects,
@@ -173,7 +176,15 @@ export default function DashboardPage() {
               eyebrow={t('dashboard.page.eyebrow')}
               title={t('dashboard.page.title')}
               description={t('dashboard.page.description')}
-              actions={showContent && <DashboardFilterBar />}
+              actions={
+                showContent && (
+                  <HeaderTools>
+                    {/* Whether the figures are the period's latest. */}
+                    <Freshness pending={periodPending} failed={periodFailed} />
+                    <DashboardFilterBar />
+                  </HeaderTools>
+                )
+              }
             />
             {showContent && <DashboardSummary />}
           </Overview>
@@ -329,6 +340,25 @@ const Overview = styled.div`
   display: grid;
   gap: var(--ui-space-5);
   margin-bottom: var(--ui-space-5);
+`
+
+/* The status above the filters, both on the right; below xl, the filters'
+   own full-width row with the status on the left above it. */
+const HeaderTools = styled.div`
+  display: grid;
+  justify-items: end;
+  gap: var(--ui-space-3);
+  min-width: 0;
+
+  ${(p) => p.theme.breakpoints.down('xl')} {
+    justify-items: stretch;
+  }
+`
+
+const Freshness = styled(WorkspaceFreshness)`
+  ${(p) => p.theme.breakpoints.down('xl')} {
+    justify-self: start;
+  }
 `
 
 const Sections = styled(motion.div)`

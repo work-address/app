@@ -3,6 +3,8 @@ import styled from 'styled-components'
 import type { ReactNode } from 'react'
 
 type Props = {
+  /** A short line of context above the title. */
+  eyebrow?: ReactNode
   title: ReactNode
   /** A small status badge or count, set on the title's baseline. */
   badge?: ReactNode
@@ -22,6 +24,7 @@ type Props = {
  * `PageTitle` alone so the size still matches.
  */
 export const PageHeader = ({
+  eyebrow,
   title,
   badge,
   description,
@@ -31,6 +34,7 @@ export const PageHeader = ({
 }: Props) => (
   <Root className={className}>
     <Body>
+      {eyebrow ? <Caption>{eyebrow}</Caption> : null}
       <TitleRow>
         {leading}
         <PageTitle>{title}</PageTitle>
@@ -70,6 +74,15 @@ const Body = styled.div`
   display: grid;
   gap: var(--ui-space-2);
   min-width: 0;
+`
+
+const Caption = styled.p`
+  margin: 0 0 var(--ui-space-1);
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
+  font-weight: var(--ui-eyebrow-weight);
+  letter-spacing: var(--ui-eyebrow-tracking);
+  text-transform: uppercase;
 `
 
 const TitleRow = styled.div`

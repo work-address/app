@@ -1,8 +1,7 @@
-import { Badge } from '@radix-ui/themes'
 import { memo, useContext } from 'react'
 import styled from 'styled-components'
 
-import { formatTrackedCount } from '../../model'
+import { formatTrackedCount, getTimeActivityPercent } from '../../model'
 import { TimeContext } from '../time-context'
 
 import { TimePaidBadge } from './time-paid-badge'
@@ -10,11 +9,7 @@ import { TimeScreenshotThumb } from './time-screenshot-thumb'
 
 import type { Time } from '@/entities/time'
 
-import {
-  Checkbox,
-  formatDurationFromMinutes,
-  getTimeActiveColor,
-} from '@/shared'
+import { Checkbox, formatDurationFromMinutes } from '@/shared'
 
 type Props = {
   entry: Time
@@ -76,13 +71,10 @@ export const TimeTableStackRow = memo(
             <Detail>
               <Label>{t('dashboard.worklogsTable.head.timeActive')}</Label>
               <Value>
-                <Badge
-                  size="1"
-                  radius="full"
-                  color={getTimeActiveColor(entry.minutesActive)}
-                >
-                  {formatDurationFromMinutes(entry.minutesActive, t)}
-                </Badge>
+                {formatDurationFromMinutes(entry.minutesActive, t)} ·{' '}
+                {t('dashboard.worklogsGrid.activity', {
+                  percent: getTimeActivityPercent(entry),
+                })}
               </Value>
             </Detail>
             {figures.map((figure) => (

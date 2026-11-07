@@ -15,10 +15,7 @@ import {
   type SocialLinkField,
 } from '../../model'
 
-import {
-  INPUT_LABEL_WIDTH,
-  type ProfileEditFormState,
-} from './profile-edit-field'
+import { type ProfileEditFormState } from './profile-edit-field'
 import { SectionHeading } from './profile-edit-styles'
 
 import type { ClipboardEvent } from 'react'
@@ -81,7 +78,7 @@ export const ProfileEditLinks = ({
               id={name}
               label={t(labelKey)}
               addonLeft={`${domain}/`}
-              labelWidth={INPUT_LABEL_WIDTH}
+              columns="1fr"
               disabled={profileSaving}
               onPaste={(e) => handleSocialPaste(name, e)}
               state={errors[name] ? 'error' : undefined}

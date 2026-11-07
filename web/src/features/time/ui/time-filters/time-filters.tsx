@@ -1,4 +1,3 @@
-import { useStoreMap } from 'effector-react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -7,45 +6,31 @@ import { TimeNoteInput } from './time-note-input'
 import { TimeProjectsSelect } from './time-projects-select'
 import { TimeTwoSideInput } from './time-two-side-input'
 
-import { $timeFilters } from '@/entities/time'
-import { Text, workspaceDesign } from '@/shared'
+import { workspaceDesign } from '@/shared'
 
 /**
- * The feed's filters, applied as they change.
- *
- * Two rows: what the work was (project, date, note) above how active it was
- * (the four numeric ranges), so no field is squeezed to a sliver.
+ * The page's scope, beside its title on a desktop: which project and which
+ * days. Applied as they change, like every desktop filter.
+ */
+export const TimeScopeFilters = () => (
+  <Scope>
+    <ScopeProject>
+      <TimeProjectsSelect labelHidden />
+    </ScopeProject>
+    <TimeDateRangePicker />
+  </Scope>
+)
+
+/**
+ * What the entries in the scope contain: their note and how active they were.
+ * Applied as they change.
  */
 export const TimeFilters = () => {
   const { t } = useTranslation()
 
-  const activeDateId = useStoreMap({
-    store: $timeFilters,
-    keys: [],
-    fn: (filters) => (filters.fromAt ? 'toAt' : 'fromAt'),
-  })
-
   return (
     <Root>
       <Fields>
-        <Field data-role="project">
-          <TimeProjectsSelect />
-        </Field>
-        <Field data-role="date">
-          <Group>
-            <Text
-              size={'2'}
-              weight={'medium'}
-              as="label"
-              htmlFor={activeDateId}
-            >
-              {t('dashboard.page.filters.date')}
-            </Text>
-            <Pair>
-              <TimeDateRangePicker />
-            </Pair>
-          </Group>
-        </Field>
         <Field data-role="note">
           <TimeNoteInput />
         </Field>
@@ -101,6 +86,28 @@ const Root = styled.div`
   min-width: 0;
 `
 
+/* The dashboard's filter geometry: page-level controls at the filter height. */
+const Scope = styled.div`
+  --select-trigger-height: var(--ui-filter-height);
+  --select-trigger-padding: var(--ui-space-4);
+  --date-field-height: var(--ui-filter-height);
+  --date-field-padding: var(--ui-space-4);
+
+  display: grid;
+  grid-template-columns: repeat(3, var(--ui-filter-width));
+  gap: var(--ui-space-3);
+  justify-content: end;
+
+  ${(p) => p.theme.breakpoints.down('xl')} {
+    grid-template-columns: minmax(0, 1fr) repeat(2, minmax(0, 1fr));
+    justify-content: stretch;
+  }
+`
+
+const ScopeProject = styled.div`
+  min-width: 0;
+`
+
 const Fields = styled.div`
   display: grid;
   grid-template-columns: repeat(12, minmax(0, 1fr));
@@ -118,20 +125,23 @@ const Fields = styled.div`
 const Field = styled.div`
   min-width: 0;
 
-  &[data-role='project'] {
-    grid-column: span 3;
-  }
-
-  &[data-role='date'] {
-    grid-column: span 5;
-  }
-
   &[data-role='note'] {
     grid-column: span 4;
   }
 
   &[data-role='range'] {
-    grid-column: span 3;
+    grid-column: span 2;
+  }
+
+  /* Narrower: the note on its own line, the ranges two by two. */
+  @container time-filters (max-width: ${workspaceDesign.container.roomy}px) {
+    &[data-role='note'] {
+      grid-column: 1 / -1;
+    }
+
+    &[data-role='range'] {
+      grid-column: span 3;
+    }
   }
 
   @container time-filters (max-width: ${workspaceDesign.container.compact}px) {
@@ -139,7 +149,7 @@ const Field = styled.div`
       grid-column: span 1;
     }
 
-    &[data-role='date'] {
+    &[data-role='note'] {
       grid-column: 1 / -1;
     }
   }
@@ -149,15 +159,4 @@ const Field = styled.div`
       grid-column: 1 / -1;
     }
   }
-`
-
-const Group = styled.div`
-  display: grid;
-  gap: var(--ui-space-2);
-`
-
-const Pair = styled.div`
-  display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--ui-space-2);
 `

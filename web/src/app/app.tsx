@@ -14,6 +14,7 @@ const TimePage = lazy(() => import('@/pages/time'))
 const ProfilePage = lazy(() => import('@/pages/profile'))
 const OwnProfilePage = lazy(() => import('@/pages/own-profile'))
 const ProfileEditPage = lazy(() => import('@/pages/profile-edit'))
+const SettingsPage = lazy(() => import('@/pages/settings'))
 const SignInPage = lazy(() => import('@/pages/sign-in'))
 const ConnectPage = lazy(() => import('@/pages/connect'))
 const InvoicePage = lazy(() => import('@/pages/invoice'))
@@ -66,6 +67,10 @@ const router = createBrowserRouter([
       {
         path: routes.profile.children.edit.schema,
         element: <ProfileEditPage />,
+      },
+      {
+        path: routes.settings.schema,
+        element: <SettingsPage />,
       },
       {
         path: routes.invoices.schema,

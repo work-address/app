@@ -1,6 +1,7 @@
-import { useUnit } from 'effector-react'
+import { MixerHorizontalIcon } from '@radix-ui/react-icons'
+import { useStoreMap, useUnit } from 'effector-react'
 import { AnimatePresence, motion, useReducedMotion } from 'motion/react'
-import { useMemo } from 'react'
+import { useMemo, useState } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -11,6 +12,7 @@ import {
   $timeDialogNavigation,
   $timeFiltersOpen,
   $timeView,
+  getTimeSelectedDay,
   timeDialogNextRequested,
   timeDialogOpenChanged,
   timeDialogPrevRequested,
@@ -19,28 +21,34 @@ import {
 import { TimeMobileBulkActions } from '../common'
 import { TimeContext } from '../time-context'
 import { TimeDialog } from '../time-dialog/time-dialog'
-import { TimeFilters } from '../time-filters/time-filters'
+import { TimeFilters, TimeScopeFilters } from '../time-filters/time-filters'
 import { TimeMobileFilters } from '../time-filters/time-mobile-filters'
 import { TimeGrid } from '../time-grid'
 import { TimeSortSelect } from '../time-sort-select'
 import { TimeTable } from '../time-table/time-table'
 import { TimeTableStack } from '../time-table/time-table-stack'
 import { TimeViewToggle } from '../time-view-toggle'
+import { TimeWeek } from '../time-week/time-week'
 
 import { TimeWorklogsBulkActions } from './time-worklogs-bulk-actions'
 import { TimeWorklogsEmpty } from './time-worklogs-empty'
 
 import {
   $allTime,
+  $isTimeFiltering,
   $timeEntriesTotal,
   $timeLoading,
   $timeFailed,
+  $timeFilters,
   fetchTime,
+  type TimeFilters as TimeFilterValues,
 } from '@/entities/time'
 import {
+  Button,
   LoadFailure,
   WorkspacePageHeader,
   WorkspacePanel,
+  WorkspaceFreshness,
   useBreakpoint,
   workspaceDesign,
 } from '@/shared'
@@ -61,10 +69,25 @@ export const TimeWorklogs = () => {
 
   const isMobile = useBreakpoint('isMobile')
   const isDesktop = useBreakpoint('isDesktop')
+
+  // How many of the panel's own filters (note and activity) are set: shown
+  // on its toggle, and enough to open it by default.
+  const activityFilterCount = useStoreMap({
+    store: $timeFilters,
+    keys: [],
+    fn: countActivityFilters,
+  })
+  const selectedDay = useStoreMap({
+    store: $timeFilters,
+    keys: [],
+    fn: getTimeSelectedDay,
+  })
+  const [filtersShown, setFiltersShown] = useState(activityFilterCount > 0)
   const reducedMotion = useReducedMotion()
 
   const {
     entries,
+    isFiltering,
     total,
     loading,
     failed,
@@ -81,6 +104,7 @@ export const TimeWorklogs = () => {
     goToNext,
   } = useUnit({
     entries: $allTime,
+    isFiltering: $isTimeFiltering,
     total: $timeEntriesTotal,
     loading: $timeLoading,
     failed: $timeFailed,
@@ -130,45 +154,99 @@ export const TimeWorklogs = () => {
     [i18n.language, t],
   )
 
+  const longDayFormatter = useMemo(
+    () =>
+      new Intl.DateTimeFormat(i18n.language, {
+        weekday: 'long',
+        day: 'numeric',
+        month: 'long',
+      }),
+    [i18n.language],
+  )
+
+  const showBulk = hasEntries && !failed && selectedCount > 0
+  const showToolbar = isMobile || filtersShown || showBulk
+
   const list = isMobile ? <TimeTableStack /> : <TimeTable />
 
   return (
     <TimeContext.Provider value={contextValue}>
       <WorkspacePageHeader
+        eyebrow={t('time.page.eyebrow')}
         title={t('time.page.title')}
         description={t('time.page.description')}
-        // Beside the title rather than inside a view: the list can also sort
-        // from its column headers, and both write the same store.
+        // Whether the feed below is the server's latest answer: a request in
+        // flight says so, and a failed one claims nothing.
         actions={
-          <Actions>
-            <TimeSortSelect />
-            <TimeViewToggle />
-          </Actions>
+          <HeaderTools>
+            <Freshness pending={loading || isFiltering} failed={failed} />
+            {/* Which project and which days: the page's scope, beside its
+                title as on the dashboard. A phone keeps every filter in its
+                drawer. */}
+            {isDesktop && <TimeScopeFilters />}
+          </HeaderTools>
         }
       />
+      <TimeWeek />
       <WorkspacePanel
-        title={t('time.panel.title')}
-        aside={
-          showCount ? (
-            <Count>{t('time.panel.count', { count: total })}</Count>
-          ) : null
+        // One day picked: the list is that day's, and says so.
+        title={
+          selectedDay
+            ? longDayFormatter.format(new Date(`${selectedDay}T00:00`))
+            : t('time.panel.title')
         }
+        // The feed's own controls sit on the feed: the count, then the order
+        // (which the list's column headers also write) and the view.
+        aside={
+          <Tools>
+            {showCount ? (
+              <Count>{t('time.panel.count', { count: total })}</Count>
+            ) : null}
+            <Controls>
+              {isDesktop && (
+                <Button
+                  variant="outline"
+                  color="neutral"
+                  iconLeft={<MixerHorizontalIcon />}
+                  aria-expanded={filtersShown}
+                  aria-controls="time-activity-filters"
+                  onClick={() => setFiltersShown((shown) => !shown)}
+                >
+                  {t('dashboard.page.filters.title')}
+                  {activityFilterCount > 0 ? (
+                    <FilterCount>{activityFilterCount}</FilterCount>
+                  ) : null}
+                </Button>
+              )}
+              <TimeSortSelect />
+              <TimeViewToggle />
+            </Controls>
+          </Tools>
+        }
+        // Nothing to hold (desktop filters folded, nothing selected): no
+        // toolbar row at all, rather than an empty one.
         toolbar={
-          <Toolbar>
-            {isDesktop && <TimeFilters />}
-            {isMobile && (
-              <TimeMobileFilters
-                filtersOpen={filtersOpen}
-                onFiltersOpenChange={setFiltersOpen}
-              />
-            )}
-            {hasEntries && !failed && selectedCount > 0 && (
-              <>
-                {isDesktop && <TimeWorklogsBulkActions />}
-                {isMobile && <TimeMobileBulkActions />}
-              </>
-            )}
-          </Toolbar>
+          showToolbar ? (
+            <Toolbar>
+              {isDesktop && filtersShown && (
+                <div id="time-activity-filters">
+                  <TimeFilters />
+                </div>
+              )}
+              {isMobile && (
+                <TimeMobileFilters
+                  filtersOpen={filtersOpen}
+                  onFiltersOpenChange={setFiltersOpen}
+                />
+              )}
+              {showBulk && (
+                <>
+                  {isDesktop && <TimeWorklogsBulkActions />}
+                  {isMobile && <TimeMobileBulkActions />}
+                </>
+              )}
+            </Toolbar>
+          ) : undefined
         }
       >
         {failed ? (
@@ -211,23 +289,83 @@ export const TimeWorklogs = () => {
   )
 }
 
-/* Sort and view side by side; on a phone they share the row below the
-   title, the picker taking what the toggle leaves. */
-const Actions = styled.div`
+/** The panel's own filters that are set: the note and each numeric bound. */
+const countActivityFilters = (filters: TimeFilterValues) =>
+  [
+    filters.note,
+    filters.timeActiveMin,
+    filters.timeActiveMax,
+    filters.keyboardKeysMin,
+    filters.keyboardKeysMax,
+    filters.mouseKeysMin,
+    filters.mouseKeysMax,
+    filters.mouseDistanceMin,
+    filters.mouseDistanceMax,
+  ].filter((value) => value !== null && value !== undefined && value !== '')
+    .length
+
+/* The status above the scope filters, both on the right; below xl they take
+   the header's own row, the status first. */
+const HeaderTools = styled.div`
+  display: grid;
+  justify-items: end;
+  gap: var(--ui-space-3);
+  min-width: 0;
+
+  ${(p) => p.theme.breakpoints.down('xl')} {
+    justify-items: stretch;
+  }
+`
+
+const Freshness = styled(WorkspaceFreshness)`
+  ${(p) => p.theme.breakpoints.down('xl')} {
+    justify-self: start;
+  }
+`
+
+const FilterCount = styled.span`
+  min-width: var(--ui-space-5);
+  padding-inline: var(--ui-space-1);
+  border-radius: var(--ui-pill-radius);
+  background: var(--ui-glow);
+  color: var(--ui-blue);
+  font-size: var(--ui-small-size);
+  line-height: var(--ui-space-5);
+  text-align: center;
+`
+
+/* Count first, then the controls; on a narrow panel the controls take the
+   line below the title on their own. */
+const Tools = styled.div`
   display: grid;
   grid-auto-flow: column;
   align-items: center;
-  justify-content: start;
+  justify-content: end;
   gap: var(--ui-space-3);
   min-width: 0;
 
   ${(p) => p.theme.breakpoints.down('md')} {
     grid-auto-flow: row;
-    grid-template-columns: minmax(0, 1fr) auto;
+    justify-content: stretch;
+    width: 100%;
+  }
+`
+
+const Controls = styled.div`
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  gap: var(--ui-space-3);
+
+  /* A phone panel is too narrow for both on one line. */
+  ${(p) => p.theme.breakpoints.down('md')} {
+    grid-auto-flow: row;
+    justify-items: start;
   }
 `
 
 const Count = styled.span`
+  justify-self: start;
   padding: var(--ui-space-2) var(--ui-space-3);
   border-radius: var(--ui-pill-radius);
   background: var(--ui-glow);

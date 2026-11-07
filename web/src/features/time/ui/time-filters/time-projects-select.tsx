@@ -6,7 +6,12 @@ import { $projects } from '@/entities/projects'
 import { changeTimeFilters, $timeFilters } from '@/entities/time'
 import { Select } from '@/shared'
 
-export const TimeProjectsSelect = () => {
+export const TimeProjectsSelect = ({
+  labelHidden,
+}: {
+  /** Beside the title the placeholder says what it is; the label stays for assistive technology. */
+  labelHidden?: boolean
+}) => {
   const { t } = useTranslation()
 
   const selectedActivity = useStoreMap({
@@ -32,6 +37,7 @@ export const TimeProjectsSelect = () => {
   return (
     <Select
       label={t('dashboard.page.filters.projects')}
+      labelHidden={labelHidden}
       options={options}
       value={selectedActivity ?? ''}
       onChange={(v) => {

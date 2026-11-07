@@ -1,4 +1,4 @@
-import { Badge, Skeleton } from '@radix-ui/themes'
+import { Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -14,7 +14,7 @@ import {
 import { ProfileViewSection } from './profile-view-section'
 
 import { routes } from '@/routes'
-import { Button, sanitizeRichText, SectionTitle, Text } from '@/shared'
+import { Button, sanitizeRichText, SectionTitle } from '@/shared'
 
 export const ProfileViewDescriptionAndSkills = () => {
   const { t } = useTranslation()
@@ -44,65 +44,59 @@ export const ProfileViewDescriptionAndSkills = () => {
 
   if (profileLoading) {
     return (
-      <>
-        <ProfileViewSection>
-          <Skeleton width="80px" height="30px" />
-          <Skeleton width="100%" height="48px" />
-        </ProfileViewSection>
-        <ProfileViewSection>
-          <Skeleton width="80px" height="30px" />
-          <Skeleton width="240px" height="24px" />
-        </ProfileViewSection>
-      </>
+      <ProfileViewSection>
+        <Skeleton width="120px" height="30px" />
+        <Skeleton width="100%" height="48px" />
+        <Skeleton width="240px" height="32px" />
+      </ProfileViewSection>
     )
   }
 
+  const hasAbout = Boolean(bio) || skills.length > 0
+
+  // A title alone is already said on the identity sheet.
+  if (!hasAbout && hasDetails) {
+    return null
+  }
+
+  // Bio and skills share one panel, parted by a rule, as one introduction.
   return (
-    <>
-      {bio && (
-        <ProfileViewSection>
-          <SectionTitle>{t('profile.form.bio')}</SectionTitle>
-          <Bio dangerouslySetInnerHTML={{ __html: bio }} />
-        </ProfileViewSection>
-      )}
-      {skills.length > 0 && (
-        <ProfileViewSection>
-          <SectionTitle>{t('profile.form.skills')}</SectionTitle>
-          <Skills>
-            {skills.map((skill) => (
-              <Badge key={skill} color="gray" size="2" radius="full">
-                <Text weight="medium" size="2">
-                  {skill}
-                </Text>
-              </Badge>
-            ))}
-          </Skills>
-        </ProfileViewSection>
-      )}
-      {!hasDetails && (
-        <ProfileViewSection>
-          {isOwn ? (
-            <EmptyOwn>
-              <Text color="gray">{t('profile.view.empty.detailsOwn')}</Text>
-              <Button
-                variant="outline"
-                onClick={() =>
-                  navigate(
-                    routes.profile.children.edit.build({
-                      id: user?.id ?? '',
-                    }),
-                  )
-                }
-              >
-                {t('profile.view.empty.addDetails')}
-              </Button>
-            </EmptyOwn>
-          ) : (
-            <Text color="gray">{t('profile.view.empty.details')}</Text>
+    <ProfileViewSection>
+      <SectionTitle>{t('profile.view.about')}</SectionTitle>
+      {hasAbout ? (
+        <>
+          {bio && <Bio dangerouslySetInnerHTML={{ __html: bio }} />}
+          {skills.length > 0 && (
+            <SkillsGroup data-ruled={bio ? true : undefined}>
+              <SkillsTitle>{t('profile.form.skills')}</SkillsTitle>
+              <Skills>
+                {skills.map((skill) => (
+                  <Skill key={skill}>{skill}</Skill>
+                ))}
+              </Skills>
+            </SkillsGroup>
           )}
-        </ProfileViewSection>
+        </>
+      ) : isOwn ? (
+        <EmptyOwn>
+          <Muted>{t('profile.view.empty.detailsOwn')}</Muted>
+          <Button
+            variant="outline"
+            onClick={() =>
+              navigate(
+                routes.profile.children.edit.build({
+                  id: user?.id ?? '',
+                }),
+              )
+            }
+          >
+            {t('profile.view.empty.addDetails')}
+          </Button>
+        </EmptyOwn>
+      ) : (
+        <Muted>{t('profile.view.empty.details')}</Muted>
       )}
-    </>
+    </ProfileViewSection>
   )
 }
 
@@ -142,11 +136,40 @@ const Bio = styled.div`
   ol {
     list-style: decimal;
   }
+`
 
-  ${(p) => p.theme.breakpoints.down('md')} {
-    font-size: var(--ui-meta-size);
-    line-height: var(--ui-meta-line-height);
+const SkillsGroup = styled.div`
+  display: grid;
+  gap: var(--ui-space-3);
+
+  &[data-ruled] {
+    padding-top: var(--ui-section-gap);
+    border-top: var(--ui-border-width) solid var(--ui-line);
   }
+`
+
+const SkillsTitle = styled.h3`
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-body-size);
+  line-height: var(--ui-body-line-height);
+  font-weight: var(--ui-weight-semibold);
+`
+
+const Skill = styled.span`
+  padding: var(--ui-space-1) var(--ui-space-3);
+  border-radius: var(--ui-filter-radius);
+  background: var(--ui-inset);
+  color: var(--ui-text);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+`
+
+const Muted = styled.p`
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-body-size);
+  line-height: var(--ui-body-line-height);
 `
 
 const Skills = styled.div`

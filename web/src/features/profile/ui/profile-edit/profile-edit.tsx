@@ -1,9 +1,14 @@
-import { ArrowLeftIcon } from '@radix-ui/react-icons'
+import {
+  ArrowLeftIcon,
+  Link2Icon,
+  LockClosedIcon,
+  PersonIcon,
+} from '@radix-ui/react-icons'
 import { useUnit } from 'effector-react'
 import { motion, useReducedMotion } from 'motion/react'
-import { useEffect } from 'react'
+import { useEffect, useState, type KeyboardEvent } from 'react'
 import { createPortal } from 'react-dom'
-import { type SubmitHandler, useForm } from 'react-hook-form'
+import { type FieldErrors, type SubmitHandler, useForm } from 'react-hook-form'
 import { useTranslation } from 'react-i18next'
 import { useLocation, useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
@@ -13,12 +18,15 @@ import {
   $profileLoading,
   $profileFailure,
   retryProfile,
+  SOCIAL_LINKS,
 } from '../../model'
 
+import { ProfileEditAccount } from './profile-edit-account'
 import { ProfileEditActions } from './profile-edit-actions'
 import { ProfileEditDetails } from './profile-edit-details'
 import { type ProfileEditFormState } from './profile-edit-field'
 import { ProfileEditLinks } from './profile-edit-links'
+import { ProfileEditPreview } from './profile-edit-preview'
 
 import { saveProfileMutation } from '@/entities/profile'
 import { ConnectedWalletCard } from '@/features/connected-wallet'
@@ -28,6 +36,8 @@ import {
   IconButton,
   LoadFailure,
   PageHeader,
+  ToolbarSegment,
+  ToolbarShell,
   Tooltip,
   useLeaveConfirm,
   useConfirm,
@@ -36,6 +46,25 @@ import {
 } from '@/shared'
 
 const FORM_ID = 'profile-edit-form'
+
+type ProfileEditTab = 'details' | 'links' | 'account'
+
+const TABS: {
+  id: ProfileEditTab
+  labelKey: string
+  icon: typeof PersonIcon
+}[] = [
+  { id: 'details', labelKey: 'settings.tabs.profile', icon: PersonIcon },
+  { id: 'links', labelKey: 'settings.tabs.links', icon: Link2Icon },
+  { id: 'account', labelKey: 'settings.tabs.account', icon: LockClosedIcon },
+]
+
+const LINK_FIELDS = new Set<string>(SOCIAL_LINKS.map(({ name }) => name))
+
+type Props = {
+  /** Reached as Settings from the navigation, or to edit from the profile. */
+  variant?: 'edit' | 'settings'
+}
 
 const EMPTY_FORM_VALUES: ProfileEditFormState = {
   name: '',
@@ -55,8 +84,10 @@ const EMPTY_FORM_VALUES: ProfileEditFormState = {
   country: '',
 }
 
-export const ProfileEdit = () => {
+export const ProfileEdit = ({ variant = 'edit' }: Props) => {
   const { t } = useTranslation()
+  // Every section stays mounted and only hides, so switching keeps the draft.
+  const [tab, setTab] = useState<ProfileEditTab>('details')
   const isDesktop = useBreakpoint('isDesktop')
   const { confirm } = useConfirm()
   const navigate = useNavigate()
@@ -109,6 +140,34 @@ export const ProfileEdit = () => {
         ? {}
         : { email: trimmedEmail || null }),
     })
+  }
+
+  // A field that fails validation in a hidden section brings it forward.
+  const onInvalid = (invalid: FieldErrors<ProfileEditFormState>) => {
+    const fields = Object.keys(invalid)
+
+    if (fields.length > 0) {
+      setTab(
+        fields.every((field) => LINK_FIELDS.has(field)) ? 'links' : 'details',
+      )
+    }
+  }
+
+  // Arrow keys move along the tabs, as a tab list's do.
+  const onTabKeyDown = (event: KeyboardEvent<HTMLDivElement>) => {
+    const step =
+      event.key === 'ArrowRight' ? 1 : event.key === 'ArrowLeft' ? -1 : 0
+
+    if (step === 0) {
+      return
+    }
+
+    event.preventDefault()
+    const index = TABS.findIndex(({ id }) => id === tab)
+    const next = TABS[(index + step + TABS.length) % TABS.length]
+
+    setTab(next.id)
+    document.getElementById(`profile-edit-tab-${next.id}`)?.focus()
   }
 
   const onReset = () => {
@@ -198,7 +257,12 @@ export const ProfileEdit = () => {
             </IconButton>
           </Tooltip>
         }
-        title={t('app.documentTitle.profileEdit')}
+        eyebrow={t('settings.page.eyebrow')}
+        title={
+          variant === 'settings'
+            ? t('settings.page.title')
+            : t('app.documentTitle.profileEdit')
+        }
         description={t('profile.form.edit.description')}
         actions={
           isDesktop && !profileFailure ? (
@@ -215,39 +279,99 @@ export const ProfileEdit = () => {
         <LoadFailure title={t('profile.loadFailure.title')} onRetry={retry} />
       ) : (
         <>
-          {/* The wallet card sits outside the form: its own dialogs submit, and
-              a submit inside a form would save the profile instead. */}
-          <form
-            id={FORM_ID}
-            onSubmit={handleSubmit(onSubmit)}
-            aria-busy={profileLoading || profileSaving || undefined}
+          <Tabs
+            role="tablist"
+            aria-label={t('settings.tabs.label')}
+            onKeyDown={onTabKeyDown}
           >
-            <Sections initial="hidden" animate="shown" variants={reveal.list}>
-              <motion.div variants={reveal.item}>
-                <ProfileEditDetails
+            {TABS.map(({ id, labelKey, icon: Icon }) => (
+              <Tab
+                key={id}
+                id={`profile-edit-tab-${id}`}
+                type="button"
+                role="tab"
+                aria-selected={tab === id}
+                aria-controls={`profile-edit-panel-${id}`}
+                tabIndex={tab === id ? 0 : -1}
+                onClick={() => setTab(id)}
+              >
+                <Icon aria-hidden />
+                {t(labelKey)}
+              </Tab>
+            ))}
+          </Tabs>
+          <Layout>
+            <Main>
+              {/* The wallet cards sit outside the form: their own dialogs
+                  submit, and a submit inside a form would save the profile
+                  instead. */}
+              <form
+                id={FORM_ID}
+                onSubmit={handleSubmit(onSubmit, onInvalid)}
+                aria-busy={profileLoading || profileSaving || undefined}
+              >
+                <Sections
+                  initial="hidden"
+                  animate="shown"
+                  variants={reveal.list}
+                >
+                  <Panel
+                    variants={reveal.item}
+                    id="profile-edit-panel-details"
+                    role="tabpanel"
+                    aria-labelledby="profile-edit-tab-details"
+                    hidden={tab !== 'details'}
+                  >
+                    <ProfileEditDetails
+                      user={user}
+                      isDesktop={isDesktop}
+                      profileLoading={profileLoading}
+                      profileSaving={profileSaving || profileLoading}
+                      register={register}
+                      control={control}
+                      errors={errors}
+                    />
+                  </Panel>
+                  <Panel
+                    variants={reveal.item}
+                    id="profile-edit-panel-links"
+                    role="tabpanel"
+                    aria-labelledby="profile-edit-tab-links"
+                    hidden={tab !== 'links'}
+                  >
+                    <ProfileEditLinks
+                      isDesktop={isDesktop}
+                      profileLoading={profileLoading}
+                      profileSaving={profileSaving || profileLoading}
+                      register={register}
+                      errors={errors}
+                      setValue={setValue}
+                    />
+                  </Panel>
+                </Sections>
+              </form>
+              <Panel
+                id="profile-edit-panel-account"
+                role="tabpanel"
+                aria-labelledby="profile-edit-tab-account"
+                hidden={tab !== 'account'}
+              >
+                <ProfileEditAccount
                   user={user}
-                  isDesktop={isDesktop}
                   profileLoading={profileLoading}
-                  profileSaving={profileSaving || profileLoading}
-                  register={register}
-                  control={control}
-                  errors={errors}
                 />
-              </motion.div>
-              <motion.div variants={reveal.item}>
-                <ProfileEditLinks
-                  isDesktop={isDesktop}
-                  profileLoading={profileLoading}
-                  profileSaving={profileSaving || profileLoading}
-                  register={register}
-                  errors={errors}
-                  setValue={setValue}
-                />
-              </motion.div>
-            </Sections>
-          </form>
-          <ConnectedWalletCard />
-          <LocalWalletCard />
+                <ConnectedWalletCard />
+                <LocalWalletCard />
+              </Panel>
+            </Main>
+            {/* Beside the form where there is room for both, under it
+                elsewhere. */}
+            <ProfileEditPreview
+              control={control}
+              profileId={user?.id}
+              loading={profileLoading}
+            />
+          </Layout>
           {/* The page scrolls under a mask that dissolves its last 40px, and
               the mask takes anything inside the scroller with it, fixed or
               not. So the bar goes on the sheet itself, as the page indicator
@@ -300,6 +424,68 @@ const Root = styled(Wrapper)`
 const Sections = styled(motion.div)`
   display: grid;
   gap: var(--ui-section-gap);
+`
+
+/* The sections as tabs on one segmented control. */
+const Tabs = styled(ToolbarShell)`
+  justify-self: start;
+  max-width: 100%;
+
+  /* A phone gives each tab a third of the width; labels wrap to fit. */
+  ${(p) => p.theme.breakpoints.down('md')} {
+    justify-self: stretch;
+    grid-auto-columns: minmax(0, 1fr);
+  }
+`
+
+const Tab = styled(ToolbarSegment)`
+  & svg {
+    flex-shrink: 0;
+    width: var(--ui-space-4);
+    height: var(--ui-space-4);
+  }
+
+  /* A phone's tabs are their words alone, as many lines as they need. */
+  ${(p) => p.theme.breakpoints.down('md')} {
+    padding-block: var(--ui-space-2);
+    line-height: var(--ui-meta-line-height);
+    text-align: center;
+    white-space: normal;
+
+    & svg {
+      display: none;
+    }
+  }
+`
+
+/* The form beside how the profile will read; the preview needs a wide page. */
+const Layout = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--ui-section-gap);
+
+  ${(p) => p.theme.breakpoints.up('xl')} {
+    grid-template-columns: minmax(0, 2fr) minmax(0, 1fr);
+  }
+`
+
+/* One section shows at a time, so the column needs no gap of its own: a
+   hidden form would otherwise still push the account panel down. */
+const Main = styled.div`
+  display: grid;
+  min-width: 0;
+`
+
+/* Hidden, not unmounted: a section's fields keep their draft. */
+const Panel = styled(motion.div)`
+  display: grid;
+  gap: var(--ui-section-gap);
+  min-width: 0;
+
+  &[hidden] {
+    display: none;
+  }
 `
 
 const BottomSheet = styled.div`

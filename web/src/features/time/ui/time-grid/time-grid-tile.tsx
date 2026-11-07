@@ -1,5 +1,4 @@
 import { ImageIcon } from '@radix-ui/react-icons'
-import { Badge } from '@radix-ui/themes'
 import { memo, useContext } from 'react'
 import styled from 'styled-components'
 
@@ -10,7 +9,7 @@ import { TimeGridTileActivity } from './time-grid-tile-activity'
 
 import type { Time } from '@/entities/time'
 
-import { Checkbox, toImageDataUrl, Tooltip } from '@/shared'
+import { Checkbox, toImageDataUrl, Tooltip, WorkspaceStatus } from '@/shared'
 
 type Props = {
   entry: Time
@@ -74,7 +73,9 @@ export const TimeGridTile = memo(
           />
         </Selection>
         {entry.isPaid && (
-          <Status>{t('dashboard.worklogsTable.paymentStatus.paid')}</Status>
+          <Status tone="positive">
+            {t('dashboard.worklogsTable.paymentStatus.paid')}
+          </Status>
         )}
       </Root>
     )
@@ -228,7 +229,14 @@ const Selection = styled.div`
   }
 `
 
-const Status = styled(Badge).attrs({ color: 'green', radius: 'full' })`
+/* Over the screenshot, so its translucent tint sits on the surface. */
+const Status = styled(WorkspaceStatus)`
+  background: linear-gradient(
+      var(--status-background),
+      var(--status-background)
+    )
+    var(--ui-surface);
+  box-shadow: var(--ui-shadow);
   position: absolute;
   top: var(--ui-space-2);
   right: var(--ui-space-2);

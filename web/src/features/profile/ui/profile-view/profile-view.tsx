@@ -9,8 +9,9 @@ import { ProfileViewDescriptionAndSkills } from './profile-view-description-and-
 import { ProfileViewHead } from './profile-view-head'
 import { ProfileViewLinks } from './profile-view-links'
 import { PROFILE_VIEW_REVEAL_LIST } from './profile-view-section'
+import { ProfileViewShare, ProfileViewVisibility } from './profile-view-share'
 
-import { copyToClipboard, showToast, Wrapper } from '@/shared'
+import { copyToClipboard, showToast, workspaceDesign, Wrapper } from '@/shared'
 
 export const ProfileView = () => {
   const { t } = useTranslation()
@@ -45,8 +46,16 @@ export const ProfileView = () => {
           onWalletAddressCopy={handleCopyWalletAddress}
           onShareProfile={handleShareProfile}
         />
-        <ProfileViewLinks />
-        <ProfileViewDescriptionAndSkills />
+        <Columns>
+          <Column>
+            <ProfileViewDescriptionAndSkills />
+            <ProfileViewShare onShare={handleShareProfile} />
+          </Column>
+          <Column>
+            <ProfileViewLinks />
+            <ProfileViewVisibility />
+          </Column>
+        </Columns>
       </Sections>
     </Wrapper>
   )
@@ -54,6 +63,35 @@ export const ProfileView = () => {
 
 /* The bands lay out by the page's own width: with the sidebar open a small
    desktop has less room than a phone-width rule would ever notice. */
+/* The introduction beside the ways to reach the person; one column when the
+   page is narrow, and the full width for whichever is alone. */
+const Columns = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  align-items: start;
+  gap: var(--ui-section-gap);
+
+  @container (min-width: ${workspaceDesign.container.roomy}px) {
+    grid-template-columns: minmax(0, 7fr) minmax(0, 5fr);
+
+    /* A column with nothing to show gives the other the full width. */
+    &:has(> :empty) {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+`
+
+const Column = styled.div`
+  display: grid;
+  align-content: start;
+  gap: var(--ui-section-gap);
+  min-width: 0;
+
+  &:empty {
+    display: none;
+  }
+`
+
 const Sections = styled(motion.div)`
   container-type: inline-size;
   display: grid;

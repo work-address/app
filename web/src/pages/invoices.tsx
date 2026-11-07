@@ -19,6 +19,7 @@ import {
   INVOICE_SORT_FIELDS,
   InvoiceFilters,
   InvoiceMobileFilters,
+  InvoiceScopeFilters,
   InvoicePaymentActions,
   InvoicesTable,
   canSettleInvoice,
@@ -31,7 +32,7 @@ import {
   invoiceProjectsQuery,
   invoiceRateHour,
   invoiceSortChanged,
-  invoiceStateColor,
+  invoiceStateTone,
   invoiceStateLabelKey,
   loadMoreInvoices,
   shortenAddress,
@@ -48,10 +49,12 @@ import {
   Spinner,
   StateNotice,
   Text,
+  WorkspaceFreshness,
   WorkspaceMetric,
   WorkspacePage,
   WorkspacePageHeader,
   WorkspacePanel,
+  WorkspaceStatus,
   WorkspaceSummary,
   useBreakpoint,
   usePageBusy,
@@ -137,8 +140,20 @@ export default function InvoicesPage() {
         description={t('invoices.page.meta')}
       />
       <WorkspacePageHeader
+        eyebrow={t('invoices.page.eyebrow')}
         title={t('invoices.page.title')}
         description={t('invoices.page.description')}
+        actions={
+          <HeaderTools>
+            <Freshness
+              pending={pending || summaryLoading}
+              failed={failed || summaryFailed}
+            />
+            {/* Which project and which period: the list's scope, beside the
+                title as on the dashboard. A phone keeps them in its drawer. */}
+            {isDesktop ? <InvoiceScopeFilters /> : null}
+          </HeaderTools>
+        }
       />
       {/* The answer to "what am I owed" before the rows that justify it. */}
       {summaryFailed ? (
@@ -147,8 +162,8 @@ export default function InvoicesPage() {
           onRetry={retrySummary}
         />
       ) : (
-        <Summary>
-          <Metric
+        <WorkspaceSummary columns={3}>
+          <WorkspaceMetric
             label={t('invoices.summary.awaiting')}
             value={formatCents(summary.requestedCents)}
             hint={t('invoices.summary.count', {
@@ -156,28 +171,33 @@ export default function InvoicesPage() {
             })}
             loading={summaryLoading}
           />
-          <Metric
+          <WorkspaceMetric
             label={t('invoices.summary.paid')}
             value={formatCents(summary.paidCents)}
             hint={t('invoices.summary.count', { count: summary.paidCount })}
             loading={summaryLoading}
           />
-          <Metric
+          <WorkspaceMetric
             label={t('invoices.summary.total')}
             value={formatCents(summary.totalCents)}
             hint={t('invoices.summary.count', { count: summary.totalCount })}
             loading={summaryLoading}
           />
-        </Summary>
+        </WorkspaceSummary>
       )}
       <WorkspacePanel
         title={t('invoices.panel.title')}
         aside={
-          <ShownCount
-            shown={rows.length}
-            total={total}
-            loading={showSkeleton}
-          />
+          <Tools>
+            <ShownCount
+              shown={rows.length}
+              total={total}
+              loading={showSkeleton}
+            />
+            {/* The list's own order, on every width: the table's headers
+                cover only its columns, and a phone's cards have none. */}
+            {rows.length > 1 ? <InvoiceSort /> : null}
+          </Tools>
         }
         toolbar={
           <Toolbar>
@@ -188,8 +208,6 @@ export default function InvoicesPage() {
               />
             )}
             {isDesktop ? <InvoiceFilters /> : <InvoiceMobileFilters />}
-            {/* A phone's cards have no column headers to sort from. */}
-            {!isDesktop && rows.length > 1 ? <InvoiceSort /> : null}
           </Toolbar>
         }
       >
@@ -257,6 +275,15 @@ export default function InvoicesPage() {
               <Sentinel ref={sentinelRef} aria-hidden />
             </>
           ) : null}
+          {/* How much of the list is on screen, under it. */}
+          {rows.length > 0 && !showSkeleton ? (
+            <Shown>
+              {t('invoices.page.shownOfTotal', {
+                shown: rows.length,
+                total,
+              })}
+            </Shown>
+          ) : null}
         </Content>
       </WorkspacePanel>
     </Root>
@@ -278,7 +305,14 @@ const ShownCount = ({
     return null
   }
 
-  return <Count>{t('invoices.page.shownOfTotal', { shown, total })}</Count>
+  // The total beside the title; how many of them are loaded, under the list.
+  return shown < total ? (
+    <Count title={t('invoices.page.shownOfTotal', { shown, total })}>
+      {t('invoices.summary.count', { count: total })}
+    </Count>
+  ) : (
+    <Count>{t('invoices.summary.count', { count: total })}</Count>
+  )
 }
 
 const InvoiceSort = () => {
@@ -361,14 +395,9 @@ const InvoiceCards = ({
             </Cell>
             <Cell $area="status" label={t('invoices.item.status')}>
               <Flex direction="column" align="start" gap="1">
-                <Badge
-                  size="2"
-                  radius="full"
-                  variant="soft"
-                  color={invoiceStateColor(invoice)}
-                >
+                <WorkspaceStatus tone={invoiceStateTone(invoice)}>
                   {t(invoiceStateLabelKey(invoice))}
-                </Badge>
+                </WorkspaceStatus>
                 {isPaid ? (
                   <Text size="1" color="gray">
                     {formatDate(invoice.paidAt)}
@@ -494,33 +523,45 @@ const Root = styled(WorkspacePage)`
   gap: var(--ui-section-gap);
 `
 
-/* Three totals: one row from xl; the shared two-column fallback below it,
-   where the last one takes the full width. */
-const Summary = styled(WorkspaceSummary)`
-  ${(p) => p.theme.breakpoints.up('xl')} {
-    &[data-detail] {
-      grid-template-columns: repeat(3, minmax(0, 1fr));
-    }
-  }
+/* The status above the scope filters, both on the right; below xl they take
+   the header's own row, the status first. */
+const HeaderTools = styled.div`
+  display: grid;
+  justify-items: end;
+  gap: var(--ui-space-3);
+  min-width: 0;
 
-  /* A phone stacks the totals: two amounts side by side would break
-     mid-number. */
-  ${(p) => p.theme.breakpoints.down('md')} {
-    &[data-detail] {
-      grid-template-columns: minmax(0, 1fr);
-    }
+  ${(p) => p.theme.breakpoints.down('xl')} {
+    justify-items: stretch;
   }
 `
 
-/* Stacked, the totals part with a rule above rather than a divider beside. */
-const Metric = styled(WorkspaceMetric)`
-  ${(p) => p.theme.breakpoints.down('md')} {
-    border-inline-start: 0;
+const Freshness = styled(WorkspaceFreshness)`
+  ${(p) => p.theme.breakpoints.down('xl')} {
+    justify-self: start;
+  }
+`
 
-    & + & {
-      padding-top: var(--ui-section-gap);
-      border-top: var(--ui-border-width) solid var(--ui-line);
-    }
+const Shown = styled.p`
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+`
+
+const Tools = styled.div`
+  display: grid;
+  grid-auto-flow: column;
+  align-items: center;
+  justify-content: end;
+  gap: var(--ui-space-3);
+  min-width: 0;
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    grid-auto-flow: row;
+    justify-content: start;
+    justify-items: start;
+    width: 100%;
   }
 `
 
@@ -618,7 +659,8 @@ const CellLabel = styled.span`
 const ProjectLink = styled(NavLink)`
   display: block;
   text-decoration: none;
-  color: var(--ui-blue);
+  color: var(--ui-ink);
+  font-weight: var(--ui-weight-semibold);
   min-width: 0;
   max-width: 100%;
 

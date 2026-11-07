@@ -28,6 +28,7 @@ import { IconButton } from './button/ui/icon-button'
 import { Tooltip } from './tooltip'
 
 import type { InputProps } from './input'
+import type { GridProps } from '@radix-ui/themes'
 
 export type TagInputProps = {
   label?: string
@@ -35,6 +36,8 @@ export type TagInputProps = {
   onChange?: (value: string[]) => void
   id?: string
   labelWidth?: string
+  /** Overrides the label-beside-field layout, e.g. `1fr` for a label above. */
+  columns?: GridProps['columns']
   placeholder?: string
   disabled?: boolean
   showSkeleton?: boolean
@@ -50,6 +53,7 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
       onChange,
       id,
       labelWidth = 'auto',
+      columns,
       placeholder,
       disabled,
       showSkeleton = false,
@@ -174,7 +178,13 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
       e.preventDefault()
     }
 
-    const internalGap = label ? (isDesktop ? '24px' : 'var(--ui-space-2)') : '0'
+    // A label beside the field needs a gutter; one above it sits close, as
+    // Input's does.
+    const internalGap = label
+      ? isDesktop && !columns
+        ? 'var(--ui-space-5)'
+        : 'var(--ui-space-2)'
+      : '0'
 
     const errorProps = useMemo<InputProps | null>(
       () => (state === 'error' ? { color: 'red', variant: 'soft' } : null),
@@ -210,7 +220,7 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
 
     return (
       <Grid
-        columns={{ initial: '1', md: `${labelWidth} 1fr` }}
+        columns={columns ?? { initial: '1', md: `${labelWidth} 1fr` }}
         gap={internalGap}
         align={'start'}
         width={'100%'}
@@ -222,7 +232,8 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
             size={'2'}
             weight={'medium'}
             htmlFor={id}
-            style={{ marginTop: '6px' }}
+            // Level with the first line of tags beside it; above them, flush.
+            style={columns ? undefined : { marginTop: '6px' }}
           >
             {label}
           </Text>

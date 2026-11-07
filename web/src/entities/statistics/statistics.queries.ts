@@ -80,17 +80,33 @@ export const statisticsProjectAppsQuery = createQuery({
 
 concurrency(statisticsProjectAppsQuery, { strategy: 'TAKE_LATEST' })
 
-export const statisticsDailyQuery = createQuery({
-  handler: async (query: StatisticsQuery): Promise<StatisticsDailyRow[]> => {
-    const { rows } = await run<{ rows: StatisticsDailyRow[] }>(() =>
-      baseApi.statisticsControllerTimeDaily({ body: query }),
-    )
+const dailyHandler = async (
+  query: StatisticsQuery,
+): Promise<StatisticsDailyRow[]> => {
+  const { rows } = await run<{ rows: StatisticsDailyRow[] }>(() =>
+    baseApi.statisticsControllerTimeDaily({ body: query }),
+  )
 
-    return rows
-  },
-})
+  return rows
+}
+
+export const statisticsDailyQuery = createQuery({ handler: dailyHandler })
 
 concurrency(statisticsDailyQuery, { strategy: 'TAKE_LATEST' })
+
+/**
+ * The Time page's week: the same totals and days as the dashboard's, kept in
+ * their own queries so neither page's period overwrites the other's.
+ */
+export const statisticsWeekOverviewQuery = createQuery({
+  handler: overviewHandler,
+})
+
+concurrency(statisticsWeekOverviewQuery, { strategy: 'TAKE_LATEST' })
+
+export const statisticsWeekDailyQuery = createQuery({ handler: dailyHandler })
+
+concurrency(statisticsWeekDailyQuery, { strategy: 'TAKE_LATEST' })
 
 export const statisticsHourlyQuery = createQuery({
   handler: async (query: StatisticsQuery): Promise<StatisticsHourlyRow[]> => {

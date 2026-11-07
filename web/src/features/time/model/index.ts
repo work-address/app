@@ -73,3 +73,21 @@ export {
   timeBulkSelectionClearRequested,
 } from './time-bulk.model'
 export type { TimeBulkAction } from './time-bulk'
+export {
+  getTimeSelectedDay,
+  getTimeWeek,
+  getTimeWeekAnchor,
+  type TimeWeek,
+  type TimeWeekDay,
+  type TimeWeekSummary,
+} from './time-week'
+export {
+  $timeWeek,
+  $timeWeekDays,
+  $timeWeekFailed,
+  $timeWeekPending,
+  $timeWeekSummary,
+  timeWeekDaySelected,
+  timeWeekRequested,
+  timeWeekWholeSelected,
+} from './time-week.model'

@@ -120,7 +120,7 @@ export const workspaceDesign = {
     focusOffset: 2,
     focusOffsetLoose: space[1],
   },
-  container: { narrow: 440, figures: 480, compact: 640 },
+  container: { narrow: 440, figures: 480, compact: 640, roomy: 960 },
   chart: {
     height: 300,
     minHeight: 240,

@@ -13,13 +13,11 @@ import { SKILLS_SUGGESTIONS, type $profile } from '../../model'
 
 import {
   ProfileEditField,
-  INPUT_LABEL_WIDTH,
   type ProfileEditFormState,
 } from './profile-edit-field'
 import { SectionHeading } from './profile-edit-styles'
 
 import {
-  Input,
   WorkspaceSheet,
   TagInput,
   Select,
@@ -78,17 +76,6 @@ export const ProfileEditDetails = ({
     <Root>
       <SectionHeading>{t('profile.form.detailsTitle')}</SectionHeading>
       <Fields>
-        <Cell data-span="full">
-          <Skeleton loading={profileLoading}>
-            <Input
-              label={t('profile.form.address')}
-              labelWidth={INPUT_LABEL_WIDTH}
-              value={user?.address || ''}
-              disabled
-              id={'address'}
-            />
-          </Skeleton>
-        </Cell>
         {TEXT_FIELDS.map((field) => (
           <Cell key={field.name}>
             <ProfileEditField
@@ -141,11 +128,7 @@ export const ProfileEditDetails = ({
                     }
                   }}
                   inputProps={{
-                    labelWidth: INPUT_LABEL_WIDTH,
-                    columns: {
-                      initial: '1',
-                      md: `${INPUT_LABEL_WIDTH} 1fr`,
-                    },
+                    columns: '1fr',
                     disabled: profileSaving,
                     id: 'country',
                   }}
@@ -197,7 +180,7 @@ export const ProfileEditDetails = ({
               <TagInput
                 label={t('profile.form.skills')}
                 placeholder={t('profile.form.skillsPlaceholder')}
-                labelWidth={INPUT_LABEL_WIDTH}
+                columns="1fr"
                 id={'skills'}
                 disabled={profileSaving}
                 showSkeleton={profileLoading}

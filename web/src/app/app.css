@@ -8,16 +8,16 @@
   box-sizing: border-box;
 }
 
+/* The workspace design's system UI stack everywhere: the body, and every
+   Radix theme root (the page's and each portal's), whose controls read it. */
 body {
-  font-family: 'Inter 24pt', sans-serif;
-  background-color: var(--ds-neutral-2);
+  font-family: var(--ui-font);
+  background-color: var(--ui-canvas);
 }
 
-/* Radix sets the family on its own theme root, which is everything on screen
-   but the body. Two selectors, as its stylesheet loads after this one. */
+/* Two selectors, as Radix's stylesheet loads after this one. */
 :root .radix-themes {
-  --default-font-family: 'Inter 24pt', -apple-system, BlinkMacSystemFont,
-    'Segoe UI', Roboto, sans-serif;
+  --default-font-family: var(--ui-font);
 }
 
 /* The app owns its scrolling - the page sheet scrolls, not the document - so

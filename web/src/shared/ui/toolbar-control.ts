@@ -44,6 +44,7 @@ export const ToolbarSegment = styled.button`
   /* Pressed for the toggle, open for the dropdown - the same "this one is
      current" state, expressed by whichever primitive owns it. */
   &[aria-pressed='true'],
+  &[aria-selected='true'],
   &[data-state='open'] {
     background: var(--toolbar-pressed-background, var(--ui-surface));
     color: var(--ui-ink);

@@ -8,8 +8,6 @@ import {
 
 import { Input, type baseApi } from '@/shared'
 
-export const INPUT_LABEL_WIDTH = '106px'
-
 export type ProfileEditFormState = Pick<
   baseApi.User,
   | 'name'
@@ -59,7 +57,7 @@ export const ProfileEditField = <T extends FieldPath<ProfileEditFormState>>({
     <Input
       label={label}
       placeholder={placeholder}
-      labelWidth={INPUT_LABEL_WIDTH}
+      columns="1fr"
       id={name}
       disabled={disabled}
       state={error ? 'error' : undefined}

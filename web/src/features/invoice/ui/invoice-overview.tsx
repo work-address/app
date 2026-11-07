@@ -1,12 +1,12 @@
 import { ArrowLeftIcon } from '@radix-ui/react-icons'
-import { Badge, Skeleton } from '@radix-ui/themes'
+import { Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { QRCodeSVG } from 'qrcode.react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import {
-  invoiceStateColor,
+  invoiceStateTone,
   invoiceStateLabelKey,
   useInvoiceInfoFields,
   type InvoiceFieldId,
@@ -26,6 +26,7 @@ import {
   Text,
   Tooltip,
   useBreakpoint,
+  WorkspaceStatus,
 } from '@/shared'
 
 /** The figures that answer "how much, for how long" at a glance. */
@@ -67,14 +68,9 @@ export const InvoiceOverview = ({ onBack }: Props) => {
   const stateBadge = loading ? (
     <Skeleton width="60px" height="22px" />
   ) : (
-    <Badge
-      size="2"
-      radius="full"
-      variant="soft"
-      color={invoiceStateColor(invoice)}
-    >
+    <WorkspaceStatus tone={invoiceStateTone(invoice)}>
       {t(invoiceStateLabelKey(invoice))}
-    </Badge>
+    </WorkspaceStatus>
   )
 
   return (

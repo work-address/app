@@ -7,6 +7,8 @@ export {
   statisticsPreviousOverviewQuery,
   statisticsProjectAppsQuery,
   statisticsTeamQuery,
+  statisticsWeekDailyQuery,
+  statisticsWeekOverviewQuery,
 } from './statistics.queries'
 
 export type {

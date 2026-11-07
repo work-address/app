@@ -21,6 +21,16 @@ export const invoiceStateColor = (
       ? 'red'
       : 'amber'
 
+/** The status pill's tone: settled, closed, or still owed. */
+export const invoiceStateTone = (
+  invoice: InvoiceStateLike,
+): 'positive' | 'critical' | 'attention' =>
+  invoice?.state === 'PAID'
+    ? 'positive'
+    : invoice?.state === 'REJECTED'
+      ? 'critical'
+      : 'attention'
+
 type SettleableInvoice = {
   state?: string | null
   user?: { id?: string | null } | null

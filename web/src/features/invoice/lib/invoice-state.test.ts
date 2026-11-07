@@ -5,6 +5,7 @@ import {
   invoiceRateHour,
   invoiceStateColor,
   invoiceStateLabelKey,
+  invoiceStateTone,
 } from './invoice-state'
 
 describe('invoice state helpers', () => {
@@ -20,6 +21,12 @@ describe('invoice state helpers', () => {
     expect(invoiceStateColor({ state: 'PAID' })).toBe('green')
     expect(invoiceStateColor({ state: 'REJECTED' })).toBe('red')
     expect(invoiceStateColor({ state: 'Requested' })).toBe('amber')
+  })
+  it('gives each state the tone of its status pill', () => {
+    expect(invoiceStateTone({ state: 'PAID' })).toBe('positive')
+    expect(invoiceStateTone({ state: 'REJECTED' })).toBe('critical')
+    expect(invoiceStateTone({ state: 'Requested' })).toBe('attention')
+    expect(invoiceStateTone(null)).toBe('attention')
   })
   it('lets only the issuer settle, and never a rejected invoice', () => {
     const invoice = { state: 'Requested', user: { id: 'worker' } }
