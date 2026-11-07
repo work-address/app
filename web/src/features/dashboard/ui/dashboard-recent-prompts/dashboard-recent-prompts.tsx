@@ -1,5 +1,4 @@
-import { ChevronRightIcon } from '@radix-ui/react-icons'
-import { Avatar } from '@radix-ui/themes'
+import { CodeIcon, LightningBoltIcon } from '@radix-ui/react-icons'
 import { useUnit } from 'effector-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -17,37 +16,18 @@ import { $user } from '@/entities/profile'
 import { $removedPromptRunKeys, recentAgentRunsQuery } from '@/entities/time'
 import { AgentPromptRemoveButton, canRemoveAgentPrompt } from '@/features/time'
 import { routes } from '@/routes'
-import { formatDurationFromMinutes, toDay } from '@/shared'
+import {
+  formatCompactDurationFromMinutes,
+  formatDurationFromMinutes,
+  toDay,
+  workspaceDesign,
+} from '@/shared'
 
 const VISIBLE_PROMPTS = 8
 
-/**
- * One colour per agent product, picked by name so it is stable across loads.
- * Several products share an initial (claude-code, cursor, codex), so the
- * colour is what tells their marks apart. FNV-1a over ten hues keeps the
- * common products on different ones; a simple sum put most on two.
- */
-const AVATAR_COLORS = [
-  'indigo',
-  'teal',
-  'orange',
-  'crimson',
-  'violet',
-  'grass',
-  'cyan',
-  'amber',
-  'plum',
-  'blue',
-] as const
-
-const avatarColor = (product: string) => {
-  let hash = 0x81_1c_9d_c5
-
-  for (let index = 0; index < product.length; index += 1) {
-    hash = Math.imul(hash ^ product.charCodeAt(index), 0x01_00_01_93) >>> 0
-  }
-
-  return AVATAR_COLORS[hash % AVATAR_COLORS.length]
+const PRODUCT_NAMES: Record<string, string> = {
+  'claude-code': 'Claude Code',
+  codex: 'Codex',
 }
 
 /**
@@ -112,11 +92,12 @@ export const DashboardRecentPrompts = () => {
           : undefined
       }
     >
-      <List>
+      <Root>
         {visible.map((run) => {
           const day = toDay(new Date(run.fromAt))
           const minutes =
             (Date.parse(run.toAt) - Date.parse(run.fromAt)) / 60_000
+          const duration = Math.max(1, Math.round(minutes))
           const removable = canRemoveAgentPrompt(run, user?.id)
 
           return (
@@ -129,36 +110,34 @@ export const DashboardRecentPrompts = () => {
                   projects: run.projectId,
                 })}`}
               >
-                {/* The agent's mark: two letters in the product's colour, so
-                    a column of prompts from several products reads at a
-                    glance. */}
-                <Avatar
-                  size="2"
-                  radius="full"
-                  variant="soft"
-                  color={avatarColor(run.product)}
-                  fallback={run.product.slice(0, 2).toUpperCase()}
-                  aria-hidden
-                />
+                <Icon aria-hidden="true">
+                  {run.product === 'codex' ? (
+                    <LightningBoltIcon
+                      width={workspaceDesign.icon.size}
+                      height={workspaceDesign.icon.size}
+                    />
+                  ) : (
+                    <CodeIcon
+                      width={workspaceDesign.icon.size}
+                      height={workspaceDesign.icon.size}
+                    />
+                  )}
+                </Icon>
                 <Body>
+                  <Product>{PRODUCT_NAMES[run.product] ?? run.product}</Product>
+                  <Duration aria-label={formatDurationFromMinutes(duration, t)}>
+                    {formatCompactDurationFromMinutes(duration, i18n.language)}
+                  </Duration>
                   {run.prompt ? (
                     <Prompt>{run.prompt}</Prompt>
                   ) : (
                     <Held>{t('dashboard.prompts.held')}</Held>
                   )}
                   <Meta>
-                    <Product>{run.product}</Product>
                     <span>{titles.get(run.projectId)}</span>
-                    <span>
-                      {formatDurationFromMinutes(
-                        Math.max(1, Math.round(minutes)),
-                        t,
-                      )}
-                    </span>
                     <span>{when.format(new Date(run.fromAt))}</span>
                   </Meta>
                 </Body>
-                <Chevron aria-hidden="true" />
               </Item>
               {/* Beside the link, not inside it: the row is an anchor, and a
                   button nested in one is invalid HTML. */}
@@ -170,117 +149,154 @@ export const DashboardRecentPrompts = () => {
             </Row>
           )
         })}
-      </List>
+      </Root>
     </DashboardWidget>
   )
 }
 
-/* Reaches into the card's padding, so a row's hover tint runs edge to edge. */
-const List = styled.ul`
+const Root = styled.ul`
   display: grid;
-  margin: calc(var(--space-2) * -1) calc(var(--space-4) * -1);
+  margin: 0;
   padding: 0;
   list-style: none;
-
-  li + li {
-    border-top: 1px solid var(--ds-neutral-alpha-4);
-  }
 `
 
 const Row = styled.li`
   position: relative;
+  min-width: 0;
+
+  & + & {
+    border-top: var(--ui-border-width) solid var(--ui-line);
+  }
 `
 
-const RemoveSlot = styled.div`
-  position: absolute;
-  top: 50%;
-  right: var(--space-3);
-  display: flex;
-  transform: translateY(-50%);
-`
-
-/* The whole row is the link: a tint says so on hover, and the chevron says
-   where it goes. A removable row leaves room for the button over its end. */
+/* A removable row reserves a separate target beside its worklog link. */
 const Item = styled(Link)`
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr) auto;
-  align-items: center;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  color: inherit;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--ui-space-3);
+  min-width: 0;
+  padding: calc(var(--ui-space-4) + var(--ui-space-1)) var(--ui-space-2);
+  border-radius: var(--ui-icon-radius);
+  color: var(--ui-ink);
   text-decoration: none;
-  transition: background-color 0.15s ease;
+  transition: background-color var(--ui-transition);
 
   &[data-removable] {
-    padding-right: calc(var(--space-3) + 32px);
+    padding-right: var(--ui-space-7);
   }
 
   &:hover,
   &:focus-visible {
-    background-color: var(--ds-neutral-2);
+    background-color: var(--ui-inset);
     outline: none;
   }
 
   &:focus-visible {
-    box-shadow: inset 0 0 0 2px var(--ds-accent-9);
+    box-shadow: inset 0 0 0 var(--ui-focus-width) var(--ui-blue);
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    transition: none;
   }
 `
 
-const Body = styled.span`
+const Icon = styled.span`
   display: grid;
-  gap: var(--space-1);
+  place-items: center;
+  width: var(--ui-space-7);
+  height: var(--ui-space-7);
+  border-radius: var(--ui-icon-radius);
+  color: var(--ui-blue);
+  background: var(--ui-glow);
+`
+
+const Body = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: baseline;
+  column-gap: var(--ui-space-3);
+  row-gap: var(--ui-space-1);
   min-width: 0;
+`
+
+const Product = styled.span`
+  min-width: 0;
+  overflow-wrap: anywhere;
+  color: var(--ui-ink);
+  font-size: var(--ui-body-size);
+  line-height: var(--ui-body-line-height);
+  font-weight: var(--ui-weight-semibold);
+`
+
+const Duration = styled.span`
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 `
 
 const Prompt = styled.p`
   display: -webkit-box;
+  grid-column: 1 / -1;
   margin: 0;
   overflow: hidden;
-  color: var(--ds-neutral-12);
-  font-size: var(--font-size-2);
-  line-height: var(--line-height-2);
-  font-weight: 500;
+  color: var(--ui-text);
+  font-size: var(--ui-body-size);
+  line-height: var(--ui-body-line-height);
+  font-weight: var(--ui-weight-regular);
+  overflow-wrap: anywhere;
   -webkit-line-clamp: 2;
   -webkit-box-orient: vertical;
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    -webkit-line-clamp: 3;
+  }
 `
 
 const Held = styled.p`
+  grid-column: 1 / -1;
   margin: 0;
-  color: var(--ds-neutral-11);
-  font-size: var(--font-size-2);
-  line-height: var(--line-height-2);
+  color: var(--ui-muted);
+  font-size: var(--ui-body-size);
+  line-height: var(--ui-body-line-height);
   font-style: italic;
 `
 
-/* Facts parted by dots, the product first and darker: it is the answer to
-   "which agent", the rest is where and when. */
+/* Facts have variable intrinsic widths and should wrap as a sentence, so
+   flex-wrap keeps their separators with each fact instead of equal grid cells. */
 const Meta = styled.span`
   display: flex;
+  grid-column: 1 / -1;
   flex-wrap: wrap;
   align-items: center;
-  column-gap: var(--space-2);
-  row-gap: 0;
+  column-gap: var(--ui-space-2);
+  row-gap: var(--ui-space-1);
   min-width: 0;
-  color: var(--ds-neutral-11);
-  font-size: var(--font-size-1);
-  line-height: var(--line-height-1);
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+  overflow-wrap: anywhere;
 
   & > * + *::before {
     content: '·';
-    margin-right: var(--space-2);
+    margin-right: var(--ui-space-2);
+  }
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    display: grid;
+
+    & > * + *::before {
+      content: none;
+    }
   }
 `
 
-const Product = styled.span`
-  color: var(--ds-neutral-12);
-  font-weight: 500;
-`
-
-const Chevron = styled(ChevronRightIcon)`
-  color: var(--ds-neutral-11);
-  transition: transform 0.15s ease;
-
-  ${Item}:hover & {
-    transform: translateX(2px);
-  }
+const RemoveSlot = styled.div`
+  position: absolute;
+  top: calc(var(--ui-space-4) + var(--ui-space-1));
+  right: var(--ui-space-2);
+  display: grid;
 `

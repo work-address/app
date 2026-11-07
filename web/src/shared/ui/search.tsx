@@ -25,7 +25,7 @@ export const SearchInput = ({ ...props }: SearchProps) => {
       onChange={(e) => {
         onChange?.(e.currentTarget.value, e)
       }}
-      placeholder={t('ui.search.placeholderProjects')}
+      placeholder={props.placeholder ?? t('ui.search.placeholderProjects')}
       addonLeft={<MagnifyingGlassIcon width={16} height={16} />}
       addonRight={
         value ? (

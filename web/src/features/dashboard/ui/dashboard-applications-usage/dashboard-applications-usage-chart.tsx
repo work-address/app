@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import {
   Bar,
   BarChart,
+  BarStack,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
@@ -12,14 +13,14 @@ import {
 import styled from 'styled-components'
 
 import {
-  getBarColor,
   HIT_AREA_KEY,
   toProcessKey,
   type ApplicationsUsageChart,
 } from '../../model'
 import { DashboardProjectPopup } from '../dashboard-project-popup'
 
-import { ChartPopup } from '@/shared'
+import { OTHER_PROCESS_NAME } from '@/entities/projects'
+import { ChartPopup, workspaceDesign } from '@/shared'
 
 // Projects visible in the chart area before horizontal scroll kicks in.
 const VISIBLE_PROJECTS_COUNT = 4
@@ -28,25 +29,12 @@ const VISIBLE_PROJECTS_COUNT = 4
 // name is always available in the tooltip.
 const MAX_LABEL_LENGTH = 8
 
-// A project's breakdown is too wide for the card it opens from.
-const POPUP_WIDTH = 640
-// Clears the card's own padding, so the popup stands apart from its edge.
-const POPUP_GAP = 24
-
-/* The plot fills its tile; this is only the floor, for a tile with little beside it. */
-const MIN_CHART_HEIGHT = 240
-// Vertical bounds of the plot box; the hour gutter outside the scroller must
-// use the same numbers to line up with the grid. Keep in sync with the chart
-// margin below, the XAxis height, and the skeleton.
-const PLOT_TOP = 6
-const LABEL_AREA_HEIGHT = 30
-// The gutter sizes itself to its own widest tick (see YAxisSizer) instead of
-// reserving a fixed width for the longest localized tick ("100小时", "100時間"),
-// which left the aside's plot paying for space no English scale ever used.
-// This is only the floor, shared with the skeleton and the empty state.
-const Y_AXIS_MIN_WIDTH = 28
-// Gap between a tick label and the plot.
-const Y_AXIS_GAP = 6
+const APP_COLORS = [
+  'var(--ui-chart-1)',
+  'var(--ui-chart-2)',
+  'var(--ui-chart-3)',
+  'var(--ui-chart-5)',
+]
 
 const truncateLabel = (label: string) =>
   label.length > MAX_LABEL_LENGTH
@@ -99,50 +87,67 @@ export const DashboardApplicationsUsageChart = ({
           <ResponsiveContainer width="100%" height="100%">
             <BarChart
               data={data}
-              margin={{ top: PLOT_TOP, right: 8, left: 0, bottom: 0 }}
+              margin={{
+                top: workspaceDesign.chart.plotTop,
+                right: workspaceDesign.chart.plotRight,
+                left: 0,
+                bottom: 0,
+              }}
               onMouseMove={(state) => {
                 const index = Number(state?.activeTooltipIndex)
                 setActive(Number.isInteger(index) ? index : null)
               }}
               onMouseLeave={() => setActive(null)}
             >
-              <CartesianGrid vertical={false} strokeDasharray="3 6" />
+              <CartesianGrid vertical={false} stroke="var(--ui-line)" />
               <XAxis
                 dataKey="label"
                 axisLine={false}
                 tickLine={false}
-                tickMargin={10}
+                tickMargin={workspaceDesign.chart.tickMargin}
                 interval={0}
-                height={LABEL_AREA_HEIGHT}
+                height={workspaceDesign.chart.labelAreaHeight}
                 tickFormatter={truncateLabel}
               />
               <YAxis domain={[0, yAxis.max]} ticks={yAxis.ticks} hide />
               {/* Only the bar highlight: the project's popup is its own. */}
               <Tooltip
                 content={() => null}
-                cursor={{ fill: 'var(--c-rgba-0-52-130-0_06)' }}
+                cursor={{ fill: 'var(--ui-inset)' }}
               />
               {processNames.length > 0 ? (
-                processNames.map((processName, index) => (
-                  <Bar
-                    key={processName}
-                    dataKey={toProcessKey(processName)}
-                    stackId="x"
-                    fill={getBarColor(processName, index)}
-                    maxBarSize={80}
-                    background={index === 0 ? { fill: 'transparent' } : false}
-                    radius={
-                      index === processNames.length - 1
-                        ? [8, 8, 0, 0]
-                        : [0, 0, 0, 0]
-                    }
-                  />
-                ))
+                <BarStack
+                  stackId="x"
+                  radius={[
+                    workspaceDesign.chart.barRadius,
+                    workspaceDesign.chart.barRadius,
+                    workspaceDesign.chart.barBaseRadius,
+                    workspaceDesign.chart.barBaseRadius,
+                  ]}
+                >
+                  {processNames.map((processName, index) => (
+                    <Bar
+                      key={processName}
+                      dataKey={toProcessKey(processName)}
+                      stackId="x"
+                      fill={
+                        processName === OTHER_PROCESS_NAME
+                          ? 'var(--ui-chart-7)'
+                          : APP_COLORS[index]
+                      }
+                      maxBarSize={workspaceDesign.chart.barMaxWidth}
+                      stroke="var(--ui-surface)"
+                      strokeWidth={workspaceDesign.border.width}
+                      background={index === 0 ? { fill: 'transparent' } : false}
+                      isAnimationActive={false}
+                    />
+                  ))}
+                </BarStack>
               ) : (
                 <Bar
                   dataKey={HIT_AREA_KEY}
                   fill="transparent"
-                  maxBarSize={80}
+                  maxBarSize={workspaceDesign.chart.barMaxWidth}
                   background={{ fill: 'transparent' }}
                   isAnimationActive={false}
                   legendType="none"
@@ -155,8 +160,8 @@ export const DashboardApplicationsUsageChart = ({
       {hovered?.projectId ? (
         <ChartPopup
           anchor={() => rootRef.current?.getBoundingClientRect()}
-          gap={POPUP_GAP}
-          width={POPUP_WIDTH}
+          gap={workspaceDesign.chart.popupGap}
+          width={workspaceDesign.chart.popupWidth}
         >
           <DashboardProjectPopup projectId={hovered.projectId} />
         </ChartPopup>
@@ -167,39 +172,38 @@ export const DashboardApplicationsUsageChart = ({
 
 const Root = styled.div`
   position: relative;
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   height: 100%;
-  min-height: ${MIN_CHART_HEIGHT}px;
+  min-height: var(--ui-chart-min-height);
 `
 
 const YAxisGutter = styled.div`
   position: relative;
-  flex: none;
-  min-width: ${Y_AXIS_MIN_WIDTH}px;
-  margin: ${PLOT_TOP}px 0 ${LABEL_AREA_HEIGHT}px;
+  min-width: var(--ui-chart-y-axis-min-width);
+  margin: var(--ui-chart-plot-top) 0 var(--ui-chart-label-area-height);
 `
 
 const YAxisSizer = styled.span`
   visibility: hidden;
   display: block;
-  padding-right: ${Y_AXIS_GAP}px;
-  font-size: var(--font-size-1);
-  line-height: 1;
+  padding-right: var(--ui-chart-y-axis-gap);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-chart-label-leading);
   white-space: nowrap;
 `
 
 const YAxisLabel = styled.span`
   position: absolute;
-  right: ${Y_AXIS_GAP}px;
+  right: var(--ui-chart-y-axis-gap);
   white-space: nowrap;
   transform: translateY(-50%);
-  color: var(--c-rgba-0-7-20-0_62);
-  font-size: var(--font-size-1);
-  line-height: 1;
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-chart-label-leading);
 `
 
 const Scroller = styled.div`
-  flex: 1;
   min-width: 0;
   overflow-x: auto;
 `
@@ -207,12 +211,8 @@ const Scroller = styled.div`
 const ChartWrap = styled.div`
   height: 100%;
 
-  .recharts-cartesian-grid-horizontal line {
-    stroke: var(--c-rgba-0-0-51-0_12);
-  }
-
   .recharts-text {
-    fill: var(--c-rgba-0-7-20-0_62);
-    font-size: var(--font-size-1);
+    fill: var(--ui-muted);
+    font-size: var(--ui-meta-size);
   }
 `

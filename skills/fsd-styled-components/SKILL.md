@@ -16,6 +16,17 @@ Specify first, implement second. A feature spec is done when it names concrete p
 exports, styled-component names and the `data-*` variant matrix — then implementation
 is transcription, not invention.
 
+## Design-system selection
+
+When a page already adopts the workspace design, or the request applies that style
+to a new surface, read [workspace-design](../workspace-design/SKILL.md). That skill
+owns its visual rules, shared token source, component recipes, opt-in scope and
+acceptance checks; this skill owns placement, naming and component contracts.
+Record the selected design contract in the spec's Tokens and Composition sections.
+Keep existing page designs and shared defaults unless their adoption is in scope.
+The examples below demonstrate structure; use the selected design's tokens for
+their illustrative style values in implementation.
+
 ## Workflow
 
 1. Write the spec from the template below. Do not write code until placement, public

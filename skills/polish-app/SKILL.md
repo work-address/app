@@ -17,6 +17,16 @@ no argument the target is every page.
 Work in rounds. Stop after the audit and let the user confirm the order, unless they
 asked to go straight through. Do not commit until the user asks.
 
+## Design-system scope
+
+Record the design contract for each route before auditing consistency. For routes
+already using the workspace design, or a request to adopt it on additional routes,
+read [workspace-design](../workspace-design/SKILL.md) and use its shared components,
+tokens and acceptance criteria. It is the single visual rulebook for that branch.
+The legacy wrapper/header/stat choices below apply to unmigrated pages. Preserve
+their existing decisions unless migration is included in the user's scope; an
+app-wide polish request alone does not imply app-wide workspace adoption.
+
 ## Inventory
 
 - Read `skills/polish-page/SKILL.md`; its rules, local setup and pitfalls apply to every
@@ -32,7 +42,7 @@ asked to go straight through. Do not commit until the user asks.
   each with and without `?nonce=`; and the not-found page. Skip the redirects
   (`/invoices`, `/download`) and the external links (docs and social profiles).
 - Keep a ledger in the scratchpad with one row per format: route, page file, feature
-  slices, last polish commit, and status. Run
+  slices, design contract, last polish commit, and status. Run
   `git log --oneline -- web/src/pages/<page>.tsx web/src/features/<slice>` to find the last
   polish commit; a `feat(web): polish …` subject means the page has had a pass already.
 - Run the app locally as polish-page describes and capture every format, full length, at
@@ -43,15 +53,19 @@ asked to go straight through. Do not commit until the user asks.
 
 ## Audit across pages
 
-1. **Columns.** Data pages (dashboard, invoices) use `Wrapper width="full"` and
+For workspace pages, use the linked workspace composition recipes for the first
+three checks instead of applying the legacy component choices. Compare equivalent
+roles within each design contract; preserve intentional adoption boundaries.
+
+1. **Columns — legacy recipe.** Data pages (dashboard, invoices) use `Wrapper width="full"` and
    `ListPageLayout`; one record or a form (an invoice, a profile, the editor) uses
    `Wrapper width="document"`. The first line of every page starts at the same height,
    the side column sits in the same place and collapses at the same width, and switching
    pages in the header does not jump.
-2. **Headers.** Every page opens with `PageHeader`, or `PageTitle` alone when the title
+2. **Headers — legacy recipe.** Every page opens with `PageHeader`, or `PageTitle` alone when the title
    sits inside the page's own card, with the same title size, badge, description and
    trailing actions.
-3. **Blocks.** Every section heading is a `SectionTitle`, every summary strip a
+3. **Blocks — legacy recipe.** Every section heading is a `SectionTitle`, every summary strip a
    `StatStrip` of `StatTile`s, every search box the shared `Search`, and every dialog an
    `AdaptiveDialog` (or `Modal`/`Drawer` where the phone needs something else).
 4. **One look per thing.** A project, a time entry, an invoice, a person or a wallet
@@ -119,9 +133,10 @@ each fix lands, the order, and anything that needs a product decision or backend
 ## Verify across the app
 
 - Measure, don't eyeball. One browser script, run over every route at 1440 and 390,
-  collects the `PageTitle`'s size and weight, the header's height, the x and width of
-  the content column and the side column, the `SectionTitle` size, and the gaps between
-  cards. Every value should agree across pages, and an outlier is a finding.
+  collects page-title size and weight, header height, content and side-column x and
+  width, section-title size, and card gaps. Compare roles within each selected design
+  contract. An outlier is a finding; an intentional adoption boundary is not a
+  migration instruction. Workspace pages also meet the linked skill's review widths.
 - On every route, check `document.title`, the description, the canonical and robots
   against the rules above. The console should show no errors, and no `/api` request
   should fail.

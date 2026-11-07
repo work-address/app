@@ -9,6 +9,20 @@ Polish the `web/` pages named by the user until each one is finished, dense, and
 
 Work in rounds when the user wants an iterative review: complete a full pass, present the result, then apply feedback and re-verify. Do not commit until the user asks.
 
+## Choose the design contract
+
+For a page already using the workspace design, or a request to apply that style to
+a new page, read [workspace-design](../workspace-design/SKILL.md). It is the single
+rulebook for its tokens, composition and visual acceptance. Use `WorkspacePage`,
+`WorkspacePageHeader`, `WorkspacePanel`, `WorkspaceSummary` and `WorkspaceMetric`
+from `@/shared` as its recipes prescribe. Its shared constants supply the values.
+
+Other pages retain their current design unless the requested scope includes their
+adoption. A polish request alone does not authorize replacing every page's visual
+contract. The wrapper, header and stat choices labeled legacy below apply to those
+unmigrated pages. Behavior, state, accessibility and verification rules still apply
+to both branches.
+
 ## Several pages
 
 - **Read the list.** Split the targets on spaces, commas and new lines, strip the origin (`http://localhost:8000/invoice` is `/invoice`), and drop duplicates. A query variant (`?nonce=`) is a format of the same page, not another page.
@@ -16,7 +30,7 @@ Work in rounds when the user wants an iterative review: complete a full pass, pr
 - **Capture the whole set first,** before any change, so the before shots all show the same code.
 - **Shared fixes once.** When two targets draw the same thing — a card, a row, a header, a state notice — fix it in `shared/ui`, `shared/styles`, the layout or the entity, then recheck every target and every other importer of what changed.
 - **Then one full pass per page,** in order: before changing anything, layout, components and code, finish, and verify. Finish and verify a page before starting the next. Keep each page's changes inside its page file and feature slice, plus the shared fixes it needs.
-- **Keep the set consistent.** Measure the same things on every target: `PageTitle` size and weight, header height, the `Wrapper` content column's x and width, `SectionTitle` size and the gaps between cards. Values should agree across the set, and an outlier is a finding.
+- **Keep the set consistent.** Record each target's design contract. Measure equivalent roles: page-title size and weight, header height, content column x and width, section-title size and the gaps between cards. Values should agree within the same contract; an intentional adoption boundary is not a reason to restyle an unrelated route.
 - **Rounds.** Go straight through the list and present the whole set at the end, unless the user asked to review each page before the next.
 - **Report per page.** One short section per page — what changed and why, before and after screenshots, remaining dependencies — then the shared changes and the pages each one touched.
 - **Commits,** when the user asks: one per page, titled `feat(web): polish the <page>`, plus one per shared change, staging only this session's hunks.
@@ -34,17 +48,17 @@ Work in rounds when the user wants an iterative review: complete a full pass, pr
 1. Show each fact once. Merge blocks that repeat the same name, address, amount, status or action.
 2. Group related content in one card with one border. Put media flush at the top, padded rows below it, and hairlines between distinct rows.
 3. Make adjacent panels share a height through grid layout rather than fixed heights.
-4. Keep related content in the same column. Data pages use `Wrapper width="full"` and `ListPageLayout` (`Main` and `Aside`); one record or a form uses `Wrapper width="document"`, so every record page starts at the same place.
-5. Open the page with the shared `PageHeader` — `PageTitle` h1, at most one small badge, a description, and trailing actions. A page whose title sits inside its own card (a profile, an invoice) uses `PageTitle` alone so the size still matches. On phones, give icon-only actions their own line and preserve accessible labels.
+4. Keep related content in the same column. **Legacy recipe:** data pages use `Wrapper width="full"` and `ListPageLayout` (`Main` and `Aside`); one record or a form uses `Wrapper width="document"`, so every record page starts at the same place. Workspace pages use the linked workspace page and panel recipes.
+5. **Legacy recipe:** open the page with the shared `PageHeader` — `PageTitle` h1, at most one small badge, a description, and trailing actions. A page whose title sits inside its own card (a profile, an invoice) uses `PageTitle` alone so the size still matches. Workspace pages use `WorkspacePageHeader`. On phones, give icon-only actions their own line and preserve accessible labels.
 6. Group related actions together, using `Button` and `IconButton` sizes (`s`, `m`, `l`) consistently within a bar, with at most one `solid` button per area.
 7. Do not style non-actions as buttons.
 8. Align paired information rows across columns. Measure their vertical centers and make them match to the pixel.
-9. Use a dense rhythm: tight padding and gaps inside cards, and inline tags and chips where they fit. Headline figures go in a `StatStrip` of `StatTile`s, not in loose text.
+9. Keep related information together and use the selected contract's spacing. **Legacy recipe:** headline figures go in a `StatStrip` of `StatTile`s. Workspace pages use the linked `WorkspaceSummary` and `WorkspaceMetric` recipe.
 
 ## Components and code
 
-- Reuse `shared/ui` first, especially `Wrapper`, `PageHeader`, `PageTitle`, `PageHelmet`, `ListPageLayout`, `SectionTitle`, `Card`, `WidePageCard`, `StatTile`, `StatStrip`, `Button`, `IconButton`, `AdaptiveDialog`, `Tabs`, `Table`, `Search`, `Tooltip`, `Hint`, `StateNotice` and `LoadFailure`, plus Radix Themes primitives such as `Skeleton`.
-- Follow the repository's styled-components and FSD conventions. Use the custom properties in `shared/styles/variables.css` and the Radix theme tokens, CSS grid, container queries, and finite `data-*` variants. Avoid raw colors, magic spacing values, and local component clones.
+- Reuse `shared/ui` first. Select page, panel and metric primitives from the chosen design contract. Both branches reuse behavior components such as `PageHelmet`, `Button`, `IconButton`, `AdaptiveDialog`, `Tabs`, `Table`, `Search`, `Tooltip`, `Hint`, `StateNotice`, `LoadFailure` and Radix `Skeleton`.
+- Follow the repository's styled-components and FSD conventions. Workspace pages use the token source and opt-in boundary documented in workspace-design; legacy pages use `shared/styles/variables.css` and Radix theme tokens. Use CSS grid, container queries and finite `data-*` variants. Avoid raw colors, magic spacing values and local component clones.
 - Keep application and interaction state in Effector. Put pure helpers in `model/` and add meaningful unit tests.
 - All copy goes through `t()`. Add every new key to all five locales in `shared/i18n/locales` (en, es, ja, ru, zh).
 - Preserve unrelated behavior and existing public boundaries.

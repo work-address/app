@@ -33,6 +33,7 @@ import {
   ProjectsMobileHeader,
 } from '../projects-mobile'
 
+import { ProjectsOverviewTable } from './projects-overview-table'
 import {
   ProjectsTableContext,
   type ProjectsTableContextValues,
@@ -52,6 +53,7 @@ import {
   type MobileDataTableConfig,
   type DataTableConfig,
   formatCount,
+  workspaceDesign,
   formatCurrency,
 } from '@/shared'
 import {
@@ -72,7 +74,12 @@ const rowIdGetter = (row: ProjectWithStats) => row.id ?? ''
 
 export type ProjectsTablePeriodTotals = Record<
   string,
-  { minutes: number; minutesActive?: number; paidCents?: number }
+  {
+    minutes: number
+    minutesActive?: number
+    paidCents?: number
+    earnedCents?: number
+  }
 >
 
 type ProjectsTableProps = {
@@ -85,12 +92,18 @@ type ProjectsTableProps = {
   periodTotals?: ProjectsTablePeriodTotals
   /** Details shown when the pointer rests on a project's name. */
   projectPopup?: (row: ProjectWithStats) => ReactNode
+  /** Optional search control supplied by the dashboard. */
+  search?: ReactNode
+  /** A surrounding card can supply the create action in its header. */
+  showCreateAction?: boolean
 }
 
 export const ProjectsTable = ({
   projectIds,
   periodTotals,
   projectPopup,
+  search,
+  showCreateAction = true,
 }: ProjectsTableProps = {}) => {
   const isMobile = useBreakpoint('isMobile')
 
@@ -156,6 +169,7 @@ export const ProjectsTable = ({
           minutes: period?.minutes ?? 0,
           minutesActive: seesDetail ? (period?.minutesActive ?? 0) : undefined,
           paidCents: seesDetail ? (period?.paidCents ?? 0) : undefined,
+          earnedCents: seesDetail ? (period?.earnedCents ?? 0) : undefined,
         }
       }),
       sort,
@@ -190,10 +204,8 @@ export const ProjectsTable = ({
 
   const desktopConfig = useMemo(
     (): DataTableConfig<ProjectWithStats> => [
-      // Widths are what each column's longest value needs and no more: the
-      // table shares a dashboard row with another tile, so it has to fit in
-      // half the page. The start date lives in the project's popup and
-      // dialog; here the name takes the room.
+      // The project name takes the largest share of the full-width table.
+      // Dates and additional details remain in the project's popup/dialog.
       {
         dataKey: 'title',
         width: 148,
@@ -322,67 +334,98 @@ export const ProjectsTable = ({
   )
 
   return (
-    <Flex direction={'column'} height={'100%'}>
-      <Flex direction={'row'} justify={'between'} pb={'3'} align={'center'}>
-        <TabsRoot value={filter.projectState} onValueChange={handleTabClick}>
-          <TabsList>
-            <TabsTrigger value={'All'}>
-              {t('dashboard.page.tabs.all')}
-            </TabsTrigger>
-            <TabsTrigger value={'Active'}>
-              {t('dashboard.page.tabs.active')}
-            </TabsTrigger>
-            <TabsTrigger value={'Inactive'}>
-              {t('dashboard.page.tabs.inactive')}
-            </TabsTrigger>
-          </TabsList>
-        </TabsRoot>
-        <Flex gap={'var(--space-2)'}>
-          {allowDeleteAll && (
-            <>
-              {isMobile ? (
-                <Tooltip content={t('dashboard.page.deleteAll')}>
-                  <IconButton
-                    variant={'outline'}
-                    color={'red'}
-                    aria-label={t('dashboard.page.deleteAll')}
+    <Root data-overview={Boolean(periodTotals) || undefined}>
+      <Toolbar>
+        {periodTotals ? (
+          <Filters aria-label={t('dashboard.projectsTable.head.status')}>
+            {(['All', 'Active', 'Inactive'] as const).map((state) => (
+              <Filter
+                key={state}
+                type="button"
+                aria-pressed={filter.projectState === state}
+                onClick={() => changeStateTab(state)}
+              >
+                {t(`dashboard.page.tabs.${state.toLowerCase()}`)}
+              </Filter>
+            ))}
+          </Filters>
+        ) : (
+          <TabsRoot value={filter.projectState} onValueChange={handleTabClick}>
+            <TabsList>
+              <TabsTrigger value={'All'}>
+                {t('dashboard.page.tabs.all')}
+              </TabsTrigger>
+              <TabsTrigger value={'Active'}>
+                {t('dashboard.page.tabs.active')}
+              </TabsTrigger>
+              <TabsTrigger value={'Inactive'}>
+                {t('dashboard.page.tabs.inactive')}
+              </TabsTrigger>
+            </TabsList>
+          </TabsRoot>
+        )}
+        {(search || periodTotals) && (
+          <Tools>
+            {search && <Search>{search}</Search>}
+            {periodTotals && projects.length > 1 && (
+              <SortSelect
+                options={sortOptions}
+                field={sortField}
+                order={sortOrder}
+                onChange={(field, order) => changeSort({ [field]: order })}
+              />
+            )}
+          </Tools>
+        )}
+        {(allowDeleteAll || showCreateAction) && (
+          <Actions>
+            {allowDeleteAll && (
+              <>
+                {isMobile ? (
+                  <Tooltip content={t('dashboard.page.deleteAll')}>
+                    <ActionIcon
+                      variant={'outline'}
+                      color={'red'}
+                      aria-label={t('dashboard.page.deleteAll')}
+                    >
+                      <TrashIcon />
+                    </ActionIcon>
+                  </Tooltip>
+                ) : (
+                  <Action
+                    color="danger"
+                    variant="outline"
+                    iconLeft={<TrashIcon />}
                   >
-                    <TrashIcon />
-                  </IconButton>
+                    {t('dashboard.page.deleteAll')}
+                  </Action>
+                )}
+              </>
+            )}
+            {showCreateAction &&
+              (isMobile ? (
+                <Tooltip content={t('dashboard.page.createProject')}>
+                  <ActionIcon
+                    themeVariant={'primary'}
+                    onClick={() => setCreateDialogOpen(true)}
+                    aria-label={t('dashboard.page.createProject')}
+                  >
+                    <PlusIcon />
+                  </ActionIcon>
                 </Tooltip>
               ) : (
-                <Button
-                  color="danger"
-                  variant="outline"
-                  iconLeft={<TrashIcon />}
+                <Action
+                  iconLeft={<PlusIcon />}
+                  onClick={() => setCreateDialogOpen(true)}
                 >
-                  {t('dashboard.page.deleteAll')}
-                </Button>
-              )}
-            </>
-          )}
-          {isMobile ? (
-            <Tooltip content={t('dashboard.page.createProject')}>
-              <IconButton
-                themeVariant={'primary'}
-                onClick={() => setCreateDialogOpen(true)}
-                aria-label={t('dashboard.page.createProject')}
-              >
-                <PlusIcon />
-              </IconButton>
-            </Tooltip>
-          ) : (
-            <Button
-              iconLeft={<PlusIcon />}
-              onClick={() => setCreateDialogOpen(true)}
-            >
-              {t('dashboard.page.createProject')}
-            </Button>
-          )}
-        </Flex>
-      </Flex>
+                  {t('dashboard.page.createProject')}
+                </Action>
+              ))}
+          </Actions>
+        )}
+      </Toolbar>
       {/* A phone's cards have no column headers to sort from. */}
-      {isMobile && projects.length > 1 && (
+      {isMobile && !periodTotals && projects.length > 1 && (
         <Flex pb={'3'}>
           <SortSelect
             options={sortOptions}
@@ -392,7 +435,7 @@ export const ProjectsTable = ({
           />
         </Flex>
       )}
-      <Root>
+      <Body data-overview={Boolean(periodTotals) || undefined}>
         <AnimatePresence mode={'wait'}>
           <motion.div
             key={filter.projectState}
@@ -400,7 +443,7 @@ export const ProjectsTable = ({
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            transition={{ duration: 0.2 }}
+            transition={{ duration: workspaceDesign.motion.filterDuration }}
           >
             {projects.length === 0 && !isProjectsLoading ? (
               <ProjectsEmptyState
@@ -408,7 +451,17 @@ export const ProjectsTable = ({
               />
             ) : (
               <ProjectsTableContext value={projectsContextValues}>
-                {isMobile ? (
+                {periodTotals ? (
+                  <ProjectsOverviewTable
+                    projects={renderingData}
+                    loading={isProjectsLoading}
+                    isFiltering={isProjectDeleting || isProjectsFiltering}
+                    sort={sort}
+                    onSortChange={changeSort}
+                    onOpen={requestEdit}
+                    projectPopup={projectPopup}
+                  />
+                ) : isMobile ? (
                   <MobileDataTable
                     data={renderingData}
                     getRowId={rowIdGetter}
@@ -447,7 +500,7 @@ export const ProjectsTable = ({
             )}
           </motion.div>
         </AnimatePresence>
-      </Root>
+      </Body>
       <ProjectsDialog
         open={isProjectDialogOpen}
         setOpen={setProjectDialogOpen}
@@ -458,30 +511,182 @@ export const ProjectsTable = ({
         open={isCreateDialogOpen}
         onOpenChange={setCreateDialogOpen}
       />
-    </Flex>
+    </Root>
   )
 }
 
 const Root = styled.div`
+  container: projects-table / inline-size;
+  display: grid;
+  align-content: start;
+  min-width: 0;
   height: 100%;
+
+  &[data-overview] {
+    --projects-tools-gap: var(--ui-space-3);
+    --projects-actions-gap: var(--ui-space-2);
+    --projects-search-width: var(--ui-search-width);
+    --projects-body-min-height: var(--ui-table-body-min-height);
+    --sort-select-height: var(--ui-control-height);
+    --sort-select-segment-height: var(--ui-segment-height);
+    --sort-select-radius: var(--ui-icon-radius);
+    --sort-select-segment-radius: var(--ui-row-radius);
+    --sort-select-border: var(--ui-line);
+    --sort-select-background: var(--ui-surface);
+    --sort-select-font-size: var(--ui-meta-size);
+    --sort-select-padding: var(--ui-space-2);
+  }
+`
+
+const Toolbar = styled.div`
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--projects-tools-gap, var(--space-3));
+  margin-bottom: var(--space-3);
+
+  ${Root}[data-overview] & {
+    margin-bottom: var(--ui-section-gap);
+  }
+
+  /* Component fit: the dashboard can place this table in a half-width card. */
+  @container projects-table (max-width: ${workspaceDesign.container
+    .compact}px) {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+
+  ${(p) => p.theme.breakpoints.down('lg')} {
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
+`
+
+const Filters = styled.div`
+  display: grid;
+  grid-auto-flow: column;
+  width: fit-content;
+  gap: var(--ui-space-1);
+  padding: var(--ui-space-1);
+  border-radius: var(--ui-icon-radius);
+  background: var(--ui-inset);
+`
+
+const Filter = styled.button`
+  min-height: var(--ui-segment-height);
+  padding-inline: var(--ui-space-4);
+  border-radius: var(--ui-row-radius);
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+
+  &[aria-pressed='true'] {
+    color: var(--ui-ink);
+    background: var(--ui-surface);
+    box-shadow: var(--ui-shadow);
+  }
+
+  &:focus-visible {
+    outline: var(--ui-focus-width) solid var(--ui-blue);
+    outline-offset: var(--ui-focus-offset);
+  }
+
+  @container projects-table (max-width: ${workspaceDesign.container
+    .compact}px) {
+    padding-inline: var(--ui-space-3);
+  }
+
+  @container projects-table (max-width: ${workspaceDesign.container.narrow}px) {
+    padding-inline: var(--ui-space-2);
+  }
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    padding-inline: var(--ui-space-3);
+  }
+`
+
+const Tools = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, var(--projects-search-width, 240px)) auto;
+  align-items: center;
+  gap: var(--projects-tools-gap, var(--space-3));
+  justify-self: end;
+  min-width: 0;
+
+  @container projects-table (max-width: ${workspaceDesign.container
+    .compact}px) {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
+  }
+
+  ${(p) => p.theme.breakpoints.down('xl')} {
+    grid-column: 1 / -1;
+    grid-row: 2;
+    grid-template-columns: minmax(0, 1fr) auto;
+    width: 100%;
+  }
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    grid-template-columns: minmax(0, 1fr);
+  }
+`
+
+const Search = styled.div`
+  min-width: 0;
+`
+
+const Actions = styled.div`
+  display: grid;
+  grid-auto-flow: column;
+  justify-self: end;
+  gap: var(--projects-actions-gap, var(--space-2));
+
+  @container projects-table (max-width: ${workspaceDesign.container
+    .compact}px) {
+    grid-row: 1;
+    grid-column: 2;
+  }
+
+  ${(p) => p.theme.breakpoints.down('lg')} {
+    grid-row: 1;
+    grid-column: 2;
+  }
+`
+
+const Action = styled(Button)`
+  ${Root}[data-overview] & {
+    min-height: var(--ui-control-height);
+    border-radius: var(--ui-icon-radius);
+    padding-inline: var(--ui-space-3);
+    font-size: var(--ui-meta-size);
+  }
+`
+
+const ActionIcon = styled(IconButton)`
+  ${Root}[data-overview] & {
+    width: var(--ui-control-height);
+    height: var(--ui-control-height);
+    border-radius: var(--ui-icon-radius);
+  }
+`
+
+const Body = styled.div`
+  min-width: 0;
 
   /* Grows with the tile around it, so the table ends level with whatever
      sits beside it, and never shorter than its header and four rows. */
   ${(p) => p.theme.breakpoints.up('md')} {
-    flex: 1;
-    min-height: 244px;
-    overflow: auto;
+    min-height: var(--projects-body-min-height, 244px);
+    overflow: visible;
 
-    /* Half the table's usual cell inset: the room five columns need in half
-       a page comes out of the gutters, not the values. Rows are one line
-       each, so they take half the usual height too. */
-    & th,
-    & td {
-      padding-inline: 6px;
+    /* Optional dashboard spacing leaves the reusable table's defaults alone. */
+    &:not([data-overview]) th,
+    &:not([data-overview]) td {
+      padding-inline: var(--projects-cell-inset-x, 6px);
     }
 
-    & td {
-      padding-block: var(--space-2);
+    &:not([data-overview]) td {
+      padding-block: var(--projects-cell-inset-y, var(--space-2));
     }
   }
 `

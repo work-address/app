@@ -18,6 +18,7 @@ import {
 } from '@/entities/statistics'
 import {
   formatCount,
+  formatCompactDurationFromMinutes,
   formatDurationFromMinutes,
   weekStartsOnFor,
   WeekHourHeatmap,
@@ -89,6 +90,24 @@ export const DashboardInsights = () => {
 
   const duration = (minutes: number) =>
     formatDurationFromMinutes(Math.round(minutes), t)
+  const focusValue = (compact: boolean) =>
+    insights && insights.focus.count > 0
+      ? t('dashboard.insights.focusValue', {
+          count: insights.focus.count,
+          time: compact
+            ? formatCompactDurationFromMinutes(
+                insights.focus.minutes,
+                i18n.language,
+              )
+            : duration(insights.focus.minutes),
+          longest: compact
+            ? formatCompactDurationFromMinutes(
+                insights.focus.longestMinutes,
+                i18n.language,
+              )
+            : duration(insights.focus.longestMinutes),
+        })
+      : t('dashboard.insights.focusNone')
 
   const nothingTracked =
     (hourly ?? []).length === 0 && (insights?.focus.count ?? 0) === 0
@@ -108,143 +127,148 @@ export const DashboardInsights = () => {
           : undefined
       }
     >
-      <Layout>
-        <div>
+      <Root>
+        <Section>
           <Caption>
             {t('dashboard.insights.heatmap')}
             {/* A day or a week has no pattern to show: the figures reach back
                 four weeks, and say so. */}
             {widened ? ` · ${t('dashboard.insights.lastFourWeeks')}` : ''}
           </Caption>
-          <WeekHourHeatmap
-            cells={cells}
-            weekdays={weekdays}
-            formatHour={formatHour}
-            formatValue={(minutes) =>
-              t('dashboard.insights.activeCell', { time: duration(minutes) })
-            }
-            describe={(cell) => {
-              const title = `${
-                weekdays.find((day) => day.weekday === cell.weekday)?.title ??
-                ''
-              }, ${formatHour(cell.hour)} – ${formatHour((cell.hour + 1) % 24)}`
-              const row = rowsByKey.get(`${cell.weekday}:${cell.hour}`)
-              const detail = weekHourDetail(row, hourly ?? [], days)
-
-              // An hour with no time has nothing to break down.
-              if (!row || detail.trackedMinutes === 0) {
-                return {
-                  title,
-                  rows: [],
-                  note: t('dashboard.insights.cell.none'),
+          <HeatmapScroll
+            tabIndex={0}
+            aria-label={t('dashboard.insights.heatmap')}
+          >
+            <Chart>
+              <WeekHourHeatmap
+                cells={cells}
+                weekdays={weekdays}
+                formatHour={formatHour}
+                formatValue={(minutes) =>
+                  t('dashboard.insights.activeCell', {
+                    time: duration(minutes),
+                  })
                 }
-              }
+                describe={(cell) => {
+                  const title = `${
+                    weekdays.find((day) => day.weekday === cell.weekday)
+                      ?.title ?? ''
+                  }, ${formatHour(cell.hour)} – ${formatHour((cell.hour + 1) % 24)}`
+                  const row = rowsByKey.get(`${cell.weekday}:${cell.hour}`)
+                  const detail = weekHourDetail(row, hourly ?? [], days)
 
-              const percent = (share: number) => {
-                const value = Math.round(share * 100)
+                  // An hour with no time has nothing to break down.
+                  if (!row || detail.trackedMinutes === 0) {
+                    return {
+                      title,
+                      rows: [],
+                      note: t('dashboard.insights.cell.none'),
+                    }
+                  }
 
-                return value < 1 ? '<1%' : `${value}%`
-              }
+                  const percent = (share: number) => {
+                    const value = Math.round(share * 100)
 
-              return {
-                title,
-                rows: [
-                  {
-                    label: t('dashboard.insights.cell.active'),
-                    value:
-                      detail.activeShare === null
-                        ? duration(detail.activeMinutes)
-                        : `${duration(detail.activeMinutes)} · ${percent(detail.activeShare)}`,
-                  },
-                  {
-                    label: t('dashboard.insights.cell.tracked'),
-                    value: duration(detail.trackedMinutes),
-                  },
-                  {
-                    label: t('dashboard.insights.cell.days'),
-                    value: t('dashboard.insights.cell.daysValue', {
-                      days: detail.days,
-                      weeks: detail.weeks,
-                    }),
-                  },
-                  {
-                    label: t('dashboard.insights.cell.weekly'),
-                    value: duration(detail.weeklyMinutes),
-                  },
-                  {
-                    label: t('dashboard.insights.cell.share'),
-                    value: percent(detail.share),
-                  },
-                  ...(detail.rank === null
-                    ? []
-                    : [
-                        {
-                          label: t('dashboard.insights.cell.rank'),
-                          value: t('dashboard.insights.cell.rankValue', {
-                            rank: detail.rank,
-                            count: detail.rankedHours,
-                          }),
-                        },
-                      ]),
-                  ...(detail.keysPerActiveHour === null
-                    ? []
-                    : [
-                        {
-                          label: t('dashboard.insights.cell.keys'),
-                          value: formatCount(detail.keysPerActiveHour),
-                        },
-                        {
-                          label: t('dashboard.insights.cell.clicks'),
-                          value: formatCount(detail.clicksPerActiveHour ?? 0),
-                        },
-                      ]),
-                ],
-                sections: [
-                  {
-                    title: t('dashboard.insights.cell.projects'),
-                    rows: row.projects.map((project) => ({
-                      label:
-                        projectTitles.get(project.projectId) ??
-                        t('dashboard.charts.other'),
-                      value: duration(project.seconds / 60),
-                    })),
-                  },
-                  {
-                    title: t('dashboard.insights.cell.apps'),
-                    rows: row.apps.map((app) => ({
-                      label: app.name,
-                      value: duration(app.seconds / 60),
-                    })),
-                  },
-                ],
-                note: detail.busiest
-                  ? t('dashboard.insights.cell.busiest')
-                  : undefined,
-              }
-            }}
-          />
-        </div>
+                    return value < 1 ? '<1%' : `${value}%`
+                  }
+
+                  return {
+                    title,
+                    rows: [
+                      {
+                        label: t('dashboard.insights.cell.active'),
+                        value:
+                          detail.activeShare === null
+                            ? duration(detail.activeMinutes)
+                            : `${duration(detail.activeMinutes)} · ${percent(detail.activeShare)}`,
+                      },
+                      {
+                        label: t('dashboard.insights.cell.tracked'),
+                        value: duration(detail.trackedMinutes),
+                      },
+                      {
+                        label: t('dashboard.insights.cell.days'),
+                        value: t('dashboard.insights.cell.daysValue', {
+                          days: detail.days,
+                          weeks: detail.weeks,
+                        }),
+                      },
+                      {
+                        label: t('dashboard.insights.cell.weekly'),
+                        value: duration(detail.weeklyMinutes),
+                      },
+                      {
+                        label: t('dashboard.insights.cell.share'),
+                        value: percent(detail.share),
+                      },
+                      ...(detail.rank === null
+                        ? []
+                        : [
+                            {
+                              label: t('dashboard.insights.cell.rank'),
+                              value: t('dashboard.insights.cell.rankValue', {
+                                rank: detail.rank,
+                                count: detail.rankedHours,
+                              }),
+                            },
+                          ]),
+                      ...(detail.keysPerActiveHour === null
+                        ? []
+                        : [
+                            {
+                              label: t('dashboard.insights.cell.keys'),
+                              value: formatCount(detail.keysPerActiveHour),
+                            },
+                            {
+                              label: t('dashboard.insights.cell.clicks'),
+                              value: formatCount(
+                                detail.clicksPerActiveHour ?? 0,
+                              ),
+                            },
+                          ]),
+                    ],
+                    sections: [
+                      {
+                        title: t('dashboard.insights.cell.projects'),
+                        rows: row.projects.map((project) => ({
+                          label:
+                            projectTitles.get(project.projectId) ??
+                            t('dashboard.charts.other'),
+                          value: duration(project.seconds / 60),
+                        })),
+                      },
+                      {
+                        title: t('dashboard.insights.cell.apps'),
+                        rows: row.apps.map((app) => ({
+                          label: app.name,
+                          value: duration(app.seconds / 60),
+                        })),
+                      },
+                    ],
+                    note: detail.busiest
+                      ? t('dashboard.insights.cell.busiest')
+                      : undefined,
+                  }
+                }}
+              />
+            </Chart>
+          </HeatmapScroll>
+        </Section>
         {insights ? (
           <Figures>
             <Figure>
               <dt>{t('dashboard.insights.productiveHours')}</dt>
               <dd>
                 {insights.productiveHours.length > 0
-                  ? insights.productiveHours.map(formatHour).join(' · ')
+                  ? insights.productiveHours
+                      .map((hour) => formatHour(hour).replaceAll(' ', '\u00a0'))
+                      .join(' · ')
                   : '—'}
               </dd>
             </Figure>
             <Figure>
               <dt>{t('dashboard.insights.focus')}</dt>
-              <dd>
-                {insights.focus.count > 0
-                  ? t('dashboard.insights.focusValue', {
-                      count: insights.focus.count,
-                      time: duration(insights.focus.minutes),
-                      longest: duration(insights.focus.longestMinutes),
-                    })
-                  : t('dashboard.insights.focusNone')}
-              </dd>
+              <dd aria-label={focusValue(false)}>{focusValue(true)}</dd>
             </Figure>
             <Figure>
               <dt>{t('dashboard.insights.activeRatio')}</dt>
@@ -267,26 +291,47 @@ export const DashboardInsights = () => {
             </Figure>
           </Figures>
         ) : null}
-      </Layout>
+      </Root>
     </DashboardWidget>
   )
 }
 
-const Layout = styled.div`
+const Root = styled.div`
   display: grid;
-  gap: var(--space-5);
+  min-width: 0;
+  gap: var(--ui-space-4);
+`
+
+const Section = styled.div`
+  min-width: 0;
 `
 
 const Caption = styled.div`
-  margin-bottom: var(--space-2);
-  color: var(--ds-neutral-11);
-  font-size: var(--font-size-1);
+  margin-bottom: var(--ui-space-3);
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+`
+
+const HeatmapScroll = styled.div`
+  overflow-x: auto;
+  padding: var(--ui-space-1);
+  border-radius: var(--ui-space-2);
+
+  &:focus-visible {
+    outline: var(--ui-focus-width) solid var(--ui-blue);
+    outline-offset: calc(-1 * var(--ui-focus-offset));
+  }
+`
+
+const Chart = styled.div`
+  min-width: var(--ui-chart-heatmap-min-width);
 `
 
 const Figures = styled.dl`
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3) var(--space-4);
+  gap: var(--ui-space-3);
   margin: 0;
 
   ${(p) => p.theme.breakpoints.down('md')} {
@@ -296,19 +341,26 @@ const Figures = styled.dl`
 
 const Figure = styled.div`
   display: grid;
-  gap: 2px;
+  align-content: start;
+  gap: var(--ui-space-2);
   min-width: 0;
+  padding: var(--ui-space-3);
+  border-radius: var(--ui-space-3);
+  background: var(--ui-inset);
 
   dt {
-    color: var(--ds-neutral-11);
-    font-size: var(--font-size-1);
+    color: var(--ui-muted);
+    font-size: var(--ui-meta-size);
+    line-height: var(--ui-meta-line-height);
   }
 
   dd {
     margin: 0;
-    color: var(--ds-neutral-12);
-    font-size: var(--font-size-2);
-    font-weight: 500;
+    color: var(--ui-text);
+    font-size: var(--ui-body-size);
+    line-height: var(--ui-body-line-height);
+    font-weight: var(--ui-weight-medium);
     font-variant-numeric: tabular-nums;
+    overflow-wrap: anywhere;
   }
 `

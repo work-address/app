@@ -1,4 +1,5 @@
 export * from './format-duration'
+export * from './format-compact-duration'
 export * from './format-address'
 export * from './format-date-range'
 export * from './intl-formatters'

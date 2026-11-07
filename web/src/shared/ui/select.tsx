@@ -28,6 +28,8 @@ type SelectProps = {
   multi?: boolean
   title?: string
   label?: string
+  /** Keep the associated accessible label without a visible line above. */
+  labelHidden?: boolean
   /** Explains the label in a question-mark tooltip beside it. */
   hint?: string
   allSelectedText?: string
@@ -44,6 +46,7 @@ export const Select = ({
   multi,
   title,
   label,
+  labelHidden,
   hint,
   allSelectedText,
   inputProps,
@@ -172,6 +175,7 @@ export const Select = ({
   return (
     <Root
       className={className}
+      data-label-hidden={labelHidden || undefined}
       data-inline-label={
         Boolean(
           label &&
@@ -238,6 +242,15 @@ const Label = styled.label`
   font-size: var(--font-size-2);
   line-height: var(--line-height-2);
   font-weight: 500;
+
+  ${Root}[data-label-hidden] & {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+    white-space: nowrap;
+  }
 `
 const Trigger = styled.button`
   display: grid;
@@ -247,26 +260,30 @@ const Trigger = styled.button`
   width: 100%;
   min-width: 0;
   /* Match Input's size 2; the phone rule uses size 3. */
-  height: var(--space-6);
+  height: var(--select-trigger-height, var(--space-6));
   min-height: 0;
-  padding: 0 var(--space-2);
-  border: 1px solid var(--gray-a7);
-  border-radius: var(--radius-2);
-  background: var(--color-surface);
-  color: var(--gray-12);
+  padding: 0 var(--select-trigger-padding, var(--space-2));
+  border: 1px solid var(--select-trigger-border, var(--gray-a7));
+  border-radius: var(--select-trigger-radius, var(--radius-2));
+  background: var(--select-trigger-background, var(--color-surface));
+  color: var(--select-trigger-color, var(--gray-12));
   font: inherit;
-  font-size: var(--font-size-2);
+  font-size: var(--select-trigger-font-size, var(--font-size-2));
   line-height: var(--line-height-2);
   text-align: left;
   &:hover:not(:disabled) {
-    border-color: var(--gray-a9);
+    border-color: var(--select-trigger-hover-border, var(--gray-a9));
+    background: var(
+      --select-trigger-hover-background,
+      var(--select-trigger-background, var(--color-surface))
+    );
   }
   &:focus-visible {
     outline: 2px solid var(--ds-accent-9);
     outline-offset: 2px;
   }
   &[data-placeholder] {
-    color: var(--gray-a10);
+    color: var(--select-trigger-color, var(--gray-a10));
   }
   &[aria-invalid='true'] {
     border-color: var(--red-8);
@@ -276,9 +293,9 @@ const Trigger = styled.button`
     cursor: not-allowed;
   }
   ${(p) => p.theme.breakpoints.down('md')} {
-    height: var(--space-7);
+    height: var(--select-trigger-height, var(--space-7));
     padding-inline: var(--space-3);
-    font-size: var(--font-size-3);
+    font-size: var(--select-trigger-font-size, var(--font-size-3));
     line-height: var(--line-height-3);
   }
 `

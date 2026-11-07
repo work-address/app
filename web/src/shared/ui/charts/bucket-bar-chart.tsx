@@ -2,6 +2,7 @@ import { useRef } from 'react'
 import {
   Bar,
   BarChart,
+  BarStack,
   CartesianGrid,
   ResponsiveContainer,
   Tooltip,
@@ -35,8 +36,13 @@ type Props = {
   totalLabel?: string
   emptyLabel: string
   height?: number
+  /** Optional presentation overrides; other charts keep their existing shape. */
+  maxBarSize?: number
+  barRadius?: number
+  gridDasharray?: string
   /** Take the height of the card instead of `height`; the legend keeps its own. */
   fill?: boolean
+  className?: string
   /**
    * Everything to say about a bar, laid out in columns. Without it the popup
    * lists the bar's series.
@@ -63,7 +69,11 @@ export const BucketBarChart = ({
   totalLabel,
   emptyLabel,
   height = 240,
+  maxBarSize,
+  barRadius,
+  gridDasharray = '3 6',
   fill = false,
+  className,
   describe,
 }: Props) => {
   const plotRef = useRef<HTMLDivElement>(null)
@@ -75,9 +85,27 @@ export const BucketBarChart = ({
       series.map((s) => [s.key, bucket.values[s.key] ?? 0]),
     ),
   }))
+  const bars = series.map((s, index) => (
+    <Bar
+      key={s.key}
+      dataKey={s.key}
+      name={s.label}
+      stackId={stacked ? 'total' : undefined}
+      fill={s.color}
+      stroke={stacked ? SURFACE : undefined}
+      strokeWidth={stacked ? 1 : 0}
+      maxBarSize={maxBarSize ?? (stacked ? 36 : 18)}
+      isAnimationActive={false}
+      radius={
+        !stacked || (barRadius === undefined && index === series.length - 1)
+          ? [barRadius ?? 4, barRadius ?? 4, 0, 0]
+          : [0, 0, 0, 0]
+      }
+    />
+  ))
 
   return (
-    <Root data-fill={fill || undefined}>
+    <Root className={className} data-fill={fill || undefined}>
       <Plot ref={plotRef} style={fill ? undefined : { height }}>
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
@@ -89,7 +117,7 @@ export const BucketBarChart = ({
             <CartesianGrid
               vertical={false}
               stroke="var(--ds-neutral-alpha-4)"
-              strokeDasharray="3 6"
+              strokeDasharray={gridDasharray}
             />
             <XAxis
               dataKey="label"
@@ -99,7 +127,10 @@ export const BucketBarChart = ({
               // Drops labels that would collide at this width, keeping both ends.
               interval="preserveStartEnd"
               minTickGap={12}
-              tick={{ fontSize: 12, fill: 'var(--ds-neutral-11)' }}
+              tick={{
+                fontSize: 'var(--chart-label-size, 12px)',
+                fill: 'var(--ds-neutral-11)',
+              }}
             />
             <YAxis
               axisLine={false}
@@ -107,7 +138,10 @@ export const BucketBarChart = ({
               width={56}
               allowDecimals={false}
               tickFormatter={formatTick}
-              tick={{ fontSize: 12, fill: 'var(--ds-neutral-11)' }}
+              tick={{
+                fontSize: 'var(--chart-label-size, 12px)',
+                fill: 'var(--ds-neutral-11)',
+              }}
             />
             <Tooltip
               cursor={{ fill: 'var(--ds-neutral-alpha-3)' }}
@@ -166,24 +200,16 @@ export const BucketBarChart = ({
                 )
               }}
             />
-            {series.map((s, index) => (
-              <Bar
-                key={s.key}
-                dataKey={s.key}
-                name={s.label}
-                stackId={stacked ? 'total' : undefined}
-                fill={s.color}
-                stroke={stacked ? SURFACE : undefined}
-                strokeWidth={stacked ? 1 : 0}
-                maxBarSize={stacked ? 36 : 18}
-                isAnimationActive={false}
-                radius={
-                  !stacked || index === series.length - 1
-                    ? [4, 4, 0, 0]
-                    : [0, 0, 0, 0]
-                }
-              />
-            ))}
+            {stacked && barRadius !== undefined ? (
+              <BarStack
+                stackId="total"
+                radius={[barRadius, barRadius, barRadius / 2, barRadius / 2]}
+              >
+                {bars}
+              </BarStack>
+            ) : (
+              bars
+            )}
           </BarChart>
         </ResponsiveContainer>
       </Plot>

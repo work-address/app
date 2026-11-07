@@ -1,6 +1,7 @@
 import { useUnit } from 'effector-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
 import { bucketBreakdowns } from '../../model/bucket-breakdown'
 import {
@@ -13,7 +14,7 @@ import {
   periodBuckets,
   visibleBuckets,
 } from '../../model/period-buckets'
-import { projectSeries } from '../../model/project-series'
+import { OTHER_SERIES_KEY, projectSeries } from '../../model/project-series'
 import { DashboardWidget } from '../dashboard-widget'
 
 import { $projects } from '@/entities/projects'
@@ -24,7 +25,10 @@ import {
 import {
   BucketBarChart,
   formatDurationFromMinutes,
+  formatCompactDurationFromMinutes,
+  fromDay,
   weekStartsOnFor,
+  workspaceDesign,
   type Bucket,
   type ChartTooltipContent,
 } from '@/shared'
@@ -86,7 +90,13 @@ export const DashboardTimeDaily = () => {
 
     return {
       buckets,
-      series,
+      series: series.map((item, index) => ({
+        ...item,
+        color:
+          item.key === OTHER_SERIES_KEY
+            ? 'var(--ui-chart-other)'
+            : `var(--ui-chart-${index + 1})`,
+      })),
       keyOf,
       breakdowns: bucketBreakdowns(
         rows ?? [],
@@ -181,10 +191,26 @@ export const DashboardTimeDaily = () => {
 
   const formatHours = (hours: number) =>
     formatDurationFromMinutes(Math.round(hours * 60), t)
+  const period = new Intl.DateTimeFormat(i18n.language, {
+    month: 'short',
+    day: 'numeric',
+    year: 'numeric',
+  }).formatRange(fromDay(range.from), fromDay(range.to))
 
   return (
-    <DashboardWidget
+    <Root
       title={t('dashboard.timeDaily.title')}
+      description={period}
+      aside={
+        rows !== null && !failed ? (
+          <Total aria-label={duration(chart.periodMinutes)}>
+            {formatCompactDurationFromMinutes(
+              chart.periodMinutes,
+              i18n.language,
+            )}
+          </Total>
+        ) : undefined
+      }
       loading={pending && rows === null}
       failed={failed}
       onRetry={retry}
@@ -197,8 +223,11 @@ export const DashboardTimeDaily = () => {
           : undefined
       }
     >
-      <BucketBarChart
-        fill
+      <Chart
+        height={workspaceDesign.chart.height}
+        maxBarSize={workspaceDesign.chart.barMaxWidth}
+        barRadius={workspaceDesign.chart.barRadius}
+        gridDasharray="0"
         buckets={chart.buckets}
         series={chart.series}
         formatValue={formatHours}
@@ -209,6 +238,28 @@ export const DashboardTimeDaily = () => {
         emptyLabel={t('dashboard.timeDaily.tooltipEmpty')}
         describe={describe}
       />
-    </DashboardWidget>
+    </Root>
   )
 }
+
+const Root = styled(DashboardWidget)`
+  --chart-label-size: var(--ui-meta-size);
+
+  height: 100%;
+`
+
+const Total = styled.span`
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-pill-radius);
+  background: var(--ui-glow);
+  color: var(--ui-blue);
+  font-size: var(--ui-body-size);
+  font-weight: var(--ui-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+`
+
+const Chart = styled(BucketBarChart)`
+  min-width: 0;
+  gap: var(--ui-space-5);
+`

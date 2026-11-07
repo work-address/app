@@ -22,9 +22,10 @@ import {
 import {
   formatCurrency,
   formatDurationFromMinutes,
+  formatCompactDurationFromMinutes,
   LoadFailure,
-  StatStrip,
-  StatTile,
+  WorkspaceSummary,
+  WorkspaceMetric,
 } from '@/shared'
 
 type Totals = {
@@ -78,7 +79,7 @@ const sumTotals = (
  * Each compares with the same stretch of the period before.
  */
 export const DashboardSummary = () => {
-  const { t } = useTranslation()
+  const { t, i18n } = useTranslation()
 
   const {
     projects,
@@ -189,12 +190,18 @@ export const DashboardSummary = () => {
 
   const duration = (minutes: number) =>
     formatDurationFromMinutes(Math.round(minutes), t)
+  const compactDuration = (minutes: number) =>
+    formatCompactDurationFromMinutes(
+      minutes,
+      i18n.resolvedLanguage ?? i18n.language,
+    )
 
   return (
-    <StatStrip $columns={showDetail ? 5 : 1}>
-      <StatTile
+    <WorkspaceSummary detail={showDetail}>
+      <WorkspaceMetric
         label={t('dashboard.summary.tracked.label')}
-        value={duration(totals.minutes)}
+        value={compactDuration(totals.minutes)}
+        valueLabel={duration(totals.minutes)}
         hint={
           change(totals.minutes, previous?.minutes) ??
           t('dashboard.summary.tracked.hint', {
@@ -207,13 +214,12 @@ export const DashboardSummary = () => {
       />
       {showDetail && (
         <>
-          <StatTile
-            tone="accent"
+          <WorkspaceMetric
             label={t('dashboard.summary.active.label')}
             value={`${Math.round(activeShare(totals) * 100)}%`}
             hint={[
               t('dashboard.summary.active.hint', {
-                time: duration(totals.minutesActive),
+                time: compactDuration(totals.minutesActive),
               }),
               // A share of nothing is not a baseline.
               pointsChange(
@@ -227,8 +233,7 @@ export const DashboardSummary = () => {
               .join(' · ')}
             loading={loading}
           />
-          <StatTile
-            tone="green"
+          <WorkspaceMetric
             label={t('dashboard.summary.earned.label')}
             value={formatCurrency(totals.earnedCents / 100)}
             hint={
@@ -237,16 +242,15 @@ export const DashboardSummary = () => {
             }
             loading={loading}
           />
-          <StatTile
-            tone="amber"
+          <WorkspaceMetric
             label={t('dashboard.summary.unpaid.label')}
             value={formatCurrency(totals.unpaidCents / 100)}
             hint={t('dashboard.summary.unpaid.hint', {
-              time: duration(totals.minutesUnpaid),
+              time: compactDuration(totals.minutesUnpaid),
             })}
             loading={loading}
           />
-          <StatTile
+          <WorkspaceMetric
             label={t('dashboard.summary.agents.label')}
             // Assisted and autonomous are two figures, never one sum: the
             // first is the value, the second its line, so the tile is as
@@ -254,17 +258,22 @@ export const DashboardSummary = () => {
             value={
               hasAgents ? (
                 <AgentValue>
-                  {duration(agentTotals.assisted)}
+                  {compactDuration(agentTotals.assisted)}
                   <small>{t('dashboard.summary.agents.assisted')}</small>
                 </AgentValue>
               ) : (
                 '—'
               )
             }
+            valueLabel={
+              hasAgents
+                ? `${duration(agentTotals.assisted)} ${t('dashboard.summary.agents.assisted')}`
+                : undefined
+            }
             hint={
               hasAgents
                 ? t('dashboard.summary.agents.autonomousHint', {
-                    time: duration(agentTotals.autonomous),
+                    time: compactDuration(agentTotals.autonomous),
                   })
                 : t('dashboard.summary.agents.none')
             }
@@ -272,20 +281,20 @@ export const DashboardSummary = () => {
           />
         </>
       )}
-    </StatStrip>
+    </WorkspaceSummary>
   )
 }
 
 const AgentValue = styled.span`
-  display: inline-grid;
-  grid-auto-flow: column;
-  align-items: baseline;
-  gap: 4px;
-  white-space: nowrap;
+  display: grid;
+  gap: var(--ui-space-1);
+  min-width: 0;
 
   small {
-    color: var(--ds-neutral-11);
-    font-size: var(--font-size-1);
-    font-weight: 400;
+    color: var(--ui-muted);
+    font-size: var(--ui-meta-size);
+    font-weight: var(--ui-weight-regular);
+    line-height: var(--ui-small-line-height);
+    letter-spacing: 0;
   }
 `

@@ -22,6 +22,7 @@ type Props = {
   value: DateRange
   onChange: (range: DateRange) => void
   className?: string
+  labelHidden?: boolean
 }
 
 const isPreset = (value: string): value is DateRangePreset =>
@@ -32,7 +33,12 @@ const isPreset = (value: string): value is DateRangePreset =>
  * choosing. One component so the dashboard and the project dialog offer the
  * same periods and the same limits.
  */
-export const DateRangePicker = ({ value, onChange, className }: Props) => {
+export const DateRangePicker = ({
+  value,
+  onChange,
+  className,
+  labelHidden,
+}: Props) => {
   const { t, i18n } = useTranslation()
 
   const options = useMemo(
@@ -93,6 +99,7 @@ export const DateRangePicker = ({ value, onChange, className }: Props) => {
     <Root className={className}>
       <PresetSelect
         label={t('common.dateRange.label')}
+        labelHidden={labelHidden}
         options={options}
         value={value.preset}
         onChange={(next) => {

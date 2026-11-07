@@ -1,5 +1,4 @@
 import { FileTextIcon, PlusIcon } from '@radix-ui/react-icons'
-import { Badge } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { motion, useReducedMotion } from 'motion/react'
 import { useCallback, useEffect, useMemo, useState } from 'react'
@@ -43,17 +42,22 @@ import {
 } from '@/features/projects'
 import { TimeScreenshotStrip } from '@/features/time'
 import {
+  Button,
+  IconButton,
   PageHelmet,
-  PageHeader,
-  Text,
-  Wrapper,
+  WorkspacePage,
+  WorkspacePageHeader,
+  workspaceDesign,
   DashboardEmptyState,
   LoadFailure,
+  Tooltip,
+  useBreakpoint,
 } from '@/shared'
 import { DashboardEmptyStateImage } from '@/shared'
 
 export default function DashboardPage() {
   const { t } = useTranslation()
+  const isMobile = useBreakpoint('isMobile')
   const [createProjectOpen, setCreateProjectOpen] = useState(false)
 
   const {
@@ -128,6 +132,7 @@ export default function DashboardPage() {
                 ? undefined
                 : Math.round(row.activeSeconds / 60),
             paidCents: row.paidCents,
+            earnedCents: row.earnedCents,
           },
         ]),
       ) as ProjectsTablePeriodTotals,
@@ -158,20 +163,17 @@ export default function DashboardPage() {
         title={t('dashboard.page.title')}
         description={t('dashboard.page.meta')}
       />
-      <Wrapper>
+      <WorkspacePage>
         <DashboardPremiumBanner />
-        {/* The headline figures, then a grid of equal tiles read left to
-            right: how and when the work happened beside the period day by
-            day, the projects beside the app breakdown, what agents did and
-            what they were asked, and - for an owner - who did it. The
-            worklogs live on /time. */}
         {/* The intro's hero already reads "Dashboard", so the page title only
             comes back once there is something under it. */}
         {(showContent || projectsFailed) && (
           <Overview>
-            <PageHeader
+            <WorkspacePageHeader
+              eyebrow={t('dashboard.page.eyebrow')}
               title={t('dashboard.page.title')}
-              actions={showContent ? <DashboardFilterBar /> : null}
+              description={t('dashboard.page.description')}
+              actions={showContent && <DashboardFilterBar />}
             />
             {showContent && <DashboardSummary />}
           </Overview>
@@ -186,38 +188,56 @@ export default function DashboardPage() {
           />
         ) : showContent ? (
           <Sections initial="hidden" animate="shown" variants={reveal.list}>
+            <Tile
+              variants={reveal.item}
+              data-chart
+              data-wide={!canTrack || undefined}
+            >
+              <DashboardTimeDaily />
+            </Tile>
             {/* About tracking, agents and screenshots: nothing a viewer can
                 ever have, so they are left out instead of empty. */}
             {canTrack && (
-              <Tile variants={reveal.item}>
+              <Tile variants={reveal.item} data-insights>
                 <DashboardInsights />
               </Tile>
             )}
             <Tile variants={reveal.item}>
-              <DashboardTimeDaily />
-            </Tile>
-            <Tile variants={reveal.item}>
               <DashboardWidget
                 title={t('dashboard.page.projects.title')}
+                description={t('dashboard.page.projects.description')}
                 aside={
                   <ProjectsTools>
                     {/* No count until there is one: "0 projects" over the
                         loading rows read as an answer. */}
                     {!projectsLoading && (
-                      <Badge size={'2'} color={'gray'}>
-                        <Text weight={'medium'} size={'1'}>
-                          {t('dashboard.page.projectsCount', {
-                            count:
-                              selectedProjectIds.length > 0
-                                ? selectedProjectIds.length
-                                : projects.length,
-                          })}
-                        </Text>
-                      </Badge>
+                      <Count>
+                        {t('dashboard.page.projectsCount', {
+                          count:
+                            selectedProjectIds.length > 0
+                              ? selectedProjectIds.length
+                              : projects.length,
+                        })}
+                      </Count>
                     )}
-                    <SearchArea>
-                      <DashboardProjectsSearchInput />
-                    </SearchArea>
+                    {isMobile ? (
+                      <Tooltip content={t('dashboard.page.createProject')}>
+                        <CreateIcon
+                          themeVariant="primary"
+                          aria-label={t('dashboard.page.createProject')}
+                          onClick={() => setCreateProjectOpen(true)}
+                        >
+                          <PlusIcon />
+                        </CreateIcon>
+                      </Tooltip>
+                    ) : (
+                      <CreateButton
+                        iconLeft={<PlusIcon />}
+                        onClick={() => setCreateProjectOpen(true)}
+                      >
+                        {t('dashboard.page.createProject')}
+                      </CreateButton>
+                    )}
                   </ProjectsTools>
                 }
               >
@@ -231,6 +251,8 @@ export default function DashboardPage() {
                     projectIds={selectedProjectIds}
                     periodTotals={periodTotals}
                     projectPopup={projectPopup}
+                    search={<DashboardProjectsSearchInput />}
+                    showCreateAction={false}
                   />
                 )}
               </DashboardWidget>
@@ -248,20 +270,19 @@ export default function DashboardPage() {
                 <Tile variants={reveal.item}>
                   <DashboardRecentPrompts />
                 </Tile>
-                {/* Hidden rather than empty: a period without screenshots
-                    is ordinary, and most projects do not take them. */}
-                {screenshotsLoaded && screenshots.length > 0 && (
-                  <Tile variants={reveal.item}>
-                    <DashboardWidget title={t('dashboard.screenshots.title')}>
-                      <TimeScreenshotStrip entries={screenshots} />
-                    </DashboardWidget>
-                  </Tile>
-                )}
               </>
             )}
             {isOwner && (
-              <Tile variants={reveal.item}>
+              <Tile variants={reveal.item} data-wide>
                 <DashboardTeam />
+              </Tile>
+            )}
+            {/* A period without screenshots is ordinary. */}
+            {canTrack && screenshotsLoaded && screenshots.length > 0 && (
+              <Tile variants={reveal.item} data-wide>
+                <DashboardWidget title={t('dashboard.screenshots.title')}>
+                  <TimeScreenshotStrip entries={screenshots} />
+                </DashboardWidget>
               </Tile>
             )}
           </Sections>
@@ -280,16 +301,22 @@ export default function DashboardPage() {
           open={createProjectOpen}
           onOpenChange={setCreateProjectOpen}
         />
-      </Wrapper>
+      </WorkspacePage>
     </>
   )
 }
 
 const REVEAL = {
-  list: { shown: { transition: { staggerChildren: 0.06 } } },
+  list: {
+    shown: { transition: { staggerChildren: workspaceDesign.motion.stagger } },
+  },
   item: {
-    hidden: { opacity: 0, y: 8 },
-    shown: { opacity: 1, y: 0, transition: { duration: 0.24 } },
+    hidden: { opacity: 0, y: workspaceDesign.motion.offset },
+    shown: {
+      opacity: 1,
+      y: 0,
+      transition: { duration: workspaceDesign.motion.duration },
+    },
   },
 }
 
@@ -298,15 +325,19 @@ const REVEAL_STILL = {
   item: { hidden: { opacity: 1 }, shown: { opacity: 1 } },
 }
 
-/* Equal tiles, two across on a desktop and one on anything narrower. A
-   row's tiles share its height, so neighbours end on the same line. */
+const Overview = styled.div`
+  display: grid;
+  gap: var(--ui-space-5);
+  margin-bottom: var(--ui-space-5);
+`
+
 const Sections = styled(motion.div)`
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-4);
+  gap: var(--ui-space-5);
 
-  ${(p) => p.theme.breakpoints.up('lg')} {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
+  ${(p) => p.theme.breakpoints.up('xl')} {
+    grid-template-columns: repeat(12, minmax(0, 1fr));
   }
 `
 
@@ -314,52 +345,67 @@ const Sections = styled(motion.div)`
 const Tile = styled(motion.div)`
   display: grid;
   min-width: 0;
-`
 
-/* The same gap as between the tiles below: the stat strip is their first row. */
-const Overview = styled.div`
-  display: grid;
-  gap: var(--space-4);
-  margin-bottom: var(--space-4);
+  ${(p) => p.theme.breakpoints.up('xl')} {
+    grid-column: span 6;
 
-  ${(p) => p.theme.breakpoints.down('md')} {
-    gap: var(--space-3);
+    &[data-chart] {
+      grid-column: span 7;
+    }
+
+    &[data-insights] {
+      grid-column: span 5;
+    }
+  }
+
+  &[data-wide] {
+    grid-column: 1 / -1;
   }
 `
 
 /* The intro takes the place of the projects table, so it gets the room it
    would have had rather than sitting flush under the title. */
 const Intro = styled(DashboardEmptyState)`
-  padding: var(--space-6) 0 var(--space-8);
+  padding: var(--ui-space-6) 0 var(--ui-space-8);
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    padding: var(--space-4) 0 var(--space-6);
+    padding: var(--ui-space-4) 0 var(--ui-space-6);
   }
 `
 
-/* The count and the search share the title row; on a phone the row wraps
-   and the search takes a line of its own rather than squeezing the title. */
+/* The count and create action stay together in the card header. */
 const ProjectsTools = styled.div`
-  display: flex;
+  display: grid;
+  grid-auto-flow: column;
   align-items: center;
-  justify-content: flex-end;
-  gap: var(--space-3);
-  flex: 1;
+  justify-content: end;
+  gap: var(--ui-space-3);
   min-width: 0;
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    flex-basis: 100%;
-    flex-wrap: wrap;
-    justify-content: flex-start;
+    width: 100%;
   }
 `
 
-const SearchArea = styled.div`
-  width: 240px;
-  max-width: 100%;
+const Count = styled.span`
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-pill-radius);
+  background: var(--ui-glow);
+  color: var(--ui-blue);
+  font-size: var(--ui-meta-size);
+  font-weight: var(--ui-weight-medium);
+  white-space: nowrap;
+`
 
-  ${(p) => p.theme.breakpoints.down('md')} {
-    flex: 1;
-    min-width: 200px;
-  }
+const CreateButton = styled(Button)`
+  min-height: var(--ui-control-height);
+  padding-inline: var(--ui-space-3);
+  border-radius: var(--ui-icon-radius);
+  font-size: var(--ui-meta-size);
+`
+
+const CreateIcon = styled(IconButton)`
+  width: var(--ui-control-height);
+  height: var(--ui-control-height);
+  border-radius: var(--ui-icon-radius);
 `

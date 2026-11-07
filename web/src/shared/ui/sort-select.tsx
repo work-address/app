@@ -74,9 +74,18 @@ export const SortSelect = <Field extends string>({
   )
 }
 
-const Root = styled(ToolbarShell).attrs({ role: 'group' })``
+const Root = styled(ToolbarShell).attrs({ role: 'group' })`
+  min-height: var(--sort-select-height, auto);
+  border-color: var(--sort-select-border, var(--ds-neutral-alpha-6));
+  border-radius: var(--sort-select-radius, var(--radius-3));
+  background: var(--sort-select-background, var(--ds-neutral-2));
+`
 
 const SortField = styled(ToolbarSegment)`
+  min-height: var(--sort-select-segment-height, 22px);
+  padding-inline: var(--sort-select-padding, var(--space-3));
+  border-radius: var(--sort-select-segment-radius, var(--radius-2));
+  font-size: var(--sort-select-font-size, var(--font-size-1));
   color: var(--ds-neutral-12);
 `
 
@@ -85,7 +94,9 @@ const Label = styled.span`
 `
 
 const Direction = styled(ToolbarSegment)`
+  min-height: var(--sort-select-segment-height, 22px);
   padding-inline: var(--space-2);
+  border-radius: var(--sort-select-segment-radius, var(--radius-2));
 
   & svg {
     transition: transform 0.15s;

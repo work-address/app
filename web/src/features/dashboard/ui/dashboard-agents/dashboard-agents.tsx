@@ -23,9 +23,10 @@ import {
 } from '@/entities/statistics'
 import {
   BucketBarChart,
+  formatCompactDurationFromMinutes,
   formatDurationFromMinutes,
-  SERIES_COLORS,
   weekStartsOnFor,
+  workspaceDesign,
   type Bucket,
   type ChartTooltipContent,
 } from '@/shared'
@@ -35,9 +36,6 @@ const POPUP_ROWS = 6
 
 const HUMAN = 'human'
 const AGENT = 'agent'
-
-/* Short enough that figures, chart and a few agents fit the tile's ceiling. */
-const CHART_HEIGHT = 150
 
 // agent | runs | assisted | autonomous
 const COLUMN_WIDTHS = ['40%', '15%', '22.5%', '22.5%']
@@ -158,6 +156,8 @@ export const DashboardAgents = () => {
 
   const duration = (minutes: number) =>
     formatDurationFromMinutes(Math.round(minutes), t)
+  const compactDuration = (minutes: number) =>
+    formatCompactDurationFromMinutes(minutes, i18n.language)
 
   const titles = useMemo(
     () => new Map(projects.map((project) => [project.id, project.title])),
@@ -246,7 +246,7 @@ export const DashboardAgents = () => {
         ) : undefined
       }
     >
-      <Layout>
+      <Root>
         <Figures>
           <Figure>
             <dt>{t('dashboard.agents.runs')}</dt>
@@ -254,31 +254,39 @@ export const DashboardAgents = () => {
           </Figure>
           <Figure>
             <dt>{t('dashboard.agents.assisted')}</dt>
-            <dd>{duration(view.totals.assisted)}</dd>
+            <dd aria-label={duration(view.totals.assisted)}>
+              {compactDuration(view.totals.assisted)}
+            </dd>
           </Figure>
           <Figure>
             <dt>{t('dashboard.agents.autonomous')}</dt>
-            <dd>{duration(view.totals.autonomous)}</dd>
+            <dd aria-label={duration(view.totals.autonomous)}>
+              {compactDuration(view.totals.autonomous)}
+            </dd>
           </Figure>
           <Figure>
             <dt>{t('dashboard.agents.waiting')}</dt>
-            <dd>{duration(view.totals.waiting)}</dd>
+            <dd aria-label={duration(view.totals.waiting)}>
+              {compactDuration(view.totals.waiting)}
+            </dd>
           </Figure>
         </Figures>
         <BucketBarChart
           stacked={false}
-          height={CHART_HEIGHT}
+          height={workspaceDesign.chart.agentHeight}
+          gridDasharray="0"
+          barRadius={workspaceDesign.chart.agentBarRadius}
           buckets={view.buckets}
           series={[
             {
               key: HUMAN,
               label: t('dashboard.agents.humanHours'),
-              color: SERIES_COLORS[0],
+              color: 'var(--ui-chart-1)',
             },
             {
               key: AGENT,
               label: t('dashboard.agents.agentHours'),
-              color: SERIES_COLORS[1],
+              color: 'var(--ui-chart-3)',
             },
           ]}
           formatValue={(hours) => duration(hours * 60)}
@@ -309,14 +317,18 @@ export const DashboardAgents = () => {
                 <tr key={row.product}>
                   <td>{row.product}</td>
                   <td>{row.runs}</td>
-                  <td>{duration(row.assisted)}</td>
-                  <td>{duration(row.autonomous)}</td>
+                  <td aria-label={duration(row.assisted)}>
+                    {compactDuration(row.assisted)}
+                  </td>
+                  <td aria-label={duration(row.autonomous)}>
+                    {compactDuration(row.autonomous)}
+                  </td>
                 </tr>
               ))}
             </tbody>
           </Table>
         </TableScroll>
-      </Layout>
+      </Root>
     </DashboardWidget>
   )
 }
@@ -324,26 +336,28 @@ export const DashboardAgents = () => {
 /* On a desktop the figures and chart hold still and the table takes what is
    left of the tile, scrolling its rows. A phone stacks the figures, which
    leaves the table no room of its own, so the whole tile scrolls instead. */
-const Layout = styled.div`
+const Root = styled.div`
+  --chart-label-size: var(--ui-meta-size);
+
+  container: dashboard-agents / inline-size;
   display: grid;
-  gap: var(--space-4);
+  gap: var(--ui-space-4);
+  min-width: 0;
 
   ${(p) => p.theme.breakpoints.up('md')} {
-    grid-template-rows: auto auto minmax(0, 1fr);
+    grid-template-rows: auto auto minmax(var(--ui-space-9), 1fr);
     height: 100%;
   }
 `
 
 const TableScroll = styled.div`
+  min-width: 0;
   min-height: 0;
-
-  ${(p) => p.theme.breakpoints.up('md')} {
-    overflow-y: auto;
-  }
+  overflow: auto;
 
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-9);
-    outline-offset: 2px;
+    outline: var(--ui-focus-width) solid var(--ui-blue);
+    outline-offset: var(--ui-focus-offset);
   }
 `
 
@@ -352,26 +366,28 @@ const TableScroll = styled.div`
 const Figures = styled.dl`
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
   margin: 0;
 
-  ${(p) => p.theme.breakpoints.down('md')} {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
-
   dt {
-    color: var(--ds-neutral-11);
-    font-size: var(--font-size-1);
-    line-height: var(--line-height-1);
+    color: var(--ui-muted);
+    font-size: var(--ui-meta-size);
+    line-height: var(--ui-meta-line-height);
   }
 
   dd {
     margin: 0;
-    font-size: var(--font-size-3);
-    line-height: var(--line-height-3);
-    font-weight: 600;
+    color: var(--ui-ink);
+    font-size: var(--ui-figure-size);
+    line-height: var(--ui-figure-line-height);
+    font-weight: var(--ui-weight-semibold);
     font-variant-numeric: tabular-nums;
     white-space: nowrap;
+  }
+
+  @container dashboard-agents (max-width: ${workspaceDesign.container
+    .figures}px) {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
 `
 
@@ -381,48 +397,50 @@ const Figures = styled.dl`
 const Figure = styled.div`
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
-  gap: 2px;
+  gap: var(--ui-space-2);
   min-width: 0;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-2);
-  background: var(--ds-neutral-2);
+  padding: var(--ui-space-3);
+  border-radius: var(--ui-space-3);
+  background: var(--ui-inset);
 `
 
 /* Fixed columns: the figures above and the rows below keep their places
    whatever the numbers are, instead of each state laying the table out anew. */
 const Table = styled.table`
   width: 100%;
+  min-width: ${workspaceDesign.layout.tableMinWidth}px;
   table-layout: fixed;
   /* Separate: a collapsed border stays behind when its sticky header moves. */
   border-collapse: separate;
   border-spacing: 0;
-  font-size: var(--font-size-2);
-  line-height: var(--line-height-2);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
   font-variant-numeric: tabular-nums;
 
   th {
-    padding: 0 0 var(--space-1);
-    color: var(--ds-neutral-11);
-    font-size: var(--font-size-1);
-    line-height: var(--line-height-1);
-    font-weight: 400;
+    padding: 0 0 var(--ui-space-1);
+    color: var(--ui-muted);
+    font-size: var(--ui-meta-size);
+    line-height: var(--ui-meta-line-height);
+    font-weight: var(--ui-weight-regular);
     text-align: left;
-    border-bottom: 1px solid var(--ds-neutral-alpha-6);
+    border-bottom: var(--ui-border-width) solid var(--ui-line);
     /* The tile's own surface: the rows scroll under it. */
     position: sticky;
     top: 0;
-    background: var(--color-panel-solid);
+    background: var(--ui-surface);
   }
 
   td {
-    padding: var(--space-2) 0;
+    padding: var(--ui-space-2) 0;
+    color: var(--ui-text);
     overflow: hidden;
     text-overflow: ellipsis;
     white-space: nowrap;
   }
 
   tr + tr td {
-    border-top: 1px solid var(--ds-neutral-alpha-4);
+    border-top: var(--ui-border-width) solid var(--ui-line);
   }
 
   th:not(:first-child),
@@ -432,18 +450,20 @@ const Table = styled.table`
 `
 
 const Statuses = styled.ul`
+  /* Status names/counts wrap at their natural width rather than into equal
+     columns, keeping the four compact facts beside the heading when they fit. */
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1) var(--space-3);
+  gap: var(--ui-space-1) var(--ui-space-3);
   margin: 0;
   padding: 0;
-  color: var(--ds-neutral-11);
-  font-size: var(--font-size-1);
-  line-height: var(--line-height-1);
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
   list-style: none;
 
   b {
-    color: var(--ds-neutral-12);
-    font-weight: 600;
+    color: var(--ui-ink);
+    font-weight: var(--ui-weight-semibold);
   }
 `

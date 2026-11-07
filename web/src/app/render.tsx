@@ -11,6 +11,7 @@ import { App } from './app'
 
 import {
   ToastStyle,
+  WorkspaceDesignStyles,
   theme,
   Confirm,
   BreakpointsWatcher,
@@ -32,6 +33,7 @@ export const render = (root: HTMLElement) =>
             <Confirm />
             <BreakpointsWatcher />
             <ToastStyle />
+            <WorkspaceDesignStyles />
             <HelmetProvider>
               <App />
             </HelmetProvider>

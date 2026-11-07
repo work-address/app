@@ -119,20 +119,21 @@ export const DashboardTeam = () => {
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--font-size-2);
+  font-size: var(--ui-body-size);
+  color: var(--ui-text);
   font-variant-numeric: tabular-nums;
 
   th {
-    padding: 6px 12px 6px 0;
-    color: var(--ds-neutral-11);
-    font-size: var(--font-size-1);
-    font-weight: 400;
+    padding: var(--ui-space-2) var(--ui-space-3) var(--ui-space-4) 0;
+    color: var(--ui-muted);
+    font-size: var(--ui-meta-size);
+    font-weight: var(--ui-weight-regular);
     text-align: left;
   }
 
   td {
-    padding: 10px 12px 10px 0;
-    border-top: 1px solid var(--ds-neutral-alpha-4);
+    padding: var(--ui-space-4) var(--ui-space-3) var(--ui-space-4) 0;
+    border-top: var(--ui-border-width) solid var(--ui-line);
   }
 
   th:not(:first-child),
@@ -142,9 +143,9 @@ const Table = styled.table`
 `
 
 const Note = styled.p`
-  margin: var(--space-3) 0 0;
-  color: var(--ds-neutral-11);
-  font-size: var(--font-size-1);
+  margin: var(--ui-space-3) 0 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
 `
 
 const People = styled.ul`
@@ -155,12 +156,12 @@ const People = styled.ul`
 
   li {
     display: grid;
-    gap: var(--space-2);
-    padding: var(--space-3) 0;
+    gap: var(--ui-space-2);
+    padding: var(--ui-space-3) 0;
   }
 
   li + li {
-    border-top: 1px solid var(--ds-neutral-alpha-4);
+    border-top: var(--ui-border-width) solid var(--ui-line);
   }
 
   li:first-child {
@@ -169,24 +170,26 @@ const People = styled.ul`
 `
 
 const Name = styled.span`
-  font-size: var(--font-size-2);
-  font-weight: 500;
+  font-size: var(--ui-body-size);
+  font-weight: var(--ui-weight-semibold);
+  color: var(--ui-ink);
 `
 
 const Figures = styled.dl`
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2) var(--space-3);
+  gap: var(--ui-space-2) var(--ui-space-3);
   margin: 0;
 
   dt {
-    color: var(--ds-neutral-11);
-    font-size: var(--font-size-1);
+    color: var(--ui-muted);
+    font-size: var(--ui-meta-size);
   }
 
   dd {
     margin: 0;
-    font-size: var(--font-size-2);
+    font-size: var(--ui-body-size);
+    color: var(--ui-text);
     font-variant-numeric: tabular-nums;
   }
 `

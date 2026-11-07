@@ -332,17 +332,18 @@ const Aside = styled.aside`
   z-index: 20;
   display: flex;
   flex-direction: column;
-  gap: 16px;
-  padding: 16px 12px 12px;
+  gap: var(--sidebar-gap, 16px);
+  padding: var(--sidebar-padding, 16px 12px 12px);
   overflow: hidden;
   background: var(--sidebar-bg);
+  border-right: var(--sidebar-edge-width, 0px) solid var(--sidebar-border);
   transition: width 0.2s ease;
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    padding: 12px 8px;
+    padding: var(--sidebar-mobile-padding, 12px 8px);
 
     &:not([data-collapsed]) {
-      padding: 12px;
+      padding: var(--sidebar-open-mobile-padding, 12px);
       box-shadow: var(--shadow-4);
     }
   }
@@ -388,7 +389,7 @@ const Nav = styled.nav`
 const List = styled.ul`
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sidebar-item-gap, 2px);
 `
 
 const Row = styled.li`
@@ -406,7 +407,7 @@ const RowBadge = styled.div`
 const Footer = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--sidebar-item-gap, 2px);
   flex-shrink: 0;
 `
 
@@ -441,14 +442,15 @@ const Item = styled.button`
   align-items: center;
   gap: 10px;
   width: 100%;
-  height: 36px;
+  height: var(--sidebar-item-height, 36px);
   /* (40px column - 16px icon) / 2: the icon stays put while the width animates. */
   padding: 0 12px;
-  border-radius: 8px;
-  font-size: var(--font-size-2);
+  border-radius: var(--sidebar-item-radius, 8px);
+  font-size: var(--sidebar-item-font-size, var(--font-size-2));
   line-height: 20px;
   font-weight: 400;
-  color: var(--ds-neutral-11);
+  color: var(--sidebar-item-color, var(--ds-neutral-11));
+  background: var(--sidebar-item-bg, transparent);
   white-space: nowrap;
   transition:
     background 0.15s ease,
@@ -459,8 +461,8 @@ const Item = styled.button`
   }
 
   &:hover {
-    background: var(--ds-neutral-alpha-3);
-    color: var(--ds-neutral-12);
+    background: var(--sidebar-item-hover, var(--ds-neutral-alpha-3));
+    color: var(--sidebar-item-hover-color, var(--ds-neutral-12));
   }
 
   &:focus-visible {
@@ -468,21 +470,23 @@ const Item = styled.button`
     outline-offset: -2px;
   }
 
-  /* A tint, not a card: the row reads as selected without weight. */
+  /* The dashboard raises its selection; other pages keep the original tint. */
   &[data-active] {
-    background: var(--c-rgba-5-86-205-0_0588);
-    color: var(--ds-accent-11);
+    background: var(--sidebar-item-active-bg, var(--c-rgba-5-86-205-0_0588));
+    color: var(--sidebar-item-active-color, var(--ds-accent-11));
+    box-shadow: var(--sidebar-item-active-shadow, none);
+    font-weight: var(--sidebar-item-active-weight, 400);
   }
 
   &[data-active] > svg {
-    color: var(--ds-accent-11);
+    color: var(--sidebar-item-active-color, var(--ds-accent-11));
   }
 
   &[data-muted] {
-    color: var(--muted);
+    color: var(--sidebar-item-muted-color, var(--muted));
   }
 
   &[data-muted]:hover {
-    color: var(--ds-neutral-12);
+    color: var(--sidebar-item-hover-color, var(--ds-neutral-12));
   }
 `

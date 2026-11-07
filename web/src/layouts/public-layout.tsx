@@ -12,9 +12,12 @@ import { Sidebar } from '@/widgets'
 
 export const PublicLayout = () => {
   const scrollRef = useRef<HTMLDivElement>(null)
+  const { pathname } = useLocation()
 
   return (
-    <Root>
+    <Root
+      data-ui={pathname === routes.dashboard.build() ? 'workspace' : undefined}
+    >
       <Sidebar />
       <Main>
         <PageIndicator />
@@ -103,8 +106,8 @@ const Main = styled.main`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--white);
-  box-shadow: var(--shadow-4);
+  background: var(--page-canvas, var(--white));
+  box-shadow: var(--page-shadow, var(--shadow-4));
 
   ${(p) => p.theme.breakpoints.up('md')} {
     /* Above the fixed sidebar, so the shadow falls onto it. On a phone the
@@ -131,12 +134,15 @@ const Scroller = styled.div`
   /* none, not contain: Chrome on macOS bounces inner scrollers too, which
      slides the page down and bares the sheet's white above it. */
   overscroll-behavior: none;
-  mask-image: linear-gradient(
-    to bottom,
-    transparent,
-    var(--c-000000) 40px,
-    var(--c-000000) calc(100% - 40px),
-    transparent
+  mask-image: var(
+    --page-scroll-mask,
+    linear-gradient(
+      to bottom,
+      transparent,
+      var(--c-000000) 40px,
+      var(--c-000000) calc(100% - 40px),
+      transparent
+    )
   );
 
   @media print {

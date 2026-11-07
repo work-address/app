@@ -61,12 +61,12 @@ export const DashboardFilterBar = () => {
   )
 
   return (
-    <Root>
-      <DateRangePicker value={range} onChange={changeRange} />
+    <Root data-custom={range.preset === 'custom' || undefined}>
       <Field>
         <Select
           multi
           label={t('dashboard.filters.projects')}
+          labelHidden
           options={projectOptions}
           value={projectIds}
           placeholder={t('dashboard.filters.allProjects')}
@@ -79,6 +79,7 @@ export const DashboardFilterBar = () => {
           <Select
             multi
             label={t('dashboard.filters.people')}
+            labelHidden
             options={peopleOptions}
             value={userIds}
             placeholder={t('dashboard.filters.everyone')}
@@ -87,36 +88,70 @@ export const DashboardFilterBar = () => {
           />
         </Field>
       )}
+      <Period value={range} onChange={changeRange} labelHidden />
     </Root>
   )
 }
 
-/* One row beside the title on a desktop. On a phone the period takes a line
-   and projects and people share the next, so the filters cost two rows of the
-   screen rather than three. */
 const Root = styled.div`
+  --select-trigger-height: var(--ui-filter-height);
+  --select-trigger-padding: var(--ui-space-4);
+  --select-trigger-radius: var(--ui-filter-radius);
+  --select-trigger-border: var(--ui-line);
+  --select-trigger-background: var(--ui-surface);
+  --select-trigger-color: var(--ui-ink);
+  --select-trigger-font-size: var(--ui-body-size);
+  --select-trigger-hover-border: var(--ui-line);
+  --select-trigger-hover-background: var(--ui-surface);
+
   display: grid;
   grid-auto-flow: column;
+  justify-self: end;
   align-items: end;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
+  max-width: 100%;
+  color: var(--ui-muted);
 
-  ${(p) => p.theme.breakpoints.down('md')} {
+  &[data-custom] {
+    grid-auto-flow: row;
+    grid-template-columns: repeat(2, auto);
+  }
+
+  ${(p) => p.theme.breakpoints.down('xl')} {
+    width: 100%;
     grid-auto-flow: row;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-2);
 
-    & > :first-child,
-    & > :last-child:nth-child(2) {
-      grid-column: 1 / -1;
+    &[data-custom] {
+      grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
 `
 
 const Field = styled.div`
-  width: 200px;
+  --select-trigger-background: transparent;
+  --select-trigger-border: transparent;
+  --select-trigger-color: var(--ui-muted);
+  --select-trigger-padding: var(--ui-space-2);
 
-  ${(p) => p.theme.breakpoints.down('md')} {
+  width: var(--ui-filter-width);
+
+  ${(p) => p.theme.breakpoints.down('xl')} {
     width: auto;
     min-width: 0;
+  }
+`
+
+const Period = styled(DateRangePicker)`
+  justify-self: end;
+
+  ${Root}[data-custom] & {
+    grid-column: 1 / -1;
+  }
+
+  ${(p) => p.theme.breakpoints.down('xl')} {
+    grid-column: 1 / -1;
+    grid-auto-flow: row;
+    justify-self: stretch;
   }
 `

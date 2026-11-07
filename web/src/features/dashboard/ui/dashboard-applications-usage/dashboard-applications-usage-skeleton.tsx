@@ -1,13 +1,6 @@
 import { Skeleton } from '@radix-ui/themes'
 import styled from 'styled-components'
 
-// Mirrors the geometry of the real chart so the plot area doesn't jump once the
-// data arrives: same height, same y-axis gutter, same bar cap.
-const MIN_CHART_HEIGHT = 240
-const LABEL_AREA_HEIGHT = 30
-// Floor for the gutter; the real chart grows past it when its ticks are wider.
-const Y_AXIS_MIN_WIDTH = 28
-const Y_AXIS_GAP = 6
 // Matches Y_AXIS_TICK_COUNT in the chart model, so the grid lands on the same rows.
 const TICK_COUNT = 6
 
@@ -19,7 +12,11 @@ export const DashboardApplicationsUsageSkeleton = () => (
   <Root>
     <YAxis>
       {Array.from({ length: TICK_COUNT }, (_, index) => (
-        <Skeleton key={index} width="18px" height="8px" />
+        <Skeleton
+          key={index}
+          width="var(--ui-chart-tick-skeleton-width)"
+          height="var(--ui-space-2)"
+        />
       ))}
     </YAxis>
     <Plot>
@@ -36,7 +33,7 @@ export const DashboardApplicationsUsageSkeleton = () => (
             </Bar>
           </BarArea>
           <Label>
-            <Skeleton width="100%" height="8px" />
+            <Skeleton width="100%" height="var(--ui-space-2)" />
           </Label>
         </Column>
       ))}
@@ -45,71 +42,68 @@ export const DashboardApplicationsUsageSkeleton = () => (
 )
 
 const Root = styled.div`
-  display: flex;
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
   height: 100%;
-  min-height: ${MIN_CHART_HEIGHT}px;
-  padding-top: 6px;
+  min-height: var(--ui-chart-min-height);
+  padding-top: var(--ui-chart-plot-top);
 `
 
 const YAxis = styled.div`
-  display: flex;
-  flex-direction: column;
-  align-items: flex-end;
-  justify-content: space-between;
-  width: ${Y_AXIS_MIN_WIDTH}px;
-  height: calc(100% - ${LABEL_AREA_HEIGHT}px);
-  padding-right: ${Y_AXIS_GAP}px;
+  display: grid;
+  justify-items: end;
+  align-content: space-between;
+  width: var(--ui-chart-y-axis-min-width);
+  height: calc(100% - var(--ui-chart-label-area-height));
+  padding-right: var(--ui-chart-y-axis-gap);
 `
 
 const Plot = styled.div`
   position: relative;
-  display: flex;
-  flex: 1;
-  align-items: flex-end;
-  justify-content: space-around;
-  padding-right: 8px;
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  align-items: end;
+  padding-right: var(--ui-chart-plot-right);
 `
 
 const Grid = styled.div`
   position: absolute;
-  inset: 0 8px ${LABEL_AREA_HEIGHT}px 0;
-  display: flex;
-  flex-direction: column;
-  justify-content: space-between;
+  inset: 0 var(--ui-chart-plot-right) var(--ui-chart-label-area-height) 0;
+  display: grid;
+  align-content: space-between;
 `
 
 const GridLine = styled.div`
-  border-top: 1px dashed var(--c-rgba-0-0-51-0_12);
+  border-top: var(--ui-border-width) solid var(--ui-line);
 `
 
 const Column = styled.div`
-  z-index: 1;
-  display: flex;
-  flex: 1;
-  flex-direction: column;
-  align-items: center;
-  justify-content: flex-end;
+  z-index: var(--ui-layer-foreground);
+  display: grid;
+  grid-template-rows: minmax(0, 1fr) var(--ui-chart-label-area-height);
+  justify-items: center;
   height: 100%;
 `
 
 const BarArea = styled.div`
-  display: flex;
-  align-items: flex-end;
-  justify-content: center;
+  display: grid;
+  align-items: end;
+  justify-items: center;
   width: 100%;
-  height: calc(100% - ${LABEL_AREA_HEIGHT}px);
+  height: 100%;
 `
 
 const Bar = styled.div`
   width: 100%;
-  max-width: 80px;
-  border-radius: 8px 8px 0 0;
+  max-width: var(--ui-chart-bar-width);
+  border-radius: var(--ui-chart-bar-radius) var(--ui-chart-bar-radius)
+    var(--ui-chart-bar-base-radius) var(--ui-chart-bar-base-radius);
   overflow: hidden;
 `
 
 const Label = styled.div`
   width: 100%;
-  max-width: 64px;
-  height: ${LABEL_AREA_HEIGHT}px;
-  padding-top: 10px;
+  max-width: var(--ui-space-9);
+  height: var(--ui-chart-label-area-height);
+  padding-top: var(--ui-chart-tick-margin);
 `
