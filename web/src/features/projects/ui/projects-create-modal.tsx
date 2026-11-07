@@ -157,14 +157,14 @@ export const ProjectsCreateModal = ({
 
 const Body = styled.div`
   display: grid;
-  gap: var(--space-4);
+  gap: var(--ui-space-4);
 `
 
 // Phones split the row between both buttons; desktops keep them at the end.
 const Actions = styled.div`
   display: grid;
   grid-template-columns: 1fr 1fr;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
 
   ${(p) => p.theme.breakpoints.up('md')} {
     grid-template-columns: auto auto;

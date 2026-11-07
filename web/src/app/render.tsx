@@ -28,7 +28,8 @@ export const render = (root: HTMLElement) =>
   createRoot(root).render(
     <AppWrapper>
       <MotionConfig reducedMotion="user">
-        <Theme>
+        {/* The whole app uses the workspace design; see WorkspaceDesignStyles. */}
+        <Theme data-ui="workspace">
           <ThemeProvider theme={theme}>
             <Confirm />
             <BreakpointsWatcher />

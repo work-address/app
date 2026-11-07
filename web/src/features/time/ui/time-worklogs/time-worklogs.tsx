@@ -24,32 +24,34 @@ import { TimeMobileFilters } from '../time-filters/time-mobile-filters'
 import { TimeGrid } from '../time-grid'
 import { TimeSortSelect } from '../time-sort-select'
 import { TimeTable } from '../time-table/time-table'
+import { TimeTableStack } from '../time-table/time-table-stack'
 import { TimeViewToggle } from '../time-view-toggle'
 
 import { TimeWorklogsBulkActions } from './time-worklogs-bulk-actions'
+import { TimeWorklogsEmpty } from './time-worklogs-empty'
 
 import {
   $allTime,
+  $timeEntriesTotal,
   $timeLoading,
   $timeFailed,
   fetchTime,
-  TimeEmptyState,
 } from '@/entities/time'
 import {
-  ListPageLayout as S,
   LoadFailure,
-  PageHeader,
+  WorkspacePageHeader,
+  WorkspacePanel,
   useBreakpoint,
+  workspaceDesign,
 } from '@/shared'
-
-const EMPTY_STATE_HEIGHT = 560
 
 /**
  * The worklogs page body: one set of filters, one selection and one dialog
  * over whichever presentation the reader picked.
  *
  * It owns the page header because the sort and view controls belong beside
- * the title, and only this component knows about them.
+ * the title, and only this component knows about them. It renders as
+ * siblings of the page's grid, so the header and the panel share its gap.
  *
  * The chrome lives here rather than in either view so that switching between
  * them keeps the filters applied and the selection intact.
@@ -63,6 +65,7 @@ export const TimeWorklogs = () => {
 
   const {
     entries,
+    total,
     loading,
     failed,
     retry,
@@ -78,6 +81,7 @@ export const TimeWorklogs = () => {
     goToNext,
   } = useUnit({
     entries: $allTime,
+    total: $timeEntriesTotal,
     loading: $timeLoading,
     failed: $timeFailed,
     retry: fetchTime,
@@ -94,6 +98,10 @@ export const TimeWorklogs = () => {
   })
 
   const hasEntries = loading || entries.length > 0
+  // The server's count of every matching entry, not the pages loaded so far.
+  // Hidden while the first page is in flight or failed, where it would be a
+  // stale answer to a different question.
+  const showCount = !failed && !(loading && entries.length === 0)
 
   const contextValue = useMemo(
     () => ({
@@ -122,103 +130,117 @@ export const TimeWorklogs = () => {
     [i18n.language, t],
   )
 
+  const list = isMobile ? <TimeTableStack /> : <TimeTable />
+
   return (
-    <S.Section>
-      <Header
+    <TimeContext.Provider value={contextValue}>
+      <WorkspacePageHeader
         title={t('time.page.title')}
         description={t('time.page.description')}
+        // Beside the title rather than inside a view: the list can also sort
+        // from its column headers, and both write the same store.
         actions={
           <Actions>
-            {/* Beside the toggle rather than inside a view: the list can also
-                sort from its column headers, and both write the same store. */}
-            {isDesktop && (
-              <>
-                <TimeSortSelect />
-                <TimeViewToggle />
-              </>
-            )}
+            <TimeSortSelect />
+            <TimeViewToggle />
+          </Actions>
+        }
+      />
+      <WorkspacePanel
+        title={t('time.panel.title')}
+        aside={
+          showCount ? (
+            <Count>{t('time.panel.count', { count: total })}</Count>
+          ) : null
+        }
+        toolbar={
+          <Toolbar>
+            {isDesktop && <TimeFilters />}
             {isMobile && (
               <TimeMobileFilters
                 filtersOpen={filtersOpen}
                 onFiltersOpenChange={setFiltersOpen}
               />
             )}
-          </Actions>
+            {hasEntries && !failed && selectedCount > 0 && (
+              <>
+                {isDesktop && <TimeWorklogsBulkActions />}
+                {isMobile && <TimeMobileBulkActions />}
+              </>
+            )}
+          </Toolbar>
         }
-      />
-      {/* A phone cannot fit all three controls beside the title - the last
-          one used to land past the right edge of the screen. The filters
-          button stays with the title; the sort picker and the view toggle
-          take the row underneath. */}
-      {isMobile && (
-        <MobileToolbar>
-          <TimeSortSelect />
-          <TimeViewToggle />
-        </MobileToolbar>
-      )}
-      {isDesktop && <TimeFilters />}
-      {failed ? (
-        <LoadFailure
-          title={t('dashboard.worklogsTable.loadFailure.title')}
-          onRetry={retry}
-        />
-      ) : hasEntries ? (
-        <TimeContext.Provider value={contextValue}>
-          {isDesktop && selectedCount > 0 && <TimeWorklogsBulkActions />}
-          {isMobile && selectedCount > 0 && <TimeMobileBulkActions />}
-          {/* The views cross-fade rather than snap: the same entries, a
-              different shape. */}
+      >
+        {failed ? (
+          <LoadFailure
+            title={t('dashboard.worklogsTable.loadFailure.title')}
+            onRetry={retry}
+          />
+        ) : hasEntries ? (
+          // The views cross-fade rather than snap: the same entries, a
+          // different shape.
           <AnimatePresence mode="wait" initial={false}>
             <motion.div
               key={view}
               initial={{ opacity: 0 }}
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
-              transition={{ duration: reducedMotion ? 0 : 0.15 }}
+              transition={{
+                duration: reducedMotion
+                  ? 0
+                  : workspaceDesign.motion.hoverDuration,
+              }}
             >
-              {view === 'grid' ? <TimeGrid /> : <TimeTable />}
+              {view === 'grid' ? <TimeGrid /> : list}
             </motion.div>
           </AnimatePresence>
-          <TimeDialog
-            open={isDialogOpen}
-            row={selectedEntry}
-            onOpenChange={setDialogOpen}
-            hasPrev={navigation.hasPrev}
-            hasNext={navigation.hasNext}
-            onPrev={goToPrev}
-            onNext={goToNext}
-          />
-        </TimeContext.Provider>
-      ) : (
-        <Empty>
-          <TimeEmptyState style={{ height: EMPTY_STATE_HEIGHT }} />
-        </Empty>
-      )}
-    </S.Section>
+        ) : (
+          <TimeWorklogsEmpty />
+        )}
+      </WorkspacePanel>
+      <TimeDialog
+        open={isDialogOpen}
+        row={selectedEntry}
+        onOpenChange={setDialogOpen}
+        hasPrev={navigation.hasPrev}
+        hasNext={navigation.hasNext}
+        onPrev={goToPrev}
+        onNext={goToNext}
+      />
+    </TimeContext.Provider>
   )
 }
 
-const Header = styled(PageHeader)`
-  margin-bottom: var(--space-5);
-`
-
+/* Sort and view side by side; on a phone they share the row below the
+   title, the picker taking what the toggle leaves. */
 const Actions = styled.div`
   display: grid;
   grid-auto-flow: column;
   align-items: center;
-  gap: var(--space-2);
+  justify-content: start;
+  gap: var(--ui-space-3);
+  min-width: 0;
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    grid-auto-flow: row;
+    grid-template-columns: minmax(0, 1fr) auto;
+  }
 `
 
-const MobileToolbar = styled.div`
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
+const Count = styled.span`
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-pill-radius);
+  background: var(--ui-glow);
+  color: var(--ui-blue);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+  font-weight: var(--ui-weight-medium);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 `
 
-const Empty = styled.div`
+const Toolbar = styled.div`
   display: grid;
-  padding-top: var(--space-7);
+  gap: var(--ui-space-4);
+  min-width: 0;
 `

@@ -112,7 +112,7 @@ export const InvoiceLines = () => {
 }
 const Root = styled.section`
   display: grid;
-  gap: var(--space-4);
+  gap: var(--ui-space-4);
   min-width: 0;
 
   /* The bill stays whole on one page, its heading with it. */
@@ -123,15 +123,15 @@ const Root = styled.section`
 `
 
 const Rejection = styled(Text)`
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-3);
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-filter-radius);
   background: var(--red-a3);
   color: var(--red-11);
   overflow-wrap: anywhere;
 
   @media print {
     display: block;
-    margin-bottom: var(--space-3);
+    margin-bottom: var(--ui-space-3);
   }
 `
 
@@ -147,19 +147,19 @@ const TableWrap = styled.div`
 const Table = styled.table`
   width: 100%;
   border-collapse: collapse;
-  font-size: var(--font-size-2);
-  line-height: var(--line-height-2);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
 
   th,
   td {
-    padding: var(--space-3);
+    padding: var(--ui-space-3);
     text-align: right;
-    border-bottom: 1px solid var(--ds-neutral-alpha-6);
+    border-bottom: 1px solid var(--ui-line);
   }
 
   th {
     font-weight: 500;
-    color: var(--ds-neutral-12);
+    color: var(--ui-ink);
   }
 
   th:first-child,
@@ -201,7 +201,7 @@ const Table = styled.table`
       tbody tr {
         display: grid;
         grid-template-columns: repeat(3, minmax(0, 1fr));
-        border-bottom: 1px solid var(--ds-neutral-alpha-6);
+        border-bottom: 1px solid var(--ui-line);
       }
 
       /* The next section's rule closes the table. */
@@ -211,7 +211,7 @@ const Table = styled.table`
 
       && th,
       && td {
-        padding: var(--space-2) 0;
+        padding: var(--ui-space-2) 0;
         border-bottom: 0;
       }
 
@@ -236,12 +236,12 @@ const Table = styled.table`
   @media print {
     th,
     td {
-      padding: var(--space-1) var(--space-2);
-      border-bottom: 1px solid var(--ds-neutral-alpha-3);
+      padding: var(--ui-space-1) var(--ui-space-2);
+      border-bottom: 1px solid var(--ui-inset);
     }
 
     th {
-      border-bottom: 1px solid var(--ds-neutral-alpha-8);
+      border-bottom: 1px solid var(--ui-muted);
     }
 
     th:first-child,
@@ -257,7 +257,7 @@ const Table = styled.table`
 `
 
 const Detail = styled.div`
-  font-size: var(--font-size-1);
-  line-height: var(--line-height-1);
-  color: var(--ds-neutral-11);
+  font-size: var(--ui-small-size);
+  line-height: var(--ui-small-line-height);
+  color: var(--ui-muted);
 `

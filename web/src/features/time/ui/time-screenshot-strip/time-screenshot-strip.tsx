@@ -78,7 +78,7 @@ export const TimeScreenshotStrip = ({ entries }: Props) => {
 const Grid = styled.div`
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
 
   ${(p) => p.theme.breakpoints.down('md')} {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -98,21 +98,21 @@ const Thumb = styled.button`
   img {
     width: 100%;
     aspect-ratio: 16 / 10;
-    border-radius: var(--radius-3);
+    border-radius: var(--ui-filter-radius);
     object-fit: cover;
-    box-shadow: 0 0 0 1px var(--ds-neutral-alpha-5);
+    box-shadow: 0 0 0 1px var(--ui-line);
   }
 
   &:hover img,
   &:focus-visible img {
-    box-shadow: 0 0 0 2px var(--ds-accent-9);
+    box-shadow: 0 0 0 2px var(--ui-blue);
   }
 `
 
 const Caption = styled.span`
   overflow: hidden;
-  color: var(--ds-neutral-11);
-  font-size: var(--font-size-1);
+  color: var(--ui-muted);
+  font-size: var(--ui-small-size);
   white-space: nowrap;
   text-overflow: ellipsis;
 `

@@ -62,7 +62,7 @@ export const InvoiceMobileFilters = () => {
         <Button
           color="neutral"
           variant="outline"
-          size="s"
+          stretch
           iconLeft={
             <S.FilterImage
               src={FilterIcon}
@@ -255,7 +255,7 @@ const InvoiceFilterFields = () => {
 const Root = styled.div`
   display: grid;
   grid-template-columns: repeat(auto-fit, minmax(130px, 1fr));
-  gap: var(--space-3);
+  gap: var(--ui-space-4) var(--ui-space-3);
 `
 
 /* The period holds two date inputs, so it takes two columns. */

@@ -20,7 +20,7 @@ import { SectionHeading } from './profile-edit-styles'
 
 import {
   Input,
-  PageSection,
+  WorkspaceSheet,
   TagInput,
   Select,
   RichEditor,
@@ -237,9 +237,9 @@ export const ProfileEditDetails = ({
   )
 }
 
-const Root = styled(PageSection)`
+const Root = styled(WorkspaceSheet)`
   display: grid;
-  gap: var(--space-5);
+  gap: var(--ui-section-gap);
 `
 
 /* One column until there is room for two: name beside title, company beside
@@ -252,11 +252,11 @@ const Fields = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
-  gap: var(--space-4) var(--space-6);
+  gap: var(--ui-space-4) var(--ui-space-6);
 
   ${(p) => p.theme.breakpoints.up('lg')} {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-5) var(--space-6);
+    gap: var(--ui-space-5) var(--ui-space-6);
   }
 `
 

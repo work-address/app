@@ -1,20 +1,19 @@
-import { Badge, Flex } from '@radix-ui/themes'
-import { useUnit } from 'effector-react'
+import { Badge } from '@radix-ui/themes'
 import { memo, useContext } from 'react'
 import styled from 'styled-components'
 
 import { formatTrackedCount } from '../../model'
 import { TimeContext } from '../time-context'
 
+import { TimePaidBadge } from './time-paid-badge'
+import { TimeScreenshotThumb } from './time-screenshot-thumb'
+
 import type { Time } from '@/entities/time'
 
-import { setTimePaidStatusMutation } from '@/entities/time'
 import {
   type DesktopBodyCellRenderProps,
   formatDurationFromMinutes,
   getTimeActiveColor,
-  Text,
-  toImageDataUrl,
   Tooltip,
 } from '@/shared'
 
@@ -22,17 +21,12 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
   const { dateFormatter, timeFormatter, numberFormatter, t } =
     useContext(TimeContext)
 
-  const { setPaidStatus, setPaidStatusStatus } = useUnit({
-    setPaidStatus: setTimePaidStatusMutation.start,
-    setPaidStatusStatus: setTimePaidStatusMutation.$status,
-  })
-
   switch (props.dataKey) {
     case 'note': {
       const note = props.data.note
 
       if (!note) {
-        return null
+        return <Muted>—</Muted>
       }
 
       return (
@@ -41,37 +35,30 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
               ellipsis has to sit on whatever directly holds the text - an
               inner atomic inline would be clipped without the dots. */}
           <NoteAnchor>
-            <NoteText color={'gray'} size="2">
-              {note}
-            </NoteText>
+            <Note>{note}</Note>
           </NoteAnchor>
         </Tooltip>
       )
     }
 
     case 'screenshot': {
-      const screenshotSrc = toImageDataUrl(props.data.screenshot)
-
-      return screenshotSrc ? (
-        <Screenshot src={screenshotSrc} alt={props.data.project?.title || ''} />
-      ) : (
-        <Text size="2" color="gray">
-          {t('dashboard.worklogsTable.screenshotNoData')}
-        </Text>
+      return (
+        <TimeScreenshotThumb
+          screenshot={props.data.screenshot}
+          alt={props.data.project?.title || ''}
+        />
       )
     }
 
     case 'fromAt': {
       return (
-        <Flex direction={'column'}>
-          <Text size="2">
-            {timeFormatter.format(new Date(props.data.fromAt))} -{' '}
+        <Stack>
+          <Primary>
+            {timeFormatter.format(new Date(props.data.fromAt))} –{' '}
             {timeFormatter.format(new Date(props.data.toAt))}
-          </Text>
-          <Text size="2" color={'gray'}>
-            {dateFormatter.format(new Date(props.data.fromAt))}
-          </Text>
-        </Flex>
+          </Primary>
+          <Meta>{dateFormatter.format(new Date(props.data.fromAt))}</Meta>
+        </Stack>
       )
     }
 
@@ -79,15 +66,19 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
     case 'mouseKeys':
     case 'mouseDistance': {
       return (
-        <Text size="2">
+        <Figure>
           {formatTrackedCount(props.data[props.dataKey], numberFormatter)}
-        </Text>
+        </Figure>
       )
     }
 
     case 'minutesActive': {
       return (
-        <Badge color={getTimeActiveColor(props.data.minutesActive)}>
+        <Badge
+          size="2"
+          radius="full"
+          color={getTimeActiveColor(props.data.minutesActive)}
+        >
           {formatDurationFromMinutes(props.data.minutesActive, t)}
         </Badge>
       )
@@ -95,45 +86,62 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
 
     default: {
       if (props.customKey === 'paidStatus') {
-        const timeId = props.data.id
+        return <TimePaidBadge entry={props.data} />
+      }
 
-        return (
-          <Tooltip content={t('common.metricDesc.paymentStatus')}>
-            <PaidStatusBadge
-              // Gray rather than red: unpaid is the ordinary state of freshly
-              // tracked time, not a fault to flag.
-              color={props.data.isPaid ? 'green' : 'gray'}
-              onClick={(event) => {
-                event.stopPropagation()
-
-                if (!timeId || setPaidStatusStatus === 'pending') {
-                  return
-                }
-
-                setPaidStatus({ ids: [timeId], isPaid: !props.data.isPaid })
-              }}
-            >
-              {t(
-                props.data.isPaid
-                  ? 'dashboard.worklogsTable.paymentStatus.paid'
-                  : 'dashboard.worklogsTable.paymentStatus.unpaid',
-              )}
-            </PaidStatusBadge>
-          </Tooltip>
-        )
+      if (props.customKey === 'projectName') {
+        return <Name>{props.data.project?.title ?? '—'}</Name>
       }
 
       return (
-        <Text size="2">
+        <Figure>
           <props.DefaultBodyComponent {...props} />
-        </Text>
+        </Figure>
       )
     }
   }
 })
 
-const Screenshot = styled.img`
-  max-width: 64px;
+const Stack = styled.span`
+  display: grid;
+  min-width: 0;
+`
+
+const Primary = styled.span`
+  color: var(--ui-ink);
+  font-size: var(--ui-body-size);
+  line-height: var(--ui-body-line-height);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+`
+
+const Meta = styled.span`
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+`
+
+const Name = styled.span`
+  min-width: 0;
+  color: var(--ui-text);
+  font-size: var(--ui-body-size);
+  line-height: var(--ui-body-line-height);
+  font-weight: var(--ui-weight-semibold);
+  overflow-wrap: anywhere;
+`
+
+const Figure = styled.span`
+  color: var(--ui-text);
+  font-size: var(--ui-body-size);
+  line-height: var(--ui-body-line-height);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+`
+
+const Muted = styled.span`
+  color: var(--ui-muted);
 `
 
 const NoteAnchor = styled.span`
@@ -144,13 +152,12 @@ const NoteAnchor = styled.span`
   max-width: 100%;
 `
 
-const NoteText = styled(Text)`
+const Note = styled.span`
   display: block;
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
   overflow: hidden;
   text-overflow: ellipsis;
   white-space: nowrap;
-`
-
-const PaidStatusBadge = styled(Badge)`
-  cursor: pointer;
 `

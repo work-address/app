@@ -57,7 +57,7 @@ const Hero = styled.div`
   max-width: 700px;
   border-radius: 12px;
   /* overflow: hidden; */
-  background: var(--c-rgba-0-0-51-0_02);
+  background: var(--ui-inset);
 `
 
 const HeroImg = styled.img`
@@ -67,7 +67,7 @@ const HeroImg = styled.img`
 `
 
 const Text = styled.div`
-  margin-top: var(--space-6);
+  margin-top: var(--ui-space-6);
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -77,5 +77,5 @@ const Text = styled.div`
 `
 
 const EmptyAction = styled(Button)`
-  margin-top: var(--space-5);
+  margin-top: var(--ui-space-5);
 `

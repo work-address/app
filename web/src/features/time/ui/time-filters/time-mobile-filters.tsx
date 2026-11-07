@@ -48,7 +48,7 @@ export const TimeMobileFilters = ({
           <Button
             color="neutral"
             variant="outline"
-            size="s"
+            stretch
             iconLeft={
               <S.FilterImage
                 src={FilterIcon}

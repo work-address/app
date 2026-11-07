@@ -1,10 +1,11 @@
 import { useUnit } from 'effector-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
 import { fetchProjects } from '@/entities/projects'
 import { TimeWorklogs, useTimeSearchSync } from '@/features/time'
-import { PageHelmet, Wrapper } from '@/shared'
+import { PageHelmet, WorkspacePage } from '@/shared'
 
 export default function TimePage() {
   const { t } = useTranslation()
@@ -18,12 +19,18 @@ export default function TimePage() {
   }, [fetchProjectsEvent])
 
   return (
-    <Wrapper>
+    <Root>
       <PageHelmet
         title={t('time.page.title')}
         description={t('time.page.meta')}
       />
       <TimeWorklogs />
-    </Wrapper>
+    </Root>
   )
 }
+
+const Root = styled(WorkspacePage)`
+  display: grid;
+  align-content: start;
+  gap: var(--ui-section-gap);
+`

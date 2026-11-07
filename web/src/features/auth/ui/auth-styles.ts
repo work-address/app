@@ -15,48 +15,48 @@ export const Logo = styled.img`
   }
 `
 
+/* A white workspace panel on the canvas. */
 export const SignInCard = styled(Card)`
   position: relative;
   text-align: center;
-  background-color: var(--ds-accent-3);
-  padding: var(--spacing-5) 16px;
+  padding: var(--ui-space-6) var(--ui-card-inset-mobile);
+  border: var(--ui-border-width) solid var(--ui-edge);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow);
+
+  /* Doubled: Card's own [data-rounded] corner outranks a single class. */
+  && {
+    border-radius: var(--ui-radius);
+  }
 
   ${({ theme }) => theme.breakpoints.up('md')} {
     width: 600px;
-    padding: 42px 48px 30px 48px;
-    background: var(--c-rgba-255-255-255-0_92);
+    padding: var(--ui-space-7) var(--ui-space-8) var(--ui-space-6);
   }
 `
 
 /* Set like the sign-in page's heading, so the two auth screens a person
    meets in a row read as one product. */
 export const Title = styled.h1`
-  font-size: 28px;
-  font-weight: 700;
-  line-height: 1.2;
-  letter-spacing: -0.01em;
-  color: var(--ds-neutral-12);
-  margin: 0 0 10px;
-
-  ${({ theme }) => theme.breakpoints.up('md')} {
-    font-size: 32px;
-  }
+  font-size: var(--ui-title-mobile-size);
+  font-weight: var(--ui-title-weight);
+  line-height: var(--ui-title-mobile-line-height);
+  letter-spacing: var(--ui-title-tracking);
+  color: var(--ui-ink);
+  margin: 0 0 var(--ui-space-2);
 `
 
 export const Desc = styled.p`
-  font-weight: 400;
-  font-size: var(--font-size-2);
-  margin-bottom: 24px;
-  color: var(--ds-accent-11);
-  line-height: 20px;
-  letter-spacing: 0.34px;
+  font-weight: var(--ui-weight-regular);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+  margin-bottom: var(--ui-space-5);
+  color: var(--ui-muted);
 
   ${({ theme }) => theme.breakpoints.up('md')} {
-    letter-spacing: 0.6px;
-    font-size: var(--font-size-3);
-    margin-bottom: 40px;
-    color: var(--c-rgba-0-7-20-0_62);
-    line-height: 150%;
+    font-size: var(--ui-body-size);
+    line-height: var(--ui-body-line-height);
+    margin-bottom: var(--ui-space-6);
   }
 `
 
@@ -79,13 +79,13 @@ export const Actions = styled.div`
 `
 
 export const Learn = styled(Link)`
-  color: var(--ds-accent-11);
+  color: var(--ui-blue);
   font-weight: 500;
   text-decoration: underline;
   text-underline-offset: 2px;
 
   &:hover {
-    color: var(--ds-accent-9);
+    color: var(--ui-blue);
   }
 `
 export const FootLine = styled.div`
@@ -97,7 +97,7 @@ export const FootLine = styled.div`
 `
 
 export const FootLabel = styled.span`
-  color: var(--c-rgba-0-7-20-0_52);
+  color: var(--ui-muted);
 `
 
 export const FootWalletLink = styled.a`
@@ -105,7 +105,7 @@ export const FootWalletLink = styled.a`
   text-decoration: none;
 
   &:hover {
-    color: var(--ds-accent-11);
+    color: var(--ui-blue);
     text-decoration: underline;
   }
 `

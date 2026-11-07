@@ -70,11 +70,11 @@ export const Modal = ({
 }
 
 const Root = styled(Dialog.Content)<{ $width?: string; $padding?: string }>`
-  padding: var(--space-5);
+  padding: var(--ui-card-inset-mobile);
   ${(p) => p.$padding && `padding: ${p.$padding};`}
 
   ${(p) => p.theme.breakpoints.up('md')} {
-    padding: 20px;
+    padding: var(--ui-card-inset);
   }
 
   ${(p) =>
@@ -89,18 +89,21 @@ const Header = styled.div<{ $spaceBelow: boolean }>`
   display: flex;
   align-items: flex-start;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
 
   /* Without a separator the header has to space itself off the content. */
-  ${(p) => p.$spaceBelow && `margin-bottom: var(--space-3);`}
+  ${(p) => p.$spaceBelow && `margin-bottom: var(--ui-space-3);`}
 `
 
 // Radix's Dialog.Title defaults to mb="3", which stacked on top of the
 // separator's own margin. The header's bottom spacing is owned by the
 // separator (or by Header when there is none) instead.
 const Title = styled(Dialog.Title).attrs({ mb: '0' as const })`
-  font-size: var(--font-size-6);
-  font-weight: var(--font-weight-medium);
+  color: var(--ui-ink);
+  font-size: var(--ui-heading-size);
+  line-height: var(--ui-heading-line-height);
+  font-weight: var(--ui-heading-weight);
+  letter-spacing: var(--ui-heading-tracking);
   flex: 1;
   min-width: 0;
 `
@@ -111,6 +114,6 @@ const Title = styled(Dialog.Title).attrs({ mb: '0' as const })`
 const Actions = styled.div`
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
   flex-shrink: 0;
 `

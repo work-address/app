@@ -63,7 +63,7 @@ const TitleRow = styled.div`
   display: flex;
   align-items: center;
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
   min-width: 0;
 `
 
@@ -75,8 +75,8 @@ const Title = styled(Text)`
 const InvoiceLink = styled(OpenInvoiceLink)`
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--ui-space-1);
   flex-shrink: 0;
-  color: var(--ds-neutral-11);
+  color: var(--ui-muted);
   text-decoration: none;
 `

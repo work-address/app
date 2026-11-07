@@ -81,55 +81,61 @@ export const LoadFailure = ({
   )
 }
 
+/* Inside a panel, a quiet dashed frame; as the whole page, a white
+   workspace panel of its own on the canvas. */
 const Root = styled.div`
   display: grid;
   justify-items: center;
-  gap: var(--space-2);
-  padding: var(--space-8) var(--space-4);
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-8) var(--ui-space-4);
   text-align: center;
-  border: 1px dashed var(--gray-a6);
-  border-radius: var(--radius-3);
+  border: var(--ui-border-width) dashed var(--ui-line);
+  border-radius: var(--ui-control-radius);
 
   &[data-size='page'] {
-    padding-block: calc(var(--space-9) * 1.5);
+    padding-block: calc(var(--ui-space-9) * 1.5);
+    border: var(--ui-border-width) solid var(--ui-edge);
+    border-radius: var(--ui-radius);
+    background: var(--ui-surface);
+    box-shadow: var(--ui-shadow);
   }
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    padding: var(--space-6) var(--space-4);
+    padding: var(--ui-space-6) var(--ui-space-4);
+
+    &[data-size='page'] {
+      padding-block: var(--ui-space-8);
+    }
   }
 `
 
 const Title = styled.h2`
   margin: 0;
-  font-size: var(--font-size-4);
-  font-weight: 500;
-  line-height: var(--line-height-4);
-  color: var(--ds-neutral-12);
+  font-size: var(--ui-figure-size);
+  font-weight: var(--ui-heading-weight);
+  line-height: var(--ui-figure-line-height);
+  letter-spacing: var(--ui-heading-tracking);
+  color: var(--ui-ink);
 
   ${Root}[data-size='page'] & {
-    font-size: var(--font-size-7);
-    line-height: 125%;
-  }
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    ${Root}[data-size='page'] & {
-      font-size: var(--font-size-5);
-    }
+    font-size: var(--ui-title-mobile-size);
+    line-height: var(--ui-title-mobile-line-height);
+    letter-spacing: var(--ui-title-tracking);
   }
 `
 
 const Description = styled.p`
   margin: 0;
   max-width: 440px;
-  font-size: var(--font-size-3);
-  line-height: var(--line-height-3);
-  color: var(--ds-neutral-11);
+  font-size: var(--ui-body-size);
+  line-height: var(--ui-body-line-height);
+  color: var(--ui-muted);
   overflow-wrap: anywhere;
 `
 
 const Actions = styled.div`
   display: grid;
   grid-auto-flow: column;
-  gap: var(--space-2);
-  margin-top: var(--space-2);
+  gap: var(--ui-space-2);
+  margin-top: var(--ui-space-3);
 `

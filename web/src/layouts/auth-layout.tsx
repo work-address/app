@@ -3,7 +3,7 @@ import { matchPath, Outlet, useLocation } from 'react-router-dom'
 import styled, { css } from 'styled-components'
 
 import { routes } from '@/routes'
-import { RouteSkeleton, SignBg } from '@/shared'
+import { RouteSkeleton } from '@/shared'
 
 export const AuthLayout = () => {
   const { pathname } = useLocation()
@@ -25,12 +25,11 @@ export const AuthLayout = () => {
   )
 }
 
-/* The sign-in page paints its own two panels edge to edge; the patterned
-   backdrop is for the smaller auth pages that sit in a card on top of it. */
+/* The workspace canvas behind every auth page: the sign-in page paints its
+   own two columns on it, the smaller pages sit in a white card. */
 const Root = styled.main<{ $fullScreen: boolean }>`
   min-height: 100vh;
-  background: ${(p) =>
-    p.$fullScreen ? 'var(--white)' : `url(${SignBg}) center / cover no-repeat`};
+  background: var(--page-canvas);
   display: flex;
   flex-direction: column;
   align-items: center;

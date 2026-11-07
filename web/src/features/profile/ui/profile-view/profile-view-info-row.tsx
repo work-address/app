@@ -35,18 +35,18 @@ const Root = styled.div`
   display: grid;
   grid-template-columns: 20px minmax(0, 1fr);
   align-items: start;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
 `
 
 /* As tall as a line of the row's text, so the icon centres on the first one. */
 const Icon = styled.div`
   display: grid;
   place-items: center;
-  height: var(--line-height-3);
-  color: var(--ds-neutral-11);
+  height: var(--ui-body-line-height);
+  color: var(--ui-muted);
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    height: var(--line-height-2);
+    height: var(--ui-meta-line-height);
   }
 `
 
@@ -62,7 +62,7 @@ const Value = styled(Text)`
     transition: border-bottom 0.2s ease-in-out;
 
     &:hover {
-      border-bottom: 1px solid var(--gray-6);
+      border-bottom: 1px solid var(--ui-line);
     }
   }
 `

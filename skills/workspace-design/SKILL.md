@@ -22,7 +22,7 @@ the same blocks.
 | --- | --- |
 | Design decisions, composition recipes, acceptance criteria | This skill |
 | Exact colors, dimensions, typography, motion, chart geometry | [`workspaceDesign`](../../web/src/shared/config/workspace-design.ts) |
-| Derived CSS properties and opt-in theme mappings | [`WorkspaceDesignStyles`](../../web/src/shared/styles/workspace-design.ts) |
+| Derived CSS properties, scope and theme mappings | [`WorkspaceDesignStyles`](../../web/src/shared/styles/workspace-design.ts) |
 | Reusable page, header, panel, summary and metric components | [`shared/ui/workspace`](../../web/src/shared/ui/workspace/index.ts) |
 | Viewport breakpoints | [`theme`](../../web/src/shared/lib/theme.ts) |
 | React placement, exports, naming and variants | [`fsd-styled-components`](../fsd-styled-components/SKILL.md) |
@@ -62,11 +62,13 @@ For a small follow-up, use the same sequence at the affected desktop width and
 
 ## Applying the design
 
-`WorkspaceDesignStyles` is installed once by the application. Tokens are globally
-available, but theme overrides are enabled only inside `data-ui="workspace"`.
-The route layout owns that scope. Adopting one page does not imply adopting the
-entire app. Extend the route's existing scope selection when that page's redesign
-is authorized; keep unrequested routes on their existing defaults.
+The whole application uses the workspace design. `WorkspaceDesignStyles` is
+installed once by the application, and `data-ui="workspace"` sits on the root
+Radix `Theme` in `app/render.tsx`. The same rules also match every Theme Radix
+renders into a portal (`.radix-themes[data-is-root-theme='false']`), so dialogs,
+drawers, menus, popovers and tooltips share the page's font, colours and
+controls without a per-component prop. Keep that single owner: a page or layout
+does not set the attribute again.
 
 Use `var(--ui-...)` in CSS. Use `workspaceDesign` for numeric values required by
 React, Recharts or Motion. The CSS token map is derived from that same object.
@@ -78,14 +80,13 @@ thresholds for container queries: CSS custom properties do not work as query
 conditions. Zero, percentages, fractions and content-driven dimensions remain
 valid layout expressions.
 
-Portals need deliberate scope. A popup mounted under `document.body` does not
-inherit the page's font, neutral aliases or control mappings. `Select`, `Modal`
-and `AdaptiveDialog` do not currently expose a workspace prop. When a portal's
-migration is authorized, locate its existing `Theme`, add an explicit opt-in prop
-with the legacy default, and put `data-ui="workspace"` on the portal-owned content
-`Root` inside that Theme. Inspect its computed styles after opening it; globally
-available tokens alone do not establish the theme. Current dashboard dialogs
-remain on their legacy design because their migration was outside the page scope.
+Shared primitives expose optional `--*` hooks with their former values as
+fallbacks (`--button-<size>-*`, `--select-trigger-*`, `--date-field-*`,
+`--toolbar-*`, `--sort-select-*`, `--table-*`). `WorkspaceDesignStyles` sets
+them inside the scope, together with the Radix field and portal mappings. Change
+a control's workspace geometry there, once, rather than per page. A table that
+needs different behaviour overrides a hook on its own root, as the invoice
+worklogs table does with `--table-sort-offset`.
 
 ## Typography
 
@@ -227,6 +228,9 @@ Fetching and mutations stay in their current feature/entity models.
 ### Panels and actions
 
 Use `WorkspacePanel` for a white information panel with its title inside.
+Use `WorkspaceSheet` for a white surface that names itself inside, such as a
+form section or a document part. Record pages (an invoice, a profile, the
+profile form) keep their heading on the canvas and put their parts on sheets.
 Its default is natural height. Set `bounded` only for an intentionally capped
 information/list panel; the shared mobile behavior restores natural height.
 Group count and primary action in `aside`, not as a second toolbar action.
@@ -344,8 +348,9 @@ can disturb the demo database. Lint only touched files when using `--fix`.
 If hot reload leaves transient demo data or stale animation, reload once after
 edits and verify a clean load before diagnosing it as a product regression.
 
-Finally, navigate to one unmodified route after a shared styling change. Confirm
-its computed theme and controls retain their defaults. Check console errors on
-a clean load. Passing TypeScript does not substitute for this visual review.
+Finally, after a shared styling change, recheck every route that renders the
+changed primitive (Dashboard, Time, Invoices, an invoice, a profile, the profile
+form, sign-in and connect) and at least one portal. Check console errors on a
+clean load. Passing TypeScript does not substitute for this visual review.
 The task is complete when the requested page matches the intended hierarchy,
 all affected interactions work, and every applicable check above has evidence.

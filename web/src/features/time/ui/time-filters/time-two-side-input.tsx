@@ -1,6 +1,6 @@
-import { Grid } from '@radix-ui/themes'
 import { useStoreMap, useUnit } from 'effector-react'
 import { useCallback } from 'react'
+import styled from 'styled-components'
 
 import type { InputProps } from '@/shared'
 
@@ -62,7 +62,7 @@ export const TimeTwoSideInput = ({
   )
 
   return (
-    <Grid columns={'auto'} gap={'2'}>
+    <Root>
       <Text
         as={'label'}
         htmlFor={leftValue ? rightId : leftId}
@@ -71,7 +71,7 @@ export const TimeTwoSideInput = ({
       >
         {label}
       </Text>
-      <Grid columns={'1fr 1fr'} gap={'2'}>
+      <Pair>
         <Input
           id={leftId}
           value={leftValue}
@@ -88,7 +88,19 @@ export const TimeTwoSideInput = ({
           {...inputProps}
           inputMode={inputMode}
         />
-      </Grid>
-    </Grid>
+      </Pair>
+    </Root>
   )
 }
+
+const Root = styled.div`
+  display: grid;
+  gap: var(--ui-space-2);
+  min-width: 0;
+`
+
+const Pair = styled.div`
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--ui-space-2);
+`

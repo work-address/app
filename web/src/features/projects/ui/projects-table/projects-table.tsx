@@ -542,8 +542,8 @@ const Toolbar = styled.div`
   display: grid;
   grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--projects-tools-gap, var(--space-3));
-  margin-bottom: var(--space-3);
+  gap: var(--projects-tools-gap, var(--ui-space-3));
+  margin-bottom: var(--ui-space-3);
 
   ${Root}[data-overview] & {
     margin-bottom: var(--ui-section-gap);
@@ -607,7 +607,7 @@ const Tools = styled.div`
   display: grid;
   grid-template-columns: minmax(0, var(--projects-search-width, 240px)) auto;
   align-items: center;
-  gap: var(--projects-tools-gap, var(--space-3));
+  gap: var(--projects-tools-gap, var(--ui-space-3));
   justify-self: end;
   min-width: 0;
 
@@ -639,7 +639,7 @@ const Actions = styled.div`
   display: grid;
   grid-auto-flow: column;
   justify-self: end;
-  gap: var(--projects-actions-gap, var(--space-2));
+  gap: var(--projects-actions-gap, var(--ui-space-2));
 
   @container projects-table (max-width: ${workspaceDesign.container
     .compact}px) {
@@ -686,7 +686,7 @@ const Body = styled.div`
     }
 
     &:not([data-overview]) td {
-      padding-block: var(--projects-cell-inset-y, var(--space-2));
+      padding-block: var(--projects-cell-inset-y, var(--ui-space-2));
     }
   }
 `

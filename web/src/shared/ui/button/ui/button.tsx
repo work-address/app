@@ -58,7 +58,7 @@ export const Button = ({
             <Spinner
               size={BUTTON_SPINNER_SIZE[size]}
               width="2px"
-              color={variant === 'solid' ? 'var(--white)' : 'currentColor'}
+              color={variant === 'solid' ? 'var(--ui-surface)' : 'currentColor'}
             />
           ) : (
             iconLeft
@@ -161,7 +161,7 @@ export const buttonStyles = css`
   /* Solid enough to find with the eye: the earlier 26% ring vanished against
      the soft surfaces most of these buttons sit on. */
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-9);
+    outline: 2px solid var(--ui-blue);
     outline-offset: 2px;
   }
 

@@ -1,6 +1,7 @@
 import { TrashIcon } from '@radix-ui/react-icons'
 import { Flex } from '@radix-ui/themes'
 import { useTranslation } from 'react-i18next'
+import styled from 'styled-components'
 
 import type { ProjectsDialogMode } from '../../model'
 
@@ -28,11 +29,8 @@ export const ProjectsDialogTitle = ({
       : t('dashboard.projectsTable.drawer.editProjectTitle')
 
   if (isDesktop) {
-    return (
-      <Text as="span" size="6" weight="medium" style={{ minWidth: 0 }}>
-        {heading}
-      </Text>
-    )
+    // The dialog's title sets the type; this only keeps a long name shrinkable.
+    return <Name>{heading}</Name>
   }
 
   return (
@@ -58,3 +56,7 @@ export const ProjectsDialogTitle = ({
     </Flex>
   )
 }
+
+const Name = styled.span`
+  min-width: 0;
+`

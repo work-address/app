@@ -24,7 +24,7 @@ type TextAreaProps = RadixTextAreaProps & {
 const LABEL_WITH_HINT = {
   display: 'inline-flex',
   alignItems: 'center',
-  gap: 'var(--space-1)',
+  gap: 'var(--ui-space-1)',
 } as const
 
 export const TextArea = ({
@@ -50,7 +50,7 @@ export const TextArea = ({
     // The label sits as close to its box as an Input's stacked label does.
     <Root
       columns={{ initial: '1' }}
-      gap={'var(--space-2)'}
+      gap={'var(--ui-space-2)'}
       align={'center'}
       data-grow={grow || undefined}
     >
@@ -103,6 +103,6 @@ const Field = styled(RadixTextArea)`
 
 const Error = styled.p`
   color: var(--red-11);
-  font-size: var(--font-size-2);
-  line-height: var(--line-height-2);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
 `

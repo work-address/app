@@ -79,19 +79,19 @@ const Root = styled.aside`
   display: grid;
   grid-template-rows: minmax(0, 1fr) auto;
   justify-items: center;
-  gap: var(--space-5);
-  padding: var(--space-7);
-  border-radius: var(--radius-5);
-  background: var(--c-253854);
-  color: var(--white);
+  gap: var(--ui-space-5);
+  padding: var(--ui-space-7);
+  border-radius: var(--ui-radius);
+  background: var(--ui-text);
+  color: var(--ui-surface);
 `
 
 const Spark = styled.svg`
   position: absolute;
-  fill: var(--c-rgba-255-255-255-0_92);
+  fill: color-mix(in srgb, var(--ui-surface) 92%, transparent);
 
   &[data-tone='accent'] {
-    fill: var(--ds-accent-3);
+    fill: var(--ui-glow);
     opacity: 0.7;
   }
 `
@@ -114,10 +114,10 @@ const DialTicks = styled.svg`
 `
 
 const Tick = styled.rect`
-  fill: var(--c-rgba-255-255-255-0_2);
+  fill: color-mix(in srgb, var(--ui-surface) 20%, transparent);
 
   &[data-tracked] {
-    fill: var(--ds-accent-3);
+    fill: var(--ui-glow);
   }
 `
 
@@ -133,15 +133,15 @@ const Tagline = styled.p`
   position: relative;
   margin: 0;
   display: grid;
-  gap: var(--space-1);
+  gap: var(--ui-space-1);
   text-align: center;
-  font-size: var(--font-size-6);
+  font-size: var(--ui-metric-min-size);
   font-weight: 400;
   line-height: 1.25;
-  color: var(--c-rgba-255-255-255-0_92);
+  color: color-mix(in srgb, var(--ui-surface) 92%, transparent);
 
   & > strong {
     font-weight: 700;
-    color: var(--white);
+    color: var(--ui-surface);
   }
 `

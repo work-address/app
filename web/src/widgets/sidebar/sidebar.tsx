@@ -321,7 +321,7 @@ const Scrim = styled.div`
   position: fixed;
   inset: 0;
   z-index: 19;
-  background: var(--ds-neutral-alpha-6);
+  background: var(--ui-line);
 `
 
 const Aside = styled.aside`
@@ -344,7 +344,7 @@ const Aside = styled.aside`
 
     &:not([data-collapsed]) {
       padding: var(--sidebar-open-mobile-padding, 12px);
-      box-shadow: var(--shadow-4);
+      box-shadow: var(--ui-shadow);
     }
   }
 
@@ -367,7 +367,7 @@ const Brand = styled(Link)`
   border-radius: 8px;
 
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-9);
+    outline: 2px solid var(--ui-blue);
     outline-offset: 2px;
   }
 `
@@ -446,10 +446,10 @@ const Item = styled.button`
   /* (40px column - 16px icon) / 2: the icon stays put while the width animates. */
   padding: 0 12px;
   border-radius: var(--sidebar-item-radius, 8px);
-  font-size: var(--sidebar-item-font-size, var(--font-size-2));
+  font-size: var(--sidebar-item-font-size, var(--ui-meta-size));
   line-height: 20px;
   font-weight: 400;
-  color: var(--sidebar-item-color, var(--ds-neutral-11));
+  color: var(--sidebar-item-color, var(--ui-muted));
   background: var(--sidebar-item-bg, transparent);
   white-space: nowrap;
   transition:
@@ -461,32 +461,32 @@ const Item = styled.button`
   }
 
   &:hover {
-    background: var(--sidebar-item-hover, var(--ds-neutral-alpha-3));
-    color: var(--sidebar-item-hover-color, var(--ds-neutral-12));
+    background: var(--sidebar-item-hover, var(--ui-inset));
+    color: var(--sidebar-item-hover-color, var(--ui-ink));
   }
 
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-9);
+    outline: 2px solid var(--ui-blue);
     outline-offset: -2px;
   }
 
   /* The dashboard raises its selection; other pages keep the original tint. */
   &[data-active] {
-    background: var(--sidebar-item-active-bg, var(--c-rgba-5-86-205-0_0588));
-    color: var(--sidebar-item-active-color, var(--ds-accent-11));
+    background: var(--sidebar-item-active-bg, var(--ui-alpha-3));
+    color: var(--sidebar-item-active-color, var(--ui-blue));
     box-shadow: var(--sidebar-item-active-shadow, none);
     font-weight: var(--sidebar-item-active-weight, 400);
   }
 
   &[data-active] > svg {
-    color: var(--sidebar-item-active-color, var(--ds-accent-11));
+    color: var(--sidebar-item-active-color, var(--ui-blue));
   }
 
   &[data-muted] {
-    color: var(--sidebar-item-muted-color, var(--muted));
+    color: var(--sidebar-item-muted-color, var(--ui-muted));
   }
 
   &[data-muted]:hover {
-    color: var(--sidebar-item-hover-color, var(--ds-neutral-12));
+    color: var(--sidebar-item-hover-color, var(--ui-ink));
   }
 `

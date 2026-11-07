@@ -136,18 +136,18 @@ export const ProjectsFormFields = ({
 const Root = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-5);
+  gap: var(--ui-space-5);
 
   ${(p) => p.theme.breakpoints.up('md')} {
     grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
-    column-gap: var(--space-6);
+    column-gap: var(--ui-space-6);
   }
 `
 
 const Details = styled.div`
   display: grid;
   align-content: start;
-  gap: var(--space-4);
+  gap: var(--ui-space-4);
   min-width: 0;
 
   /* Beside the recording card the description takes the rest of the height,
@@ -164,12 +164,12 @@ const Pair = styled.div`
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   /* An error under one field must not push its neighbour's label down. */
   align-items: start;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
 `
 
 const Collaborators = styled.div`
   grid-column: 1 / -1;
   min-width: 0;
-  padding-top: var(--space-4);
-  border-top: 1px solid var(--gray-a4);
+  padding-top: var(--ui-space-4);
+  border-top: 1px solid var(--ui-inset);
 `

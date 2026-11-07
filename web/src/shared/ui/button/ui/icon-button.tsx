@@ -31,7 +31,7 @@ const Root = styled(RadixIconButton)<{ $variant?: IconButtonProps['variant'] }>`
   &[data-theme-variant='primary'] {
     ${(p) =>
       p.$variant === 'ghost'
-        ? `color: var(--ds-accent-11);`
-        : `background-color: var(--ds-accent-9);`}
+        ? `color: var(--ui-blue);`
+        : `background-color: var(--ui-blue);`}
   }
 `

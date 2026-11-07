@@ -57,32 +57,32 @@ export const AuthWalletPanel = ({ flow, lastUsed }: Props) => {
 
 const Root = styled.div`
   display: grid;
-  gap: var(--space-4);
+  gap: var(--ui-space-4);
 `
 
 const Header = styled.header`
   display: grid;
-  gap: var(--space-1);
+  gap: var(--ui-space-1);
 `
 
 const TitleRow = styled.div`
   display: flex;
   flex-wrap: wrap;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
 `
 
 const Title = styled.h2`
   margin: 0;
-  font-size: var(--font-size-4);
+  font-size: var(--ui-description-size);
   font-weight: 600;
   line-height: 1.3;
-  color: var(--ds-neutral-12);
+  color: var(--ui-ink);
 `
 
 const Lead = styled.p`
   margin: 0;
-  font-size: var(--font-size-2);
+  font-size: var(--ui-meta-size);
   line-height: 20px;
-  color: var(--ds-neutral-11);
+  color: var(--ui-muted);
 `

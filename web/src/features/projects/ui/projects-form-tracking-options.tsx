@@ -183,7 +183,7 @@ const LabelWithHint = ({ label, hint }: { label: string; hint: string }) => {
 const Root = styled.div`
   display: grid;
   align-content: start;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
   min-width: 0;
 `
 
@@ -191,26 +191,28 @@ const Root = styled.div`
 // on the same pixel.
 const List = styled.div`
   display: grid;
-  border-radius: var(--radius-3);
-  box-shadow: inset 0 0 0 1px var(--gray-a5);
+  border-radius: var(--ui-filter-radius);
+  box-shadow: inset 0 0 0 1px var(--ui-line);
 `
 
 const Row = styled.div`
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: var(--space-2);
-  min-height: var(--space-7);
-  padding: var(--space-1) var(--space-3);
+  gap: var(--ui-space-2);
+  min-height: var(--ui-space-7);
+  padding: var(--ui-space-1) var(--ui-space-3);
 
   & + & {
-    border-top: 1px solid var(--gray-a3);
+    border-top: 1px solid var(--ui-inset);
   }
 
   /* A checkbox's width plus the gap: the nested box sits under the label,
      with no line between it and the switch it depends on. */
   &[data-nested] {
-    padding-left: calc(var(--space-3) + var(--space-4) + var(--space-2));
+    padding-left: calc(
+      var(--ui-space-3) + var(--ui-space-4) + var(--ui-space-2)
+    );
     border-top-color: transparent;
   }
 

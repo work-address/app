@@ -245,7 +245,7 @@ export const ProjectsAddCollaborators = ({
 const LockIconWrap = styled.span`
   display: inline-flex;
   align-items: center;
-  color: var(--gray-9);
+  color: var(--ui-muted);
 `
 
 const AddressField = styled.div`
@@ -262,8 +262,8 @@ const Header = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-3);
-  min-height: var(--space-6);
+  gap: var(--ui-space-3);
+  min-height: var(--ui-space-6);
 `
 
 const Title = styled.div`
@@ -271,5 +271,5 @@ const Title = styled.div`
   grid-auto-flow: column;
   justify-content: start;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
 `

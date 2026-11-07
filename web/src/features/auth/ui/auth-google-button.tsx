@@ -166,7 +166,7 @@ const Root = styled.div`
   align-content: start;
   /* Google's button stops at 400px, which a wider column has to centre. */
   justify-items: center;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
 `
 
 const Status = styled.p`
@@ -176,17 +176,17 @@ const Status = styled.p`
   display: flex;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
-  font-size: var(--font-size-2);
-  color: var(--ds-neutral-11);
+  gap: var(--ui-space-2);
+  font-size: var(--ui-meta-size);
+  color: var(--ui-muted);
 `
 
 const Message = styled.p`
   justify-self: stretch;
   margin: 0;
-  font-size: var(--font-size-2);
+  font-size: var(--ui-meta-size);
   line-height: 1.45;
-  color: var(--ds-neutral-11);
+  color: var(--ui-muted);
 
   &[data-tone='error'] {
     color: var(--error-11);

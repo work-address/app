@@ -55,8 +55,8 @@ const Root = styled.span`
   /* --ds-neutral-4, not -3: the scale defines 2, 4, 11 and 12, and an
      undefined custom property resolves to nothing, leaving the pill with no
      surface at all. */
-  background: var(--ds-neutral-4);
-  color: var(--ds-neutral-11);
+  background: var(--ui-line);
+  color: var(--ui-muted);
 
   &:is(button) {
     cursor: pointer;
@@ -67,11 +67,11 @@ const Root = styled.span`
   }
 
   &:is(button):hover {
-    background: var(--ds-neutral-alpha-6);
+    background: var(--ui-line);
   }
 
   &:is(button):focus-visible {
-    outline: 2px solid var(--ds-accent-9);
+    outline: 2px solid var(--ui-blue);
     outline-offset: 2px;
   }
 `

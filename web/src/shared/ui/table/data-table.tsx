@@ -403,27 +403,27 @@ const TableCard = styled(Card)<{
   ${(p) => p.$maxHeight && `max-height: ${p.$maxHeight};`}
 
   /* The scroll cue: a fade over the right edge while columns continue past
-     it. Phones only - on a desktop the table fits, and when it does not, a
-     scrollbar already says so. */
-  ${(p) => p.theme.breakpoints.down('md')} {
-    &::after {
-      content: '';
-      position: absolute;
-      top: 0;
-      right: 0;
-      bottom: 0;
-      width: 32px;
-      background: linear-gradient(
-        to right,
-        var(--c-rgba-255-255-255-0),
-        var(--white)
-      );
-      opacity: 0;
-      transition: opacity 0.15s;
-      pointer-events: none;
-      z-index: 2;
-    }
+     it. Phones by default - on a desktop a scrollbar usually says so; a
+     design hook can ask for the cue there too. */
+  &::after {
+    content: '';
+    position: absolute;
+    top: 0;
+    right: 0;
+    bottom: 0;
+    width: 32px;
+    background: linear-gradient(to right, transparent, var(--ui-surface));
+    opacity: 0;
+    transition: opacity 0.15s;
+    pointer-events: none;
+    z-index: 2;
+  }
 
+  &[data-overflows-right]::after {
+    opacity: var(--table-desktop-fade, 0);
+  }
+
+  ${(p) => p.theme.breakpoints.down('md')} {
     &[data-overflows-right]::after {
       opacity: 1;
     }
@@ -450,15 +450,32 @@ const Root = styled.table`
 const HeaderTd = styled.th<{ $width?: number; $truncate?: boolean }>`
   /* White, not transparent: the header is sticky, and in a table with its
      own height the rows scroll under it. */
-  background: var(--white);
-  padding: 12px var(--space-3);
-  font-size: var(--font-size-2);
+  background: var(--table-surface, var(--ui-surface));
+  padding: var(--table-header-padding-y, 12px)
+    var(--table-cell-padding-x, var(--ui-space-3));
+  font-size: var(--table-header-font-size, var(--ui-meta-size));
   font-weight: 500;
-  color: var(--ds-neutral-12);
+  color: var(--ui-ink);
   position: sticky;
   top: 0;
-  border-bottom: 1px solid var(--ds-neutral-alpha-6);
+  border-bottom: 1px solid var(--table-line, var(--ui-line));
   z-index: 1;
+
+  /* An optional inset at the table's outer edges, so the first and last
+     columns can share the surrounding panel's content edge. */
+  &:first-child {
+    padding-inline-start: var(
+      --table-edge-padding,
+      var(--table-cell-padding-x, var(--ui-space-3))
+    );
+  }
+
+  &:last-child {
+    padding-inline-end: var(
+      --table-edge-padding,
+      var(--table-cell-padding-x, var(--ui-space-3))
+    );
+  }
 
   ${(p) => p.$width && `width: ${p.$width}px; min-width: ${p.$width}px;`}
   ${(p) => p.$truncate && p.$width && `max-width: ${p.$width}px;`}
@@ -473,13 +490,34 @@ const HeaderTd = styled.th<{ $width?: number; $truncate?: boolean }>`
 `
 
 const THead = styled.thead`
-  border-bottom: 1px solid var(--ds-neutral-alpha-6);
+  border-bottom: 1px solid var(--ui-line);
 `
 
 const TBody = styled.tbody``
 
 const Td = styled.td<{ $width?: number; $truncate?: boolean }>`
-  padding: var(--space-4) var(--space-3);
+  padding: var(--table-cell-padding-y, var(--ui-space-4))
+    var(--table-cell-padding-x, var(--ui-space-3));
+  /* Separate borders draw on cells, not rows: none unless a design asks. */
+  border-bottom: var(--table-row-border, none);
+
+  &:first-child {
+    padding-inline-start: var(
+      --table-edge-padding,
+      var(--table-cell-padding-x, var(--ui-space-3))
+    );
+  }
+
+  &:last-child {
+    padding-inline-end: var(
+      --table-edge-padding,
+      var(--table-cell-padding-x, var(--ui-space-3))
+    );
+  }
+
+  tr:last-child > & {
+    border-bottom: none;
+  }
 
   ${(p) => p.$width && `width: ${p.$width}px; min-width: ${p.$width}px;`}
   ${(p) => p.$truncate && p.$width && `max-width: ${p.$width}px;`}
@@ -503,13 +541,13 @@ const Td = styled.td<{ $width?: number; $truncate?: boolean }>`
   &[data-sticky='left'] {
     position: sticky;
     left: 0;
-    background: var(--white);
+    background: var(--table-surface, var(--ui-surface));
   }
 
   &[data-sticky='right'] {
     position: sticky;
     right: 0;
-    background: var(--white);
+    background: var(--table-surface, var(--ui-surface));
   }
 `
 
@@ -517,11 +555,11 @@ const Tr = styled.tr`
   transition: 0.25s;
 
   &:not(:last-child) {
-    border-bottom: 1px solid var(--ds-neutral-alpha-6);
+    border-bottom: 1px solid var(--ui-line);
   }
 
   &:hover ${Td} {
-    background-color: var(--c-f2f2f2);
+    background-color: var(--table-row-hover, var(--ui-inset));
   }
 
   &[data-clickable] {
@@ -532,12 +570,13 @@ const Tr = styled.tr`
 const GroupTr = styled.tr``
 
 const GroupTd = styled.td`
-  padding: var(--space-5) var(--space-3) var(--space-2);
-  border-bottom: 1px solid var(--ds-neutral-alpha-6);
-  background: var(--white);
+  padding: var(--table-group-padding-top, var(--ui-space-5))
+    var(--table-edge-padding, var(--ui-space-3)) var(--ui-space-2);
+  border-bottom: 1px solid var(--table-line, var(--ui-line));
+  background: var(--table-surface, var(--ui-surface));
 
   ${GroupTr}:first-child & {
-    padding-top: var(--space-3);
+    padding-top: var(--ui-space-3);
   }
 `
 
@@ -545,7 +584,7 @@ const LoadingMoreRow = styled.div`
   display: flex;
   justify-content: center;
   align-items: center;
-  padding: var(--space-6) var(--space-3);
+  padding: var(--ui-space-6) var(--ui-space-3);
 `
 
 const ReachEndSentinel = styled.div`

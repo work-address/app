@@ -43,7 +43,7 @@ const MAX_LABEL_LENGTH = 7
 
 // Every bar is one app and is named on the axis, so color carries no extra
 // meaning and stays constant across the series.
-const BAR_COLOR = 'var(--c-rgba-0-52-130-0_75)'
+const BAR_COLOR = 'var(--ui-chart-1)'
 
 export const ProjectsDialogUsageChart = ({
   data,
@@ -119,7 +119,7 @@ export const ProjectsDialogUsageChart = ({
                   the full app name behind a truncated axis label. */}
               <Tooltip
                 content={<ProjectsDialogUsageTooltip plotRef={plotRef} />}
-                cursor={{ fill: 'var(--c-rgba-0-52-130-0_06)' }}
+                cursor={{ fill: 'var(--ui-alpha-3)' }}
               />
               {/* One series colored per bar through `shape`: recharts takes
                   only a single fill per series, and <Cell> children stop <Bar>
@@ -190,7 +190,7 @@ const YAxisSizer = styled.span`
   visibility: hidden;
   display: block;
   padding-right: ${USAGE_Y_AXIS_GAP}px;
-  font-size: var(--font-size-1);
+  font-size: var(--ui-small-size);
   line-height: 1;
   white-space: nowrap;
 `
@@ -200,8 +200,8 @@ const YAxisLabel = styled.span`
   right: ${USAGE_Y_AXIS_GAP}px;
   white-space: nowrap;
   transform: translateY(-50%);
-  color: var(--c-rgba-0-7-20-0_62);
-  font-size: var(--font-size-1);
+  color: var(--ui-muted);
+  font-size: var(--ui-small-size);
   line-height: 1;
 `
 
@@ -215,12 +215,12 @@ const ChartWrap = styled.div`
   height: 100%;
 
   .recharts-cartesian-grid-horizontal line {
-    stroke: var(--c-rgba-0-0-51-0_12);
+    stroke: var(--ui-line);
   }
 
   .recharts-text {
-    fill: var(--c-rgba-0-7-20-0_62);
-    font-size: var(--font-size-1);
+    fill: var(--ui-muted);
+    font-size: var(--ui-small-size);
   }
 
   .recharts-surface {
@@ -229,23 +229,23 @@ const ChartWrap = styled.div`
 `
 
 const TooltipRoot = styled.div`
-  background: var(--white);
-  border: 1px solid var(--c-rgba-0-0-51-0_12);
-  border-radius: 10px;
-  padding: 8px 10px;
-  box-shadow: 0 1px 6px var(--c-rgba-0-0-0-0_08);
-  color: var(--ds-neutral-12);
+  background: var(--ui-surface);
+  border: var(--ui-border-width) solid var(--ui-line);
+  border-radius: var(--ui-control-radius);
+  padding: var(--ui-space-2) var(--ui-space-3);
+  box-shadow: var(--ui-shadow);
+  color: var(--ui-ink);
 `
 
 const TooltipTitle = styled.div`
-  font-size: var(--font-size-2);
+  font-size: var(--ui-meta-size);
   line-height: 20px;
-  color: var(--c-rgba-0-7-20-0_82);
+  color: var(--ui-text);
 `
 
 const TooltipValue = styled.div`
   font-weight: 600;
-  font-size: var(--font-size-2);
+  font-size: var(--ui-meta-size);
   line-height: 20px;
   font-variant-numeric: tabular-nums;
 `

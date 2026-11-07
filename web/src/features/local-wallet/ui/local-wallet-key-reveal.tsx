@@ -47,22 +47,22 @@ export const LocalWalletKeyReveal = ({ privateKey }: Props) => {
 }
 
 export const Warning = styled.div`
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-2);
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-row-radius);
   background: var(--amber-a3);
   color: var(--amber-11);
-  font-size: var(--font-size-2);
+  font-size: var(--ui-meta-size);
   line-height: 1.45;
 `
 
 const KeyBox = styled.code`
   display: block;
-  padding: var(--space-3);
-  border: 1px solid var(--ds-neutral-alpha-6);
-  border-radius: var(--radius-2);
-  background: var(--ds-neutral-2);
+  padding: var(--ui-space-3);
+  border: 1px solid var(--ui-line);
+  border-radius: var(--ui-row-radius);
+  background: var(--ui-inset);
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: var(--font-size-2);
+  font-size: var(--ui-meta-size);
   line-height: 1.5;
   overflow-wrap: anywhere;
   user-select: all;

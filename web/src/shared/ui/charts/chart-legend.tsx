@@ -41,8 +41,8 @@ const Swatch = styled.span`
 
 const Name = styled.span`
   overflow: hidden;
-  color: var(--ds-neutral-11);
-  font-size: var(--chart-label-size, var(--font-size-1));
+  color: var(--ui-muted);
+  font-size: var(--chart-label-size, var(--ui-small-size));
   white-space: nowrap;
   text-overflow: ellipsis;
 `

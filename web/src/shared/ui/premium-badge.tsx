@@ -29,10 +29,10 @@ const Root = styled.span`
   display: inline-flex;
   align-items: center;
   flex-shrink: 0;
-  color: var(--ds-accent-9);
+  color: var(--ui-blue);
 
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-9);
+    outline: 2px solid var(--ui-blue);
     outline-offset: 2px;
     border-radius: 50%;
   }

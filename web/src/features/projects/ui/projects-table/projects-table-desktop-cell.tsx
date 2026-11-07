@@ -105,10 +105,10 @@ const TitleCell = styled(Flex)`
 `
 
 const Name = styled.span`
-  border-radius: var(--radius-1);
+  border-radius: var(--ui-inline-radius);
 
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-9);
+    outline: 2px solid var(--ui-blue);
     outline-offset: 2px;
   }
 `

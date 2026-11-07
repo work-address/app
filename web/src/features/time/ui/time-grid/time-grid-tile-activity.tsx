@@ -35,12 +35,12 @@ export const TimeGridTileActivity = ({
 }
 
 const Root = styled.div`
-  --activity-color: var(--ds-neutral-11);
+  --activity-color: var(--ui-muted);
 
   display: grid;
   grid-template-columns: 1fr auto;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
 
   &[data-tone='low'] {
     --activity-color: var(--red-9);
@@ -58,9 +58,9 @@ const Root = styled.div`
 const Track = styled.div`
   display: grid;
   grid-template-columns: var(--activity-fill) 1fr;
-  height: 4px;
-  border-radius: var(--radius-1);
-  background: var(--ds-neutral-alpha-3);
+  height: var(--ui-space-1);
+  border-radius: var(--ui-pill-radius);
+  background: var(--ui-inset);
   overflow: hidden;
 `
 
@@ -69,7 +69,8 @@ const Fill = styled.div`
 `
 
 const Value = styled.span`
-  font-size: var(--font-size-0);
+  font-size: var(--ui-small-size);
+  line-height: var(--ui-small-line-height);
   font-variant-numeric: tabular-nums;
   color: var(--activity-color);
 `

@@ -363,27 +363,27 @@ export const DashboardProjectPopup = ({
 
 const Root = styled.div`
   display: grid;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
 
   &[data-variant='card'] {
-    padding: 10px 12px;
-    border: 1px solid var(--ds-neutral-alpha-6);
-    border-radius: 10px;
-    background: var(--color-panel-solid);
-    box-shadow: 0 1px 6px var(--c-rgba-0-0-0-0_08);
+    padding: var(--ui-space-3);
+    border: var(--ui-border-width) solid var(--ui-line);
+    border-radius: var(--ui-control-radius);
+    background: var(--ui-surface);
+    box-shadow: var(--ui-shadow);
   }
 `
 
 const Chart = styled.div`
   display: grid;
-  gap: var(--space-1);
-  padding-top: var(--space-2);
-  border-top: 1px solid var(--ds-neutral-alpha-5);
+  gap: var(--ui-space-1);
+  padding-top: var(--ui-space-2);
+  border-top: 1px solid var(--ui-line);
 `
 
 const Caption = styled.span`
-  color: var(--ds-neutral-11);
-  font-size: var(--font-size-1);
+  color: var(--ui-muted);
+  font-size: var(--ui-small-size);
   font-weight: 500;
 `
 
@@ -391,5 +391,5 @@ const Actions = styled.div`
   display: grid;
   grid-auto-flow: column;
   justify-content: end;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
 `

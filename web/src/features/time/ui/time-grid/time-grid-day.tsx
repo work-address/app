@@ -2,6 +2,7 @@ import styled from 'styled-components'
 
 import { TimeDayHeading } from '../common'
 
+import { TILE_MIN_WIDTH } from './time-grid-skeleton'
 import { TimeGridTile } from './time-grid-tile'
 
 import type { TimeDayGroup } from '../../model'
@@ -38,23 +39,28 @@ export const TimeGridDay = ({
 
 const Root = styled.section`
   display: grid;
-  gap: var(--space-3);
+  gap: var(--ui-space-4);
 `
 
 const Header = styled(TimeDayHeading)`
-  padding-bottom: var(--space-2);
-  border-bottom: 1px solid var(--ds-neutral-alpha-6);
+  padding-bottom: var(--ui-space-2);
+  border-bottom: var(--ui-border-width) solid var(--ui-line);
 `
 
 const List = styled.div`
   display: grid;
-  grid-template-columns: repeat(auto-fill, minmax(210px, 1fr));
-  gap: var(--space-3);
+  grid-template-columns: repeat(auto-fill, minmax(${TILE_MIN_WIDTH}px, 1fr));
+  gap: var(--ui-space-4);
 
   /* Two across on a phone: a tile is mostly its screenshot, and one 16:10
-     tile per row made a day of entries a dozen screens long. */
+     tile per row made a day of entries a dozen screens long. The narrowest
+     phones take one, so the time range and project stay readable. */
   ${(p) => p.theme.breakpoints.down('md')} {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-2);
+    gap: var(--ui-space-3);
+  }
+
+  ${(p) => p.theme.breakpoints.down('sm')} {
+    grid-template-columns: minmax(0, 1fr);
   }
 `

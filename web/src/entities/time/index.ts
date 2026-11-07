@@ -157,6 +157,7 @@ export {
   $isTimeFiltering,
   $hasMoreTime,
   $isLoadingMoreTime,
+  $timeEntriesTotal,
 } from './time.stores'
 
 export { TimeEmptyState } from './ui'

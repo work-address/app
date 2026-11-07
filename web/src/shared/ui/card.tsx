@@ -27,15 +27,15 @@ export const Card = ({
 }
 
 const Root = styled.section`
-  /* border: 1px solid var(--ds-neutral-alpha-6); */
-  background-color: var(--white);
-  padding: var(--spacing-5);
+  /* border: 1px solid var(--ui-line); */
+  background-color: var(--ui-surface);
+  padding: var(--ui-space-5);
 
   &[data-rounded] {
-    border-radius: var(--radius-4);
+    border-radius: var(--ui-control-radius);
   }
 
   &[data-shadow] {
-    box-shadow: var(--shadow-4);
+    box-shadow: var(--ui-shadow);
   }
 `

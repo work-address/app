@@ -3,6 +3,11 @@ export {
   canRemoveAgentPrompt,
 } from './agent-prompt.model'
 export { formatTrackedCount } from './format-tracked-count'
+export {
+  getTimeSelectAllState,
+  toggleTimeSelectAll,
+  type TimeSelectAllState,
+} from './time-select-all'
 export { getTimeNavigationState, getTimeSiblingId } from './get-time-sibling-id'
 export {
   getTimeActivityPercent,

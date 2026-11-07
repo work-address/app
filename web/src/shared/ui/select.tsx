@@ -224,23 +224,23 @@ export const Select = ({
 
 const Root = styled.div`
   display: grid;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
   min-width: 0;
   width: 100%;
   align-items: center;
   ${(p) => p.theme.breakpoints.up('md')} {
     &[data-inline-label] {
       grid-template-columns: var(--select-label-width) minmax(0, 1fr);
-      gap: var(--space-5);
+      gap: var(--ui-space-5);
     }
   }
 `
 const Label = styled.label`
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
-  font-size: var(--font-size-2);
-  line-height: var(--line-height-2);
+  gap: var(--ui-space-1);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
   font-weight: 500;
 
   ${Root}[data-label-hidden] & {
@@ -256,34 +256,34 @@ const Trigger = styled.button`
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
   width: 100%;
   min-width: 0;
   /* Match Input's size 2; the phone rule uses size 3. */
-  height: var(--select-trigger-height, var(--space-6));
+  height: var(--select-trigger-height, var(--ui-space-6));
   min-height: 0;
-  padding: 0 var(--select-trigger-padding, var(--space-2));
-  border: 1px solid var(--select-trigger-border, var(--gray-a7));
-  border-radius: var(--select-trigger-radius, var(--radius-2));
-  background: var(--select-trigger-background, var(--color-surface));
-  color: var(--select-trigger-color, var(--gray-12));
+  padding: 0 var(--select-trigger-padding, var(--ui-space-2));
+  border: 1px solid var(--select-trigger-border, var(--ui-line));
+  border-radius: var(--select-trigger-radius, var(--ui-row-radius));
+  background: var(--select-trigger-background, var(--ui-surface));
+  color: var(--select-trigger-color, var(--ui-text));
   font: inherit;
-  font-size: var(--select-trigger-font-size, var(--font-size-2));
-  line-height: var(--line-height-2);
+  font-size: var(--select-trigger-font-size, var(--ui-meta-size));
+  line-height: var(--ui-meta-line-height);
   text-align: left;
   &:hover:not(:disabled) {
-    border-color: var(--select-trigger-hover-border, var(--gray-a9));
+    border-color: var(--select-trigger-hover-border, var(--ui-muted));
     background: var(
       --select-trigger-hover-background,
-      var(--select-trigger-background, var(--color-surface))
+      var(--select-trigger-background, var(--ui-surface))
     );
   }
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-9);
+    outline: 2px solid var(--ui-blue);
     outline-offset: 2px;
   }
   &[data-placeholder] {
-    color: var(--select-trigger-color, var(--gray-a10));
+    color: var(--select-trigger-color, var(--ui-muted));
   }
   &[aria-invalid='true'] {
     border-color: var(--red-8);
@@ -293,10 +293,10 @@ const Trigger = styled.button`
     cursor: not-allowed;
   }
   ${(p) => p.theme.breakpoints.down('md')} {
-    height: var(--select-trigger-height, var(--space-7));
-    padding-inline: var(--space-3);
-    font-size: var(--select-trigger-font-size, var(--font-size-3));
-    line-height: var(--line-height-3);
+    height: var(--select-trigger-height, var(--ui-space-7));
+    padding-inline: var(--ui-space-3);
+    font-size: var(--select-trigger-font-size, var(--ui-body-size));
+    line-height: var(--ui-body-line-height);
   }
 `
 const Value = styled.span`
@@ -310,13 +310,14 @@ const PopoverContent = styled(Popover.Content)`
   flex-direction: column;
   z-index: 60;
   min-width: var(--radix-popover-trigger-width);
-  max-width: min(360px, calc(100vw - var(--space-7)));
-  padding: var(--space-1);
+  max-width: min(360px, calc(100vw - var(--ui-space-7)));
+  padding: var(--ui-space-1);
 `
 const MenuTitle = styled.div`
-  padding: var(--space-2) var(--space-3);
-  font-size: var(--font-size-1);
-  color: var(--gray-11);
+  padding: var(--ui-space-2) var(--ui-space-3);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+  color: var(--ui-muted);
 `
 const MenuList = styled(ListBox)`
   display: grid;
@@ -329,31 +330,31 @@ const MenuItem = styled(ListBoxItem)`
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-2);
-  /* Match the trigger's size 2 text; the phone rule keeps a touch-sized row. */
-  padding: calc(var(--space-1) * 1.5) var(--space-3);
-  border-radius: var(--radius-2);
-  color: var(--gray-12);
-  font-size: var(--font-size-2);
-  line-height: var(--line-height-2);
+  gap: var(--ui-space-2);
+  /* Match the trigger's text; the phone rule keeps a touch-sized row. */
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-row-radius);
+  color: var(--ui-text);
+  font-size: var(--ui-body-size);
+  line-height: var(--ui-body-line-height);
   cursor: pointer;
   outline: none;
   &[data-hovered],
   &[data-focused] {
-    background: var(--ds-neutral-alpha-3);
+    background: var(--ui-inset);
   }
   &[data-focus-visible] {
-    outline: 2px solid var(--ds-accent-9);
+    outline: 2px solid var(--ui-blue);
     outline-offset: -2px;
   }
   &[aria-selected='true'] {
-    background: var(--ds-accent-3);
-    color: var(--ds-accent-11);
+    background: var(--ui-glow);
+    color: var(--ui-blue);
   }
   ${(p) => p.theme.breakpoints.down('md')} {
-    min-height: var(--space-8);
-    font-size: var(--font-size-3);
-    line-height: var(--line-height-3);
+    min-height: var(--ui-space-8);
+    font-size: var(--ui-body-size);
+    line-height: var(--ui-body-line-height);
   }
 `
 const ItemLabel = styled.span`
@@ -362,8 +363,8 @@ const ItemLabel = styled.span`
   white-space: nowrap;
 `
 const ItemCheck = styled(CheckIcon)`
-  width: var(--space-4);
-  height: var(--space-4);
+  width: var(--ui-space-4);
+  height: var(--ui-space-4);
   opacity: 0;
   &[data-visible] {
     opacity: 1;

@@ -58,7 +58,7 @@ to both branches.
 ## Components and code
 
 - Reuse `shared/ui` first. Select page, panel and metric primitives from the chosen design contract. Both branches reuse behavior components such as `PageHelmet`, `Button`, `IconButton`, `AdaptiveDialog`, `Tabs`, `Table`, `Search`, `Tooltip`, `Hint`, `StateNotice`, `LoadFailure` and Radix `Skeleton`.
-- Follow the repository's styled-components and FSD conventions. Workspace pages use the token source and opt-in boundary documented in workspace-design; legacy pages use `shared/styles/variables.css` and Radix theme tokens. Use CSS grid, container queries and finite `data-*` variants. Avoid raw colors, magic spacing values and local component clones.
+- Follow the repository's styled-components and FSD conventions. Workspace pages use the token source and app-wide scope documented in workspace-design; legacy pages use `shared/styles/variables.css` and Radix theme tokens. Use CSS grid, container queries and finite `data-*` variants. Avoid raw colors, magic spacing values and local component clones.
 - Keep application and interaction state in Effector. Put pure helpers in `model/` and add meaningful unit tests.
 - All copy goes through `t()`. Add every new key to all five locales in `shared/i18n/locales` (en, es, ja, ru, zh).
 - Preserve unrelated behavior and existing public boundaries.

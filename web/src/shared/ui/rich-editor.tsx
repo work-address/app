@@ -220,18 +220,24 @@ const ToolbarButton = ({
 )
 
 const Root = styled.div`
-  border: 1px solid var(--gray-6);
-  border-radius: var(--radius-3);
+  border: var(--ui-border-width) solid var(--ui-line);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-surface);
   overflow: hidden;
+
+  &:focus-within {
+    outline: var(--ui-focus-width) solid var(--ui-blue);
+    outline-offset: var(--ui-focus-offset);
+  }
 
   &[data-disabled] {
     pointer-events: none;
     cursor: not-allowed;
-    background-color: var(--gray-3);
+    background-color: var(--ui-inset);
     opacity: 0.6;
 
     .tiptap {
-      color: var(--gray-8);
+      color: var(--ui-muted);
     }
 
     div[contenteditable] {
@@ -241,8 +247,9 @@ const Root = styled.div`
 `
 
 const Toolbar = styled(Flex)`
-  padding: var(--space-2) var(--space-3);
-  border-bottom: 1px solid var(--gray-6);
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-bottom: var(--ui-border-width) solid var(--ui-line);
+  background: var(--ui-inset);
 `
 
 const CustomIconButton = styled(IconButton)`
@@ -251,8 +258,8 @@ const CustomIconButton = styled(IconButton)`
   /* Radix IconButton's own ghost-variant rule sets background/color for this
      class; doubling our generated class beats it without reaching for !important. */
   &&[data-active] {
-    background-color: var(--ds-accent-3);
-    color: var(--ds-accent-11);
+    background-color: var(--ui-glow);
+    color: var(--ui-blue);
   }
 `
 
@@ -261,12 +268,12 @@ const Separator = styled(RadixSeparator)`
 `
 
 const Content = styled.div`
-  padding: var(--space-3);
+  padding: var(--ui-space-3);
 
   .tiptap {
     outline: none;
-    font-size: var(--font-size-2);
-    line-height: var(--line-height-2);
+    font-size: var(--ui-body-size);
+    line-height: var(--ui-body-line-height);
 
     p {
       margin: 0;
@@ -277,7 +284,7 @@ const Content = styled.div`
 const Editor = styled(EditorContent)`
   ${(p) => p.theme.breakpoints.down('md')} {
     div[contenteditable='true'] {
-      font-size: var(--font-size-3);
+      font-size: var(--ui-body-size);
     }
   }
 

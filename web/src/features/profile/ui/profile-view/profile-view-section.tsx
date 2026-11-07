@@ -5,6 +5,8 @@ import type { ReactNode } from 'react'
 
 type Props = {
   children?: ReactNode
+  /** A white workspace panel; off for the head, which sits on the canvas. */
+  surface?: boolean
   className?: string
 }
 
@@ -21,15 +23,20 @@ const REVEAL = {
 const REVEAL_STILL = { hidden: { opacity: 1 }, shown: { opacity: 1 } }
 
 /**
- * One band of the profile. A hairline parts it from the band above, so a band
- * with nothing to say costs nothing by rendering nothing.
+ * One part of the profile, on its own white panel, so a part with nothing to
+ * say costs nothing by rendering nothing.
  */
-export const ProfileViewSection = ({ children, className }: Props) => {
+export const ProfileViewSection = ({
+  children,
+  surface = true,
+  className,
+}: Props) => {
   const reducedMotion = useReducedMotion()
 
   return (
     <Root
       className={className}
+      data-surface={surface || undefined}
       variants={reducedMotion ? REVEAL_STILL : REVEAL}
     >
       {children}
@@ -39,20 +46,20 @@ export const ProfileViewSection = ({ children, className }: Props) => {
 
 const Root = styled(motion.div)`
   display: grid;
-  gap: var(--space-3);
+  gap: var(--ui-space-4);
   min-width: 0;
-  padding-block: var(--space-5);
 
-  & + & {
-    border-top: 1px solid var(--ds-neutral-alpha-6);
+  &[data-surface] {
+    padding: var(--ui-card-inset);
+    border: var(--ui-border-width) solid var(--ui-edge);
+    border-radius: var(--ui-radius);
+    background: var(--ui-surface);
+    box-shadow: var(--ui-shadow);
   }
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    padding-block: var(--space-4);
-  }
-
-  /* The page already insets its first line. */
-  &:first-child {
-    padding-top: 0;
+    &[data-surface] {
+      padding: var(--ui-card-inset-mobile);
+    }
   }
 `

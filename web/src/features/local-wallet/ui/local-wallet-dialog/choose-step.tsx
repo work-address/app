@@ -41,5 +41,5 @@ export const ChooseStep = ({ onCreate, onImport }: Props) => {
 
 const Root = styled.div`
   display: grid;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
 `

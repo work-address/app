@@ -2,7 +2,7 @@ import styled from 'styled-components'
 
 import type { ReactNode } from 'react'
 
-import { PageSection, SectionTitle } from '@/shared'
+import { SectionTitle } from '@/shared'
 
 type Props = {
   title: ReactNode
@@ -24,13 +24,25 @@ export const InvoiceSection = ({ title, titleId, meta, children }: Props) => (
   </Root>
 )
 
-/* Paper spaces its sections from the page's body instead, with no rule. */
-const Root = styled(PageSection)`
+/* A white workspace sheet on screen; paper spaces its sections from the
+   page's body instead, with no box or rule. */
+const Root = styled.section`
   min-width: 0;
+  padding: var(--ui-card-inset);
+  border: var(--ui-border-width) solid var(--ui-edge);
+  border-radius: var(--ui-radius);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow);
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    padding: var(--ui-card-inset-mobile);
+  }
 
   @media print {
-    padding-block: 0;
-    border-top: 0;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
   }
 `
 
@@ -39,15 +51,14 @@ const Header = styled.header`
   grid-auto-flow: column;
   justify-content: start;
   align-items: baseline;
-  gap: var(--space-3);
-  padding: 0 0 var(--space-3);
+  gap: var(--ui-space-3);
+  padding: 0 0 var(--ui-space-4);
 
   /* The table's own header rule is the line under this. */
   @media print {
-    --font-size-4: 14px;
-    --font-size-6: 14px;
+    --section-title-size: 14px;
 
-    padding: 0 0 var(--space-1);
+    padding: 0 0 var(--ui-space-1);
     break-after: avoid;
   }
 `

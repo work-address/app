@@ -79,11 +79,11 @@ const Content = styled(Dialog.Content)`
   left: 50%;
   translate: -50% -50%;
 
-  background: var(--color-panel-solid);
-  border-radius: var(--radius-4);
-  padding: var(--space-5);
-  width: clamp(320px, 90vw, 400px);
-  box-shadow: var(--shadow-4);
+  background: var(--ui-surface);
+  border-radius: var(--ui-radius);
+  padding: var(--ui-card-inset);
+  width: clamp(320px, 90vw, 440px);
+  box-shadow: var(--ui-shadow);
 
   &:focus {
     outline: none;

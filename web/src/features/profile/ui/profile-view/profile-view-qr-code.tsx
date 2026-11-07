@@ -46,7 +46,7 @@ export const ProfileViewQrCode = ({ className }: Props) => {
               value={payWallet || ''}
               size={QR_DRAWN_SIZE}
               level="M"
-              fgColor="var(--ds-accent-11)"
+              fgColor="var(--ui-blue)"
               bgColor="transparent"
               marginSize={1}
             />
@@ -72,7 +72,7 @@ export const ProfileViewQrCode = ({ className }: Props) => {
             value={payWallet || ''}
             size={isMobile ? 200 : 260}
             level="M"
-            fgColor="var(--ds-accent-11)"
+            fgColor="var(--ui-blue)"
             bgColor="transparent"
             marginSize={1}
           />
@@ -92,12 +92,12 @@ const Root = styled.button`
   padding: 0;
   border: 0;
   background: transparent;
-  border-radius: var(--radius-2);
+  border-radius: var(--ui-row-radius);
   display: grid;
   place-items: stretch;
 
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-9);
+    outline: 2px solid var(--ui-blue);
     outline-offset: 4px;
   }
 

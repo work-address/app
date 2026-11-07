@@ -84,12 +84,12 @@ const Root = styled.div`
   display: grid;
   grid-auto-flow: column;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
 
   &[data-layout='mobile'] {
     grid-auto-flow: row;
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-2);
+    gap: var(--ui-space-2);
   }
 
   @media print {

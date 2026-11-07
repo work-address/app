@@ -1,8 +1,6 @@
 import { Skeleton } from '@radix-ui/themes'
 import styled from 'styled-components'
 
-import { Text } from './text'
-
 import type { ReactNode } from 'react'
 
 export type StatTileTone = 'neutral' | 'accent' | 'green' | 'amber'
@@ -34,9 +32,7 @@ export const StatTile = ({
   className,
 }: StatTileProps) => (
   <Root className={className} data-tone={tone}>
-    <Text size="2" color="gray" as="div">
-      {label}
-    </Text>
+    <Label>{label}</Label>
     <Skeleton loading={loading}>
       <Value>{value}</Value>
     </Skeleton>
@@ -51,15 +47,15 @@ export const StatTile = ({
 const Root = styled.div`
   display: flex;
   flex-direction: column;
-  gap: 2px;
+  gap: var(--ui-space-1);
   min-width: 0;
-  padding: var(--space-3) var(--space-4);
-  border: 1px solid var(--ds-neutral-alpha-6);
-  border-radius: var(--radius-3);
-  background: var(--color-panel-solid);
+  padding: var(--ui-space-3) var(--ui-space-4);
+  border: var(--ui-border-width) solid var(--ui-line);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-surface);
 
   &[data-tone='accent'] {
-    --stat-tile-color: var(--ds-accent-11);
+    --stat-tile-color: var(--ui-blue);
   }
 
   &[data-tone='green'] {
@@ -71,12 +67,18 @@ const Root = styled.div`
   }
 `
 
+const Label = styled.div`
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+`
+
 /* One line on a desktop, where four tiles share the row; free to wrap on a
    phone, where "211 hr 6 min covered b…" would say nothing. */
 const Hint = styled.div`
-  font-size: var(--font-size-1);
-  line-height: var(--line-height-1);
-  color: var(--ds-neutral-11);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+  color: var(--ui-muted);
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
@@ -87,17 +89,18 @@ const Hint = styled.div`
 `
 
 const Value = styled.div`
-  font-size: var(--font-size-6);
-  font-weight: 500;
-  line-height: 1.25;
-  letter-spacing: -0.01em;
-  color: var(--stat-tile-color, var(--ds-neutral-12));
+  font-size: var(--stat-tile-size, var(--ui-metric-min-size));
+  font-weight: var(--ui-metric-weight);
+  line-height: var(--ui-metric-line-height);
+  letter-spacing: var(--ui-metric-tracking);
+  font-variant-numeric: tabular-nums;
+  color: var(--stat-tile-color, var(--ui-ink));
   white-space: nowrap;
   overflow: hidden;
   text-overflow: ellipsis;
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    font-size: var(--font-size-5);
+    font-size: var(--stat-tile-size, var(--ui-figure-size));
   }
 `
 
@@ -105,11 +108,11 @@ const Value = styled.div`
 export const StatStrip = styled.div<{ $columns?: number }>`
   display: grid;
   grid-template-columns: repeat(${(p) => p.$columns ?? 4}, minmax(0, 1fr));
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
 
   ${(p) => p.theme.breakpoints.down('md')} {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-2);
+    gap: var(--ui-space-2);
 
     /* An odd tile at the end takes the whole row rather than leaving a gap. */
     & > :last-child:nth-child(odd) {

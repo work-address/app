@@ -81,29 +81,29 @@ const Metric = ({ label, description, children }: MetricProps) => (
 const Root = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
   width: 100%;
 `
 
 const Heading = styled.div`
   display: grid;
-  gap: var(--space-1);
+  gap: var(--ui-space-1);
 `
 
 const MetricsGrid = styled.div`
   display: flex;
-  gap: var(--space-4);
+  gap: var(--ui-space-4);
 
   ${(p) => p.theme.breakpoints.down('md')} {
     display: grid;
     grid-template-columns: 1fr 1fr;
-    gap: var(--space-3) var(--space-4);
+    gap: var(--ui-space-3) var(--ui-space-4);
   }
 `
 
 const MetricItem = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--ui-space-1);
   min-width: 0;
 `

@@ -210,8 +210,8 @@ const CloseLink = styled(Link)`
 const Progress = styled.div`
   display: grid;
   place-items: center;
-  gap: var(--space-3);
-  padding-bottom: var(--space-4);
+  gap: var(--ui-space-3);
+  padding-bottom: var(--ui-space-4);
 `
 
 const StatusDetails = styled.details`
@@ -225,22 +225,22 @@ const StatusDetails = styled.details`
 
 const StatusSummary = styled.summary`
   cursor: pointer;
-  font-size: var(--font-size-1);
-  color: var(--ds-neutral-11);
+  font-size: var(--ui-small-size);
+  color: var(--ui-muted);
 
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-9);
+    outline: 2px solid var(--ui-blue);
     outline-offset: 2px;
-    border-radius: var(--radius-1);
+    border-radius: var(--ui-inline-radius);
   }
 `
 
 const StatusNote = styled.p`
   margin-top: 8px;
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: var(--font-size-0);
+  font-size: var(--ui-small-size);
   font-weight: 400;
-  color: var(--c-rgba-0-7-20-0_52);
+  color: var(--ui-muted);
   letter-spacing: 0.2px;
   line-height: 1.5;
   text-align: center;
@@ -249,6 +249,6 @@ const StatusNote = styled.p`
   overflow-wrap: anywhere;
 
   ${({ theme }) => theme.breakpoints.up('md')} {
-    font-size: var(--font-size-1);
+    font-size: var(--ui-small-size);
   }
 `

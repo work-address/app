@@ -1,14 +1,11 @@
 import styled from 'styled-components'
 
+/** A section's h2, in the workspace panel-title role. */
 export const SectionTitle = styled.h2`
-  font-weight: 500;
-  font-size: var(--font-size-6);
-  line-height: 125%;
-  letter-spacing: 0;
-  color: var(--ds-neutral-12);
   margin: 0;
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    font-size: var(--font-size-4);
-  }
+  color: var(--ui-ink);
+  font-size: var(--section-title-size, var(--ui-heading-size));
+  line-height: var(--ui-heading-line-height);
+  font-weight: var(--ui-heading-weight);
+  letter-spacing: var(--ui-heading-tracking);
 `

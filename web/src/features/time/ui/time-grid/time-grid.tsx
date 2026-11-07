@@ -78,7 +78,7 @@ export const TimeGrid = () => {
 
 const Root = styled.div`
   display: grid;
-  gap: var(--space-6);
+  gap: var(--ui-space-6);
 
   &[data-filtering] {
     opacity: 0.6;
@@ -89,7 +89,7 @@ const Root = styled.div`
 const Footer = styled.div`
   display: grid;
   place-items: center;
-  padding: var(--space-6) 0;
+  padding: var(--ui-space-6) 0;
 `
 
 const Sentinel = styled.div`

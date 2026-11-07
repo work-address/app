@@ -99,19 +99,27 @@ export const TimeMobileBulkActions = () => {
 
 const Root = styled.div`
   display: grid;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
   width: 100%;
-  margin-bottom: var(--space-3);
+  padding: var(--ui-space-3);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-inset);
 `
 
 const Hint = styled.p`
   margin: 0;
-  font-size: var(--font-size-2);
-  color: var(--ds-neutral-11);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+  color: var(--ui-muted);
 `
 
 const Actions = styled.div`
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
+
+  /* The narrowest phones cannot fit both labels side by side. */
+  ${(p) => p.theme.breakpoints.down('sm')} {
+    grid-template-columns: minmax(0, 1fr);
+  }
 `

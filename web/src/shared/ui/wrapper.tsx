@@ -28,14 +28,14 @@ export const Wrapper = ({ children, width = 'full', className }: Props) => {
 /** The reading column's content width, shared by every `document` page. */
 export const DOCUMENT_WIDTH = 960
 
+/* The workspace page frame: the canvas shows through, and the page's own
+   white panels sit inside these insets. */
 const Root = styled.div`
-  --page-inset-x: 28px;
+  --page-inset-x: var(--ui-page-inset);
 
   box-sizing: border-box;
   width: 100%;
-  background: var(--white);
-  border-radius: 40px 40px 0 0;
-  padding: 32px var(--page-inset-x) 40px;
+  padding: var(--ui-page-top) var(--page-inset-x) var(--ui-page-bottom);
 
   &[data-width='document'] {
     max-width: calc(${DOCUMENT_WIDTH}px + 2 * var(--page-inset-x));
@@ -43,9 +43,9 @@ const Root = styled.div`
   }
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    --page-inset-x: 16px;
+    --page-inset-x: var(--ui-page-inset-mobile);
 
-    padding: 18px var(--page-inset-x) 24px;
-    border-radius: 24px 24px 0 0;
+    padding: var(--ui-page-top-mobile) var(--page-inset-x)
+      var(--ui-page-bottom-mobile);
   }
 `

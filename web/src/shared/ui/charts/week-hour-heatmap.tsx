@@ -133,8 +133,8 @@ const Row = styled.div`
 `
 
 const DayLabel = styled.span`
-  color: var(--ds-neutral-11);
-  font-size: var(--font-size-1);
+  color: var(--ui-muted);
+  font-size: var(--ui-small-size);
 `
 
 const Cell = styled.span`
@@ -143,14 +143,14 @@ const Cell = styled.span`
   border-radius: 3px;
 
   &[data-active] {
-    outline: 2px solid var(--ds-neutral-12);
+    outline: 2px solid var(--ui-ink);
     outline-offset: 1px;
   }
 `
 
 const HourLabel = styled.span`
   overflow: visible;
-  color: var(--ds-neutral-11);
-  font-size: var(--font-size-1);
+  color: var(--ui-muted);
+  font-size: var(--ui-small-size);
   white-space: nowrap;
 `

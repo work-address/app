@@ -44,17 +44,18 @@ const Root = styled.main`
   display: grid;
   align-content: center;
   min-height: 100vh;
-  padding: 32px 28px;
-  background: var(--white);
+  padding: var(--ui-page-top) var(--ui-page-inset);
+  background: var(--page-canvas);
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    padding: 18px 16px;
+    padding: var(--ui-page-top-mobile) var(--ui-page-inset-mobile);
   }
 `
 
 const Detail = styled.code`
   display: block;
-  margin-top: var(--space-2);
-  font-size: var(--font-size-1);
-  color: var(--ds-neutral-11);
+  margin-top: var(--ui-space-2);
+  font-size: var(--ui-small-size);
+  line-height: var(--ui-small-line-height);
+  color: var(--ui-muted);
 `

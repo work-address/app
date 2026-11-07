@@ -45,15 +45,16 @@ export const PageHeader = ({
 export const PageTitle = styled.h1`
   margin: 0;
   min-width: 0;
-  font-size: var(--font-size-7);
-  font-weight: 500;
-  line-height: 125%;
-  letter-spacing: 0;
-  color: var(--ds-neutral-12);
+  font-size: var(--ui-title-size);
+  font-weight: var(--ui-title-weight);
+  line-height: var(--ui-title-line-height);
+  letter-spacing: var(--ui-title-tracking);
+  color: var(--ui-ink);
   overflow-wrap: anywhere;
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    font-size: var(--font-size-5);
+    font-size: var(--ui-title-mobile-size);
+    line-height: var(--ui-title-mobile-line-height);
   }
 `
 
@@ -62,12 +63,12 @@ const Root = styled.header`
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
-  gap: var(--space-3) var(--space-5);
+  gap: var(--ui-space-3) var(--ui-section-gap);
 `
 
 const Body = styled.div`
   display: grid;
-  gap: var(--space-1);
+  gap: var(--ui-space-2);
   min-width: 0;
 `
 
@@ -76,19 +77,20 @@ const TitleRow = styled.div`
   grid-auto-flow: column;
   align-items: center;
   justify-content: start;
-  gap: var(--space-2);
+  gap: var(--ui-space-3);
   min-width: 0;
 `
 
-const Description = styled.p`
+const Description = styled.div`
   margin: 0;
-  font-size: var(--font-size-3);
-  line-height: var(--line-height-3);
-  color: var(--ds-neutral-11);
+  max-inline-size: var(--ui-description-measure);
+  font-size: var(--ui-description-size);
+  line-height: var(--ui-description-line-height);
+  color: var(--ui-muted);
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    font-size: var(--font-size-2);
-    line-height: var(--line-height-2);
+    font-size: var(--ui-meta-size);
+    line-height: var(--ui-meta-line-height);
   }
 `
 
@@ -97,7 +99,7 @@ const Actions = styled.div`
   grid-auto-flow: column;
   align-items: center;
   justify-content: end;
-  gap: var(--space-2);
+  gap: var(--ui-space-3);
 
   /* Under ~560px of header the actions get their own line rather than
      squeezing the title. */

@@ -79,9 +79,9 @@ export const ToastStyle = createGlobalStyle`
       padding: 16px;
       justify-items: start;
       align-items: start;
-      font-size: var(--font-size-3);
+      font-size: var(--ui-body-size);
       /*
-      box-shadow: 0 2px 3px -2px var(--ds-neutral-alpha-3)
+      box-shadow: 0 2px 3px -2px var(--ui-inset)
                   0px 3px 12px -4px var(--overlays-black-alpha-2)
                   0px 4px 16px -8px var(--overlays-black-alpha-2);
       */
@@ -92,13 +92,13 @@ export const ToastStyle = createGlobalStyle`
          only way to override the library's own positioning here. */
       [data-close-button] {
         position: absolute;
-        top: var(--space-4) !important;
+        top: var(--ui-space-4) !important;
         left: initial !important;
         bottom: 50% !important;
-        right: var(--space-2) !important;
+        right: var(--ui-space-2) !important;
         transform: translateY(-50%);
         background: transparent;
-        font-size: var(--font-size-4);
+        font-size: var(--ui-description-size);
         border: none;
 
         svg {
@@ -124,26 +124,18 @@ export const ToastStyle = createGlobalStyle`
   }
 
   .error-toast {
-    ${baseToastStyle(
-      'var(--c-fff7f7)',
-      'var(--error-alpha-6)',
-      'var(--error-11)',
-    )}
+    ${baseToastStyle('var(--red-2)', 'var(--error-alpha-6)', 'var(--error-11)')}
   }
 
   .warning-toast {
     ${baseToastStyle(
-      'var(--c-fffcf2)',
+      'var(--amber-2)',
       'var(--warning-alpha-6)',
       'var(--warning-11)',
     )}
   }
 
   .info-toast {
-    ${baseToastStyle(
-      'var(--ds-accent-3)',
-      'var(--ds-accent-alpha-6)',
-      'var(--c-000000)',
-    )}
+    ${baseToastStyle('var(--ui-glow)', 'var(--ui-alpha-6)', 'var(--ui-ink)')}
   }
 `

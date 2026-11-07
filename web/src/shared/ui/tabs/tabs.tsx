@@ -96,15 +96,15 @@ const List = styled(RadixTabs.List)`
 
 const Trigger = styled(RadixTabs.TabsTrigger)`
   font-weight: 400;
-  color: var(--gray-10);
+  color: var(--ui-muted);
   position: relative;
   z-index: 3;
-  padding: 10px var(--space-4);
-  font-size: var(--font-size-2);
+  padding: 10px var(--ui-space-4);
+  font-size: var(--ui-meta-size);
 
   &[data-state='active'] {
     font-weight: 500;
-    color: var(--ds-neutral-12);
+    color: var(--ui-ink);
   }
 
   &:after {
@@ -116,7 +116,7 @@ const Trigger = styled(RadixTabs.TabsTrigger)`
     right: 0;
     bottom: 0;
     height: 1px;
-    background: var(--ds-neutral-alpha-6);
+    background: var(--ui-line);
   }
 `
 
@@ -126,6 +126,6 @@ const ActiveTabIndicator = styled(motion.div)`
   left: 0;
   bottom: 0;
   height: 2px;
-  background: var(--ds-accent-11);
+  background: var(--ui-blue);
   pointer-events: none;
 `

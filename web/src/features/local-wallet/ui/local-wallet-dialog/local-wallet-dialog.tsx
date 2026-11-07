@@ -63,5 +63,5 @@ export const LocalWalletDialog = ({ open, onOpenChange, onConnect }: Props) => {
 
 const Intro = styled(Text)`
   display: block;
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--ui-space-4);
 `

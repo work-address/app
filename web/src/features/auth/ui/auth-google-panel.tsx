@@ -52,7 +52,7 @@ export const AuthGooglePanel = ({ clientId, lastUsed }: Props) => {
 const Root = styled.div`
   display: grid;
   justify-items: center;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
 `
 
 const Note = styled.div`
@@ -60,13 +60,13 @@ const Note = styled.div`
   flex-wrap: wrap;
   align-items: center;
   justify-content: center;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
 `
 
 const Lead = styled.p`
   margin: 0;
   text-align: center;
-  font-size: var(--font-size-2);
+  font-size: var(--ui-meta-size);
   line-height: 20px;
-  color: var(--ds-neutral-11);
+  color: var(--ui-muted);
 `

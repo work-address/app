@@ -52,10 +52,10 @@ type SegmentState = TimeAgentSegment['state']
 const STATES: SegmentState[] = ['running', 'human_wait', 'unknown', 'untracked']
 
 const STATE_COLORS: Record<SegmentState, string> = {
-  running: 'var(--ds-accent-9)',
+  running: 'var(--ui-blue)',
   human_wait: 'var(--amber-9)',
-  unknown: 'var(--gray-8)',
-  untracked: 'var(--gray-a5)',
+  unknown: 'var(--ui-muted)',
+  untracked: 'var(--ui-line)',
 }
 
 type TimeDialogAgentsProps = {
@@ -328,17 +328,17 @@ const RunPrompt = ({ label, text }: { label: string; text: string }) => {
 
 const List = styled.div`
   display: grid;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
   width: 100%;
 `
 
 const Card = styled.div`
   display: grid;
-  gap: var(--space-2);
-  padding: var(--space-3);
-  border: 1px solid var(--gray-a5);
-  border-radius: var(--radius-3);
-  background: var(--color-surface);
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-3);
+  border: 1px solid var(--ui-line);
+  border-radius: var(--ui-filter-radius);
+  background: var(--ui-surface);
 `
 
 const Avatar = styled.span`
@@ -346,12 +346,12 @@ const Avatar = styled.span`
   align-items: center;
   justify-content: center;
   flex-shrink: 0;
-  width: var(--space-6);
-  height: var(--space-6);
-  border-radius: var(--radius-2);
-  background: var(--ds-accent-3);
-  color: var(--ds-accent-11);
-  font-size: var(--font-size-2);
+  width: var(--ui-space-6);
+  height: var(--ui-space-6);
+  border-radius: var(--ui-row-radius);
+  background: var(--ui-glow);
+  color: var(--ui-blue);
+  font-size: var(--ui-meta-size);
   font-weight: 600;
 `
 
@@ -359,18 +359,18 @@ const PromptRow = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: start;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
 `
 
 const Prompt = styled.button`
   all: unset;
   display: block;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-2);
-  background: var(--gray-a2);
-  color: var(--ds-neutral-12);
-  font-size: var(--font-size-1);
-  line-height: var(--line-height-1);
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-row-radius);
+  background: var(--ui-inset);
+  color: var(--ui-ink);
+  font-size: var(--ui-small-size);
+  line-height: var(--ui-small-line-height);
   cursor: pointer;
 
   &[data-open] {
@@ -379,7 +379,7 @@ const Prompt = styled.button`
   }
 
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-9);
+    outline: 2px solid var(--ui-blue);
     outline-offset: 1px;
   }
 `
@@ -403,7 +403,7 @@ const Timeline = styled.div`
   position: relative;
   height: 6px;
   border-radius: 999px;
-  background: var(--gray-a3);
+  background: var(--ui-inset);
   overflow: hidden;
 `
 
@@ -418,7 +418,7 @@ const Span = styled.span`
     background-image: repeating-linear-gradient(
       -45deg,
       transparent 0 2px,
-      var(--gray-a6) 2px 4px
+      var(--ui-line) 2px 4px
     ) !important;
   }
 `
@@ -426,20 +426,20 @@ const Span = styled.span`
 const Legend = styled.div`
   display: flex;
   flex-wrap: wrap;
-  gap: var(--space-1) var(--space-3);
+  gap: var(--ui-space-1) var(--ui-space-3);
 `
 
 const LegendItem = styled.span`
   display: inline-flex;
   align-items: center;
-  gap: var(--space-1);
-  color: var(--ds-neutral-11);
-  font-size: var(--font-size-1);
-  line-height: var(--line-height-1);
+  gap: var(--ui-space-1);
+  color: var(--ui-muted);
+  font-size: var(--ui-small-size);
+  line-height: var(--ui-small-line-height);
 `
 
 const LegendValue = styled.span`
-  color: var(--ds-neutral-12);
+  color: var(--ui-ink);
   font-weight: 500;
   font-variant-numeric: tabular-nums;
 `

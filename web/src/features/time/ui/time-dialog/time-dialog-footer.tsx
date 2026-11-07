@@ -89,7 +89,7 @@ const Root = styled.div`
   justify-content: space-between;
   align-items: center;
   width: 100%;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
 
   ${(p) => p.theme.breakpoints.down('md')} {
     flex-direction: column;
@@ -99,7 +99,7 @@ const Root = styled.div`
 
 const DangerActions = styled.div`
   display: flex;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
   flex-wrap: wrap;
 
   ${(p) => p.theme.breakpoints.down('md')} {
@@ -114,7 +114,7 @@ const DangerActions = styled.div`
 
 const PrimaryActions = styled.div`
   display: flex;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
 
   ${(p) => p.theme.breakpoints.down('md')} {
     & > * {

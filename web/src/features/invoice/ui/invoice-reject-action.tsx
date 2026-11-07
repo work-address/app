@@ -105,12 +105,12 @@ export const InvoiceRejectAction = ({ Slot, stretch }: Props) => {
 
 const Form = styled.form`
   display: grid;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
 `
 
 const Actions = styled.div`
   display: grid;
   grid-auto-flow: column;
   justify-content: end;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
 `

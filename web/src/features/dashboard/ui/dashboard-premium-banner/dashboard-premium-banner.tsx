@@ -87,12 +87,14 @@ const Root = styled.div<{ align: 'center' | 'flex-start' }>`
   position: relative;
   display: flex;
   align-items: ${(p) => p.align};
-  gap: 12px;
-  padding: 8px 34px 8px 12px;
-  margin-bottom: 12px;
-  border-radius: var(--radius-4);
-  border: 1px solid var(--ds-accent-alpha-6);
-  background: var(--ds-accent-3);
+  gap: var(--ui-space-3);
+  padding: var(--ui-space-3) var(--ui-space-7) var(--ui-space-3)
+    var(--ui-space-4);
+  margin-bottom: var(--ui-section-gap);
+  border-radius: var(--ui-control-radius);
+  border: var(--ui-border-width) solid var(--ui-line);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow);
 
   ${(p) => p.theme.breakpoints.down('md')} {
     flex-direction: column;
@@ -104,7 +106,7 @@ const IconWrap = styled.span`
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  color: var(--ds-accent-9);
+  color: var(--ui-blue);
 `
 
 const TitleRow = styled.span`

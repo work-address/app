@@ -70,8 +70,8 @@ export const ProfileViewDescriptionAndSkills = () => {
           <SectionTitle>{t('profile.form.skills')}</SectionTitle>
           <Skills>
             {skills.map((skill) => (
-              <Badge key={skill} color="gray" size={{ initial: '1', md: '2' }}>
-                <Text weight="medium" size="1">
+              <Badge key={skill} color="gray" size="2" radius="full">
+                <Text weight="medium" size="2">
                   {skill}
                 </Text>
               </Badge>
@@ -109,9 +109,9 @@ export const ProfileViewDescriptionAndSkills = () => {
 /* The page runs full width; a paragraph that did too would be hard to read. */
 const Bio = styled.div`
   max-width: 80ch;
-  font-size: var(--font-size-3);
-  line-height: var(--line-height-3);
-  color: var(--ds-neutral-12);
+  font-size: var(--ui-body-size);
+  line-height: var(--ui-body-line-height);
+  color: var(--ui-text);
   overflow-wrap: anywhere;
 
   p {
@@ -120,19 +120,19 @@ const Bio = styled.div`
 
   /* Doubled: it has to outrank the zero margins set on p, ul and ol here. */
   && > * + * {
-    margin-top: var(--space-2);
+    margin-top: var(--ui-space-2);
   }
 
   /* What the editor's toolbar can produce: the app's reset strips these. */
   a {
-    color: var(--ds-accent-11);
+    color: var(--ui-blue);
     text-decoration: underline;
   }
 
   ul,
   ol {
     margin-block: 0;
-    padding-left: var(--space-5);
+    padding-left: var(--ui-space-5);
   }
 
   ul {
@@ -144,8 +144,8 @@ const Bio = styled.div`
   }
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    font-size: var(--font-size-2);
-    line-height: var(--line-height-2);
+    font-size: var(--ui-meta-size);
+    line-height: var(--ui-meta-line-height);
   }
 `
 
@@ -154,14 +154,14 @@ const Skills = styled.div`
   /* Chips of any width, each row as full as it can get: auto-fill would force
      them into equal columns. */
   flex-wrap: wrap;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
 `
 
 const EmptyOwn = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
 
   ${(p) => p.theme.breakpoints.down('md')} {
     grid-template-columns: minmax(0, 1fr);

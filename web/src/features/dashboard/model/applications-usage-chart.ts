@@ -66,14 +66,14 @@ export const toProcessName = (key: string) =>
 export const isProcessKey = (key: string) => key.startsWith(PROCESS_KEY_PREFIX)
 
 const BAR_COLORS = [
-  'var(--c-rgba-0-52-130-0_75)',
-  'var(--c-rgba-0-52-130-0_50)',
-  'var(--c-rgba-0-52-130-0_28)',
-  'var(--c-rgba-0-52-130-0_14)',
+  'var(--ui-chart-1)',
+  'var(--ui-chart-2)',
+  'var(--ui-chart-3)',
+  'var(--ui-chart-7)',
 ]
 
 // Neutral color for the aggregated "Other" bucket so it reads as a tail, not another app.
-const OTHER_BAR_COLOR = 'var(--c-rgba-0-7-20-0_22)'
+const OTHER_BAR_COLOR = 'var(--ui-chart-other)'
 
 // Palette size caps how many distinct processes get their own stacked segment.
 const MAX_VISIBLE_PROCESSES = BAR_COLORS.length

@@ -29,7 +29,7 @@ export type InputProps = TextField.RootProps & {
 const LABEL_WITH_HINT = {
   display: 'inline-flex',
   alignItems: 'center',
-  gap: 'var(--space-1)',
+  gap: 'var(--ui-space-1)',
 } as const
 
 export const Input = forwardRef(
@@ -64,7 +64,8 @@ export const Input = forwardRef(
     // wide gap only applies to the explicit side-by-side layout on a desktop.
     const isStacked = columns === '1' || columns === '1fr' || Boolean(rows)
     const usingGap = label
-      ? (gap ?? (isDesktop && !isStacked ? 'var(--space-5)' : 'var(--space-2)'))
+      ? (gap ??
+        (isDesktop && !isStacked ? 'var(--ui-space-5)' : 'var(--ui-space-2)'))
       : '0'
 
     const errorProps: InputProps | null =
@@ -156,6 +157,6 @@ const Field = styled(TextField.Root)`
 const Error = styled.p`
   grid-column: 1 / -1;
   color: var(--red-11);
-  font-size: var(--font-size-2);
-  line-height: var(--line-height-2);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
 `

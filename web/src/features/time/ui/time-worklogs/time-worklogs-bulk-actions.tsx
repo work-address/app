@@ -11,7 +11,7 @@ import {
   timeBulkSelectionClearRequested,
 } from '../../model'
 
-import { Button, ListPageLayout as S, Tooltip } from '@/shared'
+import { Button, Tooltip } from '@/shared'
 
 const TRASH_ICON_SIZE = 12
 
@@ -35,11 +35,11 @@ export const TimeWorklogsBulkActions = () => {
 
   return (
     <Root>
-      <S.Label>
+      <Count role="status">
         {t('dashboard.worklogsTable.bulk.selectedCount', {
           count: selectedCount,
         })}
-      </S.Label>
+      </Count>
       <Button
         size="s"
         type="button"
@@ -104,11 +104,25 @@ export const TimeWorklogsBulkActions = () => {
   )
 }
 
+/* A quiet strip under the filters while something is selected. */
 const Root = styled.div`
   display: grid;
   grid-auto-flow: column;
   justify-content: start;
   align-items: center;
-  gap: var(--space-2);
-  margin-bottom: var(--space-3);
+  gap: var(--ui-space-2);
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-inset);
+  overflow-x: auto;
+`
+
+const Count = styled.span`
+  margin-inline-end: var(--ui-space-2);
+  color: var(--ui-ink);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+  font-weight: var(--ui-weight-semibold);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
 `

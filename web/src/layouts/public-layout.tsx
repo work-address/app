@@ -12,12 +12,9 @@ import { Sidebar } from '@/widgets'
 
 export const PublicLayout = () => {
   const scrollRef = useRef<HTMLDivElement>(null)
-  const { pathname } = useLocation()
 
   return (
-    <Root
-      data-ui={pathname === routes.dashboard.build() ? 'workspace' : undefined}
-    >
+    <Root>
       <Sidebar />
       <Main>
         <PageIndicator />
@@ -106,8 +103,8 @@ const Main = styled.main`
   display: flex;
   flex-direction: column;
   overflow: hidden;
-  background: var(--page-canvas, var(--white));
-  box-shadow: var(--page-shadow, var(--shadow-4));
+  background: var(--page-canvas, var(--ui-surface));
+  box-shadow: var(--page-shadow, var(--ui-shadow));
 
   ${(p) => p.theme.breakpoints.up('md')} {
     /* Above the fixed sidebar, so the shadow falls onto it. On a phone the
@@ -122,11 +119,7 @@ const Main = styled.main`
   }
 `
 
-/**
- * The page's scroll container. Content leaving at either end dissolves over
- * the sheet's edge instead of being cut by it; the mask sits on the scroller,
- * so it stays put while the page moves under it.
- */
+/** The page's scroll container: the canvas stays put while the page moves. */
 const Scroller = styled.div`
   flex: 1;
   min-height: 0;
@@ -134,20 +127,9 @@ const Scroller = styled.div`
   /* none, not contain: Chrome on macOS bounces inner scrollers too, which
      slides the page down and bares the sheet's white above it. */
   overscroll-behavior: none;
-  mask-image: var(
-    --page-scroll-mask,
-    linear-gradient(
-      to bottom,
-      transparent,
-      var(--c-000000) 40px,
-      var(--c-000000) calc(100% - 40px),
-      transparent
-    )
-  );
 
   @media print {
     overflow: visible;
-    mask-image: none;
   }
 `
 

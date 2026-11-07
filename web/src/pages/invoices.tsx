@@ -43,15 +43,16 @@ import { formatCurrency, useDateFormatter, type baseApi } from '@/shared'
 import {
   Button,
   LoadFailure,
-  PageHeader,
   PageHelmet,
   SortSelect,
   Spinner,
   StateNotice,
-  StatStrip,
-  StatTile,
   Text,
-  Wrapper,
+  WorkspaceMetric,
+  WorkspacePage,
+  WorkspacePageHeader,
+  WorkspacePanel,
+  WorkspaceSummary,
   useBreakpoint,
   usePageBusy,
   useReachEnd,
@@ -130,137 +131,135 @@ export default function InvoicesPage() {
   })
 
   return (
-    <Wrapper>
+    <Root>
       <PageHelmet
         title={t('invoices.page.title')}
         description={t('invoices.page.meta')}
       />
-      <Flex direction="column" gap="5" pb="2">
-        <PageHeader
-          title={t('invoices.page.title')}
-          description={t('invoices.page.description')}
-          actions={
-            <>
-              <ShownCount
-                shown={rows.length}
-                total={total}
-                loading={showSkeleton}
-              />
-              {isDesktop ? null : <InvoiceMobileFilters />}
-            </>
-          }
+      <WorkspacePageHeader
+        title={t('invoices.page.title')}
+        description={t('invoices.page.description')}
+      />
+      {/* The answer to "what am I owed" before the rows that justify it. */}
+      {summaryFailed ? (
+        <LoadFailure
+          title={t('invoices.summary.loadFailure.title')}
+          onRetry={retrySummary}
         />
-        {projectsFailed && (
-          <LoadFailure
-            title={t('invoices.filter.projectsFailure.title')}
-            onRetry={() => loadProjects()}
+      ) : (
+        <Summary>
+          <Metric
+            label={t('invoices.summary.awaiting')}
+            value={formatCents(summary.requestedCents)}
+            hint={t('invoices.summary.count', {
+              count: summary.requestedCount,
+            })}
+            loading={summaryLoading}
           />
-        )}
-        {/* The answer to "what am I owed" before the rows that justify it. */}
-        {summaryFailed ? (
-          <LoadFailure
-            title={t('invoices.summary.loadFailure.title')}
-            onRetry={retrySummary}
+          <Metric
+            label={t('invoices.summary.paid')}
+            value={formatCents(summary.paidCents)}
+            hint={t('invoices.summary.count', { count: summary.paidCount })}
+            loading={summaryLoading}
           />
-        ) : (
-          <StatStrip $columns={3}>
-            <StatTile
-              tone="amber"
-              label={t('invoices.summary.awaiting')}
-              value={formatCents(summary.requestedCents)}
-              hint={t('invoices.summary.count', {
-                count: summary.requestedCount,
-              })}
-              loading={summaryLoading}
-            />
-            <StatTile
-              tone="green"
-              label={t('invoices.summary.paid')}
-              value={formatCents(summary.paidCents)}
-              hint={t('invoices.summary.count', { count: summary.paidCount })}
-              loading={summaryLoading}
-            />
-            <StatTile
-              label={t('invoices.summary.total')}
-              value={formatCents(summary.totalCents)}
-              hint={t('invoices.summary.count', { count: summary.totalCount })}
-              loading={summaryLoading}
-            />
-          </StatStrip>
-        )}
-        {isDesktop ? <InvoiceFilters /> : null}
-        {/* A phone's cards have no column headers to sort from. */}
-        {!isDesktop && rows.length > 1 ? <InvoiceSort /> : null}
-        {/* A failed request is not an empty list. Saying "no invoices yet"
-            when the truth is "could not load them" sends someone looking for
-            an invoice they know exists. With rows on screen they stay, and the
-            failure sits under them. */}
-        {failed && rows.length === 0 ? (
-          <LoadFailure
-            title={t('invoices.page.error.title')}
-            description={t('invoices.page.error.description')}
-            onRetry={() => fetchList()}
+          <Metric
+            label={t('invoices.summary.total')}
+            value={formatCents(summary.totalCents)}
+            hint={t('invoices.summary.count', { count: summary.totalCount })}
+            loading={summaryLoading}
           />
-        ) : showEmpty ? (
-          <StateNotice
-            title={t(
-              isFiltered
-                ? 'invoices.page.empty.filtered.title'
-                : 'invoices.page.empty.title',
+        </Summary>
+      )}
+      <WorkspacePanel
+        title={t('invoices.panel.title')}
+        aside={
+          <ShownCount
+            shown={rows.length}
+            total={total}
+            loading={showSkeleton}
+          />
+        }
+        toolbar={
+          <Toolbar>
+            {projectsFailed && (
+              <LoadFailure
+                title={t('invoices.filter.projectsFailure.title')}
+                onRetry={() => loadProjects()}
+              />
             )}
-            description={t(
-              isFiltered
-                ? 'invoices.page.empty.filtered.description'
-                : 'invoices.page.empty.description',
-            )}
-            actions={
-              isFiltered ? (
-                <Button
-                  size="l"
-                  variant="outline"
-                  onClick={() => resetFilters()}
-                >
-                  {t('invoices.page.empty.filtered.reset')}
-                </Button>
-              ) : (
-                <Button
-                  size="l"
-                  variant="outline"
-                  onClick={() => navigate(routes.dashboard.build())}
-                >
-                  {t('invoices.page.empty.action')}
-                </Button>
-              )
-            }
-          />
-        ) : isDesktop ? (
-          <InvoicesTable rows={rows} loading={showSkeleton} />
-        ) : (
-          <InvoiceCards
-            rows={rows}
-            showSkeleton={showSkeleton}
-            pending={pending}
-          />
-        )}
-        {failed && rows.length > 0 ? (
-          <LoadFailure
-            title={t('invoices.page.error.moreTitle')}
-            description={t('invoices.page.error.description')}
-            onRetry={() => retryList()}
-          />
-        ) : null}
-        {hasMore && !failed ? (
-          <>
-            {loadingMore ? (
-              <LoadingMore>
-                <Spinner size={32} />
-              </LoadingMore>
-            ) : null}
-            <Sentinel ref={sentinelRef} aria-hidden />
-          </>
-        ) : null}
-      </Flex>
-    </Wrapper>
+            {isDesktop ? <InvoiceFilters /> : <InvoiceMobileFilters />}
+            {/* A phone's cards have no column headers to sort from. */}
+            {!isDesktop && rows.length > 1 ? <InvoiceSort /> : null}
+          </Toolbar>
+        }
+      >
+        <Content>
+          {/* A failed request is not an empty list. Saying "no invoices yet"
+              when the truth is "could not load them" sends someone looking
+              for an invoice they know exists. With rows on screen they stay,
+              and the failure sits under them. */}
+          {failed && rows.length === 0 ? (
+            <LoadFailure
+              title={t('invoices.page.error.title')}
+              description={t('invoices.page.error.description')}
+              onRetry={() => fetchList()}
+            />
+          ) : showEmpty ? (
+            <StateNotice
+              title={t(
+                isFiltered
+                  ? 'invoices.page.empty.filtered.title'
+                  : 'invoices.page.empty.title',
+              )}
+              description={t(
+                isFiltered
+                  ? 'invoices.page.empty.filtered.description'
+                  : 'invoices.page.empty.description',
+              )}
+              actions={
+                isFiltered ? (
+                  <Button variant="outline" onClick={() => resetFilters()}>
+                    {t('invoices.page.empty.filtered.reset')}
+                  </Button>
+                ) : (
+                  <Button
+                    variant="outline"
+                    onClick={() => navigate(routes.dashboard.build())}
+                  >
+                    {t('invoices.page.empty.action')}
+                  </Button>
+                )
+              }
+            />
+          ) : isDesktop ? (
+            <InvoicesTable rows={rows} loading={showSkeleton} />
+          ) : (
+            <InvoiceCards
+              rows={rows}
+              showSkeleton={showSkeleton}
+              pending={pending}
+            />
+          )}
+          {failed && rows.length > 0 ? (
+            <LoadFailure
+              title={t('invoices.page.error.moreTitle')}
+              description={t('invoices.page.error.description')}
+              onRetry={() => retryList()}
+            />
+          ) : null}
+          {hasMore && !failed ? (
+            <>
+              {loadingMore ? (
+                <LoadingMore>
+                  <Spinner size={32} />
+                </LoadingMore>
+              ) : null}
+              <Sentinel ref={sentinelRef} aria-hidden />
+            </>
+          ) : null}
+        </Content>
+      </WorkspacePanel>
+    </Root>
   )
 }
 
@@ -279,11 +278,7 @@ const ShownCount = ({
     return null
   }
 
-  return (
-    <Text size="2" color="gray" wrap="nowrap">
-      {t('invoices.page.shownOfTotal', { shown, total })}
-    </Text>
-  )
+  return <Count>{t('invoices.page.shownOfTotal', { shown, total })}</Count>
 }
 
 const InvoiceSort = () => {
@@ -368,6 +363,7 @@ const InvoiceCards = ({
               <Flex direction="column" align="start" gap="1">
                 <Badge
                   size="2"
+                  radius="full"
                   variant="soft"
                   color={invoiceStateColor(invoice)}
                 >
@@ -492,20 +488,76 @@ const AREAS = `
   "action action"
 `
 
-/* One panel with one border: the rows inside part with hairlines, the way
-   every other table in the app does, rather than each wearing a card. */
+const Root = styled(WorkspacePage)`
+  display: grid;
+  align-content: start;
+  gap: var(--ui-section-gap);
+`
+
+/* Three totals: one row from xl; the shared two-column fallback below it,
+   where the last one takes the full width. */
+const Summary = styled(WorkspaceSummary)`
+  ${(p) => p.theme.breakpoints.up('xl')} {
+    &[data-detail] {
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+    }
+  }
+
+  /* A phone stacks the totals: two amounts side by side would break
+     mid-number. */
+  ${(p) => p.theme.breakpoints.down('md')} {
+    &[data-detail] {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
+`
+
+/* Stacked, the totals part with a rule above rather than a divider beside. */
+const Metric = styled(WorkspaceMetric)`
+  ${(p) => p.theme.breakpoints.down('md')} {
+    border-inline-start: 0;
+
+    & + & {
+      padding-top: var(--ui-section-gap);
+      border-top: var(--ui-border-width) solid var(--ui-line);
+    }
+  }
+`
+
+const Toolbar = styled.div`
+  display: grid;
+  gap: var(--ui-space-4);
+  min-width: 0;
+`
+
+const Content = styled.div`
+  display: grid;
+  gap: var(--ui-space-4);
+  min-width: 0;
+`
+
+const Count = styled.span`
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-pill-radius);
+  background: var(--ui-glow);
+  color: var(--ui-blue);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+  font-weight: var(--ui-weight-medium);
+  font-variant-numeric: tabular-nums;
+  white-space: nowrap;
+`
+
+/* The panel is the surface: the cards inside part with hairlines rather
+   than each wearing a border of their own. */
 const List = styled.div`
   display: grid;
-  border: 1px solid var(--ds-neutral-alpha-6);
-  border-radius: var(--radius-3);
-  background: var(--color-panel-solid);
-  overflow: hidden;
 `
 
 const LoadingMore = styled.div`
   display: grid;
   place-items: center;
-  padding: var(--space-2) 0;
+  padding: var(--ui-space-2) 0;
 `
 
 const Sentinel = styled.div`
@@ -520,16 +572,12 @@ const Row = styled.div`
   grid-template-columns: minmax(0, 1fr) minmax(0, 1fr);
   grid-template-areas: ${AREAS};
   align-items: start;
-  gap: var(--space-3);
-  padding: var(--space-3) var(--space-4);
-  transition: background-color 0.15s ease;
+  gap: var(--ui-space-3);
+  padding: var(--ui-space-4) 0;
+  transition: background-color var(--ui-transition);
 
   & + & {
-    border-top: 1px solid var(--ds-neutral-alpha-6);
-  }
-
-  &:hover {
-    background-color: var(--ds-neutral-2);
+    border-top: var(--ui-border-width) solid var(--ui-line);
   }
 `
 
@@ -557,8 +605,9 @@ const CellRoot = styled.div<{ $area: string; $align?: 'start' | 'end' }>`
 `
 
 const CellLabel = styled.span`
-  font-size: var(--font-size-1);
-  color: var(--ds-neutral-11);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+  color: var(--ui-muted);
 `
 
 /* One real link for the card. The overlay gives it the row's whole hit area
@@ -569,7 +618,7 @@ const CellLabel = styled.span`
 const ProjectLink = styled(NavLink)`
   display: block;
   text-decoration: none;
-  color: var(--ds-accent-11);
+  color: var(--ui-blue);
   min-width: 0;
   max-width: 100%;
 
@@ -586,8 +635,9 @@ const ProjectLink = styled(NavLink)`
 
   /* Inset, so the ring survives the panel clipping its rows' corners. */
   &:focus-visible::after {
-    outline: 2px solid var(--ds-accent-9);
-    outline-offset: -2px;
+    outline: var(--ui-focus-width) solid var(--ui-blue);
+    outline-offset: calc(-1 * var(--ui-focus-width));
+    border-radius: var(--ui-row-radius);
   }
 
   ${Row}:hover & {

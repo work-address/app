@@ -14,7 +14,8 @@ import {
   Button,
   isEmailAddress,
   normalizeAddress,
-  PageSection,
+  SectionTitle,
+  WorkspaceSheet,
   showToast,
   Text,
   useConfirm,
@@ -63,11 +64,9 @@ export const LocalWalletCard = () => {
   }
 
   return (
-    <PageSection>
+    <WorkspaceSheet>
       <Flex direction="column" gap="3">
-        <Text size={{ initial: '4', md: '6' }} weight="medium">
-          {t('localWallet.card.title')}
-        </Text>
+        <SectionTitle>{t('localWallet.card.title')}</SectionTitle>
         <Text size="2" color="gray">
           {t('localWallet.card.description')}
         </Text>
@@ -99,7 +98,7 @@ export const LocalWalletCard = () => {
         </Actions>
       </Flex>
       <LocalWalletExportDialog open={exportOpen} onOpenChange={setExportOpen} />
-    </PageSection>
+    </WorkspaceSheet>
   )
 }
 
@@ -107,14 +106,14 @@ const AddressBox = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-2);
-  background: var(--ds-neutral-2);
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-inset);
   overflow-wrap: anywhere;
 `
 
 const Actions = styled.div`
   display: flex;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
   flex-wrap: wrap;
 `

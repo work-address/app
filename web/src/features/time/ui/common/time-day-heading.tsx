@@ -39,16 +39,25 @@ const Root = styled.div`
   grid-auto-flow: column;
   justify-content: start;
   align-items: baseline;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
+  min-width: 0;
+
+  ${(p) => p.theme.breakpoints.down('sm')} {
+    grid-auto-flow: row;
+    gap: 0;
+  }
 `
 
 const Title = styled.h3`
-  font-size: var(--font-size-3);
-  font-weight: 500;
-  color: var(--ds-neutral-12);
+  margin: 0;
+  color: var(--ui-ink);
+  font-size: var(--ui-body-size);
+  line-height: var(--ui-body-line-height);
+  font-weight: var(--ui-weight-semibold);
 `
 
 const Caption = styled.span`
-  font-size: var(--font-size-1);
-  color: var(--ds-neutral-11);
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
 `

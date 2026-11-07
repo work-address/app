@@ -138,12 +138,12 @@ export const DatePickerInput = ({
 
 const Root = styled.div`
   display: grid;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
   width: 100%;
   min-width: 0;
 `
 const Label = styled.label`
-  font-size: var(--font-size-2);
+  font-size: var(--ui-meta-size);
   font-weight: 500;
 `
 const Field = styled.div`
@@ -151,43 +151,43 @@ const Field = styled.div`
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   /* Include the border in the same outside height as Input. */
-  height: var(--space-6);
-  border: 1px solid var(--gray-a7);
-  border-radius: var(--radius-2);
-  background: var(--color-surface);
+  height: var(--date-field-height, var(--ui-space-6));
+  border: 1px solid var(--ui-line);
+  border-radius: var(--date-field-radius, var(--ui-row-radius));
+  background: var(--ui-surface);
   &:focus-within {
-    outline: 2px solid var(--ds-accent-9);
+    outline: 2px solid var(--ui-blue);
     outline-offset: 2px;
   }
   ${(p) => p.theme.breakpoints.down('md')} {
-    height: var(--space-7);
+    height: var(--date-field-height, var(--ui-space-7));
   }
 `
 const Trigger = styled.button`
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
   align-items: center;
-  padding: 0 var(--space-2);
+  padding: 0 var(--date-field-padding, var(--ui-space-2));
   height: 100%;
   min-height: 0;
   min-width: 0;
-  color: var(--gray-12);
+  color: var(--ui-text);
   text-align: left;
   font: inherit;
-  font-size: var(--font-size-2);
-  line-height: var(--line-height-2);
+  font-size: var(--date-field-font-size, var(--ui-meta-size));
+  line-height: var(--ui-meta-line-height);
   outline: none;
   &[data-placeholder] {
-    color: var(--gray-a10);
+    color: var(--ui-muted);
   }
   &:disabled {
     opacity: 0.6;
     cursor: not-allowed;
   }
   ${(p) => p.theme.breakpoints.down('md')} {
-    font-size: var(--font-size-3);
-    line-height: var(--line-height-3);
+    font-size: var(--date-field-font-size, var(--ui-body-size));
+    line-height: var(--ui-body-line-height);
   }
 `
 const Value = styled.span`
@@ -196,32 +196,32 @@ const Value = styled.span`
   white-space: nowrap;
 `
 const Clear = styled(IconButton)`
-  margin-inline-end: var(--space-2);
+  margin-inline-end: var(--ui-space-2);
 `
 const Content = styled(Popover.Content)`
   width: max-content;
-  max-width: calc(100vw - var(--space-7));
-  padding: var(--space-3);
+  max-width: calc(100vw - var(--ui-space-7));
+  padding: var(--ui-space-3);
   z-index: 100;
 `
 const Calendar = styled(DayPicker)`
-  --rdp-accent-color: var(--ds-accent-11);
-  --rdp-accent-background-color: var(--ds-accent-3);
+  --rdp-accent-color: var(--ui-blue);
+  --rdp-accent-background-color: var(--ui-glow);
   --rdp-day-width: 40px;
   --rdp-day-height: 40px;
   --rdp-day_button-width: 40px;
   --rdp-day_button-height: 40px;
-  --rdp-selected-border: 2px solid var(--ds-accent-11);
+  --rdp-selected-border: 2px solid var(--ui-blue);
   font-family: inherit;
-  font-size: var(--font-size-2);
-  color: var(--gray-12);
+  font-size: var(--ui-meta-size);
+  color: var(--ui-text);
 `
 const Footer = styled.div`
   display: grid;
   grid-auto-flow: column;
   justify-content: end;
-  gap: var(--space-2);
-  padding-block-start: var(--space-3);
-  margin-block-start: var(--space-3);
-  border-top: 1px solid var(--ds-neutral-alpha-6);
+  gap: var(--ui-space-2);
+  padding-block-start: var(--ui-space-3);
+  margin-block-start: var(--ui-space-3);
+  border-top: 1px solid var(--ui-line);
 `

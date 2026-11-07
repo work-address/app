@@ -1,37 +1,37 @@
 /**
  * Series colours for identity - one per project or product, in a fixed
- * order. Validated as a set (adjacent CVD ΔE ≥ 9, normal-vision ΔE ≥ 19 on
- * the light surface). Three sit under 3:1 contrast, so every chart that uses
+ * order - from the workspace chart tokens, so every chart shares the
+ * dashboard's blues. Several are close in lightness, so every chart that uses
  * them names its series in a legend and a tooltip, never by colour alone.
  */
 export const SERIES_COLORS = [
-  '#2a78d6',
-  '#eb6834',
-  '#1baf7a',
-  '#eda100',
-  '#e87ba4',
-  '#008300',
-  '#6250d6',
-  '#e34948',
+  'var(--ui-chart-1)',
+  'var(--ui-chart-2)',
+  'var(--ui-chart-3)',
+  'var(--ui-chart-4)',
+  'var(--ui-chart-5)',
+  'var(--ui-chart-6)',
+  'var(--ui-chart-7)',
+  'var(--ui-chart-8)',
 ] as const
 
 /** The tail past the last slot: never a ninth generated hue. */
-export const OTHER_SERIES_COLOR = '#a3a29c'
+export const OTHER_SERIES_COLOR = 'var(--ui-chart-other)'
 
 /**
  * One hue, light to dark, for magnitude. The first step is "a little", not
  * "nothing": empty cells use the neutral track instead.
  */
 export const SEQUENTIAL_BLUE = [
-  '#cde2fb',
-  '#9ec5f4',
-  '#6da7ec',
-  '#3987e5',
-  '#256abf',
-  '#184f95',
+  'var(--ui-chart-7)',
+  'var(--ui-chart-3)',
+  'var(--ui-chart-5)',
+  'var(--ui-chart-2)',
+  'var(--ui-chart-6)',
+  'var(--ui-chart-4)',
 ] as const
 
-export const EMPTY_CELL_COLOR = 'var(--ds-neutral-alpha-3)'
+export const EMPTY_CELL_COLOR = 'var(--ui-inset)'
 
 /**
  * Colour for an entity by its place in a stable list - the order the entities

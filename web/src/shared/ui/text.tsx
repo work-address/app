@@ -25,7 +25,7 @@ export const Text = ({ $themeVariant, as, ...props }: TextProps) => {
 
 const Root = styled(RadixText)<Pick<TextProps, '$letterSpacing'>>`
   &[data-theme-variant='primary'] {
-    color: var(--ds-accent-11);
+    color: var(--ui-blue);
   }
 
   ${(p) =>

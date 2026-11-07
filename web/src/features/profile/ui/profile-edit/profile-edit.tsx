@@ -183,7 +183,7 @@ export const ProfileEdit = () => {
 
   return (
     <Root>
-      <Header
+      <PageHeader
         leading={
           <Tooltip content={t('profile.aria.back')}>
             <IconButton
@@ -222,7 +222,7 @@ export const ProfileEdit = () => {
             onSubmit={handleSubmit(onSubmit)}
             aria-busy={profileLoading || profileSaving || undefined}
           >
-            <motion.div initial="hidden" animate="shown" variants={reveal.list}>
+            <Sections initial="hidden" animate="shown" variants={reveal.list}>
               <motion.div variants={reveal.item}>
                 <ProfileEditDetails
                   user={user}
@@ -244,7 +244,7 @@ export const ProfileEdit = () => {
                   setValue={setValue}
                 />
               </motion.div>
-            </motion.div>
+            </Sections>
           </form>
           <ConnectedWalletCard />
           <LocalWalletCard />
@@ -286,6 +286,10 @@ const REVEAL_STILL = {
 }
 
 const Root = styled(Wrapper)`
+  display: grid;
+  align-content: start;
+  gap: var(--ui-section-gap);
+
   /* Clears the fixed Cancel/Save sheet on phones, so the last field can
      scroll out from under it. */
   ${(p) => p.theme.breakpoints.down('md')} {
@@ -293,12 +297,9 @@ const Root = styled(Wrapper)`
   }
 `
 
-const Header = styled(PageHeader)`
-  padding-bottom: var(--space-5);
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    padding-bottom: var(--space-4);
-  }
+const Sections = styled(motion.div)`
+  display: grid;
+  gap: var(--ui-section-gap);
 `
 
 const BottomSheet = styled.div`
@@ -308,10 +309,11 @@ const BottomSheet = styled.div`
   bottom: 0;
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
   /* Clears the home indicator on phones without a hardware button. */
-  padding: var(--space-2) var(--space-4)
-    calc(var(--space-3) + env(safe-area-inset-bottom, 0px));
-  background: var(--white);
-  border-top: 1px solid var(--ds-neutral-alpha-6);
+  padding: var(--ui-space-3) var(--ui-space-4)
+    calc(var(--ui-space-3) + env(safe-area-inset-bottom, 0px));
+  background: var(--ui-surface);
+  border-top: var(--ui-border-width) solid var(--ui-line);
+  box-shadow: var(--ui-shadow);
 `

@@ -273,7 +273,7 @@ const Root = styled(Card)`
   padding: 8px 12px;
 
   ${CardContent}:not(:last-child) {
-    border-bottom: 1px solid var(--ds-neutral-alpha-6);
+    border-bottom: 1px solid var(--ui-line);
   }
 `
 
@@ -288,11 +288,11 @@ const Fields = styled(Flex)`
 `
 
 const Addon = styled.div`
-  margin-bottom: var(--space-4);
+  margin-bottom: var(--ui-space-4);
 `
 
 const Selection = styled.div`
-  margin-top: var(--space-3);
+  margin-top: var(--ui-space-3);
 `
 
 const SkeletonRow = styled(Flex)`

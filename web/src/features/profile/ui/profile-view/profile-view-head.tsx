@@ -60,7 +60,7 @@ export const ProfileViewHead = ({
   const copyLabel = t('profile.view.copyAddressHint')
 
   return (
-    <ProfileViewSection>
+    <ProfileViewSection surface={false}>
       <Root data-qr={hasQrCode || undefined}>
         {hasQrCode && <QrCode />}
         <Identity>
@@ -179,7 +179,7 @@ const Root = styled.div`
   grid-template-columns: minmax(0, 1fr) auto;
   grid-template-areas: 'identity side';
   align-items: center;
-  gap: var(--space-4) var(--space-5);
+  gap: var(--ui-space-4) var(--ui-space-5);
 
   &[data-qr] {
     grid-template-columns: auto minmax(0, 1fr) auto;
@@ -207,7 +207,7 @@ const Identity = styled.div`
   grid-area: identity;
   display: grid;
   justify-items: start;
-  gap: var(--space-1);
+  gap: var(--ui-space-1);
   min-width: 0;
 `
 
@@ -217,7 +217,7 @@ const TitleRow = styled.div`
   grid-auto-columns: auto;
   justify-content: start;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
   min-width: 0;
 `
 
@@ -227,16 +227,16 @@ const AddressButton = styled.button`
   display: inline-grid;
   grid-auto-flow: column;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--ui-space-1);
   padding: 0;
   border: 0;
   background: none;
-  color: var(--ds-neutral-11);
+  color: var(--ui-muted);
   cursor: pointer;
-  border-radius: var(--radius-1);
+  border-radius: var(--ui-inline-radius);
 
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-9);
+    outline: 2px solid var(--ui-blue);
     outline-offset: 2px;
   }
 `
@@ -245,12 +245,12 @@ const Side = styled.div`
   grid-area: side;
   display: grid;
   justify-items: end;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
   min-width: 0;
 
   @container (max-width: 720px) {
     justify-items: start;
-    gap: var(--space-3);
+    gap: var(--ui-space-3);
   }
 
   ${(p) => p.theme.breakpoints.down('md')} {
@@ -262,7 +262,7 @@ const Actions = styled.div`
   display: grid;
   grid-auto-flow: column;
   align-items: center;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
 
   ${(p) => p.theme.breakpoints.down('md')} {
     grid-auto-columns: minmax(0, 1fr);
@@ -274,5 +274,5 @@ const Rate = styled.div`
   grid-auto-flow: column;
   justify-content: start;
   align-items: baseline;
-  gap: var(--space-1);
+  gap: var(--ui-space-1);
 `

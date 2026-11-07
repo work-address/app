@@ -96,10 +96,10 @@ const SettleButton = styled(Button)`
   z-index: 1;
 
   &&[data-compact] {
-    height: 26px;
-    min-height: 26px;
-    padding: 0 14px;
+    height: var(--button-compact-height, 26px);
+    min-height: var(--button-compact-height, 26px);
+    padding: 0 var(--button-compact-padding, 14px);
     font-size: 14px;
-    border-radius: 5px;
+    border-radius: var(--button-compact-radius, 5px);
   }
 `

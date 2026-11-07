@@ -23,7 +23,7 @@ import {
   LoadFailure,
   PageHelmet,
   StateNotice,
-  Wrapper,
+  WorkspacePage,
 } from '@/shared'
 
 export default function InvoicePage() {
@@ -145,7 +145,7 @@ const InvoicePrintGlobalStyle = createGlobalStyle`
     #root {
       height: auto;
       overflow: visible;
-      background: var(--white);
+      background: var(--ui-surface);
     }
 
     ol[data-sonner-toaster] {
@@ -154,7 +154,7 @@ const InvoicePrintGlobalStyle = createGlobalStyle`
   }
 `
 
-const Root = styled(Wrapper)`
+const Root = styled(WorkspacePage)`
   @media print {
     /* Paper reads closer than a screen, so the type comes down a step for all
        of the invoice at once. Everything set in these sizes follows. */
@@ -164,12 +164,19 @@ const Root = styled(Wrapper)`
     --line-height-2: 15px;
     --font-size-3: 12px;
     --line-height-3: 16px;
+    --ui-small-size: 10px;
+    --ui-small-line-height: 14px;
+    --ui-meta-size: 11px;
+    --ui-meta-line-height: 15px;
+    --ui-body-size: 12px;
+    --ui-body-line-height: 16px;
 
     /* Inherited, so the state badge and the rejection notice keep their colour
        with the dialog's "Background graphics" off. */
     print-color-adjust: exact;
 
     && {
+      min-height: 0;
       max-width: none;
       margin: 0;
       padding: 0 12mm;
@@ -180,6 +187,7 @@ const Root = styled(Wrapper)`
 
 const Body = styled(motion.div)`
   display: grid;
+  gap: var(--ui-section-gap);
   min-width: 0;
 
   /* Blocks, not a grid: only blocks break across pages in every browser. */
@@ -187,7 +195,7 @@ const Body = styled(motion.div)`
     display: block;
 
     > * + * {
-      margin-top: var(--space-5);
+      margin-top: var(--ui-space-5);
     }
   }
 `

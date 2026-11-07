@@ -20,7 +20,7 @@ is transcription, not invention.
 
 When a page already adopts the workspace design, or the request applies that style
 to a new surface, read [workspace-design](../workspace-design/SKILL.md). That skill
-owns its visual rules, shared token source, component recipes, opt-in scope and
+owns its visual rules, shared token source, component recipes, app-wide scope and
 acceptance checks; this skill owns placement, naming and component contracts.
 Record the selected design contract in the spec's Tokens and Composition sections.
 Keep existing page designs and shared defaults unless their adoption is in scope.

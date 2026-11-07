@@ -67,7 +67,12 @@ export const InvoiceOverview = ({ onBack }: Props) => {
   const stateBadge = loading ? (
     <Skeleton width="60px" height="22px" />
   ) : (
-    <Badge size="2" variant="soft" color={invoiceStateColor(invoice)}>
+    <Badge
+      size="2"
+      radius="full"
+      variant="soft"
+      color={invoiceStateColor(invoice)}
+    >
       {t(invoiceStateLabelKey(invoice))}
     </Badge>
   )
@@ -118,78 +123,82 @@ export const InvoiceOverview = ({ onBack }: Props) => {
           actions={<InvoiceActions layout={isMobile ? 'mobile' : 'desktop'} />}
         />
       </Band>
-      <Stats>
-        <Tile
-          tone="accent"
-          label={t('invoice.totalAmount')}
-          value={formatCurrency(invoice?.totalAmount)}
-          loading={loading}
-        />
-        {headline.map((field) => (
+      <Sheet>
+        <Stats>
           <Tile
-            key={field.id}
-            label={
-              <TileLabel>
-                {t(`invoice.fields.${field.id}`)}
-                {field.desc ? <Hint content={field.desc} size={14} /> : null}
-              </TileLabel>
-            }
-            value={field.value}
+            tone="accent"
+            label={t('invoice.totalAmount')}
+            value={formatCurrency(invoice?.totalAmount)}
             loading={loading}
           />
-        ))}
-      </Stats>
-      <Details>
-        <Qr>
-          {loading ? (
-            <Skeleton width="120px" height="120px" />
-          ) : (
-            <QRCodeSVG
-              value={invoiceUrl}
-              size={QR_DRAWN_SIZE}
-              bgColor="transparent"
-              fgColor="var(--ds-accent-11)"
-              marginSize={1}
-            />
-          )}
-          <Text size="1" color="gray" align="center">
-            {t('invoice.qrScan')}
-          </Text>
-        </Qr>
-        <Body>
-          <Facts>
-            {facts.map((field) => (
-              <Fact key={field.id}>
-                <Label>
-                  <Text size="2" color="gray">
-                    {t(`invoice.fields.${field.id}`)}
-                  </Text>
+          {headline.map((field) => (
+            <Tile
+              key={field.id}
+              label={
+                <TileLabel>
+                  {t(`invoice.fields.${field.id}`)}
                   {field.desc ? <Hint content={field.desc} size={14} /> : null}
-                </Label>
-                <dd>
-                  {loading ? (
-                    <Skeleton width="80px" height="20px" />
-                  ) : (
-                    <Text size="2" weight="medium">
-                      {field.value}
+                </TileLabel>
+              }
+              value={field.value}
+              loading={loading}
+            />
+          ))}
+        </Stats>
+        <Details>
+          <Qr>
+            {loading ? (
+              <Skeleton width="120px" height="120px" />
+            ) : (
+              <QRCodeSVG
+                value={invoiceUrl}
+                size={QR_DRAWN_SIZE}
+                bgColor="transparent"
+                fgColor="var(--ui-ink)"
+                marginSize={1}
+              />
+            )}
+            <Text size="1" color="gray" align="center">
+              {t('invoice.qrScan')}
+            </Text>
+          </Qr>
+          <Body>
+            <Facts>
+              {facts.map((field) => (
+                <Fact key={field.id}>
+                  <Label>
+                    <Text size="2" color="gray">
+                      {t(`invoice.fields.${field.id}`)}
                     </Text>
-                  )}
-                </dd>
-              </Fact>
-            ))}
-          </Facts>
-          {/* A Google account with no connected wallet is paid some other way,
+                    {field.desc ? (
+                      <Hint content={field.desc} size={14} />
+                    ) : null}
+                  </Label>
+                  <dd>
+                    {loading ? (
+                      <Skeleton width="80px" height="20px" />
+                    ) : (
+                      <Text size="2" weight="medium">
+                        {field.value}
+                      </Text>
+                    )}
+                  </dd>
+                </Fact>
+              ))}
+            </Facts>
+            {/* A Google account with no connected wallet is paid some other way,
               and an invoice has nothing to say about it here. */}
-          {payWallet && (
-            <PayTo size="2" color="gray">
-              {t('invoice.fields.payTo')}:{' '}
-              <PayToWallet size="2" weight="medium" highContrast>
-                {payWallet}
-              </PayToWallet>
-            </PayTo>
-          )}
-        </Body>
-      </Details>
+            {payWallet && (
+              <PayTo size="2" color="gray">
+                {t('invoice.fields.payTo')}:{' '}
+                <PayToWallet size="2" weight="medium" highContrast>
+                  {payWallet}
+                </PayToWallet>
+              </PayTo>
+            )}
+          </Body>
+        </Details>
+      </Sheet>
     </Root>
   )
 }
@@ -200,6 +209,7 @@ export const InvoiceOverview = ({ onBack }: Props) => {
 const Root = styled.section`
   container-type: inline-size;
   display: grid;
+  gap: var(--ui-section-gap);
   min-width: 0;
 
   /* Blocks, and no container: the rules below that go by the page's width are
@@ -217,7 +227,7 @@ const Masthead = styled.div`
     display: flex;
     justify-content: space-between;
     align-items: center;
-    padding-bottom: var(--space-4);
+    padding-bottom: var(--ui-space-4);
 
     img {
       display: block;
@@ -228,17 +238,41 @@ const Masthead = styled.div`
 
 const Band = styled.div`
   min-width: 0;
-  padding: 0 0 var(--space-4);
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    padding: 0 0 var(--space-3);
-  }
 
   @media print {
     --font-size-5: 22px;
     --font-size-7: 22px;
+    --ui-figure-size: 22px;
+    --ui-title-mobile-size: 22px;
+    --ui-title-size: 22px;
+    --ui-title-line-height: 28px;
 
-    padding: 0 0 var(--space-3);
+    padding: 0 0 var(--ui-space-3);
+  }
+`
+
+/* The figures and the facts behind them on one white sheet. Paper keeps
+   only the content: no box, no shadow. */
+const Sheet = styled.div`
+  display: grid;
+  min-width: 0;
+  padding: var(--ui-space-2) var(--ui-card-inset) var(--ui-card-inset);
+  border: var(--ui-border-width) solid var(--ui-edge);
+  border-radius: var(--ui-radius);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow);
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    padding-inline: var(--ui-card-inset-mobile);
+    padding-bottom: var(--ui-card-inset-mobile);
+  }
+
+  @media print {
+    display: block;
+    padding: 0;
+    border: 0;
+    border-radius: 0;
+    box-shadow: none;
   }
 `
 
@@ -246,8 +280,14 @@ const Band = styled.div`
 const Stats = styled(StatStrip)`
   && {
     gap: 0;
-    border-top: 1px solid var(--ds-neutral-alpha-6);
-    border-bottom: 1px solid var(--ds-neutral-alpha-6);
+    border-bottom: var(--ui-border-width) solid var(--ui-line);
+  }
+
+  @media print {
+    && {
+      border-top: 1px solid var(--ui-line);
+      border-bottom: 1px solid var(--ui-line);
+    }
   }
 
   @container (max-width: 720px) {
@@ -259,6 +299,9 @@ const Stats = styled(StatStrip)`
   @media print {
     --font-size-5: 16px;
     --font-size-6: 16px;
+    --ui-figure-size: 16px;
+    --ui-metric-min-size: 16px;
+    --stat-tile-size: 16px;
 
     && {
       grid-template-columns: repeat(4, minmax(0, 1fr));
@@ -273,19 +316,19 @@ const Tile = styled(StatTile)`
     border: 0;
     border-radius: 0;
     background: none;
-    padding: var(--space-3) var(--space-5) var(--space-3) 0;
+    padding: var(--ui-space-4) var(--ui-space-5) var(--ui-space-4) 0;
   }
 
   ${(p) => p.theme.breakpoints.down('md')} {
     && {
-      padding: var(--space-2) var(--space-3) var(--space-2) 0;
+      padding: var(--ui-space-3) var(--ui-space-3) var(--ui-space-3) 0;
     }
   }
 
   /* The first keeps to the paper's left edge, under the title. */
   @media print {
     &&& {
-      padding: var(--space-2) var(--space-3);
+      padding: var(--ui-space-2) var(--ui-space-3);
     }
 
     &&&:first-child {
@@ -303,13 +346,14 @@ const BackButton = styled(IconButton)`
 const Subtitle = styled.span`
   display: grid;
   justify-items: start;
-  gap: var(--space-1);
+  gap: var(--ui-space-1);
 `
 
 /* An id has no break opportunities of its own; without this a long one pushes
    the page wider than the phone. */
 const Reference = styled.span`
-  font-size: var(--font-size-2);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
   overflow-wrap: anywhere;
 `
 
@@ -317,7 +361,7 @@ const TileLabel = styled.span`
   display: inline-grid;
   grid-auto-flow: column;
   align-items: center;
-  gap: var(--space-1);
+  gap: var(--ui-space-1);
 `
 
 /* The code beside the facts; on paper it moves to the far side, so the facts
@@ -326,11 +370,11 @@ const Details = styled.div`
   display: grid;
   grid-template-columns: auto minmax(0, 1fr);
   align-items: center;
-  gap: var(--space-3) var(--space-5);
-  padding: var(--space-4) 0 var(--space-5);
+  gap: var(--ui-space-3) var(--ui-space-5);
+  padding: var(--ui-space-5) 0 0;
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    padding: var(--space-3) 0 var(--space-5);
+    padding: var(--ui-space-4) 0 0;
   }
 
   @container (max-width: 480px) {
@@ -340,14 +384,14 @@ const Details = styled.div`
   @media print {
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: start;
-    padding: var(--space-3) 0 0;
+    padding: var(--ui-space-3) 0 0;
   }
 `
 
 const Qr = styled.div`
   display: grid;
   justify-items: center;
-  gap: var(--space-1);
+  gap: var(--ui-space-1);
 
   svg {
     width: 120px;
@@ -374,7 +418,7 @@ const Qr = styled.div`
 
 const Body = styled.div`
   display: grid;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
   min-width: 0;
 `
 
@@ -386,7 +430,7 @@ const Facts = styled.dl`
   grid-template-columns: repeat(3, max-content minmax(0, 1fr));
   grid-template-rows: repeat(2, auto);
   grid-auto-flow: column;
-  gap: var(--space-1) var(--space-3);
+  gap: var(--ui-space-1) var(--ui-space-3);
   margin: 0;
 
   @container (max-width: 1120px) {
@@ -404,7 +448,7 @@ const Facts = styled.dl`
     grid-template-columns: repeat(2, max-content minmax(0, 1fr));
     grid-template-rows: repeat(3, auto);
     grid-auto-flow: column;
-    gap: 0 var(--space-3);
+    gap: 0 var(--ui-space-3);
   }
 `
 
@@ -412,7 +456,7 @@ const Fact = styled.div`
   grid-column: span 2;
   display: grid;
   grid-template-columns: subgrid;
-  column-gap: var(--space-3);
+  column-gap: var(--ui-space-3);
   align-items: center;
   min-height: 32px;
 
@@ -433,17 +477,17 @@ const Label = styled.dt`
   grid-auto-flow: column;
   align-items: center;
   justify-content: start;
-  gap: var(--space-1);
+  gap: var(--ui-space-1);
   white-space: nowrap;
 `
 
 const PayTo = styled(Text)`
-  padding-top: var(--space-3);
-  border-top: 1px solid var(--ds-neutral-alpha-6);
+  padding-top: var(--ui-space-3);
+  border-top: var(--ui-border-width) solid var(--ui-line);
   overflow-wrap: anywhere;
 
   @media print {
-    padding-top: var(--space-2);
+    padding-top: var(--ui-space-2);
   }
 `
 

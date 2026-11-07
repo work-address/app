@@ -16,7 +16,8 @@ import {
   Button,
   findInjectedWallets,
   isEmailAddress,
-  PageSection,
+  SectionTitle,
+  WorkspaceSheet,
   showToast,
   Text,
   useConfirm,
@@ -92,11 +93,9 @@ export const ConnectedWalletCard = () => {
   }
 
   return (
-    <PageSection>
+    <WorkspaceSheet>
       <Flex direction="column" gap="3">
-        <Text size={{ initial: '4', md: '6' }} weight="medium">
-          {t('connectedWallet.title')}
-        </Text>
+        <SectionTitle>{t('connectedWallet.title')}</SectionTitle>
         <Text size="2" color="gray">
           {t('connectedWallet.description')}
         </Text>
@@ -161,7 +160,7 @@ export const ConnectedWalletCard = () => {
           })
         }
       />
-    </PageSection>
+    </WorkspaceSheet>
   )
 }
 
@@ -169,14 +168,14 @@ const AddressBox = styled.div`
   display: flex;
   flex-direction: column;
   gap: 2px;
-  padding: var(--space-2) var(--space-3);
-  border-radius: var(--radius-2);
-  background: var(--ds-neutral-2);
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-inset);
   overflow-wrap: anywhere;
 `
 
 const Actions = styled.div`
   display: flex;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
   flex-wrap: wrap;
 `

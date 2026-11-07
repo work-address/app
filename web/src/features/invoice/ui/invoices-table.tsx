@@ -32,8 +32,8 @@ import { DataTable, formatCurrency, Text, useDateFormatter } from '@/shared'
 
 type InvoiceRow = baseApi.InvoiceSearch
 
-const PROJECT_COLUMN_WIDTH = 240
-const ISSUER_COLUMN_WIDTH = 160
+const PROJECT_COLUMN_WIDTH = 200
+const ISSUER_COLUMN_WIDTH = 136
 /** What's left of a truncated column once the cell's own padding is out. */
 const CELL_INSET = 24
 
@@ -68,6 +68,8 @@ export const InvoicesTable = ({
         width: PROJECT_COLUMN_WIDTH,
         truncate: true,
         sortable: true,
+        // The invoice's name stays in view while a narrow window scrolls.
+        sticky: 'left',
       },
       {
         dataKey: 'state',
@@ -85,7 +87,7 @@ export const InvoicesTable = ({
       {
         dataKey: 'fromAt',
         headerText: t('invoices.item.period'),
-        width: 190,
+        width: 168,
         sortable: true,
       },
       {
@@ -98,14 +100,14 @@ export const InvoicesTable = ({
         dataKey: 'amountCents',
         headerText: t('invoices.item.amount'),
         horizontalAlign: 'end',
-        width: 120,
+        width: 124,
         sortable: true,
       },
       {
         customKey: 'action',
         headerText: '',
         horizontalAlign: 'end',
-        width: 150,
+        width: 120,
       },
     ],
     [t],
@@ -147,11 +149,11 @@ const InvoiceCell = memo((props: DesktopBodyCellRenderProps<InvoiceRow>) => {
             to={routes.invoice.build({ id: invoice.id as string })}
             onClick={(event) => event.stopPropagation()}
           >
-            <Text size="2" weight="medium" truncate>
+            <Text size="3" weight="medium" truncate>
               {invoice.project?.title ?? '—'}
             </Text>
           </ProjectLink>
-          <Text size="1" color="gray" truncate>
+          <Text size="2" color="gray" truncate>
             {t('invoices.item.reference')} {shortenAddress(invoice.id ?? '')}
           </Text>
         </Stack>
@@ -161,11 +163,16 @@ const InvoiceCell = memo((props: DesktopBodyCellRenderProps<InvoiceRow>) => {
     case 'state': {
       return (
         <Flex direction="column" align="start" gap="1">
-          <Badge variant="soft" color={invoiceStateColor(invoice)}>
+          <Badge
+            size="2"
+            radius="full"
+            variant="soft"
+            color={invoiceStateColor(invoice)}
+          >
             {t(invoiceStateLabelKey(invoice))}
           </Badge>
           {invoice.state === 'PAID' && invoice.paidAt ? (
-            <Text size="1" color="gray">
+            <Text size="2" color="gray">
               {dateFormatter.format(new Date(invoice.paidAt))}
             </Text>
           ) : null}
@@ -211,13 +218,13 @@ const InvoiceCell = memo((props: DesktopBodyCellRenderProps<InvoiceRow>) => {
 
       return (
         <Flex direction="column" align="end">
-          <Text size="2" weight="medium">
+          <Amount size="3" weight="bold">
             {formatCents(Number(invoice.amountCents ?? 0))}
-          </Text>
+          </Amount>
           {/* The frozen line rate, or the project's rate for an invoice issued
               before lines were stored. */}
           {rateHour != null && (
-            <Text size="1" color="gray">
+            <Text size="2" color="gray">
               {t('invoices.item.perHour', { rate: formatCurrency(rateHour) })}
             </Text>
           )}
@@ -259,10 +266,16 @@ const Stack = styled.div<{ $width: number }>`
   max-width: ${(p) => p.$width - CELL_INSET}px;
 `
 
+/* Amounts line up digit for digit down the column. */
+const Amount = styled(Text)`
+  color: var(--ui-ink);
+  font-variant-numeric: tabular-nums;
+`
+
 const ProjectLink = styled(NavLink)`
   display: block;
   min-width: 0;
-  color: var(--ds-accent-11);
+  color: var(--ui-blue);
   text-decoration: none;
 
   &:hover {
@@ -270,8 +283,8 @@ const ProjectLink = styled(NavLink)`
   }
 
   &:focus-visible {
-    border-radius: var(--radius-1);
-    outline: 2px solid var(--ds-accent-9);
-    outline-offset: 2px;
+    border-radius: var(--ui-inline-radius);
+    outline: var(--ui-focus-width) solid var(--ui-blue);
+    outline-offset: var(--ui-focus-offset);
   }
 `

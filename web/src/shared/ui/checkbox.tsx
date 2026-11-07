@@ -7,7 +7,7 @@ export const Checkbox = styled(RadixCheckbox)`
   &[data-state='checked'],
   &[data-state='indeterminate'] {
     &:before {
-      background-color: var(--ds-accent-9);
+      background-color: var(--ui-blue);
     }
   }
 `

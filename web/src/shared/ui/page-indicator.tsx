@@ -106,7 +106,7 @@ const Bar = styled.div`
     height: 4px;
   }
 
-  background: linear-gradient(to right, transparent, var(--ds-accent-9));
+  background: linear-gradient(to right, transparent, var(--ui-blue));
 
   animation-iteration-count: 0;
   animation-timing-function: ease-out;

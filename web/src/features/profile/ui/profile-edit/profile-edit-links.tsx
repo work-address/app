@@ -23,7 +23,7 @@ import { SectionHeading } from './profile-edit-styles'
 
 import type { ClipboardEvent } from 'react'
 
-import { Input, PageSection, showToast } from '@/shared'
+import { Input, showToast, WorkspaceSheet } from '@/shared'
 
 type Props = {
   isDesktop: boolean
@@ -95,12 +95,12 @@ export const ProfileEditLinks = ({
   )
 }
 
-const Root = styled(PageSection)`
+const Root = styled(WorkspaceSheet)`
   display: grid;
-  gap: var(--space-5);
+  gap: var(--ui-section-gap);
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    gap: var(--space-3);
+    gap: var(--ui-space-3);
   }
 `
 
@@ -108,11 +108,11 @@ const Root = styled(PageSection)`
 const Links = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  gap: var(--space-4) var(--space-6);
+  gap: var(--ui-space-4) var(--ui-space-6);
 
   ${(p) => p.theme.breakpoints.up('lg')} {
     grid-template-columns: repeat(2, minmax(0, 1fr));
-    gap: var(--space-5) var(--space-6);
+    gap: var(--ui-space-5) var(--ui-space-6);
   }
 `
 

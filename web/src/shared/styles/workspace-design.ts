@@ -6,17 +6,25 @@ const declarations = Object.entries(workspaceCssTokens)
   .map(([name, value]) => `${name}: ${value};`)
   .join('\n')
 
-/** Mount once. Only an explicitly opted-in route receives the workspace skin. */
+/**
+ * Where the workspace skin applies: an element marked `data-ui="workspace"`
+ * (the app's root Theme) and every Theme Radix renders into a portal, so
+ * dialogs, menus and tooltips share the page's design. A portal Theme copies
+ * only Radix's own props, never the root's data attributes, hence the second
+ * selector.
+ */
+const SCOPE = `[data-ui='workspace'], .radix-themes[data-is-root-theme='false']`
+
+/** Mount once, beside the root Theme that carries `data-ui="workspace"`. */
 export const WorkspaceDesignStyles = createGlobalStyle`
   :root {
     ${declarations}
   }
 
-  [data-ui='workspace'] {
+  ${SCOPE} {
     --default-font-family: var(--ui-font);
     --page-canvas: radial-gradient(ellipse at 70% 0%, var(--ui-glow), var(--ui-canvas) 75%);
     --page-shadow: none;
-    --page-scroll-mask: none;
     --sidebar-bg: var(--ui-canvas);
     --sidebar-border: var(--ui-line);
     --sidebar-padding: var(--ui-space-5) var(--ui-space-3) var(--ui-space-3);
@@ -47,9 +55,126 @@ export const WorkspaceDesignStyles = createGlobalStyle`
     --ds-accent-9: var(--ui-blue);
     --ds-accent-11: var(--ui-blue);
     --color-panel-solid: var(--ui-surface);
+
+    /* Radix theme colours the scope's form controls and gray text read. */
+    --color-surface: var(--ui-surface);
+    --gray-a7: var(--ui-line);
+    --gray-a10: var(--ui-muted);
+    --gray-a11: var(--ui-muted);
+    --gray-11: var(--ui-muted);
+    --gray-12: var(--ui-text);
+    --focus-8: var(--ui-blue);
+
+    /* Optional hooks on shared primitives; their legacy defaults stay
+       everywhere outside this scope. */
+    --select-trigger-height: var(--ui-control-height);
+    --select-trigger-padding: var(--ui-space-3);
+    --select-trigger-radius: var(--ui-control-radius);
+    --select-trigger-border: var(--ui-line);
+    --select-trigger-background: var(--ui-surface);
+    --select-trigger-color: var(--ui-text);
+    --select-trigger-font-size: var(--ui-body-size);
+    --select-trigger-hover-border: var(--ui-line);
+    --select-trigger-hover-background: var(--ui-inset);
+    --button-s-height: var(--ui-segment-height);
+    --button-s-padding: 0 var(--ui-space-3);
+    --button-s-font-size: var(--ui-meta-size);
+    --button-s-radius: var(--ui-filter-radius);
+    --button-m-height: var(--ui-control-height);
+    --button-m-padding: 0 var(--ui-space-3);
+    --button-m-radius: var(--ui-control-radius);
+    --button-l-height: var(--ui-filter-height);
+    --button-l-radius: var(--ui-control-radius);
+    --button-compact-height: var(--ui-segment-height);
+    --button-compact-padding: var(--ui-space-3);
+    --button-compact-radius: var(--ui-filter-radius);
+    --date-field-height: var(--ui-control-height);
+    --date-field-radius: var(--ui-control-radius);
+    --date-field-padding: var(--ui-space-3);
+    --date-field-font-size: var(--ui-body-size);
+    --toolbar-gap: var(--ui-space-1);
+    --toolbar-padding: var(--ui-space-1);
+    --toolbar-border: transparent;
+    --toolbar-radius: var(--ui-control-radius);
+    --toolbar-background: var(--ui-inset);
+    --toolbar-segment-height: var(--ui-segment-height);
+    --toolbar-segment-padding: var(--ui-space-3);
+    --toolbar-segment-radius: var(--ui-row-radius);
+    --toolbar-font-size: var(--ui-meta-size);
+    --toolbar-pressed-background: var(--ui-surface);
+    --toolbar-pressed-shadow: var(--ui-shadow);
+    --sort-select-height: var(--ui-control-height);
+    --sort-select-segment-height: var(--ui-segment-height);
+    --sort-select-radius: var(--ui-control-radius);
+    --sort-select-segment-radius: var(--ui-row-radius);
+    --sort-select-border: var(--ui-line);
+    --sort-select-background: var(--ui-surface);
+    --sort-select-font-size: var(--ui-meta-size);
+    --sort-select-padding: var(--ui-space-2);
+    --table-surface: var(--ui-surface);
+    --table-line: var(--ui-line);
+    --table-row-border: var(--ui-border-width) solid var(--ui-line);
+    --table-row-hover: var(--ui-inset);
+    --table-header-font-size: var(--ui-meta-size);
+    --table-header-padding-y: var(--ui-space-3);
+    --table-cell-padding-y: var(--ui-space-3);
+    --table-cell-padding-x: var(--ui-space-3);
+    --table-edge-padding: 0px;
+    --table-group-padding-top: var(--ui-space-5);
+    --table-desktop-fade: 1;
+    --table-sort-height: var(--ui-segment-height);
+    --table-sort-padding: 0 var(--ui-space-2);
+    --table-sort-offset: calc(-1 * var(--ui-space-2)) 0;
+
     font-family: var(--ui-font);
     font-size: var(--ui-body-size);
     line-height: var(--ui-body-leading);
     color: var(--ui-text);
+  }
+
+  /* Paper is white: the canvas and its glow are for the screen. */
+  @media print {
+    ${SCOPE} {
+      --page-canvas: var(--white);
+    }
+  }
+
+  /* Radix sets these per size on the field itself, so the scope restates
+     them there rather than on an ancestor. */
+  :is(${SCOPE}) .rt-TextFieldRoot {
+    --text-field-height: var(--ui-control-height);
+    --text-field-border-radius: var(--ui-control-radius);
+    --text-field-padding: calc(var(--ui-space-3) - var(--text-field-border-width));
+
+    font-size: var(--ui-body-size);
+    letter-spacing: normal;
+  }
+
+  /* Portaled surfaces: the panel corner for dialogs, the control corner for
+     menus and popovers. Doubled to outrank Radix's own corner rules. */
+  .rt-BaseDialogContent.rt-BaseDialogContent {
+    border-radius: var(--ui-radius);
+  }
+
+  .rt-PopoverContent.rt-PopoverContent,
+  .rt-BaseMenuContent.rt-BaseMenuContent {
+    border-radius: var(--ui-control-radius);
+    box-shadow: var(--ui-shadow), 0 0 0 var(--ui-border-width) var(--ui-line);
+  }
+
+  /* A 16px box outlined in the pale separator colour all but disappears. */
+  :is(${SCOPE}) .rt-CheckboxRoot {
+    --gray-a7: var(--ui-line-strong);
+  }
+
+  :is(${SCOPE}) .rt-TextAreaRoot {
+    border-radius: var(--ui-control-radius);
+    font-size: var(--ui-body-size);
+    letter-spacing: normal;
+  }
+
+  :is(${SCOPE}) .rt-TextAreaInput {
+    font-size: var(--ui-body-size);
+    line-height: var(--ui-body-line-height);
   }
 `

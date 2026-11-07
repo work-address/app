@@ -128,7 +128,7 @@ const Row = styled.div`
   align-items: center;
   height: 22px;
   border-radius: 4px;
-  background: var(--c-rgba-0-0-51-0_04);
+  background: var(--ui-inset);
   overflow: hidden;
 `
 
@@ -137,15 +137,15 @@ const Fill = styled.div`
   position: absolute;
   inset: 0 auto 0 0;
   border-radius: inherit;
-  background: var(--c-rgba-0-52-130-0_28);
+  background: var(--ui-chart-3);
 `
 
 const Name = styled.span`
   position: relative;
   overflow: hidden;
-  padding: 0 var(--space-2);
-  color: var(--ds-neutral-12);
-  font-size: var(--font-size-1);
+  padding: 0 var(--ui-space-2);
+  color: var(--ui-ink);
+  font-size: var(--ui-small-size);
   line-height: 1;
   white-space: nowrap;
   text-overflow: ellipsis;
@@ -161,7 +161,7 @@ const Scale = styled.div`
 `
 
 const ScaleLabel = styled.span`
-  color: var(--ds-neutral-11);
-  font-size: var(--font-size-0);
+  color: var(--ui-muted);
+  font-size: var(--ui-small-size);
   line-height: 1;
 `

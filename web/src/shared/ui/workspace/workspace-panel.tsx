@@ -119,11 +119,13 @@ const Header = styled.div`
   padding: var(--ui-card-inset) var(--ui-card-inset) 0;
 `
 
+/* Sized from its content, so when the title and the aside cannot share a
+   line the aside wraps under the title rather than the title breaking. */
 const Heading = styled.div`
   display: grid;
   gap: var(--ui-space-1);
   min-width: 0;
-  flex: 1;
+  flex: 1 1 auto;
 `
 
 const Title = styled.h2`

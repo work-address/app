@@ -50,10 +50,10 @@ export const Button = styled.button`
   gap: 14px;
   height: 52px;
   padding: 0 14px 0 12px;
-  border: 1px solid var(--ds-neutral-alpha-6);
+  border: 1px solid var(--ui-line);
   border-radius: 8px;
-  background: var(--white);
-  color: var(--ds-neutral-12);
+  background: var(--ui-surface);
+  color: var(--ui-ink);
   text-align: left;
   cursor: pointer;
   transition:
@@ -62,45 +62,45 @@ export const Button = styled.button`
     box-shadow 0.15s ease;
 
   &:hover {
-    border-color: var(--ds-accent-9);
-    background: var(--ds-accent-3);
+    border-color: var(--ui-blue);
+    background: var(--ui-glow);
   }
 
   &:active {
-    background: var(--ds-accent-alpha-6);
+    background: var(--ui-alpha-6);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-9);
+    outline: 2px solid var(--ui-blue);
     outline-offset: 2px;
   }
 
   /* Only the trailing chevron nudges on hover; the leading mark stays put. */
   &:hover [data-chevron],
   &:focus-visible [data-chevron] {
-    color: var(--ds-accent-11);
+    color: var(--ui-blue);
     transform: translateX(2px);
   }
 
   &[data-variant='primary'] {
-    border-color: var(--ds-accent-11);
-    background: var(--ds-accent-11);
-    color: var(--white);
-    box-shadow: 0 6px 16px -8px var(--c-rgba-63-103-164-0_25);
+    border-color: var(--ui-blue);
+    background: var(--ui-blue);
+    color: var(--ui-surface);
+    box-shadow: var(--ui-shadow);
 
     &:hover {
-      border-color: var(--ds-accent-9);
-      background: var(--ds-accent-9);
+      border-color: var(--ui-blue);
+      background: var(--ui-blue);
     }
 
     &:active {
-      background: var(--accent-10);
+      filter: brightness(0.92);
     }
 
     & [data-chevron],
     &:hover [data-chevron],
     &:focus-visible [data-chevron] {
-      color: var(--white);
+      color: var(--ui-surface);
     }
   }
 `
@@ -120,19 +120,19 @@ const IconSlot = styled.span`
   align-items: center;
   justify-content: center;
   border-radius: 50%;
-  background: var(--ds-accent-3);
-  color: var(--ds-accent-11);
+  background: var(--ui-glow);
+  color: var(--ui-blue);
 
   [data-variant='primary'] > & {
-    background: var(--c-rgba-255-255-255-0_2);
-    color: var(--white);
+    background: color-mix(in srgb, var(--ui-surface) 20%, transparent);
+    color: var(--ui-surface);
   }
 `
 
 export const Text = styled.span`
   flex: 1;
   min-width: 0;
-  font-size: var(--font-size-3);
+  font-size: var(--ui-body-size);
   line-height: 1.3;
   font-weight: 500;
   color: inherit;
@@ -142,7 +142,7 @@ const Chevron = styled(ChevronRightIcon)`
   flex-shrink: 0;
   width: 18px;
   height: 18px;
-  color: var(--ds-neutral-11);
+  color: var(--ui-muted);
   transition:
     color 0.15s ease,
     transform 0.15s ease;

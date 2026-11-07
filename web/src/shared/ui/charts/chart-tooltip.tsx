@@ -118,18 +118,18 @@ const Root = styled.div`
     width: 100%;
   }
 
-  padding: 8px 10px;
-  border: 1px solid var(--ds-neutral-alpha-6);
-  border-radius: 10px;
-  background: var(--color-panel-solid);
-  box-shadow: 0 1px 6px var(--c-rgba-0-0-0-0_08);
-  color: var(--ds-neutral-12);
+  padding: var(--ui-space-2) var(--ui-space-3);
+  border: var(--ui-border-width) solid var(--ui-line);
+  border-radius: var(--ui-control-radius);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow);
+  color: var(--ui-ink);
   pointer-events: none;
 `
 
 const Title = styled.div`
   padding-bottom: 6px;
-  font-size: var(--font-size-2);
+  font-size: var(--ui-meta-size);
   font-weight: 600;
   line-height: 20px;
 `
@@ -176,8 +176,8 @@ const Label = styled.span`
   gap: 8px;
   min-width: 0;
   overflow: hidden;
-  color: var(--ds-neutral-11);
-  font-size: var(--font-size-2);
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
   white-space: nowrap;
   text-overflow: ellipsis;
 `
@@ -206,15 +206,15 @@ const Value = styled.span`
   max-width: 70%;
   overflow: hidden;
   text-overflow: ellipsis;
-  font-size: var(--font-size-2);
+  font-size: var(--ui-meta-size);
   white-space: nowrap;
   font-weight: 600;
   font-variant-numeric: tabular-nums;
 `
 
 const Muted = styled.span`
-  color: var(--ds-neutral-11);
-  font-size: var(--font-size-2);
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
 `
 
 const Total = styled.div`
@@ -223,13 +223,13 @@ const Total = styled.div`
   gap: 14px;
   margin-top: 8px;
   padding-top: 8px;
-  border-top: 1px solid var(--ds-neutral-alpha-5);
+  border-top: 1px solid var(--ui-line);
 `
 
 const Note = styled.p`
   margin: 8px 0 0;
-  color: var(--ds-neutral-11);
-  font-size: var(--font-size-1);
+  color: var(--ui-muted);
+  font-size: var(--ui-small-size);
 `
 
 const Section = styled.div`
@@ -239,7 +239,7 @@ const Section = styled.div`
   gap: 6px;
   min-width: 0;
   padding-top: 8px;
-  border-top: 1px solid var(--ds-neutral-alpha-5);
+  border-top: 1px solid var(--ui-line);
 
   /* Columns are kept apart by the gap alone: a divider would stay on a
      section that wraps to the start of a new line. */
@@ -250,7 +250,7 @@ const Section = styled.div`
 `
 
 const SectionTitle = styled.div`
-  color: var(--ds-neutral-11);
-  font-size: var(--font-size-1);
+  color: var(--ui-muted);
+  font-size: var(--ui-small-size);
   font-weight: 500;
 `

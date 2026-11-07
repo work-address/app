@@ -30,6 +30,9 @@ export const workspaceDesign = {
     muted: '#596d84',
     blue,
     line: '#d9e5f6',
+    /** Small control outlines (outline buttons, checkboxes) that a pale
+        separator would leave unreadable. */
+    lineStrong: '#b6c8e2',
     chart: {
       1: blue,
       2: '#6798e6',
@@ -171,6 +174,7 @@ export const workspaceCssTokens = {
   '--ui-muted': color.muted,
   '--ui-blue': color.blue,
   '--ui-line': color.line,
+  '--ui-line-strong': color.lineStrong,
   '--ui-chart-other': color.chartOther,
   ...Object.fromEntries(
     Object.entries(color.chart).map(([key, value]) => [

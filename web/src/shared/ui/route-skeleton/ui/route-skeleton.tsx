@@ -26,8 +26,8 @@ export const RouteSkeleton = ({ variant = 'document', className }: Props) => {
         <span className="sr-only">{t('ui.routeSkeleton.loading')}</span>
         <Content aria-hidden="true">
           <Header>
-            <Skeleton width="min(260px, 70%)" height="35px" />
-            <Skeleton width="min(440px, 90%)" height="20px" />
+            <Skeleton width="min(260px, 70%)" height="48px" />
+            <Skeleton width="min(440px, 90%)" height="26px" />
           </Header>
           {variant === 'list' && (
             <Summary>
@@ -62,25 +62,31 @@ const Root = styled.div`
 
   &[data-variant='auth'] {
     min-height: 70vh;
-    width: min(720px, calc(100vw - 2 * var(--space-4)));
+    width: min(720px, calc(100vw - 2 * var(--ui-page-inset-mobile)));
     margin-inline: auto;
   }
 `
 
 const Content = styled.div`
   display: grid;
-  gap: var(--space-5);
+  gap: var(--ui-section-gap);
 `
 
 const Header = styled.div`
   display: grid;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
 `
 
+/* The summary strip's shape: one white surface holding the figures. */
 const Summary = styled.div`
   display: grid;
   grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: var(--space-3);
+  gap: var(--ui-space-5);
+  padding: var(--ui-card-inset);
+  border: var(--ui-border-width) solid var(--ui-edge);
+  border-radius: var(--ui-radius);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow);
 
   ${(p) => p.theme.breakpoints.down('md')} {
     grid-template-columns: repeat(2, minmax(0, 1fr));
@@ -89,13 +95,19 @@ const Summary = styled.div`
 
 const Panel = styled.div`
   display: grid;
-  gap: var(--space-4);
-  padding: var(--space-4);
-  border: 1px solid var(--gray-a6);
-  border-radius: var(--radius-3);
+  gap: var(--ui-card-content-gap);
+  padding: var(--ui-card-inset);
+  border: var(--ui-border-width) solid var(--ui-edge);
+  border-radius: var(--ui-radius);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow);
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    padding: var(--ui-card-inset-mobile);
+  }
 `
 
 const Rows = styled.div`
   display: grid;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
 `

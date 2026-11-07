@@ -19,18 +19,18 @@ const Root = styled.button`
   max-width: 400px;
   height: 40px;
   border-radius: 4px;
-  background: var(--ds-accent-9);
-  color: var(--white);
-  font-size: var(--font-size-2);
+  background: var(--ui-blue);
+  color: var(--ui-surface);
+  font-size: var(--ui-meta-size);
   font-weight: 500;
   cursor: pointer;
 
   &:hover {
-    background: var(--ds-accent-11);
+    background: var(--ui-blue);
   }
 
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-9);
+    outline: 2px solid var(--ui-blue);
     outline-offset: 2px;
   }
 `

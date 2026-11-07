@@ -12,11 +12,11 @@ export const ToolbarShell = styled.div`
   display: grid;
   grid-auto-flow: column;
   align-items: center;
-  gap: 2px;
-  padding: 2px;
-  border: 1px solid var(--ds-neutral-alpha-6);
-  border-radius: var(--radius-3);
-  background: var(--ds-neutral-2);
+  gap: var(--toolbar-gap, 2px);
+  padding: var(--toolbar-padding, 2px);
+  border: 1px solid var(--toolbar-border, var(--ui-line));
+  border-radius: var(--toolbar-radius, var(--ui-filter-radius));
+  background: var(--toolbar-background, var(--ui-inset));
 `
 
 /** One pressable region inside the shell. */
@@ -25,28 +25,33 @@ export const ToolbarSegment = styled.button`
   grid-auto-flow: column;
   align-items: center;
   justify-content: center;
-  gap: var(--space-1);
-  min-height: 22px;
-  padding: var(--space-1) var(--space-3);
-  border-radius: var(--radius-2);
-  font-size: var(--font-size-1);
+  gap: var(--ui-space-1);
+  min-height: var(--toolbar-segment-height, 22px);
+  padding: var(--ui-space-1) var(--toolbar-segment-padding, var(--ui-space-3));
+  border-radius: var(--toolbar-segment-radius, var(--ui-row-radius));
+  font-size: var(--toolbar-font-size, var(--ui-small-size));
   line-height: 1;
   white-space: nowrap;
-  color: var(--ds-neutral-11);
+  color: var(--ui-muted);
   transition:
     background 0.15s,
     color 0.15s;
 
   &:hover {
-    color: var(--ds-neutral-12);
+    color: var(--ui-ink);
   }
 
   /* Pressed for the toggle, open for the dropdown - the same "this one is
      current" state, expressed by whichever primitive owns it. */
   &[aria-pressed='true'],
   &[data-state='open'] {
-    background: var(--white);
-    color: var(--ds-neutral-12);
-    box-shadow: 0 0 0 1px var(--ds-neutral-alpha-6);
+    background: var(--toolbar-pressed-background, var(--ui-surface));
+    color: var(--ui-ink);
+    box-shadow: var(--toolbar-pressed-shadow, 0 0 0 1px var(--ui-line));
+  }
+
+  &:focus-visible {
+    outline: 2px solid var(--ui-blue);
+    outline-offset: 2px;
   }
 `

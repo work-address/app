@@ -204,7 +204,7 @@ const Head = styled.div`
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  margin-bottom: var(--spacing-5);
+  margin-bottom: var(--ui-space-5);
 `
 
 const PeriodSelect = styled.div`
@@ -223,7 +223,7 @@ const Plot = styled.div`
   position: relative;
   padding: 10px;
   border-radius: 10px;
-  background: var(--white);
+  background: var(--ui-surface);
 `
 
 const PlaceholderRoot = styled.div`
@@ -243,7 +243,7 @@ const PlotGrid = styled.div`
 `
 
 const GridLine = styled.div`
-  border-top: 1px dashed var(--c-rgba-0-0-51-0_12);
+  border-top: var(--ui-border-width) dashed var(--ui-line);
 `
 
 const Message = styled.div`
@@ -256,7 +256,7 @@ const Message = styled.div`
   /* Opaque so the grid behind reads as a backdrop instead of striking through
      the copy; the card sets the same background. */
   padding: 12px 16px;
-  background: var(--white);
+  background: var(--ui-surface);
 `
 
 const SkeletonRoot = styled.div`

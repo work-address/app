@@ -72,7 +72,7 @@ export const Drawer = ({
 const DrawerOverlay = styled(Vaul.Drawer.Overlay)`
   position: fixed;
   inset: 0;
-  background: var(--c-rgba-0-0-0-0_5);
+  background: var(--color-overlay);
 `
 
 const DrawerContent = styled(Vaul.Drawer.Content)<{ $maxHeight?: string }>`
@@ -85,12 +85,12 @@ const DrawerContent = styled(Vaul.Drawer.Content)<{ $maxHeight?: string }>`
   display: flex;
   flex-direction: column;
 
-  border: 1px solid var(--ds-neutral-alpha-6);
+  border: 1px solid var(--ui-line);
   border-bottom: 0;
-  border-top-left-radius: 12px;
-  border-top-right-radius: 12px;
-  background: var(--white);
-  box-shadow: var(--shadow-4);
+  border-top-left-radius: var(--ui-radius);
+  border-top-right-radius: var(--ui-radius);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow);
 
   ${(p) => `
     max-height: ${p.$maxHeight || '95dvh'};
@@ -105,14 +105,15 @@ const DrawerHandle = styled.div`
   margin: 0 auto;
   height: 6px;
   width: 100px;
-  border-radius: 999px;
-  background: var(--ds-neutral-4);
+  border-radius: var(--ui-pill-radius);
+  background: var(--ui-line);
 `
 
 const DrawerInner = styled.div`
   /* The sheet sits on the bottom edge, so its last row has to clear the home
      indicator on phones without a hardware button. */
-  padding: 8px 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  padding: var(--ui-space-2) var(--ui-card-inset-mobile)
+    calc(var(--ui-card-inset-mobile) + env(safe-area-inset-bottom, 0px));
   display: flex;
   flex-direction: column;
   flex: 1;
@@ -123,7 +124,7 @@ const DrawerTitleRow = styled.div`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
 
   & > :first-child {
     flex: 1;
@@ -133,13 +134,16 @@ const DrawerTitleRow = styled.div`
 
 const DrawerTitle = styled.span`
   margin: 0;
-  font-weight: 500;
-  font-size: var(--font-size-4);
+  color: var(--ui-ink);
+  font-size: var(--ui-heading-size);
+  line-height: var(--ui-heading-line-height);
+  font-weight: var(--ui-heading-weight);
+  letter-spacing: var(--ui-heading-tracking);
   width: 100%;
 `
 
 const DrawerDescription = styled(Vaul.Drawer.Description)`
-  color: var(--ds-neutral-11);
+  color: var(--ui-muted);
 `
 
 const FooterWrapper = styled.div``

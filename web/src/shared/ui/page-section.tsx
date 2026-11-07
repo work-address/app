@@ -5,6 +5,6 @@ import styled from 'styled-components'
  * its content lines up with the page's own edge.
  */
 export const PageSection = styled.section`
-  padding-block: var(--space-5);
-  border-top: 1px solid var(--ds-neutral-alpha-6);
+  padding-block: var(--ui-section-gap);
+  border-top: var(--ui-border-width) solid var(--ui-line);
 `

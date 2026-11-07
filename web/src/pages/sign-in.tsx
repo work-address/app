@@ -172,7 +172,7 @@ const Root = styled.div`
   min-height: 100dvh;
   display: grid;
   grid-template-columns: minmax(0, 1fr);
-  background: var(--ds-neutral-2);
+  background: var(--page-canvas);
 
   ${({ theme }) => theme.breakpoints.up('lg')} {
     height: 100dvh;
@@ -185,13 +185,13 @@ const Root = styled.div`
 const FormSide = styled.main`
   display: grid;
   grid-template-rows: auto 1fr;
-  gap: var(--space-5);
-  padding: var(--space-4);
+  gap: var(--ui-space-5);
+  padding: var(--ui-space-4);
 
   ${({ theme }) => theme.breakpoints.up('lg')} {
     min-height: 0;
     overflow-y: auto;
-    padding: var(--space-6) var(--space-7);
+    padding: var(--ui-space-6) var(--ui-space-7);
   }
 `
 
@@ -199,7 +199,7 @@ const Top = styled.header`
   display: flex;
   align-items: center;
   justify-content: space-between;
-  gap: var(--space-4);
+  gap: var(--ui-space-4);
 `
 
 const Logo = styled.img`
@@ -211,14 +211,14 @@ const Logo = styled.img`
 const TopActions = styled.div`
   display: flex;
   align-items: center;
-  gap: var(--space-4);
+  gap: var(--ui-space-4);
 `
 
 const Version = styled.span`
   font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: var(--font-size-0);
+  font-size: var(--ui-small-size);
   white-space: nowrap;
-  color: var(--ds-neutral-11);
+  color: var(--ui-muted);
 
   ${({ theme }) => theme.breakpoints.down('lg')} {
     display: none;
@@ -229,10 +229,10 @@ const Help = styled(Link)`
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
-  gap: var(--space-2);
-  font-size: var(--font-size-2);
+  gap: var(--ui-space-2);
+  font-size: var(--ui-meta-size);
   font-weight: 500;
-  color: var(--ds-accent-11);
+  color: var(--ui-blue);
   text-decoration: none;
 
   &:hover {
@@ -241,7 +241,7 @@ const Help = styled(Link)`
   }
 
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-9);
+    outline: 2px solid var(--ui-blue);
     outline-offset: 2px;
     border-radius: 2px;
   }
@@ -253,32 +253,33 @@ const Column = styled.div`
   max-width: 400px;
   margin: auto;
   display: grid;
-  gap: var(--space-5);
+  gap: var(--ui-space-5);
 `
 
 const Heading = styled.div`
   display: grid;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
 `
 
 const Title = styled.h1`
   margin: 0;
-  font-size: 32px;
-  font-weight: 700;
-  line-height: 1.15;
-  letter-spacing: -0.02em;
-  color: var(--ds-neutral-12);
+  font-size: var(--ui-title-mobile-size);
+  font-weight: var(--ui-title-weight);
+  line-height: var(--ui-title-mobile-line-height);
+  letter-spacing: var(--ui-title-tracking);
+  color: var(--ui-ink);
 
   ${({ theme }) => theme.breakpoints.up('lg')} {
-    font-size: 36px;
+    font-size: var(--ui-title-size);
+    line-height: var(--ui-title-line-height);
   }
 `
 
 const Lead = styled.p`
   margin: 0;
-  font-size: var(--font-size-3);
-  line-height: 1.5;
-  color: var(--ds-neutral-11);
+  font-size: var(--ui-description-size);
+  line-height: var(--ui-description-line-height);
+  color: var(--ui-muted);
 `
 
 const Option = styled.section`
@@ -296,18 +297,18 @@ const Option = styled.section`
 const Or = styled.div`
   display: flex;
   align-items: center;
-  gap: var(--space-3);
-  font-size: var(--font-size-1);
+  gap: var(--ui-space-3);
+  font-size: var(--ui-small-size);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--ds-neutral-11);
+  color: var(--ui-muted);
 
   &::before,
   &::after {
     content: '';
     flex: 1;
     height: 1px;
-    background: var(--ds-neutral-alpha-6);
+    background: var(--ui-line);
   }
 `
 
@@ -318,6 +319,6 @@ const BrandSide = styled.div`
   ${({ theme }) => theme.breakpoints.up('lg')} {
     display: grid;
     min-height: 0;
-    padding: var(--space-6) var(--space-6) var(--space-6) 0;
+    padding: var(--ui-space-6) var(--ui-space-6) var(--ui-space-6) 0;
   }
 `

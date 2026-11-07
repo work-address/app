@@ -106,7 +106,7 @@ export const LocalWalletPasswordFields = <T extends PasswordFormValues>({
 export const Field = styled.div`
   display: flex;
   flex-direction: column;
-  gap: var(--space-1);
+  gap: var(--ui-space-1);
 `
 
 export const FieldError = ({ children }: { children: string }) => (

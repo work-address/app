@@ -61,11 +61,11 @@ const Root = styled.span`
   align-items: center;
   flex-shrink: 0;
   vertical-align: middle;
-  color: var(--ds-neutral-9);
+  color: var(--ui-muted);
   cursor: help;
 
   &:focus-visible {
-    outline: 2px solid var(--ds-accent-9);
+    outline: 2px solid var(--ui-blue);
     outline-offset: 2px;
     border-radius: 50%;
   }

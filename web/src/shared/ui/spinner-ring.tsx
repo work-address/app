@@ -24,7 +24,7 @@ export const Spinner = ({
       $color={color}
       $width={width}
       {...(useCase === 'button'
-        ? { size: 12, $color: 'var(--white)', $width: '2px' }
+        ? { size: 12, $color: 'var(--ui-surface)', $width: '2px' }
         : null)}
     />
   )
@@ -42,7 +42,7 @@ const Root = styled.div<
   height: ${({ size = 24 }) => size}px;
   border-radius: 50%;
   border: ${({ size = 24, $width }) => $width || `${size / 16}px`} solid
-    var(--ds-neutral-alpha-6);
-  border-top-color: ${({ $color }) => $color || 'var(--ds-accent-11)'};
+    var(--ui-line);
+  border-top-color: ${({ $color }) => $color || 'var(--ui-blue)'};
   animation: ${spin} 0.7s linear infinite;
 `

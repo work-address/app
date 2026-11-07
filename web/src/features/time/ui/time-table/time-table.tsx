@@ -25,8 +25,19 @@ import {
 } from '@/entities/time'
 import { type DataTableConfig, DataTable } from '@/shared'
 
-const DATE_COLUMN_WIDTH = 200
-const COLUMN_WIDTH = 120
+/* Column widths hold each header with its sort arrow and hint. The date
+   column stays put while a narrower window scrolls the figures beside it. */
+const COLUMN_WIDTHS = {
+  date: 196,
+  project: 176,
+  payment: 124,
+  timeActive: 136,
+  note: 168,
+  screenshot: 128,
+  keyboard: 120,
+  mouse: 100,
+  mouseDistance: 156,
+} as const
 
 /** The list presentation of the worklogs feed. */
 export const TimeTable = () => {
@@ -85,35 +96,35 @@ export const TimeTable = () => {
       {
         dataKey: 'fromAt',
         headerText: t('dashboard.worklogsTable.head.date'),
-        width: DATE_COLUMN_WIDTH,
+        width: COLUMN_WIDTHS.date,
         sortable: true,
+        sticky: 'left',
       },
       {
         customKey: 'projectName',
         getValue: (row: Time) => row.project?.title ?? '',
         headerText: t('dashboard.worklogsTable.head.projectName'),
-        width: COLUMN_WIDTH,
+        width: COLUMN_WIDTHS.project,
         sortable: true,
       },
       {
         customKey: 'paidStatus',
         headerText: t('dashboard.worklogsTable.head.paymentStatus'),
         description: t('common.metricDesc.paymentStatus'),
-        width: COLUMN_WIDTH,
+        width: COLUMN_WIDTHS.payment,
         sortable: true,
       },
       {
         dataKey: 'minutesActive',
         headerText: t('dashboard.worklogsTable.head.timeActive'),
         description: t('common.metricDesc.timeActive'),
-        horizontalAlign: 'center',
-        width: COLUMN_WIDTH,
+        width: COLUMN_WIDTHS.timeActive,
         sortable: true,
       },
       {
         dataKey: 'note',
         headerText: t('dashboard.worklogsTable.head.note'),
-        width: COLUMN_WIDTH,
+        width: COLUMN_WIDTHS.note,
         sortable: true,
         truncate: true,
       },
@@ -121,28 +132,28 @@ export const TimeTable = () => {
         dataKey: 'screenshot',
         headerText: t('dashboard.worklogsTable.head.screenshot'),
         description: t('common.metricDesc.screenshot'),
-        width: COLUMN_WIDTH,
+        width: COLUMN_WIDTHS.screenshot,
         sortable: true,
       },
       {
         dataKey: 'keyboardKeys',
         headerText: t('dashboard.worklogsTable.head.keyboard'),
         description: t('common.metricDesc.keyboard'),
-        width: COLUMN_WIDTH,
+        width: COLUMN_WIDTHS.keyboard,
         sortable: true,
       },
       {
         dataKey: 'mouseKeys',
         headerText: t('dashboard.worklogsTable.head.mouse'),
         description: t('common.metricDesc.mouse'),
-        width: COLUMN_WIDTH,
+        width: COLUMN_WIDTHS.mouse,
         sortable: true,
       },
       {
         dataKey: 'mouseDistance',
         headerText: t('dashboard.worklogsTable.head.mouseDistance'),
         description: t('common.metricDesc.mouseDistance'),
-        width: COLUMN_WIDTH,
+        width: COLUMN_WIDTHS.mouseDistance,
         sortable: true,
       },
     ],
@@ -151,7 +162,6 @@ export const TimeTable = () => {
 
   return (
     <DataTable<Time>
-      nowrap
       shadow={false}
       rounded={false}
       data={entries}

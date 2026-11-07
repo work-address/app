@@ -134,7 +134,7 @@ const Root = styled.div`
   display: grid;
   grid-auto-flow: column;
   align-items: end;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
 
   ${(p) => p.theme.breakpoints.down('md')} {
     grid-auto-flow: row;
@@ -152,7 +152,7 @@ const PresetSelect = styled(Select)`
 const Days = styled.div`
   display: grid;
   grid-template-columns: repeat(2, 150px);
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
 
   ${(p) => p.theme.breakpoints.down('md')} {
     width: 100%;

@@ -42,27 +42,31 @@ export const BUTTON_DEFAULTS = {
   type: 'button'
 }
 
+/**
+ * Each value reads an optional `--button-<size>-*` hook first, so a design
+ * scope can restate the geometry without touching the default elsewhere.
+ */
 export const BUTTON_SIZE_SPECS: Record<ButtonSize, ButtonSizeSpec> = {
   s: {
-    height: '24px',
-    padding: '0 8px',
+    height: 'var(--button-s-height, 24px)',
+    padding: 'var(--button-s-padding, 0 8px)',
     gap: '4px',
-    fontSize: '12px',
-    borderRadius: '4px',
+    fontSize: 'var(--button-s-font-size, 12px)',
+    borderRadius: 'var(--button-s-radius, 4px)',
   },
   m: {
-    height: '32px',
-    padding: '0 12px',
+    height: 'var(--button-m-height, 32px)',
+    padding: 'var(--button-m-padding, 0 12px)',
     gap: '8px',
     fontSize: '14px',
-    borderRadius: '6px',
+    borderRadius: 'var(--button-m-radius, 6px)',
   },
   l: {
-    height: '40px',
+    height: 'var(--button-l-height, 40px)',
     padding: '0 16px',
     gap: '8px',
     fontSize: '16px',
-    borderRadius: '6px',
+    borderRadius: 'var(--button-l-radius, 6px)',
   },
 }
 
@@ -72,58 +76,58 @@ export const BUTTON_TONE_SPECS: Record<
 > = {
   primary: {
     solid: {
-      background: 'var(--ds-accent-11)',
-      color: 'var(--white)',
-      hover: { background: 'var(--ds-accent-9)' },
+      background: 'var(--ui-blue)',
+      color: 'var(--ui-surface)',
+      hover: { background: 'var(--ui-blue)' },
     },
     soft: {
-      background: 'var(--ds-accent-3)',
-      color: 'var(--ds-accent-11)',
+      background: 'var(--ui-glow)',
+      color: 'var(--ui-blue)',
       hover: { filter: 'brightness(0.95)' },
     },
     outline: {
       background: 'transparent',
-      borderColor: 'var(--ds-accent-alpha-6)',
-      color: 'var(--ds-accent-11)',
-      hover: { background: 'var(--ds-accent-3)' },
+      borderColor: 'var(--ui-alpha-6)',
+      color: 'var(--ui-blue)',
+      hover: { background: 'var(--ui-glow)' },
     },
     ghost: {
       background: 'transparent',
-      color: 'var(--ds-accent-11)',
-      hover: { background: 'var(--ds-accent-3)' },
+      color: 'var(--ui-blue)',
+      hover: { background: 'var(--ui-glow)' },
     },
   },
   neutral: {
     solid: {
-      background: 'var(--ds-neutral-12)',
-      color: 'var(--white)',
+      background: 'var(--ui-ink)',
+      color: 'var(--ui-surface)',
       hover: { filter: 'brightness(1.1)' },
     },
     soft: {
-      background: 'var(--ds-secondary)',
-      color: 'var(--ds-neutral-11)',
+      background: 'var(--ui-inset)',
+      color: 'var(--ui-muted)',
       hover: { filter: 'brightness(0.95)' },
     },
     outline: {
       background: 'transparent',
-      borderColor: 'var(--ds-neutral-alpha-8)',
-      color: 'var(--ds-neutral-12)',
-      hover: { background: 'var(--ds-neutral-alpha-3)' },
+      borderColor: 'var(--ui-line-strong)',
+      color: 'var(--ui-ink)',
+      hover: { background: 'var(--ui-inset)' },
     },
     ghost: {
       background: 'transparent',
-      color: 'var(--ds-neutral-11)',
-      hover: { background: 'var(--ds-neutral-alpha-3)' },
+      color: 'var(--ui-muted)',
+      hover: { background: 'var(--ui-inset)' },
     },
   },
   danger: {
     solid: {
-      background: 'var(--c-e5484d)',
-      color: 'var(--white)',
+      background: 'var(--red-9)',
+      color: 'var(--ui-surface)',
       hover: { filter: 'brightness(0.92)' },
     },
     soft: {
-      background: 'var(--ds-secondary)',
+      background: 'var(--ui-inset)',
       color: 'var(--error-11)',
       hover: { filter: 'brightness(0.95)' },
     },
@@ -131,12 +135,12 @@ export const BUTTON_TONE_SPECS: Record<
       background: 'transparent',
       borderColor: 'var(--error-alpha-6)',
       color: 'var(--error-11)',
-      hover: { background: 'var(--c-rgba-210-0-5-0_06)' },
+      hover: { background: 'var(--red-a2)' },
     },
     ghost: {
       background: 'transparent',
       color: 'var(--error-11)',
-      hover: { background: 'var(--c-rgba-210-0-5-0_06)' },
+      hover: { background: 'var(--red-a2)' },
     },
   },
 }

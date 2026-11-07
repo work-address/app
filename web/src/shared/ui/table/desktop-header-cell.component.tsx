@@ -23,13 +23,13 @@ export type DesktopHeaderCellRenderProps<T extends AnyRecord> = {
 export const DesktopHeaderCellComponent = <T extends AnyRecord>(
   props: DesktopHeaderCellRenderProps<T>,
 ) => {
-  const Wrapper = props.columnConfig.sortable ? Button : 'div'
+  const Wrapper = props.columnConfig.sortable ? SortButton : 'div'
   const key = String(props.dataKey ?? props.customKey ?? '')
   const sortKey = props.sortParams?.[key]
 
   const label = (
     <Wrapper
-      {...(Wrapper === Button
+      {...(Wrapper === SortButton
         ? {
             variant: 'ghost',
             color: 'neutral',
@@ -56,7 +56,7 @@ export const DesktopHeaderCellComponent = <T extends AnyRecord>(
               <>
                 <ArrowDownIcon
                   style={{
-                    color: 'var(--ds-neutral-11)',
+                    color: 'var(--ui-muted)',
                     transform: sortKey === 'ASC' ? 'rotate(180deg)' : 'none',
                   }}
                 />
@@ -83,11 +83,22 @@ export const DesktopHeaderCellComponent = <T extends AnyRecord>(
 }
 
 /**
+ * A ghost button's own inset would push a sortable title off the column's
+ * content edge; an optional hook pulls it back and sets a compact height.
+ */
+const SortButton = styled(Button)`
+  --button-m-height: var(--table-sort-height, 32px);
+  --button-m-padding: var(--table-sort-padding, 0 12px);
+
+  margin-inline: var(--table-sort-offset, 0);
+`
+
+/**
  * Stated on the title itself: a sortable header wraps it in a ghost Button,
  * which would otherwise hand down its own lighter weight and colour, so
  * sortable and plain titles came out differently.
  */
 const Title = styled(Text)`
   font-weight: 500;
-  color: var(--ds-neutral-12);
+  color: var(--ui-ink);
 `

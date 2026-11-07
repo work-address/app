@@ -50,7 +50,7 @@ type Props = {
   describe?: (bucketKey: string) => ChartTooltipContent | null
 }
 
-const SURFACE = 'var(--white)'
+const SURFACE = 'var(--ui-surface)'
 
 /** A breakdown popup's width, for its columns to sit side by side in. */
 const POPUP_WIDTH = 600
@@ -116,7 +116,7 @@ export const BucketBarChart = ({
           >
             <CartesianGrid
               vertical={false}
-              stroke="var(--ds-neutral-alpha-4)"
+              stroke="var(--ui-inset)"
               strokeDasharray={gridDasharray}
             />
             <XAxis
@@ -129,7 +129,7 @@ export const BucketBarChart = ({
               minTickGap={12}
               tick={{
                 fontSize: 'var(--chart-label-size, 12px)',
-                fill: 'var(--ds-neutral-11)',
+                fill: 'var(--ui-muted)',
               }}
             />
             <YAxis
@@ -140,11 +140,11 @@ export const BucketBarChart = ({
               tickFormatter={formatTick}
               tick={{
                 fontSize: 'var(--chart-label-size, 12px)',
-                fill: 'var(--ds-neutral-11)',
+                fill: 'var(--ui-muted)',
               }}
             />
             <Tooltip
-              cursor={{ fill: 'var(--ds-neutral-alpha-3)' }}
+              cursor={{ fill: 'var(--ui-inset)' }}
               content={({ active, payload, coordinate }) => {
                 if (!active || !payload?.length) {
                   return null
@@ -222,7 +222,7 @@ export const BucketBarChart = ({
 
 const Root = styled.div`
   display: grid;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
 
   /* The plot takes whatever the card leaves over the legend, so a chart
      beside a taller card has no dead band above or below its bars. */

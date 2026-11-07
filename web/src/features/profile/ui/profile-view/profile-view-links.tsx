@@ -205,10 +205,10 @@ const InlineText = styled(Text)`
 const Rows = styled.div`
   display: grid;
   grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--space-3) var(--space-5);
+  gap: var(--ui-space-3) var(--ui-space-5);
 
   @container (max-width: 640px) {
     grid-template-columns: minmax(0, 1fr);
-    gap: var(--space-2);
+    gap: var(--ui-space-2);
   }
 `

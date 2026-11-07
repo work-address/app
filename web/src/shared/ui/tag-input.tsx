@@ -174,7 +174,7 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
       e.preventDefault()
     }
 
-    const internalGap = label ? (isDesktop ? '24px' : 'var(--space-2)') : '0'
+    const internalGap = label ? (isDesktop ? '24px' : 'var(--ui-space-2)') : '0'
 
     const errorProps = useMemo<InputProps | null>(
       () => (state === 'error' ? { color: 'red', variant: 'soft' } : null),
@@ -317,28 +317,26 @@ export const TagInput = forwardRef<HTMLInputElement | null, TagInputProps>(
 )
 
 const Field = styled(TextField.Root)`
-  min-height: var(--space-7);
+  min-height: var(--ui-control-height);
   max-height: initial;
   height: initial;
   background-clip: initial;
 
   flex-wrap: wrap;
 
-  gap: var(--space-1);
-  padding: var(--space-1);
+  gap: var(--ui-space-1);
+  padding: var(--ui-space-1) var(--ui-space-2);
 
   input {
     flex-shrink: 1;
     flex-grow: 0;
     order: 999;
     max-width: 0;
-    margin-left: calc(var(--space-1) * -1);
+    margin-left: calc(var(--ui-space-1) * -1);
     padding: 2px 0;
   }
 
   ${(p) => p.theme.breakpoints.up('md')} {
-    min-height: var(--space-6);
-
     input {
       padding: 1px 0;
     }
@@ -370,21 +368,21 @@ const Tag = styled(Badge)`
 const List = styled.div`
   display: flex;
   flex-direction: column;
-  padding: var(--space-1) 0;
+  padding: var(--ui-space-1) 0;
 `
 
 const Item = styled.button`
   all: unset;
   box-sizing: border-box;
   width: 100%;
-  padding: var(--space-1) var(--space-3);
-  font-size: var(--font-size-2);
+  padding: var(--ui-space-1) var(--ui-space-3);
+  font-size: var(--ui-body-size);
   cursor: pointer;
   background: transparent;
 
   &[data-active],
   &:hover {
-    background: var(--ds-accent-3);
-    color: var(--ds-accent-11);
+    background: var(--ui-inset);
+    color: var(--ui-blue);
   }
 `

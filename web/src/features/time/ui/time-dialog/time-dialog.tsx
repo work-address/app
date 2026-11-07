@@ -365,11 +365,11 @@ const Content = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr);
   align-items: start;
-  gap: var(--space-4);
+  gap: var(--ui-space-4);
   width: 100%;
 
   ${(p) => p.theme.breakpoints.up('md')} {
-    column-gap: var(--space-6);
+    column-gap: var(--ui-space-6);
 
     &[data-screenshot] {
       grid-template-columns: minmax(0, 540px) minmax(0, 1fr);
@@ -394,7 +394,7 @@ const Content = styled.div`
 
 const DetailsColumn = styled.div`
   display: grid;
-  gap: var(--space-4);
+  gap: var(--ui-space-4);
   min-width: 0;
 `
 
@@ -410,14 +410,14 @@ const AgentsColumn = styled.div`
 
 const ScreenshotColumn = styled.div`
   display: grid;
-  gap: var(--space-4);
+  gap: var(--ui-space-4);
   min-width: 0;
 `
 
 // Labelled like the other columns, so all three start on one line.
 const Shot = styled.div`
   display: grid;
-  gap: var(--space-2);
+  gap: var(--ui-space-2);
 `
 
 // Scales with its column at its own shape: no empty band under a wide shot.

@@ -64,18 +64,18 @@ export const AuthProviders = () => {
 const OrRow = styled.div`
   display: flex;
   align-items: center;
-  gap: var(--space-3);
+  gap: var(--ui-space-3);
   margin: 2px 0;
-  font-size: var(--font-size-1);
+  font-size: var(--ui-small-size);
   text-transform: uppercase;
   letter-spacing: 0.08em;
-  color: var(--ds-neutral-11);
+  color: var(--ui-muted);
 
   &::before,
   &::after {
     content: '';
     flex: 1;
     height: 1px;
-    background: var(--ds-neutral-alpha-6);
+    background: var(--ui-line);
   }
 `

@@ -140,5 +140,5 @@ export const LocalWalletExportDialog = ({
 const Form = styled.form`
   display: flex;
   flex-direction: column;
-  gap: var(--space-4);
+  gap: var(--ui-space-4);
 `

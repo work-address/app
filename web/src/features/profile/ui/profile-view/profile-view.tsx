@@ -57,5 +57,6 @@ export const ProfileView = () => {
 const Sections = styled(motion.div)`
   container-type: inline-size;
   display: grid;
+  gap: var(--ui-section-gap);
   min-width: 0;
 `

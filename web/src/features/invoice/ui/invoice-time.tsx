@@ -354,8 +354,8 @@ const MobileEntry = styled.div`
   display: grid;
   grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
-  gap: var(--space-2);
-  padding-right: var(--space-2);
+  gap: var(--ui-space-2);
+  padding-right: var(--ui-space-2);
   flex: 1;
 `
 
@@ -396,6 +396,10 @@ const InvoiceTimeRows = styled(MobileDataTable<InvoiceTimeRow>)`
 `
 
 const InvoiceTimeTable = styled(DataTable<InvoiceTimeRow>)`
+  /* The sort buttons below already drop their inset, so they take no
+     offset from the workspace table either. */
+  --table-sort-offset: 0px;
+
   /* DataTable's shared Tr (src/shared/ui/table/data-table.tsx) applies a 0.25s
      transition and an rgb(242, 242, 242) hover background to every row; this
      printable summary table isn't interactive, so neutralize both. */
@@ -404,7 +408,7 @@ const InvoiceTimeTable = styled(DataTable<InvoiceTimeRow>)`
   }
 
   && tr:hover td {
-    background-color: var(--white) !important;
+    background-color: var(--ui-surface) !important;
   }
 
   /* The outer cells reach the page's edge, level with the title above. The
@@ -427,6 +431,9 @@ const InvoiceTimeTable = styled(DataTable<InvoiceTimeRow>)`
   }
 
   @media print {
+    /* Paper's header type, not the screen's table header size. */
+    --table-header-font-size: var(--ui-meta-size);
+
     /* DataTable's base rules (fixed sticky headers/cells, nowrap, flex-based
        scroll container) target screen rendering; double the class here to win
        over them and lay the table out for paper instead. A scroll container
@@ -459,15 +466,15 @@ const InvoiceTimeTable = styled(DataTable<InvoiceTimeRow>)`
     && td {
       position: static;
       min-width: 0;
-      padding: var(--space-1) var(--space-2);
+      padding: var(--ui-space-1) var(--ui-space-2);
       overflow-wrap: anywhere;
       vertical-align: top;
-      border-bottom: 1px solid var(--ds-neutral-alpha-3);
+      border-bottom: 1px solid var(--ui-inset);
     }
 
     && th {
       white-space: nowrap;
-      border-bottom-color: var(--ds-neutral-alpha-8);
+      border-bottom-color: var(--ui-muted);
     }
 
     && th:first-child,
@@ -505,8 +512,8 @@ const InvoiceTimeTable = styled(DataTable<InvoiceTimeRow>)`
       padding: 0;
       background: none;
       color: inherit;
-      font-size: var(--font-size-2);
-      line-height: var(--line-height-2);
+      font-size: var(--ui-meta-size);
+      line-height: var(--ui-meta-line-height);
       font-weight: inherit;
     }
 

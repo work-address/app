@@ -73,8 +73,8 @@ export const Field = styled.div<{ $basis?: number }>`
 `
 
 export const Label = styled.div`
-  font-size: var(--font-size-2);
+  font-size: var(--ui-meta-size);
   line-height: 14px;
-  color: var(--ds-neutral-12);
+  color: var(--ui-ink);
   font-weight: 500;
 `
