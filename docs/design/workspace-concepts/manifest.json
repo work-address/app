@@ -1,0 +1,78 @@
+{
+  "version": 1,
+  "savedOn": "2026-11-07",
+  "sources": [
+    {
+      "file": "sources/dashboard.html",
+      "conversationArtifact": "dashboard-workspace-concept.html",
+      "sha256": "312dfa81cd74173ef4924b1e01cee27e9a805ea0500cf1d1d777afdffc0d66f1"
+    },
+    {
+      "file": "sources/time-invoices.html",
+      "conversationArtifact": "time-invoices-soft-blue.html",
+      "sha256": "9dd605e052fec9756b7db24fc522c00ecea3e4ae5cdd2ae5b30d6f6e86c92c27"
+    },
+    {
+      "file": "sources/profile-settings.html",
+      "conversationArtifact": "profile-settings-soft-blue.html",
+      "sha256": "f6d909b7448bd0750cef487c93c33f733cdea16cb2c5cc2cb18b297e38310030"
+    }
+  ],
+  "pages": [
+    {
+      "id": "dashboard",
+      "title": "Address Work — Dashboard concept",
+      "source": "sources/dashboard.html",
+      "preview": "previews/dashboard.html",
+      "state": {
+        "screen": "dashboard",
+        "dashboardProject": "all",
+        "dashboardPeriod": "week"
+      }
+    },
+    {
+      "id": "time",
+      "title": "Address Work — Time concept",
+      "source": "sources/time-invoices.html",
+      "preview": "previews/time.html",
+      "state": {
+        "screen": "time",
+        "day": 7,
+        "sessionLayout": "list",
+        "invoiceStatus": "all"
+      }
+    },
+    {
+      "id": "invoices",
+      "title": "Address Work — Invoices concept",
+      "source": "sources/time-invoices.html",
+      "preview": "previews/invoices.html",
+      "state": {
+        "screen": "invoices",
+        "day": 7,
+        "sessionLayout": "list",
+        "invoiceStatus": "all"
+      }
+    },
+    {
+      "id": "profile",
+      "title": "Address Work — Profile concept",
+      "source": "sources/profile-settings.html",
+      "preview": "previews/profile.html",
+      "state": {
+        "screen": "profile",
+        "settingsSection": "details"
+      }
+    },
+    {
+      "id": "settings",
+      "title": "Address Work — Settings concept",
+      "source": "sources/profile-settings.html",
+      "preview": "previews/settings.html",
+      "state": {
+        "screen": "settings",
+        "settingsSection": "details"
+      }
+    }
+  ]
+}

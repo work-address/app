@@ -1,0 +1,390 @@
+<style>
+#time-invoices-concept {
+ --ti-canvas:#eaf2ff; --ti-glow:#d9e9ff; --ti-paper:#fff; --ti-inset:#f3f7fd;
+ --ti-ink:#183c69; --ti-text:#304862; --ti-muted:#647b95; --ti-blue:#286bdf; --ti-soft:#e3eeff;
+ --ti-line:#dce7f5; --ti-green:#378454; --ti-green-soft:#e5f3e9; --ti-amber:#93652b; --ti-amber-soft:#faf0df;
+ --ti-radius:26px; --ti-padding:26px; --ti-row:19px; --ti-shadow:0 12px 28px #446fa714,0 2px 5px #446fa70a;
+ color-scheme:light; color:var(--ti-text); font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",sans-serif;
+ background:radial-gradient(ellipse at 70% 0%,var(--ti-glow),transparent 64%),var(--ti-canvas);
+ border-radius:28px; position:relative; overflow:clip;
+}
+#time-invoices-concept *,#time-invoices-concept *::before,#time-invoices-concept *::after {box-sizing:border-box}
+#time-invoices-concept [hidden] {display:none!important}
+#time-invoices-concept h1,#time-invoices-concept h2,#time-invoices-concept h3,#time-invoices-concept p {margin:0}
+#time-invoices-concept h1 {font-size:32px;line-height:1.2;letter-spacing:-1px;font-weight:650;color:var(--ti-ink)}
+#time-invoices-concept h2 {font-size:19px;line-height:1.4;letter-spacing:-.35px;font-weight:650;color:var(--ti-ink)}
+#time-invoices-concept h3 {font-size:14px;line-height:1.5;font-weight:600;color:var(--ti-ink)}
+#time-invoices-concept button,#time-invoices-concept input,#time-invoices-concept select {font:inherit}
+#time-invoices-concept button {color:inherit}
+#time-invoices-concept svg {width:18px;height:18px;stroke-width:1.75;flex-shrink:0}
+#time-invoices-concept .ti-shell {display:grid;grid-template-columns:174px minmax(0,1fr);min-height:930px}
+#time-invoices-concept .ti-sidebar {display:grid;grid-template-rows:auto auto 1fr auto;gap:36px;padding:28px 16px 22px;background:#edf4ffe8;border-right:1px solid #fff}
+#time-invoices-concept .ti-brand {display:flex;align-items:center;gap:9px;color:var(--ti-ink);font-size:15px;font-weight:650;letter-spacing:-.45px;white-space:nowrap}
+#time-invoices-concept .ti-logo {display:grid;place-items:center;width:30px;height:30px;background:var(--ti-blue);color:#fff;border-radius:10px;box-shadow:0 3px 8px #286bdf24}
+#time-invoices-concept .ti-nav {display:grid;align-content:start;gap:6px}
+#time-invoices-concept .ti-nav-item {display:flex;align-items:center;gap:10px;width:100%;border:0;border-radius:12px;padding:12px 11px;background:transparent;text-align:left;font-size:14px;color:var(--ti-muted)}
+#time-invoices-concept button.ti-nav-item:hover {background:var(--ti-soft)}
+#time-invoices-concept .ti-nav-item[aria-current=page] {background:#fff;color:var(--ti-blue);font-weight:600;box-shadow:0 4px 12px #446fa710}
+#time-invoices-concept .ti-divider {border-top:1px solid var(--ti-line);margin:11px 10px}
+#time-invoices-concept .ti-bottom {display:grid;gap:14px}
+#time-invoices-concept .ti-account {display:flex;gap:10px;align-items:center;padding:15px 4px 0;border-top:1px solid var(--ti-line)}
+#time-invoices-concept .ti-avatar {display:grid;place-items:center;width:34px;height:34px;border:2px solid #fff;border-radius:50%;background:#d7e6fa;font-size:12px;font-weight:600;color:var(--ti-ink);flex-shrink:0}
+#time-invoices-concept .ti-account strong {font-size:12px;font-weight:600}
+#time-invoices-concept .ti-account small {display:block;font-size:11px;color:var(--ti-muted)}
+#time-invoices-concept .ti-main {min-width:0;padding:30px 28px 24px}
+#time-invoices-concept .ti-header {display:flex;align-items:center;justify-content:space-between;gap:18px;margin-bottom:24px}
+#time-invoices-concept .ti-eyebrow {color:var(--ti-muted);font-size:11px;letter-spacing:1.8px;text-transform:uppercase;font-weight:600;margin-bottom:9px}
+#time-invoices-concept .ti-subtitle {margin-top:9px;color:var(--ti-muted);font-size:13px}
+#time-invoices-concept .ti-muted {color:var(--ti-muted)}
+#time-invoices-concept .ti-meta {font-size:12px;color:var(--ti-muted);line-height:1.65}
+#time-invoices-concept .ti-controls {display:flex;align-items:center;justify-content:flex-end;flex-wrap:wrap;gap:9px;margin-bottom:20px}
+#time-invoices-concept .ti-filter {display:flex;align-items:center;gap:7px;background:#ffffffdc;border:1px solid #cfdff3;border-radius:12px;padding:0 11px;color:var(--ti-muted)}
+#time-invoices-concept .ti-filter svg {width:15px;height:15px}
+#time-invoices-concept .ti-filter select {color:var(--ti-text);background:transparent;border:0;min-height:39px;padding:8px 20px 8px 0;font-size:12px;max-width:100%}
+#time-invoices-concept .ti-button {display:inline-flex;align-items:center;justify-content:center;gap:7px;background:#fff;border:1px solid var(--ti-line);border-radius:11px;padding:9px 13px;min-height:38px;font-size:12px;font-weight:500;white-space:nowrap}
+#time-invoices-concept .ti-button:hover {background:var(--ti-inset)}
+#time-invoices-concept .ti-button-primary {color:#fff;background:var(--ti-blue);border-color:var(--ti-blue);box-shadow:0 3px 8px #286bdf18}
+#time-invoices-concept .ti-button-primary:hover {background:#205fc9}
+#time-invoices-concept .ti-button svg {width:15px;height:15px}
+#time-invoices-concept .ti-icon-button {width:34px;height:34px;padding:0;background:transparent;border:1px solid transparent;border-radius:10px;display:grid;place-items:center;color:var(--ti-muted);flex-shrink:0}
+#time-invoices-concept .ti-icon-button:hover {background:var(--ti-inset);color:var(--ti-blue)}
+#time-invoices-concept .ti-pill {display:inline-flex;align-items:center;gap:5px;border-radius:999px;padding:5px 9px;background:var(--ti-soft);color:var(--ti-blue);font-size:11px;font-weight:500;white-space:nowrap}
+#time-invoices-concept .ti-pill svg {width:13px;height:13px}
+#time-invoices-concept .ti-pill[data-status=paid],#time-invoices-concept .ti-pill-green {color:var(--ti-green);background:var(--ti-green-soft)}
+#time-invoices-concept .ti-pill[data-status=unpaid] {color:var(--ti-amber);background:var(--ti-amber-soft)}
+#time-invoices-concept .ti-panel {background:#fff;border:1px solid #fff;border-radius:var(--ti-radius);padding:var(--ti-padding);box-shadow:var(--ti-shadow);min-width:0}
+#time-invoices-concept .ti-stack {display:grid;gap:20px}
+#time-invoices-concept .ti-summary {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));padding:25px 28px}
+#time-invoices-concept .ti-stat {padding:0 20px;border-left:1px solid var(--ti-line);min-width:0}
+#time-invoices-concept .ti-stat:first-child {padding-left:0;border:0}
+#time-invoices-concept .ti-stat:last-child {padding-right:0}
+#time-invoices-concept .ti-stat-label {font-size:12px;color:var(--ti-muted)}
+#time-invoices-concept .ti-stat-value {display:block;font-size:28px;font-weight:600;letter-spacing:-.65px;color:var(--ti-ink);line-height:1.4;margin:10px 0 7px;font-variant-numeric:tabular-nums}
+#time-invoices-concept .ti-stat small {font-size:11px;color:var(--ti-muted)}
+#time-invoices-concept .ti-panel-head {display:flex;align-items:center;justify-content:space-between;gap:15px;margin-bottom:21px}
+#time-invoices-concept .ti-title-row {display:flex;align-items:center;flex-wrap:wrap;gap:10px}
+#time-invoices-concept .ti-week {display:grid;grid-template-columns:repeat(7,minmax(0,1fr));gap:8px}
+#time-invoices-concept .ti-day {border:1px solid transparent;background:var(--ti-inset);border-radius:14px;padding:12px 3px 11px;display:grid;justify-items:center;gap:5px;min-width:0}
+#time-invoices-concept .ti-day span {font-size:11px;color:var(--ti-muted)}
+#time-invoices-concept .ti-day strong {font-size:18px;font-weight:550;color:var(--ti-ink)}
+#time-invoices-concept .ti-day small {font-size:11px;color:var(--ti-muted);white-space:nowrap}
+#time-invoices-concept .ti-day[aria-pressed=true] {background:var(--ti-blue);border-color:var(--ti-blue);box-shadow:0 5px 12px #286bdf25}
+#time-invoices-concept .ti-day[aria-pressed=true] span,#time-invoices-concept .ti-day[aria-pressed=true] strong,#time-invoices-concept .ti-day[aria-pressed=true] small {color:#fff}
+#time-invoices-concept .ti-day:hover:not([aria-pressed=true]) {background:var(--ti-soft)}
+#time-invoices-concept .ti-week-caption {display:flex;justify-content:space-between;align-items:center;gap:10px;font-size:12px;color:var(--ti-muted);margin-top:19px}
+#time-invoices-concept .ti-text-button {border:0;background:transparent;padding:0;color:var(--ti-blue);font-size:12px;display:inline-flex;align-items:center;gap:6px}
+#time-invoices-concept .ti-text-button svg {width:14px;height:14px}
+#time-invoices-concept .ti-view {display:flex;padding:4px;gap:3px;border-radius:11px;background:var(--ti-inset)}
+#time-invoices-concept .ti-view button {display:flex;align-items:center;gap:6px;border:0;background:transparent;padding:6px 8px;border-radius:8px;font-size:11px;color:var(--ti-muted)}
+#time-invoices-concept .ti-view button svg {width:14px;height:14px}
+#time-invoices-concept .ti-view button[aria-pressed=true] {color:var(--ti-blue);background:#fff;box-shadow:0 2px 5px #446fa710}
+#time-invoices-concept .ti-list-head {display:grid;grid-template-columns:24px minmax(0,1fr) 70px 78px 32px;align-items:center;gap:12px;padding:0 0 10px;font-size:11px;color:var(--ti-muted);border-bottom:1px solid var(--ti-line)}
+#time-invoices-concept input[type=checkbox] {width:14px;height:14px;margin:0;accent-color:var(--ti-blue);flex-shrink:0}
+#time-invoices-concept .ti-session-row {display:grid;grid-template-columns:24px minmax(0,1fr) 70px 78px 32px;align-items:center;gap:12px;padding:var(--ti-row) 0;border-bottom:1px solid var(--ti-line)}
+#time-invoices-concept .ti-session-row:last-child {border-bottom:0}
+#time-invoices-concept .ti-session-info {min-width:0}
+#time-invoices-concept .ti-session-title {display:block;font-size:13px;color:var(--ti-ink);font-weight:550;border:0;background:none;text-align:left;padding:0;line-height:1.6;overflow-wrap:anywhere}
+#time-invoices-concept .ti-session-sub {font-size:11px;color:var(--ti-muted);margin-top:3px}
+#time-invoices-concept .ti-session-note {font-size:12px;margin-top:8px;color:var(--ti-text);overflow-wrap:anywhere}
+#time-invoices-concept .ti-session-note svg {display:inline-block;width:12px;height:12px;vertical-align:-2px;margin-right:4px;color:var(--ti-muted)}
+#time-invoices-concept .ti-session-time {font-size:13px;font-weight:550;color:var(--ti-ink);font-variant-numeric:tabular-nums}
+#time-invoices-concept .ti-active {display:block;font-size:11px;font-weight:400;margin-top:4px;color:var(--ti-muted)}
+#time-invoices-concept .ti-list-footer {display:flex;align-items:center;justify-content:space-between;flex-wrap:wrap;gap:12px;border-top:1px solid var(--ti-line);padding-top:17px;font-size:12px;color:var(--ti-muted);margin-top:5px}
+#time-invoices-concept .ti-inline {display:flex;align-items:center;gap:7px}
+#time-invoices-concept .ti-session-grid {display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:12px}
+#time-invoices-concept .ti-session-grid .ti-session-row {display:grid;grid-template-columns:20px minmax(0,1fr) 32px;gap:10px;background:var(--ti-inset);border:1px solid var(--ti-line);border-radius:16px;padding:16px}
+#time-invoices-concept .ti-session-grid .ti-session-info {grid-column:2 / 4;grid-row:1}
+#time-invoices-concept .ti-session-grid .ti-session-time {grid-column:2;grid-row:2}
+#time-invoices-concept .ti-session-grid .ti-payment {grid-column:2;grid-row:3}
+#time-invoices-concept .ti-session-grid .ti-open-session {grid-column:3;grid-row:2}
+#time-invoices-concept .ti-filter-panel {display:grid;grid-template-columns:1fr 1fr;gap:16px;padding:17px;margin-bottom:20px;border-radius:15px;background:var(--ti-inset)}
+#time-invoices-concept .ti-field {display:grid;gap:6px;min-width:0;font-size:12px;color:var(--ti-text)}
+#time-invoices-concept .ti-input {width:100%;min-width:0;border:1px solid #d4e0ef;border-radius:10px;padding:9px 10px;font-size:12px;background:#fff;color:var(--ti-text);line-height:1.5}
+#time-invoices-concept .ti-empty {text-align:center;padding:42px 15px;color:var(--ti-muted);font-size:13px;line-height:1.8}
+#time-invoices-concept .ti-empty svg {color:var(--ti-blue);width:26px;height:26px;margin-bottom:9px}
+#time-invoices-concept .ti-status-tabs {display:flex;gap:5px;flex-wrap:wrap;padding:4px;background:var(--ti-inset);border-radius:11px;width:fit-content}
+#time-invoices-concept .ti-status-tab {border:0;border-radius:8px;padding:7px 10px;background:transparent;color:var(--ti-muted);font-size:12px;display:flex;align-items:center;gap:7px}
+#time-invoices-concept .ti-status-tab[aria-pressed=true] {background:#fff;color:var(--ti-blue);box-shadow:0 2px 6px #446fa710}
+#time-invoices-concept .ti-tab-count {font-size:11px;border-radius:6px;background:#e8eff9;padding:0 5px;color:#567395}
+#time-invoices-concept .ti-invoice-table {border-collapse:collapse;width:100%;margin-top:22px;table-layout:fixed}
+#time-invoices-concept .ti-invoice-table th {color:var(--ti-muted);font-size:11px;font-weight:400;text-align:left;padding:0 8px 12px;border-bottom:1px solid var(--ti-line)}
+#time-invoices-concept .ti-invoice-table th:first-child {width:31%;padding-left:0}
+#time-invoices-concept .ti-invoice-table th:nth-child(2) {width:26%}
+#time-invoices-concept .ti-invoice-table th:nth-child(3) {width:22%}
+#time-invoices-concept .ti-invoice-table th:last-child {width:21%;text-align:right;padding-right:0}
+#time-invoices-concept .ti-invoice-table td {border-bottom:1px solid var(--ti-line);padding:var(--ti-row) 8px;vertical-align:middle;font-size:12px}
+#time-invoices-concept .ti-invoice-table td:first-child {padding-left:0}
+#time-invoices-concept .ti-invoice-table td:last-child {padding-right:0;text-align:right}
+#time-invoices-concept .ti-invoice-table tbody tr:last-child td {border-bottom:0}
+#time-invoices-concept .ti-invoice-link {border:0;background:transparent;text-align:left;padding:0;color:var(--ti-ink);font-size:13px;font-weight:550;line-height:1.6;overflow-wrap:anywhere}
+#time-invoices-concept .ti-invoice-link:hover {color:var(--ti-blue)}
+#time-invoices-concept .ti-invoice-sub {display:block;font-size:11px;color:var(--ti-muted);margin-top:4px;line-height:1.6}
+#time-invoices-concept .ti-invoice-sub:empty {display:none}
+#time-invoices-concept .ti-amount {color:var(--ti-ink);font-size:14px;font-weight:600;font-variant-numeric:tabular-nums}
+#time-invoices-concept .ti-invoice-bottom {display:flex;align-items:center;justify-content:space-between;gap:14px;flex-wrap:wrap;border-top:1px solid var(--ti-line);padding-top:18px;font-size:12px;color:var(--ti-muted);margin-top:4px}
+#time-invoices-concept .ti-note {display:flex;align-items:center;gap:10px;padding:2px 4px;font-size:12px;color:var(--ti-muted)}
+#time-invoices-concept .ti-note svg {color:var(--ti-blue);width:16px;height:16px}
+#time-invoices-concept .ti-footer {display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap;padding:22px 3px 0;font-size:11px;color:var(--ti-muted)}
+#time-invoices-concept .ti-modal {position:absolute;inset:0;z-index:5;background:#193d6b35;backdrop-filter:blur(4px);padding:85px 22px 30px;display:grid;place-items:start center}
+#time-invoices-concept .ti-sheet {width:100%;max-width:530px;border:1px solid #fff;border-radius:26px;background:#fff;padding:28px;box-shadow:0 20px 70px #183c6930;min-width:0}
+#time-invoices-concept .ti-modal-head {display:flex;align-items:center;justify-content:space-between;gap:16px;margin-bottom:23px}
+#time-invoices-concept .ti-detail-hero {border-radius:18px;background:var(--ti-inset);padding:23px;text-align:center;margin-bottom:22px}
+#time-invoices-concept .ti-detail-number {display:block;font-size:36px;font-weight:600;letter-spacing:-1px;color:var(--ti-ink);margin:10px 0 5px;font-variant-numeric:tabular-nums}
+#time-invoices-concept .ti-detail-facts {display:grid;grid-template-columns:1fr 1fr;gap:18px;margin:0 0 22px}
+#time-invoices-concept .ti-detail-facts dt {font-size:11px;color:var(--ti-muted);margin-bottom:5px}
+#time-invoices-concept .ti-detail-facts dd {margin:0;font-size:13px;color:var(--ti-ink);overflow-wrap:anywhere}
+#time-invoices-concept .ti-detail-note {font-size:13px;line-height:1.8;padding-top:18px;border-top:1px solid var(--ti-line)}
+#time-invoices-concept .ti-activity-grid {display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:8px;margin-top:19px}
+#time-invoices-concept .ti-activity-grid div {padding:12px 8px;background:var(--ti-inset);border-radius:12px;text-align:center}
+#time-invoices-concept .ti-activity-grid small {display:block;font-size:11px;color:var(--ti-muted);margin-bottom:5px}
+#time-invoices-concept .ti-activity-grid strong {font-size:14px;color:var(--ti-ink);font-weight:550}
+#time-invoices-concept .ti-sheet-footer {display:flex;justify-content:space-between;align-items:center;gap:12px;flex-wrap:wrap;margin-top:23px;padding-top:18px;border-top:1px solid var(--ti-line)}
+#time-invoices-concept .ti-invoice-paper-head {display:flex;justify-content:space-between;gap:14px;align-items:center;padding-bottom:19px;border-bottom:1px solid var(--ti-line);margin-bottom:20px}
+#time-invoices-concept .ti-invoice-paper-head strong {font-size:23px;color:var(--ti-ink);letter-spacing:-.6px}
+#time-invoices-concept .ti-invoice-line {display:flex;justify-content:space-between;gap:14px;padding:16px 0;border-top:1px solid var(--ti-line);font-size:13px}
+#time-invoices-concept .ti-invoice-line strong {color:var(--ti-ink);font-weight:550;white-space:nowrap}
+#time-invoices-concept .ti-invoice-total {display:flex;justify-content:space-between;align-items:center;padding:19px 0 0;border-top:1px solid var(--ti-line);font-size:13px;color:var(--ti-muted)}
+#time-invoices-concept .ti-invoice-total strong {font-size:29px;color:var(--ti-ink);font-weight:600;letter-spacing:-.7px}
+#time-invoices-concept .ti-toast {position:absolute;z-index:9;top:12px;right:24px;max-width:calc(100% - 48px);padding:12px 15px;border-radius:12px;background:#fff;color:var(--ti-ink);box-shadow:var(--ti-shadow);border:1px solid var(--ti-line);font-size:12px}
+@media(max-width:850px) {
+ #time-invoices-concept .ti-shell {grid-template-columns:64px minmax(0,1fr)}
+ #time-invoices-concept .ti-sidebar {padding:26px 10px 20px;gap:30px}
+ #time-invoices-concept .ti-brand {justify-content:center}
+ #time-invoices-concept .ti-brand-name,#time-invoices-concept .ti-nav-text,#time-invoices-concept .ti-account-text {display:none}
+ #time-invoices-concept .ti-nav-item {justify-content:center;padding:12px 0}
+ #time-invoices-concept .ti-account {justify-content:center;padding-inline:0}
+ #time-invoices-concept .ti-main {padding:27px 24px 24px}
+}
+@media(max-width:650px) {
+ #time-invoices-concept {--ti-padding:21px;border-radius:22px}
+ #time-invoices-concept .ti-main {padding:24px 17px 20px}
+ #time-invoices-concept .ti-header {align-items:start;flex-direction:column;gap:15px}
+ #time-invoices-concept .ti-controls {justify-content:start}
+ #time-invoices-concept .ti-summary {padding:21px}
+ #time-invoices-concept .ti-stat {padding-inline:12px}
+ #time-invoices-concept .ti-stat-value {font-size:23px}
+ #time-invoices-concept .ti-week {gap:5px}
+ #time-invoices-concept .ti-day {padding-block:11px}
+ #time-invoices-concept .ti-day small {font-size:11px}
+ #time-invoices-concept .ti-list-head {grid-template-columns:20px minmax(0,1fr) 65px 28px}
+ #time-invoices-concept .ti-list-head .ti-payment-head {display:none}
+ #time-invoices-concept .ti-session-row {grid-template-columns:20px minmax(0,1fr) 65px 28px;gap:9px}
+ #time-invoices-concept .ti-session-info {grid-column:2}
+ #time-invoices-concept .ti-session-time {grid-column:3}
+ #time-invoices-concept .ti-payment {grid-column:2;grid-row:2}
+ #time-invoices-concept .ti-open-session {grid-column:4;grid-row:1}
+ #time-invoices-concept .ti-session-grid {grid-template-columns:minmax(0,1fr)}
+ #time-invoices-concept .ti-panel-head {flex-wrap:wrap}
+ #time-invoices-concept .ti-invoice-table,#time-invoices-concept .ti-invoice-table tbody {display:block;margin-top:16px}
+ #time-invoices-concept .ti-invoice-table thead {display:none}
+ #time-invoices-concept .ti-invoice-table tr {display:grid;grid-template-columns:minmax(0,1fr) auto;gap:10px 15px;padding:19px 0;border-bottom:1px solid var(--ti-line)}
+ #time-invoices-concept .ti-invoice-table tr:last-child {border:0}
+ #time-invoices-concept .ti-invoice-table td {border:0;padding:0!important}
+ #time-invoices-concept .ti-invoice-table td:nth-child(2) {grid-column:1;grid-row:2}
+ #time-invoices-concept .ti-invoice-table td:nth-child(3) {grid-column:2;grid-row:2;text-align:right}
+ #time-invoices-concept .ti-invoice-table td:last-child {grid-column:2;grid-row:1}
+ #time-invoices-concept .ti-status-tab {font-size:11px;padding-inline:8px}
+}
+@media(max-width:430px) {
+ #time-invoices-concept {--ti-padding:18px}
+ #time-invoices-concept .ti-shell {grid-template-columns:49px minmax(0,1fr)}
+ #time-invoices-concept .ti-sidebar {padding-inline:6px}
+ #time-invoices-concept .ti-main {padding-inline:13px}
+ #time-invoices-concept h1 {font-size:29px}
+ #time-invoices-concept .ti-summary {grid-template-columns:1fr;padding:18px}
+ #time-invoices-concept .ti-stat {border-left:0;border-top:1px solid var(--ti-line);padding:14px 0!important;display:grid;grid-template-columns:minmax(0,1fr) auto;align-items:center;gap:3px 12px}
+ #time-invoices-concept .ti-stat:first-child {padding-top:0!important}
+ #time-invoices-concept .ti-stat:last-child {padding-bottom:0!important}
+ #time-invoices-concept .ti-stat-value {margin:0;grid-column:2;grid-row:1 / 3;font-size:24px}
+ #time-invoices-concept .ti-stat small {grid-column:1;grid-row:2}
+ #time-invoices-concept .ti-week {grid-template-columns:repeat(4,minmax(0,1fr));gap:6px}
+ #time-invoices-concept .ti-day small {font-size:11px}
+ #time-invoices-concept .ti-week-caption {align-items:start;flex-direction:column}
+ #time-invoices-concept .ti-list-head {grid-template-columns:20px minmax(0,1fr) 28px}
+ #time-invoices-concept .ti-list-head .ti-duration-head {display:none}
+ #time-invoices-concept .ti-session-row {grid-template-columns:20px minmax(0,1fr) 28px}
+ #time-invoices-concept .ti-session-time {grid-column:2;grid-row:2}
+ #time-invoices-concept .ti-payment {grid-column:2;grid-row:3}
+ #time-invoices-concept .ti-open-session {grid-column:3}
+ #time-invoices-concept .ti-session-grid .ti-payment {grid-row:3}
+ #time-invoices-concept .ti-filter-panel {grid-template-columns:1fr}
+ #time-invoices-concept .ti-filter {max-width:100%}
+ #time-invoices-concept .ti-invoice-table tr {grid-template-columns:minmax(0,1fr);gap:10px}
+ #time-invoices-concept .ti-invoice-table td:nth-child(2),#time-invoices-concept .ti-invoice-table td:nth-child(3),#time-invoices-concept .ti-invoice-table td:last-child {grid-column:1;grid-row:auto;text-align:left}
+ #time-invoices-concept .ti-invoice-table td:nth-child(2) .ti-invoice-sub {display:inline;margin-left:5px}
+ #time-invoices-concept .ti-footer span:last-child {display:none}
+ #time-invoices-concept .ti-modal {padding:55px 13px 20px}
+ #time-invoices-concept .ti-sheet {padding:22px}
+ #time-invoices-concept .ti-detail-facts {gap:17px 12px}
+ #time-invoices-concept .ti-activity-grid {grid-template-columns:1fr}
+}
+@media(pointer:coarse) {
+ #time-invoices-concept button {min-height:44px}
+ #time-invoices-concept .ti-input,#time-invoices-concept select {font-size:16px;min-height:44px}
+}
+</style>
+<div id="time-invoices-concept" aria-label="Address Work Time and Invoices concepts">
+ <div class="ti-shell">
+  <aside class="ti-sidebar" aria-label="Application navigation">
+   <div class="ti-brand"><span class="ti-logo"><i data-lucide="layers-2" aria-hidden="true"></i></span><span class="ti-brand-name">Address Work</span></div>
+   <nav class="ti-nav">
+    <span class="ti-nav-item" aria-label="Dashboard"><i data-lucide="layout-dashboard" aria-hidden="true"></i><span class="ti-nav-text">Dashboard</span></span>
+    <button class="ti-nav-item cursor-interaction" type="button" data-page="time" aria-current="page" aria-label="Time"><i data-lucide="clock-3" aria-hidden="true"></i><span class="ti-nav-text">Time</span></button>
+    <button class="ti-nav-item cursor-interaction" type="button" data-page="invoices" aria-label="Invoices"><i data-lucide="file-text" aria-hidden="true"></i><span class="ti-nav-text">Invoices</span></button>
+    <span class="ti-nav-item" aria-label="Profile"><i data-lucide="user-round" aria-hidden="true"></i><span class="ti-nav-text">Profile</span></span>
+    <div class="ti-divider"></div>
+    <span class="ti-nav-item" aria-label="Settings"><i data-lucide="settings-2" aria-hidden="true"></i><span class="ti-nav-text">Settings</span></span>
+   </nav>
+   <div></div>
+   <div class="ti-bottom"><span class="ti-nav-item"><i data-lucide="circle-help" aria-hidden="true"></i><span class="ti-nav-text">Help Center</span></span><div class="ti-account"><span class="ti-avatar">AM</span><div class="ti-account-text"><strong>Alex Morgan</strong><small>Personal workspace</small></div></div></div>
+  </aside>
+  <main class="ti-main">
+   <section data-screen="time" aria-label="Time concept">
+    <header class="ti-header"><div><div class="ti-eyebrow">A little clarity, every day</div><h1>Time</h1><p class="ti-subtitle">Your work, one session at a time.</p></div><span class="ti-pill ti-pill-green"><i data-lucide="circle-check" aria-hidden="true"></i>All sessions saved</span></header>
+    <div class="ti-controls">
+     <label class="ti-filter"><i data-lucide="folder-open" aria-hidden="true"></i><select id="ti-time-project" aria-label="Time project"><option value="all">All projects</option><option>Website update</option><option>Mobile app</option><option>Marketing</option></select></label>
+     <label class="ti-filter"><i data-lucide="calendar-days" aria-hidden="true"></i><select id="ti-week" aria-label="Time period"><option value="current">Nov 1–7, 2026</option><option value="previous">Oct 25–31, 2026</option></select></label>
+    </div>
+    <div class="ti-stack">
+     <section class="ti-panel ti-summary" aria-label="Weekly time summary">
+      <div class="ti-stat"><span class="ti-stat-label">Time tracked</span><strong class="ti-stat-value" id="ti-tracked">32h 30m</strong><small id="ti-project-count">Across 3 projects</small></div>
+      <div class="ti-stat"><span class="ti-stat-label">Active time</span><strong class="ti-stat-value" id="ti-active">87%</strong><small>Of tracked time</small></div>
+      <div class="ti-stat"><span class="ti-stat-label">Earned</span><strong class="ti-stat-value" id="ti-earned">$2,600</strong><small>Billable work · selected week</small></div>
+     </section>
+     <section class="ti-panel" aria-label="Days of the week">
+      <div class="ti-panel-head"><div><h2>Your week</h2><p class="ti-meta" id="ti-week-label">November 1–7</p></div><span class="ti-pill" id="ti-week-count">10 sessions</span></div>
+      <div class="ti-week" id="ti-days"></div>
+      <div class="ti-week-caption"><span id="ti-day-summary">7h 30m on Saturday</span><button class="ti-text-button cursor-interaction" type="button" id="ti-all-days">Show the whole week<i data-lucide="arrow-right" aria-hidden="true"></i></button></div>
+     </section>
+     <section class="ti-panel" aria-label="Tracked sessions">
+      <div class="ti-panel-head"><div><div class="ti-title-row"><h2 id="ti-entries-title">Saturday, November 7</h2></div><p class="ti-meta" id="ti-entries-count">3 saved sessions</p></div><div class="ti-inline"><button type="button" class="ti-icon-button cursor-interaction" id="ti-filter-toggle" aria-label="Filter sessions" aria-expanded="false"><i data-lucide="sliders-horizontal" aria-hidden="true"></i></button><div class="ti-view" aria-label="Session layout"><button type="button" class="cursor-interaction" data-view="list" aria-pressed="true"><i data-lucide="list" aria-hidden="true"></i>List</button><button type="button" class="cursor-interaction" data-view="grid" aria-pressed="false"><i data-lucide="layout-grid" aria-hidden="true"></i>Grid</button></div></div></div>
+      <div class="ti-filter-panel" id="ti-more-filters" hidden><label class="ti-field"><span>Find a note</span><input class="ti-input" id="ti-note-filter" placeholder="Search session notes"></label><label class="ti-field"><span>Activity</span><select class="ti-input" id="ti-active-filter"><option value="0">Any activity</option><option value="80">80% or more</option><option value="90">90% or more</option></select></label></div>
+      <div class="ti-list-head" id="ti-list-head"><input type="checkbox" id="ti-select-all" aria-label="Select all visible sessions"><span>Session</span><span class="ti-duration-head">Tracked</span><span class="ti-payment-head">Payment</span><span></span></div>
+      <div id="ti-sessions"></div>
+      <div class="ti-list-footer"><span class="ti-inline" id="ti-selection-label"><i data-lucide="clock-3" aria-hidden="true"></i><span id="ti-total-shown">7h 30m tracked</span></span><button type="button" class="ti-button cursor-interaction" id="ti-bulk-paid" hidden><i data-lucide="check" aria-hidden="true"></i>Mark as paid</button><span class="ti-meta" id="ti-entry-hint">Open a session for activity details</span></div>
+     </section>
+    </div>
+   </section>
+   <section data-screen="invoices" aria-label="Invoices concept" hidden>
+    <header class="ti-header"><div><div class="ti-eyebrow">Good work, accounted for</div><h1>Invoices</h1><p class="ti-subtitle">From time well spent to payments received.</p></div><span class="ti-pill"><i data-lucide="banknote" aria-hidden="true"></i>USD</span></header>
+    <div class="ti-controls"><label class="ti-filter"><i data-lucide="folder-open" aria-hidden="true"></i><select id="ti-invoice-project" aria-label="Invoice project"><option value="all">All projects</option><option>Website update</option><option>Mobile app</option><option>Marketing</option></select></label><label class="ti-filter"><i data-lucide="calendar-days" aria-hidden="true"></i><select id="ti-invoice-period" aria-label="Invoice period"><option value="all">Recent invoices</option><option value="nov">November 2026</option><option value="oct">October 2026</option></select></label></div>
+    <div class="ti-stack">
+     <section class="ti-panel ti-summary" aria-label="Invoice summary"><div class="ti-stat"><span class="ti-stat-label">Awaiting payment</span><strong class="ti-stat-value" id="ti-unpaid-total">$2,600</strong><small id="ti-unpaid-count">3 invoices</small></div><div class="ti-stat"><span class="ti-stat-label">Paid</span><strong class="ti-stat-value" id="ti-paid-total">$3,040</strong><small id="ti-paid-count">3 invoices</small></div><div class="ti-stat"><span class="ti-stat-label">Total invoiced</span><strong class="ti-stat-value" id="ti-invoiced-total">$5,640</strong><small id="ti-invoiced-count">6 invoices</small></div></section>
+     <section class="ti-panel" aria-label="Invoices list"><div class="ti-panel-head"><div class="ti-title-row"><h2>All invoices</h2><span class="ti-pill" id="ti-invoice-count">6 invoices</span></div><label class="ti-filter"><select id="ti-invoice-sort" aria-label="Sort invoices"><option value="recent">Newest first</option><option value="amount">Highest amount</option></select></label></div>
+      <nav class="ti-status-tabs" aria-label="Invoice status"><button class="ti-status-tab cursor-interaction" type="button" data-status-filter="all" aria-pressed="true">All<span class="ti-tab-count" id="ti-tab-all">6</span></button><button class="ti-status-tab cursor-interaction" type="button" data-status-filter="unpaid" aria-pressed="false">Awaiting payment<span class="ti-tab-count" id="ti-tab-unpaid">3</span></button><button class="ti-status-tab cursor-interaction" type="button" data-status-filter="paid" aria-pressed="false">Paid<span class="ti-tab-count" id="ti-tab-paid">3</span></button></nav>
+      <table class="ti-invoice-table"><thead><tr><th scope="col">Project / invoice</th><th scope="col">Work period</th><th scope="col">Status</th><th scope="col">Amount</th></tr></thead><tbody id="ti-invoice-rows"></tbody></table>
+      <div class="ti-empty" id="ti-invoices-empty" hidden><i data-lucide="file-check-2" aria-hidden="true"></i><p>No invoices in this view.</p><p class="ti-meta">Try another project or period.</p></div>
+      <div class="ti-invoice-bottom"><span id="ti-showing-invoices">Showing all 6 invoices</span><span class="ti-inline"><i data-lucide="circle-check" aria-hidden="true"></i>Up to date</span></div>
+     </section>
+     <p class="ti-note"><i data-lucide="clock-3" aria-hidden="true"></i>Every invoice stays connected to the time behind it.</p>
+    </div>
+   </section>
+   <footer class="ti-footer"><span>Design concept · illustrative data</span><span>Address Work · soft workspace</span></footer>
+  </main>
+ </div>
+ <div class="ti-toast" role="status" hidden></div>
+ <div class="ti-modal" id="ti-modal" role="dialog" aria-modal="true" aria-labelledby="ti-modal-title" hidden><section class="ti-sheet"><div class="ti-modal-head"><h2 id="ti-modal-title">Session details</h2><button type="button" class="ti-icon-button cursor-interaction" id="ti-close-modal" aria-label="Close details"><i data-lucide="x" aria-hidden="true"></i></button></div><div id="ti-modal-body"></div></section></div>
+</div>
+<script>
+(() => {
+ const root=document.getElementById('time-invoices-concept');
+ const $=selector=>root.querySelector(selector);
+ const sessions=[
+  {id:1,day:7,project:'Website update',title:'Design polish',start:'14:30',end:'16:45',minutes:135,active:92,paid:false,note:'Final spacing, typography, and interaction details.',keys:4280,clicks:960,distance:'1,420 m'},
+  {id:2,day:7,project:'Website update',title:'Implement layout',start:'10:30',end:'13:30',minutes:180,active:96,paid:false,note:'Responsive project views and shared components.',keys:6840,clicks:1250,distance:'1,860 m'},
+  {id:3,day:7,project:'Marketing',title:'Launch planning',start:'08:00',end:'10:15',minutes:135,active:78,paid:false,note:'Positioning, launch copy, and the release checklist.',keys:2140,clicks:620,distance:'810 m'},
+  {id:4,day:6,project:'Mobile app',title:'Navigation and flows',start:'09:00',end:'13:00',minutes:240,active:88,paid:false,note:'Simplify the onboarding flow and navigation.',keys:5920,clicks:1420,distance:'2,080 m'},
+  {id:5,day:5,project:'Website update',title:'Build project pages',start:'09:00',end:'14:00',minutes:300,active:87,paid:false,note:'Project overview, billing details, and member roles.',keys:8920,clicks:1840,distance:'2,610 m'},
+  {id:6,day:4,project:'Mobile app',title:'Interface refinement',start:'09:00',end:'13:30',minutes:270,active:89,paid:false,note:'Refine core screens and empty states.',keys:7780,clicks:1680,distance:'2,230 m'},
+  {id:7,day:3,project:'Website update',title:'Design system',start:'09:00',end:'15:00',minutes:360,active:84,paid:false,note:'Shared typography, colors, and layout primitives.',keys:10420,clicks:2160,distance:'3,140 m'},
+  {id:8,day:2,project:'Marketing',title:'Launch outline',start:'13:00',end:'15:00',minutes:120,active:86,paid:false,note:'Plan the first release and product announcement.',keys:3160,clicks:680,distance:'940 m'},
+  {id:9,day:2,project:'Mobile app',title:'Interaction patterns',start:'11:30',end:'12:45',minutes:75,active:90,paid:false,note:'Core interactions and navigation patterns.',keys:2540,clicks:520,distance:'740 m'},
+  {id:10,day:2,project:'Website update',title:'Product foundations',start:'09:00',end:'11:15',minutes:135,active:86,paid:false,note:'Map the main user journeys and page structure.',keys:3910,clicks:790,distance:'1,160 m'}
+ ];
+ const invoices=[
+  {id:'026',project:'Website update',amount:1480,hours:18.5,period:'Nov 1–7, 2026',issued:'Nov 7, 2026',month:'nov',status:'unpaid',description:'Design & development',paidOn:''},
+  {id:'025',project:'Mobile app',amount:780,hours:9.75,period:'Nov 1–7, 2026',issued:'Nov 7, 2026',month:'nov',status:'unpaid',description:'Product engineering',paidOn:''},
+  {id:'024',project:'Marketing',amount:340,hours:4.25,period:'Nov 1–7, 2026',issued:'Nov 7, 2026',month:'nov',status:'unpaid',description:'Launch & content',paidOn:''},
+  {id:'023',project:'Website update',amount:1640,hours:20.5,period:'Oct 25–31, 2026',issued:'Oct 31, 2026',month:'oct',status:'paid',description:'Design & development',paidOn:'Nov 3'},
+  {id:'022',project:'Mobile app',amount:920,hours:11.5,period:'Oct 25–31, 2026',issued:'Oct 31, 2026',month:'oct',status:'paid',description:'Product engineering',paidOn:'Nov 2'},
+  {id:'021',project:'Marketing',amount:480,hours:6,period:'Oct 25–31, 2026',issued:'Oct 31, 2026',month:'oct',status:'paid',description:'Launch & content',paidOn:'Nov 2'}
+ ];
+ const weekdays=['Sunday','Monday','Tuesday','Wednesday','Thursday','Friday','Saturday'];
+ let page='time',day=7,view='list',status='all',selected=new Set(),lastTrigger=null,toastTimer;
+ const duration=minutes=>{const h=Math.floor(minutes/60),m=minutes%60;return h?(h+'h'+(m?' '+m+'m':'')):(m+'m');};
+ const money=value=>new Intl.NumberFormat('en-US',{style:'currency',currency:'USD',maximumFractionDigits:0}).format(value);
+ const number=value=>new Intl.NumberFormat('en-US').format(value);
+ const icon=name=>'<i data-lucide="'+name+'" aria-hidden="true"></i>';
+ const icons=()=>{if(globalThis.lucide)lucide.createIcons({attrs:{width:16,height:16}});};
+ const pill=value=>'<span class="ti-pill" data-status="'+value+'">'+icon(value==='paid'?'check':'clock-3')+(value==='paid'?'Paid':'Unpaid')+'</span>';
+ const text=(id,value)=>{$(id).textContent=value;};
+ function remember(){if(window.openai?.setWidgetState)window.openai.setWidgetState({modelContent:{screen:page,day:day,sessionLayout:view,invoiceStatus:status},privateContent:null}).catch(()=>{});}
+ function showPage(next,persist=true){page=next==='invoices'?'invoices':'time';root.querySelectorAll('[data-screen]').forEach(el=>el.hidden=el.dataset.screen!==page);root.querySelectorAll('[data-page]').forEach(el=>{if(el.dataset.page===page)el.setAttribute('aria-current','page');else el.removeAttribute('aria-current');});if(persist)remember();}
+ function weekSessions(){return $('#ti-week').value==='previous'?[]:sessions.filter(s=>$('#ti-time-project').value==='all'||s.project===$('#ti-time-project').value);}
+ function shownSessions(){return weekSessions().filter(s=>(day==='all'||s.day===day)&&s.active>=Number($('#ti-active-filter').value)&&(s.note+' '+s.title).toLowerCase().includes($('#ti-note-filter').value.toLowerCase()));}
+ function renderWeek(){
+  const rows=weekSessions(),total=rows.reduce((n,s)=>n+s.minutes,0),active=total?Math.round(rows.reduce((n,s)=>n+s.minutes*s.active,0)/total):0;
+  text('#ti-tracked',duration(total));text('#ti-active',active+'%');text('#ti-earned',money(total/60*80));
+  const count=new Set(rows.map(s=>s.project)).size;text('#ti-project-count',count?'Across '+count+' project'+(count===1?'':'s'):'No time tracked');text('#ti-week-count',rows.length+' sessions');
+  text('#ti-week-label',$('#ti-week').value==='previous'?'October 25–31':'November 1–7');
+  $('#ti-days').innerHTML=weekdays.map((name,index)=>{const date=index+1,minutes=rows.filter(s=>s.day===date).reduce((n,s)=>n+s.minutes,0),displayDate=$('#ti-week').value==='previous'?date+24:date;return '<button type="button" class="ti-day cursor-interaction" data-day="'+date+'" aria-pressed="'+(day===date)+'" aria-label="'+name+', '+duration(minutes)+' tracked"><span>'+name.slice(0,3)+'</span><strong>'+displayDate+'</strong><small>'+duration(minutes)+'</small></button>';}).join('');
+  text('#ti-day-summary',day==='all'?duration(total)+' across the week':duration(rows.filter(s=>s.day===day).reduce((n,s)=>n+s.minutes,0))+' on '+weekdays[day-1]);
+  $('#ti-all-days').hidden=day==='all';renderSessions();
+ }
+ function renderSessions(){
+  const rows=shownSessions();selected=new Set([...selected].filter(id=>rows.some(s=>s.id===id)));
+  text('#ti-entries-title',day==='all'?'All sessions':weekdays[day-1]+', '+($('#ti-week').value==='previous'?'October '+(day+24):'November '+day));text('#ti-entries-count',rows.length+' saved session'+(rows.length===1?'':'s'));
+  $('#ti-list-head').hidden=view==='grid'||rows.length===0;$('#ti-sessions').className=view==='grid'?'ti-session-grid':'';
+  $('#ti-sessions').innerHTML=rows.length?rows.map(s=>'<article class="ti-session-row"><input type="checkbox" class="ti-row-check" data-session-check="'+s.id+'" aria-label="Select '+s.title+'" '+(selected.has(s.id)?'checked':'')+'><div class="ti-session-info"><button type="button" class="ti-session-title cursor-interaction" data-open-session="'+s.id+'">'+s.title+'</button><p class="ti-session-sub">'+s.project+' · '+(day==='all'?'Nov '+s.day+' · ':'')+s.start+'–'+s.end+'</p><p class="ti-session-note">'+icon('align-left')+s.note+'</p></div><div class="ti-session-time">'+duration(s.minutes)+'<span class="ti-active">'+s.active+'% active</span></div><div class="ti-payment">'+pill(s.paid?'paid':'unpaid')+'</div><button type="button" class="ti-icon-button ti-open-session cursor-interaction" data-open-session="'+s.id+'" aria-label="Open '+s.title+'">'+icon('arrow-up-right')+'</button></article>').join(''):'<div class="ti-empty">'+icon('coffee')+'<p>No sessions in this view.</p><p class="ti-meta">Choose another day or adjust your filters.</p></div>';
+  $('#ti-select-all').checked=rows.length>0&&rows.every(s=>selected.has(s.id));$('#ti-select-all').indeterminate=selected.size>0&&selected.size<rows.length;
+  text('#ti-total-shown',selected.size?selected.size+' selected · '+duration(rows.filter(s=>selected.has(s.id)).reduce((n,s)=>n+s.minutes,0)):duration(rows.reduce((n,s)=>n+s.minutes,0))+' tracked');
+  $('#ti-bulk-paid').hidden=!selected.size;$('#ti-entry-hint').hidden=!!selected.size;icons();
+ }
+ function invoiceBase(){return invoices.filter(i=>($('#ti-invoice-project').value==='all'||i.project===$('#ti-invoice-project').value)&&($('#ti-invoice-period').value==='all'||i.month===$('#ti-invoice-period').value));}
+ function renderInvoices(){
+  const base=invoiceBase(),paid=base.filter(i=>i.status==='paid'),unpaid=base.filter(i=>i.status==='unpaid'),sum=arr=>arr.reduce((n,i)=>n+i.amount,0);
+  text('#ti-unpaid-total',money(sum(unpaid)));text('#ti-paid-total',money(sum(paid)));text('#ti-invoiced-total',money(sum(base)));
+  for(const pair of [['unpaid',unpaid],['paid',paid],['invoiced',base]])text('#ti-'+pair[0]+'-count',pair[1].length+' invoice'+(pair[1].length===1?'':'s'));
+  text('#ti-tab-all',base.length);text('#ti-tab-unpaid',unpaid.length);text('#ti-tab-paid',paid.length);
+  let rows=base.filter(i=>status==='all'||i.status===status);rows.sort((a,b)=>$('#ti-invoice-sort').value==='amount'?b.amount-a.amount:Number(b.id)-Number(a.id));
+  text('#ti-invoice-count',rows.length+' invoice'+(rows.length===1?'':'s'));text('#ti-showing-invoices','Showing '+rows.length+' of '+base.length+' invoices');
+  $('#ti-invoice-rows').innerHTML=rows.map(i=>'<tr><td><button type="button" class="ti-invoice-link cursor-interaction" data-open-invoice="'+i.id+'">'+i.project+'</button><span class="ti-invoice-sub">INV-'+i.id+' · Alex Morgan</span></td><td>'+i.period.replace(', 2026','')+'<span class="ti-invoice-sub">Issued '+i.issued.replace(', 2026','')+'</span></td><td><span class="ti-pill" data-status="'+i.status+'">'+icon(i.status==='paid'?'check':'clock-3')+(i.status==='paid'?'Paid':'Awaiting payment')+'</span><span class="ti-invoice-sub">'+(i.paidOn?'Received '+i.paidOn:'')+'</span></td><td><span class="ti-amount">'+money(i.amount)+'</span><span class="ti-invoice-sub">'+duration(i.hours*60)+' × $80/h</span></td></tr>').join('');
+  $('#ti-invoices-empty').hidden=rows.length>0;root.querySelectorAll('[data-status-filter]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.statusFilter===status)));icons();
+ }
+ function toast(message){$('.ti-toast').textContent=message;$('.ti-toast').hidden=false;clearTimeout(toastTimer);toastTimer=setTimeout(()=>{$('.ti-toast').hidden=true;},2800);}
+ function openModal(title,markup,trigger){lastTrigger=trigger;text('#ti-modal-title',title);$('#ti-modal-body').innerHTML=markup;$('#ti-modal').hidden=false;icons();$('#ti-close-modal').focus();}
+ function closeModal(){$('#ti-modal').hidden=true;lastTrigger?.focus();}
+ function openSession(id,trigger){
+  const s=sessions.find(x=>x.id===Number(id));if(!s)return;
+  openModal('Session details','<div class="ti-detail-hero"><span class="ti-pill ti-pill-green">'+icon('circle-check')+'Session saved</span><strong class="ti-detail-number">'+duration(s.minutes)+'</strong><p class="ti-meta">'+s.active+'% active · '+weekdays[s.day-1]+', November '+s.day+'</p></div><dl class="ti-detail-facts"><div><dt>Project</dt><dd>'+s.project+'</dd></div><div><dt>Time</dt><dd>'+s.start+'–'+s.end+'</dd></div><div><dt>Task</dt><dd>'+s.title+'</dd></div><div><dt>Payment</dt><dd>'+pill(s.paid?'paid':'unpaid')+'</dd></div></dl><p class="ti-detail-note">'+s.note+'</p><div class="ti-activity-grid"><div><small>Keyboard</small><strong>'+number(s.keys)+'</strong></div><div><small>Mouse clicks</small><strong>'+number(s.clicks)+'</strong></div><div><small>Mouse distance</small><strong>'+s.distance+'</strong></div></div><div class="ti-sheet-footer"><span class="ti-meta">Screenshot not recorded</span><button type="button" class="ti-button cursor-interaction" data-close-details>Done</button></div>',trigger);
+ }
+ function openInvoice(id,trigger){
+  const i=invoices.find(x=>x.id===id);if(!i)return;
+  openModal('Invoice preview','<div class="ti-invoice-paper-head"><div><p class="ti-meta">INVOICE</p><strong>INV-'+i.id+'</strong></div><span class="ti-pill" data-status="'+i.status+'">'+icon(i.status==='paid'?'circle-check':'clock-3')+(i.status==='paid'?'Paid':'Awaiting payment')+'</span></div><dl class="ti-detail-facts"><div><dt>Issued by</dt><dd>Alex Morgan</dd></div><div><dt>Project</dt><dd>'+i.project+'</dd></div><div><dt>Work period</dt><dd>'+i.period+'</dd></div><div><dt>Issued</dt><dd>'+i.issued+'</dd></div></dl><div class="ti-invoice-line"><div><h3>'+i.description+'</h3><p class="ti-meta">'+duration(i.hours*60)+' tracked · $80 / hour</p></div><strong>'+money(i.amount)+'</strong></div><div class="ti-invoice-total"><span>Total · USD</span><strong>'+money(i.amount)+'</strong></div><div class="ti-sheet-footer"><span class="ti-meta">'+(i.status==='paid'?'Payment received '+i.paidOn:'Payment has not been recorded.')+'</span><button class="ti-button '+(i.status==='paid'?'':'ti-button-primary ')+'cursor-interaction" type="button" data-payment-invoice="'+i.id+'">'+icon(i.status==='paid'?'rotate-ccw':'check')+(i.status==='paid'?'Mark unpaid':'Mark as paid')+'</button></div>',trigger);
+ }
+ root.addEventListener('click',event=>{
+  const button=event.target.closest('button');if(!button||!root.contains(button))return;
+  if(button.dataset.page)showPage(button.dataset.page);
+  if(button.dataset.day){day=Number(button.dataset.day);selected.clear();renderWeek();$('[data-day="'+day+'"]').focus();remember();}
+  if(button.dataset.view){view=button.dataset.view;root.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));renderSessions();remember();}
+  if(button.dataset.statusFilter){status=button.dataset.statusFilter;renderInvoices();remember();}
+  if(button.dataset.openSession)openSession(button.dataset.openSession,button);
+  if(button.dataset.openInvoice)openInvoice(button.dataset.openInvoice,button);
+  if(button.hasAttribute('data-close-details'))closeModal();
+  if(button.dataset.paymentInvoice){const i=invoices.find(x=>x.id===button.dataset.paymentInvoice);i.status=i.status==='paid'?'unpaid':'paid';i.paidOn=i.status==='paid'?'Nov 7':'';if(i.month==='nov'){sessions.filter(s=>s.project===i.project).forEach(s=>s.paid=i.status==='paid');renderSessions();}renderInvoices();lastTrigger=$('[data-open-invoice="'+i.id+'"]')||$('[data-status-filter][aria-pressed=true]');closeModal();toast('Payment status updated in this preview');}
+ });
+ $('#ti-all-days').addEventListener('click',()=>{day='all';selected.clear();renderWeek();remember();});
+ for(const id of ['#ti-time-project','#ti-week'])$(id).addEventListener('change',()=>{selected.clear();renderWeek();});
+ $('#ti-filter-toggle').addEventListener('click',()=>{const panel=$('#ti-more-filters');panel.hidden=!panel.hidden;$('#ti-filter-toggle').setAttribute('aria-expanded',String(!panel.hidden));});
+ $('#ti-note-filter').addEventListener('input',renderSessions);$('#ti-active-filter').addEventListener('change',renderSessions);
+ $('#ti-sessions').addEventListener('change',event=>{if(event.target.dataset.sessionCheck){const id=Number(event.target.dataset.sessionCheck);if(event.target.checked)selected.add(id);else selected.delete(id);renderSessions();$('[data-session-check="'+id+'"]').focus();}});
+ $('#ti-select-all').addEventListener('change',event=>{selected=event.target.checked?new Set(shownSessions().map(s=>s.id)):new Set();renderSessions();});
+ $('#ti-bulk-paid').addEventListener('click',()=>{sessions.filter(s=>selected.has(s.id)).forEach(s=>s.paid=true);selected.clear();renderSessions();toast('Selected sessions marked paid in this preview');});
+ for(const id of ['#ti-invoice-project','#ti-invoice-period','#ti-invoice-sort'])$(id).addEventListener('change',renderInvoices);
+ $('#ti-close-modal').addEventListener('click',closeModal);$('#ti-modal').addEventListener('click',event=>{if(event.target===$('#ti-modal'))closeModal();});
+ root.addEventListener('keydown',event=>{if($('#ti-modal').hidden)return;if(event.key==='Escape')closeModal();if(event.key==='Tab'){const controls=[...$('#ti-modal').querySelectorAll('button')],first=controls[0],last=controls[controls.length-1];if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}}});
+ function restore(state){const s=state?.modelContent||{};day=s.day==='all'||Number.isInteger(s.day)&&s.day>=1&&s.day<=7?s.day:7;view=s.sessionLayout==='grid'?'grid':'list';status=['all','unpaid','paid'].includes(s.invoiceStatus)?s.invoiceStatus:'all';showPage(s.screen,false);root.querySelectorAll('[data-view]').forEach(b=>b.setAttribute('aria-pressed',String(b.dataset.view===view)));renderWeek();renderInvoices();}
+ restore(window.openai?.widgetState);window.addEventListener('openai:set_globals',event=>{if(event.detail?.globals?.widgetState)restore(event.detail.globals.widgetState);});
+ if(globalThis.Tweak){const design={radius:26,row:19,shadows:true};const tweak=new Tweak({container:root,onChange:()=>{root.style.setProperty('--ti-radius',design.radius+'px');root.style.setProperty('--ti-row',design.row+'px');root.style.setProperty('--ti-shadow',design.shadows?'0 12px 28px #446fa714,0 2px 5px #446fa70a':'none');}});tweak.addSlider(design,'radius',{label:'Panel corners',min:16,max:32,step:2,unit:'px',reference:'--ti-radius'});tweak.addSlider(design,'row',{label:'Row spacing',min:13,max:25,step:2,unit:'px',reference:'--ti-row'});tweak.addToggle(design,'shadows',{label:'Soft shadows',reference:'--ti-shadow'});}
+})();
+</script>

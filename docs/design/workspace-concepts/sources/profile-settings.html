@@ -1,0 +1,404 @@
+<style>
+#profile-settings-concept {
+  --pc-canvas: #eaf2ff; --pc-glow: #d9e9ff; --pc-paper: #fff; --pc-inset: #f3f7fd;
+  --pc-ink: #183c69; --pc-text: #304862; --pc-muted: #647b95; --pc-blue: #286bdf;
+  --pc-blue-soft: #e3eeff; --pc-line: #dce7f5; --pc-green: #378454; --pc-green-soft: #e5f3e9;
+  --pc-radius: 26px; --pc-padding: 26px; --pc-gap: 20px;
+  --pc-elevation: 0 12px 28px #446fa714, 0 2px 5px #446fa70a;
+  color-scheme: light; color: var(--pc-text); font: 14px/1.5 -apple-system, BlinkMacSystemFont, "Segoe UI", sans-serif;
+  background: radial-gradient(ellipse at 70% 0%, var(--pc-glow), transparent 64%), var(--pc-canvas);
+  border-radius: 28px; overflow: clip; position: relative;
+}
+#profile-settings-concept *, #profile-settings-concept *::before, #profile-settings-concept *::after { box-sizing: border-box; }
+#profile-settings-concept [hidden] { display: none !important; }
+#profile-settings-concept h1, #profile-settings-concept h2, #profile-settings-concept h3, #profile-settings-concept p { margin: 0; }
+#profile-settings-concept h1 { color: var(--pc-ink); font-size: 32px; line-height: 1.2; font-weight: 650; letter-spacing: -1px; }
+#profile-settings-concept h2 { color: var(--pc-ink); font-size: 19px; line-height: 1.4; font-weight: 650; letter-spacing: -.35px; }
+#profile-settings-concept h3 { color: var(--pc-ink); font-size: 14px; line-height: 1.5; font-weight: 600; }
+#profile-settings-concept button, #profile-settings-concept input, #profile-settings-concept select, #profile-settings-concept textarea { font: inherit; }
+#profile-settings-concept button { color: inherit; }
+#profile-settings-concept svg { width: 18px; height: 18px; stroke-width: 1.75; flex: 0 0 auto; }
+#profile-settings-concept .pc-shell { display: grid; grid-template-columns: 174px minmax(0,1fr); min-height: 920px; }
+#profile-settings-concept .pc-sidebar { display: grid; grid-template-rows: auto auto 1fr auto; gap: 36px; padding: 28px 16px 22px; background: #edf4ffe8; border-right: 1px solid #fff; }
+#profile-settings-concept .pc-brand { display: flex; align-items: center; gap: 9px; color: var(--pc-ink); font-size: 15px; font-weight: 650; letter-spacing: -.45px; white-space: nowrap; }
+#profile-settings-concept .pc-brand-icon { background: var(--pc-blue); color: #fff; width: 30px; height: 30px; border-radius: 10px; display: grid; place-items: center; box-shadow: 0 3px 8px #286bdf24; }
+#profile-settings-concept .pc-nav { display: grid; gap: 6px; align-content: start; }
+#profile-settings-concept .pc-nav-item { display: flex; align-items: center; gap: 10px; width: 100%; border: 0; border-radius: 12px; padding: 12px 11px; background: transparent; text-align: left; color: var(--pc-muted); font-size: 14px; text-decoration: none; }
+#profile-settings-concept button.pc-nav-item:hover { background: var(--pc-blue-soft); }
+#profile-settings-concept .pc-nav-item[aria-current=page] { background: var(--pc-paper); color: var(--pc-blue); font-weight: 600; box-shadow: 0 4px 12px #446fa710; }
+#profile-settings-concept .pc-nav-divider { border-top: 1px solid var(--pc-line); margin: 11px 10px; }
+#profile-settings-concept .pc-sidebar-bottom { display: grid; gap: 14px; }
+#profile-settings-concept .pc-account { display: flex; gap: 10px; align-items: center; padding: 15px 4px 0; border-top: 1px solid var(--pc-line); }
+#profile-settings-concept .pc-avatar-small { width: 34px; height: 34px; border-radius: 50%; display: grid; place-items: center; background: #d7e6fa; color: var(--pc-ink); font-weight: 650; font-size: 12px; border: 2px solid #fff; flex-shrink: 0; }
+#profile-settings-concept .pc-account strong { font-size: 12px; font-weight: 600; }
+#profile-settings-concept .pc-account small { display: block; font-size: 11px; color: var(--pc-muted); }
+#profile-settings-concept .pc-main { min-width: 0; padding: 30px 28px 25px; }
+#profile-settings-concept .pc-header { display: flex; justify-content: space-between; align-items: center; gap: 18px; margin-bottom: 24px; }
+#profile-settings-concept .pc-eyebrow { color: var(--pc-muted); font-size: 10px; letter-spacing: 1.8px; text-transform: uppercase; font-weight: 650; margin-bottom: 9px; }
+#profile-settings-concept .pc-subtitle { margin-top: 9px; color: var(--pc-muted); font-size: 13px; }
+#profile-settings-concept .pc-actions { display: flex; flex-wrap: wrap; align-items: center; gap: 8px; }
+#profile-settings-concept .pc-button { border: 1px solid var(--pc-line); border-radius: 12px; min-height: 39px; padding: 9px 13px; background: var(--pc-paper); display: inline-flex; justify-content: center; align-items: center; gap: 7px; font-size: 12px; font-weight: 500; white-space: nowrap; text-decoration: none; }
+#profile-settings-concept .pc-button:hover { background: var(--pc-inset); }
+#profile-settings-concept .pc-button-primary { background: var(--pc-blue); color: #fff; border-color: var(--pc-blue); box-shadow: 0 3px 7px #286bdf1b; }
+#profile-settings-concept .pc-button-primary:hover { background: #205fc9; }
+#profile-settings-concept .pc-button:disabled { opacity: .45; }
+#profile-settings-concept .pc-button svg { width: 15px; height: 15px; }
+#profile-settings-concept .pc-link-button { border: 0; background: transparent; color: var(--pc-blue); display: inline-flex; align-items: center; gap: 6px; padding: 0; font-size: 12px; font-weight: 500; }
+#profile-settings-concept .pc-stack { display: grid; gap: var(--pc-gap); align-content: start; min-width: 0; }
+#profile-settings-concept .pc-panel { background: var(--pc-paper); padding: var(--pc-padding); border: 1px solid #fff; border-radius: var(--pc-radius); box-shadow: var(--pc-elevation); min-width: 0; }
+#profile-settings-concept .pc-panel-head { display: flex; align-items: center; justify-content: space-between; gap: 14px; margin-bottom: 20px; }
+#profile-settings-concept .pc-muted { color: var(--pc-muted); }
+#profile-settings-concept .pc-meta { font-size: 12px; line-height: 1.6; color: var(--pc-muted); }
+#profile-settings-concept .pc-pill { display: inline-flex; align-items: center; gap: 5px; border-radius: 999px; padding: 5px 9px; font-size: 11px; font-weight: 550; color: var(--pc-blue); background: var(--pc-blue-soft); white-space: nowrap; }
+#profile-settings-concept .pc-pill svg { width: 12px; height: 12px; }
+#profile-settings-concept .pc-pill-green { color: var(--pc-green); background: var(--pc-green-soft); }
+#profile-settings-concept .pc-hero { padding: 29px 28px 0; overflow: hidden; }
+#profile-settings-concept .pc-hero-main { display: grid; grid-template-columns: 76px minmax(0,1fr) auto; align-items: center; gap: 20px; padding-bottom: 25px; }
+#profile-settings-concept .pc-avatar { width: 76px; height: 76px; border-radius: 24px; color: var(--pc-blue); display: grid; place-items: center; font-size: 28px; font-weight: 500; letter-spacing: -1px; background: linear-gradient(145deg,#eaf3ff,#cfe1ff); border: 4px solid #f4f8ff; }
+#profile-settings-concept .pc-name { display: flex; flex-wrap: wrap; align-items: center; gap: 10px; margin-bottom: 5px; }
+#profile-settings-concept .pc-name h2 { font-size: 25px; letter-spacing: -.6px; }
+#profile-settings-concept .pc-role { color: var(--pc-text); font-size: 13px; }
+#profile-settings-concept .pc-location { margin-top: 10px; display: flex; flex-wrap: wrap; gap: 6px; align-items: center; color: var(--pc-muted); font-size: 12px; overflow-wrap: anywhere; }
+#profile-settings-concept .pc-location svg { width: 14px; height: 14px; }
+#profile-settings-concept .pc-rate { padding-left: 20px; border-left: 1px solid var(--pc-line); text-align: right; }
+#profile-settings-concept .pc-rate strong { color: var(--pc-ink); display: block; font-size: 27px; font-weight: 600; letter-spacing: -.6px; }
+#profile-settings-concept .pc-rate small { font-size: 12px; color: var(--pc-muted); }
+#profile-settings-concept .pc-hero-bottom { display: flex; justify-content: space-between; align-items: center; gap: 14px; padding: 16px 0; border-top: 1px solid var(--pc-line); font-size: 12px; color: var(--pc-muted); }
+#profile-settings-concept .pc-inline { display: flex; align-items: center; gap: 7px; min-width: 0; }
+#profile-settings-concept .pc-content-grid { display: grid; grid-template-columns: minmax(0,1.45fr) minmax(0,1fr); gap: var(--pc-gap); align-items: start; }
+#profile-settings-concept .pc-bio { font-size: 14px; line-height: 1.8; }
+#profile-settings-concept .pc-bio p + p { margin-top: 15px; }
+#profile-settings-concept .pc-separator { height: 1px; background: var(--pc-line); margin: 24px 0; }
+#profile-settings-concept .pc-chips { display: flex; flex-wrap: wrap; gap: 8px; margin-top: 15px; }
+#profile-settings-concept .pc-chip { padding: 6px 11px; border-radius: 9px; color: #42668c; background: var(--pc-inset); font-size: 12px; }
+#profile-settings-concept .pc-contact-list { display: grid; gap: 0; }
+#profile-settings-concept .pc-contact { display: grid; grid-template-columns: 32px minmax(0,1fr) auto; align-items: center; gap: 11px; padding: 13px 0; border-top: 1px solid var(--pc-line); }
+#profile-settings-concept .pc-contact:first-child { border-top: 0; padding-top: 0; }
+#profile-settings-concept .pc-contact:last-child { padding-bottom: 0; }
+#profile-settings-concept .pc-contact-icon { width: 32px; height: 32px; border-radius: 10px; display: grid; place-items: center; background: var(--pc-inset); color: var(--pc-blue); }
+#profile-settings-concept .pc-contact strong { display: block; font-size: 12px; font-weight: 500; overflow-wrap: anywhere; }
+#profile-settings-concept .pc-contact small { display: block; font-size: 11px; color: var(--pc-muted); }
+#profile-settings-concept .pc-contact > svg { color: #8fa4be; width: 14px; height: 14px; }
+#profile-settings-concept .pc-identity-address { display: block; padding: 12px; border: 1px solid var(--pc-line); border-radius: 12px; margin: 16px 0 12px; color: var(--pc-text); font-size: 12px; overflow-wrap: anywhere; background: var(--pc-inset); }
+#profile-settings-concept .pc-share-banner { display: grid; grid-template-columns: 40px minmax(0,1fr) auto; align-items: center; gap: 14px; }
+#profile-settings-concept .pc-content-grid .pc-share-banner { grid-template-columns: 34px minmax(0,1fr); gap: 12px; }
+#profile-settings-concept .pc-content-grid .pc-share-banner .pc-button { grid-column: 2; justify-self: start; }
+#profile-settings-concept .pc-icon-box { width: 40px; height: 40px; border-radius: 13px; background: var(--pc-blue-soft); display: grid; place-items: center; color: var(--pc-blue); }
+#profile-settings-concept .pc-footer { display: flex; justify-content: space-between; flex-wrap: wrap; gap: 8px; color: var(--pc-muted); font-size: 10px; letter-spacing: .2px; padding: 23px 3px 0; }
+#profile-settings-concept .pc-settings-tabs { display: flex; flex-wrap: wrap; gap: 6px; padding: 5px; width: fit-content; background: #dce8fa; border-radius: 14px; margin-bottom: 22px; }
+#profile-settings-concept .pc-tab { border: 0; background: transparent; color: var(--pc-muted); padding: 9px 13px; border-radius: 10px; font-size: 12px; display: inline-flex; align-items: center; gap: 7px; }
+#profile-settings-concept .pc-tab[aria-pressed=true] { background: var(--pc-paper); color: var(--pc-ink); box-shadow: 0 2px 7px #446fa711; }
+#profile-settings-concept .pc-tab svg { width: 15px; height: 15px; }
+#profile-settings-concept .pc-settings-grid { display: grid; grid-template-columns: minmax(0,1.6fr) minmax(0,.9fr); gap: var(--pc-gap); align-items: start; }
+#profile-settings-concept .pc-form-grid { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 17px 16px; }
+#profile-settings-concept .pc-field { display: grid; align-content: start; gap: 7px; min-width: 0; }
+#profile-settings-concept .pc-field-full { grid-column: 1 / -1; }
+#profile-settings-concept .pc-field > span { font-size: 12px; font-weight: 500; color: var(--pc-text); }
+#profile-settings-concept input, #profile-settings-concept textarea, #profile-settings-concept select { display: block; width: 100%; min-width: 0; color: var(--pc-text); background: #fbfcff; border: 1px solid #d4e0ef; border-radius: 10px; padding: 10px 11px; font-size: 12px; line-height: 1.5; }
+#profile-settings-concept textarea { resize: vertical; min-height: 125px; }
+#profile-settings-concept .pc-field small { font-size: 11px; color: var(--pc-muted); }
+#profile-settings-concept .pc-form-heading { padding-top: 22px; margin-top: 23px; border-top: 1px solid var(--pc-line); margin-bottom: 17px; }
+#profile-settings-concept .pc-preview-head { display: flex; justify-content: space-between; align-items: center; margin-bottom: 22px; }
+#profile-settings-concept .pc-preview-head span { color: var(--pc-muted); font-size: 10px; text-transform: uppercase; letter-spacing: 1.4px; font-weight: 600; }
+#profile-settings-concept .pc-preview-card { text-align: center; }
+#profile-settings-concept .pc-preview-card .pc-avatar { margin: 0 auto 14px; width: 62px; height: 62px; border-radius: 20px; font-size: 24px; }
+#profile-settings-concept .pc-preview-card h3 { font-size: 18px; letter-spacing: -.3px; }
+#profile-settings-concept .pc-preview-card .pc-role { margin-top: 6px; font-size: 12px; }
+#profile-settings-concept .pc-preview-card .pc-location { justify-content: center; margin-top: 12px; font-size: 11px; }
+#profile-settings-concept .pc-preview-rate { color: var(--pc-ink); padding-top: 18px; margin-top: 18px; border-top: 1px solid var(--pc-line); font-size: 21px; font-weight: 600; }
+#profile-settings-concept .pc-preview-rate small { color: var(--pc-muted); font-size: 11px; font-weight: 400; }
+#profile-settings-concept .pc-note-panel { display: grid; gap: 10px; }
+#profile-settings-concept .pc-note-panel > svg { color: var(--pc-blue); width: 22px; height: 22px; }
+#profile-settings-concept .pc-note-panel p { font-size: 12px; line-height: 1.75; color: var(--pc-muted); }
+#profile-settings-concept .pc-form-footer { margin-top: 22px; border-top: 1px solid var(--pc-line); padding-top: 17px; display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px; }
+#profile-settings-concept .pc-save-state { color: var(--pc-muted); font-size: 11px; display: flex; align-items: center; gap: 6px; }
+#profile-settings-concept .pc-save-state svg { width: 14px; height: 14px; }
+#profile-settings-concept .pc-links-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 18px; }
+#profile-settings-concept .pc-account-row { display: flex; align-items: center; justify-content: space-between; gap: 15px; padding: 19px 0; border-top: 1px solid var(--pc-line); }
+#profile-settings-concept .pc-account-row:first-of-type { padding-top: 0; border-top: 0; }
+#profile-settings-concept .pc-account-row:last-child { padding-bottom: 0; }
+#profile-settings-concept .pc-account-label { display: flex; gap: 12px; align-items: center; min-width: 0; }
+#profile-settings-concept .pc-account-label strong { display: block; font-size: 13px; font-weight: 550; }
+#profile-settings-concept .pc-account-label small { display: block; font-size: 12px; color: var(--pc-muted); overflow-wrap: anywhere; }
+#profile-settings-concept .pc-wallet-details { margin: 15px 0 0; padding: 16px; border-radius: 14px; background: var(--pc-inset); display: grid; grid-template-columns: 1fr auto; gap: 10px; font-size: 12px; }
+#profile-settings-concept .pc-wallet-details dt { color: var(--pc-muted); }
+#profile-settings-concept .pc-wallet-details dd { margin: 0; text-align: right; }
+#profile-settings-concept .pc-recovery { background: var(--pc-inset); border-radius: 13px; padding: 15px; margin-top: 15px; font-size: 12px; color: var(--pc-muted); line-height: 1.75; }
+#profile-settings-concept .pc-modal { position: absolute; inset: 0; z-index: 5; background: #193d6b35; display: grid; place-items: start center; padding: 150px 22px 30px; backdrop-filter: blur(4px); }
+#profile-settings-concept .pc-modal-card { max-width: 410px; width: 100%; background: #fff; border: 1px solid #fff; border-radius: 25px; box-shadow: 0 20px 70px #183c6930; padding: 28px; }
+#profile-settings-concept .pc-modal-title { display: flex; justify-content: space-between; align-items: center; gap: 15px; margin-bottom: 14px; }
+#profile-settings-concept .pc-close { width: 32px; height: 32px; display: grid; place-items: center; border-radius: 10px; border: 1px solid var(--pc-line); background: #fff; }
+#profile-settings-concept .pc-modal-link { margin: 20px 0; display: block; padding: 13px; background: var(--pc-inset); border-radius: 11px; color: var(--pc-ink); overflow-wrap: anywhere; font-size: 13px; }
+#profile-settings-concept .pc-share-options { display: flex; gap: 8px; }
+#profile-settings-concept .pc-toast { position: absolute; right: 26px; top: 15px; z-index: 7; padding: 11px 16px; border: 1px solid var(--pc-line); border-radius: 12px; background: #fff; box-shadow: var(--pc-elevation); color: var(--pc-ink); font-size: 12px; max-width: calc(100% - 52px); }
+@media(max-width:850px) {
+ #profile-settings-concept .pc-shell { grid-template-columns: 64px minmax(0,1fr); }
+ #profile-settings-concept .pc-sidebar { padding: 26px 10px 20px; gap: 30px; }
+ #profile-settings-concept .pc-brand { justify-content: center; }
+ #profile-settings-concept .pc-brand-name, #profile-settings-concept .pc-nav-text, #profile-settings-concept .pc-account-text { display: none; }
+ #profile-settings-concept .pc-nav-item { justify-content: center; padding: 12px 0; }
+ #profile-settings-concept .pc-account { justify-content: center; padding-inline: 0; }
+ #profile-settings-concept .pc-main { padding: 27px 24px 24px; }
+ #profile-settings-concept .pc-hero-main { gap: 16px; }
+}
+@media(max-width:650px) {
+ #profile-settings-concept { --pc-padding: 21px; --pc-gap: 16px; border-radius: 22px; }
+ #profile-settings-concept .pc-main { padding: 24px 17px 20px; }
+ #profile-settings-concept .pc-header { align-items: start; flex-direction: column; gap: 16px; }
+ #profile-settings-concept h1 { font-size: 29px; }
+ #profile-settings-concept .pc-content-grid, #profile-settings-concept .pc-settings-grid { grid-template-columns: minmax(0,1fr); }
+ #profile-settings-concept .pc-settings-grid > .pc-stack { grid-template-columns: minmax(0,1fr) minmax(0,1fr); align-items: start; }
+ #profile-settings-concept .pc-hero { padding: 24px 21px 0; }
+ #profile-settings-concept .pc-hero-main { grid-template-columns: 64px minmax(0,1fr); }
+ #profile-settings-concept .pc-hero-main .pc-avatar { width: 64px; height: 64px; border-radius: 20px; }
+ #profile-settings-concept .pc-rate { grid-column: 1 / -1; border-left: 0; padding: 13px 0 0; border-top: 1px solid var(--pc-line); text-align: left; display: flex; align-items: baseline; gap: 8px; }
+ #profile-settings-concept .pc-rate strong { font-size: 24px; }
+ #profile-settings-concept .pc-hero-bottom { align-items: start; flex-wrap: wrap; }
+ #profile-settings-concept .pc-share-banner { grid-template-columns: 36px minmax(0,1fr); }
+ #profile-settings-concept .pc-share-banner .pc-button { grid-column: 2; justify-self: start; }
+ #profile-settings-concept .pc-preview-card { text-align: left; }
+ #profile-settings-concept .pc-preview-card .pc-avatar { margin-left: 0; }
+ #profile-settings-concept .pc-preview-card .pc-location { justify-content: start; }
+}
+@media(max-width:430px) {
+ #profile-settings-concept .pc-shell { grid-template-columns: 49px minmax(0,1fr); }
+ #profile-settings-concept .pc-sidebar { padding-inline: 6px; }
+ #profile-settings-concept .pc-main { padding-inline: 13px; }
+ #profile-settings-concept .pc-form-grid, #profile-settings-concept .pc-links-grid, #profile-settings-concept .pc-settings-grid > .pc-stack { grid-template-columns: minmax(0,1fr); }
+ #profile-settings-concept .pc-field-full { grid-column: auto; }
+ #profile-settings-concept .pc-hero-main { grid-template-columns: 1fr; }
+ #profile-settings-concept .pc-name h2 { font-size: 24px; }
+ #profile-settings-concept .pc-hero-bottom .pc-meta { font-size: 11px; }
+ #profile-settings-concept .pc-tab { padding-inline: 10px; }
+ #profile-settings-concept .pc-tab svg { display: none; }
+ #profile-settings-concept .pc-account-row { align-items: start; flex-wrap: wrap; }
+ #profile-settings-concept .pc-footer span:last-child { display: none; }
+}
+@media(pointer:coarse) {
+ #profile-settings-concept input, #profile-settings-concept select, #profile-settings-concept textarea { font-size: 16px; }
+ #profile-settings-concept button { min-height: 44px; }
+}
+</style>
+
+<div id="profile-settings-concept" aria-label="Address Work profile and settings concept">
+ <div class="pc-shell">
+  <aside class="pc-sidebar" aria-label="Application navigation">
+   <div class="pc-brand"><span class="pc-brand-icon"><i data-lucide="layers-2" aria-hidden="true"></i></span><span class="pc-brand-name">Address Work</span></div>
+   <nav class="pc-nav">
+    <span class="pc-nav-item" aria-label="Dashboard"><i data-lucide="layout-dashboard" aria-hidden="true"></i><span class="pc-nav-text">Dashboard</span></span>
+    <span class="pc-nav-item" aria-label="Time"><i data-lucide="clock-3" aria-hidden="true"></i><span class="pc-nav-text">Time</span></span>
+    <span class="pc-nav-item" aria-label="Invoices"><i data-lucide="file-text" aria-hidden="true"></i><span class="pc-nav-text">Invoices</span></span>
+    <button class="pc-nav-item cursor-interaction" type="button" data-page="profile" aria-label="Profile" aria-current="page"><i data-lucide="user-round" aria-hidden="true"></i><span class="pc-nav-text">Profile</span></button>
+    <div class="pc-nav-divider"></div>
+    <button class="pc-nav-item cursor-interaction" type="button" data-page="settings" aria-label="Settings"><i data-lucide="settings-2" aria-hidden="true"></i><span class="pc-nav-text">Settings</span></button>
+   </nav>
+   <div></div>
+   <div class="pc-sidebar-bottom">
+    <span class="pc-nav-item"><i data-lucide="circle-help" aria-hidden="true"></i><span class="pc-nav-text">Help Center</span></span>
+    <div class="pc-account"><span class="pc-avatar-small" data-initials>AM</span><div class="pc-account-text"><strong data-short-name>Alex Morgan</strong><small>Personal workspace</small></div></div>
+   </div>
+  </aside>
+  <main class="pc-main">
+   <section data-screen="profile" aria-label="Profile concept">
+    <header class="pc-header">
+     <div><div class="pc-eyebrow">Your work, your identity</div><h1>Profile</h1><p class="pc-subtitle">A little more about the person behind the work.</p></div>
+     <button class="pc-button pc-button-primary cursor-interaction" data-edit type="button"><i data-lucide="pencil" aria-hidden="true"></i>Edit profile</button>
+    </header>
+    <div class="pc-stack">
+     <section class="pc-panel pc-hero" aria-label="Profile identity">
+      <div class="pc-hero-main">
+       <div class="pc-avatar" data-initials>AM</div>
+       <div><div class="pc-name"><h2 data-display="name">Alex Morgan</h2><span class="pc-pill"><i data-lucide="sparkles" aria-hidden="true"></i>Premium</span></div><p class="pc-role" data-display="title">Product designer &amp; frontend developer</p><p class="pc-location"><i data-lucide="map-pin" aria-hidden="true"></i><span data-display="location">Lisbon, Portugal</span><span>·</span><span data-display="company">Independent</span></p></div>
+       <div class="pc-rate"><strong data-display="rate">$80</strong><small>per hour</small></div>
+      </div>
+      <div class="pc-hero-bottom"><span class="pc-inline"><i data-lucide="wallet" aria-hidden="true"></i><span>0x41b8…7a92</span></span><span class="pc-inline"><i data-lucide="globe-2" aria-hidden="true"></i>Public profile</span></div>
+     </section>
+     <div class="pc-content-grid">
+      <div class="pc-stack">
+      <section class="pc-panel" aria-label="About and skills">
+       <div class="pc-panel-head"><h2>About me</h2><i data-lucide="text-align-start" aria-hidden="true" class="pc-muted"></i></div>
+       <div class="pc-bio"><p data-display="bio">I turn complex ideas into thoughtful, easy-to-use products. My work brings together product design and frontend development, from the first sketch to the final detail.</p><p class="pc-muted">Working with good people everywhere.</p></div>
+       <div class="pc-separator"></div>
+       <h3>What I work with</h3>
+       <div class="pc-chips" data-display="skills"><span class="pc-chip">Product design</span><span class="pc-chip">React</span><span class="pc-chip">TypeScript</span><span class="pc-chip">Design systems</span><span class="pc-chip">Prototyping</span></div>
+      </section>
+      <section class="pc-panel pc-share-banner"><div class="pc-icon-box"><i data-lucide="link" aria-hidden="true"></i></div><div><h3>One profile. A simple introduction.</h3><p class="pc-meta">Share who you are and how you work.</p></div><button class="pc-button cursor-interaction" data-share type="button"><i data-lucide="share-2" aria-hidden="true"></i>Share profile</button></section>
+      </div>
+      <div class="pc-stack">
+       <section class="pc-panel" aria-label="Contact and links">
+        <div class="pc-panel-head"><h2>Find me here</h2><i data-lucide="arrow-up-right" aria-hidden="true" class="pc-muted"></i></div>
+        <div class="pc-contact-list">
+         <div class="pc-contact"><span class="pc-contact-icon"><i data-lucide="mail" aria-hidden="true"></i></span><div><small>Email</small><strong data-display="email">alex@example.com</strong></div></div>
+         <div class="pc-contact" data-social="linkedin"><span class="pc-contact-icon"><i data-lucide="briefcase-business" aria-hidden="true"></i></span><div><small>LinkedIn</small><strong>in/alexmorgan</strong></div><i data-lucide="arrow-up-right" aria-hidden="true"></i></div>
+         <div class="pc-contact" data-social="telegram"><span class="pc-contact-icon"><i data-lucide="send" aria-hidden="true"></i></span><div><small>Telegram</small><strong>@alexmorgan</strong></div><i data-lucide="arrow-up-right" aria-hidden="true"></i></div>
+         <div class="pc-contact" data-social="twitter"><span class="pc-contact-icon"><i data-lucide="at-sign" aria-hidden="true"></i></span><div><small>X / Twitter</small><strong>@alexmorgan</strong></div><i data-lucide="arrow-up-right" aria-hidden="true"></i></div>
+         <div class="pc-contact" data-social="instagram" hidden><span class="pc-contact-icon"><i data-lucide="camera" aria-hidden="true"></i></span><div><small>Instagram</small><strong></strong></div><i data-lucide="arrow-up-right" aria-hidden="true"></i></div>
+         <div class="pc-contact" data-social="facebook" hidden><span class="pc-contact-icon"><i data-lucide="users" aria-hidden="true"></i></span><div><small>Facebook</small><strong></strong></div><i data-lucide="arrow-up-right" aria-hidden="true"></i></div>
+         <div class="pc-contact" data-social="youtube" hidden><span class="pc-contact-icon"><i data-lucide="play" aria-hidden="true"></i></span><div><small>YouTube</small><strong></strong></div><i data-lucide="arrow-up-right" aria-hidden="true"></i></div>
+        </div>
+       </section>
+       <section class="pc-panel pc-note-panel" aria-label="Profile visibility"><i data-lucide="globe-2" aria-hidden="true"></i><h3>Your public profile</h3><p>Your bio, skills, rate, and contact details are visible to people who visit your profile.</p><button class="pc-link-button cursor-interaction" data-edit type="button">Manage profile<i data-lucide="arrow-right" aria-hidden="true"></i></button></section>
+      </div>
+     </div>
+    </div>
+   </section>
+   <section data-screen="settings" aria-label="Settings concept" hidden>
+    <header class="pc-header"><div><div class="pc-eyebrow">Make yourself at home</div><h1>Settings</h1><p class="pc-subtitle">Your profile, connections, and account in one place.</p></div><button type="button" class="pc-button cursor-interaction" data-page="profile"><i data-lucide="eye" aria-hidden="true"></i>View profile</button></header>
+    <nav class="pc-settings-tabs" aria-label="Settings sections">
+     <button type="button" class="pc-tab cursor-interaction" data-section="details" aria-pressed="true"><i data-lucide="user-round" aria-hidden="true"></i>Public profile</button>
+     <button type="button" class="pc-tab cursor-interaction" data-section="links" aria-pressed="false"><i data-lucide="link" aria-hidden="true"></i>Links</button>
+     <button type="button" class="pc-tab cursor-interaction" data-section="account" aria-pressed="false"><i data-lucide="shield-check" aria-hidden="true"></i>Account &amp; wallet</button>
+    </nav>
+    <div data-settings-panel="details" class="pc-settings-grid">
+     <form class="pc-panel" id="pc-details-form">
+      <div class="pc-panel-head"><div><h2>The essentials</h2><p class="pc-meta">How you introduce yourself.</p></div><span class="pc-pill">Public</span></div>
+      <div class="pc-form-grid">
+       <label class="pc-field"><span>Full name</span><input name="name" value="Alex Morgan" autocomplete="off" required></label>
+       <label class="pc-field"><span>Hourly rate · USD</span><input name="rate" type="number" value="80" min="0" step="1" required></label>
+       <label class="pc-field pc-field-full"><span>Professional title</span><input name="title" value="Product designer &amp; frontend developer" autocomplete="off"></label>
+       <label class="pc-field"><span>Company</span><input name="company" value="Independent" autocomplete="off"></label>
+       <label class="pc-field"><span>Contact email</span><input name="email" type="email" value="alex@example.com" autocomplete="off"></label>
+       <label class="pc-field"><span>Country</span><select name="country"><option>Portugal</option><option>United Kingdom</option><option>United States</option><option>Germany</option><option>Netherlands</option><option>Spain</option></select></label>
+       <label class="pc-field"><span>City</span><input name="city" value="Lisbon" autocomplete="off"></label>
+      </div>
+      <div class="pc-form-heading"><h3>A little about you</h3></div>
+      <div class="pc-form-grid">
+       <label class="pc-field pc-field-full"><span>Bio</span><textarea name="bio">I turn complex ideas into thoughtful, easy-to-use products. My work brings together product design and frontend development, from the first sketch to the final detail.</textarea></label>
+       <label class="pc-field pc-field-full"><span>Skills</span><input name="skills" value="Product design, React, TypeScript, Design systems, Prototyping" autocomplete="off"><small>Separate each skill with a comma.</small></label>
+      </div>
+  <footer class="pc-form-footer"><span class="pc-save-state" data-save-status><i data-lucide="circle-check" aria-hidden="true"></i><span>All changes saved</span></span><div class="pc-actions"><button type="button" class="pc-button cursor-interaction" data-discard disabled>Cancel</button><button type="button" class="pc-button pc-button-primary cursor-interaction" data-save disabled>Save changes</button></div></footer>
+     </form>
+     <div class="pc-stack">
+      <section class="pc-panel pc-preview-card" aria-label="Live profile preview"><div class="pc-preview-head"><span>Profile preview</span><i data-lucide="eye" aria-hidden="true" class="pc-muted"></i></div><div class="pc-avatar" data-preview-initials>AM</div><h3 data-preview="name">Alex Morgan</h3><p class="pc-role" data-preview="title">Product designer &amp; frontend developer</p><p class="pc-location"><i data-lucide="map-pin" aria-hidden="true"></i><span data-preview="location">Lisbon, Portugal</span></p><div class="pc-preview-rate"><span data-preview="rate">$80</span> <small>/ hour</small></div></section>
+      <section class="pc-panel pc-note-panel"><i data-lucide="globe-2" aria-hidden="true"></i><h3>A good introduction travels.</h3><p>Keep your title clear and your bio personal. These details appear on your public profile.</p></section>
+     </div>
+    </div>
+    <div data-settings-panel="links" class="pc-settings-grid" hidden>
+     <form class="pc-panel" id="pc-links-form"><div class="pc-panel-head"><div><h2>Your corners of the internet</h2><p class="pc-meta">Give people a few more ways to find you.</p></div></div>
+      <div class="pc-links-grid">
+       <label class="pc-field"><span>LinkedIn</span><input name="linkedin" value="alexmorgan" autocomplete="off"><small>linkedin.com/in/</small></label>
+       <label class="pc-field"><span>Telegram</span><input name="telegram" value="alexmorgan" autocomplete="off"><small>t.me/</small></label>
+       <label class="pc-field"><span>X / Twitter</span><input name="twitter" value="alexmorgan" autocomplete="off"><small>x.com/</small></label>
+       <label class="pc-field"><span>Instagram</span><input name="instagram" placeholder="Your username" autocomplete="off"><small>instagram.com/</small></label>
+       <label class="pc-field"><span>Facebook</span><input name="facebook" placeholder="Your username" autocomplete="off"><small>facebook.com/</small></label>
+       <label class="pc-field"><span>YouTube</span><input name="youtube" placeholder="Your channel" autocomplete="off"><small>youtube.com/@</small></label>
+      </div><footer class="pc-form-footer"><span class="pc-save-state" data-links-status>Only filled links appear on your profile.</span><button type="button" class="pc-button pc-button-primary cursor-interaction" data-save-links>Save links</button></footer>
+     </form>
+     <section class="pc-panel pc-note-panel"><i data-lucide="link" aria-hidden="true"></i><h3>A few good connections.</h3><p>Add the places where you share your work. Leave the rest empty to keep your profile focused.</p></section>
+    </div>
+    <div data-settings-panel="account" class="pc-settings-grid" hidden>
+     <div class="pc-stack">
+      <section class="pc-panel"><div class="pc-panel-head"><h2>Sign-in &amp; identity</h2><i data-lucide="shield-check" aria-hidden="true" class="pc-muted"></i></div>
+       <div class="pc-contact-list"><div class="pc-account-row"><div class="pc-account-label"><span class="pc-icon-box"><i data-lucide="mail" aria-hidden="true"></i></span><div><strong>Google account</strong><small>alex@example.com</small></div></div><span class="pc-pill pc-pill-green"><i data-lucide="circle-check" aria-hidden="true"></i>Connected</span></div>
+       <div class="pc-account-row"><div class="pc-account-label"><span class="pc-icon-box"><i data-lucide="wallet" aria-hidden="true"></i></span><div><strong>Wallet address</strong><small>0x41b8…7a92</small></div></div><button type="button" class="pc-link-button cursor-interaction" id="pc-address-toggle" aria-expanded="false">Show address</button></div></div>
+       <span class="pc-identity-address" id="pc-full-address" hidden>0x41b8302a93fc8e982d56c013ff93b9ac1d107a92</span>
+      </section>
+      <section class="pc-panel"><div class="pc-panel-head"><div><h2>Browser wallet</h2><p class="pc-meta">Your wallet on this device.</p></div><span class="pc-pill">This browser</span></div>
+       <p class="pc-meta">Your browser wallet stays on this device. Keep a backup so you can restore access when you need it.</p>
+       <dl class="pc-wallet-details"><dt>Address</dt><dd>0x41b8…7a92</dd><dt>Storage</dt><dd>This device</dd></dl>
+       <div class="pc-form-footer"><button type="button" class="pc-button cursor-interaction" id="pc-recovery-toggle" aria-expanded="false"><i data-lucide="key-round" aria-hidden="true"></i>Backup options</button><i data-lucide="lock-keyhole" aria-hidden="true" class="pc-muted"></i></div>
+       <div class="pc-recovery" id="pc-recovery-info" hidden><strong>Keep a copy somewhere safe.</strong><br>Store your wallet backup in a place only you can access. This preview uses an example wallet.</div>
+      </section>
+     </div>
+     <section class="pc-panel pc-note-panel"><i data-lucide="lock-keyhole" aria-hidden="true"></i><h3>Just for you</h3><p>Manage how you access Address Work. Your sign-in details and wallet backup stay separate from your public profile.</p><div class="pc-separator" style="margin:5px 0"></div><p>Your wallet address remains part of your public identity.</p></section>
+    </div>
+   </section>
+   <footer class="pc-footer"><span>Design concept · illustrative profile</span><span>Address Work · soft workspace</span></footer>
+  </main>
+ </div>
+ <div class="pc-toast" role="status" hidden></div>
+ <div class="pc-modal" id="pc-share-modal" role="dialog" aria-modal="true" aria-labelledby="pc-share-title" hidden>
+  <section class="pc-modal-card"><div class="pc-modal-title"><h2 id="pc-share-title">A simple introduction</h2><button class="pc-close cursor-interaction" type="button" data-close aria-label="Close sharing preview"><i data-lucide="x" aria-hidden="true"></i></button></div><p class="pc-meta">One link to your bio, skills, and contact details.</p><span class="pc-modal-link">address.work/profile/alex-morgan</span><div class="pc-share-options"><button class="pc-button pc-button-primary cursor-interaction" type="button" data-close>Done</button><button class="pc-button cursor-interaction" type="button" id="pc-preview-share"><i data-lucide="eye" aria-hidden="true"></i>Preview profile</button></div><p class="pc-meta" style="margin-top:16px;font-size:11px">Example link for this design concept.</p></section>
+ </div>
+</div>
+<script>
+(() => {
+ const root = document.getElementById('profile-settings-concept');
+ const form = root.querySelector('#pc-details-form');
+ const shareModal = root.querySelector('#pc-share-modal');
+ let page = 'profile', section = 'details', toastTimer, lastFocus;
+ const readForm = () => Object.fromEntries(new FormData(form).entries());
+ let saved = readForm();
+ const initials = name => String(name).trim().split(/\s+/).slice(0,2).map(x => x.charAt(0)).join('').toUpperCase() || 'AM';
+ const rate = value => '$' + new Intl.NumberFormat('en-US', { maximumFractionDigits: 2 }).format(Number(value) || 0);
+ const location = data => [data.city, data.country].filter(Boolean).join(', ');
+ const setText = (selector, text) => root.querySelectorAll(selector).forEach(el => { el.textContent = text; });
+ function remember() {
+  if (window.openai?.setWidgetState) window.openai.setWidgetState({modelContent:{screen:page,settingsSection:section},privateContent:null}).catch(() => {});
+ }
+ function showPage(next, persist=true) {
+  page = next === 'settings' ? 'settings' : 'profile';
+  root.querySelectorAll('[data-screen]').forEach(el => { el.hidden = el.dataset.screen !== page; });
+  root.querySelectorAll('.pc-nav-item[data-page]').forEach(el => { if(el.dataset.page === page) el.setAttribute('aria-current','page'); else el.removeAttribute('aria-current'); });
+  if(persist) remember();
+ }
+ function showSection(next, persist=true) {
+  section = ['details','links','account'].includes(next) ? next : 'details';
+  root.querySelectorAll('[data-settings-panel]').forEach(el => { el.hidden = el.dataset.settingsPanel !== section; });
+  root.querySelectorAll('[data-section]').forEach(el => el.setAttribute('aria-pressed',String(el.dataset.section === section)));
+  if(persist) remember();
+ }
+ function preview() {
+  const data = readForm();
+  for(const key of ['name','title']) setText('[data-preview="'+key+'"]',data[key]);
+  setText('[data-preview="location"]',location(data)); setText('[data-preview="rate"]',rate(data.rate)); setText('[data-preview-initials]',initials(data.name));
+  const dirty = JSON.stringify(data) !== JSON.stringify(saved);
+  root.querySelector('[data-save]').disabled = !dirty; root.querySelector('[data-discard]').disabled = !dirty;
+  root.querySelector('[data-save-status] span').textContent = dirty ? 'Unsaved changes' : 'All changes saved';
+ }
+ function applyProfile() {
+  for(const key of ['name','title','email','bio','company']) setText('[data-display="'+key+'"]',saved[key]);
+  setText('[data-display="location"]',location(saved)); setText('[data-display="rate"]',rate(saved.rate)); setText('[data-initials]',initials(saved.name)); setText('[data-short-name]',saved.name);
+  const chips = root.querySelector('[data-display="skills"]'); chips.replaceChildren();
+  String(saved.skills).split(',').map(x=>x.trim()).filter(Boolean).forEach(skill => { const chip=document.createElement('span'); chip.className='pc-chip'; chip.textContent=skill; chips.appendChild(chip); });
+ }
+ function toast(text) { const el=root.querySelector('.pc-toast'); el.textContent=text; el.hidden=false; clearTimeout(toastTimer); toastTimer=setTimeout(()=>{el.hidden=true;},2600); }
+ function closeShare() { shareModal.hidden=true; lastFocus?.focus(); }
+ root.querySelectorAll('[data-page]').forEach(button => button.addEventListener('click',()=>showPage(button.dataset.page)));
+ root.querySelectorAll('[data-edit]').forEach(button => button.addEventListener('click',()=>{showSection('details',false);showPage('settings');}));
+ root.querySelectorAll('[data-section]').forEach(button => button.addEventListener('click',()=>showSection(button.dataset.section)));
+ root.querySelectorAll('[data-share]').forEach(button => button.addEventListener('click',()=>{lastFocus=button;shareModal.hidden=false;root.querySelector('[data-close]').focus();}));
+ root.querySelectorAll('[data-close]').forEach(button => button.addEventListener('click',closeShare));
+ root.querySelector('#pc-preview-share').addEventListener('click',()=>{closeShare();showPage('profile');});
+ shareModal.addEventListener('click',event=>{if(event.target===shareModal)closeShare();});
+ root.addEventListener('keydown',event=>{
+  if(shareModal.hidden)return;
+  if(event.key==='Escape')closeShare();
+  if(event.key==='Tab'){
+   const buttons=Array.from(shareModal.querySelectorAll('button'));
+   const first=buttons[0],last=buttons[buttons.length-1];
+   if(event.shiftKey&&document.activeElement===first){event.preventDefault();last.focus();}
+   else if(!event.shiftKey&&document.activeElement===last){event.preventDefault();first.focus();}
+  }
+ });
+ form.addEventListener('input',preview); form.addEventListener('change',preview);
+ function saveProfile(){if(!form.reportValidity())return;saved=readForm();applyProfile();preview();toast('Profile updated in this concept');}
+ form.addEventListener('submit',event=>{event.preventDefault();saveProfile();});
+ root.querySelector('[data-save]').addEventListener('click',saveProfile);
+ root.querySelector('[data-discard]').addEventListener('click',()=>{Object.entries(saved).forEach(([key,value])=>{form.elements.namedItem(key).value=value;});preview();});
+ root.querySelector('#pc-links-form').addEventListener('submit',event=>event.preventDefault());
+ root.querySelector('[data-save-links]').addEventListener('click',()=>{
+  const links=Object.fromEntries(new FormData(root.querySelector('#pc-links-form')).entries());
+  root.querySelectorAll('[data-social]').forEach(row=>{
+   const key=row.dataset.social,value=String(links[key]||'').trim().replace(/^@/,'');
+   row.hidden=!value;
+   row.querySelector('strong').textContent=(key==='linkedin'?'in/':'@')+value;
+  });
+  root.querySelector('[data-links-status]').textContent='Links saved in this concept';toast('Links updated in this concept');
+ });
+ for(const pair of [['pc-address-toggle','pc-full-address'],['pc-recovery-toggle','pc-recovery-info']]) {
+  const button=root.querySelector('#'+pair[0]), target=root.querySelector('#'+pair[1]);
+  button.addEventListener('click',()=>{target.hidden=!target.hidden;button.setAttribute('aria-expanded',String(!target.hidden));if(pair[0]==='pc-address-toggle')button.textContent=target.hidden?'Show address':'Hide address';});
+ }
+ function restore(state) { const s=state?.modelContent||{};showPage(s.screen,false);showSection(s.settingsSection,false); }
+ restore(window.openai?.widgetState); preview();
+ window.addEventListener('openai:set_globals',event=>{if(event.detail?.globals?.widgetState)restore(event.detail.globals.widgetState);});
+ if(globalThis.Tweak) {
+  const design={radius:26,spacing:26,shadows:true};
+  const tweak=new Tweak({container:root,onChange:()=>{root.style.setProperty('--pc-radius',design.radius+'px');root.style.setProperty('--pc-padding',design.spacing+'px');root.style.setProperty('--pc-elevation',design.shadows?'0 12px 28px #446fa714, 0 2px 5px #446fa70a':'none');}});
+  tweak.addSlider(design,'radius',{label:'Panel corners',min:12,max:34,step:2,unit:'px',reference:'--pc-radius'});
+  tweak.addSlider(design,'spacing',{label:'Panel breathing room',min:18,max:32,step:2,unit:'px',reference:'--pc-padding'});
+  tweak.addToggle(design,'shadows',{label:'Soft shadows',reference:'--pc-elevation'});
+ }
+})();
+</script>
