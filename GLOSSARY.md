@@ -60,6 +60,10 @@ _Avoid_: Agent timelog, agent entry
 The figures a reader may see for a project over a span, answered by one module: a viewer the project's time, a worker their own time and money, an owner everyone's.
 _Avoid_: Stats, project summary
 
+**Reader's scope**:
+Which Entries and runs a reader counts over a span, under one of four named rules: time, published detail, own entries and runs.
+_Avoid_: Visibility, access filter
+
 **Paid time**:
 Every `isPaid` minute in the reader's scope, however it came to be marked.
 _Avoid_: Settled time, billed time

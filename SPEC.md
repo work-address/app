@@ -149,6 +149,12 @@ manual time. A run's tool durations can overlap, because an
 agent can call tools in parallel, so they are shown per tool and as counts and
 never summed into a time total.
 
+**A span counts entries and runs differently, on purpose.** An entry belongs,
+whole, to the span its start falls in, so totals always match the entries. A
+run counts if it overlaps the span and is cut to it, because a run can cross
+midnight. An invoice replaces the dates for both: a report on an invoice counts
+exactly the entries and runs linked to it.
+
 **Invoices never read `Statistics`.** It is evidence of what billed time went
 into, not a second ledger of it. Usage rows are deleted along with their entry
 or run, so a report can never show detail for time that no longer exists.
