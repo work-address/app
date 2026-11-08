@@ -17,6 +17,7 @@ import { recentScreenshotsQuery } from '@/entities/time'
 import {
   DashboardAgents,
   DashboardApplicationsUsage,
+  DashboardDesktopSession,
   DashboardFilterBar,
   DashboardInsights,
   DashboardProjectPopup,
@@ -151,6 +152,10 @@ export default function DashboardPage() {
   // The card stays up even when nothing tracks processes yet — its empty state
   // is what tells people the feature exists.
   const showCharts = projectsLoading || hasProjects
+  // The reader's own latest session, like their insights: always about them,
+  // whoever the people filter selects. Only someone who tracks has one; its
+  // place is held while the projects load, so the chart does not narrow.
+  const showSession = projectsLoading || canTrack
 
   const load = useCallback(() => {
     fetchProjectsEvent()
@@ -193,6 +198,7 @@ export default function DashboardPage() {
             project" here would duplicate work the account already has. */}
         {projectsFailed ? (
           <LoadFailure
+            size="panel"
             title={t('dashboard.page.loadFailure.title')}
             description={t('dashboard.page.loadFailure.description')}
             onRetry={load}
@@ -202,15 +208,13 @@ export default function DashboardPage() {
             <Tile
               variants={reveal.item}
               data-chart
-              data-wide={!canTrack || undefined}
+              data-wide={!showSession || undefined}
             >
               <DashboardTimeDaily />
             </Tile>
-            {/* About tracking, agents and screenshots: nothing a viewer can
-                ever have, so they are left out instead of empty. */}
-            {canTrack && (
-              <Tile variants={reveal.item} data-insights>
-                <DashboardInsights />
+            {showSession && (
+              <Tile variants={reveal.item} data-session>
+                <DashboardDesktopSession />
               </Tile>
             )}
             <Tile variants={reveal.item}>
@@ -273,6 +277,13 @@ export default function DashboardPage() {
                 <DashboardApplicationsUsage />
               </Tile>
             )}
+            {/* About tracking, agents and screenshots: nothing a viewer can
+                ever have, so they are left out instead of empty. */}
+            {canTrack && (
+              <Tile variants={reveal.item} data-wide>
+                <DashboardInsights wide />
+              </Tile>
+            )}
             {canTrack && (
               <>
                 <Tile variants={reveal.item}>
@@ -299,6 +310,8 @@ export default function DashboardPage() {
           </Sections>
         ) : (
           <Intro
+            // A new account's whole page: its title is the page's heading.
+            titleAs="h1"
             imageSrc={DashboardEmptyStateImage}
             title={t('dashboard.page.empty.title')}
             description={t('dashboard.page.empty.description')}
@@ -383,7 +396,7 @@ const Tile = styled(motion.div)`
       grid-column: span 7;
     }
 
-    &[data-insights] {
+    &[data-session] {
       grid-column: span 5;
     }
   }

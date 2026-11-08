@@ -31,7 +31,12 @@ const MONDAY = new Date(2026, 9, 19)
  * When the reader works and how it goes - always about the reader, whoever
  * the people filter selects. There is no score: each figure stands alone.
  */
-export const DashboardInsights = () => {
+type Props = {
+  /** A full-width row: the heatmap and the figures side by side. */
+  wide?: boolean
+}
+
+export const DashboardInsights = ({ wide = false }: Props) => {
   const { t, i18n } = useTranslation()
 
   const { hourly, insights, widened, days, projects, pending, failed, retry } =
@@ -127,7 +132,7 @@ export const DashboardInsights = () => {
           : undefined
       }
     >
-      <Root>
+      <Root data-wide={wide || undefined}>
         <Section>
           <Caption>
             {t('dashboard.insights.heatmap')}
@@ -300,6 +305,14 @@ const Root = styled.div`
   display: grid;
   min-width: 0;
   gap: var(--ui-space-4);
+
+  ${(p) => p.theme.breakpoints.up('xl')} {
+    &[data-wide] {
+      grid-template-columns: minmax(0, 3fr) minmax(0, 2fr);
+      align-items: start;
+      gap: var(--ui-section-gap);
+    }
+  }
 `
 
 const Section = styled.div`

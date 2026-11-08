@@ -21,9 +21,13 @@ const ICON_SIZE = 16
 /** An invitation to pass the profile on, with the page's own share action. */
 export const ProfileViewShare = ({ onShare }: { onShare: () => void }) => {
   const { t } = useTranslation()
-  const loading = useUnit($profileLoading)
+  const { isOwn, loading } = useUnit({
+    isOwn: $isAuthenticatedUserProfile,
+    loading: $profileLoading,
+  })
 
-  if (loading) {
+  // Written to the owner; a visitor has the header's Share.
+  if (!isOwn || loading) {
     return null
   }
 

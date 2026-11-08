@@ -276,7 +276,11 @@ export const ProfileEdit = ({ variant = 'edit' }: Props) => {
         }
       />
       {profileFailure ? (
-        <LoadFailure title={t('profile.loadFailure.title')} onRetry={retry} />
+        <LoadFailure
+          size="panel"
+          title={t('profile.loadFailure.title')}
+          onRetry={retry}
+        />
       ) : (
         <>
           <Tabs

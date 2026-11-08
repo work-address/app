@@ -7,8 +7,8 @@ type Props = {
   /** Five metrics on desktop, two columns below xl; false is one metric. */
   detail?: boolean
   /**
-   * Another metric count on one desktop row. Phones then stack the metrics,
-   * since amounts side by side would break mid-number.
+   * Another metric count on one desktop row. Phones list every summary's
+   * metrics one per row, since amounts side by side would break mid-number.
    */
   columns?: 2 | 3 | 4
   className?: string
@@ -65,10 +65,12 @@ const Root = styled.dl`
     }
   }
 
+  /* A phone lists the metrics one per row, whatever their desktop count. */
   ${(p) => p.theme.breakpoints.down('md')} {
+    gap: var(--ui-space-4) 0;
     padding-block: var(--ui-space-4);
 
-    &[data-detail][data-columns] {
+    &[data-detail] {
       grid-template-columns: minmax(0, 1fr);
     }
   }

@@ -32,6 +32,12 @@ export const ProjectsOverviewRow = ({
   const { t, i18n } = useTranslation()
   const isMobile = useBreakpoint('isMobile')
   const [popupOpen, setPopupOpen] = useState(false)
+  // Opening the project's dialog keeps its hover card shut: its open timer,
+  // started as the pointer arrived, would otherwise open it behind the dialog
+  // and the first Escape would close the card instead of the dialog. The
+  // dialog's overlay already moves the pointer off the row, so the hold lifts
+  // only when the pointer comes back to it.
+  const [popupSuppressed, setPopupSuppressed] = useState(false)
   const viewer = project.role === 'viewer'
   const statusKey = getProjectStatusTranslationKey(project.state)
   const status = statusKey
@@ -51,9 +57,11 @@ export const ProjectsOverviewRow = ({
     <Identity
       type="button"
       onClick={() => {
+        setPopupSuppressed(true)
         setPopupOpen(false)
         onOpen(project)
       }}
+      onPointerEnter={() => setPopupSuppressed(false)}
     >
       <Body>
         <Name>{project.title}</Name>
@@ -74,8 +82,12 @@ export const ProjectsOverviewRow = ({
       <Cell>
         {projectPopup && !isMobile ? (
           <HoverCard.Root
-            open={popupOpen}
-            onOpenChange={setPopupOpen}
+            open={popupOpen && !popupSuppressed}
+            onOpenChange={(next) => {
+              if (!(next && popupSuppressed)) {
+                setPopupOpen(next)
+              }
+            }}
             openDelay={workspaceDesign.popup.openDelay}
             closeDelay={workspaceDesign.popup.closeDelay}
           >

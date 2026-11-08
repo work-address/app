@@ -13,8 +13,12 @@ type Props = {
   /** The way on: a retry, a reset, a link elsewhere. */
   actions?: ReactNode
   tone?: StateNoticeTone
-  /** `section` sits inside a page among other blocks; `page` is the page. */
-  size?: 'section' | 'page'
+  /**
+   * `inline` is one line inside a panel, for a minor failure beside working
+   * content; `section` sits inside a panel; `panel` stands in for a whole
+   * panel on the canvas; `page` is the page.
+   */
+  size?: 'inline' | 'section' | 'panel' | 'page'
   className?: string
 }
 
@@ -51,7 +55,12 @@ type LoadFailureProps = {
   title?: ReactNode
   description?: ReactNode
   onRetry: () => void
-  size?: 'section' | 'page'
+  /**
+   * `inline` is one line inside a panel, for a minor failure beside working
+   * content; `section` sits inside a panel; `panel` stands in for a whole
+   * panel on the canvas; `page` is the page.
+   */
+  size?: 'inline' | 'section' | 'panel' | 'page'
   className?: string
 }
 
@@ -73,7 +82,11 @@ export const LoadFailure = ({
       title={title ?? t('common.loadFailure.title')}
       description={description ?? t('common.loadFailure.description')}
       actions={
-        <Button size="l" variant="outline" onClick={onRetry}>
+        <Button
+          size={size === 'inline' ? 'm' : 'l'}
+          variant="outline"
+          onClick={onRetry}
+        >
           {t('common.loadFailure.retry')}
         </Button>
       }
@@ -92,6 +105,26 @@ const Root = styled.div`
   border: var(--ui-border-width) dashed var(--ui-line);
   border-radius: var(--ui-control-radius);
 
+  /* On the canvas a notice is a white panel of its own, like the panel it
+     stands in for. */
+  &[data-size='panel'],
+  &[data-size='page'] {
+    border: var(--ui-border-width) solid var(--ui-edge);
+    border-radius: var(--ui-radius);
+    background: var(--ui-surface);
+    box-shadow: var(--ui-shadow);
+  }
+
+  /* One line: the words on the left, the way on at the right. */
+  &[data-size='inline'] {
+    grid-template-columns: minmax(0, 1fr) auto;
+    justify-items: start;
+    align-items: center;
+    column-gap: var(--ui-space-4);
+    padding: var(--ui-space-3) var(--ui-space-4);
+    text-align: start;
+  }
+
   &[data-size='page'] {
     padding-block: calc(var(--ui-space-9) * 1.5);
     border: var(--ui-border-width) solid var(--ui-edge);
@@ -106,6 +139,10 @@ const Root = styled.div`
     &[data-size='page'] {
       padding-block: var(--ui-space-8);
     }
+
+    &[data-size='inline'] {
+      padding: var(--ui-space-3);
+    }
   }
 `
 
@@ -116,6 +153,12 @@ const Title = styled.h2`
   line-height: var(--ui-figure-line-height);
   letter-spacing: var(--ui-heading-tracking);
   color: var(--ui-ink);
+
+  ${Root}[data-size='inline'] & {
+    font-size: var(--ui-body-size);
+    line-height: var(--ui-body-line-height);
+    font-weight: var(--ui-weight-semibold);
+  }
 
   ${Root}[data-size='page'] & {
     font-size: var(--ui-title-mobile-size);
@@ -131,6 +174,11 @@ const Description = styled.p`
   line-height: var(--ui-body-line-height);
   color: var(--ui-muted);
   overflow-wrap: anywhere;
+
+  ${Root}[data-size='inline'] & {
+    font-size: var(--ui-meta-size);
+    line-height: var(--ui-meta-line-height);
+  }
 `
 
 const Actions = styled.div`
@@ -138,4 +186,10 @@ const Actions = styled.div`
   grid-auto-flow: column;
   gap: var(--ui-space-2);
   margin-top: var(--ui-space-3);
+
+  ${Root}[data-size='inline'] & {
+    grid-column: 2;
+    grid-row: 1 / span 2;
+    margin-top: 0;
+  }
 `

@@ -31,14 +31,19 @@ import {
   workspaceDesign,
   type Bucket,
   type ChartTooltipContent,
+  useBreakpoint,
 } from '@/shared'
 
 /** How many projects or agents a popup column names before it sums the rest. */
 const POPUP_ROWS = 6
 
+/** The most buckets a phone lists as rows: a week, or a working day by hour. */
+const ROWS_MAX = 12
+
 /** Tracked time across the period, one bar per day, week or month. */
 export const DashboardTimeDaily = () => {
   const { t, i18n } = useTranslation()
+  const isMobile = useBreakpoint('isMobile')
 
   const { range, allProjects, rows, agents, pending, failed, retry } = useUnit({
     range: $dashboardRange,
@@ -224,6 +229,11 @@ export const DashboardTimeDaily = () => {
       }
     >
       <Chart
+        // A phone lists a week's days as rows, as the preview does; more
+        // buckets than that keep their columns rather than a long list.
+        orientation={
+          isMobile && chart.buckets.length <= ROWS_MAX ? 'rows' : 'columns'
+        }
         height={workspaceDesign.chart.height}
         maxBarSize={workspaceDesign.chart.barMaxWidth}
         barRadius={workspaceDesign.chart.barRadius}

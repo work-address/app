@@ -15,9 +15,9 @@ type ProfileHeadInput = {
 }
 
 /**
- * The tab reads as the person, not as "My account": a visitor opened Gudrun's
- * profile, so the tab says Gudrun. Only your own profile keeps the personal
- * title, so it can be told apart from the profiles you are looking at.
+ * The tab reads as the person: a visitor opened Gudrun's profile, so the tab
+ * says Gudrun. Your own profile is titled as its page and nav item, Profile,
+ * so it can be told apart from the profiles you are looking at.
  */
 export function buildProfileHead(
   { name, address, isOwn, failure = null }: ProfileHeadInput,
@@ -41,7 +41,7 @@ export function buildProfileHead(
 
   if (isOwn) {
     return {
-      title: t('profile.title'),
+      title: t('header.nav.profile'),
       description: t('profile.head.descriptionOwn'),
     }
   }

@@ -2,6 +2,7 @@ import { subDays } from 'date-fns'
 import { combine, createEvent, createStore, merge, sample } from 'effector'
 import i18n from 'i18next'
 
+import { latestDesktopSession } from './desktop-session'
 import { bucketSizeFor } from './period-buckets'
 
 import { $user } from '@/entities/profile'
@@ -20,6 +21,7 @@ import {
 import {
   recentAgentRunsQuery,
   recentScreenshotsQuery,
+  recentTimeQuery,
   type RecentTimeParams,
 } from '@/entities/time'
 import {
@@ -319,4 +321,32 @@ export const $dashboardScreenshots = combine(
       )
       .slice(0, VISIBLE_SCREENSHOTS)
   },
+)
+
+/** Asks again for the reader's latest session, after a failure. */
+export const dashboardDesktopSessionRequested = createEvent()
+
+// The reader's own entries: who they are can arrive after the filters.
+sample({
+  clock: [filtersApplied, $user.updates, dashboardDesktopSessionRequested],
+  source: { instants: $dashboardInstants, user: $user },
+  filter: ({ user }) => Boolean(user?.id),
+  fn: ({ instants, user }) => ({ ...instants, userId: user?.id ?? '' }),
+  target: recentTimeQuery.start,
+})
+
+/**
+ * The signed-in person's latest desktop session in the period's projects:
+ * always their own time, like their insights, whoever the people filter
+ * selects.
+ */
+export const $dashboardDesktopSession = combine(
+  recentTimeQuery.$data,
+  $user,
+  $dashboardProjects,
+  (entries, user, projects) =>
+    latestDesktopSession(entries ?? [], {
+      userId: user?.id,
+      projectIds: projects.map((project) => project.id ?? ''),
+    }),
 )

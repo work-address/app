@@ -4,6 +4,7 @@ import { HelmetProvider } from 'react-helmet-async'
 import { ThemeProvider } from 'styled-components'
 
 import { theme } from '../src/shared/lib/theme'
+import { WorkspaceDesignStyles } from '../src/shared/styles'
 
 import type { Preview } from '@storybook/react-vite'
 
@@ -13,12 +14,14 @@ import '../src/shared/i18n/i18n'
 
 const preview: Preview = {
   decorators: [
-    // Mirrors main.tsx: Radix owns the colour and spacing scales the design
-    // tokens build on, styled-components' theme owns the breakpoint helper.
+    // Mirrors render.tsx: Radix owns the colour and spacing scales the design
+    // tokens build on, styled-components' theme owns the breakpoint helper,
+    // and the workspace styles give every story the app's --ui-* tokens.
     (Story) => (
       <MotionConfig reducedMotion="user">
-        <Theme>
+        <Theme data-ui="workspace">
           <ThemeProvider theme={theme}>
+            <WorkspaceDesignStyles />
             <HelmetProvider>
               <Story />
             </HelmetProvider>

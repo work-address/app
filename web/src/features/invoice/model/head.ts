@@ -28,7 +28,9 @@ export function buildInvoiceHead(
   if (failure === 'not-found') {
     return {
       title: t('invoice.notFound.documentTitle'),
-      description: t('invoice.page.metaGeneric'),
+      // The page's own words, not a description of an invoice that is not
+      // there.
+      description: t('invoice.notFound.description'),
     }
   }
 

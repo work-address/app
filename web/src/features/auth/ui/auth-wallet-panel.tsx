@@ -1,3 +1,4 @@
+import { LockClosedIcon } from '@radix-ui/react-icons'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
@@ -44,7 +45,10 @@ export const AuthWalletPanel = ({ flow, lastUsed }: Props) => {
       {landing && (
         <Header>
           <TitleRow>
-            <Title>{t('signIn.wallet.title')}</Title>
+            <Title>
+              <LockClosedIcon aria-hidden="true" />
+              {t('signIn.wallet.title')}
+            </Title>
             {lastUsed && <AuthLastUsed />}
           </TitleRow>
           {step === 'choose' && <Lead>{t('signIn.wallet.lead')}</Lead>}
@@ -74,15 +78,23 @@ const TitleRow = styled.div`
 
 const Title = styled.h2`
   margin: 0;
-  font-size: var(--ui-description-size);
-  font-weight: 600;
-  line-height: 1.3;
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  font-size: var(--ui-body-size);
+  font-weight: var(--ui-weight-semibold);
+  line-height: var(--ui-body-line-height);
   color: var(--ui-ink);
+
+  & > svg {
+    flex-shrink: 0;
+    color: var(--ui-muted);
+  }
 `
 
 const Lead = styled.p`
   margin: 0;
   font-size: var(--ui-meta-size);
-  line-height: 20px;
+  line-height: var(--ui-meta-line-height);
   color: var(--ui-muted);
 `

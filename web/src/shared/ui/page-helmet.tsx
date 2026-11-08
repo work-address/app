@@ -25,15 +25,14 @@ export function PageHelmet({
 
   return (
     // The document language follows the UI language on every page, so
-    // pages no longer pass it one by one.
+    // pages no longer pass it one by one. Nothing here is for search engines:
+    // index.html's robots tag covers every route (see public/robots.txt).
     <Helmet
       {...props}
       htmlAttributes={{ lang: i18n.language }}
       title={fullTitle}
     >
       {description ? <meta name="description" content={description} /> : null}
-      {/* Nothing in this app is for search engines; see public/robots.txt. */}
-      <meta name="robots" content="noindex, nofollow" />
       <meta property="og:title" content={fullTitle} />
       {description ? (
         <meta property="og:description" content={description} />

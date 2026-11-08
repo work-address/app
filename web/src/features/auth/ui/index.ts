@@ -1,6 +1,6 @@
 export * as AuthStyles from './auth-styles'
-export * from './auth-brand-panel'
 export * from './auth-google-panel'
 export * from './auth-provider-button'
 export * from './auth-providers'
 export * from './auth-wallet-panel'
+export * from './auth-welcome-story'

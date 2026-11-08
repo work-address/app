@@ -72,9 +72,23 @@ export const ProfileViewHead = ({
   return (
     <>
       <WorkspacePageHeader
-        eyebrow={isOwn ? t('profile.page.eyebrow') : undefined}
+        // While the profile loads, the owner's lines hold their place so the
+        // page does not shift down when they arrive.
+        eyebrow={
+          isOwn ? (
+            t('profile.page.eyebrow')
+          ) : loading ? (
+            <Skeleton width="200px" height="14px" />
+          ) : undefined
+        }
         title={t('header.nav.profile')}
-        description={isOwn ? t('profile.page.description') : undefined}
+        description={
+          isOwn ? (
+            t('profile.page.description')
+          ) : loading ? (
+            <Skeleton width="320px" height="20px" />
+          ) : undefined
+        }
         actions={
           <Actions>
             {isOwn && (

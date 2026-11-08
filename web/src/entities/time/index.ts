@@ -15,6 +15,7 @@ import {
 import {
   recentAgentRunsQuery,
   recentScreenshotsQuery,
+  recentTimeQuery,
   timeAgentRunsQuery,
   timeQuery,
   type TimeQueryParams,
@@ -125,16 +126,21 @@ recentAgentRunsQuery.finished.failure.watch(({ error }) => {
 recentScreenshotsQuery.finished.failure.watch(({ error }) => {
   suppressGlobalErrorToast(error)
 })
+recentTimeQuery.finished.failure.watch(({ error }) => {
+  suppressGlobalErrorToast(error)
+})
 
 export {
   recentAgentRunsQuery,
   recentScreenshotsQuery,
+  recentTimeQuery,
   timeAgentRunsQuery,
   timeQuery,
   type TimeAgentRun,
   type TimeAgentSegment,
   type TimeQueryParams,
   type RecentTimeParams,
+  type RecentTimeOfUserParams,
 } from './time.queries'
 
 export {

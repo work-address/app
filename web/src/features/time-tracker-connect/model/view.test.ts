@@ -61,4 +61,26 @@ describe('pairing page states', () => {
     expect(expired.canRetry).toBe(false)
     expect(expired.descriptionKey).toBe('connect.description.expired')
   })
+
+  it('leads on from the screens nothing on the page can fix', () => {
+    const incomplete = buildTimeTrackerConnectView({
+      ...defaults,
+      nonce: null,
+      phase: 'idle',
+    })
+    const expired = buildTimeTrackerConnectView({
+      ...defaults,
+      phase: 'error',
+      errorName: 'TimeTrackerException',
+    })
+    const transient = buildTimeTrackerConnectView({
+      ...defaults,
+      phase: 'error',
+    })
+
+    expect(incomplete.showWayOn).toBe(true)
+    expect(expired.showWayOn).toBe(true)
+    // A retryable failure offers its retry instead.
+    expect(transient.showWayOn).toBe(false)
+  })
 })

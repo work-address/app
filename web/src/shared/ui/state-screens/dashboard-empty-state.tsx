@@ -15,6 +15,8 @@ type DashboardEmptyStateProps = {
   className?: string
   style?: React.CSSProperties
   buttonIcon?: React.ReactNode
+  /** The title's level: `h1` when the empty state is the whole page. */
+  titleAs?: 'h1' | 'h2' | 'h3'
 } & ButtonProps
 
 export const DashboardEmptyState = ({
@@ -26,6 +28,7 @@ export const DashboardEmptyState = ({
   className,
   style,
   buttonIcon,
+  titleAs = 'h3',
   ...buttonProps
 }: DashboardEmptyStateProps) => {
   return (
@@ -34,7 +37,7 @@ export const DashboardEmptyState = ({
         <HeroImg src={imageSrc} alt={title} />
       </Hero>
       <Text>
-        <EmptyStateTitle>{title}</EmptyStateTitle>
+        <EmptyStateTitle as={titleAs}>{title}</EmptyStateTitle>
         <EmptyStateDescription>{description}</EmptyStateDescription>
       </Text>
       <EmptyAction iconLeft={buttonIcon} {...buttonProps} onClick={onAction}>

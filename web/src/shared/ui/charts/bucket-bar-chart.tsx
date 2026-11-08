@@ -42,6 +42,11 @@ type Props = {
   gridDasharray?: string
   /** Take the height of the card instead of `height`; the legend keeps its own. */
   fill?: boolean
+  /**
+   * `columns` stands the bars up along the bottom; `rows` lays them across,
+   * one labelled row per bucket, for a narrow screen with few buckets.
+   */
+  orientation?: 'columns' | 'rows'
   className?: string
   /**
    * Everything to say about a bar, laid out in columns. Without it the popup
@@ -51,6 +56,9 @@ type Props = {
 }
 
 const SURFACE = 'var(--ui-surface)'
+
+/** Each bucket's height when the bars lie in rows. */
+const ROW_HEIGHT = 40
 
 /** A breakdown popup's width, for its columns to sit side by side in. */
 const POPUP_WIDTH = 600
@@ -73,10 +81,19 @@ export const BucketBarChart = ({
   barRadius,
   gridDasharray = '3 6',
   fill = false,
+  orientation = 'columns',
   className,
   describe,
 }: Props) => {
   const plotRef = useRef<HTMLDivElement>(null)
+  const rows = orientation === 'rows'
+  // A rounded data end: the top of a column, the right of a row.
+  const end = (r: number): [number, number, number, number] =>
+    rows ? [0, r, r, 0] : [r, r, 0, 0]
+  const tick = {
+    fontSize: 'var(--chart-label-size, 12px)',
+    fill: 'var(--ui-muted)',
+  }
   const data = buckets.map((bucket) => ({
     key: bucket.key,
     label: bucket.label,
@@ -98,7 +115,7 @@ export const BucketBarChart = ({
       isAnimationActive={false}
       radius={
         !stacked || (barRadius === undefined && index === series.length - 1)
-          ? [barRadius ?? 4, barRadius ?? 4, 0, 0]
+          ? end(barRadius ?? 4)
           : [0, 0, 0, 0]
       }
     />
@@ -106,43 +123,71 @@ export const BucketBarChart = ({
 
   return (
     <Root className={className} data-fill={fill || undefined}>
-      <Plot ref={plotRef} style={fill ? undefined : { height }}>
+      <Plot
+        ref={plotRef}
+        style={
+          fill && !rows
+            ? undefined
+            : { height: rows ? buckets.length * ROW_HEIGHT + 32 : height }
+        }
+      >
         <ResponsiveContainer width="100%" height="100%">
           <BarChart
             data={data}
-            margin={{ top: 8, right: 4, left: 0, bottom: 0 }}
+            layout={rows ? 'vertical' : 'horizontal'}
+            margin={{ top: 8, right: rows ? 12 : 4, left: 0, bottom: 0 }}
             barCategoryGap={buckets.length > 20 ? '15%' : '28%'}
             barGap={2}
           >
             <CartesianGrid
-              vertical={false}
+              vertical={rows}
+              horizontal={!rows}
               stroke="var(--ui-inset)"
               strokeDasharray={gridDasharray}
             />
-            <XAxis
-              dataKey="label"
-              axisLine={false}
-              tickLine={false}
-              tickMargin={8}
-              // Drops labels that would collide at this width, keeping both ends.
-              interval="preserveStartEnd"
-              minTickGap={12}
-              tick={{
-                fontSize: 'var(--chart-label-size, 12px)',
-                fill: 'var(--ui-muted)',
-              }}
-            />
-            <YAxis
-              axisLine={false}
-              tickLine={false}
-              width={56}
-              allowDecimals={false}
-              tickFormatter={formatTick}
-              tick={{
-                fontSize: 'var(--chart-label-size, 12px)',
-                fill: 'var(--ui-muted)',
-              }}
-            />
+            {rows ? (
+              <>
+                <XAxis
+                  type="number"
+                  axisLine={false}
+                  tickLine={false}
+                  tickMargin={8}
+                  allowDecimals={false}
+                  tickFormatter={formatTick}
+                  tick={tick}
+                />
+                <YAxis
+                  type="category"
+                  dataKey="label"
+                  axisLine={false}
+                  tickLine={false}
+                  width={56}
+                  interval={0}
+                  tick={tick}
+                />
+              </>
+            ) : (
+              <>
+                <XAxis
+                  dataKey="label"
+                  axisLine={false}
+                  tickLine={false}
+                  tickMargin={8}
+                  // Drops labels that would collide at this width, keeping both ends.
+                  interval="preserveStartEnd"
+                  minTickGap={12}
+                  tick={tick}
+                />
+                <YAxis
+                  axisLine={false}
+                  tickLine={false}
+                  width={56}
+                  allowDecimals={false}
+                  tickFormatter={formatTick}
+                  tick={tick}
+                />
+              </>
+            )}
             <Tooltip
               cursor={{ fill: 'var(--ui-inset)' }}
               content={({ active, payload, coordinate }) => {
@@ -203,7 +248,11 @@ export const BucketBarChart = ({
             {stacked && barRadius !== undefined ? (
               <BarStack
                 stackId="total"
-                radius={[barRadius, barRadius, barRadius / 2, barRadius / 2]}
+                radius={
+                  rows
+                    ? [barRadius / 2, barRadius, barRadius, barRadius / 2]
+                    : [barRadius, barRadius, barRadius / 2, barRadius / 2]
+                }
               >
                 {bars}
               </BarStack>

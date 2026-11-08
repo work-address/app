@@ -22,9 +22,9 @@ describe('buildProfileHead', () => {
     expect(head.title).toBe('0x19E…ff2A')
   })
 
-  it('keeps the personal title on your own profile and does not index it', () => {
+  it('titles your own profile as its page and nav item', () => {
     expect(buildProfileHead({ name: 'Gudrun', isOwn: true }, t)).toEqual({
-      title: 'profile.title',
+      title: 'header.nav.profile',
       description: 'profile.head.descriptionOwn',
     })
   })

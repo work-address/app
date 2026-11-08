@@ -45,3 +45,9 @@ export {
   type ProjectSummary,
   type ProjectWithAccess,
 } from './project-summary'
+export {
+  latestDesktopSession,
+  SESSION_GAP_MS,
+  type DesktopSession,
+  type SessionEntry,
+} from './desktop-session'

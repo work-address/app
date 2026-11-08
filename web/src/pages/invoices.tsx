@@ -158,6 +158,7 @@ export default function InvoicesPage() {
       {/* The answer to "what am I owed" before the rows that justify it. */}
       {summaryFailed ? (
         <LoadFailure
+          size="panel"
           title={t('invoices.summary.loadFailure.title')}
           onRetry={retrySummary}
         />
@@ -203,6 +204,7 @@ export default function InvoicesPage() {
           <Toolbar>
             {projectsFailed && (
               <LoadFailure
+                size="inline"
                 title={t('invoices.filter.projectsFailure.title')}
                 onRetry={() => loadProjects()}
               />

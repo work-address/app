@@ -175,3 +175,64 @@ export const recentScreenshotsQuery = createQuery({
 })
 
 concurrency(recentScreenshotsQuery, { strategy: 'TAKE_LATEST' })
+
+/** One page of the newest entries, and at most how many pages to read. */
+const RECENT_TIME_PAGE = 100
+const RECENT_TIME_PAGES = 10
+/**
+ * How far before a person's earliest entry so far to keep reading: a
+ * session's ten-minute gap, plus an hour for an entry that started earlier
+ * and ends inside that gap.
+ */
+const RECENT_TIME_REACH_MS = 70 * 60_000
+
+export type RecentTimeOfUserParams = RecentTimeParams & { userId: string }
+
+/** An entry's author: the search sends it, the generated type leaves it out. */
+const authorOf = (entry: Time) =>
+  (entry as Time & { user?: { id?: string } }).user?.id
+
+/**
+ * One person's newest entries in a period. The search takes no person, so
+ * pages of everyone's entries are read newest first until that person's
+ * latest stretch is behind, or the pages run out.
+ */
+export const recentTimeQuery = createQuery({
+  handler: async ({ fromAt, toAt, userId }: RecentTimeOfUserParams) => {
+    const mine: Time[] = []
+
+    for (let page = 0; page < RECENT_TIME_PAGES; page++) {
+      const [items] = (await runApiData(() =>
+        baseApi.timeControllerSearch({
+          body: {
+            filter: { fromAt, toAt },
+            page,
+            limit: RECENT_TIME_PAGE,
+            sort: { fromAt: 'DESC' },
+          },
+        }),
+      )) as [Time[], number]
+      const list = items ?? []
+
+      mine.push(...list.filter((entry) => authorOf(entry) === userId))
+
+      const oldest = list.at(-1)
+      const earliestMine = Math.min(
+        ...mine.map((entry) => Date.parse(entry.fromAt)),
+      )
+
+      if (
+        list.length < RECENT_TIME_PAGE ||
+        (mine.length > 0 &&
+          oldest &&
+          Date.parse(oldest.fromAt) < earliestMine - RECENT_TIME_REACH_MS)
+      ) {
+        break
+      }
+    }
+
+    return mine
+  },
+})
+
+concurrency(recentTimeQuery, { strategy: 'TAKE_LATEST' })

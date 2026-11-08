@@ -109,6 +109,9 @@ export function buildTimeTrackerConnectView(input: ConnectViewInput) {
     checkingLink: screen === 'loading',
     showWalletProviders: screen === 'awaiting_auth',
     canRetry: screen === 'failed',
+    // Screens nothing on the page can fix still lead somewhere: the app, or
+    // signing in to it, instead of a dead end.
+    showWayOn: screen === 'incomplete' || screen === 'expired',
     showConnected: screen === 'connected',
   }
 }

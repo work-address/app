@@ -14,9 +14,9 @@ import {
   loginGoogleFx,
 } from '@/entities/profile'
 import {
-  AuthBrandPanel,
   AuthGooglePanel,
   AuthWalletPanel,
+  AuthWelcomeStory,
 } from '@/features/auth'
 import {
   LOCAL_WALLET_STEP_TITLE_KEY,
@@ -26,10 +26,10 @@ import { returnPathFrom, routes } from '@/routes'
 import { Button, LogoLabel, PageHelmet, StateNotice } from '@/shared'
 
 /**
- * One form column beside a brand panel. The column offers Google, where the
- * deployment does, then the browser wallet run in place. Once someone starts on
- * a new wallet the form narrows to that one step, and Back returns to the choice.
- * While one way is busy the other is held back.
+ * A white sign-in card beside a welcome to the workspace. The card offers
+ * Google, where the deployment does, then the browser wallet run in place.
+ * Once someone starts on a new wallet the card narrows to that one step, and
+ * Back returns to the choice. While one way is busy the other is held back.
  */
 export default function SignInPage() {
   const { t } = useTranslation()
@@ -85,23 +85,18 @@ export default function SignInPage() {
     <>
       <PageHelmet title={t('signIn.title')} description={t('signIn.meta')} />
       <Root>
-        <FormSide>
-          <Top>
-            <Logo src={LogoLabel} alt={t('signIn.logoAlt')} />
-            <TopActions>
-              {version && (
-                <Version>
-                  {t('signIn.version')} {version}
-                </Version>
-              )}
-              <Help to={routes.docs.build()} target={routes.docs.target}>
-                <QuestionMarkCircledIcon aria-hidden="true" />
-                {t('signIn.learnMore')}
-              </Help>
-            </TopActions>
-          </Top>
-          <Column>
+        <Top>
+          <Logo src={LogoLabel} alt={t('signIn.logoAlt')} />
+          <Help to={routes.docs.build()} target={routes.docs.target}>
+            <QuestionMarkCircledIcon aria-hidden="true" />
+            {t('signIn.learnMore')}
+          </Help>
+        </Top>
+        <Body>
+          <AuthWelcomeStory />
+          <Card>
             <Heading>
+              {landing && <Eyebrow>{t('signIn.card.eyebrow')}</Eyebrow>}
               <Title>
                 {t(
                   landing
@@ -138,7 +133,7 @@ export default function SignInPage() {
                       />
                     </Option>
                     <Or aria-hidden="true">
-                      <span>{t('signIn.local.or')}</span>
+                      <span>{t('signIn.walletDivider')}</span>
                     </Or>
                   </>
                 )}
@@ -155,43 +150,35 @@ export default function SignInPage() {
                 </Option>
               </>
             )}
-          </Column>
-        </FormSide>
-        <BrandSide>
-          <AuthBrandPanel />
-        </BrandSide>
+          </Card>
+        </Body>
+        <Footer>
+          <span>{t('signIn.footer')}</span>
+          {version && (
+            <Version>
+              {t('signIn.version')} {version}
+            </Version>
+          )}
+        </Footer>
       </Root>
     </>
   )
 }
 
-/* One column that scrolls on a phone. On a desktop the screen is pinned to the
-   viewport, and the form side scrolls if a form outgrows a short window. */
+/* The welcome beside a white sign-in card on the canvas; on a phone the
+   heading sits above the card and the page scrolls as one. */
 const Root = styled.div`
   width: 100%;
   min-height: 100dvh;
   display: grid;
-  grid-template-columns: minmax(0, 1fr);
+  grid-template-rows: auto 1fr auto;
+  gap: var(--ui-space-6);
+  padding: var(--ui-space-5) var(--ui-space-4);
   background: var(--page-canvas);
 
   ${({ theme }) => theme.breakpoints.up('lg')} {
-    height: 100dvh;
-    min-height: 0;
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-    overflow: hidden;
-  }
-`
-
-const FormSide = styled.main`
-  display: grid;
-  grid-template-rows: auto 1fr;
-  gap: var(--ui-space-5);
-  padding: var(--ui-space-4);
-
-  ${({ theme }) => theme.breakpoints.up('lg')} {
-    min-height: 0;
-    overflow-y: auto;
-    padding: var(--ui-space-6) var(--ui-space-7);
+    gap: var(--ui-space-7);
+    padding: var(--ui-space-6) var(--ui-page-inset);
   }
 `
 
@@ -200,6 +187,9 @@ const Top = styled.header`
   align-items: center;
   justify-content: space-between;
   gap: var(--ui-space-4);
+  width: 100%;
+  max-width: 1180px;
+  margin-inline: auto;
 `
 
 const Logo = styled.img`
@@ -208,57 +198,77 @@ const Logo = styled.img`
   height: 26px;
 `
 
-const TopActions = styled.div`
-  display: flex;
-  align-items: center;
-  gap: var(--ui-space-4);
-`
-
-const Version = styled.span`
-  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
-  font-size: var(--ui-small-size);
-  white-space: nowrap;
-  color: var(--ui-muted);
-
-  ${({ theme }) => theme.breakpoints.down('lg')} {
-    display: none;
-  }
-`
-
 const Help = styled(Link)`
   flex-shrink: 0;
   display: inline-flex;
   align-items: center;
   gap: var(--ui-space-2);
   font-size: var(--ui-meta-size);
-  font-weight: 500;
-  color: var(--ui-blue);
+  font-weight: var(--ui-weight-medium);
+  color: var(--ui-muted);
   text-decoration: none;
 
   &:hover {
+    color: var(--ui-blue);
     text-decoration: underline;
     text-underline-offset: 2px;
   }
 
   &:focus-visible {
-    outline: 2px solid var(--ui-blue);
-    outline-offset: 2px;
-    border-radius: 2px;
+    outline: var(--ui-focus-width) solid var(--ui-blue);
+    outline-offset: var(--ui-focus-offset);
+    border-radius: var(--ui-inline-radius);
   }
 `
 
-/* Auto margins centre it in the room left, and give way when it outgrows that. */
-const Column = styled.div`
-  width: 100%;
-  max-width: 400px;
-  margin: auto;
+const Body = styled.div`
   display: grid;
+  align-content: center;
   gap: var(--ui-space-5);
+  width: 100%;
+  max-width: 1180px;
+  margin-inline: auto;
+
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    grid-template-columns: minmax(0, 1fr) calc(400px + 2 * var(--ui-card-inset));
+    align-items: center;
+    gap: var(--ui-space-8);
+  }
+`
+
+/* Google draws its button at most 400px wide, so the card's column is that
+   wide and every other row lines up with it. */
+const Card = styled.div`
+  display: grid;
+  align-content: start;
+  gap: var(--ui-space-5);
+  width: 100%;
+  max-width: calc(400px + 2 * var(--ui-card-inset));
+  justify-self: center;
+  padding: var(--ui-space-6) var(--ui-card-inset-mobile);
+  border: var(--ui-border-width) solid var(--ui-edge);
+  border-radius: var(--ui-radius);
+  background: var(--ui-surface);
+  box-shadow: var(--ui-shadow);
+
+  ${({ theme }) => theme.breakpoints.up('lg')} {
+    padding: var(--ui-space-7) var(--ui-card-inset);
+  }
 `
 
 const Heading = styled.div`
   display: grid;
   gap: var(--ui-space-2);
+`
+
+const Eyebrow = styled.p`
+  margin: 0;
+  color: var(--ui-muted);
+  font-size: var(--ui-small-size);
+  line-height: var(--ui-small-line-height);
+  font-weight: var(--ui-eyebrow-weight);
+  letter-spacing: var(--ui-eyebrow-tracking);
+  text-transform: uppercase;
 `
 
 const Title = styled.h1`
@@ -268,17 +278,12 @@ const Title = styled.h1`
   line-height: var(--ui-title-mobile-line-height);
   letter-spacing: var(--ui-title-tracking);
   color: var(--ui-ink);
-
-  ${({ theme }) => theme.breakpoints.up('lg')} {
-    font-size: var(--ui-title-size);
-    line-height: var(--ui-title-line-height);
-  }
 `
 
 const Lead = styled.p`
   margin: 0;
-  font-size: var(--ui-description-size);
-  line-height: var(--ui-description-line-height);
+  font-size: var(--ui-body-size);
+  line-height: var(--ui-body-line-height);
   color: var(--ui-muted);
 `
 
@@ -299,26 +304,31 @@ const Or = styled.div`
   align-items: center;
   gap: var(--ui-space-3);
   font-size: var(--ui-small-size);
-  text-transform: uppercase;
-  letter-spacing: 0.08em;
   color: var(--ui-muted);
 
   &::before,
   &::after {
     content: '';
     flex: 1;
-    height: 1px;
+    height: var(--ui-border-width);
     background: var(--ui-line);
   }
 `
 
-/* Decoration, so it goes first on a phone: the sign-in options need the room. */
-const BrandSide = styled.div`
-  display: none;
+const Footer = styled.footer`
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: space-between;
+  gap: var(--ui-space-2) var(--ui-space-4);
+  width: 100%;
+  max-width: 1180px;
+  margin-inline: auto;
+  color: var(--ui-muted);
+  font-size: var(--ui-small-size);
+  line-height: var(--ui-small-line-height);
+`
 
-  ${({ theme }) => theme.breakpoints.up('lg')} {
-    display: grid;
-    min-height: 0;
-    padding: var(--ui-space-6) var(--ui-space-6) var(--ui-space-6) 0;
-  }
+const Version = styled.span`
+  font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  white-space: nowrap;
 `

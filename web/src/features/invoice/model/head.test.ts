@@ -35,7 +35,10 @@ describe('buildInvoiceHead', () => {
 
   it('says not found for a missing invoice, whatever else is known', () => {
     expect(
-      buildInvoiceHead({ project: 'Bike', failure: 'not-found' }, t).title,
-    ).toBe('invoice.notFound.documentTitle')
+      buildInvoiceHead({ project: 'Bike', failure: 'not-found' }, t),
+    ).toEqual({
+      title: 'invoice.notFound.documentTitle',
+      description: 'invoice.notFound.description',
+    })
   })
 })

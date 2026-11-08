@@ -67,15 +67,22 @@ const Root = styled.div`
     padding-inline: var(--ui-space-3);
   }
 
-  /* Stacked on a phone, metrics part with a rule above, not a divider
-     beside. */
+  /* On a phone, one row per metric: the label and its hint on the left, the
+     value on the right, and a rule above each row rather than a divider
+     beside it. */
   ${(p) => p.theme.breakpoints.down('md')} {
-    dl[data-columns] > & {
+    dl[data-detail] > & {
+      grid-template-columns: minmax(0, 1fr) auto;
+      grid-template-areas:
+        'label value'
+        'hint value';
+      align-items: center;
+      gap: var(--ui-space-1) var(--ui-space-4);
       border-inline-start: 0;
     }
 
-    dl[data-columns] > & + & {
-      padding-top: var(--ui-section-gap);
+    dl[data-detail] > & + & {
+      padding-top: var(--ui-space-4);
       border-top: var(--ui-border-width) solid var(--ui-line);
     }
   }
@@ -85,6 +92,12 @@ const Label = styled.dt`
   color: var(--ui-muted);
   font-size: var(--ui-body-size);
   line-height: var(--ui-body-line-height);
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    dl[data-detail] > ${Root} > & {
+      grid-area: label;
+    }
+  }
 `
 
 const Value = styled.dd`
@@ -106,6 +119,12 @@ const Value = styled.dd`
   ${(p) => p.theme.breakpoints.down('md')} {
     /* The final full-width metric keeps its neighbours' hierarchy. */
     font-size: var(--ui-metric-min-size);
+
+    dl[data-detail] > ${Root} > & {
+      grid-area: value;
+      justify-self: end;
+      text-align: end;
+    }
   }
 `
 
@@ -116,4 +135,10 @@ const Hint = styled.dd`
   font-size: var(--ui-meta-size);
   line-height: var(--ui-meta-line-height);
   overflow-wrap: anywhere;
+
+  ${(p) => p.theme.breakpoints.down('md')} {
+    dl[data-detail] > ${Root} > & {
+      grid-area: hint;
+    }
+  }
 `

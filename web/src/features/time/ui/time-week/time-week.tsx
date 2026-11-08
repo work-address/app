@@ -111,7 +111,13 @@ export const TimeWeek = () => {
   const metricCount = 1 + Number(showActive) + Number(showEarned)
 
   if (failed) {
-    return <LoadFailure title={t('time.week.loadFailure')} onRetry={retry} />
+    return (
+      <LoadFailure
+        size="panel"
+        title={t('time.week.loadFailure')}
+        onRetry={retry}
+      />
+    )
   }
 
   return (

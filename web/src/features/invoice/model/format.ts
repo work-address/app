@@ -1,3 +1,5 @@
+import { formatCurrency } from '@/shared'
+
 /** Minutes as `3 hr 20 min`, matching the duration keys already in common. */
 export const formatMinutes = (
   minutes: number,
@@ -18,13 +20,13 @@ export const formatMinutes = (
 }
 
 /**
- * Whole cents as `$1234.50`.
+ * Whole cents as `$1,234.50`, grouped like every other amount in the app.
  *
  * Money is integer cents everywhere - `Invoice.amountCents` - and only becomes
  * a decimal string here, at the edge. Nothing upstream should divide by 100.
  */
 export const formatCents = (cents: number): string =>
-  `$${(Math.trunc(Number(cents)) / 100).toFixed(2)}`
+  formatCurrency(Math.trunc(Number(cents)) / 100)
 
 /** `0x1234…abcd` — enough to recognise a wallet without wrapping a table cell. */
 export const shortenAddress = (address: string): string =>

@@ -80,6 +80,7 @@ export default function ConnectPage() {
     showWalletProviders,
     checkingLink,
     canRetry,
+    showWayOn,
     headingKey,
     descriptionKey,
   } = buildTimeTrackerConnectView({
@@ -132,6 +133,17 @@ export default function ConnectPage() {
         {showConnected && (
           <Button onClick={() => navigate(routes.dashboard.build())}>
             {t('notFound.action.dashboard')}
+          </Button>
+        )}
+        {/* A failure nothing here can retry, such as an incomplete link,
+            still has a way on: the app, or signing in to it. */}
+        {showWayOn && (
+          <Button variant="outline" onClick={() => navigate(closeHref)}>
+            {t(
+              authenticated
+                ? 'notFound.action.dashboard'
+                : 'notFound.action.signIn',
+            )}
           </Button>
         )}
       </S.SignInCard>

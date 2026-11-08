@@ -10,6 +10,8 @@ import {
   $invoiceProjectFilter,
   $invoiceStateFilter,
   $invoiceSummary,
+  $invoiceSummaryFailed,
+  $invoiceSummaryLoading,
   invoiceAmountFilterChanged,
   invoicePeriodFilterChanged,
   invoiceProjectFilterChanged,
@@ -193,16 +195,20 @@ const StatusField = () => {
 const StatusTabs = () => {
   const { t } = useTranslation()
   const options = useStateOptions()
-  const { state, changeState, summary } = useUnit({
-    state: $invoiceStateFilter,
-    changeState: invoiceStateFilterChanged,
-    summary: $invoiceSummary,
-  })
+  const { state, changeState, summary, summaryLoading, summaryFailed } =
+    useUnit({
+      state: $invoiceStateFilter,
+      changeState: invoiceStateFilterChanged,
+      summary: $invoiceSummary,
+      summaryLoading: $invoiceSummaryLoading,
+      summaryFailed: $invoiceSummaryFailed,
+    })
 
-  const counts: Partial<Record<InvoiceStateFilter, number>> = {
-    Requested: summary.requestedCount,
-    PAID: summary.paidCount,
-  }
+  // Only once the totals are in: a 0 while they load reads as an answer.
+  const counts: Partial<Record<InvoiceStateFilter, number>> =
+    summaryLoading || summaryFailed
+      ? {}
+      : { Requested: summary.requestedCount, PAID: summary.paidCount }
 
   return (
     <Tabs role="group" aria-label={t('invoices.item.status')}>

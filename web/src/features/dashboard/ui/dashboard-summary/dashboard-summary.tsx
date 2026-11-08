@@ -133,6 +133,7 @@ export const DashboardSummary = () => {
   if (failed) {
     return (
       <LoadFailure
+        size="panel"
         title={t('dashboard.summary.failure.title')}
         onRetry={retry}
       />
