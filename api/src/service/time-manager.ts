@@ -95,7 +95,7 @@ export class TimeManager {
           if (!(yield* fromPromise(() => this.seats.mayTrack(project, user)))) {
             return yield* Effect.fail(
               new AccessException(
-                `This project's plan limits tracking to ${FREE_PLAN_WORKERS} workers, and you are not one of them. Your recorded hours stay available and you can still invoice them.`,
+                `This project's plan limits tracking to ${FREE_PLAN_WORKERS} contributors, and you are not one of them. Your recorded hours stay available and you can still invoice them.`,
               ),
             )
           }

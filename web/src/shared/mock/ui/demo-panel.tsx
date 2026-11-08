@@ -27,7 +27,7 @@ import type { ReactNode } from 'react'
 
 const ROLE_LABELS: Record<DemoSettings['role'], string> = {
   owner: 'Owner',
-  worker: 'Worker',
+  worker: 'Contributor',
   viewer: 'Viewer',
   mixed: 'Mixed',
 }
@@ -36,7 +36,7 @@ const WORLD_LABELS: Record<DemoSettings['world'], [string, string]> = {
   empty: ['Empty', 'No projects, no time'],
   starter: ['Starter', '1 project, a few entries'],
   typical: ['Typical', '3-5 projects, a few weeks'],
-  busy: ['Busy', 'Dozens of projects, months, 25 workers'],
+  busy: ['Busy', 'Dozens of projects, months, 25 contributors'],
   random: ['Random', 'A typical shape, redrawn'],
 }
 

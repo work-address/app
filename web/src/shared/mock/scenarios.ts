@@ -29,7 +29,7 @@ const unavailable = (why: string): never => {
 export const DEMO_SCENARIOS: DemoScenario[] = [
   {
     id: 'time.upload',
-    label: 'A worker uploads time now',
+    label: 'A contributor uploads time now',
     description:
       'Half an hour from the desktop app, still inside its review window',
     run: () => {
@@ -39,7 +39,7 @@ export const DEMO_SCENARIOS: DemoScenario[] = [
       )
       if (!project) {
         unavailable(
-          'No project here has another worker. Pick a world with a team.',
+          'No project here has another contributor. Pick a world with a team.',
         )
       }
       const userId = project!.workerIds.find((id) => id !== db.meId)!

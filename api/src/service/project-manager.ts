@@ -168,7 +168,7 @@ export class ProjectManager {
               !AccountAddress.isEmail(address)
             ) {
               throw new BadRequestError(
-                'A collaborator is an EVM address or an email',
+                'Each person must be an EVM address or an email',
               )
             }
 
@@ -211,7 +211,7 @@ export class ProjectManager {
         if (grants && everyone.size > FREE_PLAN_WORKERS) {
           return yield* Effect.fail(
             new BadRequestError(
-              `The free plan includes ${FREE_PLAN_WORKERS} workers across your projects. Upgrade to Premium to add more.`,
+              `The free plan includes ${FREE_PLAN_WORKERS} contributors across your projects. Upgrade to Premium to add more.`,
             ),
           )
         }

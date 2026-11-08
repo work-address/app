@@ -72,7 +72,7 @@ export class UserController {
 
     if (kept.some((address) => !listed.includes(address))) {
       throw new BadRequestError(
-        'Everyone kept must be a worker on your projects',
+        'Everyone kept must be a contributor on your projects',
       )
     }
 

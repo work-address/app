@@ -240,7 +240,7 @@ export class InvoiceManager {
       if (!this.access.canWork(accessible, author)) {
         return yield* Effect.fail(
           new AccessException(
-            'Only a worker or the owner of a project can invoice for its time',
+            'Only a contributor or the owner of a project can invoice for its time',
           ),
         )
       }
