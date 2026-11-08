@@ -226,6 +226,39 @@ export type ConnectedWalletConfirmDto = {
     signature: string;
 };
 
+export type EntitlementPushDto = {
+    userId: string;
+    premium: boolean;
+    issuedAt: number;
+    nonce: string;
+    expiresAt?: string;
+};
+
+export type SeatInventoryRequestDto = {
+    userId: string;
+    from?: string;
+    to?: string;
+    issuedAt: number;
+    nonce: string;
+};
+
+export type KeptWorkersDto = {
+    addresses: Array<string>;
+};
+
+export type TrackingWorkerDto = {
+    address: string;
+    name?: string;
+    connected: boolean;
+    tracking: boolean;
+};
+
+export type TrackingWorkersDto = {
+    limited: boolean;
+    limit: number;
+    workers: Array<TrackingWorkerDto>;
+};
+
 export type SearchDto = {
     page: number;
     filter: {
@@ -389,14 +422,6 @@ export type InvoiceCreateDto = {
 
 export type InvoiceRejectDto = {
     reason?: string;
-};
-
-export type EntitlementPushDto = {
-    userId: string;
-    premium: boolean;
-    issuedAt: number;
-    nonce: string;
-    expiresAt?: string;
 };
 
 /**
@@ -1007,6 +1032,20 @@ export type AgentControllerStatusResponses = {
     200: unknown;
 };
 
+export type TeamControllerReadData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/team';
+};
+
+export type TeamControllerReadResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
 export type StatisticsControllerOverviewData = {
     body: StatisticsQueryDto;
     path?: never;
@@ -1198,6 +1237,32 @@ export type AuthControllerStatusResponses = {
 };
 
 export type AuthControllerStatusResponse = AuthControllerStatusResponses[keyof AuthControllerStatusResponses];
+
+export type UserControllerTrackingWorkersData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/user/tracking-workers';
+};
+
+export type UserControllerTrackingWorkersResponses = {
+    200: TrackingWorkersDto;
+};
+
+export type UserControllerTrackingWorkersResponse = UserControllerTrackingWorkersResponses[keyof UserControllerTrackingWorkersResponses];
+
+export type UserControllerKeepWorkersData = {
+    body: KeptWorkersDto;
+    path?: never;
+    query?: never;
+    url: '/api/user/tracking-workers';
+};
+
+export type UserControllerKeepWorkersResponses = {
+    200: TrackingWorkersDto;
+};
+
+export type UserControllerKeepWorkersResponse = UserControllerKeepWorkersResponses[keyof UserControllerKeepWorkersResponses];
 
 export type UserControllerSettingsData = {
     body?: never;
@@ -1806,6 +1871,23 @@ export type EntitlementControllerPushData = {
 };
 
 export type EntitlementControllerPushResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
+export type EntitlementControllerSeatsData = {
+    /**
+     * SeatInventoryRequestDto
+     */
+    body?: SeatInventoryRequestDto;
+    path?: never;
+    query?: never;
+    url: '/api/internal/seats';
+};
+
+export type EntitlementControllerSeatsResponses = {
     /**
      * Successful response
      */

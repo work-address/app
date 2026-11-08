@@ -6,6 +6,7 @@ import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
 import { Entitlement } from '@/service/entitlement'
 import { AccountAddress } from '@/service/account-address'
+import { HOSTED_SCREENSHOT_RETENTION_DAYS } from '@/model/plan'
 
 export type ProjectRole = 'owner' | 'worker' | 'viewer'
 
@@ -27,7 +28,11 @@ export class ProjectAccess {
   @inject('Entitlement')
   protected entitlement: Entitlement
 
-  /** What the project's lists say this person is, whatever the owner's plan. */
+  /**
+   * What the project's lists say this person is. No plan is read: when an owner
+   * has no plan, everyone keeps sight of the record and can still invoice what
+   * they recorded. Only new tracking is limited, by `WorkerSeats.mayTrack`.
+   */
   public role(project: Project, user: User): ProjectRole | null {
     if (project.isOwner(user)) return 'owner'
     if (this.isListed(project.workerAddresses, user)) return 'worker'
@@ -35,46 +40,28 @@ export class ProjectAccess {
     return null
   }
 
-  /** What that role grants today: a collaborator's needs a plan on the owner. */
-  public access(project: Project, user: User): ProjectRole | null {
+  /** Whether this person works on the project, so may invoice their time. */
+  public canWork(project: Project, user: User): boolean {
     const role = this.role(project, user)
 
-    return role === 'owner' || this.entitlement.isPremium(project.user)
-      ? role
-      : null
+    return role === 'owner' || role === 'worker'
   }
 
-  /** Whether this person may record and invoice time on the project today. */
-  public canWork(project: Project, user: User): boolean {
-    const access = this.access(project, user)
-
-    return access === 'owner' || access === 'worker'
-  }
-
-  /** `access`, as a filter: the projects this person has at least `atLeast` on. */
+  /** `role`, as a filter: the projects this person has at least `atLeast` on. */
   public filterProjects(
     qb: SelectQueryBuilder<ObjectLiteral>,
     aliases: IAccessAliases,
     user: User,
     atLeast: 'worker' | 'viewer',
   ): void {
-    // Self-hosted instances omit the predicate rather than relying on column
-    // data - see Entitlement.shouldFilterByPremium.
-    this.applyFilter(
-      qb,
-      aliases,
-      user,
-      atLeast,
-      this.entitlement.shouldFilterByPremium(),
-    )
+    this.applyFilter(qb, aliases, user, atLeast)
   }
 
   /**
    * The entries this person may list: an owner everyone's on the project, a
    * worker their own, a viewer none, since viewers read totals and nothing per
-   * entry. Reads no plan: collaborators are decided to be free (web/PRODUCT.md
-   * §7 #2), and a worker keeps sight of their own record while they may still
-   * be owed money.
+   * entry. Reads no plan: a worker keeps sight of their own record while they
+   * may still be owed money.
    */
   public filterEntries(
     qb: SelectQueryBuilder<ObjectLiteral>,
@@ -157,8 +144,19 @@ export class ProjectAccess {
     return `(time."userId"=:detailUser OR (project."userId"=:detailUser AND ${this.publishedSql()}))`
   }
 
+  /** The longest any screenshot is kept here: hosted has a limit, self-hosted none. */
+  public screenshotLimitDays(): number | null {
+    return this.entitlement.isSaaS() ? HOSTED_SCREENSHOT_RETENTION_DAYS : null
+  }
+
   public screenshotRetainedSql(): string {
-    return `(project."screenshotRetentionDays" IS NULL OR time."toAt" + project."screenshotRetentionDays" * INTERVAL '1 day' > NOW())`
+    const limit = this.screenshotLimitDays()
+    const days =
+      limit === null
+        ? 'project."screenshotRetentionDays"'
+        : `LEAST(COALESCE(project."screenshotRetentionDays", ${limit}), ${limit})`
+
+    return `(${days} IS NULL OR time."toAt" + ${days} * INTERVAL '1 day' > NOW())`
   }
 
   /** Strips from an entry what this person may not see. */
@@ -176,12 +174,10 @@ export class ProjectAccess {
       time.detailPendingReview =
         time.project?.user?.id === user.id && !this.published(time)
     }
-    if (
-      time.project?.screenshotRetentionDays &&
-      new Date(time.toAt).getTime() +
-        time.project.screenshotRetentionDays * 86400_000 <=
-        Date.now()
-    )
+    const limit = this.screenshotLimitDays()
+    const days = time.project?.screenshotRetentionDays ?? limit
+    const kept = limit === null ? days : Math.min(days ?? limit, limit)
+    if (kept && new Date(time.toAt).getTime() + kept * 86400_000 <= Date.now())
       time.screenshot = null
     return time
   }
@@ -203,7 +199,6 @@ export class ProjectAccess {
     { project, owner }: IAccessAliases,
     user: User,
     atLeast: 'worker' | 'viewer',
-    gated: boolean,
   ): void {
     const userAddress = AccountAddress.toCanonical(user.address)
 
@@ -212,22 +207,14 @@ export class ProjectAccess {
         access
           .where(`${owner}.id = :accessUserId`, { accessUserId: user.id })
           .orWhere(
-            new Brackets((collaborator) => {
-              const listed = new Brackets((lists) => {
-                lists.where(this.onList(project, 'workerAddresses'), {
+            new Brackets((lists) => {
+              lists.where(this.onList(project, 'workerAddresses'), {
+                userAddress,
+              })
+              if (atLeast === 'viewer') {
+                lists.orWhere(this.onList(project, 'viewerAddresses'), {
                   userAddress,
                 })
-                if (atLeast === 'viewer') {
-                  lists.orWhere(this.onList(project, 'viewerAddresses'), {
-                    userAddress,
-                  })
-                }
-              })
-
-              if (gated) {
-                collaborator.where(`${owner}.premium = true`).andWhere(listed)
-              } else {
-                collaborator.where(listed)
               }
             }),
           )

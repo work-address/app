@@ -197,7 +197,11 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     project.text = 'access test'
     project.state = EProjectState.ACTIVE
     project.user = owner
-    project.workerAddresses = [worker.address]
+    project.workerAddresses = [
+      worker.address,
+      (await this.userFixture.createUser()).address,
+      (await this.userFixture.createUser()).address,
+    ]
     project.viewerAddresses = []
 
     let error: unknown
@@ -237,7 +241,11 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     const project = await this.projectFixture.createPersonal(owner)
 
     const patch = new Project()
-    patch.workerAddresses = [worker.address]
+    patch.workerAddresses = [
+      worker.address,
+      (await this.userFixture.createUser()).address,
+      (await this.userFixture.createUser()).address,
+    ]
 
     let error: unknown
 
@@ -257,12 +265,11 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
   }
 
   /**
-   * Gating collaborators at write time is not enough on its own: without a
-   * check on the read path, anyone added during a paid month keeps access for
-   * good once the owner cancels.
+   * When an owner has no plan, everyone keeps sight of the record: a worker may
+   * still be owed money for it. Only new tracking is limited.
    */
   @test()
-  async findProjectCheckAccess_revokedWhenOwnerLosesPremium() {
+  async findProjectCheckAccess_keptWhenOwnerLosesPremium() {
     const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
@@ -289,12 +296,12 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
       await runPromise(
         this.projectManager.findProjectCheckAccess(project, worker),
       ),
-    ).to.be.undefined
+    ).to.exist
     expect(
       await runPromise(
         this.projectManager.findProjectCheckAccess(project, viewer),
       ),
-    ).to.be.undefined
+    ).to.exist
     // The owner never loses access to their own project.
     expect(
       await runPromise(
@@ -335,9 +342,13 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     )
     expect(afterRevoke.workerAddresses).to.deep.equal([workerA.address])
 
-    // ...but swapping in someone new is still a grant, and still refused.
+    // ...but going past the free limit is still a grant, and still refused.
     const regrant = new Project()
-    regrant.workerAddresses = [workerA.address, workerB.address]
+    regrant.workerAddresses = [
+      workerA.address,
+      workerB.address,
+      (await this.userFixture.createUser()).address,
+    ]
 
     let error: unknown
     try {

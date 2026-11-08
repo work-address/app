@@ -140,7 +140,7 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
    * owner's project invoices their own hours; a worker on a free one has no
    * collaborator access at all, so there is nothing for them to bill against.
    */
-  async create_throwsAccessExceptionForWorkerOnAFreeOwnersProject() {
+  async create_openToWorkerOnAFreeOwnersProject() {
     const owner = await this.userFixture.createUser()
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -167,6 +167,8 @@ export class InvoiceManagerTest extends AbstractDatabaseIntegration {
       error = e
     }
 
-    expect(error).to.be.instanceOf(AccessException)
+    // Past the access check: all that stops this is having nothing to bill.
+    expect(error).to.not.be.instanceOf(AccessException)
+    expect((error as { httpCode?: number }).httpCode).to.equal(400)
   }
 }

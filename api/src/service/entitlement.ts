@@ -33,15 +33,4 @@ export class Entitlement {
 
     return Boolean(user?.premium)
   }
-
-  /**
-   * Whether a `premium = true` predicate should be applied to a query at all.
-   * Query builders cannot call `isPremium` per row, so self-hosted instances
-   * omit the clause instead of relying on column data - entitlement is
-   * deployment configuration, not a fact about a user row, and writing it into
-   * the table would strand any instance later pointed at the SaaS.
-   */
-  public shouldFilterByPremium(): boolean {
-    return this.isSaaS()
-  }
 }

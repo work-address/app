@@ -127,7 +127,7 @@ export class InvoiceControllerCreateTest extends BaseControllerTest {
    * access to the project at all. A worker on a premium owner's project may
    * invoice their own hours - see InvoiceManagerTest.
    */
-  async create_deniedForWorkerOnAFreeOwnersProject() {
+  async create_openToWorkerOnAFreeOwnersProject() {
     const owner = await this.userFixture.createUser()
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.create(
@@ -157,8 +157,9 @@ export class InvoiceControllerCreateTest extends BaseControllerTest {
     }
 
     if (!axios.isAxiosError(error)) throw error
-    expect(error.response?.status).to.be.equal(403)
-    expect(error.response?.data.name).to.be.equal('UserAccessException')
+    // Past the access check: all that stops this is having nothing to bill.
+    expect(error.response?.status).to.be.equal(400)
+    expect(error.response?.data.name).to.be.equal('BadRequestError')
   }
 
   @test()

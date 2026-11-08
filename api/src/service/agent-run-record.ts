@@ -29,6 +29,7 @@ import { EProjectState } from '@/model/project'
 import { AgentRepository } from '@/repository/agent-repository'
 import { AgentIdentity } from '@/service/agent-identity'
 import { AgentTimeNormalizer } from '@/service/agent-time-normalizer'
+import { WorkerSeats } from '@/service/worker-seats'
 import { Entitlement } from '@/service/entitlement'
 import { ProjectAccess } from '@/service/project-access'
 import { TimeManager } from '@/service/time-manager'
@@ -130,6 +131,8 @@ export class AgentRunRecord {
   @inject('AgentRepository') private agents: AgentRepository
   @inject('ProjectAccess') private access: ProjectAccess
   @inject('Entitlement') private entitlement: Entitlement
+  @inject('WorkerSeats')
+  protected seats: WorkerSeats
 
   /**
    * Stores a credentialed batch and projects the runs it touches. Every check
@@ -191,7 +194,12 @@ export class AgentRunRecord {
           user,
           await this.attachesTo(tx, projectId, user, credential, events),
         )
-        projects.set(projectId, project)
+        projects.set(
+          projectId,
+          project && (await this.seats.mayTrack(project, user))
+            ? project
+            : null,
+        )
         // The project owner's plan, as human time: see TimeManager.
         if (project && !this.entitlement.isPremium(project.user))
           underRetention.push(project.id)

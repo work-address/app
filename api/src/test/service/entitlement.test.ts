@@ -46,13 +46,6 @@ export class EntitlementTest {
   }
 
   @test()
-  selfHosted_queriesOmitThePremiumPredicate() {
-    const entitlement = this.build('')
-
-    expect(entitlement.shouldFilterByPremium()).to.be.false
-  }
-
-  @test()
   saas_entitlementFollowsTheStoredFlag() {
     const entitlement = this.build('a-shared-secret')
 
@@ -61,13 +54,6 @@ export class EntitlementTest {
     expect(entitlement.isPremium(this.user(false))).to.be.false
     expect(entitlement.isPremium(this.user(null))).to.be.false
     expect(entitlement.isPremium(undefined)).to.be.false
-  }
-
-  @test()
-  saas_queriesApplyThePremiumPredicate() {
-    const entitlement = this.build('a-shared-secret')
-
-    expect(entitlement.shouldFilterByPremium()).to.be.true
   }
 
   @test()

@@ -1,0 +1,28 @@
+{
+  "note": "Cross-repo contract for the seat lookup. This file is duplicated byte-for-byte in work-address/app and work-address/web. web asserts it PRODUCES this request and reads this response; app asserts it ACCEPTS the request. Change both or neither.",
+  "secret": "shared-contract-fixture-secret",
+  "body": {
+    "userId": "3f2504e0-4f89-11d3-9a0c-0305e82c3301",
+    "from": "2026-10-01T00:00:00.000Z",
+    "to": "2026-11-01T00:00:00.000Z",
+    "issuedAt": 1793491200,
+    "nonce": "9c5b94b1-35ad-49bb-b118-8e8fc24abf80"
+  },
+  "serialised": "{\"userId\":\"3f2504e0-4f89-11d3-9a0c-0305e82c3301\",\"from\":\"2026-10-01T00:00:00.000Z\",\"to\":\"2026-11-01T00:00:00.000Z\",\"issuedAt\":1793491200,\"nonce\":\"9c5b94b1-35ad-49bb-b118-8e8fc24abf80\"}",
+  "signature": "43ef78b469b7090dc96a9e3d8b59f60bf88680f641a53e500938c3b624a17c75",
+  "response": {
+    "seats": 2,
+    "connected": 2,
+    "workers": [
+      {
+        "address": "worker@example.com",
+        "name": "A Worker"
+      },
+      {
+        "address": "0x52908400098527886E0F7030069857D2E4169EE7",
+        "name": null
+      }
+    ],
+    "ownerEmail": "owner@example.com"
+  }
+}

@@ -132,10 +132,10 @@ export class ProjectAccessTest extends AbstractDatabaseIntegration {
 
     this.access.filterEntries(qb, { project: 'project', owner: 'owner' }, user)
 
-    const listed = (await qb.getMany()).map((time) => time.id)
+    const listed = new Set((await qb.getMany()).map((time) => time.id))
 
     return Object.keys(entries)
-      .filter((name) => listed.includes(entries[name]))
+      .filter((name) => listed.has(entries[name]))
       .sort()
   }
 
@@ -146,7 +146,8 @@ export class ProjectAccessTest extends AbstractDatabaseIntegration {
   ): ProjectRole | null {
     if (role === 'outsider') return null
     if (role === 'owner') return 'owner'
-    return plan === 'lapsed' && mode === 'saas' ? null : role
+    // No plan is read: when an owner lapses, everyone keeps sight of the record.
+    return plan && mode ? role : null
   }
 
   @test()
@@ -164,10 +165,7 @@ export class ProjectAccessTest extends AbstractDatabaseIntegration {
           const label = `${role}, ${plan}, ${mode}`
           const expected = this.expected(role, plan, mode)
 
-          expect(this.access.access(project, user), label).to.equal(expected)
-          expect(this.access.role(project, user), label).to.equal(
-            role === 'outsider' ? null : role,
-          )
+          expect(this.access.role(project, user), label).to.equal(expected)
           expect(this.access.canWork(project, user), label).to.equal(
             expected === 'owner' || expected === 'worker',
           )

@@ -21,6 +21,7 @@ import { Entitlement } from '@/service/entitlement'
 import { ProjectAccess } from '@/service/project-access'
 import { InvoiceRecord } from '@/service/invoice-record'
 import { EntitlementSignature } from '@/service/entitlement-signature'
+import { WorkerSeats } from '@/service/worker-seats'
 import { UserManager } from '@/service/user-manager'
 import { Mailer } from '@/service/mailer'
 import { Faker } from '@/service/faker'
@@ -102,6 +103,7 @@ export class AppContainer {
     container.bind<Filter>('Filter').to(Filter)
     container.bind<Entitlement>('Entitlement').to(Entitlement)
     container.bind<ProjectAccess>('ProjectAccess').to(ProjectAccess)
+    container.bind<WorkerSeats>('WorkerSeats').to(WorkerSeats)
     container
       .bind<EntitlementSignature>('EntitlementSignature')
       .to(EntitlementSignature)

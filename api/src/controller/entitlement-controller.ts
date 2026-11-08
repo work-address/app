@@ -2,7 +2,12 @@ import { Body, HttpCode, JsonController, Post, Req } from 'routing-controllers'
 import express from 'express'
 
 import { App } from '@/app/app'
-import { EntitlementPushDto } from '@/model/dto/entitlement'
+import {
+  EntitlementPushDto,
+  SeatInventoryRequestDto,
+} from '@/model/dto/entitlement'
+import { ISeatInventory, WorkerSeats } from '@/service/worker-seats'
+import { TimeRepository } from '@/repository/time-repository'
 import { EntitlementSignature } from '@/service/entitlement-signature'
 import { UserManager } from '@/service/user-manager'
 import { UserRepository } from '@/repository/user-repository'
@@ -24,11 +29,15 @@ export class EntitlementController {
   protected entitlementSignature: EntitlementSignature
   protected userManager: UserManager
   protected userRepository: UserRepository
+  protected timeRepository: TimeRepository
+  protected workerSeats: WorkerSeats
 
   constructor() {
     this.entitlementSignature = App.container.get('EntitlementSignature')
     this.userManager = App.container.get('UserManager')
     this.userRepository = App.container.get('UserRepository')
+    this.timeRepository = App.container.get('TimeRepository')
+    this.workerSeats = App.container.get('WorkerSeats')
   }
 
   @HttpCode(200)
@@ -37,6 +46,69 @@ export class EntitlementController {
     @Body() data: EntitlementPushDto,
     @Req() request: express.Request,
   ): Promise<{ applied: boolean }> {
+    await this.authenticate(data, request)
+
+    return runPromise(
+      Effect.gen(this, function* () {
+        const user = yield* this.userRepository.findOneBy({
+          where: { id: data.userId },
+        })
+
+        // A push for an account this instance has never seen is not an error
+        // the caller can act on - the sweep re-asserts everything
+        // periodically, and failing here would make one stale row poison a
+        // whole reconciliation run.
+        if (!user) {
+          return { applied: false }
+        }
+
+        // Before the flag, so a failed restore is retried: the sweep re-asserts
+        // the same push and this still looks like an upgrade.
+        if (data.premium && !user.premium) {
+          yield* this.timeRepository.restoreRotated(user.id)
+        }
+
+        // Idempotent by construction: the push carries absolute state, so
+        // re-applying it costs one write and changes nothing.
+        user.premium = data.premium
+        yield* this.userManager.saveSingle(user)
+
+        return { applied: true }
+      }),
+    )
+  }
+
+  /** Who is on an owner's bill. Billing asks before it charges. */
+  @HttpCode(200)
+  @Post('/seats')
+  public async seats(
+    @Body() data: SeatInventoryRequestDto,
+    @Req() request: express.Request,
+  ): Promise<ISeatInventory> {
+    await this.authenticate(data, request)
+
+    const owner = await runPromise(
+      this.userRepository.findOneBy({ where: { id: data.userId } }),
+    )
+
+    // An owner this instance has never seen has nobody on their bill, which is
+    // the one-seat minimum, the same as an owner working alone.
+    if (!owner) {
+      return { seats: 1, connected: 0, workers: [], ownerEmail: null }
+    }
+
+    return this.workerSeats.inventory(
+      owner,
+      data.from && data.to
+        ? { from: new Date(data.from), to: new Date(data.to) }
+        : undefined,
+    )
+  }
+
+  private async authenticate(
+    data: { issuedAt: number; nonce: string },
+    request: express.Request,
+  ): Promise<void> {
     const signature = request.header('X-Entitlement-Signature') ?? ''
     const raw = JSON.stringify(data)
 
@@ -53,28 +125,5 @@ export class EntitlementController {
     if (!(await this.entitlementSignature.consumeNonce(data.nonce))) {
       throw new AuthenticationException('Entitlement push nonce already used')
     }
-
-    return runPromise(
-      Effect.gen(this, function* () {
-        const user = yield* this.userRepository.findOneBy({
-          where: { id: data.userId },
-        })
-
-        // A push for an account this instance has never seen is not an error
-        // the caller can act on - the sweep re-asserts everything
-        // periodically, and failing here would make one stale row poison a
-        // whole reconciliation run.
-        if (!user) {
-          return { applied: false }
-        }
-
-        // Idempotent by construction: the push carries absolute state, so
-        // re-applying it costs one write and changes nothing.
-        user.premium = data.premium
-        yield* this.userManager.saveSingle(user)
-
-        return { applied: true }
-      }),
-    )
   }
 }

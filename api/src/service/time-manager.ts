@@ -17,6 +17,11 @@ import AccessException from '@/exception/access-exception'
 import ConstraintsValidationException from '@/exception/constraints-validation-exception'
 import RetentionExceededException from '@/exception/retention-exceeded-exception'
 import { ImageResizer } from '@/service/image-resizer'
+import { WorkerSeats } from '@/service/worker-seats'
+import {
+  FREE_PLAN_WORKERS,
+  HOSTED_SCREENSHOT_RETENTION_DAYS,
+} from '@/model/plan'
 import { RepoEffect } from '@/repository/abstract-repository-template'
 import { fromPromise } from '@/service/effect-bridge'
 
@@ -32,6 +37,8 @@ export class TimeManager {
   protected entitlement: Entitlement
   @inject('ILogger')
   protected logger: ILogger
+  @inject('WorkerSeats')
+  protected seats: WorkerSeats
 
   // Projects owned by a non-premium account keep only the trailing N days of
   // time logs. Entitlement is the project owner's, not the author's - see
@@ -84,6 +91,14 @@ export class TimeManager {
             )
 
           touchedProjects.add(project.id)
+
+          if (!(yield* fromPromise(() => this.seats.mayTrack(project, user)))) {
+            return yield* Effect.fail(
+              new AccessException(
+                `This project's plan limits tracking to ${FREE_PLAN_WORKERS} workers, and you are not one of them. Your recorded hours stay available and you can still invoice them.`,
+              ),
+            )
+          }
 
           if (!this.entitlement.isPremium(project.user)) {
             projectIdsUnderRetention.add(project.id)
@@ -181,7 +196,10 @@ export class TimeManager {
           )
         }
 
-        yield* this.timeRepository.purgeExpiredScreenshots([...touchedProjects])
+        yield* this.timeRepository.purgeExpiredScreenshots(
+          [...touchedProjects],
+          this.entitlement.isSaaS() ? HOSTED_SCREENSHOT_RETENTION_DAYS : null,
+        )
         return insertionResults
       })
 

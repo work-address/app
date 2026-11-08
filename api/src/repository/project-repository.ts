@@ -16,6 +16,7 @@ import ProjectUnavailableException from '@/exception/project-unavailable-excepti
 import { EProjectState } from '@/model/project'
 import { ProjectSearchDto } from '@/model/dto/project'
 import { UserRepository } from '@/repository/user-repository'
+import { WorkerSeats } from '@/service/worker-seats'
 import { ProjectAccess } from '@/service/project-access'
 
 /** Every order the project list can ask for, by the name it asks with. */
@@ -41,6 +42,8 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
   protected userRepository: UserRepository
   @inject('ProjectAccess')
   protected access: ProjectAccess
+  @inject('WorkerSeats')
+  protected seats: WorkerSeats
   protected target = Project
 
   public findProjectAsOwner(
@@ -309,7 +312,7 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
         // since the list also holds closed projects and viewer-only ones.
         project.canTrack =
           project.state === EProjectState.ACTIVE &&
-          this.access.canWork(project, user)
+          (yield* fromPromise(() => this.seats.mayTrack(project, user)))
       }
       yield* this.attachAccessUsersToProjects(projects)
 

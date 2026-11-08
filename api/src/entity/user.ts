@@ -33,6 +33,10 @@ export class User extends AbstractBaseEntity implements IUser {
   agents: import('@/model/agent').WorkerAgent[]
 
   // Private settings are returned only by the authenticated /user/settings route.
+  /** Who an owner with no plan keeps tracking with. See WorkerSeats.tracking. */
+  @Column('jsonb', { default: () => "'[]'::jsonb" })
+  keptWorkers: string[]
+
   @Column('jsonb', { default: () => "'[]'::jsonb" })
   personalRedactionRules: import('@/model/dto/user-settings').RedactionRuleDto[]
 

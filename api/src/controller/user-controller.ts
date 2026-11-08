@@ -1,5 +1,6 @@
 import {
   Authorized,
+  BadRequestError,
   Body,
   Delete,
   Get,
@@ -26,6 +27,11 @@ import {
   ConnectedWalletNonceDto,
 } from '@/model/dto/connected-wallet'
 import { ConnectedWallet } from '@/service/connected-wallet'
+import { WorkerSeats } from '@/service/worker-seats'
+import { Entitlement } from '@/service/entitlement'
+import { AccountAddress } from '@/service/account-address'
+import { FREE_PLAN_WORKERS } from '@/model/plan'
+import { KeptWorkersDto, TrackingWorkersDto } from '@/model/dto/entitlement'
 
 @JsonController('/user')
 export class UserController {
@@ -35,6 +41,70 @@ export class UserController {
   constructor() {
     this.userManager = App.container.get('UserManager')
     this.userRepository = App.container.get('UserRepository')
+  }
+
+  @Get('/tracking-workers')
+  @Authorized([EUserRole.ROLE_USER])
+  @OpenAPIExtended({
+    summary: "Read who is listed against the free plan's worker limit",
+    response: { schema: TrackingWorkersDto },
+  })
+  trackingWorkers(@CurrentUser() user: User): Promise<TrackingWorkersDto> {
+    return this.readTrackingWorkers(user)
+  }
+
+  @Put('/tracking-workers')
+  @Authorized([EUserRole.ROLE_USER])
+  @OpenAPIExtended({
+    summary: 'Choose who keeps tracking when the account has no plan',
+    body: { schema: KeptWorkersDto },
+    response: { schema: TrackingWorkersDto },
+  })
+  async keepWorkers(
+    @CurrentUser() user: User,
+    @Body() data: KeptWorkersDto,
+  ): Promise<TrackingWorkersDto> {
+    const seats = App.container.get<WorkerSeats>('WorkerSeats')
+    const listed = await seats.listed(user.id)
+    const kept = data.addresses.map((address) =>
+      AccountAddress.toCanonical(address),
+    )
+
+    if (kept.some((address) => !listed.includes(address))) {
+      throw new BadRequestError(
+        'Everyone kept must be a worker on your projects',
+      )
+    }
+
+    user.keptWorkers = kept
+    await runPromise(this.userManager.saveSingle(user))
+
+    return this.readTrackingWorkers(user)
+  }
+
+  private async readTrackingWorkers(user: User): Promise<TrackingWorkersDto> {
+    const seats = App.container.get<WorkerSeats>('WorkerSeats')
+    const entitlement = App.container.get<Entitlement>('Entitlement')
+    const listed = await seats.listed(user.id)
+    const premium = entitlement.isPremium(user)
+    const tracking = await seats.tracking(user)
+    const accounts = new Map(
+      (await seats.accounts(listed)).map((account) => [
+        AccountAddress.toCanonical(account.address),
+        account,
+      ]),
+    )
+
+    return {
+      limited: !premium && listed.length > FREE_PLAN_WORKERS,
+      limit: FREE_PLAN_WORKERS,
+      workers: listed.map((address) => ({
+        address: accounts.get(address)?.address ?? address,
+        name: accounts.get(address)?.name ?? null,
+        connected: accounts.has(address),
+        tracking: premium || tracking.has(address),
+      })),
+    }
   }
 
   @Get('/settings')

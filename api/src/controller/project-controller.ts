@@ -13,6 +13,7 @@ import {
 import { OpenAPIExtended } from '@/decorator/openapi/openapi-extended'
 import express from 'express'
 import { App } from '@/app/app'
+import { WorkerSeats } from '@/service/worker-seats'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
 import { EntityFromParam } from '@/decorator/entity-from-param'
@@ -239,6 +240,7 @@ export class ProjectController {
         user: currentUser,
       }),
     )
+    await App.container.get<WorkerSeats>('WorkerSeats').sync(currentUser.id)
 
     res.end()
     return res

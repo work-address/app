@@ -183,13 +183,13 @@ export class TeamControllerTest extends BaseControllerTest {
   }
 
   @test()
-  async 'a collaborator of a lapsed owner sees nothing of that project'() {
+  async 'a collaborator of a lapsed owner still sees that project'() {
     const owner = await this.userFixture.createUser()
     const worker = await this.userFixture.createUser()
     const project = await this.projectFixture.createPersonal(owner, 60)
     project.workerAddresses = [worker.address]
     await App.conn.manager.save(project)
-    expect((await this.read(worker)).projects).to.deep.equal([])
+    expect((await this.read(worker)).projects).to.have.length(1)
     expect((await this.read(owner)).projects).to.have.length(1)
   }
 }

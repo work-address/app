@@ -218,7 +218,7 @@
           "lines"
         ],
         "example": {
-          "id": "4b254a73-8086-48f8-ab5e-40ff873b1569"
+          "id": "daefd6d3-1e06-4235-9866-3d8d26c034da"
         }
       },
       "ProjectStatistics": {
@@ -279,7 +279,7 @@
           "period"
         ],
         "example": {
-          "id": "a088411c-f06a-414d-9499-c2d146450269"
+          "id": "98255c2c-59b1-48de-af53-70d7c6235b4c"
         }
       },
       "Time": {
@@ -434,7 +434,7 @@
           "toAt"
         ],
         "example": {
-          "id": "720b1134-c20b-4387-b221-ded6fd7a9cf5"
+          "id": "26ff9e55-e371-4ad7-abe8-fe2a07dde13a"
         }
       },
       "Project": {
@@ -559,7 +559,7 @@
           "state"
         ],
         "example": {
-          "id": "925bcdd4-a021-440d-a216-7078836eaa38"
+          "id": "7a190c49-972e-4c93-b410-dcb0b83dd33f"
         }
       },
       "User": {
@@ -680,7 +680,7 @@
         },
         "type": "object",
         "example": {
-          "id": "d1195c6c-38aa-467d-9303-5b3aa3645502"
+          "id": "57cf9a75-8d46-4206-a8f8-df9d64bb5255"
         }
       },
       "AgentDto": {
@@ -1021,6 +1021,118 @@
         "required": [
           "address",
           "signature"
+        ]
+      },
+      "EntitlementPushDto": {
+        "properties": {
+          "userId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "premium": {
+            "type": "boolean"
+          },
+          "issuedAt": {
+            "type": "integer"
+          },
+          "nonce": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "userId",
+          "premium",
+          "issuedAt",
+          "nonce"
+        ]
+      },
+      "SeatInventoryRequestDto": {
+        "properties": {
+          "userId": {
+            "format": "uuid",
+            "type": "string"
+          },
+          "from": {
+            "type": "string"
+          },
+          "to": {
+            "type": "string"
+          },
+          "issuedAt": {
+            "type": "integer"
+          },
+          "nonce": {
+            "type": "string"
+          }
+        },
+        "type": "object",
+        "required": [
+          "userId",
+          "issuedAt",
+          "nonce"
+        ]
+      },
+      "KeptWorkersDto": {
+        "properties": {
+          "addresses": {
+            "items": {
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 2
+          }
+        },
+        "type": "object",
+        "required": [
+          "addresses"
+        ]
+      },
+      "TrackingWorkerDto": {
+        "properties": {
+          "address": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "connected": {
+            "type": "boolean"
+          },
+          "tracking": {
+            "type": "boolean"
+          }
+        },
+        "type": "object",
+        "required": [
+          "address",
+          "connected",
+          "tracking"
+        ]
+      },
+      "TrackingWorkersDto": {
+        "properties": {
+          "limited": {
+            "type": "boolean"
+          },
+          "limit": {
+            "type": "integer"
+          },
+          "workers": {
+            "items": {
+              "$ref": "#/components/schemas/TrackingWorkerDto"
+            },
+            "type": "array"
+          }
+        },
+        "type": "object",
+        "required": [
+          "limited",
+          "limit",
+          "workers"
         ]
       },
       "SearchDto": {
@@ -1642,33 +1754,6 @@
           }
         },
         "type": "object"
-      },
-      "EntitlementPushDto": {
-        "properties": {
-          "userId": {
-            "format": "uuid",
-            "type": "string"
-          },
-          "premium": {
-            "type": "boolean"
-          },
-          "issuedAt": {
-            "type": "integer"
-          },
-          "nonce": {
-            "type": "string"
-          },
-          "expiresAt": {
-            "type": "string"
-          }
-        },
-        "type": "object",
-        "required": [
-          "userId",
-          "premium",
-          "issuedAt",
-          "nonce"
-        ]
       },
       "User_search": {
         "type": "object",
@@ -3465,6 +3550,67 @@
         ]
       }
     },
+    "/api/user/tracking-workers": {
+      "get": {
+        "operationId": "UserController.trackingWorkers",
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackingWorkersDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Read who is listed against the free plan's worker limit",
+        "tags": [
+          "User"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      },
+      "put": {
+        "operationId": "UserController.keepWorkers",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/KeptWorkersDto"
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TrackingWorkersDto"
+                }
+              }
+            },
+            "description": ""
+          }
+        },
+        "summary": "Choose who keeps tracking when the account has no plan",
+        "tags": [
+          "User"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/user/settings": {
       "get": {
         "operationId": "UserController.settings",
@@ -4710,7 +4856,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "bdcdf09a-b7a8-4852-ba0f-7d9f80853b52"
+                  "projectId": "3a3691b2-5c7a-4b58-b445-3d53751c1f3e"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -4778,8 +4924,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1794084862354,
-                "toUnix": 1794171262354
+                "fromUnix": 1794089929816,
+                "toUnix": 1794176329816
               }
             }
           },
@@ -5073,6 +5219,34 @@
         ]
       }
     },
+    "/api/internal/seats": {
+      "post": {
+        "operationId": "EntitlementController.seats",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SeatInventoryRequestDto"
+              }
+            }
+          },
+          "description": "SeatInventoryRequestDto",
+          "required": false
+        },
+        "responses": {
+          "200": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Seats",
+        "tags": [
+          "Entitlement"
+        ]
+      }
+    },
     "/api/auth/timeTracker/nonce": {
       "post": {
         "operationId": "AuthTimeTrackerController.timeTrackerNonceGenerate",
@@ -5144,7 +5318,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "f4994593-090b-4a48-a1c6-8d808dd20cad"
+                "nonce": "b1dc87dc-a1d3-4806-a56e-7c526ae8803b"
               },
               "schema": {
                 "properties": {
@@ -5189,7 +5363,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "0779f820-b313-43cf-bb8a-ea0264656b0d"
+                "nonce": "d29c9a32-d73c-41ad-80c6-25003b34f137"
               },
               "schema": {
                 "properties": {
@@ -5230,21 +5404,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "b2a34133-38b8-495c-9083-a671c599bcb6",
+                      "nonce": "76c19fee-5bdb-4b1a-8916-0c8bcbd93ac1",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "91f67efd-bce1-481f-81f5-b8695940a2ac",
+                      "nonce": "ffbc0e7a-12be-4e7b-a917-6762aa1ee9e4",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "aab3c5dd-e709-45bd-a8eb-0f393a4ec5d3",
+                      "nonce": "89c5c331-bbd8-4734-8d1a-2a2d070aea8d",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

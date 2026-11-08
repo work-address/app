@@ -10,6 +10,9 @@ import { ProjectAccessAddresses } from '@/model/dto/project'
 import { RepoEffect } from '@/repository/abstract-repository-template'
 import { Entitlement } from '@/service/entitlement'
 import { AccountAddress } from '@/service/account-address'
+import { WorkerSeats } from '@/service/worker-seats'
+import { fromPromise } from '@/service/effect-bridge'
+import { FREE_PLAN_WORKERS } from '@/model/plan'
 
 @injectable()
 export class ProjectManager {
@@ -17,6 +20,8 @@ export class ProjectManager {
   protected projectRepository: ProjectRepository
   @inject('Entitlement')
   protected entitlement: Entitlement
+  @inject('WorkerSeats')
+  protected seats: WorkerSeats
 
   public findProjectCheckAccess(
     project: Project,
@@ -28,52 +33,60 @@ export class ProjectManager {
   public close(project: Project): RepoEffect<void> {
     project.state = EProjectState.INACTIVE
 
-    return this.save(project).pipe(Effect.asVoid)
+    return this.withSeatHistory(project, this.save(project)).pipe(Effect.asVoid)
   }
 
   public createAndSave(data: Project): RepoEffect<Project> {
-    if (
-      data.workerAddresses !== undefined ||
-      data.viewerAddresses !== undefined
-    ) {
-      // A brand new project grants from nothing, so every address in the
-      // payload counts as a grant.
-      this.setAccessAddresses(
-        data,
-        {
-          workerAddresses: data.workerAddresses ?? [],
-          viewerAddresses: data.viewerAddresses ?? [],
-        },
-        { workerAddresses: [], viewerAddresses: [] },
-      )
-    }
+    return Effect.gen(this, function* () {
+      if (
+        data.workerAddresses !== undefined ||
+        data.viewerAddresses !== undefined
+      ) {
+        // A brand new project grants from nothing, so every address in the
+        // payload counts as a grant.
+        yield* this.setAccessAddresses(
+          data,
+          {
+            workerAddresses: data.workerAddresses ?? [],
+            viewerAddresses: data.viewerAddresses ?? [],
+          },
+          { workerAddresses: [], viewerAddresses: [] },
+        )
+      }
 
-    delete (data as Partial<Project>).agents
-    delete (data as Partial<Project>).agentAttachments
-    data.agentTrackingSince = data.trackAgents ? new Date() : null
-    return this.save(data)
+      delete (data as Partial<Project>).agents
+      delete (data as Partial<Project>).agentAttachments
+      data.agentTrackingSince = data.trackAgents ? new Date() : null
+      return yield* this.withSeatHistory(data, this.save(data))
+    })
   }
 
   public editAndSave(project: Project, data: Project): RepoEffect<void> {
-    if (
-      data.workerAddresses !== undefined ||
-      data.viewerAddresses !== undefined
-    ) {
-      this.setAccessAddresses(
-        project,
-        {
-          workerAddresses:
-            data.workerAddresses ?? project.workerAddresses ?? [],
-          viewerAddresses:
-            data.viewerAddresses ?? project.viewerAddresses ?? [],
-        },
-        {
-          workerAddresses: project.workerAddresses ?? [],
-          viewerAddresses: project.viewerAddresses ?? [],
-        },
-      )
-    }
+    return Effect.gen(this, function* () {
+      if (
+        data.workerAddresses !== undefined ||
+        data.viewerAddresses !== undefined
+      ) {
+        yield* this.setAccessAddresses(
+          project,
+          {
+            workerAddresses:
+              data.workerAddresses ?? project.workerAddresses ?? [],
+            viewerAddresses:
+              data.viewerAddresses ?? project.viewerAddresses ?? [],
+          },
+          {
+            workerAddresses: project.workerAddresses ?? [],
+            viewerAddresses: project.viewerAddresses ?? [],
+          },
+        )
+      }
 
+      yield* this.applyEdit(project, data)
+    })
+  }
+
+  private applyEdit(project: Project, data: Project): RepoEffect<void> {
     delete (data as Partial<Project>).agents
     // Transformation exposes absent fields as undefined; a partial edit must
     // retain the stored policy so legacy nulls can be normalized on save.
@@ -98,7 +111,36 @@ export class ProjectManager {
       project.agentTrackingSince = new Date()
     Object.assign(project, editable)
 
-    return this.save(project).pipe(Effect.asVoid)
+    return this.withSeatHistory(project, this.save(project)).pipe(Effect.asVoid)
+  }
+
+  /**
+   * Records the seat history around a change to who is on a project. Billing
+   * syncs again when it reads, so a failure here is worth a log and not a
+   * refused edit.
+   */
+  private withSeatHistory<A>(
+    project: Project,
+    change: RepoEffect<A>,
+  ): RepoEffect<A> {
+    const ownerId = project.user?.id
+    const sync = fromPromise(() =>
+      ownerId ? this.seats.sync(ownerId) : Promise.resolve(),
+    ).pipe(
+      Effect.catchAll((error) =>
+        Effect.sync(() =>
+          console.error(`Seat history not updated for ${ownerId}`, error),
+        ),
+      ),
+    )
+
+    return Effect.gen(function* () {
+      yield* sync
+      const result = yield* change
+      yield* sync
+
+      return result
+    })
   }
 
   /**
@@ -111,62 +153,76 @@ export class ProjectManager {
     project: Project,
     data: ProjectAccessAddresses,
     current: ProjectAccessAddresses,
-  ): void {
-    const ownerAddress = AccountAddress.toCanonical(project.user.address)
-    // Deduped on the canonical form, so one account entered twice is one entry,
-    // while the surviving string keeps an EVM address's checksum casing.
-    const forStorage = (addresses: string[]): string[] => {
-      const seen = new Set<string>()
+  ): RepoEffect<void> {
+    return Effect.gen(this, function* () {
+      const ownerAddress = AccountAddress.toCanonical(project.user.address)
+      // Deduped on the canonical form, so one account entered twice is one entry,
+      // while the surviving string keeps an EVM address's checksum casing.
+      const forStorage = (addresses: string[]): string[] => {
+        const seen = new Set<string>()
 
-      return addresses
-        .map((address) => {
-          if (
-            !AccountAddress.isEvm(address) &&
-            !AccountAddress.isEmail(address)
-          ) {
-            throw new BadRequestError(
-              'A collaborator is an EVM address or an email',
-            )
-          }
+        return addresses
+          .map((address) => {
+            if (
+              !AccountAddress.isEvm(address) &&
+              !AccountAddress.isEmail(address)
+            ) {
+              throw new BadRequestError(
+                'A collaborator is an EVM address or an email',
+              )
+            }
 
-          return AccountAddress.toStorage(address)
-        })
-        .filter((address) => {
-          const key = AccountAddress.toCanonical(address)
+            return AccountAddress.toStorage(address)
+          })
+          .filter((address) => {
+            const key = AccountAddress.toCanonical(address)
 
-          if (seen.has(key) || key === ownerAddress) {
-            return false
-          }
+            if (seen.has(key) || key === ownerAddress) {
+              return false
+            }
 
-          seen.add(key)
+            seen.add(key)
 
-          return true
-        })
-    }
-
-    const workerAddresses = forStorage(data.workerAddresses)
-    const viewerAddresses = forStorage(data.viewerAddresses)
-
-    if (!this.entitlement.isPremium(project.user)) {
-      // Gate *granting*, never revoking. An owner whose subscription lapsed
-      // still has to be able to take access away one collaborator at a time -
-      // otherwise their only way out is to wipe the whole list.
-      const grantsAccess =
-        ProjectManager.addsAddress(workerAddresses, current.workerAddresses) ||
-        ProjectManager.addsAddress(viewerAddresses, current.viewerAddresses)
-
-      if (grantsAccess) {
-        throw new BadRequestError(
-          'Collaborators (workers and viewers) require a premium subscription',
-        )
+            return true
+          })
       }
-    }
 
-    project.workerAddresses = workerAddresses
-    project.viewerAddresses = viewerAddresses
+      const workerAddresses = forStorage(data.workerAddresses)
+      const viewerAddresses = forStorage(data.viewerAddresses)
+
+      if (!this.entitlement.isPremium(project.user)) {
+        // Limit *granting*, never revoking or keeping: an owner whose
+        // subscription lapsed can still take access away one worker at a time,
+        // and viewers are free whatever the plan.
+        const elsewhere = yield* fromPromise(() =>
+          this.seats.listed(project.user.id, { exceptProjectId: project.id }),
+        )
+        const everyone = new Set([
+          ...elsewhere,
+          ...workerAddresses.map((address) =>
+            AccountAddress.toCanonical(address),
+          ),
+        ])
+        const grants = ProjectManager.addedWorkers(workerAddresses, [
+          ...current.workerAddresses,
+          ...elsewhere,
+        ])
+
+        if (grants && everyone.size > FREE_PLAN_WORKERS) {
+          return yield* Effect.fail(
+            new BadRequestError(
+              `The free plan includes ${FREE_PLAN_WORKERS} workers across your projects. Upgrade to Premium to add more.`,
+            ),
+          )
+        }
+      }
+
+      project.workerAddresses = workerAddresses
+      project.viewerAddresses = viewerAddresses
+    })
   }
 
-  private static addsAddress(next: string[], current: string[]): boolean {
+  private static addedWorkers(next: string[], current: string[]): boolean {
     const existing = new Set(
       current.map((address) => AccountAddress.toCanonical(address)),
     )
