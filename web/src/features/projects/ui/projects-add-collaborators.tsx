@@ -220,9 +220,15 @@ const AddressField = styled.div`
   min-width: 0;
 `
 
+/* Wide enough for the longest role label, Japanese "Contributor". On a phone
+   the address field needs the room more, and the open list shows it in full. */
 const RoleField = styled.div`
-  width: 160px;
+  width: 196px;
   flex-shrink: 0;
+
+  @media (max-width: 480px) {
+    width: 160px;
+  }
 `
 
 const Header = styled.div`
