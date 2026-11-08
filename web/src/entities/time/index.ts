@@ -140,7 +140,8 @@ export {
   type TimeAgentSegment,
   type TimeQueryParams,
   type RecentTimeParams,
-  type RecentTimeOfUserParams,
+  type RecentDesktopTimeParams,
+  type RecentEntriesParams,
 } from './time.queries'
 
 export {

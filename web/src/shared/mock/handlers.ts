@@ -257,6 +257,10 @@ const DETAIL_FILTERS = [
   'mouseDistanceTo',
 ]
 
+/** Whether a list filter lets this id through; an empty list narrows nothing. */
+const among = (list: unknown, id: string) =>
+  !Array.isArray(list) || list.length === 0 || list.includes(id)
+
 function searchTimes({ db, meId, body }: Ctx) {
   const filter = (body.filter ?? {}) as Record<string, unknown>
   const has = (key: string) => filter[key] !== undefined && filter[key] !== null
@@ -274,6 +278,15 @@ function searchTimes({ db, meId, body }: Ctx) {
       return false
     }
     if (has('projectId') && time.projectId !== filter.projectId) {
+      return false
+    }
+    if (
+      !among(filter.projectIds, time.projectId) ||
+      !among(filter.userIds, time.userId)
+    ) {
+      return false
+    }
+    if (has('source') && time.source !== filter.source) {
       return false
     }
     if (

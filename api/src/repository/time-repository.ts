@@ -263,6 +263,21 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
             projectId: s.filter.projectId,
           })
         }
+        if (s.filter.projectIds?.length) {
+          filterQb.andWhere('project.id IN (:...projectIds)', {
+            projectIds: s.filter.projectIds,
+          })
+        }
+        if (s.filter.userIds?.length) {
+          filterQb.andWhere('user.id IN (:...userIds)', {
+            userIds: s.filter.userIds,
+          })
+        }
+        if ('source' in s.filter) {
+          filterQb.andWhere('time.source = :source', {
+            source: s.filter.source,
+          })
+        }
         if ('fromAt' in s.filter) {
           filterQb.andWhere('time.fromAt >= :fromAt', {
             fromAt: s.filter.fromAt,

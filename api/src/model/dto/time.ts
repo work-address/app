@@ -1,6 +1,7 @@
 import { Type } from 'class-transformer'
 import {
   Allow,
+  ArrayMaxSize,
   ArrayMinSize,
   IsArray,
   IsBoolean,
@@ -17,8 +18,13 @@ import type { OrderByCondition } from 'typeorm'
 
 import { ISearch, SearchDto } from './search'
 
+import type { Time } from '@/entity/time'
+
 type SortDirection = Extract<OrderByCondition[string], 'ASC' | 'DESC'>
 const SORT_DIRECTIONS: SortDirection[] = ['ASC', 'DESC']
+
+type TimeSource = Time['source']
+const TIME_SOURCES: TimeSource[] = ['desktop', 'manual', 'web']
 
 class TimeSearchSortDto {
   @IsIn(SORT_DIRECTIONS)
@@ -74,6 +80,22 @@ class TimeSearchFilterDto {
   @IsUUID()
   @IsOptional()
   projectId?: string
+  /** Any of these projects; an empty list narrows nothing. */
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(100)
+  @IsUUID('all', { each: true })
+  projectIds?: string[]
+  /** Entries by any of these people; an empty list narrows nothing. */
+  @IsOptional()
+  @IsArray()
+  @ArrayMaxSize(100)
+  @IsUUID('all', { each: true })
+  userIds?: string[]
+  /** Where the time came from. */
+  @IsIn(TIME_SOURCES)
+  @IsOptional()
+  source?: TimeSource
   @IsDate()
   @IsOptional()
   @Type(() => Date)

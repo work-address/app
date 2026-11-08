@@ -218,7 +218,7 @@
           "lines"
         ],
         "example": {
-          "id": "ead174b6-7109-4013-b2c6-f3cc202b077f"
+          "id": "3c92b49f-87d7-451e-92e7-3b38fbe275c9"
         }
       },
       "ProjectStatistics": {
@@ -279,7 +279,7 @@
           "period"
         ],
         "example": {
-          "id": "468f80c4-12c5-4b70-b911-2663e54b89e1"
+          "id": "2fb21c6b-dc56-4e62-ad1f-b7893b704287"
         }
       },
       "Time": {
@@ -430,7 +430,7 @@
           "toAt"
         ],
         "example": {
-          "id": "0c62927f-417c-485d-93af-ce65738f895e"
+          "id": "0891be07-b763-4362-9273-7fbe5451b117"
         }
       },
       "Project": {
@@ -555,7 +555,7 @@
           "state"
         ],
         "example": {
-          "id": "f0e80334-65d0-41f2-ab05-87c66b4bf19d"
+          "id": "670f0c61-62d5-4238-9ade-fceb3a9efac6"
         }
       },
       "User": {
@@ -676,7 +676,7 @@
         },
         "type": "object",
         "example": {
-          "id": "d35a6901-ec62-4a7d-8a97-ebd1ed0a920f"
+          "id": "601b8038-3a24-47f9-be89-fa00847ed72d"
         }
       },
       "AgentDto": {
@@ -1266,6 +1266,30 @@
           "projectId": {
             "format": "uuid",
             "type": "string"
+          },
+          "projectIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 100
+          },
+          "userIds": {
+            "items": {
+              "format": "uuid",
+              "type": "string"
+            },
+            "type": "array",
+            "maxItems": 100
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "desktop",
+              "manual",
+              "web"
+            ]
           },
           "fromAt": {
             "oneOf": [
@@ -2875,6 +2899,39 @@
           }
         },
         "summary": "Search",
+        "tags": [
+          "Agent"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
+    "/api/agent-tracking/runs/{runKey}/prompt": {
+      "delete": {
+        "operationId": "AgentController.removePrompt",
+        "parameters": [
+          {
+            "in": "path",
+            "name": "runKey",
+            "required": true,
+            "schema": {
+              "pattern": "[^\\/#\\?]+?",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "204": {
+            "content": {
+              "application/json": {}
+            },
+            "description": "Successful response"
+          }
+        },
+        "summary": "Erase the prompt that started one of the caller's own runs, until it is invoiced",
         "tags": [
           "Agent"
         ],
@@ -4623,7 +4680,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "37861c7c-839c-4345-9101-481c907a28c9"
+                  "projectId": "fb2059b0-6195-4b83-93d1-1e07bdfe8b51"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -4691,8 +4748,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1793635069229,
-                "toUnix": 1793721469229
+                "fromUnix": 1794049589153,
+                "toUnix": 1794135989153
               }
             }
           },
@@ -5057,7 +5114,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "3af6139d-48e1-4b9c-bd69-1cbafc0c5f6e"
+                "nonce": "4f6cfaa2-72e0-4b02-b80a-cce29148dac5"
               },
               "schema": {
                 "properties": {
@@ -5102,7 +5159,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "31d7e5d4-c174-4049-a7ff-27d6ba6eb6cf"
+                "nonce": "5ba3a1bf-b8c2-4a1c-a8fa-214648e8be95"
               },
               "schema": {
                 "properties": {
@@ -5143,21 +5200,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "6cf0fb99-f4bb-4d5c-89bb-6d40d32ab93b",
+                      "nonce": "882d47a2-ef98-4447-b7c5-d9b555cbe113",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "66fa9aa7-b021-41eb-a581-7ec9f66fd5ae",
+                      "nonce": "95601306-e9e7-4566-97be-fb1d5545edbd",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "c75115c7-485e-4e53-9ad9-33fcb5bf9845",
+                      "nonce": "dd4cfe2f-8f4c-4b77-b5be-ac4ed0378f1c",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

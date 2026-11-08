@@ -1123,6 +1123,153 @@ export class TimeControllerSearchTest extends BaseControllerTest {
     expect(error.response?.status).to.be.equal(400)
   }
 
+  /** The ids a search lists, for a body that may hold the new filters. */
+  private async searchIds(
+    user: Awaited<ReturnType<typeof this.userFixture.createUser>>,
+    filter: Record<string, unknown>,
+  ): Promise<string[]> {
+    const res = await timeControllerSearch({
+      client: this.apiClient(),
+      headers: {
+        Authorization: this.authenticator.getTokens(user).accessToken,
+      },
+      body: {
+        filter: filter as never,
+        sort: { fromAt: 'DESC' },
+        page: 0,
+        limit: 100,
+      },
+      throwOnError: true,
+    })
+
+    return (res.data[0] as Array<{ id: string }>).map((row) => row.id)
+  }
+
+  private async searchStatus(
+    user: Awaited<ReturnType<typeof this.userFixture.createUser>>,
+    filter: Record<string, unknown>,
+  ): Promise<number | undefined> {
+    try {
+      await this.searchIds(user, filter)
+      return 200
+    } catch (error: unknown) {
+      if (!axios.isAxiosError(error)) throw error
+      return error.response?.status
+    }
+  }
+
+  @test
+  async search_filtersByAuthors() {
+    const owner = await this.userFixture.createPremiumUser()
+    const worker = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner)
+    project.workerAddresses = [worker.address]
+    await runPromise(this.projectRepository.saveSingle(project))
+    const to = moment.utc().subtract(2, 'days')
+    const from = to.clone().subtract(30, 'minutes')
+    const owners = await this.timeFixture.create(
+      project,
+      from.toDate(),
+      to.toDate(),
+      owner,
+    )
+    const workers = await this.timeFixture.create(
+      project,
+      from.toDate(),
+      to.toDate(),
+      worker,
+    )
+
+    expect(await this.searchIds(owner, { userIds: [worker.id] })).to.deep.equal(
+      [workers.id],
+    )
+    expect(await this.searchIds(owner, { userIds: [owner.id] })).to.deep.equal([
+      owners.id,
+    ])
+    expect(
+      await this.searchIds(owner, { userIds: [owner.id, worker.id] }),
+    ).to.have.members([owners.id, workers.id])
+    // An empty list is no filter, like the statistics' people list.
+    expect(await this.searchIds(owner, { userIds: [] })).to.have.members([
+      owners.id,
+      workers.id,
+    ])
+  }
+
+  @test
+  async search_authorFilterShowsAStrangerNothing() {
+    const owner = await this.userFixture.createUser()
+    const stranger = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(owner)
+    await this.timeFixture.create(
+      project,
+      moment.utc().subtract(60, 'minutes').toDate(),
+      moment.utc().toDate(),
+    )
+
+    expect(await this.searchIds(stranger, { userIds: [owner.id] })).to.be.empty
+  }
+
+  @test
+  async search_filtersByProjects() {
+    const user = await this.userFixture.createUser()
+    const first = await this.projectFixture.createPersonal(user)
+    const second = await this.projectFixture.createPersonal(user)
+    const third = await this.projectFixture.createPersonal(user)
+    const to = moment.utc().subtract(1, 'days')
+    const from = to.clone().subtract(30, 'minutes')
+    const [a, b] = await Promise.all(
+      [first, second, third].map((project) =>
+        this.timeFixture.create(project, from.toDate(), to.toDate()),
+      ),
+    )
+
+    expect(
+      await this.searchIds(user, { projectIds: [first.id, second.id] }),
+    ).to.have.members([a.id, b.id])
+    expect(await this.searchIds(user, { projectIds: [] })).to.have.lengthOf(3)
+  }
+
+  @test
+  async search_filtersBySource() {
+    const user = await this.userFixture.createUser()
+    const project = await this.projectFixture.createPersonal(user)
+    const to = moment.utc().subtract(1, 'days')
+    const desktop = await this.timeFixture.create(
+      project,
+      to.clone().subtract(30, 'minutes').toDate(),
+      to.toDate(),
+    )
+    const manual = await this.timeFixture.create(
+      project,
+      to.clone().subtract(90, 'minutes').toDate(),
+      to.clone().subtract(60, 'minutes').toDate(),
+    )
+    manual.source = 'manual'
+    await runPromise(this.timeRepository.saveSingle(manual))
+
+    expect(await this.searchIds(user, { source: 'desktop' })).to.deep.equal([
+      desktop.id,
+    ])
+    expect(await this.searchIds(user, { source: 'manual' })).to.deep.equal([
+      manual.id,
+    ])
+  }
+
+  @test
+  async search_rejectsMalformedNewFilters() {
+    const user = await this.userFixture.createUser()
+
+    for (const filter of [
+      { userIds: ['not-a-uuid'] },
+      { userIds: faker.string.uuid() },
+      { projectIds: ['not-a-uuid'] },
+      { source: 'telepathy' },
+    ]) {
+      expect(await this.searchStatus(user, filter)).to.equal(400)
+    }
+  }
+
   @test
   async search_rejectsInvalidLimitType() {
     const user = await this.userFixture.createUser()

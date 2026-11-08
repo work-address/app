@@ -126,6 +126,8 @@ const mock: ContractAdapter = {
 
     return {
       project: 'active',
+      ownerId: PEOPLE.owner,
+      workerId: PEOPLE.worker,
       draftEntry: 'draft',
       oldEntry: 'old',
       looseEntry: 'loose',

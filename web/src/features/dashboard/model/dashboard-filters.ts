@@ -285,7 +285,22 @@ sample({
 sample({
   clock: filtersApplied,
   source: $dashboardInstants,
-  target: [recentAgentRunsQuery.start, recentScreenshotsQuery.start],
+  target: recentAgentRunsQuery.start,
+})
+
+sample({
+  clock: filtersApplied,
+  source: {
+    instants: $dashboardInstants,
+    projectIds: $dashboardProjectIds,
+    userIds: $dashboardUserIds,
+  },
+  fn: ({ instants, projectIds, userIds }) => ({
+    ...instants,
+    projectIds,
+    userIds,
+  }),
+  target: recentScreenshotsQuery.start,
 })
 
 // Ownership is only known once the projects arrive, which can be after the
@@ -298,40 +313,31 @@ sample({
   target: statisticsTeamQuery.start,
 })
 
-const VISIBLE_SCREENSHOTS = 8
-
-/**
- * The newest screenshots matching the filter. The search takes one project at
- * most and no person, so the selection is applied to its newest page here.
- */
-export const $dashboardScreenshots = combine(
-  recentScreenshotsQuery.$data,
-  $dashboardProjects,
-  $dashboardUserIds,
-  (entries, projects, userIds) => {
-    const visible = new Set(projects.map((project) => project.id))
-    const people = new Set(userIds)
-
-    return (entries ?? [])
-      .filter((entry) => visible.has(entry.project?.id))
-      .filter(
-        (entry) =>
-          people.size === 0 ||
-          people.has((entry as { user?: { id?: string } }).user?.id ?? ''),
-      )
-      .slice(0, VISIBLE_SCREENSHOTS)
-  },
+/** The newest screenshots matching the filter. */
+export const $dashboardScreenshots = recentScreenshotsQuery.$data.map(
+  (entries) => entries ?? [],
 )
 
 /** Asks again for the reader's latest session, after a failure. */
 export const dashboardDesktopSessionRequested = createEvent()
 
+/** Who the reader is, changing only when that does. */
+const $readerId = $user.map((user) => user?.id ?? null)
+
 // The reader's own entries: who they are can arrive after the filters.
 sample({
-  clock: [filtersApplied, $user.updates, dashboardDesktopSessionRequested],
-  source: { instants: $dashboardInstants, user: $user },
+  clock: [filtersApplied, $readerId.updates, dashboardDesktopSessionRequested],
+  source: {
+    instants: $dashboardInstants,
+    projectIds: $dashboardProjectIds,
+    user: $user,
+  },
   filter: ({ user }) => Boolean(user?.id),
-  fn: ({ instants, user }) => ({ ...instants, userId: user?.id ?? '' }),
+  fn: ({ instants, projectIds, user }) => ({
+    ...instants,
+    projectIds,
+    userId: user?.id ?? '',
+  }),
   target: recentTimeQuery.start,
 })
 

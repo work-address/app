@@ -58,16 +58,14 @@ blocks and the app's larger type and spacing.
   value on the right. Invoice amounts are grouped like every other amount
   (`$9,976.32`).
 - **Desktop session is the reader's own, read from real entries.** The time
-  search returns each entry's author, though the generated type leaves it out.
-  The block shows the signed-in person's latest stretch of desktop-app time in
-  the selected projects and period, joined across gaps of up to ten minutes
-  (the statistics' focus-session rule): its length, when it ended, its project
-  and note, and a "View session" link to that day on the Time page. Like
-  Insights, it is about the reader whoever the people filter selects, and a
-  viewer, who cannot track, does not get it. The search takes no person, so
-  pages of everyone's entries are read newest first, up to 1,000 entries; past
-  that, a busy team's owner sees "No recent desktop session". The duration uses
-  the app's format ("2 hr 10 min") rather than the preview's stopwatch.
+  search filters by `userIds`, `projectIds` and `source`, so the block asks for
+  the signed-in person's newest desktop-app entries in the selected projects
+  and period, and joins them across gaps of up to ten minutes (the statistics'
+  focus-session rule): its length, when it ended, its project and note, and a
+  "View session" link to that day on the Time page. Like Insights, it is about
+  the reader whoever the people filter selects, and a viewer, who cannot track,
+  does not get it. The duration uses the app's format ("2 hr 10 min") rather
+  than the preview's stopwatch.
 - **Real data in place of illustrative data.** Avatars are initials or the
   profile's QR code, sample names and figures come from the demo world, and the
   "Saved"/"Synced" labels appear only when application state backs them.
@@ -78,7 +76,7 @@ blocks and the app's larger type and spacing.
 
 ## Desktop session states checked, desktop and phone
 
-Filled (a teammate's newer entries skipped, the reader's session found), empty
+Filled (the reader's session, whatever teammates tracked since), empty
 ("No recent desktop session" when the period holds none of the reader's
 desktop time), loading in the block's own shape with its place held while
 projects load, a failed request with Try again recovering it, hidden for a

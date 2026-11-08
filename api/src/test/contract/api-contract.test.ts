@@ -96,6 +96,8 @@ export class ApiContractTest
 
     return {
       project: project.id,
+      ownerId: owner.id,
+      workerId: worker.id,
       draftEntry: draft.id,
       oldEntry: old.id,
       looseEntry: loose.id,

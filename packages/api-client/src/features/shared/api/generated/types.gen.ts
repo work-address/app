@@ -285,6 +285,9 @@ export type TimeSearchSortDto = {
 
 export type TimeSearchFilterDto = {
     projectId?: string;
+    projectIds?: Array<string>;
+    userIds?: Array<string>;
+    source?: 'desktop' | 'manual' | 'web';
     fromAt?: string | string;
     toAt?: string | string;
     note?: string;
@@ -969,6 +972,22 @@ export type AgentControllerSearchResponses = {
      * Successful response
      */
     200: unknown;
+};
+
+export type AgentControllerRemovePromptData = {
+    body?: never;
+    path: {
+        runKey: string;
+    };
+    query?: never;
+    url: '/api/agent-tracking/runs/{runKey}/prompt';
+};
+
+export type AgentControllerRemovePromptResponses = {
+    /**
+     * Successful response
+     */
+    204: unknown;
 };
 
 export type AgentControllerStatusData = {

@@ -129,7 +129,7 @@ export const getEntryAgentRuns = (
   runs: TimeAgentRun[],
   time: Time,
 ): EntryAgentRun[] => {
-  const authorId = (time as { user?: { id?: string } }).user?.id
+  const authorId = time.user?.id
   const from = Date.parse(time.fromAt)
   const to = Date.parse(time.toAt)
   if (to <= from) {

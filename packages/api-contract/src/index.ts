@@ -9,6 +9,9 @@ export type ContractPerson = 'owner' | 'worker' | 'viewer' | 'outsider'
 /** Ids of a small world every scenario starts from, rate $60/h, 24 h review. */
 export interface ContractWorld {
   project: string
+  /** The people, for filters that name them. */
+  ownerId: string
+  workerId: string
   /** The worker's, inside the review window, note 'draft'. */
   draftEntry: string
   /** The worker's, past the review window, note 'old'. */
@@ -75,6 +78,12 @@ const search = (): ContractRequest => ({
   method: 'post',
   path: '/time/search',
   body: { filter: {}, sort: { fromAt: 'DESC' }, page: 0, limit: 100 },
+})
+
+const searchWhere = (filter: Record<string, unknown>): ContractRequest => ({
+  method: 'post',
+  path: '/time/search',
+  body: { filter, sort: { fromAt: 'DESC' }, page: 0, limit: 100 },
 })
 
 /* eslint-disable @typescript-eslint/no-explicit-any */
@@ -260,6 +269,63 @@ export const CONTRACT_SCENARIOS: ContractScenario[] = [
     name: 'a viewer lists no entries',
     as: 'viewer',
     request: search,
+    status: 200,
+    check: (body) =>
+      body[0].length === 0 ? undefined : `lists ${body[0].length} entries`,
+  },
+  {
+    name: 'the search narrows to the people asked for',
+    as: 'owner',
+    request: (w) => searchWhere({ userIds: [w.workerId] }),
+    status: 200,
+    check: (body, w) =>
+      entry(body, w.draftEntry) && !entry(body, w.ownerEntry)
+        ? undefined
+        : 'did not list the worker alone',
+  },
+  {
+    name: 'naming a person shows a viewer no entries either',
+    as: 'viewer',
+    request: (w) => searchWhere({ userIds: [w.workerId] }),
+    status: 200,
+    check: (body) =>
+      body[0].length === 0 ? undefined : `lists ${body[0].length} entries`,
+  },
+  {
+    name: 'the search narrows to the projects asked for',
+    as: 'owner',
+    request: (w) => searchWhere({ projectIds: [w.project] }),
+    status: 200,
+    check: (body, w) =>
+      entry(body, w.draftEntry) &&
+      (body[0] as { project?: { id?: string } }[]).every(
+        (row) => row.project?.id === w.project,
+      )
+        ? undefined
+        : 'listed another project, or none of this one',
+  },
+  {
+    name: 'empty people and project lists narrow nothing',
+    as: 'owner',
+    request: () => searchWhere({ userIds: [], projectIds: [] }),
+    status: 200,
+    check: (body, w) =>
+      entry(body, w.draftEntry) && entry(body, w.ownerEntry)
+        ? undefined
+        : 'an empty list hid entries',
+  },
+  {
+    name: 'the search narrows to the source asked for',
+    as: 'owner',
+    request: () => searchWhere({ source: 'desktop' }),
+    status: 200,
+    check: (body, w) =>
+      entry(body, w.ownerEntry) ? undefined : 'did not list desktop time',
+  },
+  {
+    name: 'a source nothing came from lists nothing',
+    as: 'owner',
+    request: () => searchWhere({ source: 'manual' }),
     status: 200,
     check: (body) =>
       body[0].length === 0 ? undefined : `lists ${body[0].length} entries`,

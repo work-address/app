@@ -21,9 +21,8 @@ export type TimeTotalDetail = {
   id: string
 } & ITimeTotal
 
-export type Time = baseApi.Time & {
-  project?: baseApi.Project
-}
+/** An entry as the search answers it, with its project and author. */
+export type Time = baseApi.Time & Pick<baseApi.TimeSearch, 'project' | 'user'>
 
 export type TimeFilters = {
   fromAt: number | null

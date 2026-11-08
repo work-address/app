@@ -285,6 +285,9 @@ export type TimeSearchSortDto = {
 
 export type TimeSearchFilterDto = {
     projectId?: string;
+    projectIds?: Array<string>;
+    userIds?: Array<string>;
+    source?: 'desktop' | 'manual' | 'web';
     fromAt?: string | string;
     toAt?: string | string;
     note?: string;
