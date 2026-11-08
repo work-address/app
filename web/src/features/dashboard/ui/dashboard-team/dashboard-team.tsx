@@ -1,5 +1,6 @@
 import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { dashboardStatisticsRequested } from '../../model/dashboard-filters'
@@ -9,6 +10,7 @@ import {
   statisticsTeamQuery,
   type StatisticsTeamRow,
 } from '@/entities/statistics'
+import { routes } from '@/routes'
 import { formatDurationFromMinutes, useBreakpoint } from '@/shared'
 
 const EMPTY_ROW: StatisticsTeamRow = {
@@ -59,6 +61,11 @@ export const DashboardTeam = () => {
   return (
     <DashboardWidget
       title={t('dashboard.team.title')}
+      aside={
+        <ManageLink to={routes.team.build()}>
+          {t('dashboard.team.manage')}
+        </ManageLink>
+      }
       loading={pending && rows === null}
       failed={failed}
       onRetry={retry}
@@ -115,6 +122,11 @@ export const DashboardTeam = () => {
     </DashboardWidget>
   )
 }
+
+const ManageLink = styled(Link)`
+  color: var(--ui-blue);
+  font-size: var(--ui-meta-size);
+`
 
 const Table = styled.table`
   width: 100%;

@@ -13,6 +13,7 @@ import { match } from 'ts-pattern'
 
 import { $authenticated, $user, signOut } from '@/entities/profile'
 import { showPremiumBanner } from '@/features/dashboard'
+import { $canSeeTeam, fetchTeam } from '@/features/team'
 import {
   AUTH_REQUIRED_ROUTES,
   defaultMappedRoutes,
@@ -57,12 +58,28 @@ export const Sidebar = () => {
   const { t } = useTranslation()
   const { pathname } = useLocation()
   const isMobile = useBreakpoint('isMobile')
-  const { user, authenticated, signOutEvent, showBanner } = useUnit({
+  const {
+    user,
+    authenticated,
+    signOutEvent,
+    showBanner,
+    canSeeTeam,
+    fetchTeamEvent,
+  } = useUnit({
     user: $user,
     authenticated: $authenticated,
     signOutEvent: signOut,
     showBanner: showPremiumBanner,
+    canSeeTeam: $canSeeTeam,
+    fetchTeamEvent: fetchTeam,
   })
+
+  // Whether the Team item shows depends on the person's roles, on any page.
+  useEffect(() => {
+    if (authenticated) {
+      fetchTeamEvent()
+    }
+  }, [authenticated, fetchTeamEvent])
 
   /**
    * On desktop the choice sticks and pushes the page aside. On a phone the
@@ -136,6 +153,10 @@ export const Sidebar = () => {
 
   const renderItem = (route: MappingRoute) => {
     if (!authenticated && AUTH_REQUIRED_ROUTES.has(route.schema)) {
+      return null
+    }
+
+    if (route.schema === routes.team.schema && !canSeeTeam) {
       return null
     }
 

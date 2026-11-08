@@ -59,6 +59,8 @@ export type MockProject = {
   reviewWindowHours: number
   screenshotRetentionDays: number | null
   deletedAt: string | null
+  /** The demo's agents are its runs' products: `userId:product` to cents. */
+  agentRates?: Record<string, number>
 }
 
 export type MockTime = {

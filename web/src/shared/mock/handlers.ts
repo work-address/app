@@ -44,6 +44,7 @@ import {
   type StatisticsQuery,
 } from './statistics'
 import { demoDb, removeRows, saveRow } from './store'
+import { ownAgents, teamOf } from './team'
 
 import type { Db, MockInvoice, MockProject, MockTime, MockUser } from './db'
 
@@ -944,6 +945,27 @@ export const handlers: HttpHandler[] = [
   statistics('/statistics/team', ({ db, meId }, q) =>
     team(statisticsScope(db, meId, q)),
   ),
+
+  // The Team page.
+  route('get', '/team', ({ db, meId }) => teamOf(db, meId)),
+  route('get', '/agents', ({ db, meId }) => ownAgents(db, meId)),
+  route('put', '/project/:id/agents/:agentId', ({ db, meId, params, body }) => {
+    const project = projectOf(db, params.id)
+    if (!project || !isWorker(db, project, meId)) {
+      fail(403, 'Access denied')
+    }
+    if (!params.agentId.startsWith(`${meId}:`)) {
+      fail(403, 'Access denied')
+    }
+    saveRow('projects', {
+      ...project!,
+      agentRates: {
+        ...project!.agentRates,
+        [params.agentId]: Number(body.rateHourCents),
+      },
+    })
+    return { agentId: params.agentId, rateHourCents: body.rateHourCents }
+  }),
 ]
 
 /** Signing out in the app: the demo remembers it across reloads. */

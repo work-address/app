@@ -9,10 +9,13 @@ import {
 
 import type { Route, IdRouteParams, NoChildRoutes, MappingRoute } from './types'
 
+import { PeopleIcon } from '@/shared/icons'
+
 /* eslint-disable */
 type MainRoutes =
   & Route<'/', 'dashboard'>
   & Route<'/time', 'time'>
+  & Route<'/team', 'team'>
   & Route<'/sign-in', 'signIn'>
   & Route<'/profile/:id', 'profile', ProfileRoutes, IdRouteParams>
   & Route<'https://address.work/docs', 'docs'>
@@ -58,6 +61,19 @@ export const routes: MainRoutes = {
     translateKeyDesktop: 'header.nav.time',
     translateKeyMobile: 'header.nav.time',
     icon: ClockIcon,
+  },
+
+  team: {
+    schema: '/team',
+    build: () => '/team',
+
+    desktopOrder: 1.5,
+    mobileOrder: 1.5,
+
+    showInMenu: true,
+    translateKeyDesktop: 'header.nav.team',
+    translateKeyMobile: 'header.nav.team',
+    icon: PeopleIcon,
   },
 
   profile: {
@@ -180,6 +196,7 @@ export const routes: MainRoutes = {
 export const AUTH_REQUIRED_ROUTES = new Set<string>([
   routes.dashboard.schema,
   routes.time.schema,
+  routes.team.schema,
   routes.profile.schema,
   routes.invoices.schema,
   routes.settings.schema,

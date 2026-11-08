@@ -208,7 +208,15 @@ removes can no longer invoice, and neither can their agents.
 
 **Agents hold no access of their own.** An agent cannot sign in. Runs arrive
 through a write-only credential the worker issues for each machine, which opens
-no other route.
+no other route. A server agent's credential sends for one agent on one project,
+because the secret may sit on a machine the worker does not fully control. A
+desktop app's credential covers the worker's account, because one laptop tracks
+several projects.
+
+**The Team page is where this is seen and set.** `/team` lists, by project,
+everyone on the project's lists and the agents they run, and a worker sets their
+own agents' rates there. It adds no rule: it shows what "Who can see what" allows.
+A person who is only ever a viewer does not get the page.
 
 The build order and the measurement rules are in `docs/agent-time-tracking.md`.
 

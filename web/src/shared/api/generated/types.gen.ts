@@ -1007,6 +1007,20 @@ export type AgentControllerStatusResponses = {
     200: unknown;
 };
 
+export type TeamControllerReadData = {
+    body?: never;
+    path?: never;
+    query?: never;
+    url: '/api/team';
+};
+
+export type TeamControllerReadResponses = {
+    /**
+     * Successful response
+     */
+    200: unknown;
+};
+
 export type StatisticsControllerOverviewData = {
     body: StatisticsQueryDto;
     path?: never;

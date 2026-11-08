@@ -20,6 +20,14 @@ _Avoid_: Guest, observer
 A worker or a viewer, as opposed to the owner.
 _Avoid_: Member, teammate
 
+**Team**:
+The people on a project's lists and the agents they run, as the `/team` page shows them. Not an account or an organisation: nothing is stored under this name.
+_Avoid_: Organisation, workspace
+
+**Server agent**:
+An agent of a worker's that runs on a server rather than their laptop, and uploads with its own credential limited to one agent on one project.
+_Avoid_: Project agent, hosted agent
+
 **Role**:
 What a project's lists say a person is: owner, worker, viewer, or nothing.
 _Avoid_: Permission, access level

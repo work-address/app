@@ -1,5 +1,6 @@
 import 'reflect-metadata'
 import { AgentController } from '@/controller/agent-controller'
+import { TeamController } from '@/controller/team-controller'
 import { StatisticsController } from '@/controller/statistics-controller'
 import * as http from 'http'
 import * as Sentry from '@sentry/node'
@@ -157,6 +158,7 @@ export class App {
       controllers: [
         HelpController,
         AgentController,
+        TeamController,
         StatisticsController,
         ProjectController,
         AuthController,
