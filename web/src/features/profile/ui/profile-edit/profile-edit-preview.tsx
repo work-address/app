@@ -8,7 +8,7 @@ import styled from 'styled-components'
 import type { ProfileEditFormState } from './profile-edit-field'
 
 import { routes } from '@/routes'
-import { formatCurrency, getCountryLabel, WorkspaceSheet } from '@/shared'
+import { formatRate, getCountryLabel, WorkspaceSheet } from '@/shared'
 
 type Props = {
   control: Control<ProfileEditFormState>
@@ -69,7 +69,7 @@ export const ProfileEditPreview = ({
           {hasRate ? (
             <>
               <RateValue>
-                {formatCurrency(Number(String(rate).replace(',', '.')))}
+                {formatRate(Number(String(rate).replace(',', '.')))}
               </RateValue>
               <Meta>{t('profile.view.usdtUnit')}</Meta>
             </>

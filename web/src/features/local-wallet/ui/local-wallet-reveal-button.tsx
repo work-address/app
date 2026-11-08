@@ -16,7 +16,7 @@ type Props = {
    * else's page and not on an account signed in through a wallet app.
    */
   address?: string | null
-} & Pick<ButtonProps, 'size' | 'stretch' | 'variant' | 'color'>
+} & Pick<ButtonProps, 'size' | 'stretch' | 'variant' | 'color' | 'className'>
 
 /** "Reveal private key": opens the password-gated key dialog. */
 export const LocalWalletRevealButton = ({
@@ -25,6 +25,7 @@ export const LocalWalletRevealButton = ({
   stretch,
   variant = 'outline',
   color = 'neutral',
+  className,
 }: Props) => {
   const { t } = useTranslation()
   const wallet = useUnit($localWallet)
@@ -45,6 +46,7 @@ export const LocalWalletRevealButton = ({
         stretch={stretch}
         variant={variant}
         color={color}
+        className={className}
         iconLeft={<EyeOpenIcon />}
         onClick={() => setOpen(true)}
       >

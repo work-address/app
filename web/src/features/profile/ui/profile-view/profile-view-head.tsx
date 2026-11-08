@@ -2,6 +2,7 @@ import { CopyIcon, Pencil1Icon, Share1Icon } from '@radix-ui/react-icons'
 import { Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
+import { LuEarth, LuMapPin, LuWallet } from 'react-icons/lu'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
@@ -19,7 +20,7 @@ import { routes } from '@/routes'
 import {
   Button,
   formatAddress,
-  formatCurrency,
+  formatRate,
   getCountryLabel,
   IconButton,
   PremiumBadge,
@@ -27,6 +28,9 @@ import {
   useBreakpoint,
   WorkspacePageHeader,
 } from '@/shared'
+
+/** The icons beside the card's quieter lines: location, wallet, visibility. */
+const META_ICON_SIZE = 16
 
 type Props = {
   onWalletAddressCopy: () => void
@@ -92,12 +96,12 @@ export const ProfileViewHead = ({
         actions={
           <Actions>
             {isOwn && (
-              <LocalWalletRevealButton
+              <RevealButton
                 address={user?.connectedWallet ?? user?.address}
                 stretch={isMobile}
               />
             )}
-            <Button
+            <ShareButton
               variant="outline"
               color="neutral"
               stretch={isMobile}
@@ -105,7 +109,7 @@ export const ProfileViewHead = ({
               onClick={onShareProfile}
             >
               {t('common.share')}
-            </Button>
+            </ShareButton>
             {isOwn && (
               <Button
                 stretch={isMobile}
@@ -123,7 +127,7 @@ export const ProfileViewHead = ({
           </Actions>
         }
       />
-      <ProfileViewSection>
+      <HeadSection>
         <Root data-qr={hasQrCode || undefined}>
           {hasQrCode && <QrCode />}
           <Identity>
@@ -151,30 +155,18 @@ export const ProfileViewHead = ({
               </NameRow>
             )}
             {jobTitle && <JobTitle>{jobTitle}</JobTitle>}
-            {facts && <Facts>{facts}</Facts>}
-            {loading ? (
-              <Skeleton width="150px" height="20px" />
-            ) : (
-              name &&
-              shortAddress && (
-                <Tooltip content={copyLabel}>
-                  <AddressButton
-                    type="button"
-                    aria-label={copyLabel}
-                    onClick={onWalletAddressCopy}
-                  >
-                    {shortAddress}
-                    <CopyIcon aria-hidden />
-                  </AddressButton>
-                </Tooltip>
-              )
+            {facts && (
+              <Facts>
+                {location && <LuMapPin size={META_ICON_SIZE} aria-hidden />}
+                <span>{facts}</span>
+              </Facts>
             )}
           </Identity>
           <Rate>
             {hasRate || loading ? (
               <>
                 <Skeleton loading={loading}>
-                  <RateValue>{formatCurrency(user?.rate)}</RateValue>
+                  <RateValue>{formatRate(user?.rate)}</RateValue>
                 </Skeleton>
                 <RateUnit>{t('profile.view.usdtUnit')}</RateUnit>
               </>
@@ -183,7 +175,31 @@ export const ProfileViewHead = ({
             )}
           </Rate>
         </Root>
-      </ProfileViewSection>
+        <Footer>
+          {loading ? (
+            <Skeleton width="150px" height="20px" />
+          ) : (
+            <>
+              {name && shortAddress && (
+                <Tooltip content={copyLabel}>
+                  <AddressButton
+                    type="button"
+                    aria-label={copyLabel}
+                    onClick={onWalletAddressCopy}
+                  >
+                    <LuWallet size={META_ICON_SIZE} aria-hidden />
+                    {shortAddress}
+                  </AddressButton>
+                </Tooltip>
+              )}
+              <PublicProfile>
+                <LuEarth size={META_ICON_SIZE} aria-hidden />
+                {t('profile.view.publicProfile')}
+              </PublicProfile>
+            </>
+          )}
+        </Footer>
+      </HeadSection>
     </>
   )
 }
@@ -203,6 +219,25 @@ const Actions = styled.div`
   ${(p) => p.theme.breakpoints.down('md')} {
     grid-auto-columns: minmax(0, 1fr);
     justify-content: stretch;
+  }
+`
+
+/* An outline button is see-through, and would all but vanish on the canvas. */
+const ShareButton = styled(Button)`
+  background: var(--ui-surface);
+`
+
+const RevealButton = styled(LocalWalletRevealButton)`
+  background: var(--ui-surface);
+`
+
+/* The footer's own rule and padding end the panel, so a full inset below would
+   leave it floating. */
+const HeadSection = styled(ProfileViewSection)`
+  gap: var(--ui-section-gap);
+
+  &[data-surface] {
+    padding-bottom: var(--ui-space-4);
   }
 `
 
@@ -255,10 +290,10 @@ const Identity = styled.div`
   min-width: 0;
 `
 
+/* Wraps so a long name keeps its width and the badge drops below it. */
 const NameRow = styled.div`
-  display: grid;
-  grid-auto-flow: column;
-  justify-content: start;
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
   gap: var(--ui-space-2);
   min-width: 0;
@@ -284,6 +319,9 @@ const JobTitle = styled.p`
 `
 
 const Facts = styled.p`
+  display: flex;
+  align-items: center;
+  gap: var(--ui-space-2);
   margin: 0;
   color: var(--ui-muted);
   font-size: var(--ui-meta-size);
@@ -291,25 +329,35 @@ const Facts = styled.p`
   overflow-wrap: anywhere;
 `
 
-/* A link in all but tag: a bare line of text with a copy icon, on the column's
-   own left edge rather than inset by a button's padding. */
-const AddressButton = styled.button`
-  display: inline-grid;
-  grid-auto-flow: column;
+/* The panel's last line: where the wallet is, and who can see this page. */
+const Footer = styled.div`
+  display: flex;
+  flex-wrap: wrap;
   align-items: center;
-  gap: var(--ui-space-1);
-  margin-top: var(--ui-space-1);
+  gap: var(--ui-space-2) var(--ui-space-4);
+  padding-top: var(--ui-space-4);
+  border-top: var(--ui-border-width) solid var(--ui-line);
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+`
+
+/* A link in all but tag: a bare line of text, on the panel's own left edge
+   rather than inset by a button's padding. */
+const AddressButton = styled.button`
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2);
   padding: 0;
   border: 0;
   border-radius: var(--ui-inline-radius);
   background: none;
-  color: var(--ui-blue);
-  font-size: var(--ui-meta-size);
-  line-height: var(--ui-meta-line-height);
-  font-weight: var(--ui-weight-medium);
+  color: inherit;
+  font: inherit;
   cursor: pointer;
 
   &:hover {
+    color: var(--ui-blue);
     text-decoration: underline;
   }
 
@@ -317,6 +365,14 @@ const AddressButton = styled.button`
     outline: var(--ui-focus-width) solid var(--ui-blue);
     outline-offset: var(--ui-focus-offset);
   }
+`
+
+/* Kept right even with no address to its left. */
+const PublicProfile = styled.span`
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-2);
+  margin-inline-start: auto;
 `
 
 /* The rate, set off from the identity by a rule, as the sheet's headline

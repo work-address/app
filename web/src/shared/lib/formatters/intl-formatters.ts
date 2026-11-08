@@ -25,6 +25,21 @@ export const formatCurrency = (
 ): string =>
   `${BASE_CURRENCY.symbol}${moneyFormatter.format(Number(value ?? 0))}`
 
+const wholeMoneyFormatter = new Intl.NumberFormat(undefined, {
+  maximumFractionDigits: 0,
+})
+
+/** An hourly rate: cents only when there are some ($80, but $80.50). */
+export const formatRate = (
+  value: number | string | null | undefined,
+): string => {
+  const amount = Number(value ?? 0)
+
+  return Number.isInteger(amount)
+    ? `${BASE_CURRENCY.symbol}${wholeMoneyFormatter.format(amount)}`
+    : formatCurrency(amount)
+}
+
 /**
  * Whole numbers with digit grouping, for the tracked counters - keystrokes,
  * clicks, pointer distance. The tracker reports distance with full float

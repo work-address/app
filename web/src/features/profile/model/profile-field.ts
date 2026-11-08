@@ -98,11 +98,6 @@ export const SKILLS_SUGGESTIONS = [
 
 export const SOCIAL_LINKS = [
   {
-    name: 'facebook',
-    labelKey: 'profile.links.facebook',
-    domain: 'facebook.com',
-  },
-  {
     name: 'linkedIn',
     labelKey: 'profile.links.linkedin',
     domain: 'linkedin.com',
@@ -121,6 +116,11 @@ export const SOCIAL_LINKS = [
     name: 'instagram',
     labelKey: 'profile.links.instagram',
     domain: 'instagram.com',
+  },
+  {
+    name: 'facebook',
+    labelKey: 'profile.links.facebook',
+    domain: 'facebook.com',
   },
   {
     name: 'youtube',

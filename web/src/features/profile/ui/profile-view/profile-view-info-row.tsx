@@ -32,6 +32,15 @@ const Root = styled.div`
   & + & {
     border-top: var(--ui-border-width) solid var(--ui-line);
   }
+
+  /* The panel's own spacing already sets the list off at either end. */
+  &:first-child {
+    padding-top: 0;
+  }
+
+  &:last-child {
+    padding-bottom: 0;
+  }
 `
 
 const Icon = styled.span`
@@ -43,7 +52,6 @@ const Icon = styled.span`
   background: var(--ui-inset);
   color: var(--ui-blue);
 
-  img,
   svg {
     width: var(--ui-icon-size);
     height: var(--ui-icon-size);

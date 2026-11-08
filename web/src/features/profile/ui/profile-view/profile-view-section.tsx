@@ -3,6 +3,8 @@ import styled from 'styled-components'
 
 import type { ReactNode } from 'react'
 
+import { SectionTitle } from '@/shared'
+
 type Props = {
   children?: ReactNode
   /** A white workspace panel; off for the head, which sits on the canvas. */
@@ -43,6 +45,34 @@ export const ProfileViewSection = ({
     </Root>
   )
 }
+
+/** A panel's title, with a quiet icon saying what kind of panel it is. */
+export const ProfileViewSectionHead = ({
+  title,
+  icon,
+}: {
+  title: ReactNode
+  icon: ReactNode
+}) => (
+  <Head>
+    <SectionTitle>{title}</SectionTitle>
+    {icon}
+  </Head>
+)
+
+const Head = styled.div`
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--ui-space-3);
+  color: var(--ui-muted);
+
+  svg {
+    flex-shrink: 0;
+    width: var(--ui-icon-size);
+    height: var(--ui-icon-size);
+  }
+`
 
 const Root = styled(motion.div)`
   display: grid;

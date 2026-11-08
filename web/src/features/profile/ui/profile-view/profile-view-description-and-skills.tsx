@@ -2,6 +2,7 @@ import { Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { LuAlignLeft } from 'react-icons/lu'
 import { useNavigate } from 'react-router-dom'
 import styled from 'styled-components'
 
@@ -11,10 +12,13 @@ import {
   $profileLoading,
 } from '../../model'
 
-import { ProfileViewSection } from './profile-view-section'
+import {
+  ProfileViewSection,
+  ProfileViewSectionHead,
+} from './profile-view-section'
 
 import { routes } from '@/routes'
-import { Button, sanitizeRichText, SectionTitle } from '@/shared'
+import { Button, sanitizeRichText } from '@/shared'
 
 export const ProfileViewDescriptionAndSkills = () => {
   const { t } = useTranslation()
@@ -62,13 +66,16 @@ export const ProfileViewDescriptionAndSkills = () => {
   // Bio and skills share one panel, parted by a rule, as one introduction.
   return (
     <ProfileViewSection>
-      <SectionTitle>{t('profile.view.about')}</SectionTitle>
+      <ProfileViewSectionHead
+        title={t('profile.view.about')}
+        icon={<LuAlignLeft aria-hidden />}
+      />
       {hasAbout ? (
         <>
           {bio && <Bio dangerouslySetInnerHTML={{ __html: bio }} />}
           {skills.length > 0 && (
             <SkillsGroup data-ruled={bio ? true : undefined}>
-              <SkillsTitle>{t('profile.form.skills')}</SkillsTitle>
+              <SkillsTitle>{t('profile.view.skills')}</SkillsTitle>
               <Skills>
                 {skills.map((skill) => (
                   <Skill key={skill}>{skill}</Skill>
@@ -157,10 +164,10 @@ const SkillsTitle = styled.h3`
 `
 
 const Skill = styled.span`
-  padding: var(--ui-space-1) var(--ui-space-3);
-  border-radius: var(--ui-filter-radius);
+  padding: 6px var(--ui-space-3);
+  border-radius: var(--ui-control-radius);
   background: var(--ui-inset);
-  color: var(--ui-text);
+  color: var(--ui-muted);
   font-size: var(--ui-meta-size);
   line-height: var(--ui-meta-line-height);
 `

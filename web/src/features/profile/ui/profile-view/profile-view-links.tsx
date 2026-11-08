@@ -1,11 +1,17 @@
-import {
-  ArrowTopRightIcon,
-  EnvelopeClosedIcon,
-  TokensIcon,
-} from '@radix-ui/react-icons'
 import { Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
+import {
+  LuArrowUpRight,
+  LuAtSign,
+  LuBriefcaseBusiness,
+  LuCamera,
+  LuMail,
+  LuPlay,
+  LuSend,
+  LuUsers,
+  LuWallet,
+} from 'react-icons/lu'
 import { NavLink } from 'react-router-dom'
 import styled from 'styled-components'
 
@@ -17,21 +23,16 @@ import {
 } from '../../model'
 
 import { ProfileViewInfoRow } from './profile-view-info-row'
-import { ProfileViewSection } from './profile-view-section'
+import {
+  ProfileViewSection,
+  ProfileViewSectionHead,
+} from './profile-view-section'
 
 import type { ReactNode } from 'react'
+import type { IconType } from 'react-icons'
 
 import { routes } from '@/routes'
-import {
-  FacebookIcon,
-  InstagramIcon,
-  LinkedinIcon,
-  SectionTitle,
-  TelegramIcon,
-  TwitterIcon,
-  YoutubeIcon,
-  formatAddress,
-} from '@/shared'
+import { formatAddress } from '@/shared'
 
 /** Rows the skeleton holds while the profile loads. */
 const SKELETON_ROWS = 4
@@ -39,44 +40,44 @@ const SKELETON_ROWS = 4
 const SOCIAL_LINK_VIEW_CONFIG: Record<
   SocialLinkField,
   {
-    icon: string
+    icon: IconType
     altKey: string
     prefixKey: string
     route: { build: (params: { userId: string }) => string }
   }
 > = {
   linkedIn: {
-    icon: LinkedinIcon,
+    icon: LuBriefcaseBusiness,
     altKey: 'profile.links.linkedin',
     prefixKey: 'profile.view.social.linkedinPrefix',
     route: routes.linkedin,
   },
   facebook: {
-    icon: FacebookIcon,
+    icon: LuUsers,
     altKey: 'profile.links.facebook',
     prefixKey: 'profile.view.social.facebookPrefix',
     route: routes.facebook,
   },
   telegram: {
-    icon: TelegramIcon,
+    icon: LuSend,
     altKey: 'profile.links.telegram',
     prefixKey: 'profile.view.social.telegramPrefix',
     route: routes.telegram,
   },
   twitter: {
-    icon: TwitterIcon,
+    icon: LuAtSign,
     altKey: 'profile.links.twitter',
     prefixKey: 'profile.view.social.twitterPrefix',
     route: routes.twitter,
   },
   instagram: {
-    icon: InstagramIcon,
+    icon: LuCamera,
     altKey: 'profile.links.instagram',
     prefixKey: 'profile.view.social.instagramPrefix',
     route: routes.instagram,
   },
   youtube: {
-    icon: YoutubeIcon,
+    icon: LuPlay,
     altKey: 'profile.links.youtube',
     prefixKey: 'profile.view.social.youtubePrefix',
     route: routes.youtube,
@@ -110,13 +111,13 @@ export const ProfileViewLinks = () => {
   const facts = [
     user?.email && {
       key: 'email',
-      icon: <EnvelopeClosedIcon aria-hidden />,
+      icon: <LuMail aria-hidden />,
       label: t('profile.view.email'),
       value: user.email,
     },
     user?.connectedWallet && {
       key: 'wallet',
-      icon: <TokensIcon aria-hidden />,
+      icon: <LuWallet aria-hidden />,
       label: t('profile.view.connectedWallet'),
       value: formatAddress(user.connectedWallet),
     },
@@ -136,7 +137,10 @@ export const ProfileViewLinks = () => {
 
   return (
     <ProfileViewSection>
-      <SectionTitle>{t('profile.view.findMe')}</SectionTitle>
+      <ProfileViewSectionHead
+        title={t('profile.view.findMe')}
+        icon={<LuArrowUpRight aria-hidden />}
+      />
       <Rows>
         {facts.map(({ key, icon, label, value }) => (
           <ProfileViewInfoRow
@@ -153,7 +157,7 @@ export const ProfileViewLinks = () => {
           return (
             <ProfileViewInfoRow
               key={name}
-              icon={<img src={config.icon} alt="" />}
+              icon={<config.icon aria-hidden />}
               label={t(config.altKey)}
               value={
                 <NavLink
@@ -165,7 +169,7 @@ export const ProfileViewLinks = () => {
                   {value}
                 </NavLink>
               }
-              trailing={<ArrowTopRightIcon aria-hidden />}
+              trailing={<LuArrowUpRight size={16} aria-hidden />}
             />
           )
         })}

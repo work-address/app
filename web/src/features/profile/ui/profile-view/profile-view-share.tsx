@@ -1,11 +1,7 @@
-import {
-  ArrowRightIcon,
-  GlobeIcon,
-  Link2Icon,
-  Share1Icon,
-} from '@radix-ui/react-icons'
+import { ArrowRightIcon, Share1Icon } from '@radix-ui/react-icons'
 import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
+import { LuEarth, LuLink } from 'react-icons/lu'
 import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
@@ -35,7 +31,7 @@ export const ProfileViewShare = ({ onShare }: { onShare: () => void }) => {
     <ProfileViewSection>
       <Row>
         <Icon>
-          <Link2Icon width={ICON_SIZE} height={ICON_SIZE} aria-hidden />
+          <LuLink aria-hidden />
         </Icon>
         <Body>
           <Title>{t('profile.view.shareCard.title')}</Title>
@@ -70,7 +66,7 @@ export const ProfileViewVisibility = () => {
 
   return (
     <ProfileViewSection>
-      <GlobeIcon width={ICON_SIZE} height={ICON_SIZE} aria-hidden />
+      <VisibilityIcon aria-hidden />
       <Title>{t('profile.view.visibility.title')}</Title>
       <Text>{t('profile.view.visibility.description')}</Text>
       <Manage to={routes.settings.build()}>
@@ -95,6 +91,17 @@ const Icon = styled.span`
   height: var(--ui-control-height);
   border-radius: var(--ui-control-radius);
   background: var(--ui-inset);
+  color: var(--ui-blue);
+
+  svg {
+    width: var(--ui-icon-size);
+    height: var(--ui-icon-size);
+  }
+`
+
+const VisibilityIcon = styled(LuEarth)`
+  width: var(--ui-icon-size);
+  height: var(--ui-icon-size);
   color: var(--ui-blue);
 `
 
