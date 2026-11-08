@@ -46,53 +46,54 @@ export const TimeMobileBulkActions = () => {
 
   return (
     <Root aria-busy={busy || undefined}>
-      <Text size="2" weight="medium">
-        {t('dashboard.worklogsTable.bulk.selectedCount', {
-          count: selectedCount,
-        })}
-      </Text>
-      <Select
-        options={options}
-        value={action}
-        onChange={(value) => {
-          if (
-            !Array.isArray(value) &&
-            options.some((option) => option.value === value)
-          ) {
-            setAction(value as TimeBulkAction)
-          }
-        }}
-        inputProps={{
-          disabled: busy,
-          'aria-label': t('dashboard.worklogsTable.bulk.actionPlaceholder'),
-        }}
-        placeholder={t('dashboard.worklogsTable.bulk.actionPlaceholder')}
-      />
-      {invalidInvoice && (
-        <Hint role="status">
-          {t('dashboard.worklogsTable.bulk.invoiceOneProject')}
-        </Hint>
-      )}
-      <Actions>
+      {/* The count and its undo on one line, then the action and its
+          trigger on the next: two rows rather than four. */}
+      <Head>
+        <Text size="2" weight="medium">
+          {t('dashboard.worklogsTable.bulk.selectedCount', {
+            count: selectedCount,
+          })}
+        </Text>
         <Button
-          stretch
-          size="l"
-          disabled={!action || busy || invalidInvoice || selectedCount === 0}
-          onClick={() => action && request(action)}
-        >
-          {t('common.apply')}
-        </Button>
-        <Button
-          stretch
-          size="l"
-          variant="outline"
+          size="s"
+          variant="ghost"
           color="neutral"
           disabled={busy}
           onClick={clear}
         >
           {t('dashboard.worklogsTable.bulk.clearSelection')}
         </Button>
+      </Head>
+      <Actions>
+        <Select
+          options={options}
+          value={action}
+          onChange={(value) => {
+            if (
+              !Array.isArray(value) &&
+              options.some((option) => option.value === value)
+            ) {
+              setAction(value as TimeBulkAction)
+            }
+          }}
+          inputProps={{
+            disabled: busy,
+            'aria-label': t('dashboard.worklogsTable.bulk.actionPlaceholder'),
+          }}
+          placeholder={t('dashboard.worklogsTable.bulk.actionPlaceholder')}
+        />
+        <Button
+          disabled={!action || busy || invalidInvoice || selectedCount === 0}
+          onClick={() => action && request(action)}
+        >
+          {t('common.apply')}
+        </Button>
       </Actions>
+      {invalidInvoice && (
+        <Hint role="status">
+          {t('dashboard.worklogsTable.bulk.invoiceOneProject')}
+        </Hint>
+      )}
     </Root>
   )
 }
@@ -113,13 +114,16 @@ const Hint = styled.p`
   color: var(--ui-muted);
 `
 
+const Head = styled.div`
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
+  gap: var(--ui-space-2);
+`
+
 const Actions = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
+  grid-template-columns: minmax(0, 1fr) auto;
+  align-items: center;
   gap: var(--ui-space-2);
-
-  /* The narrowest phones cannot fit both labels side by side. */
-  ${(p) => p.theme.breakpoints.down('sm')} {
-    grid-template-columns: minmax(0, 1fr);
-  }
 `

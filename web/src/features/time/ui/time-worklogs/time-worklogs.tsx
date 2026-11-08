@@ -40,6 +40,7 @@ import {
   $timeLoading,
   $timeFailed,
   $timeFilters,
+  $timeSort,
   fetchTime,
   type TimeFilters as TimeFilterValues,
 } from '@/entities/time'
@@ -77,12 +78,27 @@ export const TimeWorklogs = () => {
     keys: [],
     fn: countActivityFilters,
   })
+  // The list heads each day only while it is in date order.
+  const datesGrouped = useStoreMap({
+    store: $timeSort,
+    keys: [],
+    fn: (sort) => Boolean(sort.fromAt),
+  })
   const selectedDay = useStoreMap({
     store: $timeFilters,
     keys: [],
     fn: getTimeSelectedDay,
   })
   const [filtersShown, setFiltersShown] = useState(activityFilterCount > 0)
+  // A filter set from outside the panel (the URL on load, Back) opens it,
+  // so the reason for a short or empty list is on screen to change.
+  const [seenFilterCount, setSeenFilterCount] = useState(activityFilterCount)
+  if (seenFilterCount !== activityFilterCount) {
+    setSeenFilterCount(activityFilterCount)
+    if (activityFilterCount > seenFilterCount) {
+      setFiltersShown(true)
+    }
+  }
   const reducedMotion = useReducedMotion()
 
   const {
@@ -149,9 +165,10 @@ export const TimeWorklogs = () => {
       numberFormatter: new Intl.NumberFormat(i18n.language, {
         maximumFractionDigits: 0,
       }),
+      datesGrouped,
       t,
     }),
-    [i18n.language, t],
+    [i18n.language, t, datesGrouped],
   )
 
   const longDayFormatter = useMemo(
@@ -250,10 +267,7 @@ export const TimeWorklogs = () => {
         }
       >
         {failed ? (
-          <LoadFailure
-            title={t('dashboard.worklogsTable.loadFailure.title')}
-            onRetry={retry}
-          />
+          <LoadFailure title={t('time.loadFailure.title')} onRetry={retry} />
         ) : hasEntries ? (
           // The views cross-fade rather than snap: the same entries, a
           // different shape.

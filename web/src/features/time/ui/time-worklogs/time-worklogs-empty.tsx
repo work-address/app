@@ -2,6 +2,7 @@ import { useUnit } from 'effector-react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
+import { $projects } from '@/entities/projects'
 import { $hasActiveTimeFilters, resetTimeFilters } from '@/entities/time'
 import { routes } from '@/routes'
 import { Button, StateNotice } from '@/shared'
@@ -13,17 +14,28 @@ import { Button, StateNotice } from '@/shared'
 export const TimeWorklogsEmpty = () => {
   const { t } = useTranslation()
 
-  const { hasActiveFilters, reset } = useUnit({
+  const { hasActiveFilters, reset, projects } = useUnit({
     hasActiveFilters: $hasActiveTimeFilters,
     reset: resetTimeFilters,
+    projects: $projects,
   })
+  // Entries are listed only on projects one owns or works on; someone who
+  // only views projects sees their totals above and never a row here.
+  const viewsOnly =
+    projects.length > 0 &&
+    projects.every((project) => project.role === 'viewer')
 
   return (
     <Root>
-      {hasActiveFilters ? (
+      {viewsOnly ? (
         <StateNotice
-          title={t('dashboard.worklogsEmpty.title.afterFilters')}
-          description={t('dashboard.worklogsEmpty.description.afterFilters')}
+          title={t('time.viewOnly.title')}
+          description={t('time.viewOnly.description')}
+        />
+      ) : hasActiveFilters ? (
+        <StateNotice
+          title={t('time.noMatch.title')}
+          description={t('time.noMatch.description')}
           actions={
             <Button variant="outline" onClick={() => reset()}>
               {t('dashboard.worklogsEmpty.action.filtersReset')}
@@ -32,8 +44,8 @@ export const TimeWorklogsEmpty = () => {
         />
       ) : (
         <StateNotice
-          title={t('dashboard.worklogsEmpty.title')}
-          description={t('dashboard.worklogsEmpty.description')}
+          title={t('time.empty.title')}
+          description={t('time.empty.description')}
           actions={
             <Button
               variant="outline"

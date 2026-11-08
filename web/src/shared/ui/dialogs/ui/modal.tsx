@@ -20,6 +20,7 @@ export const Modal = ({
   showClose = false,
   showTitleSeparator = true,
   description,
+  focusContentOnOpen = false,
 }: CommonDialogProps & ModalProps) => {
   const { t } = useTranslation()
 
@@ -29,7 +30,18 @@ export const Modal = ({
   return (
     <Dialog.Root open={open} onOpenChange={onOpenChange}>
       {trigger && <Dialog.Trigger>{trigger}</Dialog.Trigger>}
-      <Root $width={width} $padding={padding}>
+      <Root
+        $width={width}
+        $padding={padding}
+        onOpenAutoFocus={
+          focusContentOnOpen
+            ? (event) => {
+                event.preventDefault()
+                ;(event.currentTarget as HTMLElement | null)?.focus()
+              }
+            : undefined
+        }
+      >
         {(title || hasHeaderActions) && (
           <>
             <Header $spaceBelow={!hasSeparator}>

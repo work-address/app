@@ -7,6 +7,8 @@ export type TimeContextProps = {
   timeFormatter: Intl.DateTimeFormat
   dayFormatter: Intl.DateTimeFormat
   numberFormatter: Intl.NumberFormat
+  /** The list is headed by days, so a row need not repeat its date. */
+  datesGrouped: boolean
   t: ReturnType<typeof useTranslation>['t']
 }
 
@@ -22,5 +24,6 @@ export const TimeContext = createContext<TimeContextProps>({
   timeFormatter: new Intl.DateTimeFormat(),
   dayFormatter: new Intl.DateTimeFormat(),
   numberFormatter: new Intl.NumberFormat(),
+  datesGrouped: false,
   t: ((key: string) => key) as ReturnType<typeof useTranslation>['t'],
 })

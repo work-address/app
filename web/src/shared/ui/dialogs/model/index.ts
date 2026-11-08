@@ -21,6 +21,12 @@ export type CommonDialogProps = {
   desktopWidth?: string
   desktopPadding?: string
   desktopShowClose?: boolean
+  /**
+   * Focus the dialog itself on open rather than its first control, for a
+   * dialog whose first control is a tooltipped icon (its tooltip would open
+   * with the dialog). Tab still reaches every control in order.
+   */
+  focusContentOnOpen?: boolean
 }
 
 export type ModalProps = {

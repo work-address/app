@@ -1,11 +1,12 @@
 import { useContext } from 'react'
+import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { TimeContext } from '../time-context'
 
 import type { TimeDayGroup } from '../../model'
 
-import { formatDurationFromMinutes } from '@/shared'
+import { formatCompactDurationFromMinutes } from '@/shared'
 
 type Props = {
   group: TimeDayGroup
@@ -20,13 +21,18 @@ type Props = {
  */
 export const TimeDayHeading = ({ group, className }: Props) => {
   const { dayFormatter, t } = useContext(TimeContext)
+  const { i18n } = useTranslation()
 
   return (
     <Root className={className}>
       <Title>{dayFormatter.format(group.date)}</Title>
       <Caption>
         {t('dashboard.worklogsGrid.dayTotals', {
-          tracked: formatDurationFromMinutes(group.trackedMinutes, t),
+          // Written as the week above writes a day's total.
+          tracked: formatCompactDurationFromMinutes(
+            group.trackedMinutes,
+            i18n.resolvedLanguage ?? i18n.language,
+          ),
           percent: group.activityPercent,
         })}
       </Caption>

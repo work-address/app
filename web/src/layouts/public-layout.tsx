@@ -26,6 +26,12 @@ export const PublicLayout = () => {
   )
 }
 
+const LIST_ROUTES = new Set([
+  routes.dashboard.build(),
+  routes.time.build(),
+  routes.invoices.build(),
+])
+
 type PageContentProps = {
   /** The sheet the page scrolls in, so a route change starts at its top. */
   scrollRef: RefObject<HTMLElement | null>
@@ -35,11 +41,8 @@ const PageContent = memo(({ scrollRef }: PageContentProps) => {
   const { pathname } = useLocation()
   const isDesktop = useBreakpoint('isDesktop')
   const reducedMotion = useReducedMotion()
-  const skeletonVariant =
-    pathname === routes.dashboard.build() ||
-    pathname === routes.invoices.build()
-      ? 'list'
-      : 'document'
+  // The list pages open with a summary strip; the rest with one sheet.
+  const skeletonVariant = LIST_ROUTES.has(pathname) ? 'list' : 'document'
 
   const motionProps = useMemo(() => {
     if (isDesktop && !reducedMotion) {

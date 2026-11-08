@@ -18,31 +18,21 @@ type Props = {
   onSelectedChange: (id: string) => void
 }
 
-/** One entry of the phone list, with every column of the table, labelled. */
+/**
+ * One entry of the phone list: every fact the table shows, in reading order
+ * rather than as labelled cells, with the screenshot beside it. A figure the
+ * tracker never recorded is left out instead of reading as a row of dashes.
+ */
 export const TimeTableStackRow = memo(
   ({ entry, selected, onOpen, onSelectedChange }: Props) => {
-    const { dateFormatter, timeFormatter, numberFormatter, t } =
+    const { dateFormatter, timeFormatter, numberFormatter, datesGrouped, t } =
       useContext(TimeContext)
 
     const range = `${timeFormatter.format(new Date(entry.fromAt))} – ${timeFormatter.format(new Date(entry.toAt))}`
-
-    const figures = [
-      {
-        key: 'keyboard',
-        label: t('dashboard.worklogsTable.head.keyboard'),
-        value: formatTrackedCount(entry.keyboardKeys, numberFormatter),
-      },
-      {
-        key: 'mouse',
-        label: t('dashboard.worklogsTable.head.mouse'),
-        value: formatTrackedCount(entry.mouseKeys, numberFormatter),
-      },
-      {
-        key: 'mouseDistance',
-        label: t('dashboard.worklogsTable.head.mouseDistance'),
-        value: formatTrackedCount(entry.mouseDistance, numberFormatter),
-      },
-    ]
+    const hasInput =
+      entry.keyboardKeys != null ||
+      entry.mouseKeys != null ||
+      entry.mouseDistance != null
 
     return (
       <Root data-selected={selected || undefined}>
@@ -57,43 +47,43 @@ export const TimeTableStackRow = memo(
           <Range>{range}</Range>
           <Meta>
             <Project>{entry.project?.title ?? '—'}</Project>
-            {' · '}
-            {dateFormatter.format(new Date(entry.fromAt))}
+            {/* Under a day heading the date is already said. */}
+            {datesGrouped
+              ? null
+              : ` · ${dateFormatter.format(new Date(entry.fromAt))}`}
           </Meta>
-          {entry.note ? <Note>{entry.note}</Note> : null}
-          <Details>
-            <Detail>
-              <Label>{t('dashboard.worklogsTable.head.paymentStatus')}</Label>
-              <Value>
-                <TimePaidBadge entry={entry} />
-              </Value>
-            </Detail>
-            <Detail>
-              <Label>{t('dashboard.worklogsTable.head.timeActive')}</Label>
-              <Value>
-                {formatDurationFromMinutes(entry.minutesActive, t)} ·{' '}
-                {t('dashboard.worklogsGrid.activity', {
-                  percent: getTimeActivityPercent(entry),
+          <Figures>
+            <Strong>{formatDurationFromMinutes(entry.minutesActive, t)}</Strong>
+            {' · '}
+            {t('dashboard.worklogsGrid.activity', {
+              percent: getTimeActivityPercent(entry),
+            })}
+          </Figures>
+          {hasInput ? (
+            <>
+              <Figures>
+                {t('dashboard.insights.inputValue', {
+                  keys: formatTrackedCount(entry.keyboardKeys, numberFormatter),
+                  clicks: formatTrackedCount(entry.mouseKeys, numberFormatter),
                 })}
-              </Value>
-            </Detail>
-            {figures.map((figure) => (
-              <Detail key={figure.key}>
-                <Label>{figure.label}</Label>
-                <Value>{figure.value}</Value>
-              </Detail>
-            ))}
-            <Detail>
-              <Label>{t('dashboard.worklogsTable.head.screenshot')}</Label>
-              <Value>
-                <TimeScreenshotThumb
-                  screenshot={entry.screenshot}
-                  alt={entry.project?.title || ''}
-                />
-              </Value>
-            </Detail>
-          </Details>
+              </Figures>
+              <Figures>
+                {t('dashboard.worklogsTable.head.mouseDistance')}{' '}
+                {formatTrackedCount(entry.mouseDistance, numberFormatter)}
+              </Figures>
+            </>
+          ) : null}
+          {entry.note ? <Note>{entry.note}</Note> : null}
         </Body>
+        {/* The screenshot and the payment toggle share the trailing column,
+            so the facts beside them keep the row short. */}
+        <Aside>
+          <TimeScreenshotThumb
+            screenshot={entry.screenshot}
+            alt={entry.project?.title || ''}
+          />
+          <TimePaidBadge entry={entry} />
+        </Aside>
         {/* A stretched button rather than a clickable row: the checkbox and
             the payment toggle stay separate controls above it. */}
         <Trigger
@@ -111,10 +101,10 @@ TimeTableStackRow.displayName = 'TimeTableStackRow'
 const Root = styled.article`
   position: relative;
   display: grid;
-  grid-template-columns: auto minmax(0, 1fr);
+  grid-template-columns: auto minmax(0, 1fr) auto;
   align-items: start;
   gap: var(--ui-space-3);
-  padding-block: var(--ui-space-4);
+  padding-block: var(--ui-space-3);
   border-bottom: var(--ui-border-width) solid var(--ui-line);
   transition: background var(--ui-transition);
 
@@ -165,6 +155,19 @@ const Project = styled.span`
   font-weight: var(--ui-weight-medium);
 `
 
+const Figures = styled.span`
+  color: var(--ui-muted);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+`
+
+const Strong = styled.span`
+  color: var(--ui-ink);
+  font-weight: var(--ui-weight-semibold);
+`
+
 const Note = styled.p`
   margin: 0;
   color: var(--ui-text);
@@ -178,32 +181,11 @@ const Note = styled.p`
   overflow-wrap: anywhere;
 `
 
-const Details = styled.dl`
+const Aside = styled.div`
   display: grid;
-  grid-template-columns: repeat(2, minmax(0, 1fr));
-  gap: var(--ui-space-2) var(--ui-space-3);
-  margin: var(--ui-space-2) 0 0;
-`
-
-const Detail = styled.div`
-  display: grid;
-  justify-items: start;
-  gap: var(--ui-space-1);
-  min-width: 0;
-`
-
-const Label = styled.dt`
-  color: var(--ui-muted);
-  font-size: var(--ui-small-size);
-  line-height: var(--ui-small-line-height);
-`
-
-const Value = styled.dd`
-  margin: 0;
-  color: var(--ui-text);
-  font-size: var(--ui-meta-size);
-  line-height: var(--ui-meta-line-height);
-  font-variant-numeric: tabular-nums;
+  justify-items: end;
+  gap: var(--ui-space-2);
+  padding-top: var(--ui-space-1);
 `
 
 const Trigger = styled.button`

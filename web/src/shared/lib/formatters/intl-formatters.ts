@@ -14,9 +14,16 @@ export const formatAmount = (
   value: number | string | null | undefined,
 ): string => Number(value ?? 0).toFixed(2)
 
+/** Money for reading: cents always shown, thousands grouped ($9,876.50). */
+const moneyFormatter = new Intl.NumberFormat(undefined, {
+  minimumFractionDigits: 2,
+  maximumFractionDigits: 2,
+})
+
 export const formatCurrency = (
   value: number | string | null | undefined,
-): string => `${BASE_CURRENCY.symbol}${formatAmount(value)}`
+): string =>
+  `${BASE_CURRENCY.symbol}${moneyFormatter.format(Number(value ?? 0))}`
 
 /**
  * Whole numbers with digit grouping, for the tracked counters - keystrokes,

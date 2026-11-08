@@ -1,4 +1,4 @@
-import { Badge, Flex } from '@radix-ui/themes'
+import { Flex } from '@radix-ui/themes'
 import { type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
@@ -31,9 +31,7 @@ export const TimeDialogMetrics = ({ row, range }: TimeDialogMetricsProps) => {
           label={t('dashboard.worklogsTable.head.timeActive')}
           description={t('common.metricDesc.timeActive')}
         >
-          <Badge color="green">
-            {formatDurationFromMinutes(row.minutesActive, t)}
-          </Badge>
+          {formatDurationFromMinutes(row.minutesActive, t)}
         </Metric>
         <Metric
           label={t('dashboard.worklogsTable.head.keyboard')}

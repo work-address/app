@@ -33,7 +33,13 @@ export const TimeDialogFooter = ({
   return (
     <Root>
       <DangerActions>
-        <Button color="danger" disabled={isPending} onClick={onDelete}>
+        {/* Soft, not solid: Save is the one filled button here. */}
+        <Button
+          color="danger"
+          variant="soft"
+          disabled={isPending}
+          onClick={onDelete}
+        >
           {t('dashboard.worklogsTable.dialog.deleteEntry')}
         </Button>
         {hasScreenshot && (

@@ -35,7 +35,11 @@ const meta = {
   decorators: [
     (Story) => (
       <TimeContext.Provider
-        value={{ ...formatters, t: i18n.t.bind(i18n) as TimeContextProps['t'] }}
+        value={{
+          ...formatters,
+          datesGrouped: true,
+          t: i18n.t.bind(i18n) as TimeContextProps['t'],
+        }}
       >
         <Frame>
           <Story />

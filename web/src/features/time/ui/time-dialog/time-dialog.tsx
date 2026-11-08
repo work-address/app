@@ -178,16 +178,18 @@ export const TimeDialog = ({
     }
   }, [open, isDirty, hasPrev, hasNext, onPrev, onNext])
 
+  // The same clock and date the list beside it writes, in the reader's own
+  // convention, so the entry reads identically in both places.
   const dateTimeFormatter = new Intl.DateTimeFormat(i18n.language, {
-    day: '2-digit',
-    month: '2-digit',
+    weekday: 'short',
+    day: 'numeric',
+    month: 'short',
     year: 'numeric',
   })
 
   const timeFormatter = new Intl.DateTimeFormat(i18n.language, {
-    hour: '2-digit',
+    hour: 'numeric',
     minute: '2-digit',
-    hour12: false,
   })
 
   // Derived straight from the row: the feed clears screenshot/processes when
@@ -238,9 +240,9 @@ export const TimeDialog = ({
   }
 
   const rangeLabel = row
-    ? `${timeFormatter.format(new Date(row.fromAt))} - ${timeFormatter.format(
+    ? `${timeFormatter.format(new Date(row.fromAt))} – ${timeFormatter.format(
         new Date(row.toAt),
-      )}, ${dateTimeFormatter.format(new Date(row.fromAt))}`
+      )} · ${dateTimeFormatter.format(new Date(row.fromAt))}`
     : ''
 
   return (
@@ -257,6 +259,9 @@ export const TimeDialog = ({
               ? DIALOG_WIDTH_WIDE
               : '540px'
       }
+      // The first control is the tooltipped "previous" arrow; focusing it
+      // on open would pop its tooltip over the title.
+      focusContentOnOpen
       desktopShowClose
       headerActions={
         row ? (

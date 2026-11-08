@@ -23,7 +23,7 @@ const NOTE_ICON_SIZE = 14
  * the figures beside it are the entry's activity and payment.
  */
 export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
-  const { dateFormatter, timeFormatter, numberFormatter, t } =
+  const { dateFormatter, timeFormatter, numberFormatter, datesGrouped, t } =
     useContext(TimeContext)
   const entry = props.data
 
@@ -72,8 +72,11 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
           <Name>{entry.project?.title ?? '—'}</Name>
           <Meta>
             {timeFormatter.format(new Date(entry.fromAt))} –{' '}
-            {timeFormatter.format(new Date(entry.toAt))} ·{' '}
-            {dateFormatter.format(new Date(entry.fromAt))}
+            {timeFormatter.format(new Date(entry.toAt))}
+            {/* Under a day heading the date is already said. */}
+            {datesGrouped
+              ? null
+              : ` · ${dateFormatter.format(new Date(entry.fromAt))}`}
           </Meta>
           {entry.note ? (
             <Tooltip content={entry.note}>
