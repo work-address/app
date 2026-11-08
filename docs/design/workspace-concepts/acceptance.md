@@ -33,7 +33,9 @@ row in the card lines up with it.
 
 The user accepted the pages on 2026-11-08. The Dashboard's Desktop session
 block was then built as well (below), so every preview's composition is now in
-the app.
+the app. On 2026-11-08 the user confirmed the UI as finalized against all six
+previews, accepting the two differences kept on purpose: the Dashboard's live
+blocks and the app's larger type and spacing.
 
 ## Differences that are intended
 
