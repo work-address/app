@@ -68,6 +68,10 @@ const fail = (status: number, message: string) => {
   throw new DemoHttpError(status, message)
 }
 
+const isSignedIn = (request: Request) =>
+  !readDemoSettings().signedOut &&
+  request.headers.get('authorization') === DEMO_ACCESS_TOKEN
+
 function route(
   method: 'get' | 'post' | 'put' | 'delete',
   path: string,
@@ -91,10 +95,7 @@ function route(
       )
     }
     const db = demoDb()
-    const signedIn =
-      !settings.signedOut &&
-      request.headers.get('authorization') === DEMO_ACCESS_TOKEN
-    if (auth && !signedIn) {
+    if (auth && !isSignedIn(request)) {
       return HttpResponse.json({ message: 'Unauthorized' }, { status: 401 })
     }
     let body: Record<string, unknown> = {}
@@ -445,7 +446,16 @@ const DEMO_GOOGLE_REFUSALS: Partial<
 
 export const handlers: HttpHandler[] = [
   // Auth: any sign-in signs in as the demo's chosen role.
-  route('get', '/auth/status', ({ me }) => shapeUser(me)),
+  // Like the API it never refuses: a token that identifies nobody gets nothing.
+  route(
+    'get',
+    '/auth/status',
+    ({ me, request }) =>
+      isSignedIn(request)
+        ? shapeUser(me)
+        : new HttpResponse(null, { status: 200 }),
+    { auth: false },
+  ),
   route('post', '/auth/nonce', () => crypto.randomUUID(), {
     auth: false,
   }),

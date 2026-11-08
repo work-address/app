@@ -3,6 +3,7 @@ import {
   type AxiosResponse,
   type InternalAxiosRequestConfig,
 } from 'axios'
+import { createEvent } from 'effector'
 import i18n from 'i18next'
 
 import { authControllerRefresh } from './generated'
@@ -13,6 +14,13 @@ import { showToast } from '@/shared/lib/sonner'
 
 const ACCESS_TOKEN_KEY = 'access_token'
 const REFRESH_TOKEN_KEY = 'refresh_token'
+
+/**
+ * The API no longer accepts this session, and nothing here can win it back. Also
+ * fires for a refused request from someone with no session at all, such as a
+ * failed sign-in, so whoever listens decides whether there was one to end.
+ */
+export const sessionExpired = createEvent()
 
 client.setConfig({
   baseURL: import.meta.env.VITE_API_URL,
@@ -60,6 +68,38 @@ const refreshTokens = async (refreshToken: string) => {
   return newAccessToken
 }
 
+/**
+ * Trades the refresh token for a new pair. Rejects when it can't: a refusal also
+ * ends the session, while an outage says nothing about the tokens, so they stay
+ * for whatever is retried next.
+ */
+export const renewSession = async () => {
+  const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY)
+
+  if (!refreshToken) {
+    sessionExpired()
+    throw new Error('There is no session to renew')
+  }
+
+  try {
+    refreshPromise ??= refreshTokens(refreshToken).finally(() => {
+      refreshPromise = null
+    })
+
+    return await refreshPromise
+  } catch (refreshError) {
+    if (
+      refreshError instanceof AxiosError &&
+      refreshError.response?.status === 401
+    ) {
+      localStorage.removeItem(ACCESS_TOKEN_KEY)
+      localStorage.removeItem(REFRESH_TOKEN_KEY)
+      sessionExpired()
+    }
+    throw refreshError
+  }
+}
+
 client.instance.interceptors.response.use(
   (response: AxiosResponse) => response,
   async (error: AxiosError) => {
@@ -67,34 +107,28 @@ client.instance.interceptors.response.use(
       _retry?: boolean
     }
 
+    // The refresh's own refusal goes back to refreshTokens: waiting here for the
+    // refresh to finish would have it wait on itself, along with every request
+    // queued behind it, and none of them would ever settle.
+    if (originalRequest.url?.endsWith('/auth/refresh')) {
+      return Promise.reject(error)
+    }
+
     if (error.response?.status === 401 && !originalRequest._retry) {
       originalRequest._retry = true
 
-      const refreshToken = localStorage.getItem(REFRESH_TOKEN_KEY)
-
-      if (!refreshToken) {
+      if (!localStorage.getItem(REFRESH_TOKEN_KEY)) {
+        sessionExpired()
         return Promise.reject(error)
       }
 
-      try {
-        if (!refreshPromise) {
-          refreshPromise = refreshTokens(refreshToken).finally(() => {
-            refreshPromise = null
-          })
-        }
+      const newAccessToken = await renewSession()
 
-        const newAccessToken = await refreshPromise
-
-        if (originalRequest.headers && newAccessToken) {
-          originalRequest.headers.Authorization = newAccessToken
-        }
-
-        return client.instance(originalRequest)
-      } catch (refreshError) {
-        localStorage.removeItem(ACCESS_TOKEN_KEY)
-        localStorage.removeItem(REFRESH_TOKEN_KEY)
-        throw refreshError
+      if (originalRequest.headers && newAccessToken) {
+        originalRequest.headers.Authorization = newAccessToken
       }
+
+      return client.instance(originalRequest)
     }
 
     return Promise.reject(error)
@@ -115,9 +149,9 @@ export function suppressGlobalErrorToast(error: unknown): void {
 /**
  * Every failing status gets a generic toast except 401, which belongs to the
  * refresh/logout flow above: a 401 only reaches this interceptor once the
- * refresh has already given up, and that path signs the user out and reports
- * itself. Previously only 400 and 5xx were covered, so 403/404/409/422/429
- * failed completely silently for any caller without its own handler.
+ * refresh has already given up, and that path signs the user out. Previously
+ * only 400 and 5xx were covered, so 403/404/409/422/429 failed completely
+ * silently for any caller without its own handler.
  */
 const isGloballyHandledStatus = (status: number) =>
   status >= 400 && status !== 401

@@ -5,6 +5,7 @@
  */
 
 import { sample } from 'effector'
+import { delay } from 'patronum/delay'
 
 import { loginEthFx } from './eth.model'
 import { loginGoogleFx } from './google.model'
@@ -12,6 +13,7 @@ import {
   clearTokensFx,
   fetchStatusFx,
   LOCAL_STORAGE_ACCESS_TOKEN,
+  restartAppFx,
   saveTokensFx,
   writeAuthenticatedToLsFx,
   writeLastSignInMethodFx,
@@ -24,7 +26,10 @@ import {
   $lastSignInMethod,
 } from './profile.stores'
 
-import { suppressGlobalErrorToast } from '@/shared'
+import { routes } from '@/routes'
+import { sessionExpired, suppressGlobalErrorToast } from '@/shared'
+
+const STATUS_RETRY_MS = 15_000
 
 /**
  * Persist auth flag to localStorage for backward compatibility.
@@ -62,6 +67,26 @@ sample({
   target: logout,
 })
 
+sample({
+  clock: signOut,
+  fn: () => routes.signIn.build(),
+  target: restartAppFx,
+})
+
+// A failed sign-in also gets a refusal, with no session to end and its error to
+// show, so only a session this page still believes in counts.
+const sessionRanOut = sample({
+  clock: sessionExpired,
+  source: $authenticated,
+  filter: Boolean,
+  fn: () => {},
+})
+
+sample({
+  clock: sessionRanOut,
+  target: [logout, restartAppFx],
+})
+
 /**
  * Logout flow: clear tokens
  */
@@ -88,12 +113,21 @@ sample({
 })
 
 /**
- * On session validation failure (401), clear tokens and reset auth state.
+ * A failed read says nothing about the session: a real refusal ends it through
+ * `sessionExpired`, so what reaches here is an outage. Everyone stays signed in
+ * and it is read again, because too much hangs off knowing who they are.
  */
 sample({
-  clock: fetchStatusFx.fail,
-  target: [$authenticated.reinit, logout],
+  clock: delay(fetchStatusFx.fail, STATUS_RETRY_MS),
+  source: $authenticated,
+  filter: Boolean,
+  fn: () => {},
+  target: fetchStatusFx,
 })
+
+// Quiet, or an outage would raise a toast at every retry. Each page says for
+// itself that it could not load.
+fetchStatusFx.failData.watch(suppressGlobalErrorToast)
 
 sample({
   clock: saveProfileMutation.finished.success,
