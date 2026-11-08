@@ -1,7 +1,7 @@
 import { Effect } from 'effect'
 import * as _ from 'lodash'
 import { inject, injectable } from 'inversify'
-import { SelectQueryBuilder } from 'typeorm'
+import { OrderByCondition, SelectQueryBuilder } from 'typeorm'
 
 import { Filter } from '@/service/filter'
 import {
@@ -17,6 +17,18 @@ import { EProjectState } from '@/model/project'
 import { ProjectSearchDto } from '@/model/dto/project'
 import { UserRepository } from '@/repository/user-repository'
 import { ProjectAccess } from '@/service/project-access'
+
+/** Every order the project list can ask for, by the name it asks with. */
+const PROJECT_SORT_COLUMN_BY_KEY = new Map([
+  ['id', 'project.id'],
+  ['createdAt', 'project.createdAt'],
+  ['updatedAt', 'project.updatedAt'],
+  ['title', 'project.title'],
+  ['state', 'project.state'],
+  ['rateHour', 'project.rateHour'],
+  ['trackScreenshots', 'project.trackScreenshots'],
+  ['trackProcesses', 'project.trackProcesses'],
+])
 
 const UUID_PATTERN =
   /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i
@@ -162,6 +174,33 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
     )
   }
 
+  /** The order to run, sorting the rate by what this reader may see of it. */
+  private buildVisibleOrderBy(
+    query: SelectQueryBuilder<Project>,
+    search: ProjectSearchDto,
+    user: User,
+  ): OrderByCondition {
+    const sort = this.filter.buildOrderByCondition(
+      PROJECT_SORT_COLUMN_BY_KEY,
+      search,
+      'projects',
+    )
+    const direction = sort['project.rateHour']
+
+    if (!direction) {
+      return sort
+    }
+
+    this.access.selectVisibleRate(
+      query,
+      { project: 'project', owner: 'user' },
+      user,
+      'visible_rate_sort',
+    )
+
+    return { visible_rate_sort: direction, 'project.id': 'ASC' }
+  }
+
   public findAndCountAccessibleBy(
     search: ProjectSearchDto,
     user: User,
@@ -176,7 +215,6 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
       },
       search,
     )
-    const sort = this.filter.buildOrderByCondition('project', s)
     const limit = this.filter.buildLimit(search)
 
     const query = this.getRepo()
@@ -254,13 +292,14 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
           })
         }
       })
-      .orderBy(sort)
       .skip(limit * s.page)
       .take(limit)
 
     return Effect.gen(this, function* () {
       const [projects, count] = yield* fromPromise(() =>
-        query.getManyAndCount(),
+        query
+          .orderBy(this.buildVisibleOrderBy(query, s, user))
+          .getManyAndCount(),
       )
 
       for (const project of projects) {

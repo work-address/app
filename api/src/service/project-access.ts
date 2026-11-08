@@ -100,6 +100,27 @@ export class ProjectAccess {
     )
   }
 
+  /**
+   * Selects, as `alias`, the project's rate where this person may see it: every
+   * role but a viewer, as `role` answers it. Empty otherwise, so sorting by it
+   * cannot read a hidden rate back through the order of the rows.
+   */
+  public selectVisibleRate(
+    qb: SelectQueryBuilder<ObjectLiteral>,
+    { project, owner }: IAccessAliases,
+    user: User,
+    alias: string,
+  ): void {
+    qb.addSelect(
+      `CASE WHEN ${owner}.id = :accessUserId OR ${this.onList(project, 'workerAddresses')}
+        THEN ${project}.rateHour END`,
+      alias,
+    ).setParameters({
+      accessUserId: user.id,
+      userAddress: AccountAddress.toCanonical(user.address),
+    })
+  }
+
   /** Whether the review window of an entry ending at `toAt` is over. */
   public reviewEnded(
     toAt: Date,

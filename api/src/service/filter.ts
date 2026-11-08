@@ -1,5 +1,5 @@
 import { injectable } from 'inversify'
-import * as _ from 'lodash'
+import { BadRequestError } from 'routing-controllers'
 import { OrderByCondition } from 'typeorm'
 
 import { ISearch } from '@/model/dto/search'
@@ -8,14 +8,32 @@ import { ISearch } from '@/model/dto/search'
 export class Filter {
   private defaultLimit = 20
 
-  buildOrderByCondition(domain: string, search: ISearch): OrderByCondition {
-    const sort: OrderByCondition = {}
+  /**
+   * The order a search asked for, out of `columns`: every order its list can
+   * ask for, by the name it asks with. A list rather than `${table}.${key}`,
+   * because the key comes from the request and TypeORM writes it into the SQL
+   * as given, and because any column reachable here can be read back through
+   * the order of the rows, even when the rows themselves leave it out.
+   *
+   * The first key orders. The rest are refused alike, so a bad key is never
+   * silently ignored.
+   */
+  buildOrderByCondition(
+    columns: ReadonlyMap<string, string>,
+    search: ISearch,
+    rows: string,
+  ): OrderByCondition {
+    const orders = Object.entries(search.sort).map(([key, direction]) => {
+      const column = columns.get(key)
 
-    if (Object.keys(search.sort).length > 0) {
-      sort[`${domain}.${_.keys(search.sort)[0]}`] = _.values(search.sort)[0]
-    }
+      if (!column || (direction !== 'ASC' && direction !== 'DESC')) {
+        throw new BadRequestError(`Cannot sort ${rows} by ${key}`)
+      }
 
-    return sort
+      return { [column]: direction }
+    })
+
+    return orders[0] ?? {}
   }
 
   buildLimit(search: ISearch): number {

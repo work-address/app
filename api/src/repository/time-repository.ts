@@ -24,6 +24,7 @@ import {
   In,
   ObjectLiteral,
   OrderByCondition,
+  SelectQueryBuilder,
 } from 'typeorm'
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity'
 
@@ -32,12 +33,34 @@ import InvoicedTimeException from '@/exception/invoiced-time-exception'
 import { TimeSearchDto } from '@/model/dto/time'
 import { BadRequestError } from 'routing-controllers'
 
-// Sort keys that don't map 1:1 onto a `time` column - they live on a
-// joined table instead (projectName -> project.title).
-const TIME_SORT_COLUMN_BY_KEY: Record<string, string> = {
-  projectName: 'project.title',
-  paidStatus: 'time.isPaid',
-}
+/** Every order the entry list can ask for, by the name it asks with. */
+const TIME_SORT_COLUMN_BY_KEY = new Map([
+  ['createdAt', 'time.createdAt'],
+  ['updatedAt', 'time.updatedAt'],
+  ['fromAt', 'time.fromAt'],
+  ['toAt', 'time.toAt'],
+  ['keyboardKeys', 'time.keyboardKeys'],
+  ['minutesActive', 'time.minutesActive'],
+  ['mouseKeys', 'time.mouseKeys'],
+  ['mouseDistance', 'time.mouseDistance'],
+  ['note', 'time.note'],
+  ['screenshot', 'time.screenshot'],
+  ['paidStatus', 'time.isPaid'],
+  ['projectName', 'project.title'],
+])
+
+/**
+ * The listed columns that hold Detail. Each sorts through a guard, so adding
+ * Detail to the list above means adding it here too.
+ */
+const DETAIL_SORT_COLUMNS = new Set([
+  'time.note',
+  'time.keyboardKeys',
+  'time.minutesActive',
+  'time.mouseKeys',
+  'time.mouseDistance',
+  'time.screenshot',
+])
 
 /** What an author may still bill: not paid by hand, and on no invoice. */
 const INVOICEABLE =
@@ -188,16 +211,34 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     }
   }
 
-  private buildTimeOrderByCondition(search: TimeSearchDto): OrderByCondition {
-    const [key, direction] = Object.entries(search.sort)[0] ?? []
+  /** The order to run, sorting Detail by what this reader may see of it. */
+  private buildVisibleOrderBy(
+    qb: SelectQueryBuilder<Time>,
+    search: TimeSearchDto,
+    user: User,
+  ): OrderByCondition {
+    const sort = this.filter.buildOrderByCondition(
+      TIME_SORT_COLUMN_BY_KEY,
+      search,
+      'time entries',
+    )
+    const [sortColumn, sortDirection] = Object.entries(sort)[0] ?? []
 
-    if (!key || !direction) {
-      return {}
+    if (!DETAIL_SORT_COLUMNS.has(sortColumn)) {
+      return sort
     }
 
-    const column = TIME_SORT_COLUMN_BY_KEY[key] ?? `time.${key}`
+    // Sort the visible value, not the secret value that will be redacted later.
+    const screenshotVisible =
+      sortColumn === 'time.screenshot'
+        ? ` AND ${this.access.screenshotRetainedSql()}`
+        : ''
+    qb.addSelect(
+      `CASE WHEN ${this.access.detailSql()}${screenshotVisible} THEN ${sortColumn} ELSE NULL END`,
+      'visible_detail_sort',
+    ).setParameter('detailUser', user.id)
 
-    return { [column]: direction }
+    return { visible_detail_sort: sortDirection, 'time.id': 'ASC' }
   }
 
   public findAndCount(
@@ -215,7 +256,6 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       search,
     )
 
-    let sort = this.buildTimeOrderByCondition(s)
     const limit = this.filter.buildLimit(search)
 
     const qb = this.getRepo()
@@ -227,28 +267,6 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       .andWhere('project.deletedAt IS NULL')
 
     this.access.filterEntries(qb, { project: 'project', owner: 'owner' }, user)
-
-    const privateSortColumns = [
-      'time.note',
-      'time.keyboardKeys',
-      'time.minutesActive',
-      'time.mouseKeys',
-      'time.mouseDistance',
-      'time.screenshot',
-    ]
-    const [sortColumn, sortDirection] = Object.entries(sort)[0] ?? []
-    if (privateSortColumns.includes(sortColumn)) {
-      // Sort the visible value, not the secret value that will be redacted later.
-      const screenshotVisible =
-        sortColumn === 'time.screenshot'
-          ? ` AND ${this.access.screenshotRetainedSql()}`
-          : ''
-      qb.addSelect(
-        `CASE WHEN ${this.access.detailSql()}${screenshotVisible} THEN ${sortColumn} ELSE NULL END`,
-        'visible_detail_sort',
-      ).setParameter('detailUser', user.id)
-      sort = { visible_detail_sort: sortDirection, 'time.id': 'ASC' }
-    }
 
     const detailFilters = [
       'screenshot',
@@ -373,6 +391,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     )
 
     return fromPromise(async () => {
+      const sort = this.buildVisibleOrderBy(qb, s, user)
       const [times, count] = await qb
         .select()
         .orderBy(sort)

@@ -13,8 +13,6 @@ import {
 
 import { Repository } from 'typeorm/repository/Repository'
 import { getDataSource } from '@/connector/data-source'
-import { ISearch } from '@/model/dto/search'
-import { Filter } from '@/service/filter'
 import ConstraintsValidationException from '@/exception/constraints-validation-exception'
 import { fromPromise } from '@/service/effect-bridge'
 import { validate } from 'class-validator'
@@ -34,7 +32,6 @@ export type TSelectOptions = TRelations
 export type RepoEffect<A> = Effect.Effect<A, unknown>
 
 export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
-  protected filter: Filter
   protected target: EntityTarget<T> & { name: string }
 
   public validateAndSave(entity: T): RepoEffect<T> {
@@ -107,7 +104,6 @@ export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
     findOptions: TFindOptions,
     selectOptions: null | TSelectOptions = null,
     relations: null | TRelations = null,
-    searchOptions: ISearch | null = null,
   ) {
     const mainAliasName: string = this.target.name.toLowerCase()
     const query = this.getRepo()
@@ -137,16 +133,6 @@ export abstract class AbstractRepositoryTemplate<T extends ObjectLiteral> {
         qb,
       )
     })
-
-    if (searchOptions) {
-      if (searchOptions.sort) {
-        const sort = this.filter.buildOrderByCondition(
-          mainAliasName,
-          searchOptions,
-        )
-        query.orderBy(sort)
-      }
-    }
 
     return fromPromise(() => query.getOne())
   }

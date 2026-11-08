@@ -33,11 +33,7 @@ import { InvoiceSearchDto } from '@/model/dto/invoice'
 const ISSUER_LABEL_SQL = `COALESCE(NULLIF(issuer.name, ''), issuer.address)`
 const ISSUER_LABEL_ALIAS = 'issuer_label'
 
-/**
- * Every order the list can ask for, by the name it asks with. A list rather
- * than `invoice.${key}`, because the key comes from the request and TypeORM
- * writes it into the SQL as given.
- */
+/** Every order the invoice list can ask for, by the name it asks with. */
 const INVOICE_SORT_COLUMN_BY_KEY = new Map([
   ['id', 'invoice.id'],
   ['createdAt', 'invoice.createdAt'],
@@ -51,25 +47,14 @@ const INVOICE_SORT_COLUMN_BY_KEY = new Map([
   ['issuedBy', ISSUER_LABEL_ALIAS],
 ])
 
-const buildInvoiceOrderBy = (sort: OrderByCondition): OrderByCondition => {
-  const [key, direction] = Object.entries(sort)[0] ?? []
-
-  if (!key) {
-    return {}
-  }
-
-  const column = INVOICE_SORT_COLUMN_BY_KEY.get(key)
-
-  if (!column || (direction !== 'ASC' && direction !== 'DESC')) {
-    throw new BadRequestError(`Cannot sort invoices by ${key}`)
-  }
-
-  // Pages are offsets, and many invoices share a project or a state: without a
-  // unique tie-break a row could repeat on one page and go missing from another.
-  return key === 'id'
-    ? { [column]: direction }
-    : { [column]: direction, 'invoice.id': 'ASC' }
-}
+/**
+ * Pages are offsets, and many invoices share a project or a state: without a
+ * unique tie-break a row could repeat on one page and go missing from another.
+ */
+const withInvoiceTieBreak = (order: OrderByCondition): OrderByCondition =>
+  !Object.keys(order).length || 'invoice.id' in order
+    ? order
+    : { ...order, 'invoice.id': 'ASC' }
 
 @injectable()
 export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
@@ -432,7 +417,15 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
             })
           }
         })
-        .orderBy(buildInvoiceOrderBy(s.sort))
+        .orderBy(
+          withInvoiceTieBreak(
+            this.filter.buildOrderByCondition(
+              INVOICE_SORT_COLUMN_BY_KEY,
+              s,
+              'invoices',
+            ),
+          ),
+        )
         .skip(limit * s.page)
         .take(limit)
         .getManyAndCount(),
