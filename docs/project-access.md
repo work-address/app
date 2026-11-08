@@ -94,4 +94,4 @@ Everything else must be unchanged, including a lapsed owner's collaborators stil
 
 ## Follow-up, not this work
 
-The new collaborator rule (§7 #2) ships with per-seat billing (§7 #3): viewers are free, and Free includes the owner plus two workers. It replaces the gate rule and the grant check at `project-manager.ts:144` with that limit, and changes the web's `premiumLocked` path in `projects-add-collaborators.tsx`, the `premium.limits.card.collaborators` copy, and `createPremiumUser` in most fixtures.
+Done with per-seat billing (§7 #2 and #3): reads no longer depend on the owner's plan. The grant check in `project-manager.ts` now enforces the free plan's two workers, and tracking on a project whose owner has no plan goes through `WorkerSeats.mayTrack`.

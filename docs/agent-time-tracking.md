@@ -238,7 +238,7 @@ Paths are relative to the repository root. [SPEC.md](../SPEC.md) defines five do
 | `web/src/features/time/model/time-grid.ts` | Human activity percentages and daily sums | Unchanged; agents get their own view |
 | `api/dockerfile.prod`, `dockerfile.dev`, `docker-compose-dev.yml`, `scripts/installer.sh` | Schema applied by `schema:sync` on every start | Unchanged. Every schema change here is additive |
 
-Preexisting issues this plan does not change: collaborator premium gating on `dev` versus SPEC's worker limit on Free (agents ride on the worker's membership, so neither applies to them, and agents are never billable seats); a removed worker losing the right to invoice past hours (agents follow the same rule); the desktop pairing token being retrievable until its nonce expires.
+Preexisting issues this plan does not change: agents ride on the worker's membership and are never billable seats, and a worker who may not track on a project (`WorkerSeats.mayTrack`) has their runs on it refused too; a removed worker losing the right to invoice past hours (agents follow the same rule); the desktop pairing token being retrievable until its nonce expires.
 
 ## Architecture
 

@@ -293,19 +293,20 @@ invoice leaves the product as a PDF, sent by the issuer.
 ## What premium governs
 
 **Viewers are free, and Free includes the owner plus two workers.** More workers
-need Premium, which is billed per connected worker. Attaching an agent is not
-adding a collaborator: it rides on the worker's own membership.
+need Premium, which is billed per connected worker: a listed worker on an active
+project who has signed in (see `service/worker-seats.ts`). Attaching an agent is
+not adding a collaborator: it rides on the worker's own membership.
 
 Premium also governs **how long recorded time is kept**. On the hosted service an
-unpaid workspace hides timelogs and agent runs at 14 days, restorably; paying
-converts the whole workspace so nothing rotates. A self-hosted instance is
-unconditionally entitled — unlimited seats, no rotation (see
-`service/entitlement.ts`).
+unpaid workspace hides timelogs and agent runs at 14 days, and upgrading restores
+them; paying converts the whole workspace so nothing rotates. Hosted screenshots
+are kept for 12 months at most. A self-hosted instance is unconditionally entitled
+— unlimited seats, no rotation (see `service/entitlement.ts`).
 
 When Premium ends, through a missed renewal or a cancellation, membership stays.
-After 14 days of full access, tracking
-is limited to the owner and two workers the owner chooses. Everyone keeps access
-to hours already recorded and can still invoice them.
+Billing keeps it on for 14 days first. After that, tracking is limited to the
+owner and two workers the owner chooses, or the first two listed. Everyone keeps
+access to hours already recorded and can still invoice them.
 
 Retention is a property of the workspace, never of one person: `Statistics`
 and invoice reports aggregate across contributors, so a project whose
