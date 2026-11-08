@@ -9,16 +9,16 @@ The person a project belongs to.
 _Avoid_: Client, employer, admin
 
 **Worker**:
-A person whose address is on a project's worker list and who records time on it. Always a person: an agent is "an agent run by a contributor". English text users read calls this role **Contributor**; `worker` stays in code, the API, stored values and internal docs. The other languages keep their own words for now.
-_Avoid_: Contractor, freelancer, member. In English text users read, avoid Worker too, except "remote workers" as a description of the audience
+A person whose address is on a project's worker list and who records time on it. Always a person: an agent is "an agent run by a contributor". Text users read calls this role **Contributor** (es colaborador, ru участник, ja コントリビューター, zh 贡献者); `worker` stays in code, the API, stored values and internal docs.
+_Avoid_: Contractor, freelancer, member. In text users read, avoid Worker too, except "remote workers" as a description of the audience
 
 **Viewer**:
 A person whose address is on a project's viewer list and who reads project totals only.
 _Avoid_: Guest, observer
 
 **Collaborator**:
-A worker or a viewer, as opposed to the owner. English text users read says **people**, or "contributors or viewers"; `collaborator` stays in code and internal docs.
-_Avoid_: Member, teammate. In English text users read, avoid Collaborator too
+A worker or a viewer, as opposed to the owner. Text users read says **people** (es personas, ru люди, ja メンバー, zh 人员), or "contributors or viewers"; `collaborator` stays in code and internal docs.
+_Avoid_: Member, teammate. In text users read, avoid Collaborator too
 
 **Team**:
 The people on a project's lists and the agents they run, as the `/team` page shows them. Not an account or an organisation: nothing is stored under this name.
