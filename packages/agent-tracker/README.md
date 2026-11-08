@@ -32,7 +32,7 @@ When using the app API, supply the same source-instance UUID used to issue the
 credential; omitting it generates an identity suitable for the mock receiver.
 
 `WORK_ADDRESS_PROJECT` selects a project for an agent process, and
-`WORK_ADDRESS_AGENT` selects that worker's agent handle. Hooks, Codex streams and
+`WORK_ADDRESS_AGENT` selects that contributor's agent handle. Hooks, Codex streams and
 the OpenClaw plugin honor these values. Each project/handle combination has a
 separate durable queue beneath the configured state directory; the base config
 and its existing queue are unchanged. Run `status` and `sync` with the same values
@@ -41,7 +41,7 @@ event. The API validates membership, the owner switch and attachment again.
 Local policy/attachment preflight and automatic hook installation remain pending.
 
 Claude Code and Codex hooks send the prompt that starts a run with `run.started`,
-trimmed and cut to 4,000 characters; the worker and the project owner see it on
+trimmed and cut to 4,000 characters; the contributor and the project owner see it on
 the run. Set `WORK_ADDRESS_PROMPTS=off` to keep prompts on the machine.
 
 HTTPS is required except for explicit loopback HTTP; redirects are rejected.
