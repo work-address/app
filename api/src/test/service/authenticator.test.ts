@@ -164,14 +164,17 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     try {
       await runPromise(this.authenticator.getUserFromRefreshToken(refreshToken))
     } catch (err: unknown) {
-      expect((err as Error).name).to.be.eq('TokenExpiredError')
+      expect((err as Error).name).to.be.eq('AuthenticationException')
+      expect((err as Error).message).to.be.eq(
+        'Authentication error: Refresh token has expired',
+      )
     }
   }
 
   @test()
   async getUserFromRefreshToken_failUserDoesNotExist() {
     const refreshToken = jwt.sign(
-      { id: faker.number.int() },
+      { id: faker.string.uuid() },
       this.parameters.jwtSecret,
       {
         expiresIn: 60 * 60 * 24,
@@ -223,6 +226,92 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
 
     expect(tokens).to.contain.keys(['accessToken', 'refreshToken'])
     expect(userDB.id).to.be.eq(user.id)
+  }
+
+  /** A casing is how an address is written, not a different wallet. */
+  @test()
+  async loginEth_sameWalletInAnyCasingIsOneAccount() {
+    const account = web3.eth.accounts.create()
+    const signIn = async (address: string) => {
+      const nonce = await runPromise(this.authenticator.getNonce(address))
+      const { signature } = web3.eth.accounts.sign(nonce, account.privateKey)
+      const tokens = await runPromise(
+        this.authenticator.loginEth(signature, address),
+      )
+
+      return this.authenticator.decodeJwtToken(tokens.accessToken).id
+    }
+
+    const asChecksum = await signIn(account.address)
+    const asLowerCase = await signIn(account.address.toLowerCase())
+    const asUpperCase = await signIn(
+      `0x${account.address.slice(2).toUpperCase()}`,
+    )
+
+    expect(asLowerCase).to.be.eq(asChecksum)
+    expect(asUpperCase).to.be.eq(asChecksum)
+    const accounts = await runPromise(
+      this.userRepository.findByAddresses([account.address]),
+    )
+    expect(accounts.map(({ id }) => id)).to.deep.eq([asChecksum])
+  }
+
+  /** The first sign-in's casing does not become the account's address. */
+  @test()
+  async loginEth_storesANewWalletInItsChecksumCasing() {
+    const account = web3.eth.accounts.create()
+    const address = account.address.toLowerCase()
+    const nonce = await runPromise(this.authenticator.getNonce(address))
+    const { signature } = web3.eth.accounts.sign(nonce, account.privateKey)
+
+    await runPromise(this.authenticator.loginEth(signature, address))
+
+    const [user] = await runPromise(
+      this.userRepository.findByAddresses([address]),
+    )
+    expect(user.address).to.be.eq(account.address)
+  }
+
+  /** An account made in another casing before the lookup ignored casing. */
+  @test()
+  async loginEth_findsAnAccountStoredInAnotherCasing() {
+    const account = web3.eth.accounts.create()
+    const user = await this.userFixture.createUserFromKeypair(account)
+    user.address = account.address.toLowerCase()
+    await runPromise(this.userRepository.saveSingle(user))
+
+    const nonce = await runPromise(this.authenticator.getNonce(account.address))
+    const { signature } = web3.eth.accounts.sign(nonce, account.privateKey)
+    const tokens = await runPromise(
+      this.authenticator.loginEth(signature, account.address),
+    )
+
+    expect(this.authenticator.decodeJwtToken(tokens.accessToken).id).to.be.eq(
+      user.id,
+    )
+  }
+
+  /**
+   * Where a wallet already has two accounts, each spelling keeps reaching the
+   * one it always did, and any other spelling reaches the oldest.
+   */
+  @test()
+  async findByAddressPublic_withDuplicateRows() {
+    const account = web3.eth.accounts.create()
+    const lowerCase = account.address.toLowerCase()
+    const older = await this.userFixture.createUserFromKeypair(account)
+    older.address = lowerCase
+    await runPromise(this.userRepository.saveSingle(older))
+    const newer = await this.userFixture.createUserFromKeypair(account)
+
+    const find = (address: string) =>
+      runPromise(this.userRepository.findByAddressPublicOrFail(address))
+
+    expect((await find(account.address)).id).to.be.eq(newer.id)
+    expect((await find(lowerCase)).id).to.be.eq(older.id)
+    expect(
+      (await find(`0x${account.address.slice(2).toUpperCase()}`)).id,
+    ).to.be.eq(older.id)
   }
 
   @test()

@@ -1,6 +1,7 @@
 import { faker } from '@faker-js/faker'
 import { expect } from 'chai'
 import axios from 'axios'
+import { Effect } from 'effect'
 import jwt from 'jsonwebtoken'
 import * as web3 from 'web3'
 import { suite, test } from '@testdeck/mocha'
@@ -268,6 +269,93 @@ export class AuthControllerTest extends BaseControllerTest {
     expect(error).to.be.ok
     expect(error.response?.status).to.be.equal(401)
     expect(String(error.response?.data?.message ?? '')).to.match(/valid/i)
+  }
+
+  /** The dashboard signs out on a 401 and treats anything else as an outage. */
+  @test()
+  async refresh_refusesAnExpiredRefreshToken() {
+    const client = this.apiClient()
+    const user = await this.userFixture.createUser()
+    const parameters = this.container.get<IConfigParameters>('parameters')
+    const refreshToken = jwt.sign({ id: user.id }, parameters.jwtSecret, {
+      expiresIn: -1,
+    })
+
+    let error: unknown
+
+    try {
+      await authControllerRefresh({
+        client,
+        body: { refreshToken },
+        headers: { Authorization: '' },
+        throwOnError: true,
+      })
+    } catch (e: unknown) {
+      error = e
+    }
+
+    if (!axios.isAxiosError(error)) throw error
+    expect(error.response?.status).to.be.equal(401)
+  }
+
+  /** An outage must not read as "nobody": the dashboard would sign them out. */
+  @test()
+  async refresh_answersAFailedLookupAsAnOutage() {
+    const user = await this.userFixture.createUser()
+    const refreshToken = this.authenticator.generateRefreshToken(user)
+
+    const status = await this.statusWhileUsersCannotBeRead(() =>
+      authControllerRefresh({
+        client: this.apiClient(),
+        body: { refreshToken },
+        headers: { Authorization: '' },
+        throwOnError: true,
+      }),
+    )
+
+    expect(status).to.be.equal(500)
+  }
+
+  @test()
+  async status_answersAFailedLookupAsAnOutage() {
+    const user = await this.userFixture.createUser()
+    const token = this.authenticator.generateJwtToken(user)
+
+    const status = await this.statusWhileUsersCannotBeRead(() =>
+      authControllerStatus({
+        client: this.apiClient(),
+        headers: { Authorization: token },
+        throwOnError: true,
+      }),
+    )
+
+    expect(status).to.be.equal(500)
+  }
+
+  private async statusWhileUsersCannotBeRead(
+    request: () => Promise<unknown>,
+  ): Promise<number | undefined> {
+    const repository = UserRepository.prototype as unknown as Record<
+      string,
+      unknown
+    >
+    const outage = () => Effect.fail(new Error('connection lost'))
+
+    repository.findOneBy = outage
+    repository.findOneByIdOrFail = outage
+
+    try {
+      await request()
+    } catch (error: unknown) {
+      if (!axios.isAxiosError(error)) throw error
+
+      return error.response?.status
+    } finally {
+      delete repository.findOneBy
+      delete repository.findOneByIdOrFail
+    }
+
+    return 200
   }
 
   @test()

@@ -2,6 +2,8 @@ import * as bcrypt from 'bcrypt'
 import * as jwt from 'jsonwebtoken'
 import { Effect } from 'effect'
 import { inject, injectable } from 'inversify'
+import { EntityNotFoundError } from 'typeorm'
+import * as web3 from 'web3'
 
 import { User } from '@/entity/user'
 import { Mailer } from '@/service/mailer'
@@ -162,8 +164,12 @@ export class Authenticator {
         payload = this.decodeJwtToken(token)
       } catch (e) {
         if (e instanceof AuthenticationException) return yield* Effect.fail(e)
+        // Named apart because jsonwebtoken's own error carries no HTTP status,
+        // and would answer 500 to what is an ordinary refusal.
         if (e instanceof Error && e.name === 'TokenExpiredError') {
-          return yield* Effect.fail(e)
+          return yield* Effect.fail(
+            new AuthenticationException('Refresh token has expired'),
+          )
         }
         return yield* Effect.fail(
           new AuthenticationException('Refresh token is not valid'),
@@ -178,10 +184,12 @@ export class Authenticator {
       }
 
       return yield* this.userRepository.findOneByIdOrFail(userId).pipe(
-        // Any lookup failure here means the token names a user that is gone;
-        // the caller only ever surfaced it as an auth error.
-        Effect.catchAll(() =>
-          Effect.fail(new AuthenticationException('User does not exist')),
+        // Only a user that is gone refuses the token. A lookup that failed says
+        // nothing about it, and answering 401 to an outage would sign people out.
+        Effect.mapError((error) =>
+          error instanceof EntityNotFoundError
+            ? new AuthenticationException('User does not exist')
+            : error,
         ),
       )
     })
@@ -203,7 +211,16 @@ export class Authenticator {
 
   public getUserFromJwtToken(token: string): AuthEffect<User | null> {
     return Effect.gen(this, function* () {
-      const tokenData = this.decodeJwtToken(token)
+      let tokenData: jwt.JwtPayload & Partial<IAuthTokenData>
+
+      // A malformed or expired token is not an error to this caller - it just
+      // does not identify anyone. A failed lookup is: it stays a failure, so an
+      // outage is not mistaken for a token that identifies nobody.
+      try {
+        tokenData = this.decodeJwtToken(token)
+      } catch {
+        return null
+      }
 
       // A refresh token has only an id, and must go through rotation rather
       // than work as a long-lived access token.
@@ -216,12 +233,7 @@ export class Authenticator {
           where: { id: tokenData.id },
         })) ?? null
       )
-    }).pipe(
-      // A malformed or expired token is not an error to this caller - it just
-      // does not identify anyone. Defects are caught too because decodeJwtToken
-      // throws rather than failing.
-      Effect.catchAllCause(() => Effect.succeed(null)),
-    )
+    })
   }
 
   public getJwtIatOrThrowError(token: string): string {
@@ -275,7 +287,7 @@ export class Authenticator {
     // through creating their first project.
     return Effect.gen(this, function* () {
       const user = new User()
-      user.address = address
+      user.address = web3.utils.toChecksumAddress(address)
       user.roles = [EUserRole.ROLE_USER]
 
       yield* this.userManager.saveSingle(user)

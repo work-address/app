@@ -7,6 +7,7 @@ import {
   AbstractRepositoryTemplate,
   RepoEffect,
 } from '@/repository/abstract-repository-template'
+import { AccountAddress } from '@/service/account-address'
 import { fromPromise } from '@/service/effect-bridge'
 
 @injectable()
@@ -41,23 +42,29 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
 
   public findByAddressPublic(address: string): RepoEffect<User | undefined> {
     return fromPromise(
-      async () =>
-        (await this.getRepo().findOne({
-          where: {
-            address,
-          },
-        })) ?? undefined,
+      async () => (await this.queryByAddress(address).getOne()) ?? undefined,
     )
   }
 
   public findByAddressPublicOrFail(address: string): RepoEffect<User> {
-    return fromPromise(() =>
-      this.getRepo().findOneOrFail({
-        where: {
-          address,
-        },
-      }),
-    )
+    return fromPromise(() => this.queryByAddress(address).getOneOrFail())
+  }
+
+  /**
+   * The account an address names, however it is cased. The column's unique
+   * constraint compares exact strings, so rows differing only in casing can
+   * exist: the one written exactly as asked wins, so that nobody who already
+   * signs in with that spelling lands in another account, and then the oldest.
+   */
+  private queryByAddress(address: string) {
+    return this.getRepo()
+      .createQueryBuilder('user')
+      .where(`${AccountAddress.canonicalSql('user.address')} = :canonical`, {
+        canonical: AccountAddress.toCanonical(address),
+      })
+      .orderBy('user.address = :address', 'DESC')
+      .addOrderBy('user.createdAt', 'ASC')
+      .setParameter('address', address)
   }
 
   public countByAddresses(addresses: string[]): RepoEffect<number> {
