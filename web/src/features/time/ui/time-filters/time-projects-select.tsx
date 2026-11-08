@@ -4,7 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import { $projects } from '@/entities/projects'
 import { changeTimeFilters, $timeFilters } from '@/entities/time'
-import { Select } from '@/shared'
+import { FolderIcon, Select } from '@/shared'
 
 export const TimeProjectsSelect = ({
   labelHidden,
@@ -38,6 +38,7 @@ export const TimeProjectsSelect = ({
     <Select
       label={t('dashboard.page.filters.projects')}
       labelHidden={labelHidden}
+      icon={<FolderIcon />}
       options={options}
       value={selectedActivity ?? ''}
       onChange={(v) => {

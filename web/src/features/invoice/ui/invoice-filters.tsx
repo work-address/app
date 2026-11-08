@@ -26,6 +26,7 @@ import {
   DatePickerInput,
   Drawer,
   FilterIcon,
+  FolderIcon,
   Input,
   ListPageLayout as S,
   Select,
@@ -140,6 +141,7 @@ const ProjectField = ({ labelHidden }: { labelHidden?: boolean }) => {
       <Select
         label={t('invoices.item.project')}
         labelHidden={labelHidden}
+        icon={<FolderIcon />}
         options={options}
         value={projectId}
         placeholder={t('invoices.filter.allProjects')}

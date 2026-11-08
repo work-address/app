@@ -264,6 +264,7 @@ export const ProfileEdit = ({ variant = 'edit' }: Props) => {
             : t('app.documentTitle.profileEdit')
         }
         description={t('profile.form.edit.description')}
+        actionsAlign="end"
         actions={
           isDesktop && !profileFailure ? (
             <ProfileEditActions

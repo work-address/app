@@ -4,7 +4,13 @@ import {
   ChevronUpIcon,
 } from '@radix-ui/react-icons'
 import { Popover } from '@radix-ui/themes'
-import { useId, useMemo, useState, type CSSProperties } from 'react'
+import {
+  useId,
+  useMemo,
+  useState,
+  type CSSProperties,
+  type ReactNode,
+} from 'react'
 import { ListBox, ListBoxItem } from 'react-aria-components'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
@@ -35,6 +41,10 @@ type SelectProps = {
   allSelectedText?: string
   inputProps?: InputProps
   menuMaxHeight?: string | number
+  /** Before the value: what the field picks, at a glance. */
+  icon?: ReactNode
+  /** The trigger's text in place of the chosen labels, e.g. with its dates. */
+  valueText?: string
 }
 
 export const Select = ({
@@ -51,6 +61,8 @@ export const Select = ({
   allSelectedText,
   inputProps,
   menuMaxHeight,
+  icon,
+  valueText,
 }: SelectProps) => {
   const { t } = useTranslation()
   const isMobile = useBreakpoint('isMobile')
@@ -159,6 +171,7 @@ export const Select = ({
       }
       aria-describedby={inputProps?.['aria-describedby']}
       data-placeholder={!buttonText || undefined}
+      data-icon={icon ? true : undefined}
       style={inputProps?.style}
       onKeyDown={(event) => {
         if (event.key === 'ArrowDown' || event.key === 'ArrowUp') {
@@ -167,7 +180,8 @@ export const Select = ({
         }
       }}
     >
-      <Value>{buttonText || ph}</Value>
+      {icon ? <Icon aria-hidden>{icon}</Icon> : null}
+      <Value>{valueText ?? (buttonText || ph)}</Value>
       {open ? <ChevronUpIcon aria-hidden /> : <ChevronDownIcon aria-hidden />}
     </Trigger>
   )
@@ -271,6 +285,9 @@ const Trigger = styled.button`
   font-size: var(--select-trigger-font-size, var(--ui-meta-size));
   line-height: var(--ui-meta-line-height);
   text-align: left;
+  &[data-icon] {
+    grid-template-columns: auto minmax(0, 1fr) auto;
+  }
   &:hover:not(:disabled) {
     border-color: var(--select-trigger-hover-border, var(--ui-muted));
     background: var(
@@ -298,6 +315,11 @@ const Trigger = styled.button`
     font-size: var(--select-trigger-font-size, var(--ui-body-size));
     line-height: var(--ui-body-line-height);
   }
+`
+const Icon = styled.span`
+  display: grid;
+  place-items: center;
+  color: var(--ui-muted);
 `
 const Value = styled.span`
   overflow: hidden;

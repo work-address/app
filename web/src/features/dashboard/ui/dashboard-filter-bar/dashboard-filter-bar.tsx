@@ -1,3 +1,4 @@
+import { PersonIcon } from '@radix-ui/react-icons'
 import { useUnit } from 'effector-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -14,7 +15,7 @@ import {
 } from '../../model'
 
 import { $projects } from '@/entities/projects'
-import { DateRangePicker, Select } from '@/shared'
+import { DateRangePicker, FolderIcon, Select } from '@/shared'
 
 const toIds = (value: string | string[]) =>
   Array.isArray(value) ? value : value ? [value] : []
@@ -67,6 +68,7 @@ export const DashboardFilterBar = () => {
           multi
           label={t('dashboard.filters.projects')}
           labelHidden
+          icon={<FolderIcon />}
           options={projectOptions}
           value={projectIds}
           placeholder={t('dashboard.filters.allProjects')}
@@ -80,6 +82,7 @@ export const DashboardFilterBar = () => {
             multi
             label={t('dashboard.filters.people')}
             labelHidden
+            icon={<PersonIcon />}
             options={peopleOptions}
             value={userIds}
             placeholder={t('dashboard.filters.everyone')}
@@ -101,8 +104,10 @@ const Root = styled.div`
   --select-trigger-background: var(--ui-surface);
   --select-trigger-color: var(--ui-ink);
   --select-trigger-font-size: var(--ui-body-size);
-  --select-trigger-hover-border: var(--ui-line);
+  --select-trigger-hover-border: var(--ui-line-strong);
   --select-trigger-hover-background: var(--ui-surface);
+  --date-field-height: var(--ui-filter-height);
+  --date-field-padding: var(--ui-space-4);
 
   display: grid;
   grid-auto-flow: column;
@@ -112,9 +117,12 @@ const Root = styled.div`
   max-width: 100%;
   color: var(--ui-muted);
 
+  /* A custom period keeps the three filters on one line and puts its two
+     days on the line below, at the right. */
   &[data-custom] {
     grid-auto-flow: row;
-    grid-template-columns: repeat(2, auto);
+    grid-template-columns: repeat(3, auto);
+    justify-content: end;
   }
 
   ${(p) => p.theme.breakpoints.down('xl')} {
@@ -126,14 +134,18 @@ const Root = styled.div`
       grid-template-columns: repeat(2, minmax(0, 1fr));
     }
   }
+
+  /* A phone gives each filter its own row, so a name never shares its line
+     with the icon and gets cut short. */
+  ${(p) => p.theme.breakpoints.down('md')} {
+    &,
+    &[data-custom] {
+      grid-template-columns: minmax(0, 1fr);
+    }
+  }
 `
 
 const Field = styled.div`
-  --select-trigger-background: transparent;
-  --select-trigger-border: transparent;
-  --select-trigger-color: var(--ui-muted);
-  --select-trigger-padding: var(--ui-space-2);
-
   width: var(--ui-filter-width);
 
   ${(p) => p.theme.breakpoints.down('xl')} {
@@ -145,11 +157,20 @@ const Field = styled.div`
 const Period = styled(DateRangePicker)`
   justify-self: end;
 
-  ${Root}[data-custom] & {
-    grid-column: 1 / -1;
+  ${(p) => p.theme.breakpoints.up('xl')} {
+    ${Root}[data-custom] & {
+      display: contents;
+    }
+
+    ${Root}[data-custom] & > :last-child {
+      grid-column: 1 / -1;
+      justify-self: end;
+    }
   }
 
   ${(p) => p.theme.breakpoints.down('xl')} {
+    --date-range-preset-width: 100%;
+
     grid-column: 1 / -1;
     grid-auto-flow: row;
     justify-self: stretch;

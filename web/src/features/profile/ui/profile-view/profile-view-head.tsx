@@ -195,6 +195,11 @@ const Actions = styled.div`
   justify-content: end;
   gap: var(--ui-space-3);
 
+  /* Beside the title, on the description's line. */
+  ${(p) => p.theme.breakpoints.up('xl')} {
+    align-self: end;
+  }
+
   ${(p) => p.theme.breakpoints.down('md')} {
     grid-auto-columns: minmax(0, 1fr);
     justify-content: stretch;

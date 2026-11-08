@@ -533,6 +533,13 @@ const HeaderTools = styled.div`
   gap: var(--ui-space-3);
   min-width: 0;
 
+  /* Beside the title, the status sits at the top and the filters at the
+     bottom, on the description's line. */
+  ${(p) => p.theme.breakpoints.up('xl')} {
+    align-self: stretch;
+    align-content: space-between;
+  }
+
   ${(p) => p.theme.breakpoints.down('xl')} {
     justify-items: stretch;
   }

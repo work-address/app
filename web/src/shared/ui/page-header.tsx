@@ -12,6 +12,11 @@ type Props = {
   description?: ReactNode
   /** Trailing actions or filters; they drop under the title when narrow. */
   actions?: ReactNode
+  /**
+   * Where the actions sit beside a tall heading: `start` by the title, or
+   * `end` on the description's line.
+   */
+  actionsAlign?: 'start' | 'end'
   /** A leading control, such as a back link, on the title's line. */
   leading?: ReactNode
   className?: string
@@ -29,6 +34,7 @@ export const PageHeader = ({
   badge,
   description,
   actions,
+  actionsAlign = 'start',
   leading,
   className,
 }: Props) => (
@@ -42,7 +48,7 @@ export const PageHeader = ({
       </TitleRow>
       {description ? <Description>{description}</Description> : null}
     </Body>
-    {actions ? <Actions>{actions}</Actions> : null}
+    {actions ? <Actions data-align={actionsAlign}>{actions}</Actions> : null}
   </Root>
 )
 
@@ -113,6 +119,10 @@ const Actions = styled.div`
   align-items: center;
   justify-content: end;
   gap: var(--ui-space-3);
+
+  &[data-align='end'] {
+    align-self: end;
+  }
 
   /* Under ~560px of header the actions get their own line rather than
      squeezing the title. */

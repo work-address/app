@@ -1,3 +1,4 @@
+import { CalendarIcon } from '@radix-ui/react-icons'
 import { addDays, subDays } from 'date-fns'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -49,6 +50,29 @@ export const DateRangePicker = ({
       })),
     [t],
   )
+
+  // A named period says which days it is ("This week · Nov 1 - 7"); a
+  // custom one shows its days in the fields beside it instead.
+  const valueText = useMemo((): string | undefined => {
+    if (value.preset === 'custom') {
+      return
+    }
+
+    const from = fromDay(value.from)
+    const to = fromDay(value.to)
+    const format = new Intl.DateTimeFormat(i18n.language, {
+      month: 'short',
+      day: 'numeric',
+    })
+    const days =
+      value.from === value.to
+        ? format.format(from)
+        : format.formatRange(from, to)
+
+    const name = t(`common.dateRange.${value.preset}`)
+
+    return `${name} · ${days}`
+  }, [value, i18n.language, t])
 
   const choosePreset = (preset: DateRangePreset) => {
     // Custom starts from the days already shown, ready to adjust.
@@ -102,6 +126,8 @@ export const DateRangePicker = ({
         labelHidden={labelHidden}
         options={options}
         value={value.preset}
+        icon={<CalendarIcon />}
+        valueText={valueText}
         onChange={(next) => {
           if (typeof next === 'string' && isPreset(next)) {
             choosePreset(next)
@@ -112,14 +138,18 @@ export const DateRangePicker = ({
         <Days>
           <DatePickerInput
             id={'range-from'}
-            label={t('common.dateRange.from')}
+            // Beside the title the field names itself, as the preset does.
+            label={labelHidden ? undefined : t('common.dateRange.from')}
+            placeholder={t('common.dateRange.from')}
             value={fromDay(value.from)}
             onChange={changeFrom}
             allowClear={false}
           />
           <DatePickerInput
             id={'range-to'}
-            label={t('common.dateRange.to')}
+            // Beside the title the field names itself, as the preset does.
+            label={labelHidden ? undefined : t('common.dateRange.to')}
+            placeholder={t('common.dateRange.to')}
             value={fromDay(value.to)}
             onChange={changeTo}
             allowClear={false}
@@ -141,8 +171,12 @@ const Root = styled.div`
   }
 `
 
+/* As wide as the period and its days need, so "Last 30 days · Oct 9 - Nov 7"
+   is not cut off; a parent can stretch it with --date-range-preset-width. */
 const PresetSelect = styled(Select)`
-  width: 180px;
+  width: var(--date-range-preset-width, max-content);
+  min-width: 180px;
+  max-width: 100%;
 
   ${(p) => p.theme.breakpoints.down('md')} {
     width: 100%;
