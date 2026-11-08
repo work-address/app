@@ -253,7 +253,8 @@ profile form) keep their heading on the canvas and put their parts on sheets.
 Its default is natural height. Set `bounded` only for an intentionally capped
 information/list panel; the shared mobile behavior restores natural height.
 Group count and primary action in `aside`, not as a second toolbar action.
-A count is informational, not a clickable button. On a phone, keep the count
+A count is informational, not a clickable button; every panel's count or total
+uses `WorkspaceCount`. On a phone, keep the count
 and action together on their own header line when needed; an icon-only action
 retains its accessible label and tooltip.
 

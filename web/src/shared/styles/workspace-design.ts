@@ -171,6 +171,9 @@ export const WorkspaceDesignStyles = createGlobalStyle`
      menus and popovers. Doubled to outrank Radix's own corner rules. */
   .rt-BaseDialogContent.rt-BaseDialogContent {
     border-radius: var(--ui-radius);
+    box-shadow:
+      var(--ui-shadow),
+      0 0 0 var(--ui-border-width) var(--ui-line);
   }
 
   .rt-PopoverContent.rt-PopoverContent,

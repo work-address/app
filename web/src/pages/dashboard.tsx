@@ -54,6 +54,7 @@ import {
   LoadFailure,
   Tooltip,
   useBreakpoint,
+  WorkspaceCount,
 } from '@/shared'
 import { DashboardEmptyStateImage } from '@/shared'
 
@@ -437,15 +438,7 @@ const ProjectsTools = styled.div`
   }
 `
 
-const Count = styled.span`
-  padding: var(--ui-space-2) var(--ui-space-3);
-  border-radius: var(--ui-pill-radius);
-  background: var(--ui-glow);
-  color: var(--ui-blue);
-  font-size: var(--ui-meta-size);
-  font-weight: var(--ui-weight-medium);
-  white-space: nowrap;
-`
+const Count = WorkspaceCount
 
 const CreateButton = styled(Button)`
   min-height: var(--ui-control-height);

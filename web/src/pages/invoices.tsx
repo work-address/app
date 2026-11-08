@@ -40,7 +40,12 @@ import {
   type InvoiceSortOrder,
 } from '@/features/invoice'
 import { routes } from '@/routes'
-import { formatCurrency, useDateFormatter, type baseApi } from '@/shared'
+import {
+  formatCurrency,
+  useDateFormatter,
+  type baseApi,
+  WorkspaceCount,
+} from '@/shared'
 import {
   Button,
   LoadFailure,
@@ -586,17 +591,7 @@ const Content = styled.div`
   min-width: 0;
 `
 
-const Count = styled.span`
-  padding: var(--ui-space-2) var(--ui-space-3);
-  border-radius: var(--ui-pill-radius);
-  background: var(--ui-glow);
-  color: var(--ui-blue);
-  font-size: var(--ui-meta-size);
-  line-height: var(--ui-meta-line-height);
-  font-weight: var(--ui-weight-medium);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-`
+const Count = WorkspaceCount
 
 /* The panel is the surface: the cards inside part with hairlines rather
    than each wearing a border of their own. */

@@ -52,6 +52,7 @@ import {
   WorkspaceFreshness,
   useBreakpoint,
   workspaceDesign,
+  WorkspaceCount,
 } from '@/shared'
 
 /**
@@ -385,17 +386,8 @@ const Controls = styled.div`
   }
 `
 
-const Count = styled.span`
+const Count = styled(WorkspaceCount)`
   justify-self: start;
-  padding: var(--ui-space-2) var(--ui-space-3);
-  border-radius: var(--ui-pill-radius);
-  background: var(--ui-glow);
-  color: var(--ui-blue);
-  font-size: var(--ui-meta-size);
-  line-height: var(--ui-meta-line-height);
-  font-weight: var(--ui-weight-medium);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
 `
 
 const Toolbar = styled.div`

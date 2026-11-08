@@ -30,6 +30,7 @@ import {
   WorkspaceMetric,
   WorkspacePanel,
   WorkspaceSummary,
+  WorkspaceCount,
 } from '@/shared'
 
 const ICON_SIZE = 14
@@ -231,17 +232,7 @@ export const TimeWeek = () => {
   )
 }
 
-const Total = styled.span`
-  padding: var(--ui-space-2) var(--ui-space-3);
-  border-radius: var(--ui-pill-radius);
-  background: var(--ui-glow);
-  color: var(--ui-blue);
-  font-size: var(--ui-meta-size);
-  line-height: var(--ui-meta-line-height);
-  font-weight: var(--ui-weight-medium);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-`
+const Total = WorkspaceCount
 
 const Body = styled.div`
   display: grid;

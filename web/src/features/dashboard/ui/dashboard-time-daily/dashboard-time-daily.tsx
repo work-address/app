@@ -32,6 +32,7 @@ import {
   type Bucket,
   type ChartTooltipContent,
   useBreakpoint,
+  WorkspaceCount,
 } from '@/shared'
 
 /** How many projects or agents a popup column names before it sums the rest. */
@@ -258,16 +259,7 @@ const Root = styled(DashboardWidget)`
   height: 100%;
 `
 
-const Total = styled.span`
-  padding: var(--ui-space-2) var(--ui-space-3);
-  border-radius: var(--ui-pill-radius);
-  background: var(--ui-glow);
-  color: var(--ui-blue);
-  font-size: var(--ui-body-size);
-  font-weight: var(--ui-weight-semibold);
-  font-variant-numeric: tabular-nums;
-  white-space: nowrap;
-`
+const Total = WorkspaceCount
 
 const Chart = styled(BucketBarChart)`
   min-width: 0;
