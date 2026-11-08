@@ -26,6 +26,7 @@ import {
   DashboardTimeDaily,
   DashboardWidget,
   DashboardPremiumBanner,
+  DashboardTrackingLimit,
   DashboardProjectsSearchInput,
   DashboardSummary,
   $dashboardCanTrack,
@@ -174,6 +175,7 @@ export default function DashboardPage() {
       />
       <WorkspacePage>
         <DashboardPremiumBanner />
+        <DashboardTrackingLimit />
         {/* The intro's hero already reads "Dashboard", so the page title only
             comes back once there is something under it. */}
         {(showContent || projectsFailed) && (

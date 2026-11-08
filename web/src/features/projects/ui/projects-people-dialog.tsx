@@ -14,7 +14,6 @@ import { ProjectsAddCollaborators } from './projects-add-collaborators'
 
 import type { ProjectFormValues } from '../model'
 
-import { $user } from '@/entities/profile'
 import { $rawProjects, editProjectMutation } from '@/entities/projects'
 import {
   AdaptiveDialog,
@@ -43,11 +42,10 @@ type Props = {
 export const ProjectsPeopleDialog = ({ projectId }: Props) => {
   const { t } = useTranslation()
   const [open, setOpen] = useState(false)
-  const { edit, status, reset, user } = useUnit({
+  const { edit, status, reset } = useUnit({
     edit: editProjectMutation.start,
     status: editProjectMutation.$status,
     reset: editProjectMutation.reset,
-    user: $user,
   })
   const project = useStoreMap({
     store: $rawProjects,
@@ -141,7 +139,6 @@ export const ProjectsPeopleDialog = ({ projectId }: Props) => {
             register={register}
             errors={errors}
             disabled={pending}
-            premiumLocked={!user?.premium}
             inputProps={STACKED_INPUT}
           />
         </form>

@@ -7,7 +7,6 @@ import { ProjectsFormFields } from '../projects-form-fields'
 
 import type { ProjectFormValues } from '../../model'
 
-import { $user } from '@/entities/profile'
 import { $rawProjects, editProjectMutation } from '@/entities/projects'
 import { useBreakpoint } from '@/shared'
 
@@ -33,10 +32,9 @@ export const ProjectsDialogForm = ({
     values: defaultValues,
   })
 
-  const { editProject, editingStatus, user } = useUnit({
+  const { editProject, editingStatus } = useUnit({
     editProject: editProjectMutation.start,
     editingStatus: editProjectMutation.$status,
-    user: $user,
   })
 
   const editingProject = useStoreMap({
@@ -99,7 +97,6 @@ export const ProjectsDialogForm = ({
         register={register}
         errors={errors}
         disabled={isPending}
-        premiumLocked={!user?.premium}
         idSuffix="-edit"
       />
     </form>

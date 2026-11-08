@@ -27,7 +27,6 @@ type Props = {
   register: UseFormRegister<ProjectFormValues>
   errors: FieldErrors<ProjectFormValues>
   disabled?: boolean
-  premiumLocked?: boolean
   /** Keeps ids unique when the create and edit forms share a page. */
   idSuffix?: string
 }
@@ -41,7 +40,6 @@ export const ProjectsFormFields = ({
   register,
   errors,
   disabled,
-  premiumLocked,
   idSuffix = '',
 }: Props) => {
   const { t } = useTranslation()
@@ -125,7 +123,6 @@ export const ProjectsFormFields = ({
           register={register}
           errors={errors}
           disabled={disabled}
-          premiumLocked={premiumLocked}
           inputProps={STACKED_INPUT}
         />
       </Collaborators>

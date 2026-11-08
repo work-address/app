@@ -1,4 +1,4 @@
-import { LockClosedIcon, PlusIcon, TrashIcon } from '@radix-ui/react-icons'
+import { PlusIcon, TrashIcon } from '@radix-ui/react-icons'
 import { Flex, IconButton } from '@radix-ui/themes'
 import { useMemo } from 'react'
 import {
@@ -35,8 +35,6 @@ type Props = {
   disabled?: boolean
   /** View mode: hide add/remove and render fields read-only. */
   readOnly?: boolean
-  /** Collaborators are a premium-only feature - lock the whole section. */
-  premiumLocked?: boolean
   inputProps?: InputProps
 }
 
@@ -46,15 +44,13 @@ export const ProjectsAddCollaborators = ({
   errors,
   disabled,
   readOnly,
-  premiumLocked,
   inputProps,
 }: Props) => {
   const { t } = useTranslation()
-  const fieldsDisabled = Boolean(disabled || readOnly || premiumLocked)
-  // A lapsed subscription blocks *granting* access, never revoking it - an
-  // owner must always be able to remove a collaborator they already added.
-  // Mirrors the same rule in ProjectManager.setAccessAddresses on the API.
-  const removeDisabled = Boolean(disabled || readOnly)
+  // The API refuses a worker past the free limit, since only it can see the
+  // owner's other projects. An owner can always remove someone.
+  const fieldsDisabled = Boolean(disabled || readOnly)
+  const removeDisabled = fieldsDisabled
 
   const { fields, append, remove } = useFieldArray({
     control,
@@ -109,21 +105,7 @@ export const ProjectsAddCollaborators = ({
     return true
   }
 
-  const addButton = readOnly ? null : premiumLocked ? (
-    <Tooltip content={t('project.createModal.collaborators.premiumRequired')}>
-      <span>
-        <Button
-          size="s"
-          variant="soft"
-          color="neutral"
-          iconLeft={<PlusIcon />}
-          disabled
-        >
-          {addLabel}
-        </Button>
-      </span>
-    </Tooltip>
-  ) : (
+  const addButton = readOnly ? null : (
     <Button
       size="s"
       variant="soft"
@@ -149,15 +131,6 @@ export const ProjectsAddCollaborators = ({
             )}
           </Text>
           <Hint content={t('project.form.hint.collaborators')} size={13} />
-          {premiumLocked && (
-            <Tooltip
-              content={t('project.createModal.collaborators.premiumRequired')}
-            >
-              <LockIconWrap>
-                <LockClosedIcon width={14} height={14} />
-              </LockIconWrap>
-            </Tooltip>
-          )}
         </Title>
         {addButton}
       </Header>
@@ -241,12 +214,6 @@ export const ProjectsAddCollaborators = ({
     </Flex>
   )
 }
-
-const LockIconWrap = styled.span`
-  display: inline-flex;
-  align-items: center;
-  color: var(--ui-muted);
-`
 
 const AddressField = styled.div`
   flex: 1;

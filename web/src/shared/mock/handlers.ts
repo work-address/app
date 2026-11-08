@@ -532,6 +532,56 @@ export const handlers: HttpHandler[] = [
   })),
 
   // Profile.
+  route('get', '/user/tracking-workers', ({ db, me, meId }) => {
+    const listed = [
+      ...new Set(
+        db.projects
+          .filter((project) => project.ownerId === meId)
+          .flatMap((project) => project.workerIds),
+      ),
+    ]
+
+    return {
+      limited: !me.premium && listed.length > 2,
+      limit: 2,
+      workers: listed.map((id, index) => {
+        const worker = userOf(db, id)
+
+        return {
+          address: worker?.address ?? id,
+          name: worker?.name || null,
+          connected: true,
+          tracking: me.premium || index < 2,
+        }
+      }),
+    }
+  }),
+  route('put', '/user/tracking-workers', ({ db, me, meId, body }) => {
+    const kept = (body.addresses ?? []) as string[]
+    const listed = [
+      ...new Set(
+        db.projects
+          .filter((project) => project.ownerId === meId)
+          .flatMap((project) => project.workerIds),
+      ),
+    ]
+
+    return {
+      limited: !me.premium && listed.length > 2,
+      limit: 2,
+      workers: listed.map((id) => {
+        const worker = userOf(db, id)
+        const address = worker?.address ?? id
+
+        return {
+          address,
+          name: worker?.name || null,
+          connected: true,
+          tracking: me.premium || kept.includes(address),
+        }
+      }),
+    }
+  }),
   route('get', '/user/:id', ({ db, params }) => {
     const user = userOf(db, params.id)
     if (!user) {
