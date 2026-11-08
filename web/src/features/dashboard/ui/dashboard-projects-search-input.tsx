@@ -47,18 +47,5 @@ export const DashboardProjectsSearchInput = () => {
   return <Root value={searchText} onChange={handleChange} />
 }
 
-const Root = styled(SearchInput)`
-  --text-field-height: var(--ui-control-height);
-  --text-field-border-radius: var(--ui-icon-radius);
-  --color-surface: var(--ui-surface);
-  --gray-a7: var(--ui-line);
-  --gray-a10: var(--ui-muted);
-  --gray-a11: var(--ui-muted);
-  --gray-12: var(--ui-text);
-
-  font-size: var(--ui-meta-size);
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    font-size: var(--ui-body-size);
-  }
-`
+/* The shared field look and type size come from the workspace styles. */
+const Root = styled(SearchInput)``

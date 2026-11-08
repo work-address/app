@@ -43,9 +43,6 @@ export const TextArea = ({
   const errorId = `${id ?? generatedId}-error`
   const showError = state === 'error' && Boolean(errorMessage)
 
-  const errorProps: TextAreaProps | null =
-    state === 'error' ? { color: 'red', variant: 'soft' } : null
-
   return (
     // The label sits as close to its box as an Input's stacked label does.
     <Root
@@ -76,7 +73,6 @@ export const TextArea = ({
             .filter(Boolean)
             .join(' ') || undefined
         }
-        {...errorProps}
       />
       {showError ? (
         <Error id={errorId} role="alert">

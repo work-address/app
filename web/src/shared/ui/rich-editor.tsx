@@ -220,10 +220,14 @@ const ToolbarButton = ({
 )
 
 const Root = styled.div`
-  border: var(--ui-border-width) solid var(--ui-line);
-  border-radius: var(--ui-control-radius);
-  background: var(--ui-surface);
+  border: var(--ui-border-width) solid var(--ui-field-border, var(--ui-line));
+  border-radius: var(--ui-field-radius, var(--ui-control-radius));
+  background: var(--ui-field-background, var(--ui-surface));
   overflow: hidden;
+
+  &:hover:not([data-disabled]) {
+    border-color: var(--ui-field-border-hover, var(--ui-line-strong));
+  }
 
   &:focus-within {
     outline: var(--ui-focus-width) solid var(--ui-blue);
@@ -233,8 +237,7 @@ const Root = styled.div`
   &[data-disabled] {
     pointer-events: none;
     cursor: not-allowed;
-    background-color: var(--ui-inset);
-    opacity: 0.6;
+    background-color: var(--ui-field-background-locked, var(--ui-inset));
 
     .tiptap {
       color: var(--ui-muted);

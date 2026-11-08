@@ -241,8 +241,8 @@ const StatusSummary = styled.summary`
   color: var(--ui-muted);
 
   &:focus-visible {
-    outline: 2px solid var(--ui-blue);
-    outline-offset: 2px;
+    outline: var(--ui-focus-width) solid var(--ui-blue);
+    outline-offset: var(--ui-focus-offset);
     border-radius: var(--ui-inline-radius);
   }
 `

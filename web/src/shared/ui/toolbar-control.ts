@@ -9,6 +9,7 @@ import styled from 'styled-components'
  * restating the recipe.
  */
 export const ToolbarShell = styled.div`
+  box-sizing: border-box;
   display: grid;
   grid-auto-flow: column;
   align-items: center;
@@ -27,7 +28,9 @@ export const ToolbarSegment = styled.button`
   justify-content: center;
   gap: var(--ui-space-1);
   min-height: var(--toolbar-segment-height, 22px);
-  padding: var(--ui-space-1) var(--toolbar-segment-padding, var(--ui-space-3));
+  /* The height is the segment's own, so content such as a count chip is
+     centred in it rather than padded beyond the shell's field height. */
+  padding: 0 var(--toolbar-segment-padding, var(--ui-space-3));
   border-radius: var(--toolbar-segment-radius, var(--ui-row-radius));
   font-size: var(--toolbar-font-size, var(--ui-small-size));
   line-height: 1;
@@ -52,7 +55,7 @@ export const ToolbarSegment = styled.button`
   }
 
   &:focus-visible {
-    outline: 2px solid var(--ui-blue);
-    outline-offset: 2px;
+    outline: var(--ui-focus-width, 2px) solid var(--ui-blue);
+    outline-offset: var(--ui-focus-offset, 2px);
   }
 `

@@ -165,8 +165,7 @@ for local gaps. Prefer `gap` to sibling margin rules; use grid for layout.
 | Panel header to content | 24px desktop; 16px phone |
 | Title to description | 4–8px, owned by the shared header |
 | Controls and related metadata | 8–12px gaps |
-| Standard controls | 40px high, 12px corners |
-| Page filter controls | 48px high |
+| Standard controls and page filters | 40px high, 12px corners |
 | Pills | Fully rounded, compact internal padding |
 | Focus ring | 2px, using shared focus tokens |
 
@@ -224,6 +223,26 @@ const Root = styled(WorkspacePage)`
 
 The named filters, actions and content stand for the page's existing features.
 Fetching and mutations stay in their current feature/entity models.
+
+### Fields
+
+Every control that takes a value - text field, text area, tag input, select,
+date field, sort picker, rich editor - shares one look from the `--ui-field-*`
+tokens in `WorkspaceDesignStyles`: a 1px `--ui-field-border` on
+`--ui-field-background` at `--ui-field-radius`; `--ui-field-border-hover` on
+hover; the shared focus ring outside the edge; `--ui-field-border-invalid`
+when `aria-invalid`; `--ui-field-background-locked` when disabled or
+read-only. Radix fields draw the same line as an inset shadow. Do not restyle
+a field's border, radius, fill or text colour per page; change the token. An
+error is the red border plus the message below, never a tinted fill. Segmented
+switches (status tabs, view toggles) use `ToolbarShell` and `ToolbarSegment`,
+whose shell is the standard control height. Every field and switch is 40px,
+the page scope filters beside a title included.
+
+Focus rings use `--ui-focus-width` and sit `--ui-focus-offset` outside the
+edge. The one exception is an item inside a clipped, scrolling list (menu
+options, sidebar items, list rows and tiles), whose ring sits inside at
+`calc(-1 * var(--ui-focus-width))` so the list does not cut it off.
 
 ### Panels and actions
 

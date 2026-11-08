@@ -97,18 +97,6 @@ export const DashboardFilterBar = () => {
 }
 
 const Root = styled.div`
-  --select-trigger-height: var(--ui-filter-height);
-  --select-trigger-padding: var(--ui-space-4);
-  --select-trigger-radius: var(--ui-filter-radius);
-  --select-trigger-border: var(--ui-line);
-  --select-trigger-background: var(--ui-surface);
-  --select-trigger-color: var(--ui-ink);
-  --select-trigger-font-size: var(--ui-body-size);
-  --select-trigger-hover-border: var(--ui-line-strong);
-  --select-trigger-hover-background: var(--ui-surface);
-  --date-field-height: var(--ui-filter-height);
-  --date-field-padding: var(--ui-space-4);
-
   display: grid;
   grid-auto-flow: column;
   justify-self: end;

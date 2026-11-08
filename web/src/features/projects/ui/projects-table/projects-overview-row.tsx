@@ -243,7 +243,7 @@ const Identity = styled.button`
 
   &:focus-visible {
     outline: var(--ui-focus-width) solid var(--ui-blue);
-    outline-offset: var(--ui-focus-offset-loose);
+    outline-offset: var(--ui-focus-offset);
   }
 `
 

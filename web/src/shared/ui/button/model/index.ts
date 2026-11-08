@@ -87,7 +87,9 @@ export const BUTTON_TONE_SPECS: Record<
     },
     outline: {
       background: 'transparent',
-      borderColor: 'var(--ui-alpha-6)',
+      // One outline border for every tone but danger; the text carries the
+      // tone.
+      borderColor: 'var(--ui-line-strong)',
       color: 'var(--ui-blue)',
       hover: { background: 'var(--ui-glow)' },
     },

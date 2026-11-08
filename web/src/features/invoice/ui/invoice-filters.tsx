@@ -337,11 +337,6 @@ const AmountField = () => {
 
 /* The dashboard's filter geometry: page-level controls at the filter height. */
 const Scope = styled.div`
-  --select-trigger-height: var(--ui-filter-height);
-  --select-trigger-padding: var(--ui-space-4);
-  --date-field-height: var(--ui-filter-height);
-  --date-field-padding: var(--ui-space-4);
-
   display: grid;
   grid-template-columns: var(--ui-filter-width) auto;
   justify-content: end;

@@ -68,9 +68,6 @@ export const Input = forwardRef(
         (isDesktop && !isStacked ? 'var(--ui-space-5)' : 'var(--ui-space-2)'))
       : '0'
 
-    const errorProps: InputProps | null =
-      state === 'error' ? { color: 'red', variant: 'soft' } : null
-
     const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
       e.target.value = match(props.inputMode)
         .with('decimal', () =>
@@ -120,7 +117,8 @@ export const Input = forwardRef(
               .filter(Boolean)
               .join(' ') || undefined
           }
-          {...errorProps}
+          // An error shows as the field's red border (workspace styles) and
+          // the message below, like every other field.
           onChange={handleChange}
         >
           {addonLeft && (

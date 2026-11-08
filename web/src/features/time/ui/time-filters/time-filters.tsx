@@ -86,13 +86,8 @@ const Root = styled.div`
   min-width: 0;
 `
 
-/* The dashboard's filter geometry: page-level controls at the filter height. */
+/* Page-level scope beside the title, in the shared field look and height. */
 const Scope = styled.div`
-  --select-trigger-height: var(--ui-filter-height);
-  --select-trigger-padding: var(--ui-space-4);
-  --date-field-height: var(--ui-filter-height);
-  --date-field-padding: var(--ui-space-4);
-
   display: grid;
   grid-template-columns: repeat(3, var(--ui-filter-width));
   gap: var(--ui-space-3);

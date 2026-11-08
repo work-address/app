@@ -65,8 +65,8 @@ const Root = styled.span`
   cursor: help;
 
   &:focus-visible {
-    outline: 2px solid var(--ui-blue);
-    outline-offset: 2px;
+    outline: var(--ui-focus-width) solid var(--ui-blue);
+    outline-offset: var(--ui-focus-offset);
     border-radius: 50%;
   }
 

@@ -161,8 +161,8 @@ export const buttonStyles = css`
   /* Solid enough to find with the eye: the earlier 26% ring vanished against
      the soft surfaces most of these buttons sit on. */
   &:focus-visible {
-    outline: 2px solid var(--ui-blue);
-    outline-offset: 2px;
+    outline: var(--ui-focus-width, 2px) solid var(--ui-blue);
+    outline-offset: var(--ui-focus-offset, 2px);
   }
 
   &:disabled {

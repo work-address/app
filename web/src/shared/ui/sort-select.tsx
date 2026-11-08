@@ -79,6 +79,10 @@ const Root = styled(ToolbarShell).attrs({ role: 'group' })`
   border-color: var(--sort-select-border, var(--ui-line));
   border-radius: var(--sort-select-radius, var(--ui-filter-radius));
   background: var(--sort-select-background, var(--ui-inset));
+
+  &:hover {
+    border-color: var(--ui-field-border-hover, var(--sort-select-border));
+  }
 `
 
 const SortField = styled(ToolbarSegment)`

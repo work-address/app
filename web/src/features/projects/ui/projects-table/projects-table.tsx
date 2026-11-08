@@ -65,6 +65,8 @@ import {
   Button,
   IconButton,
   SortSelect,
+  ToolbarSegment,
+  ToolbarShell,
   Tooltip,
   useBreakpoint,
   ProjectsEmptyState,
@@ -527,14 +529,6 @@ const Root = styled.div`
     --projects-actions-gap: var(--ui-space-2);
     --projects-search-width: var(--ui-search-width);
     --projects-body-min-height: var(--ui-table-body-min-height);
-    --sort-select-height: var(--ui-control-height);
-    --sort-select-segment-height: var(--ui-segment-height);
-    --sort-select-radius: var(--ui-icon-radius);
-    --sort-select-segment-radius: var(--ui-row-radius);
-    --sort-select-border: var(--ui-line);
-    --sort-select-background: var(--ui-surface);
-    --sort-select-font-size: var(--ui-meta-size);
-    --sort-select-padding: var(--ui-space-2);
   }
 `
 
@@ -560,35 +554,13 @@ const Toolbar = styled.div`
   }
 `
 
-const Filters = styled.div`
-  display: grid;
-  grid-auto-flow: column;
+/* The status switch is the shared segmented shell, like the time view
+   toggle and the invoice status tabs. */
+const Filters = styled(ToolbarShell)`
   width: fit-content;
-  gap: var(--ui-space-1);
-  padding: var(--ui-space-1);
-  border-radius: var(--ui-icon-radius);
-  background: var(--ui-inset);
 `
 
-const Filter = styled.button`
-  min-height: var(--ui-segment-height);
-  padding-inline: var(--ui-space-4);
-  border-radius: var(--ui-row-radius);
-  color: var(--ui-muted);
-  font-size: var(--ui-meta-size);
-  line-height: var(--ui-meta-line-height);
-
-  &[aria-pressed='true'] {
-    color: var(--ui-ink);
-    background: var(--ui-surface);
-    box-shadow: var(--ui-shadow);
-  }
-
-  &:focus-visible {
-    outline: var(--ui-focus-width) solid var(--ui-blue);
-    outline-offset: var(--ui-focus-offset);
-  }
-
+const Filter = styled(ToolbarSegment)`
   @container projects-table (max-width: ${workspaceDesign.container
     .compact}px) {
     padding-inline: var(--ui-space-3);
@@ -596,10 +568,6 @@ const Filter = styled.button`
 
   @container projects-table (max-width: ${workspaceDesign.container.narrow}px) {
     padding-inline: var(--ui-space-2);
-  }
-
-  ${(p) => p.theme.breakpoints.down('md')} {
-    padding-inline: var(--ui-space-3);
   }
 `
 

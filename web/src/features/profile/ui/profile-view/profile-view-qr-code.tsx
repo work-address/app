@@ -101,8 +101,8 @@ const Root = styled.button`
   place-items: stretch;
 
   &:focus-visible {
-    outline: 2px solid var(--ui-blue);
-    outline-offset: 4px;
+    outline: var(--ui-focus-width) solid var(--ui-blue);
+    outline-offset: var(--ui-focus-offset);
   }
 
   &:disabled {

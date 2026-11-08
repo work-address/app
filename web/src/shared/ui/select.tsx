@@ -296,17 +296,18 @@ const Trigger = styled.button`
     );
   }
   &:focus-visible {
-    outline: 2px solid var(--ui-blue);
-    outline-offset: 2px;
+    outline: var(--ui-focus-width, 2px) solid var(--ui-blue);
+    outline-offset: var(--ui-focus-offset, 2px);
   }
   &[data-placeholder] {
     color: var(--select-trigger-color, var(--ui-muted));
   }
   &[aria-invalid='true'] {
-    border-color: var(--red-8);
+    border-color: var(--ui-field-border-invalid, var(--red-8));
   }
   &:disabled {
-    opacity: 0.6;
+    background: var(--ui-field-background-locked, var(--ui-inset));
+    color: var(--ui-muted);
     cursor: not-allowed;
   }
   ${(p) => p.theme.breakpoints.down('md')} {
@@ -366,8 +367,8 @@ const MenuItem = styled(ListBoxItem)`
     background: var(--ui-inset);
   }
   &[data-focus-visible] {
-    outline: 2px solid var(--ui-blue);
-    outline-offset: -2px;
+    outline: var(--ui-focus-width) solid var(--ui-blue);
+    outline-offset: calc(-1 * var(--ui-focus-width));
   }
   &[aria-selected='true'] {
     background: var(--ui-glow);

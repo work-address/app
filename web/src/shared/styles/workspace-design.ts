@@ -65,21 +65,33 @@ export const WorkspaceDesignStyles = createGlobalStyle`
     --gray-12: var(--ui-text);
     --focus-8: var(--ui-blue);
 
+    /* One field look for every control that takes a value - text fields,
+       text areas, tag inputs, selects, date fields, the sort picker and the
+       rich editor: a line border on white at the control corner, a stronger
+       border on hover, the focus ring outside the edge, red when invalid and
+       a pale fill when it cannot be changed. */
+    --ui-field-border: var(--ui-line);
+    --ui-field-border-hover: var(--ui-line-strong);
+    --ui-field-border-invalid: var(--red-9);
+    --ui-field-radius: var(--ui-control-radius);
+    --ui-field-background: var(--ui-surface);
+    --ui-field-background-locked: var(--ui-inset);
+
     /* Optional hooks on shared primitives; their legacy defaults stay
        everywhere outside this scope. */
     --select-trigger-height: var(--ui-control-height);
     --select-trigger-padding: var(--ui-space-3);
-    --select-trigger-radius: var(--ui-control-radius);
-    --select-trigger-border: var(--ui-line);
-    --select-trigger-background: var(--ui-surface);
+    --select-trigger-radius: var(--ui-field-radius);
+    --select-trigger-border: var(--ui-field-border);
+    --select-trigger-background: var(--ui-field-background);
     --select-trigger-color: var(--ui-text);
     --select-trigger-font-size: var(--ui-body-size);
-    --select-trigger-hover-border: var(--ui-line);
-    --select-trigger-hover-background: var(--ui-inset);
+    --select-trigger-hover-border: var(--ui-field-border-hover);
+    --select-trigger-hover-background: var(--ui-field-background);
     --button-s-height: var(--ui-segment-height);
     --button-s-padding: 0 var(--ui-space-3);
     --button-s-font-size: var(--ui-meta-size);
-    --button-s-radius: var(--ui-filter-radius);
+    --button-s-radius: var(--ui-control-radius);
     --button-m-height: var(--ui-control-height);
     --button-m-padding: 0 var(--ui-space-3);
     --button-m-radius: var(--ui-control-radius);
@@ -87,9 +99,9 @@ export const WorkspaceDesignStyles = createGlobalStyle`
     --button-l-radius: var(--ui-control-radius);
     --button-compact-height: var(--ui-segment-height);
     --button-compact-padding: var(--ui-space-3);
-    --button-compact-radius: var(--ui-filter-radius);
+    --button-compact-radius: var(--ui-control-radius);
     --date-field-height: var(--ui-control-height);
-    --date-field-radius: var(--ui-control-radius);
+    --date-field-radius: var(--ui-field-radius);
     --date-field-padding: var(--ui-space-3);
     --date-field-font-size: var(--ui-body-size);
     --toolbar-gap: var(--ui-space-1);
@@ -97,18 +109,23 @@ export const WorkspaceDesignStyles = createGlobalStyle`
     --toolbar-border: transparent;
     --toolbar-radius: var(--ui-control-radius);
     --toolbar-background: var(--ui-inset);
-    --toolbar-segment-height: var(--ui-segment-height);
+    /* A shell's segments fill it to the field height: the control height
+       less its padding and border on both sides. */
+    --toolbar-segment-height: calc(
+      var(--ui-control-height) - 2 * var(--toolbar-padding) - 2 *
+        var(--ui-border-width)
+    );
     --toolbar-segment-padding: var(--ui-space-3);
     --toolbar-segment-radius: var(--ui-row-radius);
     --toolbar-font-size: var(--ui-meta-size);
     --toolbar-pressed-background: var(--ui-surface);
     --toolbar-pressed-shadow: var(--ui-shadow);
     --sort-select-height: var(--ui-control-height);
-    --sort-select-segment-height: var(--ui-segment-height);
-    --sort-select-radius: var(--ui-control-radius);
+    --sort-select-segment-height: var(--toolbar-segment-height);
+    --sort-select-radius: var(--ui-field-radius);
     --sort-select-segment-radius: var(--ui-row-radius);
-    --sort-select-border: var(--ui-line);
-    --sort-select-background: var(--ui-surface);
+    --sort-select-border: var(--ui-field-border);
+    --sort-select-background: var(--ui-field-background);
     --sort-select-font-size: var(--ui-meta-size);
     --sort-select-padding: var(--ui-space-2);
     --table-surface: var(--ui-surface);
@@ -168,9 +185,44 @@ export const WorkspaceDesignStyles = createGlobalStyle`
   }
 
   :is(${SCOPE}) .rt-TextAreaRoot {
-    border-radius: var(--ui-control-radius);
+    border-radius: var(--ui-field-radius);
     font-size: var(--ui-body-size);
     letter-spacing: normal;
+  }
+
+  /* Radix draws its fields' border as an inset shadow and its focus ring
+     inside the edge; here they take the shared field look, so a text field
+     beside a select reads as the same kind of control in every state. */
+  :is(${SCOPE}) :is(.rt-TextFieldRoot, .rt-TextAreaRoot) {
+    --text-field-border-radius: var(--ui-field-radius);
+
+    background-color: var(--ui-field-background);
+    background-image: none;
+    box-shadow: inset 0 0 0 var(--ui-border-width) var(--ui-field-border);
+  }
+
+  :is(${SCOPE}) :is(.rt-TextFieldRoot, .rt-TextAreaRoot):hover {
+    box-shadow: inset 0 0 0 var(--ui-border-width) var(--ui-field-border-hover);
+  }
+
+  :is(${SCOPE}) :is(.rt-TextFieldRoot, .rt-TextAreaRoot):focus-within {
+    outline: var(--ui-focus-width) solid var(--ui-blue);
+    outline-offset: var(--ui-focus-offset);
+  }
+
+  :is(${SCOPE})
+    :is(.rt-TextFieldRoot, .rt-TextAreaRoot):has(
+      :is(.rt-TextFieldInput, .rt-TextAreaInput)[aria-invalid='true']
+    ) {
+    box-shadow: inset 0 0 0 var(--ui-border-width) var(--ui-field-border-invalid);
+  }
+
+  :is(${SCOPE})
+    :is(.rt-TextFieldRoot, .rt-TextAreaRoot):has(
+      :is(.rt-TextFieldInput, .rt-TextAreaInput):is(:disabled, :read-only)
+    ) {
+    background-color: var(--ui-field-background-locked);
+    box-shadow: inset 0 0 0 var(--ui-border-width) var(--ui-field-border);
   }
 
   :is(${SCOPE}) .rt-TextAreaInput {

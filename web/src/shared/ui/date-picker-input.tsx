@@ -152,12 +152,18 @@ const Field = styled.div`
   align-items: center;
   /* Include the border in the same outside height as Input. */
   height: var(--date-field-height, var(--ui-space-6));
-  border: 1px solid var(--ui-line);
+  border: 1px solid var(--ui-field-border, var(--ui-line));
   border-radius: var(--date-field-radius, var(--ui-row-radius));
-  background: var(--ui-surface);
+  background: var(--ui-field-background, var(--ui-surface));
+  &:hover:not(:has(button:disabled)) {
+    border-color: var(--ui-field-border-hover, var(--ui-muted));
+  }
   &:focus-within {
-    outline: 2px solid var(--ui-blue);
-    outline-offset: 2px;
+    outline: var(--ui-focus-width, 2px) solid var(--ui-blue);
+    outline-offset: var(--ui-focus-offset, 2px);
+  }
+  &:has(button:disabled) {
+    background: var(--ui-field-background-locked, var(--ui-inset));
   }
   ${(p) => p.theme.breakpoints.down('md')} {
     height: var(--date-field-height, var(--ui-space-7));
@@ -182,7 +188,7 @@ const Trigger = styled.button`
     color: var(--ui-muted);
   }
   &:disabled {
-    opacity: 0.6;
+    color: var(--ui-muted);
     cursor: not-allowed;
   }
   ${(p) => p.theme.breakpoints.down('md')} {

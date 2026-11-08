@@ -367,8 +367,8 @@ const Brand = styled(Link)`
   border-radius: 8px;
 
   &:focus-visible {
-    outline: 2px solid var(--ui-blue);
-    outline-offset: 2px;
+    outline: var(--ui-focus-width) solid var(--ui-blue);
+    outline-offset: var(--ui-focus-offset);
   }
 `
 
@@ -466,8 +466,8 @@ const Item = styled.button`
   }
 
   &:focus-visible {
-    outline: 2px solid var(--ui-blue);
-    outline-offset: -2px;
+    outline: var(--ui-focus-width) solid var(--ui-blue);
+    outline-offset: calc(-1 * var(--ui-focus-width));
   }
 
   /* The dashboard raises its selection; other pages keep the original tint. */
