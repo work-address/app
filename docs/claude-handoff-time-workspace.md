@@ -7,7 +7,7 @@ original name so existing handoff links continue to work.
 
 The user requested the dashboard's style across the app and explicitly chose
 **Finish Time first**. They subsequently requested concepts for Dashboard, Time,
-Invoices, Profile, and Settings, then asked to save those concepts in this repo
+Invoices, Profile, Settings, and Sign-in, then asked to save those concepts in this repo
 and prepare bounded implementation work for a cheaper model.
 
 **Default next implementation assignment: Time, starting with T1.** Finish and
@@ -18,14 +18,14 @@ and concept assets only; it does not implement or commit application changes.
 
 ## Current checkout — inspect before editing
 
-At this update, branch `fea/0-ui-theme` has HEAD `ef5243ce`
-(`feat(web): redesign dashboard and share workspace design system`).
-The working tree contains extensive later, uncommitted styling work across
-Time, invoices, profile/editor, wallets, auth, sidebar, shared controls, locales,
-and design skills. Preserve that work. Read `git status --short` and the relevant
-diff before editing; do not replace the checkout with the committed baseline.
+The original inventory below was recorded on `fea/0-ui-theme` at `ef5243ce`.
+Since then, `434e492e` applied the workspace design across the app and `e58721c4`
+built concepts into Time, Invoices, Profile, and Settings. Additional uncommitted
+changes are present. Treat the bullets below as historical context, and inspect
+current routes/components and their diffs before selecting a remaining gap.
+Preserve ongoing work; do not restart from the earlier committed baseline.
 
-Verified source facts, not a completed visual review:
+Source facts from the original inventory, not a completed visual review:
 
 - `web/src/app/render.tsx` installs `WorkspaceDesignStyles` under the root
   `<Theme data-ui="workspace">`. The current style adapter also handles portals.
@@ -71,9 +71,10 @@ file is required to inspect them.
 | Profile | [Open](design/workspace-concepts/previews/profile.html) | [P1 identity; P2 content/share](design/workspace-concepts/slices/profile.md) | Later page assignment |
 | Settings | [Open](design/workspace-concepts/previews/settings.html) | [S1 details; S2 links; S3 wallet presentation](design/workspace-concepts/slices/settings.md) | Later page assignment |
 | Dashboard | [Open](design/workspace-concepts/previews/dashboard.html) | [D1 header/charts; D2 projects/prompts; D3 supporting panels](design/workspace-concepts/slices/dashboard.md) | Reference; refine when assigned |
+| Sign-in | [Open](design/workspace-concepts/previews/sign-in.html) | [A1 composition/choices; A2 step and request states](design/workspace-concepts/slices/sign-in.md) | Saved concept; implement when assigned |
 
 The original fragments are preserved exactly under `sources/`; the
-[manifest](design/workspace-concepts/manifest.json) records hashes and the five
+[manifest](design/workspace-concepts/manifest.json) records hashes and all
 preview entry states. Generated HTML preserves its sandboxed iframe and CSP.
 Use the catalog's local-server command if the browser needs HTTP. Network access
 is required for the preview runtime/icons and the dashboard chart library.
@@ -106,7 +107,7 @@ The catalog and page briefs identify the risky mismatches explicitly.
 ## Shared visual contract
 
 The authoritative rules live in the workspace-design skill; do not create a
-parallel palette or copy the prototypes' `--ti-*` / `--pc-*` values into page code.
+parallel palette or copy the prototypes' `--ti-*` / `--pc-*` / `--aw-*` values into page code.
 The compact preview font sizes are not the production type scale. Use the
 existing `--ui-*` roles for legible app text, panel geometry, and control heights.
 

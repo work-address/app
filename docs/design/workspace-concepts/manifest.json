@@ -16,6 +16,11 @@
       "file": "sources/profile-settings.html",
       "conversationArtifact": "profile-settings-soft-blue.html",
       "sha256": "f6d909b7448bd0750cef487c93c33f733cdea16cb2c5cc2cb18b297e38310030"
+    },
+    {
+      "file": "sources/sign-in.html",
+      "conversationArtifact": "sign-in-soft-blue.html",
+      "sha256": "e328c3e83f2b7d241ca30d043eefd05f649edea37c62e840b8b4b91528914795"
     }
   ],
   "pages": [
@@ -72,6 +77,17 @@
       "state": {
         "screen": "settings",
         "settingsSection": "details"
+      }
+    },
+    {
+      "id": "sign-in",
+      "title": "Address Work — Sign-in concepts",
+      "source": "sources/sign-in.html",
+      "preview": "previews/sign-in.html",
+      "state": {
+        "welcomeStep": "choose",
+        "quietStep": "choose",
+        "wallet": "New visitor"
       }
     }
   ]

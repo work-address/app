@@ -12,6 +12,7 @@ design references with illustrative data, not application implementations.
 | Invoices | [Invoices](previews/invoices.html) | [Invoice slices](slices/invoices.md) | `/invoice`, record at `/invoice/:id` |
 | Profile | [Profile](previews/profile.html) | [Profile slice](slices/profile.md) | `/profile/:id` |
 | Settings | [Settings](previews/settings.html) | [Settings slices](slices/settings.md) | Currently `/profile/:id/edit` |
+| Sign-in | [Sign-in](previews/sign-in.html) | [Sign-in slices](slices/sign-in.md) | `/sign-in` |
 
 Open the HTML files in a browser, or from the repository root run:
 
@@ -23,6 +24,8 @@ Then open `http://127.0.0.1:8766/previews/dashboard.html` (substitute the page n
 Each preview opens its named page. Navigation within a concept remains local.
 Dashboard also includes the Time and Invoice views; Profile includes Settings.
 Settings has Public profile, Links, and Account & wallet sections.
+Sign-in includes **Workspace welcome** and **Quiet focus**; use the bottom
+variant picker to compare them. Workspace welcome is the initial view.
 
 The exports preserve the renderer's **sandboxed iframe and CSP**. They contain
 no app API integration. Creating projects, saving profile fields, and changing
@@ -50,7 +53,7 @@ The implementation authority remains:
 4. The relevant preview and page brief for composition.
 
 The previews use compact proportions for an approximately 1024px conversation
-surface. Their literal `--ti-*`/`--pc-*` CSS values are **not a second production
+surface. Their literal `--ti-*`/`--pc-*`/`--aw-*` CSS values are **not a second production
 design system**. Keep the app's readable type roles and shared geometry; map
 the concept to `--ui-*` tokens. Build React/styled-components components with
 the existing models, controls, icon library, charts, and locale helpers.
@@ -69,16 +72,19 @@ runtime in this documentation folder; they do not belong in `web/src`.
 | Agent durations and prompts | Keep human/assisted/autonomous time distinct and enforce real visibility/redaction rules. |
 | Profile avatar and shortened identity | Use supported profile data and existing address/QR/share behavior; no avatar upload feature is implied. |
 | Preview payment toggles and backup controls | Preserve real permissions, confirmations, and wallet flows; never copy the simulation as product logic. |
+| Sign-in account chooser, passwords, keys, and success screens | Local interaction samples only. Keep the real Google provider, deployment capabilities, wallet lifecycle, backup requirements, errors, and return-path behavior. Read-only example fields do not collect credentials. |
 
 ## Saved sources and regeneration
 
-Three original fragments cover the five pages:
+Four original fragments cover the six pages:
 
 - [Dashboard source](sources/dashboard.html): latest dashboard concept with
   Time/Invoice navigation, responsive chart, compact Projects, and agent prompts.
 - [Time and Invoices source](sources/time-invoices.html): the dedicated two-page concept.
 - [Profile and Settings source](sources/profile-settings.html): the profile and
   editor/account concept.
+- [Sign-in source](sources/sign-in.html): both sign-in layouts, with local Google,
+  wallet creation/import, help, and returning-wallet preview states.
 
 These copies are byte-for-byte originals. [manifest.json](manifest.json) records
 their SHA-256 hashes, original artifact names, preview files, and initial screens.
@@ -93,7 +99,7 @@ python3 docs/design/workspace-concepts/export.py \
 ```
 
 The helper verifies source hashes, adjusts only the initial state call in a
-temporary copy, and generates all five previews. Keep the generated CSP and
+temporary copy, and generates all previews. Keep the generated CSP and
 `sandbox="allow-scripts"` unchanged. A deliberate reference revision requires
 updating its source hash and recording which design decision changed.
 
@@ -107,3 +113,7 @@ On 2026-11-07, all five exported previews opened on their named pages in a brows
 The three source hashes matched the original artifacts; each export retained its
 iframe sandbox and inner/outer CSP; all 50 documentation links resolved. These
 checks validate the saved references, not the application's implementation.
+
+The later Sign-in export preserves its original source and both variants, with
+the initial choice screen, sandbox, and CSP verified. Its source was reviewed
+at desktop and 320px widths; all catalog and handoff links resolve.
