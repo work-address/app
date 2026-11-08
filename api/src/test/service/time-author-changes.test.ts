@@ -10,6 +10,7 @@ import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
 import AccessException from '@/exception/access-exception'
 import InvoicedTimeException from '@/exception/invoiced-time-exception'
+import { TimeCreateDto } from '@/model/dto/time'
 import { EInvoiceState } from '@/model/invoice'
 import { EProjectState } from '@/model/project'
 import { InvoiceRepository } from '@/repository/invoice-repository'
@@ -341,5 +342,75 @@ export class TimeAuthorChangesTest extends AbstractDatabaseIntegration {
 
     await runPromise(this.timeManager.removeScreenshots([time.id], worker))
     expect((await this.read(time.id))!.screenshot).to.equal(null)
+  }
+
+  /** Inside the review window, so only publishing can publish it. */
+  private recentSlot() {
+    return moment.utc().subtract(2, 'hours').startOf('minute')
+  }
+
+  private upload(project: Project, note: string, fromAt: moment.Moment) {
+    return {
+      fromIndex: 1,
+      toIndex: 2,
+      note,
+      keyboardKeys: 3,
+      minutesActive: 4,
+      mouseKeys: 3,
+      mouseDistance: 5,
+      fromAt: fromAt.toISOString(),
+      toAt: fromAt.clone().add(10, 'minutes').toISOString(),
+      projectId: project.id,
+    } as unknown as TimeCreateDto
+  }
+
+  /** The desktop retries an upload with the note it first sent. */
+  @test()
+  async aRetryCannotUndoACorrectedNoteOncePublished() {
+    const { worker, project } = await this.scenario()
+    const slot = this.recentSlot()
+    const [saved] = await runPromise(
+      this.timeManager.createOrUpdateMany(
+        [this.upload(project, 'first', slot)],
+        worker,
+      ),
+    )
+
+    await runPromise(this.timeManager.publish([saved.id!], worker))
+    await runPromise(
+      this.timeManager.edit(saved.id!, this.note('corrected'), worker),
+    )
+
+    const [retried] = await runPromise(
+      this.timeManager.createOrUpdateMany(
+        [this.upload(project, 'first', slot)],
+        worker,
+      ),
+    )
+
+    expect(retried.error).to.be.undefined
+    expect(retried.note).to.equal('first')
+    expect((await this.read(saved.id!))!.note).to.equal('corrected')
+  }
+
+  @test()
+  async aRetryStillReplacesTheNoteBeforePublication() {
+    const { worker, project } = await this.scenario()
+    const slot = this.recentSlot()
+    const [saved] = await runPromise(
+      this.timeManager.createOrUpdateMany(
+        [this.upload(project, 'first', slot)],
+        worker,
+      ),
+    )
+
+    await runPromise(
+      this.timeManager.createOrUpdateMany(
+        [this.upload(project, 'second', slot)],
+        worker,
+      ),
+    )
+
+    expect((await this.read(saved.id!))!.note).to.equal('second')
   }
 }

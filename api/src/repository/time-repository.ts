@@ -110,7 +110,9 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         }
         if (preserveUsage) {
           // Evidence never changes once the owner can see it: a desktop retry
-          // must not restore a removed screenshot or rewrite input counts.
+          // must not restore a removed screenshot, rewrite input counts, or put
+          // back a note its author has since corrected.
+          time.note = existing.note
           time.screenshot = existing.screenshot
           time.processes = existing.processes
           time.keyboardKeys = existing.keyboardKeys

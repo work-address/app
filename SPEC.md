@@ -129,6 +129,10 @@ rejection releases it. Its paid state still changes by hand, as above. Until the
 an author may remove any of these, even after the owner has seen them, the same
 as a run's prompt. A batch containing an invoiced entry changes nothing.
 
+**A re-upload never changes published detail.** Once an entry is published, a
+desktop retry leaves its detail as it stands, note included, so it can't undo what
+its author has since corrected or removed.
+
 ## Statistics explains time; it never records it
 
 `Statistics` holds breakdowns of `Time` records: how a human entry's active
@@ -248,7 +252,7 @@ invoice on the project; a worker's is their own. Hand-marked money is an estimat
 until it is invoiced: it moves with the rate, where an invoice's amount does not.
 
 **Detail waits for the worker's review.** An entry's screenshot, apps, titles,
-domains and timeline reach the owner, and its apps reach the viewers' project
+domains, timeline and note reach the owner, and its apps reach the viewers' project
 totals, only once its author publishes them or the project's review window has
 passed — one to twenty-four
 hours, set by the owner. The time itself is visible at once, and creating an
