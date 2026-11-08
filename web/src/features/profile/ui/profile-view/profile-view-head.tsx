@@ -218,7 +218,8 @@ const Root = styled.div`
     grid-template-areas: 'qr identity rate';
   }
 
-  /* Narrow: the code stays beside the name, the rate takes its own line. */
+  /* Narrow: the name takes the full width; below a rule, the rate sits on
+     the left and the code, too big to share the name's line, on the right. */
   @container (max-width: 720px) {
     grid-template-columns: minmax(0, 1fr);
     grid-template-areas:
@@ -228,8 +229,16 @@ const Root = styled.div`
     &[data-qr] {
       grid-template-columns: minmax(0, 1fr) auto;
       grid-template-areas:
-        'identity qr'
-        'rate rate';
+        'identity identity'
+        'rule rule'
+        'rate qr';
+      align-items: center;
+    }
+
+    &[data-qr]::before {
+      content: '';
+      grid-area: rule;
+      border-top: var(--ui-border-width) solid var(--ui-line);
     }
   }
 `
@@ -327,6 +336,12 @@ const Rate = styled.div`
     padding-top: var(--ui-space-4);
     border-inline-start: 0;
     border-top: var(--ui-border-width) solid var(--ui-line);
+
+    /* Beside the code the sheet draws the rule across both. */
+    ${Root}[data-qr] & {
+      padding-top: 0;
+      border-top: 0;
+    }
   }
 `
 

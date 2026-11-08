@@ -14,9 +14,13 @@ type Props = {
 }
 
 /** Pixels the code is drawn at; CSS decides what it is shown at. */
-const QR_DRAWN_SIZE = 180
+const QR_DRAWN_SIZE = 240
 
-/** The wallet as a code, small beside the name; a tap opens it to scan. */
+/* The wordmark's blue on white: dark enough (about 5.9:1) for any scanner. */
+const QR_INK = '#3F67A4'
+const QR_PAPER = '#ffffff'
+
+/** The wallet as a code beside the name; a tap opens it larger to scan. */
 export const ProfileViewQrCode = ({ className }: Props) => {
   const isMobile = useBreakpoint('isMobile')
   const isDesktop = useBreakpoint('isDesktop')
@@ -46,8 +50,8 @@ export const ProfileViewQrCode = ({ className }: Props) => {
               value={payWallet || ''}
               size={QR_DRAWN_SIZE}
               level="M"
-              fgColor="var(--ui-blue)"
-              bgColor="transparent"
+              fgColor={QR_INK}
+              bgColor={QR_PAPER}
               marginSize={1}
             />
           </Skeleton>
@@ -72,8 +76,8 @@ export const ProfileViewQrCode = ({ className }: Props) => {
             value={payWallet || ''}
             size={isMobile ? 200 : 260}
             level="M"
-            fgColor="var(--ui-blue)"
-            bgColor="transparent"
+            fgColor={QR_INK}
+            bgColor={QR_PAPER}
             marginSize={1}
           />
           <Text size={isMobile ? '1' : '2'} align={'center'}>
@@ -86,8 +90,8 @@ export const ProfileViewQrCode = ({ className }: Props) => {
 }
 
 const Root = styled.button`
-  width: 112px;
-  height: 112px;
+  width: 160px;
+  height: 160px;
   cursor: pointer;
   padding: 0;
   border: 0;
@@ -111,7 +115,7 @@ const Root = styled.button`
   }
 
   ${(p) => p.theme.breakpoints.down('md')} {
-    width: 88px;
-    height: 88px;
+    width: 112px;
+    height: 112px;
   }
 `
