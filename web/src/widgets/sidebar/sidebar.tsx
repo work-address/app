@@ -326,8 +326,10 @@ const Scrim = styled.div`
 
 const Aside = styled.aside`
   position: fixed;
-  top: 0;
-  bottom: 0;
+  /* Inset so the edge border stops short of the viewport; the layout behind
+     shares this background, so the gaps don't show. */
+  top: 10px;
+  bottom: 10px;
   left: 0;
   z-index: 20;
   display: flex;
@@ -342,7 +344,10 @@ const Aside = styled.aside`
   ${(p) => p.theme.breakpoints.down('md')} {
     padding: var(--sidebar-mobile-padding, 12px 8px);
 
+    /* Open, it lies over the page, which would show through the inset. */
     &:not([data-collapsed]) {
+      top: 0;
+      bottom: 0;
       padding: var(--sidebar-open-mobile-padding, 12px);
       box-shadow: var(--ui-shadow);
     }

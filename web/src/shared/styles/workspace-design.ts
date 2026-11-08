@@ -27,7 +27,7 @@ export const WorkspaceDesignStyles = createGlobalStyle`
     --page-shadow: none;
     --sidebar-bg: var(--ui-canvas);
     --sidebar-border: var(--ui-line);
-    --sidebar-padding: var(--ui-space-5) var(--ui-space-3) var(--ui-space-3);
+    --sidebar-padding: var(--ui-space-3) var(--ui-space-3) var(--ui-space-3);
     --sidebar-gap: var(--ui-space-5);
     --sidebar-item-gap: var(--ui-space-2);
     --sidebar-item-height: var(--ui-filter-height);
