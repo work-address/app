@@ -247,9 +247,7 @@ export class StatisticsManager {
       const key = `${run.userId}:${run.agentId}`
       byAgent.set(key, [
         ...(byAgent.get(key) ?? []),
-        ...run.segments
-          .filter((segment) => segment.state === 'running')
-          .map((s): Span => [Date.parse(s.fromAt), Date.parse(s.toAt)]),
+        ...StatisticsInsights.workedSpans(run.segments),
       ])
     }
     for (const [key, spans] of byAgent) {
@@ -268,16 +266,19 @@ export class StatisticsManager {
       agentSeconds: Math.round((agentMs.get(row.userId) ?? 0) / 1000),
     }))
     // Someone whose agents worked while they tracked nothing still appears.
-    for (const [userId, ms] of agentMs)
-      if (!people.some((p) => p.userId === userId))
-        people.push({
-          userId,
-          name: userId,
-          trackedSeconds: 0,
-          activeSeconds: 0,
-          unpaidSeconds: 0,
-          agentSeconds: Math.round(ms / 1000),
-        })
+    const agentsOnly = [...agentMs.keys()].filter(
+      (userId) => !people.some((p) => p.userId === userId),
+    )
+    const names = await this.repository.personNames(agentsOnly)
+    for (const userId of agentsOnly)
+      people.push({
+        userId,
+        name: names.get(userId) ?? userId,
+        trackedSeconds: 0,
+        activeSeconds: 0,
+        unpaidSeconds: 0,
+        agentSeconds: Math.round((agentMs.get(userId) ?? 0) / 1000),
+      })
     return {
       rows: people.sort((a, b) => a.name.localeCompare(b.name)),
     }

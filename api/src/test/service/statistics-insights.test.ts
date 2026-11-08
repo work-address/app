@@ -178,6 +178,51 @@ describe('StatisticsInsights', () => {
     ])
   })
 
+  it('counts unclassified time as worked, and never time with the timer off', () => {
+    const rows = StatisticsInsights.agentDaily(
+      [
+        {
+          userId: 'u',
+          projectId: 'p',
+          agentId: 'a',
+          product: 'codex',
+          status: 'completed',
+          segments: [
+            segment('unknown', 0, 30),
+            segment('untracked', 30, 40),
+            segment('unknown', 40, 60),
+          ],
+        },
+      ],
+      [{ userId: 'u', projectId: 'p', span: [nine, nine + 20 * MIN] }],
+      [nine - 60 * MIN, nine + 120 * MIN],
+      'UTC',
+    )
+    expect(rows).to.deep.equal([
+      {
+        day: '2026-10-19',
+        product: 'codex',
+        assistedSeconds: 20 * 60,
+        autonomousSeconds: 30 * 60,
+        waitSeconds: 0,
+      },
+    ])
+  })
+
+  it('counts neither waiting nor time with the timer off as worked', () => {
+    expect(
+      StatisticsInsights.workedSpans([
+        segment('running', 0, 10),
+        segment('human_wait', 10, 20),
+        segment('unknown', 20, 30),
+        segment('untracked', 30, 40),
+      ]),
+    ).to.deep.equal([
+      [nine, nine + 10 * MIN],
+      [nine + 20 * MIN, nine + 30 * MIN],
+    ])
+  })
+
   it('cuts agent time at the reader midnight and the range edges', () => {
     const rows = StatisticsInsights.agentDaily(
       [

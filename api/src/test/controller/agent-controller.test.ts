@@ -252,6 +252,62 @@ export class AgentControllerTest extends BaseControllerTest {
     expect((await search()).data[0][0].prompt).to.equal(null)
   }
 
+  private static statisticsRange() {
+    const day = 86400000
+    return {
+      from: new Date(Date.now() - day).toISOString().slice(0, 10),
+      to: new Date(Date.now() + day).toISOString().slice(0, 10),
+      timeZone: 'UTC',
+    }
+  }
+
+  /** What an ingested run shows up as, not a run written by hand as `running`. */
+  @test() async aRecordedRunCountsInTheStatistics() {
+    const s = await this.scenario()
+    await s.uploader.post('/agent-tracking/events', {
+      events: [
+        s.event('run.started', 0, 0),
+        s.event('run.completed', 1, 180000),
+      ],
+    })
+    const owner = this.client(s.owner)
+    const range = AgentControllerTest.statisticsRange()
+
+    const team = (await owner.post('/statistics/team', range)).data.rows
+    expect(team).to.have.length(1)
+    expect(team[0].userId).to.equal(s.worker.id)
+    expect(team[0].agentSeconds).to.equal(180)
+    // Nobody tracked anything, and the person still reads as a person.
+    expect(team[0].trackedSeconds).to.equal(0)
+    expect(team[0].name).to.equal(s.worker.name || s.worker.address)
+
+    const { daily } = (await owner.post('/statistics/agents/daily', range)).data
+    expect(daily).to.have.length(1)
+    expect(daily[0].product).to.equal('codex')
+    expect(daily[0].assistedSeconds + daily[0].autonomousSeconds).to.equal(180)
+  }
+
+  @test() async timeWithTheTimerOffCountsInNoStatistic() {
+    const s = await this.scenario()
+    const uploaded = await s.uploader.post('/agent-tracking/events', {
+      events: [
+        s.event('run.started', 0, 0),
+        s.event('tracking.paused', 1, 60000, { reason: 'idle' }),
+        s.event('tracking.resumed', 2, 120000, { reason: 'started' }),
+        s.event('run.completed', 3, 180000),
+      ],
+    })
+    for (const result of uploaded.data.results)
+      expect(result.status).to.equal('accepted')
+    const owner = this.client(s.owner)
+    const range = AgentControllerTest.statisticsRange()
+
+    const team = (await owner.post('/statistics/team', range)).data.rows
+    expect(team[0].agentSeconds).to.equal(120)
+    const { daily } = (await owner.post('/statistics/agents/daily', range)).data
+    expect(daily[0].assistedSeconds + daily[0].autonomousSeconds).to.equal(120)
+  }
+
   @test() async aBatchIsAcknowledgedAndItsRunsAreSearchable() {
     const s = await this.scenario()
     const events = [

@@ -558,9 +558,7 @@ export function team(scope: Scope) {
     const key = `${run.userId}|${run.agentId}`
     byAgent.set(key, [
       ...(byAgent.get(key) ?? []),
-      ...run.segments
-        .filter((s) => s.state === 'running')
-        .map((s): Span => [Date.parse(s.fromAt), Date.parse(s.toAt)]),
+      ...StatisticsInsights.workedSpans(run.segments),
     ])
   }
   for (const [key, spans] of byAgent) {

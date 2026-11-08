@@ -48,7 +48,12 @@ const top = <K extends string>(totals: Map<string, number>, key: K) =>
   [...totals]
     .sort((a, b) => b[1] - a[1] || a[0].localeCompare(b[0]))
     .slice(0, HOURLY_TOP)
-    .map(([id, seconds]) => ({ [key]: id, seconds: Math.round(seconds) }) as Record<K, string> & { seconds: number })
+    .map(
+      ([id, seconds]) =>
+        ({ [key]: id, seconds: Math.round(seconds) }) as Record<K, string> & {
+          seconds: number
+        },
+    )
 
 export interface AgentRunInput {
   userId: string
@@ -148,7 +153,10 @@ export class StatisticsInsights {
           (cell.projectTotals.get(entry.projectId) ?? 0) + seconds,
         )
       for (const app of entry.apps ?? [])
-        cell.appTotals.set(app.name, (cell.appTotals.get(app.name) ?? 0) + app.seconds)
+        cell.appTotals.set(
+          app.name,
+          (cell.appTotals.get(app.name) ?? 0) + app.seconds,
+        )
       cells.set(key, cell)
     }
     return [...cells.values()]
@@ -204,7 +212,21 @@ export class StatisticsInsights {
   }
 
   /**
-   * Agent time per day and product. Running time is assisted where the same
+   * When an agent worked, as every statistic counts it. Unclassified time is
+   * worked time, as it is on the invoice: until a runtime is qualified, it is
+   * the only state a recorded run has. Waiting on a person is reported apart,
+   * and time with the timer off counts for nothing.
+   */
+  public static workedSpans(
+    segments: Pick<AgentSegment, 'fromAt' | 'toAt' | 'state'>[],
+  ): Span[] {
+    return segments
+      .filter(({ state }) => state === 'running' || state === 'unknown')
+      .map((s): Span => [Date.parse(s.fromAt), Date.parse(s.toAt)])
+  }
+
+  /**
+   * Agent time per day and product. Worked time is assisted where the same
    * worker's own timer ran on the same project, autonomous otherwise.
    * `human_wait` is reported apart and never counts as agent time. Each
    * agent's runs are merged first, so overlapping runs of one agent count
@@ -262,13 +284,16 @@ export class StatisticsInsights {
           ),
           [range],
         )
-      const running = state('running')
+      const worked = TimeSpans.intersect(
+        TimeSpans.union(group.flatMap((run) => this.workedSpans(run.segments))),
+        [range],
+      )
       const own = TimeSpans.union(humanBy.get(`${userId}:${projectId}`) ?? [])
-      const assisted = TimeSpans.intersect(running, own)
+      const assisted = TimeSpans.intersect(worked, own)
       add(assisted, product, 'assistedSeconds')
-      add(TimeSpans.subtract(running, assisted), product, 'autonomousSeconds')
+      add(TimeSpans.subtract(worked, assisted), product, 'autonomousSeconds')
       add(
-        TimeSpans.subtract(state('human_wait'), running),
+        TimeSpans.subtract(state('human_wait'), worked),
         product,
         'waitSeconds',
       )
@@ -287,10 +312,7 @@ export class StatisticsInsights {
   }
 
   /** A span cut at the reader's hours, as [`YYYY-MM-DDTHH`, milliseconds] pairs. */
-  public static splitByHour(
-    span: Span,
-    timeZone: string,
-  ): [string, number][] {
+  public static splitByHour(span: Span, timeZone: string): [string, number][] {
     const out: [string, number][] = []
     let cursor = span[0]
     while (cursor < span[1]) {

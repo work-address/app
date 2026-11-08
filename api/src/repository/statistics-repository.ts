@@ -1,6 +1,6 @@
 import { ProjectAccess } from '@/service/project-access'
 import { inject, injectable } from 'inversify'
-import { SelectQueryBuilder } from 'typeorm'
+import { In, SelectQueryBuilder } from 'typeorm'
 import { AppUsage } from '@/entity/app-usage'
 import { TimeAgent } from '@/entity/time-agent'
 import { Time } from '@/entity/time'
@@ -249,6 +249,18 @@ export class StatisticsRepository {
       .setParameter('detailUser', scope.user.id)
       .groupBy('person.id')
       .getRawMany()
+  }
+
+  /** How the team report names people it found through their agents alone. */
+  public async personNames(userIds: string[]): Promise<Map<string, string>> {
+    if (!userIds.length) return new Map()
+    const users = await getDataSource()
+      .getRepository(User)
+      .find({
+        where: { id: In(userIds) },
+        select: { id: true, name: true, address: true },
+      })
+    return new Map(users.map((u) => [u.id, u.name || u.address]))
   }
 
   public gaps(scope: StatisticsScope) {
