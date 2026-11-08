@@ -40,6 +40,10 @@ _Avoid_: Evidence, activity data
 Of an entry: its detail has reached the owner, because its author released it, an invoice billed it, or the review window ended.
 _Avoid_: Reviewed, released, public
 
+**Invoiced**:
+Of an entry: covered by an invoice from its author that has not been rejected, either billed on it or, for an invoice older than frozen lines, inside its period. Its detail stays and only its paid state can still change by hand.
+_Avoid_: Billed, frozen, settled
+
 **Run record**:
 One agent run's whole life, kept by one module: credentialed events in, the run they project, frozen once billed, finished, released and rotated.
 _Avoid_: Agent timelog, agent entry

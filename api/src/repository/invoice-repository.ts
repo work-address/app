@@ -134,6 +134,7 @@ export class InvoiceRepository extends AbstractRepositoryTemplate<Invoice> {
               .andWhere(
                 'time.invoiceId IS NULL AND COALESCE(time.isPaid,false)=false',
               )
+              .orderBy('time.id')
               .setLock('pessimistic_write')
               .getMany()
           : []

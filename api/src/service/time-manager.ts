@@ -1,3 +1,4 @@
+import { validate } from 'class-validator'
 import { Cause, Effect } from 'effect'
 import { inject, injectable } from 'inversify'
 import moment from 'moment'
@@ -12,6 +13,7 @@ import { ErrorFormatter } from '@/service/error-formatter'
 import { TimeCreateDto } from '@/model/dto/time'
 import { Entitlement } from '@/service/entitlement'
 import AccessException from '@/exception/access-exception'
+import ConstraintsValidationException from '@/exception/constraints-validation-exception'
 import RetentionExceededException from '@/exception/retention-exceeded-exception'
 import { ImageResizer } from '@/service/image-resizer'
 import { RepoEffect } from '@/repository/abstract-repository-template'
@@ -194,62 +196,42 @@ export class TimeManager {
     })
   }
 
-  public save(time: Time): RepoEffect<Time> {
-    return this.timeRepository.validateAndSave(time)
-  }
-
   public setIsPaidMany(
     ids: string[],
     isPaid: boolean,
     user: User,
   ): RepoEffect<void> {
-    return Effect.gen(this, function* () {
-      const times = yield* this.timeRepository.findByIdsAsAuthor(ids, user)
-
-      for (const time of times) {
-        time.isPaid = isPaid
-      }
-
-      yield* this.timeRepository.saveMany(times)
-    })
+    return this.timeRepository.updateAsAuthor(ids, user, { isPaid })
   }
 
-  public editAndSave(time: Time, data: Time): RepoEffect<void> {
-    time.note = data.note
+  public edit(id: string, data: Time, user: User): RepoEffect<void> {
+    return Effect.gen(this, function* () {
+      // The route's 'edit' group selects the fields but checks none of them.
+      const errors = yield* fromPromise(() =>
+        validate(data, { skipMissingProperties: true }),
+      )
 
-    if (data.isPaid !== undefined) {
-      time.isPaid = data.isPaid
-    }
+      if (errors.length) {
+        return yield* Effect.fail(new ConstraintsValidationException(errors))
+      }
 
-    return this.timeRepository.validateAndSave(time).pipe(Effect.asVoid)
+      yield* this.timeRepository.updateAsAuthor([id], user, {
+        ...(data.note !== undefined && { note: data.note }),
+        ...(data.isPaid !== undefined && { isPaid: data.isPaid }),
+      })
+    })
   }
 
   public removeScreenshots(ids: string[], user: User): RepoEffect<void> {
-    return Effect.gen(this, function* () {
-      const times = yield* this.timeRepository.findByIdsAsAuthor(ids, user)
-
-      for (const time of times) {
-        time.screenshot = null
-      }
-
-      yield* this.timeRepository.saveMany(times)
-    })
+    return this.timeRepository.updateAsAuthor(ids, user, { screenshot: null })
   }
 
   public removeProcesses(ids: string[], user: User): RepoEffect<void> {
-    return Effect.gen(this, function* () {
-      const times = yield* this.timeRepository.findByIdsAsAuthor(ids, user)
-
-      yield* this.timeRepository.clearProcesses(times)
-    })
+    return this.timeRepository.clearProcessesAsAuthor(ids, user)
   }
 
   public removeMany(ids: string[], user: User): RepoEffect<void> {
-    return Effect.gen(this, function* () {
-      const times = yield* this.timeRepository.findByIdsAsAuthor(ids, user)
-
-      yield* this.timeRepository.removeMany(times)
-    })
+    return this.timeRepository.removeAsAuthor(ids, user)
   }
 
   public async resize(screenshot?: string): Promise<string | null> {

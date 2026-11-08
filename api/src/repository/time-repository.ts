@@ -18,7 +18,8 @@ import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
 import { Invoice } from '@/entity/invoice'
 import { EProjectState } from '@/model/project'
-import { Brackets, OrderByCondition } from 'typeorm'
+import { Brackets, EntityManager, In, OrderByCondition } from 'typeorm'
+import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity'
 
 import AccessException from '@/exception/access-exception'
 import { TimeSearchDto } from '@/model/dto/time'
@@ -376,17 +377,78 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     })
   }
 
-  /** Removes what entries recorded about processes, and the usage built from it. */
-  public clearProcesses(times: Time[]): RepoEffect<void> {
-    for (const time of times) {
-      time.processes = null
-    }
+  /** Sets these columns on one author's entries, and touches nothing else. */
+  public updateAsAuthor(
+    ids: string[],
+    user: User,
+    values: QueryDeepPartialEntity<Time>,
+  ): RepoEffect<void> {
+    return this.changeAsAuthor(ids, user, async (manager, uniqueIds) => {
+      // Nothing to write still answers whether the entries are the author's.
+      if (!Object.keys(values).length) return
+      await manager
+        .createQueryBuilder()
+        .update(Time)
+        .set(values)
+        .where('id IN (:...ids)', { ids: uniqueIds })
+        .execute()
+    })
+  }
 
+  /** Removes what entries recorded about processes, and the usage built from it. */
+  public clearProcessesAsAuthor(ids: string[], user: User): RepoEffect<void> {
+    return this.changeAsAuthor(ids, user, async (manager, uniqueIds) => {
+      await manager
+        .createQueryBuilder()
+        .update(Time)
+        .set({ processes: null })
+        .where('id IN (:...ids)', { ids: uniqueIds })
+        .execute()
+      await manager.delete(AppUsage, { time: { id: In(uniqueIds) } })
+    })
+  }
+
+  /** Deletes for good: the author asked, so unlike retention nothing is kept. */
+  public removeAsAuthor(ids: string[], user: User): RepoEffect<void> {
+    return this.changeAsAuthor(ids, user, async (manager, uniqueIds) => {
+      await manager
+        .createQueryBuilder()
+        .delete()
+        .from(Time)
+        .where('id IN (:...ids)', { ids: uniqueIds })
+        .execute()
+    })
+  }
+
+  /**
+   * One author's entries by id, all or none: an id that isn't theirs refuses
+   * the whole batch.
+   *
+   * Never save a loaded entry here: an upload may have replaced its accounting
+   * and app evidence since it was read. Locks in id order, as billing does, so
+   * a change waits for an upload or an invoice in progress and sees its result.
+   */
+  private changeAsAuthor(
+    ids: string[],
+    user: User,
+    change: (manager: EntityManager, uniqueIds: string[]) => Promise<void>,
+  ): RepoEffect<void> {
+    const uniqueIds = [...new Set(ids)]
+    if (!uniqueIds.length) return Effect.void
     return fromPromise(() =>
       this.getRepo().manager.transaction(async (manager) => {
-        await manager.save(Time, times)
-        for (const time of times)
-          await manager.delete(AppUsage, { time: { id: time.id } })
+        const mine = await manager
+          .createQueryBuilder(Time, 'time')
+          .select('time.id')
+          .where('time.id IN (:...ids) AND time.userId=:user', {
+            ids: uniqueIds,
+            user: user.id,
+          })
+          .orderBy('time.id')
+          .setLock('pessimistic_write')
+          .getMany()
+        if (mine.length !== uniqueIds.length) throw new AccessException()
+        await change(manager, uniqueIds)
       }),
     )
   }

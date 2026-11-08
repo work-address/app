@@ -197,8 +197,4 @@ export class Time extends AbstractBaseEntity implements ITime {
   @Column('timestamptz', { nullable: false })
   @IsDate()
   toAt: Date
-
-  public isAuthor(user: User): boolean {
-    return this.user?.id === user.id
-  }
 }

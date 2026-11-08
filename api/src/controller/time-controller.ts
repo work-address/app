@@ -28,7 +28,6 @@ import { Time } from '@/entity/time'
 import { EntityFromParam } from '@/decorator/entity-from-param'
 import { ITimeInsertionResult } from '@/model/time'
 import { Project } from '@/entity/project'
-import AccessException from '@/exception/access-exception'
 import express from 'express'
 import { Effect } from 'effect'
 import { fromPromise, runPromise } from '@/service/effect-bridge'
@@ -289,20 +288,13 @@ export class TimeController {
   @HttpCode(200)
   public async edit(
     @CurrentUser() currentUser: User,
-    @EntityFromParam({
-      paramName: 'id',
-      relations: { project: { user: true }, user: true },
-    })
+    @EntityFromParam({ paramName: 'id' })
     time: Time,
     @Body({ validate: { groups: ['edit'] }, transform: { groups: ['edit'] } })
     data: Time,
     @Res() res: express.Response,
   ): Promise<express.Response> {
-    if (!time.isAuthor(currentUser)) {
-      throw new AccessException()
-    }
-
-    await runPromise(this.timeManager.editAndSave(time, data))
+    await runPromise(this.timeManager.edit(time.id, data, currentUser))
 
     res.end()
     return res

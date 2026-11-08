@@ -62,9 +62,10 @@ export class InvoicePaymentTest extends AbstractDatabaseIntegration {
     expect(await this.isPaid(workerTime.id)).to.be.false
 
     await runPromise(
-      timeManager.editAndSave(
-        await runPromise(this.timeRepository.findOneByIdOrFail(workerTime.id)),
+      timeManager.edit(
+        workerTime.id,
         Object.assign(new Time(), { isPaid: true }),
+        worker,
       ),
     )
     expect(await this.isPaid(workerTime.id)).to.be.true
