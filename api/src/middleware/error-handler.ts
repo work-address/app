@@ -6,6 +6,8 @@ import express from 'express'
 import { RecordingPrivacy } from '@/service/recording-privacy'
 
 import * as Sentry from '@sentry/node'
+import { AppContainer } from '@/app/app-container'
+import { ILogger } from '@/model/logging'
 import { ErrorFormatter } from '@/service/error-formatter'
 
 @Middleware({ type: 'after' })
@@ -56,8 +58,29 @@ export class ErrorHandler implements ExpressErrorMiddlewareInterface {
       this.captureSentry(httpCode, error)
     }
 
+    if (!ErrorFormatter.expected(error)) {
+      this.logUnexpected(error, requestUrl)
+    }
+
     response.status(httpCode)
     response.send(errorFormatted)
+  }
+
+  /** The client no longer gets the text, and Sentry may be off or not told. */
+  private logUnexpected(error: unknown, requestUrl: string) {
+    try {
+      AppContainer.getContainer()
+        .get<ILogger>('ILogger')
+        .error('unexpected error', {
+          url: requestUrl,
+          error: ErrorFormatter.forLog(
+            error,
+            RecordingPrivacy.sensitive(requestUrl),
+          ),
+        })
+    } catch (failure) {
+      console.error('ErrorHandler could not log', failure)
+    }
   }
 
   private captureSentry(httpCode: number, error: unknown) {

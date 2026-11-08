@@ -10,6 +10,7 @@ import { TimeRepository } from '@/repository/time-repository'
 import { ProjectRepository } from '@/repository/project-repository'
 import { ITimeInsertionResult } from '@/model/time'
 import { ErrorFormatter } from '@/service/error-formatter'
+import { ILogger } from '@/model/logging'
 import { TimeCreateDto } from '@/model/dto/time'
 import { Entitlement } from '@/service/entitlement'
 import AccessException from '@/exception/access-exception'
@@ -29,6 +30,8 @@ export class TimeManager {
   protected imageResizer: ImageResizer
   @inject('Entitlement')
   protected entitlement: Entitlement
+  @inject('ILogger')
+  protected logger: ILogger
 
   // Projects owned by a non-premium account keep only the trailing N days of
   // time logs. Entitlement is the project owner's, not the author's - see
@@ -161,7 +164,7 @@ export class TimeManager {
             Effect.catchAllCause((cause) =>
               Effect.succeed({
                 ...item,
-                error: ErrorFormatter.format(Cause.squash(cause)),
+                error: this.reportEntryFailure(Cause.squash(cause)),
                 appsAccepted: undefined,
                 apps: undefined,
                 screenshot: undefined,
@@ -184,6 +187,21 @@ export class TimeManager {
 
       return program
     })
+  }
+
+  /**
+   * One entry's failure, as its result row says it. The row is a 200, so neither
+   * the error handler nor Sentry hears of it: an unexpected one is logged here,
+   * as for any route that handles recordings.
+   */
+  private reportEntryFailure(error: unknown) {
+    if (!ErrorFormatter.expected(error)) {
+      this.logger.error('unexpected error storing a time entry', {
+        error: ErrorFormatter.forLog(error, true),
+      })
+    }
+
+    return ErrorFormatter.format(error)
   }
 
   public publish(ids: string[], user: User): RepoEffect<void> {

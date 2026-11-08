@@ -24,8 +24,8 @@ export class ErrorHandlerTest {
 
     expect(action.response.statusCode).to.be.equal(500)
     expect(action.response._getData()).to.be.eql({
-      message: error.message,
-      name: error.name,
+      message: 'Something went wrong on the server',
+      name: 'InternalServerError',
     })
   }
 
