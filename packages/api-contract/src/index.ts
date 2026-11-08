@@ -35,7 +35,7 @@ export interface ContractWorld {
 }
 
 export interface ContractRequest {
-  method: 'get' | 'post' | 'put'
+  method: 'get' | 'post' | 'put' | 'delete'
   path: string
   body?: unknown
 }
@@ -241,6 +241,98 @@ export const CONTRACT_SCENARIOS: ContractScenario[] = [
       body: { ids: [w.invoicedEntry] },
     }),
     status: 403,
+  },
+
+  // Invoiced entries: SPEC.md "An invoiced entry keeps its detail"
+  {
+    name: 'an author deletes an entry on no invoice',
+    as: 'worker',
+    request: (w) => ({
+      method: 'delete',
+      path: '/time',
+      body: { ids: [w.looseEntry] },
+    }),
+    status: 200,
+  },
+  {
+    name: 'an invoiced entry cannot be deleted',
+    as: 'worker',
+    request: (w) => ({
+      method: 'delete',
+      path: '/time',
+      body: { ids: [w.invoicedEntry] },
+    }),
+    status: 400,
+  },
+  {
+    name: 'a batch with an invoiced entry in it is refused whole',
+    as: 'worker',
+    request: (w) => ({
+      method: 'delete',
+      path: '/time',
+      body: { ids: [w.looseEntry, w.invoicedEntry] },
+    }),
+    status: 400,
+  },
+  {
+    name: 'only its author can delete an entry',
+    as: 'owner',
+    request: (w) => ({
+      method: 'delete',
+      path: '/time',
+      body: { ids: [w.looseEntry] },
+    }),
+    status: 403,
+  },
+  {
+    name: 'an author removes a screenshot from an entry on no invoice',
+    as: 'worker',
+    request: (w) => ({
+      method: 'delete',
+      path: '/time/screenshots',
+      body: { ids: [w.looseEntry] },
+    }),
+    status: 200,
+  },
+  {
+    name: 'an invoiced entry keeps its screenshot',
+    as: 'worker',
+    request: (w) => ({
+      method: 'delete',
+      path: '/time/screenshots',
+      body: { ids: [w.invoicedEntry] },
+    }),
+    status: 400,
+  },
+  {
+    name: 'an invoiced entry keeps its apps',
+    as: 'worker',
+    request: (w) => ({
+      method: 'delete',
+      path: '/time/processes',
+      body: { ids: [w.invoicedEntry] },
+    }),
+    status: 400,
+  },
+  {
+    name: 'an invoiced entry keeps its note',
+    as: 'worker',
+    request: (w) => ({
+      method: 'put',
+      path: `/time/${w.invoicedEntry}`,
+      body: { note: 'changed' },
+    }),
+    status: 400,
+  },
+  {
+    name: 'an edit may carry an invoiced entry’s same note with a paid change',
+    as: 'worker',
+    request: (w) => ({
+      method: 'put',
+      path: `/time/${w.invoicedEntry}`,
+      body: { note: 'invoiced', isPaid: true },
+    }),
+    status: 200,
   },
 
   // Detail: SPEC.md "Detail waits for the worker's review"

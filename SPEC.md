@@ -123,6 +123,12 @@ entries and runs covered by an invoice from the same issuer, so a financial
 record always keeps the detail behind it, usage rows included. A rejected
 invoice is not evidence: what it released rotates like anything else.
 
+**An invoiced entry keeps its detail.** While an invoice covers an entry, its
+author can't delete it, remove its screenshot or apps, or change its note; a
+rejection releases it. Its paid state still changes by hand, as above. Until then
+an author may remove any of these, even after the owner has seen them, the same
+as a run's prompt. A batch containing an invoiced entry changes nothing.
+
 ## Statistics explains time; it never records it
 
 `Statistics` holds breakdowns of `Time` records: how a human entry's active

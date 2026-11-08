@@ -196,6 +196,7 @@ export class TimeManager {
     })
   }
 
+  /** Allowed on an invoiced entry too: `SPEC.md` keeps this one hand change. */
   public setIsPaidMany(
     ids: string[],
     isPaid: boolean,
@@ -215,15 +216,14 @@ export class TimeManager {
         return yield* Effect.fail(new ConstraintsValidationException(errors))
       }
 
-      yield* this.timeRepository.updateAsAuthor([id], user, {
-        ...(data.note !== undefined && { note: data.note }),
-        ...(data.isPaid !== undefined && { isPaid: data.isPaid }),
-      })
+      yield* this.timeRepository.editAsAuthor(id, user, data)
     })
   }
 
   public removeScreenshots(ids: string[], user: User): RepoEffect<void> {
-    return this.timeRepository.updateAsAuthor(ids, user, { screenshot: null })
+    return this.timeRepository.updateUninvoicedAsAuthor(ids, user, {
+      screenshot: null,
+    })
   }
 
   public removeProcesses(ids: string[], user: User): RepoEffect<void> {

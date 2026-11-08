@@ -18,10 +18,17 @@ import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
 import { Invoice } from '@/entity/invoice'
 import { EProjectState } from '@/model/project'
-import { Brackets, EntityManager, In, OrderByCondition } from 'typeorm'
+import {
+  Brackets,
+  EntityManager,
+  In,
+  ObjectLiteral,
+  OrderByCondition,
+} from 'typeorm'
 import { QueryDeepPartialEntity } from 'typeorm/query-builder/QueryPartialEntity'
 
 import AccessException from '@/exception/access-exception'
+import InvoicedTimeException from '@/exception/invoiced-time-exception'
 import { TimeSearchDto } from '@/model/dto/time'
 import { BadRequestError } from 'routing-controllers'
 
@@ -377,52 +384,90 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
     })
   }
 
-  /** Sets these columns on one author's entries, and touches nothing else. */
+  /** Sets these columns on one author's entries, invoiced or not. */
   public updateAsAuthor(
     ids: string[],
     user: User,
     values: QueryDeepPartialEntity<Time>,
   ): RepoEffect<void> {
-    return this.changeAsAuthor(ids, user, async (manager, uniqueIds) => {
-      // Nothing to write still answers whether the entries are the author's.
-      if (!Object.keys(values).length) return
-      await manager
-        .createQueryBuilder()
-        .update(Time)
-        .set(values)
-        .where('id IN (:...ids)', { ids: uniqueIds })
-        .execute()
-    })
+    return this.changeAsAuthor(ids, user, (manager, uniqueIds) =>
+      this.update(manager, uniqueIds, values),
+    )
   }
 
-  /** Removes what entries recorded about processes, and the usage built from it. */
+  /** Sets these columns on one author's entries, unless any is invoiced. */
+  public updateUninvoicedAsAuthor(
+    ids: string[],
+    user: User,
+    values: QueryDeepPartialEntity<Time>,
+  ): RepoEffect<void> {
+    return this.changeAsAuthor(ids, user, (manager, uniqueIds) =>
+      this.update(manager, uniqueIds, values, `NOT ${this.invoicedSql()}`),
+    )
+  }
+
+  /**
+   * An invoiced entry keeps its note, but an edit may still carry that same
+   * note alongside a paid change. A blank note and no note are the same note.
+   */
+  public editAsAuthor(
+    id: string,
+    user: User,
+    { note, isPaid }: { note?: string | null; isPaid?: boolean },
+  ): RepoEffect<void> {
+    return this.changeAsAuthor([id], user, (manager, uniqueIds) =>
+      note === undefined
+        ? this.update(manager, uniqueIds, {
+            ...(isPaid !== undefined && { isPaid }),
+          })
+        : this.update(
+            manager,
+            uniqueIds,
+            { note, ...(isPaid !== undefined && { isPaid }) },
+            `(COALESCE("time"."note", '') = COALESCE(:note, '') OR NOT ${this.invoicedSql()})`,
+            { note },
+          ),
+    )
+  }
+
+  /**
+   * Removes what entries recorded about processes, and the usage built from it,
+   * unless any is invoiced.
+   */
   public clearProcessesAsAuthor(ids: string[], user: User): RepoEffect<void> {
     return this.changeAsAuthor(ids, user, async (manager, uniqueIds) => {
-      await manager
-        .createQueryBuilder()
-        .update(Time)
-        .set({ processes: null })
-        .where('id IN (:...ids)', { ids: uniqueIds })
-        .execute()
+      const changed = await this.update(
+        manager,
+        uniqueIds,
+        { processes: null },
+        `NOT ${this.invoicedSql()}`,
+      )
       await manager.delete(AppUsage, { time: { id: In(uniqueIds) } })
-    })
-  }
-
-  /** Deletes for good: the author asked, so unlike retention nothing is kept. */
-  public removeAsAuthor(ids: string[], user: User): RepoEffect<void> {
-    return this.changeAsAuthor(ids, user, async (manager, uniqueIds) => {
-      await manager
-        .createQueryBuilder()
-        .delete()
-        .from(Time)
-        .where('id IN (:...ids)', { ids: uniqueIds })
-        .execute()
+      return changed
     })
   }
 
   /**
-   * One author's entries by id, all or none: an id that isn't theirs refuses
-   * the whole batch.
+   * Deletes for good, unless any is invoiced: the author asked, so unlike
+   * retention nothing is kept.
+   */
+  public removeAsAuthor(ids: string[], user: User): RepoEffect<void> {
+    return this.changeAsAuthor(ids, user, async (manager, uniqueIds) => {
+      const { affected } = await manager
+        .createQueryBuilder()
+        .delete()
+        .from(Time)
+        .where('id IN (:...ids)', { ids: uniqueIds })
+        .andWhere(`NOT ${this.invoicedSql()}`)
+        .execute()
+      return affected ?? 0
+    })
+  }
+
+  /**
+   * One author's entries by id, all or none: an id that isn't theirs, or a
+   * change that leaves out an invoiced entry, refuses the whole batch. `change`
+   * answers how many entries it changed, and throwing rolls it back.
    *
    * Never save a loaded entry here: an upload may have replaced its accounting
    * and app evidence since it was read. Locks in id order, as billing does, so
@@ -431,7 +476,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
   private changeAsAuthor(
     ids: string[],
     user: User,
-    change: (manager: EntityManager, uniqueIds: string[]) => Promise<void>,
+    change: (manager: EntityManager, uniqueIds: string[]) => Promise<number>,
   ): RepoEffect<void> {
     const uniqueIds = [...new Set(ids)]
     if (!uniqueIds.length) return Effect.void
@@ -448,9 +493,57 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
           .setLock('pessimistic_write')
           .getMany()
         if (mine.length !== uniqueIds.length) throw new AccessException()
-        await change(manager, uniqueIds)
+        if ((await change(manager, uniqueIds)) !== uniqueIds.length)
+          throw new InvoicedTimeException()
       }),
     )
+  }
+
+  /** Writes only these columns; nothing to write leaves every entry as it is. */
+  private async update(
+    manager: EntityManager,
+    ids: string[],
+    values: QueryDeepPartialEntity<Time>,
+    guard = 'TRUE',
+    params: ObjectLiteral = {},
+  ): Promise<number> {
+    if (!Object.keys(values).length) return ids.length
+    const { affected } = await manager
+      .createQueryBuilder()
+      .update(Time)
+      .set(values)
+      .where('id IN (:...ids)', { ids })
+      .andWhere(guard, params)
+      .execute()
+    return affected ?? 0
+  }
+
+  /**
+   * Whether an entry is invoiced, written against its table: billed on an
+   * invoice, or inside the period of one older than frozen lines. Scoped by
+   * issuer as well as project: an invoice covers only its own author's hours,
+   * so one contributor's invoice must not pin a colleague's entries in the same
+   * window. Legacy rows have no issuer and still protect the whole project - the
+   * safe direction. Identifiers come from entity metadata, never request data.
+   */
+  private invoicedSql(): string {
+    const time = this.getRepo().metadata.tableName
+    const invoice =
+      this.getRepo().manager.connection.getMetadata(Invoice).tableName
+
+    return `EXISTS (
+      SELECT 1 FROM "${invoice}" invoice
+      WHERE invoice."projectId" = "${time}"."projectId"
+        AND invoice."deletedAt" IS NULL
+        AND invoice.state <> 'REJECTED'
+        AND (
+          invoice."userId" IS NULL
+          OR invoice."userId" = "${time}"."userId"
+        )
+        AND (invoice.id = "${time}"."invoiceId" OR (invoice.lines IS NULL
+          AND "${time}"."fromAt" < invoice."toAt"
+          AND "${time}"."toAt" > invoice."fromAt"))
+    )`
   }
 
   public publishAsAuthor(ids: string[], user: User): RepoEffect<void> {
@@ -512,9 +605,9 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
    *
    * Soft-deletes rather than hard-deletes: this runs automatically, without
    * the user asking for it, so it stays reversible on upgrade. (User-initiated
-   * removal via removeMany still hard-deletes - that one is intentional.)
-   * Entries backing an issued invoice are never purged, so a financial record
-   * always keeps its supporting detail.
+   * removal via removeAsAuthor still hard-deletes - that one is intentional.)
+   * Invoiced entries are never purged, so a financial record always keeps its
+   * supporting detail.
    */
   public softDeleteExpiredEntriesForProjects(
     projectIds: string[],
@@ -526,10 +619,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       return Effect.void
     }
 
-    // Identifiers come from entity metadata, never from request data.
     const timeTable = this.getRepo().metadata.tableName
-    const invoiceTable =
-      this.getRepo().manager.connection.getMetadata(Invoice).tableName
 
     return fromPromise(async () => {
       await this.getRepo()
@@ -541,25 +631,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         })
         .andWhere(`"${timeTable}"."fromAt" < :cutoff`, { cutoff })
         .andWhere(`"${timeTable}"."deletedAt" IS NULL`)
-        .andWhere(
-          // Scoped by issuer as well as project: an invoice covers only its
-          // own author's hours, so one contributor's invoice must not pin a
-          // colleague's entries in the same window. Legacy rows have no issuer
-          // and still protect the whole project - the safe direction.
-          `NOT EXISTS (
-          SELECT 1 FROM "${invoiceTable}" invoice
-          WHERE invoice."projectId" = "${timeTable}"."projectId"
-            AND invoice."deletedAt" IS NULL
-            AND invoice.state <> 'REJECTED'
-            AND (
-              invoice."userId" IS NULL
-              OR invoice."userId" = "${timeTable}"."userId"
-            )
-            AND (invoice.id = "${timeTable}"."invoiceId" OR (invoice.lines IS NULL
-              AND "${timeTable}"."fromAt" < invoice."toAt"
-              AND "${timeTable}"."toAt" > invoice."fromAt"))
-        )`,
-        )
+        .andWhere(`NOT ${this.invoicedSql()}`)
         .execute()
     })
   }

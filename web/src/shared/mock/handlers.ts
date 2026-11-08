@@ -342,6 +342,16 @@ function searchTimes({ db, meId, body }: Ctx) {
 }
 
 /** Entries the reader may change: their own record, nobody else's. */
+/** SPEC.md "An invoiced entry keeps its detail": the whole batch is refused. */
+function keepInvoiced(times: MockTime[]) {
+  if (times.some((time) => time.invoiceId)) {
+    fail(
+      400,
+      'This time is on an invoice, so its detail stays unless the invoice is rejected',
+    )
+  }
+}
+
 function editableTimes(db: Db, meId: string, ids: unknown) {
   const wanted = new Set(Array.isArray(ids) ? (ids as string[]) : [])
   const rows = db.times.filter((time) => wanted.has(time.id))
@@ -669,6 +679,9 @@ export const handlers: HttpHandler[] = [
     if (!time) {
       fail(404, 'Time not found')
     }
+    if ('note' in body && (body.note ?? '') !== (time.note ?? '')) {
+      keepInvoiced([time])
+    }
     return shapeTime(
       db,
       saveRow('times', {
@@ -682,6 +695,7 @@ export const handlers: HttpHandler[] = [
   }),
   route('delete', '/time', ({ db, meId, body }) => {
     const rows = editableTimes(db, meId, body.ids)
+    keepInvoiced(rows)
     removeRows(
       'times',
       rows.map((t) => t.id),
@@ -697,13 +711,17 @@ export const handlers: HttpHandler[] = [
     }),
   ),
   route('delete', '/time/screenshots', ({ db, meId, body }) => {
-    for (const time of editableTimes(db, meId, body.ids)) {
+    const rows = editableTimes(db, meId, body.ids)
+    keepInvoiced(rows)
+    for (const time of rows) {
       saveRow('times', { ...time, screenshot: null })
     }
     return { success: true }
   }),
   route('delete', '/time/processes', ({ db, meId, body }) => {
-    for (const time of editableTimes(db, meId, body.ids)) {
+    const rows = editableTimes(db, meId, body.ids)
+    keepInvoiced(rows)
+    for (const time of rows) {
       saveRow('times', { ...time, apps: [] })
     }
     return { success: true }
