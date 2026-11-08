@@ -8,6 +8,7 @@ import {
   timeEntryDeleteRequested,
   timeProcessesRemoveRequested,
   timeScreenshotRemoveRequested,
+  getEntryChanges,
 } from '../../model'
 
 import { TimeDialogAgents, useEntryAgentRuns } from './time-dialog-agents'
@@ -194,6 +195,7 @@ export const TimeDialog = ({
 
   // Derived straight from the row: the feed clears screenshot/processes when
   // the mutation lands, so there is no local copy to keep in step.
+  const changes = getEntryChanges(row ?? {}, reader?.id)
   const hasScreenshot = Boolean(row?.screenshot)
   const hasProcesses = getTimeApps(row ?? undefined).length > 0
   const agentRuns = useEntryAgentRuns(row)
@@ -282,6 +284,9 @@ export const TimeDialog = ({
             canSave={isDirty}
             hasScreenshot={hasScreenshot}
             hasProcesses={hasProcesses}
+            canRemove={changes.canRemove}
+            canEdit={changes.isAuthor}
+            isInvoiced={Boolean(row.isInvoiced)}
             onDelete={handleDelete}
             onRemoveScreenshot={handleRemoveScreenshot}
             onRemoveProcesses={handleRemoveProcesses}
@@ -330,6 +335,7 @@ export const TimeDialog = ({
                       field.onChange(value)
                     }}
                     label={t('dashboard.worklogsTable.head.paymentStatus')}
+                    inputProps={{ disabled: !changes.canMarkPaid }}
                   />
                 )}
               />
@@ -345,7 +351,7 @@ export const TimeDialog = ({
                     onBlur={field.onBlur}
                     name={field.name}
                     rows={3}
-                    disabled={isPending}
+                    disabled={isPending || !changes.canEditNote}
                   />
                 )}
               />

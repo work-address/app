@@ -2,10 +2,12 @@ import { useUnit } from 'effector-react'
 import { useContext } from 'react'
 import styled from 'styled-components'
 
+import { getEntryChanges } from '../../model'
 import { TimeContext } from '../time-context'
 
 import type { Time } from '@/entities/time'
 
+import { $user } from '@/entities/profile'
 import { setTimePaidStatusMutation } from '@/entities/time'
 import { Tooltip, WorkspaceStatus } from '@/shared'
 
@@ -14,7 +16,8 @@ type Props = {
 }
 
 /**
- * An entry's payment status, which toggles it on press.
+ * An entry's payment status, which its author toggles on press. For anyone
+ * else it is only a status, and a press opens the row behind it.
  *
  * A button rather than a clickable badge, so the toggle is reachable from the
  * keyboard; it stops the press so the row behind it does not open too.
@@ -22,7 +25,8 @@ type Props = {
 export const TimePaidBadge = ({ entry }: Props) => {
   const { t } = useContext(TimeContext)
 
-  const { setPaidStatus, status } = useUnit({
+  const { reader, setPaidStatus, status } = useUnit({
+    reader: $user,
     setPaidStatus: setTimePaidStatusMutation.start,
     status: setTimePaidStatusMutation.$status,
   })
@@ -32,6 +36,18 @@ export const TimePaidBadge = ({ entry }: Props) => {
       ? 'dashboard.worklogsTable.paymentStatus.paid'
       : 'dashboard.worklogsTable.paymentStatus.unpaid',
   )
+
+  const pill = (
+    <WorkspaceStatus tone={entry.isPaid ? 'positive' : 'attention'}>
+      {label}
+    </WorkspaceStatus>
+  )
+
+  if (!getEntryChanges(entry, reader?.id).canMarkPaid) {
+    return (
+      <Tooltip content={t('common.metricDesc.paymentStatus')}>{pill}</Tooltip>
+    )
+  }
 
   return (
     <Tooltip content={t('common.metricDesc.paymentStatus')}>
@@ -50,9 +66,7 @@ export const TimePaidBadge = ({ entry }: Props) => {
           setPaidStatus({ ids: [entry.id], isPaid: !entry.isPaid })
         }}
       >
-        <WorkspaceStatus tone={entry.isPaid ? 'positive' : 'attention'}>
-          {label}
-        </WorkspaceStatus>
+        {pill}
       </Root>
     </Tooltip>
   )

@@ -321,6 +321,10 @@
             "type": "boolean",
             "nullable": true
           },
+          "isInvoiced": {
+            "type": "boolean",
+            "nullable": true
+          },
           "apps": {
             "type": "array",
             "items": {
@@ -2217,6 +2221,10 @@
             "nullable": true
           },
           "detailPendingReview": {
+            "type": "boolean",
+            "nullable": true
+          },
+          "isInvoiced": {
             "type": "boolean",
             "nullable": true
           },

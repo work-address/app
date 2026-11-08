@@ -108,6 +108,7 @@ export {
   appendTimeSort as changeTimeSort,
   applyTimeFilters,
   resetTimeFilters,
+  timeEntriesInvoiced,
   resetTimeSort,
   restoreTimeQuery,
   loadMoreTime,

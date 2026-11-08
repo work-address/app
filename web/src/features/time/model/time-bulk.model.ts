@@ -1,5 +1,6 @@
 import { attach, combine, createEvent, createStore, sample } from 'effector'
 
+import { hasInvoicedEntry } from './entry-changes'
 import {
   getSelectedTimeProjectId,
   isSameTimeSelection,
@@ -21,6 +22,7 @@ import {
   removeTimeProcessesMutation,
   removeTimeScreenshotMutation,
   setTimePaidStatusMutation,
+  timeEntriesInvoiced,
 } from '@/entities/time'
 import { confirmFx, showToastFx, translate } from '@/shared'
 
@@ -42,6 +44,13 @@ export const $selectedTimeProjectId = combine(
   $allTime,
   $selectedTimeIds,
   getSelectedTimeProjectId,
+)
+
+/** Deleting would be refused whole, so it isn't offered. */
+export const $selectionHasInvoiced = combine(
+  $allTime,
+  $selectedTimeIds,
+  hasInvoicedEntry,
 )
 
 const confirmBulkFx = attach({
@@ -237,6 +246,11 @@ sample({
         isSameTimeSelection(request.ids, params.timeIds),
     ),
   target: bulkOperationSucceeded,
+})
+sample({
+  clock: invoiceSelectedTimeMutation.finished.success,
+  fn: ({ params }) => params.timeIds,
+  target: timeEntriesInvoiced,
 })
 sample({ clock: bulkOperationSucceeded, target: timeSelectionCleared })
 

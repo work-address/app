@@ -335,6 +335,18 @@ export const CONTRACT_SCENARIOS: ContractScenario[] = [
     status: 200,
   },
 
+  {
+    name: 'a search says which entries are invoiced',
+    as: 'worker',
+    request: search,
+    status: 200,
+    check: (body, w) =>
+      entry(body, w.invoicedEntry)?.isInvoiced === true &&
+      entry(body, w.looseEntry)?.isInvoiced === false
+        ? undefined
+        : 'isInvoiced is wrong',
+  },
+
   // Detail: SPEC.md "Detail waits for the worker's review"
   {
     name: 'an author sees their own detail before review',

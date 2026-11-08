@@ -9,6 +9,11 @@ type TimeDialogFooterProps = {
   canSave: boolean
   hasScreenshot: boolean
   hasProcesses: boolean
+  /** The reader may delete it and remove what it recorded. */
+  canRemove: boolean
+  /** The reader may save a change to it; if not, only closing is offered. */
+  canEdit: boolean
+  isInvoiced: boolean
   onDelete: () => void
   onRemoveScreenshot: () => void
   onRemoveProcesses: () => void
@@ -22,6 +27,9 @@ export const TimeDialogFooter = ({
   canSave,
   hasScreenshot,
   hasProcesses,
+  canRemove,
+  canEdit,
+  isInvoiced,
   onDelete,
   onRemoveScreenshot,
   onRemoveProcesses,
@@ -32,59 +40,76 @@ export const TimeDialogFooter = ({
 
   return (
     <Root>
-      <DangerActions>
-        {/* Soft, not solid: Save is the one filled button here. */}
-        <Button
-          color="danger"
-          variant="soft"
-          disabled={isPending}
-          onClick={onDelete}
-        >
-          {t('dashboard.worklogsTable.dialog.deleteEntry')}
-        </Button>
-        {hasScreenshot && (
-          <Tooltip content={t('dashboard.worklogsTable.removeScreenshot')}>
-            <Button
-              color="danger"
-              variant="soft"
-              disabled={isPending}
-              onClick={onRemoveScreenshot}
-              aria-label={t('dashboard.worklogsTable.removeScreenshot')}
-            >
-              <ScreenshotsIcon width={16} height={16} />
-            </Button>
-          </Tooltip>
-        )}
-        {hasProcesses && (
-          <Tooltip content={t('dashboard.worklogsTable.removeProcesses')}>
-            <Button
-              color="danger"
-              variant="soft"
-              disabled={isPending}
-              onClick={onRemoveProcesses}
-              aria-label={t('dashboard.worklogsTable.removeProcesses')}
-            >
-              <ProcessesIcon width={16} height={16} />
-            </Button>
-          </Tooltip>
-        )}
-      </DangerActions>
+      {canRemove ? (
+        <DangerActions>
+          {/* Soft, not solid: Save is the one filled button here. */}
+          <Button
+            color="danger"
+            variant="soft"
+            disabled={isPending}
+            onClick={onDelete}
+          >
+            {t('dashboard.worklogsTable.dialog.deleteEntry')}
+          </Button>
+          {hasScreenshot && (
+            <Tooltip content={t('dashboard.worklogsTable.removeScreenshot')}>
+              <Button
+                color="danger"
+                variant="soft"
+                disabled={isPending}
+                onClick={onRemoveScreenshot}
+                aria-label={t('dashboard.worklogsTable.removeScreenshot')}
+              >
+                <ScreenshotsIcon width={16} height={16} />
+              </Button>
+            </Tooltip>
+          )}
+          {hasProcesses && (
+            <Tooltip content={t('dashboard.worklogsTable.removeProcesses')}>
+              <Button
+                color="danger"
+                variant="soft"
+                disabled={isPending}
+                onClick={onRemoveProcesses}
+                aria-label={t('dashboard.worklogsTable.removeProcesses')}
+              >
+                <ProcessesIcon width={16} height={16} />
+              </Button>
+            </Tooltip>
+          )}
+        </DangerActions>
+      ) : (
+        canEdit &&
+        isInvoiced && (
+          <Hint role="note">
+            {t('dashboard.worklogsTable.dialog.invoicedHint')}
+          </Hint>
+        )
+      )}
       <PrimaryActions>
-        <Button
-          color="neutral"
-          variant="soft"
-          disabled={isPending}
-          onClick={onDiscard}
-        >
-          {t('dashboard.worklogsTable.dialog.discard')}
-        </Button>
-        <Button
-          disabled={isPending || !canSave}
-          loading={isSaving}
-          onClick={onSave}
-        >
-          {t('common.save')}
-        </Button>
+        {canEdit ? (
+          <>
+            <Button
+              color="neutral"
+              variant="soft"
+              disabled={isPending}
+              onClick={onDiscard}
+            >
+              {t('dashboard.worklogsTable.dialog.discard')}
+            </Button>
+            <Button
+              disabled={isPending || !canSave}
+              loading={isSaving}
+              onClick={onSave}
+            >
+              {t('common.save')}
+            </Button>
+          </>
+        ) : (
+          <Button color="neutral" variant="soft" onClick={onDiscard}>
+            {t('common.close')}
+          </Button>
+        )}
       </PrimaryActions>
     </Root>
   )
@@ -118,9 +143,19 @@ const DangerActions = styled.div`
   }
 `
 
+const Hint = styled.p`
+  min-width: 0;
+  margin: 0;
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
+  color: var(--ui-muted);
+`
+
 const PrimaryActions = styled.div`
   display: flex;
   gap: var(--ui-space-3);
+  /* Stays on the right when nothing sits on its left. */
+  margin-left: auto;
 
   ${(p) => p.theme.breakpoints.down('md')} {
     & > * {

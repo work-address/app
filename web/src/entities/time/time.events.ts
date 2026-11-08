@@ -19,6 +19,8 @@ export const debouncedChangeTimeFilters = debounce(
 export const applyTimeFilters = createEvent()
 
 export const resetTimeFilters = createEvent()
+/** An invoice now bills these entries, so what they offer has changed. */
+export const timeEntriesInvoiced = createEvent<string[]>()
 
 export const appendTimeSort = createEvent<TimeSort>()
 

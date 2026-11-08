@@ -63,6 +63,7 @@ export type Time = {
     source?: string | null;
     publishedAt?: string | null;
     detailPendingReview?: boolean | null;
+    isInvoiced?: boolean | null;
     apps?: Array<{
         name?: string;
         seconds?: number;
@@ -552,6 +553,7 @@ export type TimeSearch = {
     source?: string | null;
     publishedAt?: string | null;
     detailPendingReview?: boolean | null;
+    isInvoiced?: boolean | null;
     apps?: Array<{
         name?: string;
         seconds?: number;
@@ -720,6 +722,7 @@ export type TimeSearchWritable = {
     source?: string | null;
     publishedAt?: string | null;
     detailPendingReview?: boolean | null;
+    isInvoiced?: boolean | null;
     apps?: Array<{
         name?: string;
         seconds?: number;

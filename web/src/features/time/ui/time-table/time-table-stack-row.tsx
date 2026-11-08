@@ -1,7 +1,12 @@
+import { useUnit } from 'effector-react'
 import { memo, useContext } from 'react'
 import styled from 'styled-components'
 
-import { formatTrackedCount, getTimeActivityPercent } from '../../model'
+import {
+  formatTrackedCount,
+  getEntryChanges,
+  getTimeActivityPercent,
+} from '../../model'
 import { TimeContext } from '../time-context'
 
 import { TimePaidBadge } from './time-paid-badge'
@@ -9,6 +14,7 @@ import { TimeScreenshotThumb } from './time-screenshot-thumb'
 
 import type { Time } from '@/entities/time'
 
+import { $user } from '@/entities/profile'
 import { Checkbox, formatDurationFromMinutes } from '@/shared'
 
 type Props = {
@@ -27,6 +33,8 @@ export const TimeTableStackRow = memo(
   ({ entry, selected, onOpen, onSelectedChange }: Props) => {
     const { dateFormatter, timeFormatter, numberFormatter, datesGrouped, t } =
       useContext(TimeContext)
+    const reader = useUnit($user)
+    const canSelect = getEntryChanges(entry, reader?.id).isAuthor
 
     const range = `${timeFormatter.format(new Date(entry.fromAt))} – ${timeFormatter.format(new Date(entry.toAt))}`
     const hasInput =
@@ -37,11 +45,13 @@ export const TimeTableStackRow = memo(
     return (
       <Root data-selected={selected || undefined}>
         <Selection>
-          <Checkbox
-            checked={selected}
-            aria-label={t('dashboard.worklogsGrid.selectEntry', { range })}
-            onCheckedChange={() => entry.id && onSelectedChange(entry.id)}
-          />
+          {canSelect && (
+            <Checkbox
+              checked={selected}
+              aria-label={t('dashboard.worklogsGrid.selectEntry', { range })}
+              onCheckedChange={() => entry.id && onSelectedChange(entry.id)}
+            />
+          )}
         </Selection>
         <Body>
           <Range>{range}</Range>

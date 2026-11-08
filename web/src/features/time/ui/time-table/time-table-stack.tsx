@@ -6,6 +6,7 @@ import styled from 'styled-components'
 import {
   $timeSelection,
   getTimeDayKey,
+  getEntryChanges,
   getTimeSelectAllState,
   groupTimeByDay,
   timeRowClicked,
@@ -17,6 +18,7 @@ import { TimeContext } from '../time-context'
 
 import { TimeTableStackRow } from './time-table-stack-row'
 
+import { $user } from '@/entities/profile'
 import {
   $allTime,
   $isLoadingMoreTime,
@@ -38,6 +40,7 @@ export const TimeTableStack = () => {
   const { t } = useContext(TimeContext)
 
   const {
+    reader,
     entries,
     loading,
     isFiltering,
@@ -48,6 +51,7 @@ export const TimeTableStack = () => {
     changeSelection,
     openEntry,
   } = useUnit({
+    reader: $user,
     entries: $allTime,
     loading: $timeLoading,
     isFiltering: $isTimeFiltering,
@@ -76,8 +80,13 @@ export const TimeTableStack = () => {
   )
 
   const ids = useMemo(
-    () => entries.flatMap((entry) => (entry.id ? [entry.id] : [])),
-    [entries],
+    () =>
+      entries.flatMap((entry) =>
+        entry.id && getEntryChanges(entry, reader?.id).isAuthor
+          ? [entry.id]
+          : [],
+      ),
+    [entries, reader?.id],
   )
   const allSelected = getTimeSelectAllState(ids, selection)
 
@@ -97,16 +106,18 @@ export const TimeTableStack = () => {
 
   return (
     <Root data-filtering={isFiltering || undefined}>
-      <Header>
-        <Checkbox
-          checked={allSelected}
-          aria-label={t('ui.table.selectAll')}
-          onCheckedChange={() =>
-            changeSelection(toggleTimeSelectAll(ids, selection))
-          }
-        />
-        <Caption>{t('time.list.selectAll')}</Caption>
-      </Header>
+      {ids.length > 0 && (
+        <Header>
+          <Checkbox
+            checked={allSelected}
+            aria-label={t('ui.table.selectAll')}
+            onCheckedChange={() =>
+              changeSelection(toggleTimeSelectAll(ids, selection))
+            }
+          />
+          <Caption>{t('time.list.selectAll')}</Caption>
+        </Header>
+      )}
       <List>
         {entries.map((entry, index) => {
           const day = getTimeDayKey(entry)

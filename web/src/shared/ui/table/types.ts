@@ -60,6 +60,8 @@ export type SelectionProps =
 
 export type DataProps<T extends AnyRecord> = {
   data: T[]
+  /** Leaves a row out of selection; every row can be selected without it. */
+  canSelectRow?: (row: T) => boolean
   getRowId: (data: T) => string | number
   loading?: boolean
   isFiltering?: boolean

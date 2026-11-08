@@ -28,9 +28,10 @@ const {
   toast: vi.fn(),
 }))
 vi.mock('@/entities/time', async () => {
-  const { createStore } = await import('effector')
+  const { createEvent, createStore } = await import('effector')
   const { createMutation } = await import('@farfetched/core')
   return {
+    timeEntriesInvoiced: createEvent<string[]>(),
     $allTime: createStore([
       { id: 'a', project: { id: 'p' } },
       { id: 'b', project: { id: 'p' } },
@@ -96,6 +97,18 @@ const selectedScope = async () => {
 }
 
 describe('time bulk workflow', () => {
+  it('tells the list which entries it invoiced', async () => {
+    const { timeEntriesInvoiced } = await import('@/entities/time')
+    const invoiced = vi.fn()
+    const unwatch = timeEntriesInvoiced.watch(invoiced)
+    const scope = await selectedScope()
+
+    await allSettled(timeBulkActionRequested, { scope, params: 'invoice' })
+    unwatch()
+
+    expect(invoiced).toHaveBeenCalledWith(['a', 'b'])
+  })
+
   it.each([
     'paid',
     'unpaid',

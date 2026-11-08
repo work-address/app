@@ -68,6 +68,7 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
     getRowId,
     verticalAlign,
     allowSelection,
+    canSelectRow,
     HeaderComponent = DesktopHeaderCellComponent,
     BodyComponent = DesktopBodyCellComponent,
     nowrap,
@@ -147,13 +148,18 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
   const onSelectedIdsChange =
     'onSelectedIdsChange' in props ? props.onSelectedIdsChange : undefined
 
+  const selectableRows = useMemo(
+    () => (canSelectRow ? data.filter(canSelectRow) : data),
+    [canSelectRow, data],
+  )
+
   const {
     isPartiallySelected,
     isAllSelected,
     handleSelectedChange,
     handleToggleAllSelected,
   } = useSelection({
-    data,
+    data: selectableRows,
     getRowId,
     onSelectedIdsChange,
     selectedIds,
@@ -227,7 +233,10 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                         <Checkbox
                           checked={rowsSelected}
                           aria-label={t('ui.table.selectAll')}
-                          disabled={Boolean(loading) && !isDataExists}
+                          disabled={
+                            (Boolean(loading) && !isDataExists) ||
+                            (isDataExists && selectableRows.length === 0)
+                          }
                           onCheckedChange={() => handleToggleAllSelected()}
                         />
                       )}
@@ -304,6 +313,13 @@ export const DataTable = <T extends AnyRecord>(props: DataTableProps<T>) => {
                             >
                               {allowSelection && index === 0 && (
                                 <div
+                                  // Keeps its width, so every row's first
+                                  // column still starts at the same place.
+                                  style={
+                                    canSelectRow && !canSelectRow(row)
+                                      ? { visibility: 'hidden' }
+                                      : undefined
+                                  }
                                   onClick={(event) => event.stopPropagation()}
                                 >
                                   <Checkbox

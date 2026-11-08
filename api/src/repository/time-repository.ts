@@ -69,6 +69,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       }
 
       await this.loadUsage([timeEntry])
+      await this.loadInvoiced([timeEntry])
       return this.access.redact(timeEntry, user)
     })
   }
@@ -379,11 +380,24 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         .take(limit)
         .getManyAndCount()
       await this.loadUsage(times)
+      await this.loadInvoiced(times)
       return [times.map((time) => this.access.redact(time, user)), count] as [
         Time[],
         number,
       ]
     })
+  }
+
+  private async loadInvoiced(times: Time[]): Promise<void> {
+    if (!times.length) return
+    const covered = await this.getRepo()
+      .createQueryBuilder('time')
+      .select('time.id', 'id')
+      .where('time.id IN (:...ids)', { ids: times.map((time) => time.id) })
+      .andWhere(this.invoicedSql())
+      .getRawMany<{ id: string }>()
+    const ids = new Set(covered.map(({ id }) => id))
+    for (const time of times) time.isInvoiced = ids.has(time.id)
   }
 
   /** Sets these columns on one author's entries, invoiced or not. */

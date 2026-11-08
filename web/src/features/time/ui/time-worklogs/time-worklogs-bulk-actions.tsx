@@ -7,6 +7,7 @@ import {
   $isTimeBulkPending,
   $selectedTimeCount,
   $selectedTimeProjectId,
+  $selectionHasInvoiced,
   timeBulkActionRequested,
   timeBulkSelectionClearRequested,
 } from '../../model'
@@ -22,12 +23,14 @@ export const TimeWorklogsBulkActions = () => {
   const {
     selectedCount,
     selectedProjectId,
+    hasInvoiced,
     isBulkPending,
     request,
     clearSelection,
   } = useUnit({
     selectedCount: $selectedTimeCount,
     selectedProjectId: $selectedTimeProjectId,
+    hasInvoiced: $selectionHasInvoiced,
     isBulkPending: $isTimeBulkPending,
     request: timeBulkActionRequested,
     clearSelection: timeBulkSelectionClearRequested,
@@ -77,19 +80,29 @@ export const TimeWorklogsBulkActions = () => {
           </Button>
         </span>
       </Tooltip>
-      <Button
-        color="danger"
-        variant="outline"
-        size="s"
-        type="button"
-        iconLeft={
-          <TrashIcon width={TRASH_ICON_SIZE} height={TRASH_ICON_SIZE} />
+      <Tooltip
+        content={
+          hasInvoiced
+            ? t('dashboard.worklogsTable.bulk.invoicedHint')
+            : undefined
         }
-        disabled={isBulkPending}
-        onClick={() => request('delete')}
       >
-        {t('dashboard.worklogsTable.bulk.delete')}
-      </Button>
+        <span>
+          <Button
+            color="danger"
+            variant="outline"
+            size="s"
+            type="button"
+            iconLeft={
+              <TrashIcon width={TRASH_ICON_SIZE} height={TRASH_ICON_SIZE} />
+            }
+            disabled={isBulkPending || hasInvoiced}
+            onClick={() => request('delete')}
+          >
+            {t('dashboard.worklogsTable.bulk.delete')}
+          </Button>
+        </span>
+      </Tooltip>
       <Button
         variant="outline"
         color="neutral"

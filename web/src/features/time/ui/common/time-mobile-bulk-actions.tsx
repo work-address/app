@@ -7,6 +7,7 @@ import {
   $isTimeBulkPending,
   $selectedTimeCount,
   $selectedTimeProjectId,
+  $selectionHasInvoiced,
   timeBulkActionRequested,
   timeBulkSelectionClearRequested,
   type TimeBulkAction,
@@ -18,14 +19,21 @@ import { Button, Select, Text } from '@/shared'
 export const TimeMobileBulkActions = () => {
   const { t } = useTranslation()
   const [action, setAction] = useState<TimeBulkAction | ''>('')
-  const { selectedCount, projectId, busy, request, clear } = useUnit({
-    selectedCount: $selectedTimeCount,
-    projectId: $selectedTimeProjectId,
-    busy: $isTimeBulkPending,
-    request: timeBulkActionRequested,
-    clear: timeBulkSelectionClearRequested,
-  })
+  const { selectedCount, projectId, hasInvoiced, busy, request, clear } =
+    useUnit({
+      selectedCount: $selectedTimeCount,
+      projectId: $selectedTimeProjectId,
+      hasInvoiced: $selectionHasInvoiced,
+      busy: $isTimeBulkPending,
+      request: timeBulkActionRequested,
+      clear: timeBulkSelectionClearRequested,
+    })
   const invalidInvoice = action === 'invoice' && !projectId
+  const refusedInvoiced =
+    hasInvoiced &&
+    (action === 'delete' ||
+      action === 'remove-screenshots' ||
+      action === 'remove-processes')
   const options = [
     { value: 'paid', label: t('dashboard.worklogsTable.paymentStatus.paid') },
     {
@@ -83,7 +91,13 @@ export const TimeMobileBulkActions = () => {
           placeholder={t('dashboard.worklogsTable.bulk.actionPlaceholder')}
         />
         <Button
-          disabled={!action || busy || invalidInvoice || selectedCount === 0}
+          disabled={
+            !action ||
+            busy ||
+            invalidInvoice ||
+            refusedInvoiced ||
+            selectedCount === 0
+          }
           onClick={() => action && request(action)}
         >
           {t('common.apply')}
@@ -92,6 +106,11 @@ export const TimeMobileBulkActions = () => {
       {invalidInvoice && (
         <Hint role="status">
           {t('dashboard.worklogsTable.bulk.invoiceOneProject')}
+        </Hint>
+      )}
+      {refusedInvoiced && (
+        <Hint role="status">
+          {t('dashboard.worklogsTable.bulk.invoicedHint')}
         </Hint>
       )}
     </Root>

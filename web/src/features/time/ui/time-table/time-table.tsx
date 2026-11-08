@@ -4,6 +4,7 @@ import { useTranslation } from 'react-i18next'
 
 import {
   $timeSelection,
+  getEntryChanges,
   getTimeDayKey,
   groupTimeByDay,
   timeRowClicked,
@@ -13,6 +14,7 @@ import { TimeDayHeading } from '../common'
 
 import { TimeTableCell } from './time-table-cell'
 
+import { $user } from '@/entities/profile'
 import {
   $allTime,
   $isLoadingMoreTime,
@@ -42,6 +44,7 @@ export const TimeTable = () => {
   const { t } = useTranslation()
 
   const {
+    reader,
     entries,
     loading,
     isFiltering,
@@ -53,6 +56,7 @@ export const TimeTable = () => {
     changeSelection,
     rowClicked,
   } = useUnit({
+    reader: $user,
     entries: $allTime,
     loading: $timeLoading,
     isFiltering: $isTimeFiltering,
@@ -133,6 +137,12 @@ export const TimeTable = () => {
     [t],
   )
 
+  const readerId = reader?.id
+  const canSelectRow = useCallback(
+    (row: Time) => getEntryChanges(row, readerId).isAuthor,
+    [readerId],
+  )
+
   return (
     <DataTable<Time>
       shadow={false}
@@ -142,6 +152,7 @@ export const TimeTable = () => {
       getRowId={(row) => row.id ?? ''}
       BodyComponent={TimeTableCell}
       allowSelection
+      canSelectRow={canSelectRow}
       selectedIds={selection}
       onSelectedIdsChange={changeSelection}
       loading={loading}

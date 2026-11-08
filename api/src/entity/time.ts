@@ -138,6 +138,14 @@ export class Time extends AbstractBaseEntity implements ITime {
   @Expose({ groups: ['search'] })
   detailPendingReview?: boolean
 
+  // Whether an invoice covers it, for a client to offer only what it would
+  // accept. Which invoice stays server-side: see `invoice` above.
+  @Allow()
+  @IsOptional()
+  @JSONSchema({ type: 'boolean', nullable: true })
+  @Expose({ groups: ['search'] })
+  isInvoiced?: boolean
+
   @Allow()
   @IsOptional()
   @JSONSchema({

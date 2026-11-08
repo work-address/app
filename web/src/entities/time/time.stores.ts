@@ -6,6 +6,7 @@ import {
   changeTimeFilters,
   fetchTime,
   resetTimeFilters,
+  timeEntriesInvoiced,
   resetTimeSort,
   restoreTimeQuery,
   setTimeLoading,
@@ -108,6 +109,9 @@ export const $timeEntriesTotal = createStore(0)
  * user has already scrolled through.
  */
 const $timeFeed = createStore<TimeFeed>(EMPTY_FEED)
+  .on(timeEntriesInvoiced, (feed, ids) =>
+    patchTimeItems(feed, ids, (item) => ({ ...item, isInvoiced: true })),
+  )
   .on(timeQuery.finished.success, (feed, { params, result }) => {
     const { items } = result
 

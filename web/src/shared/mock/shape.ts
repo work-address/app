@@ -154,6 +154,7 @@ export const shapeTime = (
   const { projectId: _p, userId: _u, invoiceId: _i, screenshot, ...rest } = time
   const base = {
     ...rest,
+    isInvoiced: Boolean(time.invoiceId),
     project: shapeProjectCore(db, project),
     user: author ? shapeUser(author) : undefined,
     screenshot: screenshot === null ? undefined : demoScreenshots()[screenshot],

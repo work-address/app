@@ -2,6 +2,7 @@ export {
   agentPromptRemoveRequested,
   canRemoveAgentPrompt,
 } from './agent-prompt.model'
+export { getEntryChanges } from './entry-changes'
 export { formatTrackedCount } from './format-tracked-count'
 export {
   getTimeSelectAllState,
@@ -67,6 +68,7 @@ export {
 export {
   $isTimeBulkPending,
   $selectedTimeProjectId,
+  $selectionHasInvoiced,
   timeBulkActionRequested,
   timeBulkDeleteRequested,
   timeBulkPaidStatusRequested,

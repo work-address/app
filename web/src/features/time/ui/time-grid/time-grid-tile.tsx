@@ -1,14 +1,20 @@
 import { ImageIcon } from '@radix-ui/react-icons'
+import { useUnit } from 'effector-react'
 import { memo, useContext } from 'react'
 import styled from 'styled-components'
 
-import { getTimeActivityPercent, getTimeActivityTone } from '../../model'
+import {
+  getEntryChanges,
+  getTimeActivityPercent,
+  getTimeActivityTone,
+} from '../../model'
 import { TimeContext } from '../time-context'
 
 import { TimeGridTileActivity } from './time-grid-tile-activity'
 
 import type { Time } from '@/entities/time'
 
+import { $user } from '@/entities/profile'
 import { Checkbox, toImageDataUrl, Tooltip, WorkspaceStatus } from '@/shared'
 
 type Props = {
@@ -21,6 +27,8 @@ type Props = {
 export const TimeGridTile = memo(
   ({ entry, selected, onOpen, onSelectedChange }: Props) => {
     const { timeFormatter, t } = useContext(TimeContext)
+    const reader = useUnit($user)
+    const canSelect = getEntryChanges(entry, reader?.id).isAuthor
 
     const percent = getTimeActivityPercent(entry)
     const tone = getTimeActivityTone(percent)
@@ -65,13 +73,15 @@ export const TimeGridTile = memo(
           aria-label={t('dashboard.worklogsGrid.openEntry', { range })}
           onClick={() => onOpen(entry)}
         />
-        <Selection>
-          <Checkbox
-            checked={selected}
-            aria-label={t('dashboard.worklogsGrid.selectEntry', { range })}
-            onCheckedChange={() => entry.id && onSelectedChange(entry.id)}
-          />
-        </Selection>
+        {canSelect && (
+          <Selection>
+            <Checkbox
+              checked={selected}
+              aria-label={t('dashboard.worklogsGrid.selectEntry', { range })}
+              onCheckedChange={() => entry.id && onSelectedChange(entry.id)}
+            />
+          </Selection>
+        )}
         {entry.isPaid && (
           <Status tone="positive">
             {t('dashboard.worklogsTable.paymentStatus.paid')}
