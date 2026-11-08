@@ -78,7 +78,7 @@ roles within each design contract; preserve intentional adoption boundaries.
    `PublicLayout` also work for a guest.
 6. **Page heads.** Every page renders `PageHelmet`, and every page about one record
    builds its head in a tested `model/head.ts` builder. Tabs read
-   `<what is on screen> - Address Work` (`formatPageTitle`). Everything behind sign-in, a
+   `<what is on screen> - Work Address` (`formatPageTitle`). Everything behind sign-in, a
    person's own records and every form are `noindex`, and each description says what a
    visitor can do there.
 7. **Copy.** Pages share one plain voice. The same action uses the same verb everywhere,

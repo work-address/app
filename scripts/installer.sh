@@ -15,7 +15,7 @@ fi
 set -e
 
 # =============================================================================
-# Address Work production installer
+# Work Address production installer
 #
 # Single-command install on a fresh machine (clones the repo for you):
 #   curl -fsSL https://raw.githubusercontent.com/work-address/app/dev/scripts/installer.sh | bash
@@ -587,7 +587,7 @@ fi
 log_info "Services are running."
 printf '\n'
 printf '%b\n' "${GREEN}============================================${NC}"
-printf '%b\n' "${GREEN}  Address Work is running in production mode${NC}"
+printf '%b\n' "${GREEN}  Work Address is running in production mode${NC}"
 printf '%b\n' "${GREEN}============================================${NC}"
 printf '\n'
 printf '  URL:     %s\n' "$APP_PUBLIC_URL"

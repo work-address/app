@@ -67,7 +67,7 @@ to both branches.
 
 - Use motion through `motion/react`, the way the shell and `shared/ui` already do: staggered fades for block reveals, `AnimatePresence` for conditional content, and no snapping layout. Respect reduced motion (`useReducedMotion`).
 - Add promotional content only when the page has a real next step backed by real data. Do not invent prices, availability, metrics or social proof.
-- Give the page a `PageHelmet`: a title (formatted as `<title> - Address Work`), a description explaining what visitors can do, `noindex` for anything behind sign-in, a person's own records and every form, and `ogType="profile"` for a person. A page about one record builds these in a pure head builder in its feature's `model/head.ts`, as `buildInvoiceHead` and `buildProfileHead` do. Test the builder.
+- Give the page a `PageHelmet`: a title (formatted as `<title> - Work Address`), a description explaining what visitors can do, `noindex` for anything behind sign-in, a person's own records and every form, and `ogType="profile"` for a person. A page about one record builds these in a pure head builder in its feature's `model/head.ts`, as `buildInvoiceHead` and `buildProfileHead` do. Test the builder.
 - Cover the states relevant to the page: a `Skeleton` in the page's own shape (as `time-grid-skeleton.tsx` does), a retryable `LoadFailure` that tells "not found" from "failed" with `getLoadFailureKind`, an empty `StateNotice` that offers a way on, the guest view where the layout allows guests, and copy/share feedback.
 
 ## Verify

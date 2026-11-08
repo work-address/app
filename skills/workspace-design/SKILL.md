@@ -1,11 +1,11 @@
 ---
 name: workspace-design
-description: Apply the Address Work workspace design to web pages and components, maintain its shared design tokens, or review visual consistency against the dashboard. Use for styling, layout, responsive behavior, and design-system adoption in this repository.
+description: Apply the Work Address workspace design to web pages and components, maintain its shared design tokens, or review visual consistency against the dashboard. Use for styling, layout, responsive behavior, and design-system adoption in this repository.
 ---
 
 # Workspace design
 
-Build the Address Work interface with the approved workspace design: a pale blue
+Build the Work Address interface with the approved workspace design: a pale blue
 canvas, white reading surfaces, navy headings, readable supporting text, soft
 blue shadows, and restrained blue controls. Preserve the user's requested page
 scope and the application's real data and behavior.
