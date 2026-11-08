@@ -6,6 +6,8 @@ type ConnectViewInput = {
   authenticated: boolean
   authPending: boolean
   errorName: string | null
+  /** Opened by the website's sign-in, not by the desktop time tracker. */
+  fromWebsite?: boolean
 }
 
 type ConnectScreen =
@@ -52,6 +54,42 @@ const COPY_BY_SCREEN: Record<
   },
   failed: {
     headingKey: 'connect.heading.failed',
+    descriptionKey: 'connect.description.failed',
+  },
+}
+
+/** Someone signing in to the website has never heard of a time tracker. */
+const WEBSITE_COPY_BY_SCREEN: typeof COPY_BY_SCREEN = {
+  incomplete: {
+    headingKey: 'connect.website.heading.incomplete',
+    descriptionKey: 'connect.website.description.retry',
+  },
+  loading: {
+    headingKey: 'connect.website.heading.loading',
+    descriptionKey: 'connect.website.description.loading',
+  },
+  awaiting_auth: {
+    headingKey: 'connect.website.title',
+    descriptionKey: 'connect.website.description.default',
+  },
+  signing_in: {
+    headingKey: 'connect.heading.signingIn',
+    descriptionKey: 'connect.website.description.signingIn',
+  },
+  pairing: {
+    headingKey: 'connect.heading.signingIn',
+    descriptionKey: 'connect.website.description.signingIn',
+  },
+  connected: {
+    headingKey: 'connect.website.heading.connected',
+    descriptionKey: 'connect.website.description.connected',
+  },
+  expired: {
+    headingKey: 'connect.website.heading.expired',
+    descriptionKey: 'connect.website.description.retry',
+  },
+  failed: {
+    headingKey: 'connect.website.heading.failed',
     descriptionKey: 'connect.description.failed',
   },
 }
@@ -103,7 +141,7 @@ export function buildTimeTrackerConnectView(input: ConnectViewInput) {
 
   return {
     screen,
-    ...COPY_BY_SCREEN[screen],
+    ...(input.fromWebsite ? WEBSITE_COPY_BY_SCREEN : COPY_BY_SCREEN)[screen],
     showLoading,
     showError,
     checkingLink: screen === 'loading',

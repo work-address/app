@@ -4,7 +4,7 @@ import { useUnit } from 'effector-react'
 import { useEffect } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
-import styled from 'styled-components'
+import styled, { css } from 'styled-components'
 
 import type { TimeTrackerConnectPhase } from '@/features/time-tracker-connect'
 
@@ -13,8 +13,12 @@ import { AuthStyles as S, AuthProviders } from '@/features/auth'
 import {
   initTimeTrackerConnect,
   buildTimeTrackerConnectView,
+  finishWebsiteSignIn,
+  leaveForWebsite,
+  parseWebsiteReturn,
   resetTimeTrackerConnect,
   retryTimeTrackerConnect,
+  timeTrackerConnectOpenedBy,
   $phase,
   $errorMessage,
   $errorName,
@@ -29,6 +33,7 @@ import {
   PageHelmet,
   Spinner,
   useBreakpoint,
+  WEBSITE_ORIGINS,
 } from '@/shared'
 
 export default function ConnectPage() {
@@ -37,11 +42,17 @@ export default function ConnectPage() {
   const isDesktop = useBreakpoint('isDesktop')
   const [searchParams] = useSearchParams()
   const nonce = searchParams.get('nonce')
+  const websiteReturn = parseWebsiteReturn(
+    searchParams.get('return_to'),
+    WEBSITE_ORIGINS,
+  )
+  const fromWebsite = websiteReturn !== null
 
   const {
     initConnect,
     resetConnect,
     retryConnect,
+    setOpenedBy,
     phase,
     errorMessage,
     errorName,
@@ -52,6 +63,7 @@ export default function ConnectPage() {
     initConnect: initTimeTrackerConnect,
     resetConnect: resetTimeTrackerConnect,
     retryConnect: retryTimeTrackerConnect,
+    setOpenedBy: timeTrackerConnectOpenedBy,
     phase: $phase,
     errorMessage: $errorMessage,
     errorName: $errorName,
@@ -66,12 +78,13 @@ export default function ConnectPage() {
       return
     }
 
+    setOpenedBy(fromWebsite ? 'website' : 'tracker')
     initConnect(nonce)
 
     return () => {
       resetConnect()
     }
-  }, [nonce, initConnect, resetConnect])
+  }, [nonce, fromWebsite, initConnect, resetConnect, setOpenedBy])
 
   const {
     showError,
@@ -89,18 +102,45 @@ export default function ConnectPage() {
     authenticated,
     authPending: loading,
     errorName,
+    fromWebsite,
   })
   const closeHref = authenticated
     ? routes.dashboard.build()
     : routes.signIn.build()
 
+  // A website sign-in ends back on the website, not here.
+  useEffect(() => {
+    if (websiteReturn && showConnected) {
+      finishWebsiteSignIn(window, websiteReturn)
+    }
+  }, [websiteReturn, showConnected])
+
+  const backToWebsite = () => {
+    if (websiteReturn) {
+      leaveForWebsite(window, websiteReturn)
+    }
+  }
+
   return (
     <>
-      <PageHelmet title={t('connect.title')} description={t('connect.meta')} />
+      <PageHelmet
+        title={t(fromWebsite ? 'connect.website.title' : 'connect.title')}
+        description={t(fromWebsite ? 'connect.website.meta' : 'connect.meta')}
+      />
       <IconButton asChild variant="ghost" radius="full" color="gray" size="4">
-        <CloseLink to={closeHref} aria-label={t('connect.close')}>
-          <Cross1Icon aria-hidden="true" />
-        </CloseLink>
+        {fromWebsite ? (
+          <CloseButton
+            type="button"
+            aria-label={t('connect.website.close')}
+            onClick={backToWebsite}
+          >
+            <Cross1Icon aria-hidden="true" />
+          </CloseButton>
+        ) : (
+          <CloseLink to={closeHref} aria-label={t('connect.close')}>
+            <Cross1Icon aria-hidden="true" />
+          </CloseLink>
+        )}
       </IconButton>
       <S.Logo src={isDesktop ? LogoLabel : Logo} alt={t('signIn.logoAlt')} />
       <S.SignInCard aria-busy={showLoading || undefined}>
@@ -130,21 +170,34 @@ export default function ConnectPage() {
             {t('common.loadFailure.retry')}
           </Button>
         )}
-        {showConnected && (
-          <Button onClick={() => navigate(routes.dashboard.build())}>
-            {t('notFound.action.dashboard')}
-          </Button>
-        )}
-        {/* A failure nothing here can retry, such as an incomplete link,
-            still has a way on: the app, or signing in to it. */}
-        {showWayOn && (
-          <Button variant="outline" onClick={() => navigate(closeHref)}>
-            {t(
-              authenticated
-                ? 'notFound.action.dashboard'
-                : 'notFound.action.signIn',
+        {fromWebsite ? (
+          (showConnected || showWayOn) && (
+            <Button
+              variant={showConnected ? undefined : 'outline'}
+              onClick={backToWebsite}
+            >
+              {t('connect.website.back')}
+            </Button>
+          )
+        ) : (
+          <>
+            {showConnected && (
+              <Button onClick={() => navigate(routes.dashboard.build())}>
+                {t('notFound.action.dashboard')}
+              </Button>
             )}
-          </Button>
+            {/* A failure nothing here can retry, such as an incomplete link,
+                still has a way on: the app, or signing in to it. */}
+            {showWayOn && (
+              <Button variant="outline" onClick={() => navigate(closeHref)}>
+                {t(
+                  authenticated
+                    ? 'notFound.action.dashboard'
+                    : 'notFound.action.signIn',
+                )}
+              </Button>
+            )}
+          </>
         )}
       </S.SignInCard>
       {/* The pairing state stays on the page for support and for the
@@ -207,7 +260,7 @@ const getLoginStateLabel = (
   return 'disconnected'
 }
 
-const CloseLink = styled(Link)`
+const closePosition = css`
   position: fixed;
   top: 16px;
   right: 16px;
@@ -217,6 +270,14 @@ const CloseLink = styled(Link)`
     top: 24px;
     right: 24px;
   }
+`
+
+const CloseLink = styled(Link)`
+  ${closePosition}
+`
+
+const CloseButton = styled.button`
+  ${closePosition}
 `
 
 const Progress = styled.div`

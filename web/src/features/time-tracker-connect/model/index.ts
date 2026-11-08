@@ -10,7 +10,7 @@ import {
   timeTrackerConnected,
   timeTrackerConnectFailed,
 } from './events'
-import { $nonce, $phase } from './stores'
+import { $nonce, $openedByWebsite, $phase } from './stores'
 import {
   getTimeTrackerNonceStorageKey,
   TIME_TRACKER_CONNECTED_STATE,
@@ -21,6 +21,13 @@ import { showToast, suppressGlobalErrorToast } from '@/shared'
 
 const writeNonceMarkerFx = createEffect((nonce: string) => {
   localStorage.setItem(getTimeTrackerNonceStorageKey(nonce), '1')
+})
+
+const announceConnectedFx = createEffect(() => {
+  showToast('success', {
+    message: i18n.t('connect.toast.success'),
+    position: 'top-center',
+  })
 })
 
 sample({
@@ -96,11 +103,12 @@ sample({
   target: writeNonceMarkerFx,
 })
 
-timeTrackerConnected.watch(() => {
-  showToast('success', {
-    message: i18n.t('connect.toast.success'),
-    position: 'top-center',
-  })
+// The website's sign-in closes this tab on success, so nobody would see it.
+sample({
+  clock: timeTrackerConnected,
+  source: $openedByWebsite,
+  filter: (openedByWebsite) => !openedByWebsite,
+  target: announceConnectedFx,
 })
 
 // Failures are explained in place; a global toast would repeat the message.
@@ -115,9 +123,21 @@ export {
   initTimeTrackerConnect,
   resetTimeTrackerConnect,
   retryTimeTrackerConnect,
+  timeTrackerConnectOpenedBy,
 } from './events'
-export { $nonce, $phase, $errorMessage, $errorName } from './stores'
+export {
+  $nonce,
+  $openedByWebsite,
+  $phase,
+  $errorMessage,
+  $errorName,
+} from './stores'
 export type { TimeTrackerConnectPhase } from './types'
 export { getTimeTrackerNonceStorageKey } from './types'
 
 export { buildTimeTrackerConnectView } from './view'
+export {
+  finishWebsiteSignIn,
+  leaveForWebsite,
+  parseWebsiteReturn,
+} from './website-return'

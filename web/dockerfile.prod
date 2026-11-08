@@ -32,6 +32,8 @@ WORKDIR /app/web
 ARG GIT_COMMIT
 ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
+ARG VITE_WEBSITE_ORIGINS
+ENV VITE_WEBSITE_ORIGINS=$VITE_WEBSITE_ORIGINS
 RUN --mount=type=bind,source=.git,target=/tmp/.git,readonly \
     export GIT_COMMIT="$(GIT_COMMIT="$GIT_COMMIT" GIT_DIR=/tmp/.git sh /app/scripts/resolve-git-commit.sh)" && \
     pnpm run build

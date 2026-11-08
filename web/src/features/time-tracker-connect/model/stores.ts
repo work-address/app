@@ -7,9 +7,14 @@ import {
   resetTimeTrackerConnect,
   timeTrackerConnected,
   timeTrackerConnectFailed,
+  timeTrackerConnectOpenedBy,
 } from './events'
 
 import type { TimeTrackerConnectPhase } from './types'
+
+export const $openedByWebsite = createStore(false)
+  .on(timeTrackerConnectOpenedBy, (_, opener) => opener === 'website')
+  .reset(resetTimeTrackerConnect)
 
 export const $nonce = createStore<string | null>(null)
   .on(initTimeTrackerConnect, (_, nonce) => nonce)

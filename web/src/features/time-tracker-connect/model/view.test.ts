@@ -83,4 +83,80 @@ describe('pairing page states', () => {
     // A retryable failure offers its retry instead.
     expect(transient.showWayOn).toBe(false)
   })
+
+  describe('opened by the website', () => {
+    const phases = [
+      { nonce: null, phase: 'idle' },
+      { phase: 'loading' },
+      { phase: 'awaiting_auth' },
+      { phase: 'awaiting_auth', authPending: true },
+      { phase: 'connecting', authenticated: true },
+      { phase: 'connected', authenticated: true },
+      { phase: 'error', errorName: 'TimeTrackerException' },
+      { phase: 'error' },
+    ] as const
+
+    it.each(phases)('never mentions the time tracker: %o', (state) => {
+      const view = buildTimeTrackerConnectView({
+        ...defaults,
+        ...state,
+        fromWebsite: true,
+      })
+
+      for (const key of [view.headingKey, view.descriptionKey]) {
+        expect(WEBSITE_SAFE_KEYS).toContain(key)
+      }
+    })
+
+    it.each(phases)('leaves the tracker wording alone: %o', (state) => {
+      const tracker = buildTimeTrackerConnectView({ ...defaults, ...state })
+
+      expect(tracker.headingKey).not.toContain('connect.website.')
+      expect(tracker.descriptionKey).not.toContain('connect.website.')
+    })
+
+    it('says the sign-in is done, not that a tracker connected', () => {
+      const view = buildTimeTrackerConnectView({
+        ...defaults,
+        phase: 'connected',
+        authenticated: true,
+        fromWebsite: true,
+      })
+
+      expect(view.headingKey).toBe('connect.website.heading.connected')
+      expect(view.showConnected).toBe(true)
+    })
+
+    it('keeps the same actions as the tracker', () => {
+      const expired = buildTimeTrackerConnectView({
+        ...defaults,
+        phase: 'error',
+        errorName: 'TimeTrackerException',
+        fromWebsite: true,
+      })
+
+      expect(expired.showWayOn).toBe(true)
+      expect(expired.canRetry).toBe(false)
+    })
+  })
 })
+
+/**
+ * Keys that read correctly to someone signing in to the website. The two
+ * outside `connect.website.` are worded without mentioning a tracker.
+ */
+const WEBSITE_SAFE_KEYS = [
+  'connect.website.title',
+  'connect.website.heading.incomplete',
+  'connect.website.heading.loading',
+  'connect.website.heading.connected',
+  'connect.website.heading.expired',
+  'connect.website.heading.failed',
+  'connect.website.description.default',
+  'connect.website.description.loading',
+  'connect.website.description.signingIn',
+  'connect.website.description.connected',
+  'connect.website.description.retry',
+  'connect.heading.signingIn',
+  'connect.description.failed',
+]

@@ -18,4 +18,5 @@ declare module '*.svg?react' {
 
 interface ImportMetaEnv {
   readonly VITE_GIT_COMMIT_SUFFIX: string
+  readonly VITE_WEBSITE_ORIGINS?: string
 }

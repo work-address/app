@@ -1,17 +1,20 @@
 import { allSettled, fork, scopeBind } from 'effector'
-import { describe, expect, it, vi } from 'vitest'
+import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import { connectTimeTrackerFx, fetchTimeTrackerNonceFx } from './effects'
 
 import {
   $errorMessage,
+  $openedByWebsite,
   $phase,
   initTimeTrackerConnect,
   resetTimeTrackerConnect,
   retryTimeTrackerConnect,
+  timeTrackerConnectOpenedBy,
 } from './index'
 
 import { $authenticated } from '@/entities/profile'
+import { showToast } from '@/shared'
 
 vi.mock('@/entities/profile', async () => {
   const { createStore } = await import('effector')
@@ -105,5 +108,44 @@ describe('time-tracker pairing recovery', () => {
     })
     expect(scope.getState($phase)).toBe('connected')
     expect(pair).not.toHaveBeenCalled()
+  })
+})
+
+describe('announcing a finished pairing', () => {
+  // The marker the model writes after pairing needs a storage to write to.
+  vi.stubGlobal('localStorage', { setItem: vi.fn(), getItem: vi.fn() })
+
+  beforeEach(() => {
+    vi.mocked(showToast).mockClear()
+  })
+
+  const pairAs = async (opener: 'website' | 'tracker') => {
+    const scope = fork({
+      values: [[$authenticated, true]],
+      handlers: [
+        [fetchTimeTrackerNonceFx, async () => ({ state: 'Init' })],
+        [connectTimeTrackerFx, async () => {}],
+      ],
+    })
+
+    await allSettled(timeTrackerConnectOpenedBy, { scope, params: opener })
+    await allSettled(initTimeTrackerConnect, { scope, params: 'a-link' })
+
+    return scope
+  }
+
+  it('tells a tracker user their tracker is connected', async () => {
+    const scope = await pairAs('tracker')
+
+    expect(scope.getState($phase)).toBe('connected')
+    expect(showToast).toHaveBeenCalledOnce()
+  })
+
+  it('stays quiet for a website sign-in, whose tab is about to close', async () => {
+    const scope = await pairAs('website')
+
+    expect(scope.getState($phase)).toBe('connected')
+    expect(scope.getState($openedByWebsite)).toBe(true)
+    expect(showToast).not.toHaveBeenCalled()
   })
 })
