@@ -184,7 +184,12 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
     )
   }
 
-  /** New accounts per UTC day from `since` to today, zero-filled, oldest first. */
+  /**
+   * New accounts per UTC day from `since` to today, zero-filled, oldest first.
+   * `createdAt` is really `timestamp` (CreateDateColumn wins over the
+   * declared timestamptz) holding the database's local time, so it is cast
+   * to timestamptz in the session zone before taking the UTC day.
+   */
   public countSignupsByDay(since: Date): RepoEffect<AdminDailyCountDto[]> {
     return fromPromise(async () => {
       const rows: Array<{ date: string; count: string }> =
@@ -197,7 +202,7 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
                   ) AS d(day)
              LEFT JOIN "user" u
                ON u."deletedAt" IS NULL
-              AND date_trunc('day', u."createdAt" AT TIME ZONE 'UTC') = d.day
+              AND date_trunc('day', u."createdAt"::timestamptz AT TIME ZONE 'UTC') = d.day
             GROUP BY d.day
             ORDER BY d.day`,
           [since],
