@@ -65,19 +65,12 @@ export class EntitlementSignature {
    * stays valid, and only the timestamp limits how long it can be replayed.
    */
   public async consumeNonce(nonce: string): Promise<boolean> {
-    const key = `entitlement:nonce:${nonce}`
-
-    if (await this.redisClient.get(key)) {
-      return false
-    }
-
-    // setWithExpiry takes milliseconds.
-    await this.redisClient.setWithExpiry(
-      key,
+    // One step, not a read and then a write: two copies of a request arriving
+    // together would both pass the read.
+    return this.redisClient.setIfAbsent(
+      `entitlement:nonce:${nonce}`,
       '1',
       EntitlementSignature.replayWindowSeconds * 1000,
     )
-
-    return true
   }
 }

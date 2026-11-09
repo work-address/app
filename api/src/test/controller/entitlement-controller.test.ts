@@ -105,6 +105,45 @@ export class EntitlementControllerTest extends BaseControllerTest {
   }
 
   @test()
+  async aRequest_isAcceptedOnce() {
+    const owner = await this.userFixture.createUser()
+    const body = {
+      userId: owner.id,
+      premium: true,
+      issuedAt: Math.floor(Date.now() / 1000),
+      nonce: randomUUID(),
+    }
+    let error: unknown
+
+    expect((await this.post('entitlement', body)).status).to.equal(200)
+    await this.post('entitlement', body).catch((e) => {
+      error = e
+    })
+
+    if (!axios.isAxiosError(error)) throw new Error('Expected a refusal')
+    expect(error.response?.status).to.equal(401)
+  }
+
+  @test()
+  async copiesOfARequestArrivingTogether_areAcceptedOnce() {
+    const owner = await this.userFixture.createUser()
+    const body = {
+      userId: owner.id,
+      premium: true,
+      issuedAt: Math.floor(Date.now() / 1000),
+      nonce: randomUUID(),
+    }
+
+    const answers = await Promise.allSettled(
+      Array.from({ length: 8 }, () => this.post('entitlement', body)),
+    )
+
+    expect(
+      answers.filter((answer) => answer.status === 'fulfilled'),
+    ).to.have.length(1)
+  }
+
+  @test()
   async upgrading_bringsBackWhatRotationHid() {
     const owner = await this.userFixture.createUser()
     const project = await this.owned(owner, [])

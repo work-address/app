@@ -26,6 +26,26 @@ export class RedisClient {
     await client.disconnect()
   }
 
+  /**
+   * Sets the key only if nothing holds it, in one step, and says whether it
+   * did: of any number of callers racing on one key, exactly one hears true.
+   */
+  public async setIfAbsent(
+    key: string,
+    value: unknown,
+    expiryMilliseconds: number,
+  ): Promise<boolean> {
+    const client = await this.getConnectedClient()
+
+    const reply = await client.set(key, JSON.stringify(value), {
+      PX: expiryMilliseconds,
+      NX: true,
+    })
+    await client.disconnect()
+
+    return reply === 'OK'
+  }
+
   public async get(key: string): Promise<unknown | string> {
     const client = await this.getConnectedClient()
     const value = await client.get(key)
