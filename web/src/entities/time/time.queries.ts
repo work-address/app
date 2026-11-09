@@ -11,6 +11,13 @@ export type TimeQueryParams = {
   fromAt?: number
   toAt?: number
   page?: number
+  /**
+   * Read every page up to this one again and replace the list with them: after
+   * rows leave, the pages already loaded no longer line up with the server's.
+   */
+  reloadThroughPage?: number
+  /** Nobody asked for this read, so it shows no progress and no failure. */
+  quiet?: boolean
   sort?: TimeSort
   timeActiveMin?: number | null
   timeActiveMax?: number | null
@@ -42,32 +49,57 @@ const toFilterNumber = (value?: number | null | string) => {
   return Number.isNaN(parsed) ? undefined : parsed
 }
 
+const searchTimePage = async (params: TimeQueryParams, page: number) => {
+  const [items, total] = (await runApiData(() =>
+    baseApi.timeControllerSearch({
+      body: {
+        filter: {
+          projectId: params?.activityId,
+          fromAt: toDateTime(params?.fromAt),
+          toAt: toDateTime(params?.toAt, true),
+          note: params.note,
+          minutesActiveFrom: toFilterNumber(params.timeActiveMin),
+          minutesActiveTo: toFilterNumber(params.timeActiveMax),
+          keyboardKeysFrom: toFilterNumber(params.keyboardKeysMin),
+          keyboardKeysTo: toFilterNumber(params.keyboardKeysMax),
+          mouseKeysFrom: toFilterNumber(params.mouseKeysMin),
+          mouseKeysTo: toFilterNumber(params.mouseKeysMax),
+          mouseDistanceFrom: toFilterNumber(params.mouseDistanceMin),
+          mouseDistanceTo: toFilterNumber(params.mouseDistanceMax),
+        },
+        page,
+        sort: params?.sort ?? {},
+      },
+    }),
+  )) as [Time[], number]
+
+  return { items: items ?? [], total: Number(total ?? 0) }
+}
+
 export const timeQuery = createQuery({
   handler: async (params: TimeQueryParams) => {
-    const [items, total] = (await runApiData(() =>
-      baseApi.timeControllerSearch({
-        body: {
-          filter: {
-            projectId: params?.activityId,
-            fromAt: toDateTime(params?.fromAt),
-            toAt: toDateTime(params?.toAt, true),
-            note: params.note,
-            minutesActiveFrom: toFilterNumber(params.timeActiveMin),
-            minutesActiveTo: toFilterNumber(params.timeActiveMax),
-            keyboardKeysFrom: toFilterNumber(params.keyboardKeysMin),
-            keyboardKeysTo: toFilterNumber(params.keyboardKeysMax),
-            mouseKeysFrom: toFilterNumber(params.mouseKeysMin),
-            mouseKeysTo: toFilterNumber(params.mouseKeysMax),
-            mouseDistanceFrom: toFilterNumber(params.mouseDistanceMin),
-            mouseDistanceTo: toFilterNumber(params.mouseDistanceMax),
-          },
-          page: params?.page ?? 0,
-          sort: params?.sort ?? {},
-        },
-      }),
-    )) as [Time[], number]
+    if (params.reloadThroughPage === undefined) {
+      return searchTimePage(params, params?.page ?? 0)
+    }
 
-    return { items: items ?? [], total: Number(total ?? 0) }
+    const byId = new Map<string, Time>()
+    let total = 0
+
+    for (let page = 0; page <= params.reloadThroughPage; page += 1) {
+      const result = await searchTimePage(params, page)
+
+      total = result.total
+      for (const item of result.items) {
+        if (item.id) {
+          byId.set(item.id, item)
+        }
+      }
+      if (result.items.length === 0) {
+        break
+      }
+    }
+
+    return { items: [...byId.values()], total }
   },
 })
 

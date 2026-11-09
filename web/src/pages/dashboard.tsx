@@ -13,7 +13,7 @@ import {
   $projects,
 } from '@/entities/projects'
 import { statisticsOverviewQuery } from '@/entities/statistics'
-import { recentScreenshotsQuery } from '@/entities/time'
+import { $recentScreenshotsShown } from '@/entities/time'
 import {
   DashboardAgents,
   DashboardApplicationsUsage,
@@ -91,7 +91,7 @@ export default function DashboardPage() {
     periodRows: statisticsOverviewQuery.$data,
     selectedProjectIds: $dashboardProjectIds,
     screenshots: $dashboardScreenshots,
-    screenshotsLoaded: recentScreenshotsQuery.$succeeded,
+    screenshotsLoaded: $recentScreenshotsShown,
     isOwner: $isDashboardOwner,
     canTrack: $dashboardCanTrack,
   })

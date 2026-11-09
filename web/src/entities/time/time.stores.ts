@@ -48,7 +48,12 @@ const DEFAULT_TIME_FILTERS: TimeFilters = {
   mouseDistanceMax: null,
 }
 
-const isFirstPage = (params: TimeQueryParams) => (params.page ?? 0) === 0
+const isReload = (params: TimeQueryParams) =>
+  params.reloadThroughPage !== undefined
+
+/** A reload happens behind the list, so it is never the list's first load. */
+const isFirstPage = (params: TimeQueryParams) =>
+  (params.page ?? 0) === 0 && !isReload(params)
 
 type TimeFeed = {
   items: Time[]
@@ -96,6 +101,17 @@ export const $timePage = createStore(0)
   .on(timeQuery.finished.success, (_, { params }) => params.page ?? 0)
   .on([applyTimeFilters, fetchTime, resetTimeFilters], () => 0)
 
+/**
+ * Rows have left since the loaded pages were read, so the next page by offset
+ * would skip some. True until the loaded pages are read again.
+ */
+export const $timeOutOfStep = createStore(false)
+  .on(deleteTimeMutation.finished.success, () => true)
+  .on(timeQuery.finished.success, (outOfStep, { params }) =>
+    isFirstPage(params) || isReload(params) ? false : outOfStep,
+  )
+  .reset(resetTimeFilters)
+
 export const $timeEntriesTotal = createStore(0)
   .on(timeQuery.finished.success, (_, { result }) => result.total)
   .on(deleteTimeMutation.finished.success, (total, { params }) =>
@@ -115,7 +131,7 @@ const $timeFeed = createStore<TimeFeed>(EMPTY_FEED)
   .on(timeQuery.finished.success, (feed, { params, result }) => {
     const { items } = result
 
-    if (isFirstPage(params)) {
+    if (isFirstPage(params) || isReload(params)) {
       return { items, endReached: items.length === 0 }
     }
 
@@ -174,7 +190,7 @@ export const $hasMoreTime = combine(
 )
 
 export const $isLoadingMoreTime = createStore(false)
-  .on(timeQuery.start, (_, params) => !isFirstPage(params))
+  .on(timeQuery.start, (_, params) => (params.page ?? 0) > 0 && !params.quiet)
   .on(timeQuery.finished.finally, (state, { params }) =>
     isFirstPage(params) ? state : false,
   )

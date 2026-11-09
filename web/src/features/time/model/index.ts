@@ -29,6 +29,11 @@ export {
   timeScreenshotRemoveRequested,
 } from './time-dialog.model'
 export {
+  $stripEntryId,
+  stripEntryClosed,
+  stripEntryOpened,
+} from './time-screenshot-strip.model'
+export {
   $isTimeDialogOpen,
   $selectedTimeEntry,
   $selectedTimeId,

@@ -1,7 +1,9 @@
-import { useMemo, useState } from 'react'
+import { useUnit } from 'effector-react'
+import { useEffect, useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
+import { $stripEntryId, stripEntryClosed, stripEntryOpened } from '../../model'
 import { TimeDialog } from '../time-dialog/time-dialog'
 
 import type { Time } from '@/entities/time'
@@ -16,7 +18,11 @@ type Props = { entries: Time[] }
  */
 export const TimeScreenshotStrip = ({ entries }: Props) => {
   const { i18n } = useTranslation()
-  const [index, setIndex] = useState<number | null>(null)
+  const { openId, open, close } = useUnit({
+    openId: $stripEntryId,
+    open: stripEntryOpened,
+    close: stripEntryClosed,
+  })
 
   const when = useMemo(
     () =>
@@ -29,12 +35,28 @@ export const TimeScreenshotStrip = ({ entries }: Props) => {
     [i18n.language],
   )
 
-  const selected = index === null ? null : (entries[index] ?? null)
+  const index = entries.findIndex((entry) => entry.id === openId)
+  const selected = index === -1 ? null : entries[index]!
+  const step = (by: number) => {
+    const id = entries[index + by]?.id
+
+    if (id) {
+      open(id)
+    }
+  }
+
+  // The open entry has left the strip, or the strip itself is going away.
+  useEffect(() => {
+    if (openId !== null && selected === null) {
+      close()
+    }
+  }, [openId, selected, close])
+  useEffect(() => close, [close])
 
   return (
     <>
       <Grid>
-        {entries.map((entry, position) => {
+        {entries.map((entry) => {
           const src = toImageDataUrl(entry.screenshot)
           const label = `${entry.project?.title ?? ''} · ${when.format(
             new Date(entry.fromAt),
@@ -46,7 +68,7 @@ export const TimeScreenshotStrip = ({ entries }: Props) => {
               type="button"
               aria-label={label}
               title={label}
-              onClick={() => setIndex(position)}
+              onClick={() => entry.id && open(entry.id)}
             >
               <img src={src} alt="" loading="lazy" />
               <Caption>{label}</Caption>
@@ -57,19 +79,15 @@ export const TimeScreenshotStrip = ({ entries }: Props) => {
       <TimeDialog
         open={selected !== null}
         row={selected}
-        onOpenChange={(open) => {
-          if (!open) {
-            setIndex(null)
+        onOpenChange={(isOpen) => {
+          if (!isOpen) {
+            close()
           }
         }}
-        hasPrev={index !== null && index > 0}
-        hasNext={index !== null && index < entries.length - 1}
-        onPrev={() => setIndex((i) => (i === null ? i : Math.max(0, i - 1)))}
-        onNext={() =>
-          setIndex((i) =>
-            i === null ? i : Math.min(entries.length - 1, i + 1),
-          )
-        }
+        hasPrev={index > 0}
+        hasNext={index !== -1 && index < entries.length - 1}
+        onPrev={() => step(-1)}
+        onNext={() => step(1)}
       />
     </>
   )
