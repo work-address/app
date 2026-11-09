@@ -36,6 +36,10 @@ _Avoid_: Permission, access level
 What a person's role grants them today, once the owner's plan is taken into account.
 _Avoid_: Role, membership
 
+**Plan**:
+What an owner's account is on: Free, Premium, or a self-hosted instance with no limits. It limits who may record on the owner's projects, how far back entries, runs and screenshots are kept, and how many workers the owner may list.
+_Avoid_: Tier, subscription. Entitlement is billing's signed message that sets the plan, not the plan itself
+
 **Entry**:
 One record of a worker's time on a project, for a ten-minute slice.
 _Avoid_: Timelog, time row
