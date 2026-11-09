@@ -74,6 +74,15 @@ export class TimeManager {
 
           touchedProjects.add(project.id)
 
+          // Before any refusal: an upload's arrival is what rotates a project
+          // past its window, whether or not the plan lets its author record,
+          // as for agent runs.
+          const keptFrom = this.plan.keptFrom(project.user, now)
+
+          if (keptFrom) {
+            keptFromByProject.set(project.id, keptFrom)
+          }
+
           if (!(yield* fromPromise(() => this.plan.mayTrack(project, user)))) {
             return yield* Effect.fail(
               new AccessException(
@@ -82,11 +91,7 @@ export class TimeManager {
             )
           }
 
-          const keptFrom = this.plan.keptFrom(project.user, now)
-
           if (keptFrom) {
-            keptFromByProject.set(project.id, keptFrom)
-
             // Refuse rather than accept-and-purge: saving this row and deleting
             // it moments later would hand the client an id for a row that no
             // longer exists, and a syncing tracker would drop its local copy.

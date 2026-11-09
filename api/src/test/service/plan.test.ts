@@ -538,6 +538,33 @@ export class PlanTest extends AbstractDatabaseIntegration {
     expect(await hidden.again()).to.deep.equal({ entry: true, run: true })
   }
 
+  /** An upload's arrival rotates, even from someone the plan does not let record. */
+  @test() async aRefusedUploadStillRotatesWhatIsPastTheWindow() {
+    const { project, people } = await this.world('no plan')
+    const unkept = people['unkept worker']
+    const old = moment.utc().subtract(FREE_RETENTION_DAYS + 1, 'days')
+    const entry = await this.container
+      .get<TimeFixture>('TimeFixture')
+      .create(
+        project,
+        old.clone().subtract(10, 'minutes').toDate(),
+        old.toDate(),
+        unkept,
+      )
+    const ownersRun = await this.collector(people.owner, project)
+    await ownersRun('old')
+    await this.conn
+      .getRepository(TimeAgent)
+      .update({ sourceRunId: 'old' }, { fromAt: old.toDate() })
+
+    expect(await this.uploadsEntry(unkept, project.id), 'entry').to.be.false
+    expect(await this.seesEntry(entry.id), 'old entry').to.be.false
+
+    const startsRun = await this.collector(unkept, project)
+    expect(await startsRun('refused'), 'run').to.be.false
+    expect(await this.seesRun('old'), 'old run').to.be.false
+  }
+
   /** The longest a hosted instance keeps any screenshot, whatever the project says. */
   private async oldScreenshotAfterAnUpload(kind: PlanKind) {
     const { owner, project } = await this.world(kind)
