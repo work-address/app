@@ -4,6 +4,7 @@ import { hasInvoicedEntry } from './entry-changes'
 import {
   getSelectedTimeProjectId,
   isSameTimeSelection,
+  REFUSED_WHEN_INVOICED,
   type TimeBulkAction,
 } from './time-bulk'
 import {
@@ -46,11 +47,17 @@ export const $selectedTimeProjectId = combine(
   getSelectedTimeProjectId,
 )
 
-/** Deleting would be refused whole, so it isn't offered. */
-export const $selectionHasInvoiced = combine(
+const NOTHING_REFUSED: readonly TimeBulkAction[] = []
+
+/**
+ * The actions the API would refuse for this selection. Every view offers its
+ * actions from this one answer, and a request for one of them goes nowhere.
+ */
+export const $refusedTimeBulkActions = combine(
   $allTime,
   $selectedTimeIds,
-  hasInvoicedEntry,
+  (rows, ids) =>
+    hasInvoicedEntry(rows, ids) ? REFUSED_WHEN_INVOICED : NOTHING_REFUSED,
 )
 
 const confirmBulkFx = attach({
@@ -126,8 +133,10 @@ sample({
     ids: $selectedTimeIds,
     projectId: $selectedTimeProjectId,
     pending: $isTimeBulkPending,
+    refused: $refusedTimeBulkActions,
   },
-  filter: ({ ids, pending }) => ids.length > 0 && !pending,
+  filter: ({ ids, pending, refused }, action) =>
+    ids.length > 0 && !pending && !refused.includes(action),
   fn: ({ ids, projectId }, action) => ({ action, ids: [...ids], projectId }),
   target: bulkAccepted,
 })

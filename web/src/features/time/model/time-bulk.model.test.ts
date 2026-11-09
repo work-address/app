@@ -3,6 +3,7 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   $isTimeBulkPending,
+  $refusedTimeBulkActions,
   timeBulkActionRequested,
   timeBulkSelectionClearRequested,
 } from './time-bulk.model'
@@ -36,6 +37,7 @@ vi.mock('@/entities/time', async () => {
       { id: 'a', project: { id: 'p' } },
       { id: 'b', project: { id: 'p' } },
       { id: 'c', project: { id: 'q' } },
+      { id: 'd', project: { id: 'p' }, isInvoiced: true },
     ]),
     setTimePaidStatusMutation: createMutation({ handler: paid }),
     removeTimeScreenshotMutation: createMutation({
@@ -226,5 +228,48 @@ describe('time bulk workflow', () => {
     expect(scope.getState($selectedTimeIds)).toEqual(['a', 'c'])
     await allSettled(timeBulkSelectionClearRequested, { scope })
     expect(scope.getState($selectedTimeIds)).toEqual([])
+  })
+})
+
+describe('a selection holding an invoiced entry', () => {
+  const invoicedScope = async () => {
+    const scope = fork()
+    await allSettled(timeSelectionChanged, {
+      scope,
+      params: { a: true, d: true },
+    })
+    return scope
+  }
+
+  it.each(['delete', 'remove-screenshots', 'remove-processes'] as const)(
+    'refuses %s without asking or sending anything',
+    async (action) => {
+      const scope = await invoicedScope()
+
+      expect(scope.getState($refusedTimeBulkActions)).toContain(action)
+      await allSettled(timeBulkActionRequested, { scope, params: action })
+
+      expect(confirm).not.toHaveBeenCalled()
+      expect(deleteEntries).not.toHaveBeenCalled()
+      expect(removeScreenshots).not.toHaveBeenCalled()
+      expect(removeProcesses).not.toHaveBeenCalled()
+      expect(scope.getState($selectedTimeIds)).toEqual(['a', 'd'])
+    },
+  )
+
+  it('still marks it paid', async () => {
+    const scope = await invoicedScope()
+
+    await allSettled(timeBulkActionRequested, { scope, params: 'paid' })
+
+    expect(paid).toHaveBeenCalledWith({ ids: ['a', 'd'], isPaid: true })
+  })
+
+  it('refuses nothing once the invoiced entry is deselected', async () => {
+    const scope = await invoicedScope()
+
+    await allSettled(timeSelectionChanged, { scope, params: { d: false } })
+
+    expect(scope.getState($refusedTimeBulkActions)).toEqual([])
   })
 })

@@ -32,3 +32,13 @@ export function isSameTimeSelection(a: string[], b: string[]): boolean {
   const ids = new Set(a)
   return ids.size === b.length && b.every((id) => ids.has(id))
 }
+
+/**
+ * What a selection holding an invoiced entry rules out: an invoiced entry
+ * keeps its detail, so the API refuses these for the whole selection.
+ */
+export const REFUSED_WHEN_INVOICED: readonly TimeBulkAction[] = [
+  'delete',
+  'remove-screenshots',
+  'remove-processes',
+]

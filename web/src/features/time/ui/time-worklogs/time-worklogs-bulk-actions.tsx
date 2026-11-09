@@ -7,7 +7,7 @@ import {
   $isTimeBulkPending,
   $selectedTimeCount,
   $selectedTimeProjectId,
-  $selectionHasInvoiced,
+  $refusedTimeBulkActions,
   timeBulkActionRequested,
   timeBulkSelectionClearRequested,
 } from '../../model'
@@ -23,18 +23,19 @@ export const TimeWorklogsBulkActions = () => {
   const {
     selectedCount,
     selectedProjectId,
-    hasInvoiced,
+    refused,
     isBulkPending,
     request,
     clearSelection,
   } = useUnit({
     selectedCount: $selectedTimeCount,
     selectedProjectId: $selectedTimeProjectId,
-    hasInvoiced: $selectionHasInvoiced,
+    refused: $refusedTimeBulkActions,
     isBulkPending: $isTimeBulkPending,
     request: timeBulkActionRequested,
     clearSelection: timeBulkSelectionClearRequested,
   })
+  const deleteRefused = refused.includes('delete')
 
   return (
     <Root>
@@ -82,7 +83,7 @@ export const TimeWorklogsBulkActions = () => {
       </Tooltip>
       <Tooltip
         content={
-          hasInvoiced
+          deleteRefused
             ? t('dashboard.worklogsTable.bulk.invoicedHint')
             : undefined
         }
@@ -96,7 +97,7 @@ export const TimeWorklogsBulkActions = () => {
             iconLeft={
               <TrashIcon width={TRASH_ICON_SIZE} height={TRASH_ICON_SIZE} />
             }
-            disabled={isBulkPending || hasInvoiced}
+            disabled={isBulkPending || deleteRefused}
             onClick={() => request('delete')}
           >
             {t('dashboard.worklogsTable.bulk.delete')}

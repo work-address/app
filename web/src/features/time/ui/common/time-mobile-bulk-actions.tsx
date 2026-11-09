@@ -7,7 +7,7 @@ import {
   $isTimeBulkPending,
   $selectedTimeCount,
   $selectedTimeProjectId,
-  $selectionHasInvoiced,
+  $refusedTimeBulkActions,
   timeBulkActionRequested,
   timeBulkSelectionClearRequested,
   type TimeBulkAction,
@@ -19,21 +19,16 @@ import { Button, Select, Text } from '@/shared'
 export const TimeMobileBulkActions = () => {
   const { t } = useTranslation()
   const [action, setAction] = useState<TimeBulkAction | ''>('')
-  const { selectedCount, projectId, hasInvoiced, busy, request, clear } =
-    useUnit({
-      selectedCount: $selectedTimeCount,
-      projectId: $selectedTimeProjectId,
-      hasInvoiced: $selectionHasInvoiced,
-      busy: $isTimeBulkPending,
-      request: timeBulkActionRequested,
-      clear: timeBulkSelectionClearRequested,
-    })
+  const { selectedCount, projectId, refused, busy, request, clear } = useUnit({
+    selectedCount: $selectedTimeCount,
+    projectId: $selectedTimeProjectId,
+    refused: $refusedTimeBulkActions,
+    busy: $isTimeBulkPending,
+    request: timeBulkActionRequested,
+    clear: timeBulkSelectionClearRequested,
+  })
   const invalidInvoice = action === 'invoice' && !projectId
-  const refusedInvoiced =
-    hasInvoiced &&
-    (action === 'delete' ||
-      action === 'remove-screenshots' ||
-      action === 'remove-processes')
+  const refusedInvoiced = action !== '' && refused.includes(action)
   const options = [
     { value: 'paid', label: t('dashboard.worklogsTable.paymentStatus.paid') },
     {

@@ -68,7 +68,7 @@ export {
 export {
   $isTimeBulkPending,
   $selectedTimeProjectId,
-  $selectionHasInvoiced,
+  $refusedTimeBulkActions,
   timeBulkActionRequested,
   timeBulkDeleteRequested,
   timeBulkPaidStatusRequested,
