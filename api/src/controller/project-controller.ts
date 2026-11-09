@@ -13,7 +13,7 @@ import {
 import { OpenAPIExtended } from '@/decorator/openapi/openapi-extended'
 import express from 'express'
 import { App } from '@/app/app'
-import { WorkerSeats } from '@/service/worker-seats'
+import { Plan } from '@/service/plan'
 import { User } from '@/entity/user'
 import { Project } from '@/entity/project'
 import { EntityFromParam } from '@/decorator/entity-from-param'
@@ -235,12 +235,14 @@ export class ProjectController {
     }
 
     await runPromise(
-      this.projectRepository.softDelete({
-        id: project.id,
-        user: currentUser,
-      }),
+      App.container.get<Plan>('Plan').aroundListChange(
+        currentUser.id,
+        this.projectRepository.softDelete({
+          id: project.id,
+          user: currentUser,
+        }),
+      ),
     )
-    await App.container.get<WorkerSeats>('WorkerSeats').sync(currentUser.id)
 
     res.end()
     return res

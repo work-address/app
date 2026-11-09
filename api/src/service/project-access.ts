@@ -4,9 +4,8 @@ import { Brackets, ObjectLiteral, SelectQueryBuilder } from 'typeorm'
 import { Project } from '@/entity/project'
 import { Time } from '@/entity/time'
 import { User } from '@/entity/user'
-import { Entitlement } from '@/service/entitlement'
+import { Plan } from '@/service/plan'
 import { AccountAddress } from '@/service/account-address'
-import { HOSTED_SCREENSHOT_RETENTION_DAYS } from '@/model/plan'
 
 export type ProjectRole = 'owner' | 'worker' | 'viewer'
 
@@ -25,13 +24,13 @@ const DEFAULT_REVIEW_WINDOW_HOURS = 24
  */
 @injectable()
 export class ProjectAccess {
-  @inject('Entitlement')
-  protected entitlement: Entitlement
+  @inject('Plan')
+  protected plan: Plan
 
   /**
    * What the project's lists say this person is. No plan is read: when an owner
    * has no plan, everyone keeps sight of the record and can still invoice what
-   * they recorded. Only new tracking is limited, by `WorkerSeats.mayTrack`.
+   * they recorded. Only new tracking is limited, by `Plan.mayTrack`.
    */
   public role(project: Project, user: User): ProjectRole | null {
     if (project.isOwner(user)) return 'owner'
@@ -144,13 +143,8 @@ export class ProjectAccess {
     return `(time."userId"=:detailUser OR (project."userId"=:detailUser AND ${this.publishedSql()}))`
   }
 
-  /** The longest any screenshot is kept here: hosted has a limit, self-hosted none. */
-  public screenshotLimitDays(): number | null {
-    return this.entitlement.isSaaS() ? HOSTED_SCREENSHOT_RETENTION_DAYS : null
-  }
-
   public screenshotRetainedSql(): string {
-    const limit = this.screenshotLimitDays()
+    const limit = this.plan.screenshotLimitDays()
     const days =
       limit === null
         ? 'project."screenshotRetentionDays"'
@@ -174,7 +168,7 @@ export class ProjectAccess {
       time.detailPendingReview =
         time.project?.user?.id === user.id && !this.published(time)
     }
-    const limit = this.screenshotLimitDays()
+    const limit = this.plan.screenshotLimitDays()
     const days = time.project?.screenshotRetentionDays ?? limit
     const kept = limit === null ? days : Math.min(days ?? limit, limit)
     if (kept && new Date(time.toAt).getTime() + kept * 86400_000 <= Date.now())

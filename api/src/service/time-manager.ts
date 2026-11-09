@@ -12,16 +12,12 @@ import { ITimeInsertionResult } from '@/model/time'
 import { ErrorFormatter } from '@/service/error-formatter'
 import { ILogger } from '@/model/logging'
 import { TimeCreateDto } from '@/model/dto/time'
-import { Entitlement } from '@/service/entitlement'
 import AccessException from '@/exception/access-exception'
 import ConstraintsValidationException from '@/exception/constraints-validation-exception'
 import RetentionExceededException from '@/exception/retention-exceeded-exception'
 import { ImageResizer } from '@/service/image-resizer'
-import { WorkerSeats } from '@/service/worker-seats'
-import {
-  FREE_PLAN_WORKERS,
-  HOSTED_SCREENSHOT_RETENTION_DAYS,
-} from '@/model/plan'
+import { Plan } from '@/service/plan'
+import { FREE_PLAN_WORKERS, FREE_RETENTION_DAYS } from '@/model/plan'
 import { RepoEffect } from '@/repository/abstract-repository-template'
 import { fromPromise } from '@/service/effect-bridge'
 
@@ -33,26 +29,10 @@ export class TimeManager {
   protected projectRepository: ProjectRepository
   @inject('ImageResizer')
   protected imageResizer: ImageResizer
-  @inject('Entitlement')
-  protected entitlement: Entitlement
   @inject('ILogger')
   protected logger: ILogger
-  @inject('WorkerSeats')
-  protected seats: WorkerSeats
-
-  // Projects owned by a non-premium account keep only the trailing N days of
-  // time logs. Entitlement is the project owner's, not the author's - see
-  // TimeRepository.softDeleteExpiredEntriesForProjects.
-  // Kept at 14 to match what the pricing page advertises - the two must not
-  // drift, or the free tier silently under-delivers what was sold.
-  public static freeTimeLogRetentionDays: number = 14
-
-  public static retentionCutoff(): Date {
-    return moment
-      .utc()
-      .subtract(TimeManager.freeTimeLogRetentionDays, 'days')
-      .toDate()
-  }
+  @inject('Plan')
+  protected plan: Plan
 
   /**
    * A tracker syncs a batch and each entry succeeds or fails on its own, so one
@@ -73,8 +53,10 @@ export class TimeManager {
     return Effect.suspend(() => {
       // Fixed for the whole request so every entry is judged against the same
       // window, and so the purge below cannot move past what was just accepted.
-      const retentionCutoff = TimeManager.retentionCutoff()
-      const projectIdsUnderRetention = new Set<string>()
+      const now = new Date()
+      // The projects whose owner's plan keeps only a trailing window, and
+      // from when. One moment, one window: they all share the cutoff.
+      const keptFromByProject = new Map<string, Date>()
       const touchedProjects = new Set<string>()
 
       const storeEntry = (
@@ -92,7 +74,7 @@ export class TimeManager {
 
           touchedProjects.add(project.id)
 
-          if (!(yield* fromPromise(() => this.seats.mayTrack(project, user)))) {
+          if (!(yield* fromPromise(() => this.plan.mayTrack(project, user)))) {
             return yield* Effect.fail(
               new AccessException(
                 `This project's plan limits tracking to ${FREE_PLAN_WORKERS} contributors, and you are not one of them. Your recorded hours stay available and you can still invoice them.`,
@@ -100,16 +82,18 @@ export class TimeManager {
             )
           }
 
-          if (!this.entitlement.isPremium(project.user)) {
-            projectIdsUnderRetention.add(project.id)
+          const keptFrom = this.plan.keptFrom(project.user, now)
+
+          if (keptFrom) {
+            keptFromByProject.set(project.id, keptFrom)
 
             // Refuse rather than accept-and-purge: saving this row and deleting
             // it moments later would hand the client an id for a row that no
             // longer exists, and a syncing tracker would drop its local copy.
-            if (fromAt < retentionCutoff) {
+            if (fromAt < keptFrom) {
               return yield* Effect.fail(
                 new RetentionExceededException(
-                  `Entry starts before the ${TimeManager.freeTimeLogRetentionDays}-day retention window of this project's plan and was not stored`,
+                  `Entry starts before the ${FREE_RETENTION_DAYS}-day retention window of this project's plan and was not stored`,
                 ),
               )
             }
@@ -189,16 +173,18 @@ export class TimeManager {
           ),
         )
 
-        if (projectIdsUnderRetention.size > 0) {
+        const [keptFrom] = keptFromByProject.values()
+
+        if (keptFrom) {
           yield* this.timeRepository.softDeleteExpiredEntriesForProjects(
-            [...projectIdsUnderRetention],
-            retentionCutoff,
+            [...keptFromByProject.keys()],
+            keptFrom,
           )
         }
 
         yield* this.timeRepository.purgeExpiredScreenshots(
           [...touchedProjects],
-          this.entitlement.isSaaS() ? HOSTED_SCREENSHOT_RETENTION_DAYS : null,
+          this.plan.screenshotLimitDays(),
         )
         return insertionResults
       })

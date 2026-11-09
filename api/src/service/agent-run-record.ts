@@ -29,10 +29,8 @@ import { EProjectState } from '@/model/project'
 import { AgentRepository } from '@/repository/agent-repository'
 import { AgentIdentity } from '@/service/agent-identity'
 import { AgentTimeNormalizer } from '@/service/agent-time-normalizer'
-import { WorkerSeats } from '@/service/worker-seats'
-import { Entitlement } from '@/service/entitlement'
+import { Plan } from '@/service/plan'
 import { ProjectAccess } from '@/service/project-access'
-import { TimeManager } from '@/service/time-manager'
 
 /** Why an event is refused whoever it belongs to, or null. */
 function eventRefusal(
@@ -130,9 +128,7 @@ function agentForMachine(
 export class AgentRunRecord {
   @inject('AgentRepository') private agents: AgentRepository
   @inject('ProjectAccess') private access: ProjectAccess
-  @inject('Entitlement') private entitlement: Entitlement
-  @inject('WorkerSeats')
-  protected seats: WorkerSeats
+  @inject('Plan') private plan: Plan
 
   /**
    * Stores a credentialed batch and projects the runs it touches. Every check
@@ -162,7 +158,9 @@ export class AgentRunRecord {
     const submittedIds = parsed.data.events.map((event) => event.eventId)
     const events = parsed.data.events.map((event) => AgentIdentity.event(event))
     const health = parsed.data.health
-    const underRetention: string[] = []
+    // The projects whose owner's plan keeps only a trailing window, and from
+    // when. One moment, one window: they all share the cutoff.
+    const keptFromByProject = new Map<string, Date>()
 
     const results = await getDataSource().transaction(async (tx) => {
       const now = Date.now()
@@ -196,13 +194,11 @@ export class AgentRunRecord {
         )
         projects.set(
           projectId,
-          project && (await this.seats.mayTrack(project, user))
-            ? project
-            : null,
+          project && (await this.plan.mayTrack(project, user)) ? project : null,
         )
-        // The project owner's plan, as human time: see TimeManager.
-        if (project && !this.entitlement.isPremium(project.user))
-          underRetention.push(project.id)
+        const keptFrom =
+          project && this.plan.keptFrom(project.user, new Date(now))
+        if (project && keptFrom) keptFromByProject.set(project.id, keptFrom)
       }
       if (
         events.some(
@@ -251,7 +247,7 @@ export class AgentRunRecord {
       return results
     })
 
-    await this.rotate(underRetention)
+    await this.rotate(keptFromByProject)
 
     return {
       results: results.map((result, index) => ({
@@ -622,22 +618,37 @@ export class AgentRunRecord {
   }
 
   /**
-   * Free-tier retention: past the same window as human time, a project owned by
-   * a non-premium account rotates its runs when new events arrive for it. Runs
-   * on an invoice stay as its evidence. Soft, so it stays reversible on upgrade.
-   * See TimeRepository.softDeleteExpiredEntriesForProjects.
+   * Hides the runs older than the owner's plan keeps (`Plan.keptFrom`), when
+   * new events arrive for the project. Runs on an invoice stay as its evidence.
+   * Soft, so `restoreRotated` can undo it on an upgrade.
    */
-  private async rotate(projectIds: string[]): Promise<void> {
-    if (!projectIds.length) return
+  private async rotate(keptFromByProject: Map<string, Date>): Promise<void> {
+    const projectIds = [...keptFromByProject.keys()]
+    const [cutoff] = keptFromByProject.values()
+    if (!cutoff) return
     await getDataSource()
       .createQueryBuilder()
       .softDelete()
       .from(TimeAgent)
       .where('"projectId" IN (:...projectIds)', { projectIds })
-      .andWhere('"fromAt" < :cutoff', { cutoff: TimeManager.retentionCutoff() })
+      .andWhere('"fromAt" < :cutoff', { cutoff })
       .andWhere('"invoiceId" IS NULL')
       .andWhere('"deletedAt" IS NULL')
       .execute()
+  }
+
+  /**
+   * Brings back the runs rotation hid on this owner's projects, on their
+   * upgrade. Rotation is the only soft delete of a run, so anything marked
+   * deleted is something the free plan hid.
+   */
+  public async restoreRotated(ownerId: string): Promise<void> {
+    await getDataSource().query(
+      `UPDATE time_agent SET "deletedAt"=NULL FROM project
+      WHERE time_agent."projectId"=project.id AND project."userId"=$1
+      AND time_agent."deletedAt" IS NOT NULL`,
+      [ownerId],
+    )
   }
 
   /**

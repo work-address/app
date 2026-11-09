@@ -15,7 +15,7 @@ import AccessException from '@/exception/access-exception'
 import ProjectUnavailableException from '@/exception/project-unavailable-exception'
 import { EProjectState } from '@/model/project'
 import { ProjectSearchDto } from '@/model/dto/project'
-import { WorkerSeats } from '@/service/worker-seats'
+import { Plan } from '@/service/plan'
 import { Collaborators } from '@/service/collaborators'
 import { ProjectAccess } from '@/service/project-access'
 
@@ -40,8 +40,8 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
   protected filter: Filter
   @inject('ProjectAccess')
   protected access: ProjectAccess
-  @inject('WorkerSeats')
-  protected seats: WorkerSeats
+  @inject('Plan')
+  protected plan: Plan
   @inject('Collaborators')
   protected collaborators: Collaborators
   protected target = Project
@@ -312,7 +312,7 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
         // since the list also holds closed projects and viewer-only ones.
         project.canTrack =
           project.state === EProjectState.ACTIVE &&
-          (yield* fromPromise(() => this.seats.mayTrack(project, user)))
+          (yield* fromPromise(() => this.plan.mayTrack(project, user)))
       }
       yield* this.attachAccessUsersToProjects(projects)
 

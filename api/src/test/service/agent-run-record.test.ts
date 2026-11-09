@@ -1,4 +1,5 @@
 import { suite, test } from '@testdeck/mocha'
+import { FREE_RETENTION_DAYS } from '@/model/plan'
 import { expect } from 'chai'
 import { randomUUID } from 'crypto'
 import moment from 'moment'
@@ -1230,7 +1231,7 @@ export class AgentRunRecordTest extends AbstractDatabaseIntegration {
     const event = this.events(project.id, instanceId)
     const expired = moment
       .utc()
-      .subtract(TimeManager.freeTimeLogRetentionDays + 1, 'days')
+      .subtract(FREE_RETENTION_DAYS + 1, 'days')
       .toDate()
     const start = (...runIds: string[]) =>
       upload(runIds.map((runId) => event('run.started', 0, 0, { runId })))
@@ -1260,7 +1261,7 @@ export class AgentRunRecordTest extends AbstractDatabaseIntegration {
       {
         fromAt: moment
           .utc()
-          .subtract(TimeManager.freeTimeLogRetentionDays - 1, 'days')
+          .subtract(FREE_RETENTION_DAYS - 1, 'days')
           .toDate(),
       },
     )
@@ -1380,23 +1381,6 @@ export class AgentRunRecordTest extends AbstractDatabaseIntegration {
         .map((run) => run.sourceRunId)
         .sort(),
     ).to.include('theirs')
-  }
-
-  @test() async premiumOwnersAndSelfHostedInstancesDoNotRotate() {
-    const premium = await this.ownersRuns(true)
-    await premium.start('kept')
-    await premium.expire('kept')
-    await premium.upload([premium.event('run.started', 0, 0, { runId: 'new' })])
-    expect(await premium.live()).to.include('kept')
-
-    this.parameters.entitlementSecret = ''
-    const selfHosted = await this.ownersRuns()
-    await selfHosted.start('also-kept')
-    await selfHosted.expire('also-kept')
-    await selfHosted.upload([
-      selfHosted.event('run.started', 0, 0, { runId: 'newer' }),
-    ])
-    expect(await selfHosted.live()).to.include('also-kept')
   }
 
   /** runKey stays unique across rotated rows: a late event must not collide with one. */

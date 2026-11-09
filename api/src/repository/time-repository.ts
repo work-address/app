@@ -187,20 +187,19 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
   }
 
   /**
-   * Brings back what rotation hid, on the owner's upgrade. Rotation is the only
-   * soft delete of entries and runs, so anything marked deleted here is
-   * something the free plan hid: removal by an author deletes for real.
+   * Brings back the entries rotation hid, on the owner's upgrade. Rotation is
+   * the only soft delete of an entry, so anything marked deleted here is
+   * something the free plan hid: removal by an author deletes for real. Runs
+   * are `AgentRunRecord.restoreRotated`.
    */
   public restoreRotated(ownerId: string): RepoEffect<void> {
     return fromPromise(async () => {
-      for (const table of ['time', 'time_agent']) {
-        await this.getRepo().manager.query(
-          `UPDATE ${table} SET "deletedAt"=NULL FROM project
-          WHERE ${table}."projectId"=project.id AND project."userId"=$1
-          AND ${table}."deletedAt" IS NOT NULL`,
-          [ownerId],
-        )
-      }
+      await this.getRepo().manager.query(
+        `UPDATE time SET "deletedAt"=NULL FROM project
+        WHERE time."projectId"=project.id AND project."userId"=$1
+        AND time."deletedAt" IS NOT NULL`,
+        [ownerId],
+      )
     })
   }
 

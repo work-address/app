@@ -22,6 +22,8 @@ import { ProjectAccess } from '@/service/project-access'
 import { InvoiceRecord } from '@/service/invoice-record'
 import { EntitlementSignature } from '@/service/entitlement-signature'
 import { WorkerSeats } from '@/service/worker-seats'
+import { Plan } from '@/service/plan'
+import { PlanChange } from '@/service/plan-change'
 import { Collaborators } from '@/service/collaborators'
 import { UserManager } from '@/service/user-manager'
 import { AdminUserManager } from '@/service/admin-user-manager'
@@ -106,6 +108,8 @@ export class AppContainer {
     container.bind<Entitlement>('Entitlement').to(Entitlement)
     container.bind<ProjectAccess>('ProjectAccess').to(ProjectAccess)
     container.bind<WorkerSeats>('WorkerSeats').to(WorkerSeats)
+    container.bind<Plan>('Plan').to(Plan)
+    container.bind<PlanChange>('PlanChange').to(PlanChange)
     container.bind<Collaborators>('Collaborators').to(Collaborators)
     container
       .bind<EntitlementSignature>('EntitlementSignature')

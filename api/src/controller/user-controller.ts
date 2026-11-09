@@ -1,6 +1,5 @@
 import {
   Authorized,
-  BadRequestError,
   Body,
   Delete,
   Get,
@@ -27,10 +26,7 @@ import {
   ConnectedWalletNonceDto,
 } from '@/model/dto/connected-wallet'
 import { ConnectedWallet } from '@/service/connected-wallet'
-import { WorkerSeats } from '@/service/worker-seats'
-import { Entitlement } from '@/service/entitlement'
-import { AccountAddress } from '@/service/account-address'
-import { FREE_PLAN_WORKERS } from '@/model/plan'
+import { Plan } from '@/service/plan'
 import { KeptWorkersDto, TrackingWorkersDto } from '@/model/dto/entitlement'
 
 @JsonController('/user')
@@ -50,7 +46,7 @@ export class UserController {
     response: { schema: TrackingWorkersDto },
   })
   trackingWorkers(@CurrentUser() user: User): Promise<TrackingWorkersDto> {
-    return this.readTrackingWorkers(user)
+    return App.container.get<Plan>('Plan').trackingWorkers(user)
   }
 
   @Put('/tracking-workers')
@@ -64,42 +60,12 @@ export class UserController {
     @CurrentUser() user: User,
     @Body() data: KeptWorkersDto,
   ): Promise<TrackingWorkersDto> {
-    const seats = App.container.get<WorkerSeats>('WorkerSeats')
-    const listed = await seats.listed(user.id)
-    const kept = data.addresses.map((address) =>
-      AccountAddress.toCanonical(address),
-    )
+    const plan = App.container.get<Plan>('Plan')
 
-    if (kept.some((address) => !listed.includes(address))) {
-      throw new BadRequestError(
-        'Everyone kept must be a contributor on your projects',
-      )
-    }
-
-    user.keptWorkers = kept
+    user.keptWorkers = await plan.keptWorkers(user, data.addresses)
     await runPromise(this.userManager.saveSingle(user))
 
-    return this.readTrackingWorkers(user)
-  }
-
-  private async readTrackingWorkers(user: User): Promise<TrackingWorkersDto> {
-    const seats = App.container.get<WorkerSeats>('WorkerSeats')
-    const entitlement = App.container.get<Entitlement>('Entitlement')
-    const listed = await seats.listed(user.id)
-    const premium = entitlement.isPremium(user)
-    const tracking = await seats.tracking(user)
-    const accounts = await seats.accounts(user.id)
-
-    return {
-      limited: !premium && listed.length > FREE_PLAN_WORKERS,
-      limit: FREE_PLAN_WORKERS,
-      workers: listed.map((address) => ({
-        address: accounts.get(address)?.address ?? address,
-        name: accounts.get(address)?.name ?? null,
-        connected: accounts.has(address),
-        tracking: premium || tracking.has(address),
-      })),
-    }
+    return plan.trackingWorkers(user)
   }
 
   @Get('/settings')

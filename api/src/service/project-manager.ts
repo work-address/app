@@ -8,20 +8,16 @@ import { EProjectState } from '@/model/project'
 import { User } from '@/entity/user'
 import { ProjectAccessAddresses } from '@/model/dto/project'
 import { RepoEffect } from '@/repository/abstract-repository-template'
-import { Entitlement } from '@/service/entitlement'
 import { AccountAddress } from '@/service/account-address'
-import { WorkerSeats } from '@/service/worker-seats'
+import { Plan } from '@/service/plan'
 import { fromPromise } from '@/service/effect-bridge'
-import { FREE_PLAN_WORKERS } from '@/model/plan'
 
 @injectable()
 export class ProjectManager {
   @inject('ProjectRepository')
   protected projectRepository: ProjectRepository
-  @inject('Entitlement')
-  protected entitlement: Entitlement
-  @inject('WorkerSeats')
-  protected seats: WorkerSeats
+  @inject('Plan')
+  protected plan: Plan
 
   public findProjectCheckAccess(
     project: Project,
@@ -33,7 +29,9 @@ export class ProjectManager {
   public close(project: Project): RepoEffect<void> {
     project.state = EProjectState.INACTIVE
 
-    return this.withSeatHistory(project, this.save(project)).pipe(Effect.asVoid)
+    return this.plan
+      .aroundListChange(project.user?.id, this.save(project))
+      .pipe(Effect.asVoid)
   }
 
   public createAndSave(data: Project): RepoEffect<Project> {
@@ -57,7 +55,7 @@ export class ProjectManager {
       delete (data as Partial<Project>).agents
       delete (data as Partial<Project>).agentAttachments
       data.agentTrackingSince = data.trackAgents ? new Date() : null
-      return yield* this.withSeatHistory(data, this.save(data))
+      return yield* this.plan.aroundListChange(data.user?.id, this.save(data))
     })
   }
 
@@ -111,36 +109,9 @@ export class ProjectManager {
       project.agentTrackingSince = new Date()
     Object.assign(project, editable)
 
-    return this.withSeatHistory(project, this.save(project)).pipe(Effect.asVoid)
-  }
-
-  /**
-   * Records the seat history around a change to who is on a project. Billing
-   * syncs again when it reads, so a failure here is worth a log and not a
-   * refused edit.
-   */
-  private withSeatHistory<A>(
-    project: Project,
-    change: RepoEffect<A>,
-  ): RepoEffect<A> {
-    const ownerId = project.user?.id
-    const sync = fromPromise(() =>
-      ownerId ? this.seats.sync(ownerId) : Promise.resolve(),
-    ).pipe(
-      Effect.catchAll((error) =>
-        Effect.sync(() =>
-          console.error(`Seat history not updated for ${ownerId}`, error),
-        ),
-      ),
-    )
-
-    return Effect.gen(function* () {
-      yield* sync
-      const result = yield* change
-      yield* sync
-
-      return result
-    })
+    return this.plan
+      .aroundListChange(project.user?.id, this.save(project))
+      .pipe(Effect.asVoid)
   }
 
   /**
@@ -190,46 +161,13 @@ export class ProjectManager {
       const workerAddresses = forStorage(data.workerAddresses)
       const viewerAddresses = forStorage(data.viewerAddresses)
 
-      if (!this.entitlement.isPremium(project.user)) {
-        // Limit *granting*, never revoking or keeping: an owner whose
-        // subscription lapsed can still take access away one worker at a time,
-        // and viewers are free whatever the plan.
-        const elsewhere = yield* fromPromise(() =>
-          this.seats.listed(project.user.id, { exceptProjectId: project.id }),
-        )
-        const everyone = new Set([
-          ...elsewhere,
-          ...workerAddresses.map((address) =>
-            AccountAddress.toCanonical(address),
-          ),
-        ])
-        const grants = ProjectManager.addedWorkers(workerAddresses, [
-          ...current.workerAddresses,
-          ...elsewhere,
-        ])
-
-        if (grants && everyone.size > FREE_PLAN_WORKERS) {
-          return yield* Effect.fail(
-            new BadRequestError(
-              `The free plan includes ${FREE_PLAN_WORKERS} contributors across your projects. Upgrade to Premium to add more.`,
-            ),
-          )
-        }
-      }
+      yield* fromPromise(() =>
+        this.plan.checkGrant(project, workerAddresses, current.workerAddresses),
+      )
 
       project.workerAddresses = workerAddresses
       project.viewerAddresses = viewerAddresses
     })
-  }
-
-  private static addedWorkers(next: string[], current: string[]): boolean {
-    const existing = new Set(
-      current.map((address) => AccountAddress.toCanonical(address)),
-    )
-
-    return next.some(
-      (address) => !existing.has(AccountAddress.toCanonical(address)),
-    )
   }
 
   public save(project: Project) {

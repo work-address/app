@@ -20,7 +20,7 @@ Deletes dead code from `TimeRepository`, then gives the rules for accepting an u
 **Ingest is where the expensive bugs were.** `4b92de7b`: retention purged by the wrong person. `68eba1ac`: a re-upload overwrote evidence. Its rules span a manager and a repository:
 
 - A re-upload replaces a slice, unless it's published, when evidence freezes (`saveWithUsage`).
-- Retention follows the project owner's plan, is refused up front, and never purges invoice backing (`time-manager.ts:84`, `softDeleteExpiredEntriesForProjects`).
+- Retention follows the project owner's plan (`Plan.keptFrom`), is refused up front, and never purges invoice backing (`TimeManager.createOrUpdateMany`, `softDeleteExpiredEntriesForProjects`).
 - An entry belonging to someone else is refused (`time-manager.ts:103`).
 
 There's also one leak across the seam: `time-manager.ts:249` reaches through `getRepo().manager` to run its own transaction.

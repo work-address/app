@@ -6,10 +6,10 @@ import {
   EntitlementPushDto,
   SeatInventoryRequestDto,
 } from '@/model/dto/entitlement'
-import { ISeatInventory, WorkerSeats } from '@/service/worker-seats'
-import { TimeRepository } from '@/repository/time-repository'
+import { ISeatInventory } from '@/service/worker-seats'
+import { Plan } from '@/service/plan'
+import { PlanChange } from '@/service/plan-change'
 import { EntitlementSignature } from '@/service/entitlement-signature'
-import { UserManager } from '@/service/user-manager'
 import { UserRepository } from '@/repository/user-repository'
 import AuthenticationException from '@/exception/authentication-exception'
 import { Effect } from 'effect'
@@ -27,17 +27,15 @@ import { runPromise } from '@/service/effect-bridge'
 @JsonController('/internal')
 export class EntitlementController {
   protected entitlementSignature: EntitlementSignature
-  protected userManager: UserManager
   protected userRepository: UserRepository
-  protected timeRepository: TimeRepository
-  protected workerSeats: WorkerSeats
+  protected plan: Plan
+  protected planChange: PlanChange
 
   constructor() {
     this.entitlementSignature = App.container.get('EntitlementSignature')
-    this.userManager = App.container.get('UserManager')
     this.userRepository = App.container.get('UserRepository')
-    this.timeRepository = App.container.get('TimeRepository')
-    this.workerSeats = App.container.get('WorkerSeats')
+    this.plan = App.container.get('Plan')
+    this.planChange = App.container.get('PlanChange')
   }
 
   @HttpCode(200)
@@ -62,16 +60,7 @@ export class EntitlementController {
           return { applied: false }
         }
 
-        // Before the flag, so a failed restore is retried: the sweep re-asserts
-        // the same push and this still looks like an upgrade.
-        if (data.premium && !user.premium) {
-          yield* this.timeRepository.restoreRotated(user.id)
-        }
-
-        // Idempotent by construction: the push carries absolute state, so
-        // re-applying it costs one write and changes nothing.
-        user.premium = data.premium
-        yield* this.userManager.saveSingle(user)
+        yield* this.planChange.apply(user, data.premium)
 
         return { applied: true }
       }),
@@ -97,7 +86,7 @@ export class EntitlementController {
       return { seats: 1, connected: 0, workers: [], ownerEmail: null }
     }
 
-    return this.workerSeats.inventory(
+    return this.plan.inventory(
       owner,
       data.from && data.to
         ? { from: new Date(data.from), to: new Date(data.to) }

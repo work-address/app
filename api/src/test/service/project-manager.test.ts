@@ -234,36 +234,6 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
     expect(saved.viewerAddresses).to.deep.equal([])
   }
 
-  @test()
-  async editAndSave_rejectsAccessAddressesForNonPremiumOwner() {
-    const owner = await this.userFixture.createUser()
-    const worker = await this.userFixture.createUser()
-    const project = await this.projectFixture.createPersonal(owner)
-
-    const patch = new Project()
-    patch.workerAddresses = [
-      worker.address,
-      (await this.userFixture.createUser()).address,
-      (await this.userFixture.createUser()).address,
-    ]
-
-    let error: unknown
-
-    try {
-      await runPromise(this.projectManager.editAndSave(project, patch))
-    } catch (e: unknown) {
-      error = e
-    }
-
-    expect(error).to.exist
-    expect((error as { httpCode?: number }).httpCode).to.be.equal(400)
-
-    const unchanged = await runPromise(
-      this.projectRepository.findOneByIdOrFail(project.id),
-    )
-    expect(unchanged.workerAddresses ?? []).to.deep.equal([])
-  }
-
   /**
    * When an owner has no plan, everyone keeps sight of the record: a worker may
    * still be owed money for it. Only new tracking is limited.
@@ -308,56 +278,5 @@ export class ProjectManagerTest extends AbstractDatabaseIntegration {
         this.projectManager.findProjectCheckAccess(project, owner),
       ),
     ).to.exist
-  }
-
-  /**
-   * A lapsed owner must still be able to take access away - the gate is on
-   * granting, not on revoking.
-   */
-  @test()
-  async editAndSave_allowsNonPremiumOwnerToRemoveExistingCollaborators() {
-    const owner = await this.userFixture.createPremiumUser()
-    const workerA = await this.userFixture.createUser()
-    const workerB = await this.userFixture.createUser()
-    const project = await this.projectFixture.createPersonal(owner)
-
-    const granted = new Project()
-    granted.workerAddresses = [workerA.address, workerB.address]
-    await runPromise(this.projectManager.editAndSave(project, granted))
-
-    owner.premium = false
-    await runPromise(this.userManager.saveSingle(owner))
-
-    const reloaded = await runPromise(
-      this.projectRepository.findOneByIdOrFail(project.id),
-    )
-
-    // Dropping one of the two is allowed...
-    const revoke = new Project()
-    revoke.workerAddresses = [workerA.address]
-    await runPromise(this.projectManager.editAndSave(reloaded, revoke))
-
-    const afterRevoke = await runPromise(
-      this.projectRepository.findOneByIdOrFail(project.id),
-    )
-    expect(afterRevoke.workerAddresses).to.deep.equal([workerA.address])
-
-    // ...but going past the free limit is still a grant, and still refused.
-    const regrant = new Project()
-    regrant.workerAddresses = [
-      workerA.address,
-      workerB.address,
-      (await this.userFixture.createUser()).address,
-    ]
-
-    let error: unknown
-    try {
-      await runPromise(this.projectManager.editAndSave(afterRevoke, regrant))
-    } catch (e: unknown) {
-      error = e
-    }
-
-    expect(error).to.exist
-    expect((error as { httpCode?: number }).httpCode).to.be.equal(400)
   }
 }

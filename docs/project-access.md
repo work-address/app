@@ -94,4 +94,4 @@ Everything else must be unchanged, including a lapsed owner's collaborators stil
 
 ## Follow-up, not this work
 
-Done with per-seat billing (§7 #2 and #3): reads no longer depend on the owner's plan. The grant check in `project-manager.ts` now enforces the free plan's two workers, and tracking on a project whose owner has no plan goes through `WorkerSeats.mayTrack`.
+Done with per-seat billing (§7 #2 and #3): reads no longer depend on the owner's plan. The grant check (`Plan.checkGrant`) enforces the free plan's two workers, and tracking on a project whose owner has no plan goes through `Plan.mayTrack`.

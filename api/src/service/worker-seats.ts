@@ -6,11 +6,9 @@ import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
 import { WorkerSeat } from '@/entity/worker-seat'
 import { EProjectState } from '@/model/project'
-import { FREE_PLAN_WORKERS } from '@/model/plan'
 import { UserRepository } from '@/repository/user-repository'
 import { AccountAddress } from '@/service/account-address'
 import { runPromise } from '@/service/effect-bridge'
-import { Entitlement } from '@/service/entitlement'
 
 interface ISeatListOptions {
   activeOnly?: boolean
@@ -37,18 +35,18 @@ export interface ISeatInterval {
 }
 
 /**
- * Who is on an owner's bill, and who may keep tracking once the owner has no
- * plan (web/PRODUCT.md §5). A seat is a listed worker who has signed in, so a
- * typo or an unused invite costs nothing, and the owner is never one.
+ * Who is on an owner's projects and on their bill (web/PRODUCT.md §5), and the
+ * history of that. A seat is a listed worker who has signed in, so a typo or
+ * an unused invite costs nothing, and the owner is never one.
  *
  * Closed projects don't count towards the bill, since nothing can be tracked on
  * them, but they do count towards the free limit, because reopening one takes
  * no new grant and would otherwise slip past it.
+ *
+ * This is the inside of `Plan`: nothing else reads it.
  */
 @injectable()
 export class WorkerSeats {
-  @inject('Entitlement')
-  protected entitlement: Entitlement
   @inject('UserRepository')
   protected users: UserRepository
 
@@ -211,39 +209,5 @@ export class WorkerSeats {
         owner.email ??
         (AccountAddress.isEmail(owner.address) ? owner.address : null),
     }
-  }
-
-  /**
-   * The workers an owner with no plan keeps tracking with: their choice, topped
-   * up from the first listed until it reaches the free limit, so a lapse never
-   * leaves a worker who has been kept with nothing to do but wait for a choice.
-   */
-  public async tracking(owner: User): Promise<Set<string>> {
-    const listed = await this.listed(owner.id)
-
-    if (listed.length <= FREE_PLAN_WORKERS) return new Set(listed)
-
-    const chosen = (owner.keptWorkers ?? [])
-      .map((address) => AccountAddress.toCanonical(address))
-      .filter((address) => listed.includes(address))
-
-    return new Set(
-      [...new Set([...chosen, ...listed])].slice(0, FREE_PLAN_WORKERS),
-    )
-  }
-
-  /** Whether this person's new time on the project is accepted today. */
-  public async mayTrack(project: Project, user: User): Promise<boolean> {
-    if (project.isOwner(user)) return true
-
-    const address = AccountAddress.toCanonical(user.address ?? '')
-    const worker = (project.workerAddresses ?? []).some((listed) =>
-      AccountAddress.isSame(listed, address),
-    )
-
-    if (!worker) return false
-    if (this.entitlement.isPremium(project.user)) return true
-
-    return (await this.tracking(project.user)).has(address)
   }
 }
