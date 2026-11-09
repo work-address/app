@@ -3,7 +3,7 @@ import { Project } from '@/entity/project'
 import { User } from '@/entity/user'
 import { ITeam, ITeamAgent, ITeamPerson, ITeamProject } from '@/model/team'
 import { TeamRepository } from '@/repository/team-repository'
-import { AccountAddress } from '@/service/account-address'
+import { Collaborators, ICollaborator } from '@/service/collaborators'
 import { ProjectRole } from '@/service/project-access'
 
 /**
@@ -14,6 +14,7 @@ import { ProjectRole } from '@/service/project-access'
 @injectable()
 export class TeamManager {
   @inject('TeamRepository') private repository: TeamRepository
+  @inject('Collaborators') private collaborators: Collaborators
 
   public async read(reader: User): Promise<ITeam> {
     const projects = await this.repository.projects(reader, 'worker')
@@ -21,44 +22,20 @@ export class TeamManager {
       const listed = await this.repository.projects(reader, 'viewer')
       return { viewerOnly: listed.length > 0, projects: [] }
     }
-    const accounts = await this.accountsByAddress(projects)
+    const people = await this.collaborators.of(projects)
     return {
       viewerOnly: false,
       projects: projects.map((project) =>
-        TeamManager.project(project, reader, accounts),
+        TeamManager.project(project, reader, people.get(project.id) ?? []),
       ),
     }
-  }
-
-  private async accountsByAddress(
-    projects: Project[],
-  ): Promise<Map<string, User>> {
-    const addresses = [
-      ...new Set(
-        projects.flatMap((project) => [
-          ...(project.workerAddresses ?? []),
-          ...(project.viewerAddresses ?? []),
-        ]),
-      ),
-    ]
-    const accounts = await this.repository.accounts(addresses)
-    return new Map(
-      accounts.map((account) => [
-        AccountAddress.toCanonical(account.address),
-        account,
-      ]),
-    )
   }
 
   private static project(
     project: Project,
     reader: User,
-    accounts: Map<string, User>,
+    listed: ICollaborator[],
   ): ITeamProject {
-    const listed = (address: string, role: ProjectRole): ITeamPerson => {
-      const account = accounts.get(AccountAddress.toCanonical(address))
-      return TeamManager.person(project, reader, address, role, account)
-    }
     return {
       id: project.id,
       title: project.title,
@@ -73,8 +50,9 @@ export class TeamManager {
           'owner',
           project.user,
         ),
-        ...(project.workerAddresses ?? []).map((a) => listed(a, 'worker')),
-        ...(project.viewerAddresses ?? []).map((a) => listed(a, 'viewer')),
+        ...listed.map(({ address, role, account }) =>
+          TeamManager.person(project, reader, address, role, account),
+        ),
       ],
     }
   }

@@ -88,12 +88,7 @@ export class UserController {
     const listed = await seats.listed(user.id)
     const premium = entitlement.isPremium(user)
     const tracking = await seats.tracking(user)
-    const accounts = new Map(
-      (await seats.accounts(listed)).map((account) => [
-        AccountAddress.toCanonical(account.address),
-        account,
-      ]),
-    )
+    const accounts = await seats.accounts(user.id)
 
     return {
       limited: !premium && listed.length > FREE_PLAN_WORKERS,

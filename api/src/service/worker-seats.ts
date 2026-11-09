@@ -7,8 +7,15 @@ import { User } from '@/entity/user'
 import { WorkerSeat } from '@/entity/worker-seat'
 import { EProjectState } from '@/model/project'
 import { FREE_PLAN_WORKERS } from '@/model/plan'
+import { UserRepository } from '@/repository/user-repository'
 import { AccountAddress } from '@/service/account-address'
+import { runPromise } from '@/service/effect-bridge'
 import { Entitlement } from '@/service/entitlement'
+
+interface ISeatListOptions {
+  activeOnly?: boolean
+  exceptProjectId?: string
+}
 
 export interface ISeatWorker {
   address: string
@@ -42,12 +49,36 @@ export interface ISeatInterval {
 export class WorkerSeats {
   @inject('Entitlement')
   protected entitlement: Entitlement
+  @inject('UserRepository')
+  protected users: UserRepository
 
   /** Distinct workers on the owner's live projects, first listed first. */
   public async listed(
     ownerId: string,
-    options: { activeOnly?: boolean; exceptProjectId?: string } = {},
+    options: ISeatListOptions = {},
   ): Promise<string[]> {
+    return [...(await this.spellings(ownerId, options)).keys()]
+  }
+
+  /**
+   * The accounts of those workers who have signed in, by canonical address,
+   * first listed first. Each is the account signing in with the address as the
+   * list spells it reaches.
+   */
+  public async accounts(
+    ownerId: string,
+    options: ISeatListOptions = {},
+  ): Promise<Map<string, User>> {
+    const spellings = await this.spellings(ownerId, options)
+
+    return runPromise(this.users.accountsByAddress([...spellings.values()]))
+  }
+
+  /** Each listed worker's canonical address and how a list first spells it. */
+  private async spellings(
+    ownerId: string,
+    options: ISeatListOptions,
+  ): Promise<Map<string, string>> {
     const projects = await getDataSource()
       .getRepository(Project)
       .createQueryBuilder('project')
@@ -57,42 +88,20 @@ export class WorkerSeats {
       .orderBy('project."createdAt"', 'ASC')
       .getMany()
 
-    const workers = new Set<string>()
+    const workers = new Map<string, string>()
 
     for (const project of projects) {
       if (project.id === options.exceptProjectId) continue
       if (options.activeOnly && project.state !== EProjectState.ACTIVE) continue
 
       for (const address of project.workerAddresses ?? []) {
-        workers.add(AccountAddress.toCanonical(address))
+        const canonical = AccountAddress.toCanonical(address)
+
+        if (!workers.has(canonical)) workers.set(canonical, address)
       }
     }
 
-    return [...workers]
-  }
-
-  /** The accounts behind these addresses. An address with none is left out. */
-  public async accounts(addresses: string[]): Promise<ISeatWorker[]> {
-    if (!addresses.length) return []
-
-    const users = await getDataSource()
-      .getRepository(User)
-      .createQueryBuilder('u')
-      .select(['u.address', 'u.name'])
-      .where(`${AccountAddress.canonicalSql('u.address')} IN (:...addresses)`, {
-        addresses,
-      })
-      .getMany()
-
-    const found = new Map(
-      users.map((user) => [AccountAddress.toCanonical(user.address), user]),
-    )
-
-    return addresses.flatMap((address) => {
-      const user = found.get(address)
-
-      return user ? [{ address: user.address, name: user.name ?? null }] : []
-    })
+    return workers
   }
 
   /**
@@ -102,11 +111,8 @@ export class WorkerSeats {
    */
   public async sync(ownerId: string, now = new Date()): Promise<void> {
     const repository = getDataSource().getRepository(WorkerSeat)
-    const current = await this.accounts(
-      await this.listed(ownerId, { activeOnly: true }),
-    )
     const addresses = new Set(
-      current.map((worker) => AccountAddress.toCanonical(worker.address)),
+      (await this.accounts(ownerId, { activeOnly: true })).keys(),
     )
     const open = await repository.find({
       where: { ownerId, endedAt: IsNull() },
@@ -178,9 +184,12 @@ export class WorkerSeats {
   ): Promise<ISeatInventory> {
     await this.sync(owner.id)
 
-    const workers = await this.accounts(
-      await this.listed(owner.id, { activeOnly: true }),
-    )
+    const workers = [
+      ...(await this.accounts(owner.id, { activeOnly: true })).values(),
+    ].map((account) => ({
+      address: account.address,
+      name: account.name ?? null,
+    }))
     let count = workers.length
 
     if (period) {

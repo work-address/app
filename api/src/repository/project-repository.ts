@@ -15,8 +15,8 @@ import AccessException from '@/exception/access-exception'
 import ProjectUnavailableException from '@/exception/project-unavailable-exception'
 import { EProjectState } from '@/model/project'
 import { ProjectSearchDto } from '@/model/dto/project'
-import { UserRepository } from '@/repository/user-repository'
 import { WorkerSeats } from '@/service/worker-seats'
+import { Collaborators } from '@/service/collaborators'
 import { ProjectAccess } from '@/service/project-access'
 
 /** Every order the project list can ask for, by the name it asks with. */
@@ -38,12 +38,12 @@ const UUID_PATTERN =
 export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
   @inject('Filter')
   protected filter: Filter
-  @inject('UserRepository')
-  protected userRepository: UserRepository
   @inject('ProjectAccess')
   protected access: ProjectAccess
   @inject('WorkerSeats')
   protected seats: WorkerSeats
+  @inject('Collaborators')
+  protected collaborators: Collaborators
   protected target = Project
 
   public findProjectAsOwner(
@@ -339,43 +339,17 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
   }
 
   private attachAccessUsersToProjects(projects: Project[]): RepoEffect<void> {
-    return Effect.gen(this, function* () {
-      if (!projects.length) {
-        return
-      }
-
-      const addresses = [
-        ...new Set(
-          projects.flatMap((project) => [
-            ...(project.workerAddresses ?? []),
-            ...(project.viewerAddresses ?? []),
-          ]),
-        ),
-      ]
-
-      if (!addresses.length) {
-        for (const project of projects) {
-          project.workers = []
-          project.viewers = []
-        }
-        return
-      }
-
-      const users = yield* this.userRepository.findByAddresses(addresses)
-      const usersByAddress = new Map(
-        users.map((u) => [u.address.toLowerCase(), u]),
-      )
+    return fromPromise(async () => {
+      const people = await this.collaborators.of(projects)
 
       for (const project of projects) {
-        const workerAddresses = project.workerAddresses ?? []
-        const viewerAddresses = project.viewerAddresses ?? []
+        const signedIn = (role: 'worker' | 'viewer') =>
+          (people.get(project.id) ?? []).flatMap((person) =>
+            person.role === role && person.account ? [person.account] : [],
+          )
 
-        project.workers = workerAddresses
-          .map((address) => usersByAddress.get(address.toLowerCase()))
-          .filter((u): u is User => u !== undefined)
-        project.viewers = viewerAddresses
-          .map((address) => usersByAddress.get(address.toLowerCase()))
-          .filter((u): u is User => u !== undefined)
+        project.workers = signedIn('worker')
+        project.viewers = signedIn('viewer')
       }
     })
   }

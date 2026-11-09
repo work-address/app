@@ -251,9 +251,9 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
     expect(asLowerCase).to.be.eq(asChecksum)
     expect(asUpperCase).to.be.eq(asChecksum)
     const accounts = await runPromise(
-      this.userRepository.findByAddresses([account.address]),
+      this.userRepository.accountsByAddress([account.address]),
     )
-    expect(accounts.map(({ id }) => id)).to.deep.eq([asChecksum])
+    expect([...accounts.values()].map(({ id }) => id)).to.deep.eq([asChecksum])
   }
 
   /** The first sign-in's casing does not become the account's address. */
@@ -266,8 +266,8 @@ export class AuthenticatorTest extends AbstractDatabaseIntegration {
 
     await runPromise(this.authenticator.loginEth(signature, address))
 
-    const [user] = await runPromise(
-      this.userRepository.findByAddresses([address]),
+    const user = await runPromise(
+      this.userRepository.findByAddressPublicOrFail(address),
     )
     expect(user.address).to.be.eq(account.address)
   }

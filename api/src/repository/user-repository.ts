@@ -1,5 +1,6 @@
 import { Effect } from 'effect'
 import { inject, injectable } from 'inversify'
+import { EntityNotFoundError } from 'typeorm'
 
 import { User } from '@/entity/user'
 import { Filter } from '@/service/filter'
@@ -48,60 +49,73 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
   }
 
   public findByAddressPublic(address: string): RepoEffect<User | undefined> {
-    return fromPromise(
-      async () => (await this.queryByAddress(address).getOne()) ?? undefined,
+    return this.accountsByAddress([address]).pipe(
+      Effect.map((accounts) =>
+        accounts.get(AccountAddress.toCanonical(address)),
+      ),
     )
   }
 
   public findByAddressPublicOrFail(address: string): RepoEffect<User> {
-    return fromPromise(() => this.queryByAddress(address).getOneOrFail())
+    return this.findByAddressPublic(address).pipe(
+      Effect.flatMap((account) =>
+        account
+          ? Effect.succeed(account)
+          : Effect.fail(new EntityNotFoundError(User, { address })),
+      ),
+    )
   }
 
   /**
-   * The account an address names, however it is cased. The column's unique
-   * constraint compares exact strings, so rows differing only in casing can
-   * exist: the one written exactly as asked wins, so that nobody who already
-   * signs in with that spelling lands in another account, and then the oldest.
+   * The account each address names, however it is cased or padded, keyed by
+   * the address's canonical form. An address nobody has signed in with is
+   * absent. Signing in and every list of people read accounts through here, so
+   * an address names the same account wherever it appears.
+   *
+   * The column's unique constraint compares exact strings, so rows differing
+   * only in casing can exist: the one written exactly as asked wins, so that
+   * nobody who already signs in with that spelling lands in another account,
+   * and then the oldest. Asked in two spellings at once, the first decides.
    */
-  private queryByAddress(address: string) {
-    return this.getRepo()
-      .createQueryBuilder('user')
-      .where(`${AccountAddress.canonicalSql('user.address')} = :canonical`, {
-        canonical: AccountAddress.toCanonical(address),
-      })
-      .orderBy('user.address = :address', 'DESC')
-      .addOrderBy('user.createdAt', 'ASC')
-      .setParameter('address', address)
-  }
-
-  public countByAddresses(addresses: string[]): RepoEffect<number> {
+  public accountsByAddress(addresses: string[]): RepoEffect<Map<string, User>> {
     if (!addresses.length) {
-      return Effect.succeed(0)
+      return Effect.succeed(new Map())
     }
 
-    return fromPromise(() =>
-      this.getRepo()
+    return fromPromise(async () => {
+      const rows = await this.getRepo()
         .createQueryBuilder('user')
-        .andWhere('lower(user.address) IN (:...addresses)', {
-          addresses: addresses.map((address) => address.toLowerCase()),
-        })
-        .getCount(),
-    )
-  }
+        .where(
+          `${AccountAddress.canonicalSql('user.address')} IN (:...canonical)`,
+          {
+            canonical: [...new Set(addresses.map(AccountAddress.toCanonical))],
+          },
+        )
+        .orderBy('user.createdAt', 'ASC')
+        .addOrderBy('user.id', 'ASC')
+        .getMany()
 
-  public findByAddresses(addresses: string[]): RepoEffect<User[]> {
-    if (!addresses.length) {
-      return Effect.succeed([])
-    }
+      const stored = new Map<string, User[]>()
+      for (const row of rows) {
+        const canonical = AccountAddress.toCanonical(row.address)
+        stored.set(canonical, [...(stored.get(canonical) ?? []), row])
+      }
 
-    return fromPromise(() =>
-      this.getRepo()
-        .createQueryBuilder('user')
-        .where('lower(user.address) IN (:...addresses)', {
-          addresses: addresses.map((address) => address.toLowerCase()),
-        })
-        .getMany(),
-    )
+      const named = new Map<string, User>()
+      for (const address of addresses) {
+        const canonical = AccountAddress.toCanonical(address)
+        const candidates = stored.get(canonical)
+
+        if (candidates && !named.has(canonical)) {
+          named.set(
+            canonical,
+            candidates.find((row) => row.address === address) ?? candidates[0],
+          )
+        }
+      }
+
+      return named
+    })
   }
 
   /** Every account, newest first unless the admin sorts otherwise. */
@@ -133,10 +147,10 @@ export class UserRepository extends AbstractRepositoryTemplate<User> {
         )
       }
       if (filter.ids) {
-        if (!filter.ids.length) {
-          qb.andWhere('1 = 0')
-        } else {
+        if (filter.ids.length) {
           qb.andWhere('user.id IN (:...ids)', { ids: filter.ids })
+        } else {
+          qb.andWhere('1 = 0')
         }
       }
 
