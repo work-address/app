@@ -1,6 +1,6 @@
 # Failure reporting
 
-Status: decided on 10 November 2026, built the same day on `dev`. Nothing a person sees changes, with the one exception under Known oddities, "Late failures".
+Status: decided on 10 November 2026, built the same day on `dev`. Nothing a person sees changes, with two exceptions: "Late failures" under Known oddities, and two failures that used to toast twice (removing an agent run's prompt, revoking a server credential) now show only their own message.
 
 A request says, where it is made, who tells the person it failed. One module in the web app reads that and does the telling.
 
@@ -54,5 +54,4 @@ Kept as they were, for a ruling later.
 
 - **Offline is uneven.** With no HTTP status the interceptor says nothing, so a generic failure with no connection is silent. Own and fixed messages still show.
 - **A final 401 with a declared message shows that message** as well as ending the session.
-- **Two failures toast twice.** Removing an agent run's prompt and revoking a server credential each show their own message from a `sample` and never declared anything, so the generic toast joins it. Declaring `{ fixed: key }` on the request and deleting the `sample` is the whole fix.
 - **Late failures.** The one difference from before. A request overtaken by a newer one (`TAKE_LATEST`) never reached its failure watcher, so its failure, arriving late, raised the generic toast over a page that had moved on. The declaration travels with the request now, so a late in-place failure is silent and a late declared message is the declared one.

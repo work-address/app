@@ -43,8 +43,9 @@ export const removeTimeScreenshotMutation = createMutation({
 
 export const removeAgentPromptMutation = createMutation({
   handler: async (runKey: string) => {
-    return runApi(() =>
-      baseApi.agentControllerRemovePrompt({ path: { runKey } }),
+    return runApi(
+      () => baseApi.agentControllerRemovePrompt({ path: { runKey } }),
+      { fixed: 'dashboard.prompts.remove.failed' },
     )
   },
 })

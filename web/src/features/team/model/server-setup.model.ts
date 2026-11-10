@@ -110,7 +110,9 @@ const connectServerMutation = createMutation({
 
 const revokeCredentialMutation = createMutation({
   handler: async (id: string) =>
-    runApi(() => baseApi.agentControllerRevoke({ path: { id } })),
+    runApi(() => baseApi.agentControllerRevoke({ path: { id } }), {
+      fixed: 'team.servers.revoke.failed',
+    }),
 })
 
 /**
@@ -209,15 +211,6 @@ sample({
   fn: () => ({
     type: 'success' as const,
     messageKey: 'team.servers.revoke.success',
-  }),
-  target: showToastFx,
-})
-
-sample({
-  clock: revokeCredentialMutation.finished.failure,
-  fn: () => ({
-    type: 'error' as const,
-    messageKey: 'team.servers.revoke.failed',
   }),
   target: showToastFx,
 })

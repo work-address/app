@@ -42,12 +42,3 @@ sample({
   }),
   target: showToastFx,
 })
-
-sample({
-  clock: removeAgentPromptMutation.finished.failure,
-  fn: () => ({
-    type: 'error' as const,
-    messageKey: 'dashboard.prompts.remove.failed',
-  }),
-  target: showToastFx,
-})
