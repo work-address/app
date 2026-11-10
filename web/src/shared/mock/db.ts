@@ -139,6 +139,33 @@ export type MockRun = {
   released?: boolean
 }
 
+/** An agent someone set up by hand, beside the ones their runs imply. */
+export type MockAgent = {
+  id: string
+  userId: string
+  name: string
+  slug: string
+  product: string
+  isDefault: boolean
+  bindings: string[]
+  createdAt: string
+  removedAt: string | null
+}
+
+/** A server's upload credential. The demo keeps no secret, only its start. */
+export type MockCredential = {
+  id: string
+  userId: string
+  instanceId: string
+  label: string
+  mode: 'timer' | 'fixed'
+  prefix: string
+  createdAt: string
+  expiresAt: string
+  revokedAt: string | null
+  lastUsedAt: string | null
+}
+
 export type Db = {
   meId: string
   users: MockUser[]
@@ -146,6 +173,9 @@ export type Db = {
   times: MockTime[]
   invoices: MockInvoice[]
   runs: MockRun[]
+  /** Empty until the visitor sets one up: the seed's agents are its runs' products. */
+  agents: MockAgent[]
+  credentials: MockCredential[]
 }
 
 type WorldShape = {
@@ -423,6 +453,8 @@ export function buildDb(settings: DemoSettings, now: number): Db {
     times,
     invoices,
     runs,
+    agents: [],
+    credentials: [],
   }
 }
 

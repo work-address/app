@@ -6,8 +6,26 @@ import { isOwner, isWorker, projectOf, userOf, visibleProjects } from './shape'
 
 import type { Db, MockProject } from './db'
 
-const agentsOn = (db: Db, project: MockProject, userId: string) =>
-  [
+/** Agents set up by hand are attached where they have a rate. */
+const createdOn = (db: Db, project: MockProject, userId: string) =>
+  db.agents
+    .filter(
+      (agent) =>
+        agent.userId === userId &&
+        !agent.removedAt &&
+        project.agentRates?.[agent.id] !== undefined,
+    )
+    .map((agent) => ({
+      id: agent.id,
+      name: agent.name,
+      product: agent.product,
+      rateHourCents: project.agentRates![agent.id],
+      attachedAt: agent.createdAt,
+      lastRateChange: null,
+    }))
+
+const agentsOn = (db: Db, project: MockProject, userId: string) => [
+  ...[
     ...new Set(
       db.runs
         .filter((run) => run.projectId === project.id && run.userId === userId)
@@ -24,7 +42,9 @@ const agentsOn = (db: Db, project: MockProject, userId: string) =>
       attachedAt: project.createdAt,
       lastRateChange: null,
     }
-  })
+  }),
+  ...createdOn(db, project, userId),
+]
 
 export function teamOf(db: Db, meId: string) {
   const visible = visibleProjects(db, meId)
@@ -75,10 +95,22 @@ export const ownAgents = (db: Db, meId: string) => {
       .map((run) => run.product),
   )
 
-  return [...products].map((product) => ({
-    id: `${meId}:${product}`,
-    name: product,
-    product,
-    removedAt: null,
-  }))
+  return [
+    ...[...products].map((product) => ({
+      id: `${meId}:${product}`,
+      name: product,
+      slug: product,
+      product,
+      removedAt: null,
+    })),
+    ...db.agents
+      .filter((agent) => agent.userId === meId)
+      .map(({ id, name, slug, product, removedAt }) => ({
+        id,
+        name,
+        slug,
+        product,
+        removedAt,
+      })),
+  ]
 }

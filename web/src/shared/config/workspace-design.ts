@@ -53,6 +53,9 @@ export const workspaceDesign = {
   },
   typography: {
     fontFamily: "-apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif",
+    // Commands and keys, which are read character by character.
+    fontFamilyMono:
+      'ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace',
     title: {
       size: 40,
       lineHeight: 48,
@@ -189,6 +192,7 @@ export const workspaceCssTokens = {
     ]),
   ),
   '--ui-font': typography.fontFamily,
+  '--ui-font-mono': typography.fontFamilyMono,
   '--ui-title-size': px(typography.title.size),
   '--ui-title-line-height': px(typography.title.lineHeight),
   '--ui-title-weight': typography.title.weight,

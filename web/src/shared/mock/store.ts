@@ -10,7 +10,14 @@
 import { buildDb, type Db } from './db'
 import { demoDataKey, readDemoSettings } from './settings'
 
-type Collection = 'users' | 'projects' | 'times' | 'invoices' | 'runs'
+type Collection =
+  | 'users'
+  | 'projects'
+  | 'times'
+  | 'invoices'
+  | 'runs'
+  | 'agents'
+  | 'credentials'
 
 type Row = { id?: string; runKey?: string }
 
@@ -25,7 +32,15 @@ const rowId = (row: Row) => (row.id ?? row.runKey) as string
 
 const emptyOverrides = (day: string): Overrides => ({
   day,
-  rows: { users: {}, projects: {}, times: {}, invoices: {}, runs: {} },
+  rows: {
+    users: {},
+    projects: {},
+    times: {},
+    invoices: {},
+    runs: {},
+    agents: {},
+    credentials: {},
+  },
 })
 
 const storageKey = () => `wa.demo.data:${demoDataKey(readDemoSettings())}`
@@ -44,6 +59,8 @@ function readOverrides(day: string): Overrides {
     if (!saved?.rows) {
       return emptyOverrides(day)
     }
+    // Edits saved before a collection existed have no place for its rows.
+    saved.rows = { ...emptyOverrides(day).rows, ...saved.rows }
     if (saved.day !== day) {
       for (const collection of DAILY) {
         saved.rows[collection] = {}

@@ -1,3 +1,5 @@
+import type { ServerProduct } from './server-agent'
+
 export type TeamRole = 'owner' | 'worker' | 'viewer'
 
 export type TeamAgent = {
@@ -36,8 +38,51 @@ export type Team = {
 export type OwnAgent = {
   id: string
   name: string
+  /** The handle `WORK_ADDRESS_AGENT` names; unique among the reader's agents. */
+  slug: string
   product: string
   removedAt: string | null
+}
+
+/** A machine's upload credential, as `GET /agent-tracking/credentials` lists it. */
+export type AgentCredential = {
+  id: string
+  instanceId: string
+  label: string
+  mode: 'timer' | 'fixed'
+  prefix: string
+  createdAt: string
+  expiresAt: string
+  revokedAt: string | null
+  lastUsedAt: string | null
+}
+
+export type ServerCredentialState = 'active' | 'expiring' | 'expired'
+
+export type ServerCredentialRow = {
+  id: string
+  label: string
+  prefix: string
+  expiresAt: string
+  lastUsedAt: string | null
+  state: ServerCredentialState
+}
+
+/** What the setup dialog asks for. */
+export type ServerAgentForm = {
+  product: ServerProduct
+  name: string
+  projectId: string
+  rateHourCents: number
+}
+
+/** A finished setup: the secret is in memory only, and shown once. */
+export type ServerSetup = {
+  product: ServerProduct
+  projectId: string
+  instanceId: string
+  credential: string
+  expiresAt: string
 }
 
 export type OwnAgentAttachment = {

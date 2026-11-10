@@ -48,6 +48,25 @@ import { ownAgents, teamOf } from './team'
 
 import type { Db, MockInvoice, MockProject, MockTime, MockUser } from './db'
 
+/** `AGENT_PRODUCTS` in the API's model/agent.ts. */
+const AGENT_PRODUCTS = new Set([
+  'claude-code',
+  'codex',
+  'cursor',
+  'gemini-cli',
+  'copilot',
+  'windsurf',
+  'cline',
+  'minimax',
+  'devin-local',
+  'claude-cowork',
+  'kimi-code',
+  'kimi-cli',
+  'openclaw',
+  'hermes',
+  'opencode',
+])
+
 type Ctx = {
   request: Request
   params: Record<string, string>
@@ -442,6 +461,37 @@ const DEMO_GOOGLE_REFUSALS: Partial<
   },
   'google-invalid': { name: 'AuthenticationException', status: 401 },
   'google-unavailable': { name: 'GoogleUnavailableException', status: 503 },
+}
+
+const UUID = /^[\da-f]{8}(?:-[\da-f]{4}){3}-[\da-f]{12}$/i
+
+/** What `AgentDto` lets through, or null: the API answers anything else 400. */
+function agentDraft(body: Record<string, unknown>) {
+  const { name, slug, product, isDefault, bindings } = body
+  const valid =
+    typeof name === 'string' &&
+    name.length > 0 &&
+    name.length <= 60 &&
+    !/[<>]/.test(name) &&
+    [...name].every((char) => char.charCodeAt(0) > 31) &&
+    typeof slug === 'string' &&
+    /^[\da-z][\da-z-]{0,59}$/.test(slug) &&
+    typeof product === 'string' &&
+    AGENT_PRODUCTS.has(product) &&
+    typeof isDefault === 'boolean' &&
+    Array.isArray(bindings) &&
+    bindings.every((id) => typeof id === 'string' && UUID.test(id)) &&
+    new Set(bindings).size === bindings.length
+
+  return valid
+    ? {
+        name: name as string,
+        slug: slug as string,
+        product: product as string,
+        isDefault: isDefault as boolean,
+        bindings: (bindings as string[]).map((id) => id.toLowerCase()),
+      }
+    : null
 }
 
 export const handlers: HttpHandler[] = [
@@ -1014,7 +1064,13 @@ export const handlers: HttpHandler[] = [
     if (!project || !isWorker(db, project, meId)) {
       fail(403, 'Access denied')
     }
-    if (!params.agentId.startsWith(`${meId}:`)) {
+    // The reader's own: one their runs imply, or one they set up by hand.
+    const own =
+      params.agentId.startsWith(`${meId}:`) ||
+      db.agents.some(
+        (agent) => agent.id === params.agentId && agent.userId === meId,
+      )
+    if (!own) {
       fail(403, 'Access denied')
     }
     saveRow('projects', {
@@ -1025,6 +1081,96 @@ export const handlers: HttpHandler[] = [
       },
     })
     return { agentId: params.agentId, rateHourCents: body.rateHourCents }
+  }),
+
+  // Setting up an agent on a server: the agent, then its machine's credential.
+  route('post', '/agents', ({ db, meId, body }) => {
+    const draft = agentDraft(body)
+    if (!draft) {
+      fail(400, 'Invalid body')
+    }
+    const mine = db.agents.filter((agent) => agent.userId === meId)
+    if (ownAgents(db, meId).some((agent) => agent.slug === draft!.slug)) {
+      fail(400, 'SLUG_IN_USE')
+    }
+    const peers = mine.filter(
+      (agent) => !agent.removedAt && agent.product === draft!.product,
+    )
+    if (
+      peers.some((agent) =>
+        agent.bindings.some((id) => draft!.bindings.includes(id)),
+      )
+    ) {
+      fail(400, 'BINDING_IN_USE')
+    }
+    // A product always has one default: its first agent, or the one that asks.
+    const isDefault =
+      draft!.isDefault || !peers.some((agent) => agent.isDefault)
+    if (isDefault) {
+      for (const peer of peers.filter((agent) => agent.isDefault)) {
+        saveRow('agents', { ...peer, isDefault: false })
+      }
+    }
+    const { userId: _owner, ...agent } = saveRow('agents', {
+      ...draft!,
+      id: crypto.randomUUID(),
+      userId: meId,
+      isDefault,
+      createdAt: new Date().toISOString(),
+      removedAt: null,
+    })
+    return agent
+  }),
+  route('get', '/agent-tracking/credentials', ({ db, meId }) =>
+    db.credentials
+      .filter((credential) => credential.userId === meId)
+      .sort((a, b) => b.createdAt.localeCompare(a.createdAt))
+      .map(({ userId: _owner, ...credential }) => credential),
+  ),
+  route('post', '/agent-tracking/credentials', ({ meId, body }) => {
+    if (
+      typeof body.instanceId !== 'string' ||
+      !UUID.test(body.instanceId) ||
+      (body.mode !== 'timer' && body.mode !== 'fixed')
+    ) {
+      fail(400, 'Invalid body')
+    }
+    const secret = [...crypto.getRandomValues(new Uint8Array(32))]
+      .map((byte) => byte.toString(16).padStart(2, '0'))
+      .join('')
+    const credential = `wa_agent_${secret}`
+    const now = Date.now()
+    const row = saveRow('credentials', {
+      id: crypto.randomUUID(),
+      userId: meId,
+      instanceId: String(body.instanceId).toLowerCase(),
+      label: String(body.label ?? ''),
+      mode: body.mode === 'timer' ? ('timer' as const) : ('fixed' as const),
+      prefix: credential.slice(0, 12),
+      createdAt: new Date(now).toISOString(),
+      expiresAt: new Date(now + 90 * 86_400_000).toISOString(),
+      revokedAt: null,
+      lastUsedAt: null,
+    })
+    return {
+      id: row.id,
+      instanceId: row.instanceId,
+      credential,
+      expiresAt: row.expiresAt,
+    }
+  }),
+  route('delete', '/agent-tracking/credentials/:id', ({ db, meId, params }) => {
+    const credential = db.credentials.find(
+      (row) => row.id === params.id && row.userId === meId,
+    )
+    if (!credential) {
+      fail(404, 'Not found')
+    }
+    saveRow('credentials', {
+      ...credential!,
+      revokedAt: new Date().toISOString(),
+    })
+    return null
   }),
 ]
 

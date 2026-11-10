@@ -13,6 +13,7 @@ import type { OwnAgent, Team } from './types'
 const agent = (id: string, removedAt: string | null = null): OwnAgent => ({
   id,
   name: id,
+  slug: id,
   product: 'codex',
   removedAt,
 })

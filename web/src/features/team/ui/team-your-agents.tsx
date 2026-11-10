@@ -13,6 +13,8 @@ import {
 } from '../model'
 
 import { TeamAgentRate } from './team-agent-rate'
+import { TeamServerSetup } from './team-server-setup'
+import { TeamServers } from './team-servers'
 
 import { $user } from '@/entities/profile'
 import { WorkspacePanel } from '@/shared'
@@ -47,6 +49,11 @@ export const TeamYourAgents = () => {
           ? 'team.yourAgents.descriptionOwner'
           : 'team.yourAgents.description',
       )}
+      aside={
+        team?.projects.length ? (
+          <TeamServerSetup projects={team.projects} />
+        ) : undefined
+      }
       loading={pending && agents === null}
       failed={failed}
       onRetry={retry}
@@ -91,6 +98,7 @@ export const TeamYourAgents = () => {
           </Item>
         ))}
       </List>
+      <TeamServers />
       {/* Every runtime's time is still recorded as unclassified, and it bills. */}
       <Note>
         {t(
