@@ -137,10 +137,11 @@ export class WorkerAgents {
 
   /**
    * What unnamed laptop runs of these products set up for a worker: a default
-   * agent for a product they never had an agent for, and each run's agent
-   * attached at 0/hour where the worker never had it attached. Their own
-   * choices stand: a removed agent is not recreated and a detached one is not
-   * reattached. Whoever takes locks asks `addsAgents` and `attaches`; whoever
+   * agent where a run would otherwise find none, and each run's agent attached
+   * at 0/hour where the worker never had it attached. Agents bound to other
+   * machines do not stand in the way. The worker's own choices stand: once
+   * they have removed an agent of a product none is made for it, and a
+   * detached agent is not reattached. Whoever takes locks asks `addsAgents` and `attaches`; whoever
    * writes takes the lists. Pass no attachments to ask about agents alone.
    */
   public static provision(input: {
@@ -163,7 +164,8 @@ export class WorkerAgents {
 
     for (const product of products) {
       if (!(product in AGENT_PRODUCT_NAMES)) continue
-      if (agents.some((a) => a.product === product)) continue
+      if (this.assign(agents, { product, instanceId })) continue
+      if (agents.some((a) => a.product === product && a.removedAt)) continue
       let slug = product
       for (let n = 2; agents.some((a) => a.slug === slug); n++)
         slug = `${product}-${n}`
@@ -196,9 +198,11 @@ export class WorkerAgents {
   }
 
   /**
-   * A worker adds an agent or edits one of theirs. A product keeps exactly one
-   * default: its first agent, or the one that asks, which takes it from the
-   * last. A handle stays taken once used, a removed agent's included.
+   * A worker adds an agent or edits one of theirs. A product has at most one
+   * default: the agent that asks, which takes it from the last, or unasked
+   * its first agent with no machine bindings. An agent bound to machines is
+   * that machine's agent only, unless its worker makes it the default. A
+   * handle stays taken once used, a removed agent's included.
    */
   public static save(
     agents: WorkerAgent[],
@@ -238,14 +242,15 @@ export class WorkerAgents {
     const agent: WorkerAgent = {
       ...data,
       id: prior?.id ?? stamp.newId(),
-      isDefault: data.isDefault || !peers.some((a) => a.isDefault),
+      isDefault:
+        data.isDefault ||
+        (data.bindings.length === 0 && !peers.some((a) => a.isDefault)),
       createdAt: prior?.createdAt ?? stamp.at,
       removedAt: null,
     }
 
-    return {
-      agent,
-      agents: [
+    const saved = this.withDefault(
+      [
         ...agents
           .filter((a) => a.id !== agent.id)
           .map((a) =>
@@ -253,13 +258,17 @@ export class WorkerAgents {
           ),
         agent,
       ],
-    }
+      agent.product,
+    )
+
+    return { agents: saved, agent: saved.find((a) => a.id === agent.id)! }
   }
 
   /**
    * A worker removes an agent: it is kept, so runs and invoice lines keep a
    * name, but it gives up its bindings and its place as default, which the
-   * product's next agent takes. Removing it twice changes nothing.
+   * product's next agent with no machine bindings takes. Removing it twice
+   * changes nothing.
    */
   public static remove(
     agents: WorkerAgent[],
@@ -274,16 +283,8 @@ export class WorkerAgents {
     const next = agents.map((a) =>
       a.id === id ? { ...a, removedAt: at, isDefault: false, bindings: [] } : a,
     )
-    const peers = next.filter(
-      (a) => !a.removedAt && a.product === agent.product,
-    )
-    const heir =
-      peers.length && !peers.some((a) => a.isDefault) ? peers[0] : undefined
 
-    return {
-      changed: true,
-      agents: next.map((a) => (a === heir ? { ...a, isDefault: true } : a)),
-    }
+    return { changed: true, agents: this.withDefault(next, agent.product) }
   }
 
   /**
@@ -336,6 +337,22 @@ export class WorkerAgents {
         ? attachments.map((a) => (a === prior ? attachment : a))
         : [...attachments, attachment],
     }
+  }
+
+  /**
+   * A product whose default has gone gets its first agent with no machine
+   * bindings as the next one, so runs no machine is bound for keep a home.
+   * When every agent left is bound to machines, the product has no default.
+   */
+  private static withDefault(
+    agents: WorkerAgent[],
+    product: string,
+  ): WorkerAgent[] {
+    const live = agents.filter((a) => !a.removedAt && a.product === product)
+    if (live.some((a) => a.isDefault)) return agents
+    const heir = live.find((a) => a.bindings.length === 0)
+
+    return agents.map((a) => (a === heir ? { ...a, isDefault: true } : a))
   }
 
   /** Until the worker sets a rate, an attached agent's time costs nothing. */

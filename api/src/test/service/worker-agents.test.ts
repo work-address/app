@@ -245,6 +245,37 @@ describe('WorkerAgents', () => {
       expect(plan.attachments.map((a) => a.agentId)).to.deep.equal(['b'])
     })
 
+    it('makes a default beside agents bound to other machines', () => {
+      const plan = provision({
+        agents: [agent('server', { bindings: ['another-machine'] })],
+      })
+
+      expect(plan.addsAgents).to.equal(true)
+      expect(plan.agents[1]).to.include({ isDefault: true, slug: 'codex' })
+      expect(plan.attachments.map((a) => a.agentId)).to.deep.equal(['new-1'])
+    })
+
+    it('makes none when this machine has its own agent', () => {
+      const plan = provision({
+        agents: [agent('mine', { bindings: [MACHINE] })],
+      })
+
+      expect(plan.addsAgents).to.equal(false)
+      expect(plan.attachments.map((a) => a.agentId)).to.deep.equal(['mine'])
+    })
+
+    it('makes none once the worker has removed an agent of the product', () => {
+      const plan = provision({
+        agents: [
+          agent('server', { bindings: ['another-machine'] }),
+          agent('old', { removedAt: AT }),
+        ],
+      })
+
+      expect(plan.addsAgents).to.equal(false)
+      expect(plan.attaches).to.equal(false)
+    })
+
     it('does not recreate a removed agent or attach anything for it', () => {
       const plan = provision({
         agents: [agent('a', { isDefault: false, removedAt: AT })],
@@ -305,7 +336,37 @@ describe('WorkerAgents', () => {
     const save = (agents: WorkerAgent[], over = {}, create = true) =>
       WorkerAgents.save(agents, draft(over), create, { at: AT, newId: ids() })
 
-    it("a product's first agent is its default whatever is asked", () => {
+    it('a machine-bound agent is the default only when it asks', () => {
+      const quiet = save([], { bindings: [MACHINE] })
+      const asking = save([], { bindings: [MACHINE], isDefault: true })
+
+      expect(quiet).to.have.nested.property('agent.isDefault', false)
+      expect(asking).to.have.nested.property('agent.isDefault', true)
+    })
+
+    it('a first agent with no bindings is the default beside bound ones', () => {
+      const result = save([agent('server', { bindings: [MACHINE] })])
+
+      expect(result).to.have.nested.property('agent.isDefault', true)
+    })
+
+    it('a bound default that gives the place up hands it to an unbound agent', () => {
+      const result = save(
+        [
+          agent('server', { isDefault: true, bindings: [MACHINE] }),
+          agent('laptop'),
+        ],
+        { id: 'server', name: 'server', slug: 'server', bindings: [MACHINE] },
+        false,
+      )
+
+      expect(
+        'agents' in result &&
+          result.agents.filter((a) => a.isDefault).map((a) => a.id),
+      ).to.deep.equal(['laptop'])
+    })
+
+    it("a product's first agent with no bindings is its default unasked", () => {
       const result = save([])
 
       expect(result).to.have.nested.property('agent.isDefault', true)
@@ -422,6 +483,38 @@ describe('WorkerAgents', () => {
         agent('a', { removedAt: AT }),
         agent('b', { isDefault: true }),
       ])
+    })
+
+    it('leaves no default when every agent left is bound to machines', () => {
+      const result = WorkerAgents.remove(
+        [
+          agent('a', { isDefault: true }),
+          agent('server', { bindings: [MACHINE] }),
+        ],
+        'a',
+        AT,
+      )
+
+      expect(
+        'agents' in result && result.agents.some((a) => a.isDefault),
+      ).to.equal(false)
+    })
+
+    it('passes the default over a bound agent to an unbound one', () => {
+      const result = WorkerAgents.remove(
+        [
+          agent('a', { isDefault: true }),
+          agent('server', { bindings: [MACHINE] }),
+          agent('b'),
+        ],
+        'a',
+        AT,
+      )
+
+      expect(
+        'agents' in result &&
+          result.agents.filter((a) => a.isDefault).map((a) => a.id),
+      ).to.deep.equal(['b'])
     })
 
     it('twice changes nothing', () => {

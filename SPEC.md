@@ -180,7 +180,7 @@ rows, and never used where a figure must match an invoice. The plans are in
 
 A worker keeps a list of agents — one or more per product they run, such as
 Claude Code on their laptop and Claude Code on a build server — each optionally
-bound to the machines it runs on, with one default per product. They attach their own agents to projects they work on and set each
+bound to the machines it runs on, with at most one default per product. The default takes the runs no machine is bound for. An agent bound to machines is the default only when its worker makes it so. They attach their own agents to projects they work on and set each
 agent's hourly rate for that project, from zero. The owner sees every agent,
 rate and run on the project but cannot add, change or remove any of them; the
 owner's levers are rejecting an invoice and removing the worker. Agent runs

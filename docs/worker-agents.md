@@ -1,6 +1,6 @@
 # Worker agents
 
-Status: done on 10 November 2026 (`9ba132a2` and the commit after it), on `dev`. No behaviour changed: the whole API suite passed unedited in an isolated database, 681 tests. One thing is narrower than before: the Run record's two lock predicates now ask the provisioning plan itself, so a batch for an unknown product, or for a product whose only agent was removed, takes a read lock where it used to take a write lock for a write that never happened. The default rule under Afterwards is still open.
+Status: done on 10 November 2026 (`9ba132a2` and the commit after it), on `dev`. No behaviour changed: the whole API suite passed unedited in an isolated database, 681 tests. One thing is narrower than before: the Run record's two lock predicates now ask the provisioning plan itself, so a batch for an unknown product, or for a product whose only agent was removed, takes a read lock where it used to take a write lock for a write that never happened. The default rule under Afterwards was settled the same day.
 
 One module answers every rule about a worker's agents and where they are attached: which agent a run goes to, whether an attachment still counts, who may see it, and what the two lists become when something changes. The repository and the Run record lock and persist.
 
@@ -43,7 +43,7 @@ Related documents: [agent-time-tracking.md](agent-time-tracking.md) "Agents and 
 | Does it bill past runs? | It was ever attached, detached or not |
 | Is it shown on the Team? | It accepts new runs |
 | Who may see it? | The project's owner sees all; a worker their own; nobody else |
-| What will this batch provision? | A default agent for a product the worker never had an agent for, and a rate-0 attachment where the worker never had one, for unnamed laptop runs only. A removed agent is not recreated and a detached one is not reattached |
+| What will this batch provision? | A default agent where an unnamed laptop run would find none, and a rate-0 attachment where the worker never had one. Once the worker has removed an agent of a product none is made, and a detached agent is not reattached |
 | What do the lists become? | Saving, removing, attaching, setting a rate and detaching, each as the new list or a refusal code |
 
 ## Order
@@ -54,4 +54,14 @@ Related documents: [agent-time-tracking.md](agent-time-tracking.md) "Agents and 
 
 ## Afterwards
 
-The default rule is undecided in [agent-time-tracking.md](agent-time-tracking.md): a product's first agent is its default, so a first server agent also receives the desktop app's runs. The agreed direction is that an agent created with machine bindings and `isDefault: false` does not become the default, "exactly one default agent per product" becomes "at most one", and the Team dialog's warning goes. It is a separate change to `SPEC.md`, the plan and this module, with its own tests.
+Done on 10 November 2026. A product's first agent used to be its default whatever was asked, so a first server agent also received the desktop app's runs. Now:
+
+| Area | Decision | Not chosen |
+| --- | --- | --- |
+| Default | At most one per product. Unasked, only a product's first agent with no machine bindings; an agent with bindings only when it asks | Exactly one, whichever agent came first |
+| Removing the default | The place goes to the product's first remaining agent with no bindings, or to nobody | Handing it to a machine-bound agent |
+| Desktop runs | A default is made when a run finds no agent, so agents bound to other machines no longer stand in the way. Not once the worker has removed an agent of the product | Making one only when the worker has no agent of the product at all |
+| Existing agents | Left as they are: stored data does not say whether a default was chosen or forced | A data change |
+| After a removal | Removing an agent clears its bindings, so any removed agent of a product reads as "the worker chose not to have one" and desktop runs of that product wait, as before. The web has no way to add a laptop agent to get out of it | Changing what removal stores |
+
+No existing test pinned the old rule: the suite passed unedited, 689 tests.
