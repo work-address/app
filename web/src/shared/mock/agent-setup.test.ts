@@ -36,7 +36,7 @@ describe('server agent setup in the demo', () => {
   beforeAll(() => server.listen())
   afterAll(() => server.close())
 
-  it('makes the first agent of a product its default, as the API does', async () => {
+  it('makes a machine-bound agent, which is not the default unasked', async () => {
     const created = await call('post', '/agents', agent())
 
     expect(created.status).toBe(200)
@@ -44,7 +44,7 @@ describe('server agent setup in the demo', () => {
       name: 'OpenClaw (server)',
       slug: 'openclaw-server',
       product: 'openclaw',
-      isDefault: true,
+      isDefault: false,
       bindings: [INSTANCE],
       removedAt: null,
     })
@@ -56,6 +56,16 @@ describe('server agent setup in the demo', () => {
     expect(listed.body).toContainEqual(
       expect.objectContaining({ id: created.body.id, slug: 'openclaw-server' }),
     )
+  })
+
+  it("makes a product's first agent with no bindings its default, as the API does", async () => {
+    const created = await call(
+      'post',
+      '/agents',
+      agent({ slug: 'openclaw-laptop', bindings: [] }),
+    )
+
+    expect(created.body).toMatchObject({ isDefault: true, bindings: [] })
   })
 
   it('refuses what the API refuses', async () => {

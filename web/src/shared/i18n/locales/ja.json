@@ -919,7 +919,6 @@
   "team.serverSetup.recorded": "各実行について、開始時刻、長さ、終了の仕方が記録されます。",
   "team.serverSetup.recordedPrompt": "{{product}} は実行を開始したプロンプトも送信します（サーバーで WORK_ADDRESS_PROMPTS=off を設定した場合を除く）。",
   "team.serverSetup.ownerSees": "プロジェクトのオーナーはこれらすべてを確認できます。",
-  "team.serverSetup.takesDesktopRuns": "これが最初の {{product}} エージェントになるため、{{product}} の既定のエージェントになります。デスクトップアプリがノートPCで記録する実行もこのエージェントに入ります。",
   "team.serverSetup.demo": "これはデモです。この認証情報は本物ではなく、どのサーバーでも使えません。",
   "team.serverSetup.done": "完了",
   "team.servers.title": "サーバー",

@@ -8,7 +8,6 @@ import {
   $serverSetup,
   $serverSetupPending,
   $serverSetupResuming,
-  ownAgentsQuery,
   serverSetupClosed,
   serverSetupSubmitted,
   type TeamProjectData,
@@ -37,11 +36,10 @@ export const TeamServerSetup = ({ projects }: Props) => {
   // The machine's identity. The agent is bound to it and the credential is
   // issued for it, so one dialog keeps one, whatever is retried.
   const [instanceId, setInstanceId] = useState('')
-  const { setup, pending, resuming, agents, submit, close } = useUnit({
+  const { setup, pending, resuming, submit, close } = useUnit({
     setup: $serverSetup,
     pending: $serverSetupPending,
     resuming: $serverSetupResuming,
-    agents: ownAgentsQuery.$data,
     submit: serverSetupSubmitted,
     close: serverSetupClosed,
   })
@@ -103,7 +101,6 @@ export const TeamServerSetup = ({ projects }: Props) => {
           <TeamServerSetupForm
             id={FORM_ID}
             projects={projects}
-            agents={agents ?? []}
             disabled={pending}
             agentSettled={resuming}
             onSubmit={(form) => submit({ ...form, instanceId })}

@@ -1,6 +1,5 @@
 import type {
   AgentCredential,
-  OwnAgent,
   ServerCredentialRow,
   ServerCredentialState,
 } from './types'
@@ -32,25 +31,6 @@ export const SERVER_PRODUCT_NAMES: Record<ServerProduct, string> = {
 /** Runtimes whose collector sends the prompt that starts a run. */
 export const sendsPrompts = (product: ServerProduct): boolean =>
   product === 'claude-code' || product === 'codex'
-
-/** Runtimes the desktop app also reads on a laptop. */
-const DESKTOP_PRODUCTS = new Set<ServerProduct>([
-  'claude-code',
-  'codex',
-  'kimi-code',
-])
-
-/**
- * Whether a new server agent would also be given the desktop app's runs. The
- * API makes a product's first agent its default whatever is asked, and the
- * default takes every run no machine is bound for.
- */
-export const takesDesktopRuns = (
-  product: ServerProduct,
-  agents: Pick<OwnAgent, 'product' | 'removedAt'>[],
-): boolean =>
-  DESKTOP_PRODUCTS.has(product) &&
-  !agents.some((agent) => agent.product === product && !agent.removedAt)
 
 // `dev` is the repository's default branch.
 const REPOSITORY = 'https://github.com/work-address/app/blob/dev/packages'

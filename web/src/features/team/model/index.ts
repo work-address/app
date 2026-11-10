@@ -32,7 +32,6 @@ export {
   serverCredentialRows,
   setupCommand,
   setupGuideUrl,
-  takesDesktopRuns,
 } from './server-agent'
 export type { ServerProduct } from './server-agent'
 export type {

@@ -1103,9 +1103,11 @@ export const handlers: HttpHandler[] = [
     ) {
       fail(400, 'BINDING_IN_USE')
     }
-    // A product always has one default: its first agent, or the one that asks.
+    // At most one default: the agent that asks, or unasked the product's
+    // first agent with no machine bindings.
     const isDefault =
-      draft!.isDefault || !peers.some((agent) => agent.isDefault)
+      draft!.isDefault ||
+      (draft!.bindings.length === 0 && !peers.some((agent) => agent.isDefault))
     if (isDefault) {
       for (const peer of peers.filter((agent) => agent.isDefault)) {
         saveRow('agents', { ...peer, isDefault: false })

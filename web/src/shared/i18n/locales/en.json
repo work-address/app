@@ -923,7 +923,6 @@
   "team.serverSetup.recorded": "Each run is recorded with its start, its length and how it ended.",
   "team.serverSetup.recordedPrompt": "{{product}} also sends the prompt that started the run, unless the server sets WORK_ADDRESS_PROMPTS=off.",
   "team.serverSetup.ownerSees": "The project's owner sees all of it.",
-  "team.serverSetup.takesDesktopRuns": "This will be your first {{product}} agent, so it becomes your default for {{product}}: runs the desktop app records on your laptop go under it too.",
   "team.serverSetup.demo": "This is a demo: the credential isn't real and no server can use it.",
   "team.serverSetup.done": "Done",
   "team.servers.title": "Servers",

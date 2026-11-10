@@ -926,7 +926,6 @@
   "team.serverSetup.recorded": "De cada ejecución se registra su inicio, su duración y cómo terminó.",
   "team.serverSetup.recordedPrompt": "{{product}} también envía el prompt que inició la ejecución, salvo que el servidor defina WORK_ADDRESS_PROMPTS=off.",
   "team.serverSetup.ownerSees": "El propietario del proyecto lo ve todo.",
-  "team.serverSetup.takesDesktopRuns": "Será tu primer agente de {{product}}, así que pasa a ser tu agente predeterminado de {{product}}: las ejecuciones que la app de escritorio registre en tu portátil también irán a él.",
   "team.serverSetup.demo": "Esto es una demo: la credencial no es real y ningún servidor puede usarla.",
   "team.serverSetup.done": "Listo",
   "team.servers.title": "Servidores",

@@ -9,7 +9,6 @@ import {
   serverCredentialRows,
   setupCommand,
   setupGuideUrl,
-  takesDesktopRuns,
 } from './server-agent'
 
 import type { AgentCredential } from './types'
@@ -62,26 +61,6 @@ describe('sendsPrompts', () => {
       'claude-code',
       'codex',
     ])
-  })
-})
-
-describe('takesDesktopRuns', () => {
-  const agent = (product: string, removedAt: string | null = null) => ({
-    product,
-    removedAt,
-  })
-
-  it('is true of the first agent of a runtime the desktop app reads', () => {
-    expect(takesDesktopRuns('codex', [agent('claude-code')])).toBe(true)
-    expect(takesDesktopRuns('codex', [agent('codex', '2026-11-01')])).toBe(true)
-  })
-
-  it('is false once the runtime has an agent', () => {
-    expect(takesDesktopRuns('codex', [agent('codex')])).toBe(false)
-  })
-
-  it('is false of a runtime that only runs on servers', () => {
-    expect(takesDesktopRuns('openclaw', [])).toBe(false)
   })
 })
 

@@ -8,8 +8,6 @@ import {
   SERVER_PRODUCT_NAMES,
   SERVER_PRODUCTS,
   sendsPrompts,
-  takesDesktopRuns,
-  type OwnAgent,
   type ServerAgentForm,
   type ServerProduct,
   type TeamProjectData,
@@ -28,8 +26,6 @@ const PRODUCT_OPTIONS = SERVER_PRODUCTS.map((product) => ({
 type Props = {
   id: string
   projects: TeamProjectData[]
-  /** The reader's agents so far, which decide what a new one inherits. */
-  agents: OwnAgent[]
   disabled: boolean
   /** A failed attempt already made the agent: its runtime and name stand. */
   agentSettled: boolean
@@ -39,7 +35,6 @@ type Props = {
 export const TeamServerSetupForm = ({
   id,
   projects,
-  agents,
   disabled,
   agentSettled,
   onSubmit,
@@ -98,11 +93,6 @@ export const TeamServerSetupForm = ({
             : undefined
         }
       />
-      {!agentSettled && takesDesktopRuns(product, agents) ? (
-        <Notice>
-          {t('team.serverSetup.takesDesktopRuns', { product: productName })}
-        </Notice>
-      ) : null}
       <Select
         label={t('team.serverSetup.project')}
         hint={t('team.serverSetup.projectHint')}

@@ -918,7 +918,6 @@
   "team.serverSetup.recorded": "每次运行都会记录其开始时间、时长和结束方式。",
   "team.serverSetup.recordedPrompt": "{{product}} 还会发送启动该运行的提示词，除非服务器设置了 WORK_ADDRESS_PROMPTS=off。",
   "team.serverSetup.ownerSees": "项目所有者可以看到这一切。",
-  "team.serverSetup.takesDesktopRuns": "这将是你的第一个 {{product}} 智能体，因此它会成为 {{product}} 的默认智能体：桌面应用在你的笔记本电脑上记录的运行也会归到它名下。",
   "team.serverSetup.demo": "这是演示：该凭据不是真实的，任何服务器都无法使用。",
   "team.serverSetup.done": "完成",
   "team.servers.title": "服务器",

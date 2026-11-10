@@ -937,7 +937,6 @@
   "team.serverSetup.recorded": "Для каждого запуска записываются его начало, длительность и результат.",
   "team.serverSetup.recordedPrompt": "{{product}} также отправляет запрос, с которого начался запуск, если на сервере не задано WORK_ADDRESS_PROMPTS=off.",
   "team.serverSetup.ownerSees": "Всё это видит владелец проекта.",
-  "team.serverSetup.takesDesktopRuns": "Это будет ваш первый агент {{product}}, поэтому он станет агентом по умолчанию для {{product}}: запуски, которые настольное приложение записывает на ноутбуке, тоже попадут к нему.",
   "team.serverSetup.demo": "Это демо: ключ ненастоящий, и ни один сервер не сможет его использовать.",
   "team.serverSetup.done": "Готово",
   "team.servers.title": "Серверы",
