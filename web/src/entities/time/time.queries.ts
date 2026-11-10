@@ -3,7 +3,7 @@ import { endOfDay } from 'date-fns'
 
 import type { Time, TimeSort } from './types'
 
-import { baseApi, runApiData } from '@/shared'
+import { baseApi, runApiData, type FailureReport } from '@/shared'
 
 export type TimeQueryParams = {
   activityId?: string
@@ -49,28 +49,41 @@ const toFilterNumber = (value?: number | null | string) => {
   return Number.isNaN(parsed) ? undefined : parsed
 }
 
+/**
+ * A first page fails in place: the worklogs section shows it, with a retry. So
+ * does a read nobody asked for, such as the reload after a delete: the rows on
+ * screen are right, and the next "load more" reads them again. Only a later
+ * page the person asked for has nowhere to say so but a toast.
+ */
+const timeFailureReport = (params: TimeQueryParams): FailureReport =>
+  (params.page ?? 0) === 0 || params.quiet
+    ? 'in-place'
+    : { fixed: 'dashboard.worklogsTable.loadMoreError' }
+
 const searchTimePage = async (params: TimeQueryParams, page: number) => {
-  const [items, total] = (await runApiData(() =>
-    baseApi.timeControllerSearch({
-      body: {
-        filter: {
-          projectId: params?.activityId,
-          fromAt: toDateTime(params?.fromAt),
-          toAt: toDateTime(params?.toAt, true),
-          note: params.note,
-          minutesActiveFrom: toFilterNumber(params.timeActiveMin),
-          minutesActiveTo: toFilterNumber(params.timeActiveMax),
-          keyboardKeysFrom: toFilterNumber(params.keyboardKeysMin),
-          keyboardKeysTo: toFilterNumber(params.keyboardKeysMax),
-          mouseKeysFrom: toFilterNumber(params.mouseKeysMin),
-          mouseKeysTo: toFilterNumber(params.mouseKeysMax),
-          mouseDistanceFrom: toFilterNumber(params.mouseDistanceMin),
-          mouseDistanceTo: toFilterNumber(params.mouseDistanceMax),
+  const [items, total] = (await runApiData(
+    () =>
+      baseApi.timeControllerSearch({
+        body: {
+          filter: {
+            projectId: params?.activityId,
+            fromAt: toDateTime(params?.fromAt),
+            toAt: toDateTime(params?.toAt, true),
+            note: params.note,
+            minutesActiveFrom: toFilterNumber(params.timeActiveMin),
+            minutesActiveTo: toFilterNumber(params.timeActiveMax),
+            keyboardKeysFrom: toFilterNumber(params.keyboardKeysMin),
+            keyboardKeysTo: toFilterNumber(params.keyboardKeysMax),
+            mouseKeysFrom: toFilterNumber(params.mouseKeysMin),
+            mouseKeysTo: toFilterNumber(params.mouseKeysMax),
+            mouseDistanceFrom: toFilterNumber(params.mouseDistanceMin),
+            mouseDistanceTo: toFilterNumber(params.mouseDistanceMax),
+          },
+          page,
+          sort: params?.sort ?? {},
         },
-        page,
-        sort: params?.sort ?? {},
-      },
-    }),
+      }),
+    timeFailureReport(params),
   )) as [Time[], number]
 
   return { items: items ?? [], total: Number(total ?? 0) }
@@ -144,10 +157,13 @@ export type TimeAgentRunsParams = {
 }
 
 /** The project's agent runs that overlap an entry: everyone's for its owner, one's own otherwise. */
+// A project without agent tracking, or a viewer, has none to show: the dialog
+// simply leaves the section out.
 export const timeAgentRunsQuery = createQuery({
   handler: async (params: TimeAgentRunsParams) => {
-    const [runs] = (await runApiData(() =>
-      baseApi.agentControllerSearch({ body: params }),
+    const [runs] = (await runApiData(
+      () => baseApi.agentControllerSearch({ body: params }),
+      'in-place',
     )) as [TimeAgentRun[], number]
 
     return runs
@@ -161,6 +177,9 @@ export type RecentTimeParams = {
   toAt: string
 }
 
+// The three reads below fail in place: the dashboard's strips show their own
+// failure.
+
 /**
  * The newest runs across every project the reader works on: their own, and
  * every worker's on projects they own. Prompts another worker has not yet
@@ -168,8 +187,9 @@ export type RecentTimeParams = {
  */
 export const recentAgentRunsQuery = createQuery({
   handler: async (params: RecentTimeParams) => {
-    const [runs] = (await runApiData(() =>
-      baseApi.agentControllerSearch({ body: params }),
+    const [runs] = (await runApiData(
+      () => baseApi.agentControllerSearch({ body: params }),
+      'in-place',
     )) as [TimeAgentRun[], number]
 
     return runs
@@ -198,15 +218,23 @@ export const recentScreenshotsQuery = createQuery({
     projectIds,
     userIds,
   }: RecentEntriesParams) => {
-    const [items] = (await runApiData(() =>
-      baseApi.timeControllerSearch({
-        body: {
-          filter: { withScreenshots: true, fromAt, toAt, projectIds, userIds },
-          page: 0,
-          limit: RECENT_SCREENSHOTS_PAGE,
-          sort: { fromAt: 'DESC' },
-        },
-      }),
+    const [items] = (await runApiData(
+      () =>
+        baseApi.timeControllerSearch({
+          body: {
+            filter: {
+              withScreenshots: true,
+              fromAt,
+              toAt,
+              projectIds,
+              userIds,
+            },
+            page: 0,
+            limit: RECENT_SCREENSHOTS_PAGE,
+            sort: { fromAt: 'DESC' },
+          },
+        }),
+      'in-place',
     )) as [Time[], number]
 
     return items ?? []
@@ -231,21 +259,23 @@ export const recentTimeQuery = createQuery({
     projectIds,
     userId,
   }: RecentDesktopTimeParams) => {
-    const [items] = (await runApiData(() =>
-      baseApi.timeControllerSearch({
-        body: {
-          filter: {
-            fromAt,
-            toAt,
-            projectIds,
-            userIds: [userId],
-            source: 'desktop',
+    const [items] = (await runApiData(
+      () =>
+        baseApi.timeControllerSearch({
+          body: {
+            filter: {
+              fromAt,
+              toAt,
+              projectIds,
+              userIds: [userId],
+              source: 'desktop',
+            },
+            page: 0,
+            limit: RECENT_TIME_PAGE,
+            sort: { fromAt: 'DESC' },
           },
-          page: 0,
-          limit: RECENT_TIME_PAGE,
-          sort: { fromAt: 'DESC' },
-        },
-      }),
+        }),
+      'in-place',
     )) as [Time[], number]
 
     return items ?? []

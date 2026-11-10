@@ -1,8 +1,30 @@
 import { createMutation } from '@farfetched/core'
+import { AxiosError } from 'axios'
 
 import { readInvoiceSettlement } from './invoice-feed'
 
 import { baseApi, runApiData } from '@/shared'
+
+/**
+ * One settlement request. The answer is checked inside the call, so an invoice
+ * the server sends back wrong is reported the same way as a refusal.
+ */
+const settle = (id: string, call: () => Promise<unknown>) =>
+  runApiData(
+    async () => {
+      const response = await call()
+
+      return response instanceof AxiosError
+        ? response
+        : {
+            data: readInvoiceSettlement(
+              id,
+              (response as { data: baseApi.InvoiceSearch }).data,
+            ),
+          }
+    },
+    { fixed: 'invoice.payment.failed' },
+  )
 
 /**
  * Marking an invoice paid marks the hours behind it paid - the server cascades
@@ -10,22 +32,18 @@ import { baseApi, runApiData } from '@/shared'
  * person owed the money is the one who knows whether it arrived.
  */
 export const markInvoicePaidMutation = createMutation({
-  handler: async (id: string) => {
-    const invoice = await runApiData(() =>
+  handler: (id: string) =>
+    settle(id, () =>
       baseApi.invoiceControllerMarkPaid({ path: { id: id as never } }),
-    )
-    return readInvoiceSettlement(id, invoice as baseApi.InvoiceSearch)
-  },
+    ),
 })
 
 /** Reverts a mistaken mark, releasing the hours back to unpaid. */
 export const markInvoiceUnpaidMutation = createMutation({
-  handler: async (id: string) => {
-    const invoice = await runApiData(() =>
+  handler: (id: string) =>
+    settle(id, () =>
       baseApi.invoiceControllerMarkUnpaid({ path: { id: id as never } }),
-    )
-    return readInvoiceSettlement(id, invoice as baseApi.InvoiceSearch)
-  },
+    ),
 })
 
 /**

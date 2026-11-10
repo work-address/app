@@ -27,7 +27,7 @@ import {
 } from './profile.stores'
 
 import { routes } from '@/routes'
-import { sessionExpired, suppressGlobalErrorToast } from '@/shared'
+import { sessionExpired } from '@/shared'
 
 const STATUS_RETRY_MS = 15_000
 
@@ -125,22 +125,10 @@ sample({
   target: fetchStatusFx,
 })
 
-// Quiet, or an outage would raise a toast at every retry. Each page says for
-// itself that it could not load.
-fetchStatusFx.failData.watch(suppressGlobalErrorToast)
-
 sample({
   clock: saveProfileMutation.finished.success,
   target: fetchStatusFx,
 })
-
-// profile-edit.tsx already shows its own toast on save failure.
-saveProfileMutation.finished.failure.watch(({ error }) => {
-  suppressGlobalErrorToast(error)
-})
-
-// The Google button shows these in place, in `$googleSignInError`'s words.
-loginGoogleFx.failData.watch(suppressGlobalErrorToast)
 
 // eslint-disable-next-line
 ;(window as any)['logout'] = logout

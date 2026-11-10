@@ -6,25 +6,23 @@ import type { OwnAgent, Team } from './types'
 
 import { signOut } from '@/entities/profile'
 import { editProjectMutation } from '@/entities/projects'
-import {
-  baseApi,
-  getErrorMessage,
-  runApi,
-  runApiData,
-  showToast,
-  suppressGlobalErrorToast,
-} from '@/shared'
+import { baseApi, runApi, runApiData, showToast } from '@/shared'
 
 export const fetchTeam = createEvent()
 
+// Both fail in place: the page says so, with a retry; the sidebar asks too, on
+// every page, and a toast there would blame a screen the person is not looking at.
 export const teamQuery = createQuery({
   handler: async () =>
-    (await runApiData(() => baseApi.teamControllerRead())) as Team,
+    (await runApiData(() => baseApi.teamControllerRead(), 'in-place')) as Team,
 })
 
 export const ownAgentsQuery = createQuery({
   handler: async () =>
-    (await runApiData(() => baseApi.agentControllerList())) as OwnAgent[],
+    (await runApiData(
+      () => baseApi.agentControllerList(),
+      'in-place',
+    )) as OwnAgent[],
 })
 
 concurrency(teamQuery, { strategy: 'TAKE_LATEST' })
@@ -36,11 +34,13 @@ export const setAgentRateMutation = createMutation({
     agentId: string
     rateHourCents: number
   }) =>
-    runApi(() =>
-      baseApi.agentControllerAttach({
-        path: { id: rate.projectId, agentId: rate.agentId },
-        body: { rateHourCents: rate.rateHourCents },
-      }),
+    runApi(
+      () =>
+        baseApi.agentControllerAttach({
+          path: { id: rate.projectId, agentId: rate.agentId },
+          body: { rateHourCents: rate.rateHourCents },
+        }),
+      { fallback: 'team.rate.saveError' },
     ),
 })
 
@@ -66,25 +66,6 @@ sample({
 sample({
   clock: signOut,
   target: [teamQuery.reset, ownAgentsQuery.reset],
-})
-
-// The page says so in place, with a retry; the sidebar asks too, on every page,
-// and a toast there would blame a screen the person is not looking at.
-teamQuery.finished.failure.watch(({ error }) => {
-  suppressGlobalErrorToast(error)
-})
-ownAgentsQuery.finished.failure.watch(({ error }) => {
-  suppressGlobalErrorToast(error)
-})
-
-setAgentRateMutation.finished.failure.watch(({ error }) => {
-  suppressGlobalErrorToast(error)
-
-  const message = getErrorMessage(error, i18n.t('team.rate.saveError'))
-
-  if (message) {
-    showToast('error', { message, position: 'top-center' })
-  }
 })
 
 setAgentRateMutation.finished.success.watch(() => {

@@ -11,21 +11,15 @@ import type {
   StatisticsTotalsRow,
 } from './types'
 
-import { baseApi, runApiData, suppressGlobalErrorToast } from '@/shared'
+import { baseApi, runApiData } from '@/shared'
 
 // Raw SQL sums arrive as strings.
 const toNumber = (value: unknown) =>
   value == null ? undefined : Number(value) || 0
 
-const run = async <T>(request: () => Promise<unknown>): Promise<T> => {
-  try {
-    return (await runApiData(request as never)) as T
-  } catch (error) {
-    // Each widget shows its own failure and retry.
-    suppressGlobalErrorToast(error)
-    throw error
-  }
-}
+// Each widget shows its own failure and retry.
+const run = async <T>(request: () => Promise<unknown>): Promise<T> =>
+  (await runApiData(request as never, 'in-place')) as T
 
 const overviewHandler = async (
   query: StatisticsQuery,

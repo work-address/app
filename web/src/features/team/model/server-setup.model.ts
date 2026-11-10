@@ -15,12 +15,9 @@ import { signOut } from '@/entities/profile'
 import {
   baseApi,
   confirmFx,
-  getErrorMessage,
   runApi,
   runApiData,
-  showToast,
   showToastFx,
-  suppressGlobalErrorToast,
   translate,
 } from '@/shared'
 
@@ -37,12 +34,18 @@ export const credentialRevokeRequested = createEvent<{
 
 export const credentialsQuery = createQuery({
   handler: async () =>
-    (await runApiData(() =>
-      baseApi.agentControllerCredentials(),
+    (await runApiData(
+      () => baseApi.agentControllerCredentials(),
+      // The servers list is left out when it cannot load; the agents above
+      // still show.
+      'in-place',
     )) as AgentCredential[],
 })
 
 concurrency(credentialsQuery, { strategy: 'TAKE_LATEST' })
+
+/** Whichever step of the setup fails, the person is told the same way. */
+const SETUP_FAILED = { fallback: 'team.serverSetup.failed' }
 
 /**
  * The agent, bound to the machine so its runs land on it without the server
@@ -56,37 +59,43 @@ const createServerAgentMutation = createMutation({
     request: SetupRequest
     taken: string[]
   }) =>
-    (await runApiData(() =>
-      baseApi.agentControllerCreate({
-        body: {
-          name: request.name,
-          slug: agentSlug(request.name, request.product, taken),
-          product: request.product,
-          isDefault: false,
-          bindings: [request.instanceId],
-        },
-      }),
+    (await runApiData(
+      () =>
+        baseApi.agentControllerCreate({
+          body: {
+            name: request.name,
+            slug: agentSlug(request.name, request.product, taken),
+            product: request.product,
+            isDefault: false,
+            bindings: [request.instanceId],
+          },
+        }),
+      SETUP_FAILED,
     )) as OwnAgent,
 })
 
 /** Attached first: a credential for an agent on no project uploads nothing. */
 const connectServerMutation = createMutation({
   handler: async (request: ConnectRequest): Promise<ServerSetup> => {
-    await runApi(() =>
-      baseApi.agentControllerAttach({
-        path: { id: request.projectId, agentId: request.agentId },
-        body: { rateHourCents: request.rateHourCents },
-      }),
+    await runApi(
+      () =>
+        baseApi.agentControllerAttach({
+          path: { id: request.projectId, agentId: request.agentId },
+          body: { rateHourCents: request.rateHourCents },
+        }),
+      SETUP_FAILED,
     )
 
-    const issued = (await runApiData(() =>
-      baseApi.agentControllerIssue({
-        body: {
-          instanceId: request.instanceId,
-          mode: 'fixed',
-          label: request.name,
-        },
-      }),
+    const issued = (await runApiData(
+      () =>
+        baseApi.agentControllerIssue({
+          body: {
+            instanceId: request.instanceId,
+            mode: 'fixed',
+            label: request.name,
+          },
+        }),
+      SETUP_FAILED,
     )) as { credential: string; expiresAt: string }
 
     return {
@@ -194,24 +203,6 @@ sample({
 })
 
 sample({ clock: signOut, target: credentialsQuery.reset })
-
-// The servers list is left out when it cannot load; the agents above still show.
-credentialsQuery.finished.failure.watch(({ error }) => {
-  suppressGlobalErrorToast(error)
-})
-
-const setupFailed = ({ error }: { error: unknown }) => {
-  suppressGlobalErrorToast(error)
-
-  const message = getErrorMessage(error, translate('team.serverSetup.failed'))
-
-  if (message) {
-    showToast('error', { message, position: 'top-center' })
-  }
-}
-
-createServerAgentMutation.finished.failure.watch(setupFailed)
-connectServerMutation.finished.failure.watch(setupFailed)
 
 sample({
   clock: revokeCredentialMutation.finished.success,

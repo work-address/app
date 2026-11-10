@@ -3,18 +3,16 @@ import { createEffect, createEvent, createStore } from 'effector'
 
 import type { AuthorizationHeaders } from './types'
 
-import { baseApi, runApi, runApiData, suppressGlobalErrorToast } from '@/shared'
+import { baseApi, runApi, runApiData } from '@/shared'
 
 /**
  * Which sign-in methods this deployment offers is the API's to say at runtime,
  * so one build serves a deployment that can reach Google and one that can't.
  */
 export const fetchAuthMethodsFx = createEffect(() =>
-  runApiData(() => baseApi.authControllerMethods()),
+  // The sign-in page says so itself, with a way to ask again.
+  runApiData(() => baseApi.authControllerMethods(), 'in-place'),
 )
-
-// The sign-in page says so itself, with a way to ask again.
-fetchAuthMethodsFx.failData.watch(suppressGlobalErrorToast)
 
 /**
  * Starts at `loading`, so the page knows not to draw a wallet-only screen
@@ -52,8 +50,11 @@ export const $googleScriptAttempt = createStore(0).on(
 /** Swaps Google's credential for the same session a wallet sign-in gets. */
 export const loginGoogleFx = createEffect(
   async (credential: string): Promise<AuthorizationHeaders> => {
-    const result = await runApi(() =>
-      baseApi.authControllerLoginGoogle({ body: { credential } }),
+    // The Google button shows a failure in place, in `$googleSignInError`'s
+    // words.
+    const result = await runApi(
+      () => baseApi.authControllerLoginGoogle({ body: { credential } }),
+      'in-place',
     )
 
     return {

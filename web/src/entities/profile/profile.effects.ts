@@ -1,6 +1,6 @@
 import { createEffect } from 'effector'
 
-import { baseApi, renewSession, runApiData } from '@/shared'
+import { baseApi, renewSession, runApi, runApiData } from '@/shared'
 
 export const LOCAL_STORAGE_AUTH_KEY = 'authenticated'
 export const LOCAL_STORAGE_ACCESS_TOKEN = 'access_token'
@@ -24,7 +24,10 @@ export const writeLastSignInMethodFx = createEffect((method: SignInMethod) => {
   localStorage.setItem(LOCAL_STORAGE_LAST_SIGN_IN_METHOD, method)
 })
 
-const readStatus = () => runApiData(() => baseApi.authControllerStatus())
+// Quiet, or an outage would raise a toast at every retry. Each page says for
+// itself that it could not load.
+const readStatus = () =>
+  runApiData(() => baseApi.authControllerStatus(), 'in-place')
 
 /**
  * The status route never refuses: a token that identifies nobody gets an empty
@@ -38,7 +41,7 @@ export const fetchStatusFx = createEffect(async () => {
     return user
   }
 
-  await renewSession()
+  await runApi(() => renewSession(), 'in-place')
 
   const renewed = await readStatus()
 

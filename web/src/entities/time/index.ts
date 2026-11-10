@@ -1,5 +1,4 @@
 import { combine, createEvent, createStore, sample } from 'effector'
-import i18n from 'i18next'
 
 import {
   applyTimeFilters,
@@ -21,10 +20,7 @@ import {
   setTimePaidStatusMutation,
 } from './time.mutations'
 import {
-  recentAgentRunsQuery,
   recentScreenshotsQuery,
-  recentTimeQuery,
-  timeAgentRunsQuery,
   timeQuery,
   type RecentEntriesParams,
   type TimeQueryParams,
@@ -39,7 +35,7 @@ import {
 
 import type { TimeFilters, TimeSort } from './types'
 
-import { $breakpoints, showToast, suppressGlobalErrorToast } from '@/shared'
+import { $breakpoints } from '@/shared'
 
 const toTimeQueryParams = (
   filters: TimeFilters,
@@ -158,28 +154,6 @@ sample({
   target: setTimeLoading.prepend(() => true),
 })
 
-timeQuery.finished.failure.watch(({ params, error }) => {
-  if ((params.page ?? 0) === 0) {
-    // The worklogs section presents this failure and its retry in place.
-    suppressGlobalErrorToast(error)
-    return
-  }
-
-  if (params.quiet) {
-    // Nobody asked for the reload after a delete: the rows on screen are
-    // right, and the next "load more" reads them again.
-    suppressGlobalErrorToast(error)
-    return
-  }
-
-  suppressGlobalErrorToast(error)
-
-  showToast('error', {
-    message: i18n.t('dashboard.worklogsTable.loadMoreError'),
-    position: 'top-center',
-  })
-})
-
 export {
   type ITimeTotal,
   type TimeTotalDetail as ITimeTotalDetail,
@@ -199,23 +173,6 @@ export {
   restoreTimeQuery,
   loadMoreTime,
 } from './time.events'
-
-// A project without agent tracking, or a viewer, has none to show: the
-// dialog simply leaves the section out.
-timeAgentRunsQuery.finished.failure.watch(({ error }) => {
-  suppressGlobalErrorToast(error)
-})
-
-// The dashboard's strips show their own failure in place.
-recentAgentRunsQuery.finished.failure.watch(({ error }) => {
-  suppressGlobalErrorToast(error)
-})
-recentScreenshotsQuery.finished.failure.watch(({ error }) => {
-  suppressGlobalErrorToast(error)
-})
-recentTimeQuery.finished.failure.watch(({ error }) => {
-  suppressGlobalErrorToast(error)
-})
 
 export {
   recentAgentRunsQuery,

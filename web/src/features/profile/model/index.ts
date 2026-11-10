@@ -14,7 +14,6 @@ import {
   navigateFx,
   runApiData,
   showToastFx,
-  suppressGlobalErrorToast,
   type LoadFailureKind,
 } from '@/shared'
 
@@ -24,12 +23,15 @@ const ProfileGate = createGate<{ id: string | null }>({
 
 const profileQuery = createQuery({
   handler: async (id: string) => {
-    return runApiData(() =>
-      baseApi.userControllerRead({
-        path: {
-          id: id as never,
-        },
-      }),
+    return runApiData(
+      () =>
+        baseApi.userControllerRead({
+          path: {
+            id: id as never,
+          },
+        }),
+      // The page explains a failed load itself, with a retry.
+      'in-place',
     )
   },
 })
@@ -105,31 +107,17 @@ sample({
   target: profileQuery.start,
 })
 
-// The page explains a failed load in place; the generic toast would repeat it.
-profileQuery.finished.failure.watch(({ error }) => {
-  suppressGlobalErrorToast(error)
-})
-
 /**
  * What happens after a profile save is a consequence of the mutation
  * finishing, not of a render: the component no longer mirrors mutation status
- * into local state to decide when to toast and when to route away.
+ * into local state to decide when to toast and when to route away. A failed
+ * save is reported by the request itself.
  */
 sample({
   clock: saveProfileMutation.finished.success,
   fn: () => ({
     type: 'success' as const,
     messageKey: 'profile.form.edit.success',
-    closeButton: true,
-  }),
-  target: showToastFx,
-})
-
-sample({
-  clock: saveProfileMutation.finished.failure,
-  fn: () => ({
-    type: 'error' as const,
-    messageKey: 'profile.form.edit.error',
     closeButton: true,
   }),
   target: showToastFx,

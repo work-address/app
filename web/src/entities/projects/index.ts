@@ -20,7 +20,7 @@ import {
 } from './projects.queries'
 import { $projectsWithProcessTracking } from './projects.stores'
 
-import { getErrorMessage, showToast, suppressGlobalErrorToast } from '@/shared'
+import { showToast } from '@/shared'
 
 sample({
   clock: fetchProjects,
@@ -70,20 +70,9 @@ const showProcessStatsError = () => {
   })
 }
 
-// The dashboard says so in place, with a retry; a toast on top of that
-// would report the same failure twice.
-projectsQuery.finished.failure.watch(({ error }) => {
-  suppressGlobalErrorToast(error)
-})
-
-projectsStatsQuery.finished.failure.watch(({ error }) => {
-  suppressGlobalErrorToast(error)
-})
-
-projectsProcessStatsQuery.finished.failure.watch(({ error }) => {
-  suppressGlobalErrorToast(error)
-  showProcessStatsError()
-})
+// One toast for the chart, however many of its projects failed: each request
+// fails in place and the handler gathers them.
+projectsProcessStatsQuery.finished.failure.watch(showProcessStatsError)
 
 projectsProcessStatsQuery.finished.success.watch(({ result }) => {
   if (result.some((stats) => stats.failed)) {
@@ -98,36 +87,6 @@ sample({
     editProjectMutation.finished.success.map(() => void 0),
   ],
   target: projectsQuery.start,
-})
-
-createProjectMutation.finished.failure.watch(({ error }) => {
-  suppressGlobalErrorToast(error)
-
-  const message = getErrorMessage(
-    error,
-    i18n.t('project.createModal.createError'),
-  )
-
-  if (!message) {
-    return
-  }
-
-  showToast('error', { message, position: 'top-center' })
-})
-
-editProjectMutation.finished.failure.watch(({ error }) => {
-  suppressGlobalErrorToast(error)
-
-  const message = getErrorMessage(
-    error,
-    i18n.t('dashboard.projectsTable.editError'),
-  )
-
-  if (!message) {
-    return
-  }
-
-  showToast('error', { message, position: 'top-center' })
 })
 
 editProjectMutation.finished.success.watch(() => {

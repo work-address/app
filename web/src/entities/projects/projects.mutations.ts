@@ -4,10 +4,12 @@ import { baseApi, runApi } from '@/shared'
 
 export const createProjectMutation = createMutation({
   handler: async (project: baseApi.Project) => {
-    return runApi(() =>
-      baseApi.projectControllerCreate({
-        body: project,
-      }),
+    return runApi(
+      () =>
+        baseApi.projectControllerCreate({
+          body: project,
+        }),
+      { fallback: 'project.createModal.createError' },
     )
   },
 })
@@ -24,13 +26,15 @@ export const deleteProjectMutation = createMutation({
 
 export const editProjectMutation = createMutation({
   handler: async (project: baseApi.Project) => {
-    return runApi(() =>
-      baseApi.projectControllerEdit({
-        path: {
-          id: project.id as never,
-        },
-        body: project,
-      }),
+    return runApi(
+      () =>
+        baseApi.projectControllerEdit({
+          path: {
+            id: project.id as never,
+          },
+          body: project,
+        }),
+      { fallback: 'dashboard.projectsTable.editError' },
     )
   },
 })

@@ -136,17 +136,6 @@ client.instance.interceptors.response.use(
   },
 )
 
-// Errors that a caller already surfaced with its own, more specific message
-// (see suppressGlobalErrorToast below) so the generic handler doesn't also
-// show a second, redundant toast for the same failure.
-const suppressedErrors = new WeakSet<object>()
-
-export function suppressGlobalErrorToast(error: unknown): void {
-  if (error !== null && typeof error === 'object') {
-    suppressedErrors.add(error)
-  }
-}
-
 /**
  * Every failing status gets a generic toast except 401, which belongs to the
  * refresh/logout flow above: a 401 only reaches this interceptor once the
@@ -170,15 +159,7 @@ client.instance.interceptors.response.use(
 
     if (status !== undefined && isGloballyHandledStatus(status)) {
       setTimeout(() => {
-        const body = error.response?.data
-
-        if (
-          isReported(error) ||
-          suppressedErrors.has(error) ||
-          (body !== null &&
-            typeof body === 'object' &&
-            suppressedErrors.has(body))
-        ) {
+        if (isReported(error)) {
           return
         }
 

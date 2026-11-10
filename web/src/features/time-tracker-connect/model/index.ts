@@ -17,7 +17,7 @@ import {
 } from './types'
 
 import { $authenticated } from '@/entities/profile'
-import { showToast, suppressGlobalErrorToast } from '@/shared'
+import { showToast } from '@/shared'
 
 const writeNonceMarkerFx = createEffect((nonce: string) => {
   localStorage.setItem(getTimeTrackerNonceStorageKey(nonce), '1')
@@ -109,14 +109,6 @@ sample({
   source: $openedByWebsite,
   filter: (openedByWebsite) => !openedByWebsite,
   target: announceConnectedFx,
-})
-
-// Failures are explained in place; a global toast would repeat the message.
-fetchTimeTrackerNonceFx.fail.watch(({ error }) => {
-  suppressGlobalErrorToast(error)
-})
-connectTimeTrackerFx.fail.watch(({ error }) => {
-  suppressGlobalErrorToast(error)
 })
 
 export {

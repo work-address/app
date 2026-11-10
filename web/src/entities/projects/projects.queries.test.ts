@@ -5,11 +5,12 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 import { projectsQuery, projectsStatsQuery } from './projects.queries'
 import { $projectsFailed, $projectsStatsFailed } from './projects.stores'
 
-const { totals, search, suppressed } = vi.hoisted(() => ({
+const { totals, search, reported } = vi.hoisted(() => ({
   totals: vi.fn(),
   search: vi.fn(),
-  suppressed: vi.fn(),
+  reported: vi.fn(),
 }))
+vi.mock('@/shared/api/failure-report', () => ({ reportFailure: reported }))
 vi.mock('@/shared', async () => {
   const { runApiData } = await import('@/shared/lib/api')
   const { collectSearchPages } = await import(
@@ -22,18 +23,17 @@ vi.mock('@/shared', async () => {
     },
     runApiData,
     collectSearchPages,
-    suppressGlobalErrorToast: suppressed,
   }
 })
 
 beforeEach(() => {
   totals.mockReset()
   search.mockReset()
-  suppressed.mockReset()
+  reported.mockReset()
 })
 
 describe('project totals reliability', () => {
-  it('suppresses every parallel request error beside the one inline failure', async () => {
+  it('leaves every parallel request error to the one inline failure', async () => {
     const scope = fork()
     const errors = Array.from(
       { length: 4 },
@@ -47,9 +47,9 @@ describe('project totals reliability', () => {
       params: ['a', 'b', 'c', 'd'],
     })
     expect(scope.getState($projectsStatsFailed)).toBe(true)
-    expect(suppressed).toHaveBeenCalledTimes(4)
+    expect(reported).toHaveBeenCalledTimes(4)
     for (const error of errors) {
-      expect(suppressed).toHaveBeenCalledWith(error)
+      expect(reported).toHaveBeenCalledWith(error, 'in-place')
     }
   })
   it('keeps a totals failure independent from the successfully loaded projects', async () => {

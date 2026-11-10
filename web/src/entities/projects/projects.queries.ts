@@ -4,22 +4,21 @@ import { normalizeProcessName } from './utils'
 
 import type { ProjectProcessStats, StatsPeriod, TimeTotalsRow } from './types'
 
-import {
-  baseApi,
-  collectSearchPages,
-  runApiData,
-  suppressGlobalErrorToast,
-} from '@/shared'
+import { baseApi, collectSearchPages, runApiData } from '@/shared'
 
+// The dashboard says so in place, with a retry; a toast on top of that would
+// report the same failure twice.
 export const projectsQuery = createQuery({
   handler: async () => {
     // Unique id order keeps tied creation dates stable across every page.
     const items = await collectSearchPages<baseApi.Project>(
       async (page, limit) =>
-        (await runApiData(() =>
-          baseApi.projectControllerSearch({
-            body: { filter: {}, page, sort: { id: 'ASC' }, limit },
-          }),
+        (await runApiData(
+          () =>
+            baseApi.projectControllerSearch({
+              body: { filter: {}, page, sort: { id: 'ASC' }, limit },
+            }),
+          'in-place',
         )) as [baseApi.Project[], number],
     )
 
@@ -42,18 +41,16 @@ export const projectsStatsQuery = createQuery({
     }
 
     const responses = await Promise.all(
-      projectIds.map(async (id) => {
-        try {
-          return (await runApiData(() =>
-            baseApi.timeControllerGetTotals({ path: { id: id as never } }),
-          )) as TimeTotalsRow[]
-        } catch (error) {
+      projectIds.map(
+        async (id) =>
           // Every request belongs to the same inline failure, including
           // rejections arriving after Promise.all has already failed.
-          suppressGlobalErrorToast(error)
-          throw error
-        }
-      }),
+          (await runApiData(
+            () =>
+              baseApi.timeControllerGetTotals({ path: { id: id as never } }),
+            'in-place',
+          )) as TimeTotalsRow[],
+      ),
     )
 
     return responses.flat()
@@ -110,18 +107,15 @@ export const projectProcessStatsQuery = createQuery({
 })
 
 const fetchProjectProcesses = async (id: string, period: StatsPeriod) => {
-  const response = await baseApi.projectControllerGetStats({
-    path: { id: id as never, period },
-  })
-
-  if (response.error) {
-    // The failure is aggregated into this project's `failed` flag and
-    // surfaced once via showProcessStatsError, not per-project.
-    suppressGlobalErrorToast(response.error)
-    throw response.error
-  }
-
-  const stats = (response.data ?? []) as baseApi.ProjectStatisticsSearch[]
+  // The failure is aggregated into this project's `failed` flag and
+  // surfaced once via showProcessStatsError, not per-project.
+  const stats = ((await runApiData(
+    () =>
+      baseApi.projectControllerGetStats({
+        path: { id: id as never, period },
+      }),
+    'in-place',
+  )) ?? []) as baseApi.ProjectStatisticsSearch[]
 
   return stats.map((stat) => ({
     processName: normalizeProcessName(stat.processName),

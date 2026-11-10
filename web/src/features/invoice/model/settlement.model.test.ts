@@ -17,13 +17,14 @@ import {
   retryInvoiceList,
 } from './index'
 
-const { paid, unpaid, search, toast, suppressed } = vi.hoisted(() => ({
+const { paid, unpaid, search, toast, reported } = vi.hoisted(() => ({
   paid: vi.fn(),
   unpaid: vi.fn(),
   search: vi.fn(),
   toast: vi.fn(),
-  suppressed: vi.fn(),
+  reported: vi.fn(),
 }))
+vi.mock('@/shared/api/failure-report', () => ({ reportFailure: reported }))
 vi.mock('@/shared', async () => {
   const { createEffect } = await import('effector')
   const { runApiData } = await import('@/shared/lib/api')
@@ -40,7 +41,6 @@ vi.mock('@/shared', async () => {
     collectSearchPages,
     showToastFx: createEffect((request: unknown) => toast(request)),
     navigateFx: createEffect(() => {}),
-    suppressGlobalErrorToast: suppressed,
     getLoadFailureKind: () => 'failed',
   }
 })
@@ -67,7 +67,7 @@ beforeEach(() => {
   unpaid.mockReset()
   search.mockReset()
   toast.mockReset()
-  suppressed.mockReset()
+  reported.mockReset()
   search.mockResolvedValue({ data: [[], 0] })
 })
 
@@ -113,19 +113,19 @@ describe('invoice settlement model', () => {
     const scope = fork()
     search.mockResolvedValue({ data: [[row('a')], 1] })
     await allSettled(fetchInvoiceList, { scope })
-    paid.mockResolvedValue(new AxiosError('Offline', 'ERR_NETWORK'))
+    const offline = new AxiosError('Offline', 'ERR_NETWORK')
+    paid.mockResolvedValue(offline)
     await allSettled(invoiceSettlementRequested, {
       scope,
       params: { id: 'a', isPaid: true },
     })
     expect(scope.getState($invoices)).toEqual([row('a')])
     expect(scope.getState($invoiceSettlementPendingIds)).toEqual({})
-    expect(toast).toHaveBeenCalledTimes(1)
-    expect(toast.mock.calls[0][0]).toEqual({
-      type: 'error',
-      messageKey: 'invoice.payment.failed',
+    expect(toast).not.toHaveBeenCalled()
+    expect(reported).toHaveBeenCalledTimes(1)
+    expect(reported).toHaveBeenCalledWith(offline, {
+      fixed: 'invoice.payment.failed',
     })
-    expect(suppressed).toHaveBeenCalledTimes(1)
   })
 
   it('refills two filtered pages and never skips the next boundary invoice', async () => {

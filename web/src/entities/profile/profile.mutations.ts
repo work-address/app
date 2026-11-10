@@ -16,10 +16,12 @@ type SaveProfileParams = Omit<baseApi.User, 'rate' | 'email'> & {
 
 export const saveProfileMutation = createMutation({
   handler: async (params: SaveProfileParams) => {
-    return runApi(() =>
-      baseApi.userControllerEdit({
-        body: params as baseApi.UserEdit,
-      }),
+    return runApi(
+      () =>
+        baseApi.userControllerEdit({
+          body: params as baseApi.UserEdit,
+        }),
+      { fixed: 'profile.form.edit.error', closeButton: true },
     )
   },
 })

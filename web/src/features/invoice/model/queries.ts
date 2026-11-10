@@ -19,11 +19,15 @@ import { baseApi, collectSearchPages, runApiData } from '@/shared'
  * `runApiData` rejects on failure rather than yielding undefined - treating a
  * failed request as an empty report would render a $0.00 invoice instead of an
  * error.
+ *
+ * Every read here fails in place: the invoice page explains a failed load, and
+ * each section of the list has its own retry.
  */
 export const invoiceQuery = createQuery({
   handler: (id: string) =>
-    runApiData(() =>
-      baseApi.invoiceControllerRead({ path: { id: id as never } }),
+    runApiData(
+      () => baseApi.invoiceControllerRead({ path: { id: id as never } }),
+      'in-place',
     ) as Promise<InvoiceRead>,
 })
 
@@ -54,15 +58,17 @@ export const invoiceListQuery = createQuery({
     page: number
   }> => {
     const fetchPage = async (page: number) => {
-      const [items, total] = (await runApiData(() =>
-        baseApi.invoiceControllerSearch({
-          body: {
-            filter,
-            sort,
-            page,
-            limit: INVOICE_PAGE_SIZE,
-          },
-        }),
+      const [items, total] = (await runApiData(
+        () =>
+          baseApi.invoiceControllerSearch({
+            body: {
+              filter,
+              sort,
+              page,
+              limit: INVOICE_PAGE_SIZE,
+            },
+          }),
+        'in-place',
       )) as [baseApi.InvoiceSearch[], number]
       return { items: items ?? [], total: Number(total ?? 0), page }
     }
@@ -83,10 +89,12 @@ export const invoiceProjectsQuery = createQuery({
   handler: async (): Promise<baseApi.Project[]> => {
     const items = await collectSearchPages<baseApi.Project>(
       async (page, limit) =>
-        (await runApiData(() =>
-          baseApi.projectControllerSearch({
-            body: { filter: {}, sort: { id: 'ASC' }, page, limit },
-          }),
+        (await runApiData(
+          () =>
+            baseApi.projectControllerSearch({
+              body: { filter: {}, sort: { id: 'ASC' }, page, limit },
+            }),
+          'in-place',
         )) as [baseApi.Project[], number],
     )
 
@@ -107,15 +115,17 @@ export const invoiceSummaryQuery = createQuery({
   }): Promise<baseApi.InvoiceSearch[]> =>
     collectSearchPages<baseApi.InvoiceSearch>(
       async (page, limit) =>
-        (await runApiData(() =>
-          baseApi.invoiceControllerSearch({
-            body: {
-              filter: projectId ? { projectId } : {},
-              sort: { id: 'ASC' },
-              page,
-              limit,
-            },
-          }),
+        (await runApiData(
+          () =>
+            baseApi.invoiceControllerSearch({
+              body: {
+                filter: projectId ? { projectId } : {},
+                sort: { id: 'ASC' },
+                page,
+                limit,
+              },
+            }),
+          'in-place',
         )) as [baseApi.InvoiceSearch[], number],
     ),
 })

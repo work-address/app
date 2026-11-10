@@ -15,7 +15,7 @@ import {
 } from './settlement.events'
 import { $invoiceSettlementPendingIds } from './settlement.stores'
 
-import { showToastFx, suppressGlobalErrorToast } from '@/shared'
+import { showToastFx } from '@/shared'
 
 sample({
   clock: invoiceSettlementRequested,
@@ -38,11 +38,6 @@ const settlementSucceeded = merge([
   markInvoicePaidMutation.finished.success,
   markInvoiceUnpaidMutation.finished.success,
 ])
-const settlementFailed = merge([
-  markInvoicePaidMutation.finished.failure,
-  markInvoiceUnpaidMutation.finished.failure,
-])
-settlementFailed.watch(({ error }) => suppressGlobalErrorToast(error))
 
 sample({
   clock: settlementSucceeded,
@@ -53,11 +48,6 @@ sample({
         ? 'invoice.payment.markedPaid'
         : 'invoice.payment.markedUnpaid',
   }),
-  target: showToastFx,
-})
-sample({
-  clock: settlementFailed,
-  fn: () => ({ type: 'error' as const, messageKey: 'invoice.payment.failed' }),
   target: showToastFx,
 })
 sample({
