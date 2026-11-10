@@ -1,8 +1,8 @@
 # Work Address OpenClaw adapter
 
 Prototype, **partial coverage**, fixed-project mode. Source stays in the Work Address
-monorepo; this directory produces an independently installable npm plugin. No package
-has been published yet.
+monorepo; this directory is published to npm as
+`@work-address/agent-tracker-openclaw`.
 
 ## What works
 
@@ -117,11 +117,9 @@ unsent events until you explicitly choose to remove that dedicated directory.
 The API issues collector credentials and ingests, deduplicates and bills these runs.
 Every minute is billed as unclassified until this adapter is qualified.
 
-1. Install the collector and this plugin on the gateway host. No package is published
-   yet: build with `pnpm agent-tracker:build`, run `pnpm pack` in each of
-   `packages/agent-tracking-contract`, `packages/agent-tracker` and this directory,
-   and install the three tarballs on the host with `npm install -g`. That puts
-   `agent-tracker` on the PATH.
+1. Install the collector and this plugin on the gateway host with
+   `npm install -g @work-address/agent-tracker @work-address/agent-tracker-openclaw`.
+   That puts `agent-tracker` on the PATH.
 2. On the web Team page, choose **Add a server agent**, pick OpenClaw, the project and
    a rate. The project needs **Record AI agents** on, or its runs are refused. The
    page shows the credential once, and a setup command.

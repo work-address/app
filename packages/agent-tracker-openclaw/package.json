@@ -1,6 +1,6 @@
 {
   "name": "@work-address/agent-tracker-openclaw",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "OpenClaw telemetry adapter for Work Address",
   "type": "module",
   "license": "MIT",

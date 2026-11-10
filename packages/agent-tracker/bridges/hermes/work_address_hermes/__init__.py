@@ -6,7 +6,17 @@ import sys
 
 _FIELDS = ("session_id", "turn_id", "parent_session_id", "telemetry_schema_version",
            "completed", "failed", "interrupted")
+_DEFAULT_TIMEOUT = 5.0
 _warned = False
+
+
+def _timeout():
+    """Seconds one collector call may take; a busy host starts Node slowly."""
+    try:
+        value = float(os.environ.get("WORK_ADDRESS_BRIDGE_TIMEOUT", ""))
+    except ValueError:
+        return _DEFAULT_TIMEOUT
+    return value if 0 < value <= 60 else _DEFAULT_TIMEOUT
 
 
 def _observe(name, **kwargs):
@@ -26,7 +36,7 @@ def _observe(name, **kwargs):
         result = subprocess.run(
             [os.environ.get("WORK_ADDRESS_COLLECTOR_BIN", "agent-tracker"), "hook", "hermes"],
             input=json.dumps(payload), text=True, stdout=subprocess.DEVNULL,
-            stderr=subprocess.PIPE, timeout=1, check=False,
+            stderr=subprocess.PIPE, timeout=_timeout(), check=False,
             env={**os.environ, "NODE_NO_WARNINGS": "1"},
         )
         if result.returncode or result.stderr:

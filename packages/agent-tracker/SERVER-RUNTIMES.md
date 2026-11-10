@@ -38,8 +38,8 @@ agent. Other adapters ignore unrecognized events and do not serialize extra fiel
 
 ## Install and operate
 
-Build from the repository with `pnpm agent-tracker:build`; use the existing tarball
-packaging workflow to install the collector. Requires Node >=22.16 (the separate
+Install the collector with `npm install -g @work-address/agent-tracker`, which puts
+`agent-tracker` on the PATH. Requires Node >=22.16 (the separate
 OpenClaw host has its stronger requirement). Set up the collector once using the
 README's endpoint/project/credential command. Configure a fixed project and private
 state directory for each deployment; no task/project inference from prompt text.
@@ -67,8 +67,8 @@ Hermes configuration. The pip entry point registers two callbacks accepting
 `**kwargs` and returning `None`; the bridge never returns context or directives.
 Set `WORK_ADDRESS_COLLECTOR_BIN` to an absolute collector executable if needed.
 Only session/turn/parent identity, schema version and three boolean outcome flags
-cross the Python-to-Node boundary. The subprocess has a one-second timeout and no
-network operation. Bridge failure emits one generic warning per Python process;
+cross the Python-to-Node boundary. The subprocess has a five-second timeout
+(`WORK_ADDRESS_BRIDGE_TIMEOUT`, in seconds, up to 60) and no network operation. Bridge failure emits one generic warning per Python process;
 loss before reaching SQLite cannot be counted durably and requires host-log
 monitoring. Collector failures after queue opening increment `status.lost`.
 

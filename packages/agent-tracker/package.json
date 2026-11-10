@@ -1,6 +1,6 @@
 {
   "name": "@work-address/agent-tracker",
-  "version": "0.1.0",
+  "version": "0.1.1",
   "description": "Durable Work Address agent collector and CLI",
   "type": "module",
   "license": "MIT",

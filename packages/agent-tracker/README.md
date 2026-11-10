@@ -4,6 +4,10 @@ Shared library and `agent-tracker` CLI for experimental server runtime adapters.
 See [server coverage, setup and qualification limits](SERVER-RUNTIMES.md). Requires Node
 22.16+ and built-in `node:sqlite`. No native addon installation is needed.
 
+```sh
+npm install -g @work-address/agent-tracker
+```
+
 ## Commands
 
 - `agent-tracker setup <events-endpoint> <project-uuid> [source-instance-uuid]` reads the credential from

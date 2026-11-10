@@ -23,9 +23,15 @@ class BridgeTest(unittest.TestCase):
         self.assertIsNone(hooks["pre_llm_call"](telemetry_schema_version="hermes.observer.v1", session_id="s", turn_id="t", user_message="PRIVATE", future_field="PRIVATE"))
         payload = json.loads(run.call_args.kwargs["input"])
         self.assertNotIn("PRIVATE", json.dumps(payload))
-        self.assertEqual(run.call_args.kwargs["timeout"], 1)
+        self.assertEqual(run.call_args.kwargs["timeout"], 5.0)
         self.assertIsNone(hooks["on_session_end"](telemetry_schema_version="hermes.observer.v1", session_id="s"))
         self.assertEqual(run.call_count, 1)
+
+    def test_timeout_override_falls_back_when_unusable(self):
+        cases = {"2.5": 2.5, "60": 60.0, "0": 5.0, "-1": 5.0, "61": 5.0, "nan": 5.0, "soon": 5.0, "": 5.0}
+        for raw, expected in cases.items():
+            with patch.dict(os.environ, {"WORK_ADDRESS_BRIDGE_TIMEOUT": raw}):
+                self.assertEqual(bridge._timeout(), expected, raw)
 
     @patch.dict(os.environ, {"WORK_ADDRESS_EXPERIMENTAL_ADAPTERS": "1"})
     @patch("work_address_hermes.subprocess.run", side_effect=TimeoutError("PRIVATE"))
