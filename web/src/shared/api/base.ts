@@ -6,6 +6,7 @@ import {
 import { createEvent } from 'effector'
 import i18n from 'i18next'
 
+import { isReported } from './failure-report'
 import { authControllerRefresh } from './generated'
 import { client } from './generated/client.gen'
 
@@ -156,13 +157,12 @@ export function suppressGlobalErrorToast(error: unknown): void {
 const isGloballyHandledStatus = (status: number) =>
   status >= 400 && status !== 401
 
-// Global exceptions interceptor - any failing response not already handled by
-// a caller (via suppressGlobalErrorToast) gets a generic error toast, so a
-// backend failure is never silent by default. Registered as a separate
-// interceptor (rather than folded into the 401 handler above) so it only
-// sees errors the 401 refresh flow didn't already resolve, and runs on a
-// macrotask delay so a same-tick `.finished.failure` watcher has a chance to
-// call suppressGlobalErrorToast() first.
+// The net under every request that did not say who reports its failure
+// (docs/failure-reporting.md): a generic toast, so a backend failure is never
+// silent by default. Registered as a separate interceptor (rather than folded
+// into the 401 handler above) so it only sees errors the 401 refresh flow
+// didn't already resolve, and runs on a macrotask delay because the request's
+// own report is made after this, once the failure has reached `runApi`.
 client.instance.interceptors.response.use(
   (response: AxiosResponse) => response,
   (error: AxiosError) => {
@@ -170,12 +170,10 @@ client.instance.interceptors.response.use(
 
     if (status !== undefined && isGloballyHandledStatus(status)) {
       setTimeout(() => {
-        // Callers usually see the response body rather than the AxiosError -
-        // the generated client hands that back as the failure - so a body
-        // marked as handled counts too.
         const body = error.response?.data
 
         if (
+          isReported(error) ||
           suppressedErrors.has(error) ||
           (body !== null &&
             typeof body === 'object' &&

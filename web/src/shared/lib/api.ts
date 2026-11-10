@@ -1,6 +1,10 @@
 import { AxiosError } from 'axios'
 import { Cause, Data, Effect, Exit } from 'effect'
 
+import { reportFailure, type FailureReport } from '@/shared/api/failure-report'
+
+export type { FailureReport } from '@/shared/api/failure-report'
+
 /**
  * The generated client returns failures as values (`T | AxiosError`) rather
  * than throwing, so every call site had to remember to test for it. Modelling
@@ -42,9 +46,13 @@ export const fromApi = <T>(
  * FiberFailure wrapper, and both getErrorMessage and farfetched's failure
  * paths test `instanceof AxiosError`. Squashing the cause rethrows the
  * original error, so error handling downstream is unchanged.
+ *
+ * `report` says who tells the person about a failure
+ * (docs/failure-reporting.md). Leave it out and the generic toast does.
  */
 export const runApi = async <T>(
   call: () => Promise<T>,
+  report?: FailureReport,
 ): Promise<ApiSuccess<T>> => {
   const exit = await Effect.runPromiseExit(
     fromApi(call).pipe(Effect.mapError((error) => error.cause)),
@@ -54,14 +62,21 @@ export const runApi = async <T>(
     return exit.value
   }
 
-  throw Cause.squash(exit.cause)
+  const error = Cause.squash(exit.cause)
+
+  if (report) {
+    reportFailure(error, report)
+  }
+
+  throw error
 }
 
 /** `runApi` for calls whose body is the only part the caller wants. */
 export const runApiData = async <T>(
   call: () => Promise<T>,
+  report?: FailureReport,
 ): Promise<ApiSuccess<T> extends { data: infer D } ? D : never> => {
-  const response = await runApi(call)
+  const response = await runApi(call, report)
 
   return (response as { data: unknown }).data as never
 }
