@@ -23,7 +23,7 @@ import { AgentEvent } from '@/entity/agent-event'
 import { Project } from '@/entity/project'
 import { TimeAgent } from '@/entity/time-agent'
 import { User } from '@/entity/user'
-import { AGENT_PRODUCT_NAMES, WorkerAgent } from '@/model/agent'
+import { AgentAttachment, WorkerAgent } from '@/model/agent'
 import { AgentSearchDto } from '@/model/dto/agent'
 import { EProjectState } from '@/model/project'
 import { AgentRepository } from '@/repository/agent-repository'
@@ -31,6 +31,7 @@ import { AgentIdentity } from '@/service/agent-identity'
 import { AgentTimeNormalizer } from '@/service/agent-time-normalizer'
 import { Plan } from '@/service/plan'
 import { ProjectAccess } from '@/service/project-access'
+import { WorkerAgents } from '@/service/worker-agents'
 
 /** Why an event is refused whoever it belongs to, or null. */
 function eventRefusal(
@@ -92,28 +93,20 @@ function rejectionCode({
     return 'RUN_SCOPE_MISMATCH'
   if (
     !assigned ||
-    !project.agentAttachments?.some(
-      (a) =>
-        a.agentId === assigned.id && a.workerId === user.id && !a.detachedAt,
+    !WorkerAgents.acceptsRuns(
+      user.agents ?? [],
+      project.agentAttachments ?? [],
+      user.id,
+      assigned.id,
     )
   )
     return 'AGENT_NOT_ATTACHED'
   return null
 }
 
-/** The agent a run goes to when nothing names one: this machine's, or the default. */
-function agentForMachine(
-  agents: WorkerAgent[],
-  product: string,
-  instanceId: string,
-): WorkerAgent | undefined {
-  const live = agents.filter((a) => !a.removedAt && a.product === product)
-
-  return (
-    live.find((a) =>
-      a.bindings.some((id) => id.toLowerCase() === instanceId.toLowerCase()),
-    ) ?? live.find((a) => a.isDefault)
-  )
+/** The products of a batch's laptop runs that name no agent, which `WorkerAgents` may provision for. */
+function unnamedProducts(events: AgentEventV1[]): string[] {
+  return events.filter((e) => !e.source.agent).map((e) => e.source.product)
 }
 
 /**
@@ -291,12 +284,15 @@ export class AgentRunRecord {
     })
     const adds =
       credential.mode === 'timer' &&
-      events.some(
-        (e) =>
-          !e.source.agent &&
-          e.source.product in AGENT_PRODUCT_NAMES &&
-          !seen.agents?.some((a) => a.product === e.source.product),
-      )
+      WorkerAgents.provision({
+        agents: seen.agents ?? [],
+        attachments: [],
+        workerId: seen.id,
+        instanceId: credential.instanceId,
+        products: unnamedProducts(events),
+        at: '',
+        newId: randomUUID,
+      }).addsAgents
 
     return tx.findOneOrFail(User, {
       where: { id: credential.userId },
@@ -320,18 +316,17 @@ export class AgentRunRecord {
     const seen = await tx.findOneBy(Project, { id: projectId })
     if (!seen) return false
 
-    return events.some((e) => {
-      if (e.projectId !== projectId || e.source.agent) return false
-      const agent = agentForMachine(
-        user.agents ?? [],
-        e.source.product,
-        credential.instanceId,
-      )
-
-      return !seen.agentAttachments?.some(
-        (a) => a.agentId === agent?.id && a.workerId === user.id,
-      )
-    })
+    return WorkerAgents.provision({
+      agents: user.agents ?? [],
+      attachments: seen.agentAttachments ?? [],
+      workerId: user.id,
+      instanceId: credential.instanceId,
+      products: unnamedProducts(
+        events.filter((e) => e.projectId === projectId),
+      ),
+      at: '',
+      newId: randomUUID,
+    }).attaches
   }
 
   /**
@@ -364,58 +359,29 @@ export class AgentRunRecord {
       )
     })
     if (!unnamed.length) return
-    const agents = user.agents ?? []
     const at = new Date(now).toISOString()
-    let created = false
-    for (const product of new Set(unnamed.map((e) => e.source.product))) {
-      if (!(product in AGENT_PRODUCT_NAMES)) continue
-      if (agents.some((a) => a.product === product)) continue
-      let slug = product
-      for (let n = 2; agents.some((a) => a.slug === slug); n++)
-        slug = `${product}-${n}`
-      agents.push({
-        id: randomUUID(),
-        name: AGENT_PRODUCT_NAMES[product as keyof typeof AGENT_PRODUCT_NAMES],
-        slug,
-        product,
-        isDefault: true,
-        bindings: [],
-        createdAt: at,
-        removedAt: null,
+    const plan = (products: string[], attachments: AgentAttachment[]) =>
+      WorkerAgents.provision({
+        agents: user.agents ?? [],
+        attachments,
+        workerId: user.id,
+        instanceId: credential.instanceId,
+        products,
+        at,
+        newId: randomUUID,
       })
-      created = true
-    }
+    // Agents first, for every product in the batch, then each project's attachments.
+    const { agents, addsAgents } = plan(unnamedProducts(unnamed), [])
     user.agents = agents
-    if (created) await tx.update(User, user.id, { agents })
+    if (addsAgents) await tx.update(User, user.id, { agents })
     for (const projectId of [...new Set(unnamed.map((e) => e.projectId))]) {
       const project = projects.get(projectId)!
-      const attachments = project.agentAttachments ?? []
-      let attached = false
-      for (const product of new Set(
-        unnamed
-          .filter((e) => e.projectId === projectId)
-          .map((e) => e.source.product),
-      )) {
-        const agent = agentForMachine(agents, product, credential.instanceId)
-        if (
-          !agent ||
-          attachments.some(
-            (a) => a.agentId === agent.id && a.workerId === user.id,
-          )
-        )
-          continue
-        attachments.push({
-          agentId: agent.id,
-          workerId: user.id,
-          rateHourCents: 0,
-          rateChanges: [],
-          attachedAt: at,
-          detachedAt: null,
-        })
-        attached = true
-      }
+      const { attachments, attaches } = plan(
+        unnamedProducts(unnamed.filter((e) => e.projectId === projectId)),
+        project.agentAttachments ?? [],
+      )
       project.agentAttachments = attachments
-      if (attached)
+      if (attaches)
         await tx.update(Project, project.id, {
           agentAttachments: attachments,
         })
@@ -522,17 +488,12 @@ export class AgentRunRecord {
     credential: AgentCredential,
     previous: AgentEvent | null,
   ): WorkerAgent | undefined {
-    const live = (user.agents ?? []).filter(
-      (a) => !a.removedAt && a.product === event.source.product,
-    )
-    if (previous) return live.find((a) => a.id === previous.workerAgentId)
-    if (event.source.agent)
-      return live.find((a) => a.slug === event.source.agent)
-    return agentForMachine(
-      user.agents ?? [],
-      event.source.product,
-      credential.instanceId,
-    )
+    return WorkerAgents.assign(user.agents ?? [], {
+      product: event.source.product,
+      pinnedAgentId: previous?.workerAgentId,
+      handle: event.source.agent,
+      instanceId: credential.instanceId,
+    })
   }
 
   private async projectRun(
@@ -715,8 +676,10 @@ export class AgentRunRecord {
       return qb
     }
     const attached = (run: TimeAgent) =>
-      (project.agentAttachments ?? []).some(
-        (a) => a.agentId === run.agentId && a.workerId === run.userId,
+      WorkerAgents.billsPastRuns(
+        project.agentAttachments ?? [],
+        run.userId,
+        run.agentId,
       )
     const candidates = (await select().getMany()).filter(attached)
     if (!candidates.length) return []

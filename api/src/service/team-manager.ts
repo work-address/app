@@ -5,6 +5,7 @@ import { ITeam, ITeamAgent, ITeamPerson, ITeamProject } from '@/model/team'
 import { TeamRepository } from '@/repository/team-repository'
 import { Collaborators, ICollaborator } from '@/service/collaborators'
 import { ProjectRole } from '@/service/project-access'
+import { WorkerAgents } from '@/service/worker-agents'
 
 /**
  * Who is on each project and which agents they run, as `reader` may see it
@@ -79,32 +80,26 @@ export class TeamManager {
 
   /** A detached agent, or one its worker removed, is no longer on the project. */
   private static agents(project: Project, worker: User): ITeamAgent[] {
-    return (project.agentAttachments ?? []).flatMap((attachment) => {
-      const agent = worker.agents?.find((a) => a.id === attachment.agentId)
-      if (
-        attachment.workerId !== worker.id ||
-        attachment.detachedAt ||
-        !agent ||
-        agent.removedAt
-      )
-        return []
+    return WorkerAgents.onTeam(
+      worker.agents ?? [],
+      project.agentAttachments ?? [],
+      worker.id,
+    ).map(({ agent, attachment }) => {
       const change = attachment.rateChanges[attachment.rateChanges.length - 1]
-      return [
-        {
-          id: agent.id,
-          name: agent.name,
-          product: agent.product,
-          rateHourCents: attachment.rateHourCents,
-          attachedAt: attachment.attachedAt,
-          lastRateChange: change
-            ? {
-                at: change.at,
-                fromCents: change.fromCents,
-                toCents: change.toCents,
-              }
-            : null,
-        },
-      ]
+      return {
+        id: agent.id,
+        name: agent.name,
+        product: agent.product,
+        rateHourCents: attachment.rateHourCents,
+        attachedAt: attachment.attachedAt,
+        lastRateChange: change
+          ? {
+              at: change.at,
+              fromCents: change.fromCents,
+              toCents: change.toCents,
+            }
+          : null,
+      }
     })
   }
 }

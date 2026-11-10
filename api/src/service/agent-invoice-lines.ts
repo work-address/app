@@ -1,6 +1,7 @@
 import { AgentAttachment, AgentSegment, WorkerAgent } from '@/model/agent'
 import { IInvoiceLine } from '@/model/invoice'
 import { Span, TimeSpans } from '@/service/time-spans'
+import { WorkerAgents } from '@/service/worker-agents'
 
 export interface InvoiceableRun {
   agentId: string
@@ -28,8 +29,10 @@ export class AgentInvoiceLines {
     for (const run of runs)
       byAgent.set(run.agentId, [...(byAgent.get(run.agentId) ?? []), run])
     return [...byAgent].map(([agentId, agentRuns]): IInvoiceLine => {
-      const attachment = attachments.find(
-        (a) => a.agentId === agentId && a.workerId === workerId,
+      const attachment = WorkerAgents.attachmentOf(
+        attachments,
+        workerId,
+        agentId,
       )
       if (!attachment) throw new Error('AGENT_NOT_ATTACHED')
       const state = (name: AgentSegment['state']) =>

@@ -1,6 +1,6 @@
 # Worker agents
 
-Status: confirmed on 10 November 2026 from a design walk of 13 decisions, on `dev` at `83192b9c`. Not built yet.
+Status: done on 10 November 2026 (`9ba132a2` and the commit after it), on `dev`. No behaviour changed: the whole API suite passed unedited in an isolated database, 681 tests. One thing is narrower than before: the Run record's two lock predicates now ask the provisioning plan itself, so a batch for an unknown product, or for a product whose only agent was removed, takes a read lock where it used to take a write lock for a write that never happened. The default rule under Afterwards is still open.
 
 One module answers every rule about a worker's agents and where they are attached: which agent a run goes to, whether an attachment still counts, who may see it, and what the two lists become when something changes. The repository and the Run record lock and persist.
 

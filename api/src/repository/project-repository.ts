@@ -18,6 +18,7 @@ import { ProjectSearchDto } from '@/model/dto/project'
 import { Plan } from '@/service/plan'
 import { Collaborators } from '@/service/collaborators'
 import { ProjectAccess } from '@/service/project-access'
+import { WorkerAgents } from '@/service/worker-agents'
 
 /** Every order the project list can ask for, by the name it asks with. */
 const PROJECT_SORT_COLUMN_BY_KEY = new Map([
@@ -323,11 +324,11 @@ export class ProjectRepository extends AbstractRepositoryTemplate<Project> {
   /** The reader's role on a project, and what that role may not see of it. */
   private presentTo(project: Project, user: User): void {
     project.role = this.access.role(project, user)
-    project.agents = (project.agentAttachments ?? []).filter(
-      (attachment) =>
-        project.isOwner(user) ||
-        (this.access.canWork(project, user) && attachment.workerId === user.id),
-    )
+    project.agents = WorkerAgents.visibleTo(project.agentAttachments ?? [], {
+      id: user.id,
+      isOwner: project.isOwner(user),
+      canWork: this.access.canWork(project, user),
+    })
     // A viewer gets time and no money: SPEC.md, "Who can see what".
     if (project.role === 'viewer') {
       delete (project as Partial<Project>).rateHour
