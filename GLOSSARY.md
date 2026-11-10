@@ -28,6 +28,10 @@ _Avoid_: Organisation, workspace
 An agent of a worker's that runs on a server rather than their laptop, and uploads with its own credential limited to one agent on one project.
 _Avoid_: Project agent, hosted agent
 
+**Attachment**:
+A worker's agent on a project, with its rate. Detaching keeps it, so the runs it already recorded stay billable at its last rate.
+_Avoid_: Assignment, link, membership
+
 **Role**:
 What a project's lists say a person is: owner, worker, viewer, or nothing.
 _Avoid_: Permission, access level
