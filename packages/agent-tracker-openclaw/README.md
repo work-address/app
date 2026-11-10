@@ -56,8 +56,8 @@ full gateway or qualify a real model run.
 ## Try with a development gateway
 
 Use a separate test gateway with the exact version above and a supported Node runtime.
-Do not point this prototype at the production application: its ingestion endpoint
-and collector-credential issuance are not implemented yet.
+These steps use the loopback development receiver, which bills nothing. To record
+into a Work Address project, see [Connect to Work Address](#connect-to-work-address).
 
 1. Build all three packages with `pnpm agent-tracker:build`.
 2. Start the loopback development receiver in another terminal, supplying a local
@@ -112,6 +112,36 @@ Disable/remove this plugin through OpenClaw when finished. Stop the gateway serv
 before inspecting or deleting its collector directory. Uninstallation should preserve
 unsent events until you explicitly choose to remove that dedicated directory.
 
+## Connect to Work Address
+
+The API issues collector credentials and ingests, deduplicates and bills these runs.
+Every minute is billed as unclassified until this adapter is qualified.
+
+1. Install the collector and this plugin on the gateway host. No package is published
+   yet: build with `pnpm agent-tracker:build`, run `pnpm pack` in each of
+   `packages/agent-tracking-contract`, `packages/agent-tracker` and this directory,
+   and install the three tarballs on the host with `npm install -g`. That puts
+   `agent-tracker` on the PATH.
+2. On the web Team page, choose **Add a server agent**, pick OpenClaw, the project and
+   a rate. The project needs **Record AI agents** on, or its runs are refused. The
+   page shows the credential once, and a setup command.
+3. Set `WORK_ADDRESS_STATE_DIR` to a new absolute private directory. Copy the
+   credential first, then run the command the page shows, as it is:
+
+   ```sh
+   agent-tracker setup <events-endpoint> <project-uuid> <source-instance-uuid>
+   ```
+
+   The command waits 30 seconds for the credential on stdin: paste it, press Enter,
+   then Ctrl+D. Keep the third argument. It is the machine identity the credential
+   was issued for, and the API refuses uploads from any other.
+4. Enable the plugin with that directory as `stateDirectory`, as in step 4 above, and
+   restart the gateway.
+
+A credential lasts 90 days and cannot be renewed, and setup never overwrites an
+existing directory. To carry on after it expires, add a new server agent on the Team
+page and set the collector up in a new directory.
+
 ## Qualification boundary
 
 See `compatibility.json` and the fixture's provenance. Current tests use synthetic
@@ -121,9 +151,8 @@ subagent lineage or cross-collector deduplication is claimed. Do not run this al
 another collector for the same work and assume the result is invoice-ready.
 
 Before production: qualify real completion, interruption, crash, concurrent and child
-runs on supported hosts; measure enqueue latency; add server-side credential issuance,
-ingestion, normalization, deduplication, retention and billing. The server must register
-adapter capabilities itself; client capability flags are never billing authority.
+runs on supported hosts and measure enqueue latency. The server must register adapter
+capabilities itself; client capability flags are never billing authority.
 
 This prototype is intentionally independent of the Qt desktop collector and existing
 human time/invoice behavior. It adds no hooks or services to the user's machine by itself.

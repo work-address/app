@@ -8,7 +8,10 @@ See [server coverage, setup and qualification limits](SERVER-RUNTIMES.md). Requi
 
 - `agent-tracker setup <events-endpoint> <project-uuid> [source-instance-uuid]` reads the credential from
   stdin and creates a new config in `WORK_ADDRESS_STATE_DIR` (default
-  `~/.work-address/agent-tracker`). Setup never overwrites an existing identity.
+  `~/.work-address/agent-tracker`). It waits 30 seconds for the credential, so copy
+  it before running the command. Setup never overwrites an existing identity. The
+  web Team page's **Add a server agent** issues the credential and shows this
+  command with all three arguments filled in.
 - `agent-tracker adapters` prints the complete server support matrix.
 - `agent-tracker hook <product>` reads native hook JSON; experimental opt-in required.
   Session boundaries and stops start a detached `sync`; in CI and cloud sandboxes

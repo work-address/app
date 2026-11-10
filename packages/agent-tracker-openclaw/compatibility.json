@@ -11,7 +11,7 @@
     "No replay after an OpenClaw crash; a lost end event must remain incomplete",
     "No human-wait boundaries, token counts, tool usage or nested-agent correlation",
     "Harness-only streams ignored to avoid counting an outer run twice",
-    "No production ingestion, billing, credential issuance or desktop integration",
+    "Run time is billed as unclassified; no desktop integration",
     "No OS/runtime performance qualification yet"
   ]
 }
