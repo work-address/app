@@ -49,7 +49,7 @@ One record of a worker's time on a project, for a ten-minute slice.
 _Avoid_: Timelog, time row
 
 **Detail**:
-What an entry holds beyond its time: screenshot, apps, titles, input counts and note.
+What an entry holds beyond its time: screenshot, apps, titles, input counts and note, and, once phone time is built, location.
 _Avoid_: Evidence, activity data
 
 **Published**:
@@ -87,3 +87,23 @@ _Avoid_: Wallet address, username
 **Connected wallet**:
 A wallet a Google account has proved is its own, shown on its profile and paid on its invoices. It signs nobody in and grants no access.
 _Avoid_: Linked wallet, payout address
+
+## Planned: phone time
+
+Decided on 13 November 2026 and not built. The rules are in [android-server.md](../time-tracker/docs/android-server.md).
+
+**Phone time**:
+An entry recorded by the phone app. It is billed like the desktop's time and never counts as manual time. It has no input counts, apps or screenshots. Text users read says "phone"; code and the API say `mobile`.
+_Avoid_: Mobile time in text users read, field time
+
+**Location**:
+Where the phone was while its timer ran: the fixes kept on an entry. Part of the entry's detail.
+_Avoid_: GPS data, geolocation, tracking (alone)
+
+**Fix**:
+One position the phone recorded, with its accuracy and time. An attempt that found no position is kept as "no fix".
+_Avoid_: Ping, GPS point
+
+**Trail**:
+The fixes of one stretch of phone time, joined in time order.
+_Avoid_: Route, path, track

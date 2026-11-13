@@ -56,7 +56,7 @@ Replace the web repository's "without turning time tracking into surveillance" w
 
 | Area | Exists | Planned elsewhere | Absent |
 | --- | --- | --- | --- |
-| Capture | Desktop timer; input counts; screenshots per project; idle auto-stop after 20 min; app snapshots (open apps, names only) | Foreground apps, titles, hostnames ([app-statistics.md](app-statistics.md)); agent runs ([agent-time-tracking.md](agent-time-tracking.md)) | Manual entries; web timer; editor/IDE; calendar; mobile |
+| Capture | Desktop timer; input counts; screenshots per project; idle auto-stop after 20 min; app snapshots (open apps, names only) | Foreground apps, titles, hostnames ([app-statistics.md](app-statistics.md)); agent runs ([agent-time-tracking.md](agent-time-tracking.md)); an Android phone app, from 13 Nov 2026 ([android-server.md](../../time-tracker/docs/android-server.md)) | Manual entries; web timer; editor/IDE; calendar |
 | Classification | Notes on entries | — | Categories, rules, labels, tags |
 | Insights | Worklog grid with activity tone; dashboard summary; top 4/8 apps | Statistics domain, any range, per-worker apps, Overview/Apps/Agents tabs | Timeline; goals; trends; heatmap; export |
 | Focus and wellbeing | Idle-stop notification | — | Goals; focus sessions; reminders |
@@ -87,7 +87,7 @@ Sources and the full matrix are in [Market reference](#market-reference).
 | 3 | Idle return prompt | **Never** (the idle stretch before an auto-stop is cut automatically) |
 | 4 | Editor and IDE heartbeats | Later |
 | 5 | Calendar import | Later |
-| 6 | Mobile app | Later |
+| 6 | Mobile app | **Designed 13 Nov 2026, not built**: an Android app for work away from a computer. It records the time between Start and Stop and, where the owner asks for it, location. It records no input, apps or screenshots. The server half is [android-server.md](../../time-tracker/docs/android-server.md) and the app is [android.md](../../time-tracker/docs/android.md). Revised from Later |
 | 7 | Categories with rules | **Now** |
 | 8 | Productivity labels (private for the worker; published for the owner's set) | **Now** |
 | 9 | Tags on entries | Later |
@@ -256,7 +256,7 @@ Builds on app-statistics Phase 1 (the Statistics domain) and Phase 2 (foreground
 | P5 | Full data export and account deletion | Uninvoiced data gone; invoiced records anonymised |
 | P6 | Daily rollups | Account-wide reports over a year for 1,000 workers within the operational target; invoice totals still exact |
 
-**Later:** editor heartbeats, calendar import, mobile, tags, trends, weekly summary, Pomodoro, break reminders, AI summary, MCP server, personal API tokens, single sign-on, moving screenshots to object storage, a different storage layout if rollups are not enough. **Never:** automatic project suggestion, distraction blocking, stealth mode, single scores or rankings.
+**Later:** editor heartbeats, calendar import, tags, trends, weekly summary, Pomodoro, break reminders, AI summary, MCP server, personal API tokens, single sign-on, moving screenshots to object storage, a different storage layout if rollups are not enough. **Never:** automatic project suggestion, distraction blocking, stealth mode, single scores or rankings.
 
 ## Acceptance tests
 

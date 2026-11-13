@@ -175,7 +175,7 @@ request fields cannot silently acknowledge data they did not store. Entries with
 | `domain` | Hostname or `local`, nullable |
 | `seconds` | Positive integer |
 
-Unique `(timeId, app, title, domain)` with nulls treated as equal; index `timeId`. An entry's rows never add up to more than its `minutesActive × 60` seconds. Idle is not stored: it is the entry's tracked seconds minus `minutesActive × 60`; active seconds not covered by usage rows are the entry's gap. Manual and web-timer entries (`source` other than `desktop`) have no usage rows, no active minutes, no idle and no gap: statistics show them as manual time.
+Unique `(timeId, app, title, domain)` with nulls treated as equal; index `timeId`. An entry's rows never add up to more than its `minutesActive × 60` seconds. Idle is not stored: it is the entry's tracked seconds minus `minutesActive × 60`; active seconds not covered by usage rows are the entry's gap. Manual and web-timer entries (`source` `manual` or `web`) have no usage rows, no active minutes, no idle and no gap: statistics show them as manual time. Phone entries (`source` `mobile`, planned in [android-server.md](../../time-tracker/docs/android-server.md)) have no usage rows either and are never shown as manual time.
 
 `agent_tool_usage`: one row per agent run and tool, written by the agent normalizer from the run's content event.
 

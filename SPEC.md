@@ -80,7 +80,10 @@ agent's runs, nothing between them.
 
 **Each worker's record is their own.** A human entry is unique per project,
 worker and start, so two workers tracking the same minutes on one project both
-keep their time.
+keep their time. Planned and not built: the uploading device joins that key, so
+one worker's phone and computer in the same slice keep both entries. Both are
+marked, and the minutes they share are billed once
+([offline-server.md](../time-tracker/docs/offline-server.md), step 6).
 
 **`Time.isPaid` is set by an invoice or by its author by hand, and they can
 disagree.** `InvoiceManager.markPaid` sets it and `markUnpaid` and rejection clear
@@ -226,6 +229,40 @@ A person who is only ever a viewer does not get the page.
 
 The build order and the measurement rules are in `docs/agent-time-tracking.md`.
 
+## Phone time and location (planned)
+
+Decided on 13 November 2026 and not built. The rules and the build order are in
+[android-server.md](../time-tracker/docs/android-server.md). The phone app
+itself is in [android.md](../time-tracker/docs/android.md).
+
+**Phone time is a `Time` entry.** Its `source` is `mobile`, and it needs no
+domain of its own. Where the phone was is part of the entry's detail, not a
+breakdown of its time.
+
+**The owner decides whether a project may be tracked from a phone.** It is a
+per-project switch, off by default like the recording switches. An upload may
+name `mobile` and no other source. A `mobile` entry on a project without the
+switch is refused on its own, unless it started before the switch last went
+off, so a worker who was out of signal keeps time worked under the owner's own
+setting. Naming `mobile` grants nothing the owner did not allow, and it only
+ever means less detail.
+
+**Phone time is billed as the desktop's is.** Every minute the phone recorded
+is billed. It has no input counts, apps or screenshots, so it stays out of the
+active and idle split and has no app breakdown. Where totals and invoice lines
+split the desktop's time from manual time, phone time is a part of its own,
+never manual. A worker on a phone counts against the plan as any worker does.
+
+**Where the phone was is detail, and follows every rule detail follows.** A
+second switch, under the first and never on without it, asks for it. The author
+sees it at once, the owner once the entry is published, and a viewer never. The
+author may remove it until the entry is invoiced, and the time stays. It is
+kept only as long as the project keeps screenshots. It is not stored for a
+project that did not ask for it, and an upload never puts it back. A position
+the phone says was faked is kept and marked, never refused. Nothing turns a
+position into a street address or an on-site verdict: the owner reads the
+trail.
+
 ## Who can see what
 
 | | Project owner | Project worker | Project viewer |
@@ -234,6 +271,7 @@ The build order and the measurement rules are in `docs/agent-time-tracking.md`.
 | Who is tracking now | **every worker** | **own only** | **no** |
 | The rate, money, paid and unpaid time | **every worker** | **own only** | **no** |
 | Screenshots, apps, window titles, domains, idle and the day timeline | **every worker, after review** | **own only** | **project totals by app name** |
+| Where the phone was (planned) | **every worker, after review** | **own only** | **no** |
 | Time by the owner's categories and labels | **every worker, after review** | **own, and the published set** | **project totals by category, no labels** |
 | A person's own categories, labels and goals | **no** | **own only** | **no** |
 | Agents: runs and rates | **all workers'** | **own only** | **no** |
@@ -274,7 +312,8 @@ invoice publishes what it bills. The person recorded sees the record first.
 
 **Nothing is recorded in secret.** The desktop shows when it is recording and
 what the project records, and a worker sees everything about them that the
-owner sees.
+owner sees. The phone app, once built, keeps a notification up while its timer
+runs, and asks the worker before it first records location.
 
 **A worker sees only their own agents.** The same reason covers agents, and
 more: an agent's runs show how a contractor works, not only what they charge.
