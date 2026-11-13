@@ -3,6 +3,7 @@ import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
 import { TimeContext } from '../time-context'
+import { TimeDayTrail } from '../time-day-trail/time-day-trail'
 
 import type { TimeDayGroup } from '../../model'
 
@@ -36,6 +37,7 @@ export const TimeDayHeading = ({ group, className }: Props) => {
           percent: group.activityPercent,
         })}
       </Caption>
+      <TimeDayTrail group={group} />
     </Root>
   )
 }

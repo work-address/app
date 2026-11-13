@@ -24,6 +24,10 @@ services:
         # the page - which is what a self-hosted install behind this nginx needs.
         # Bare `-` so an explicitly empty value survives; `:-` would replace it.
         VITE_API_URL: "${VITE_API_URL-https://app.address.work}"
+        # Where the phone-location map takes its squares from; see
+        # README-DOCKER.md, "Map tiles".
+        VITE_MAP_TILE_URL: "${VITE_MAP_TILE_URL-}"
+        VITE_MAP_TILE_ATTRIBUTION: "${VITE_MAP_TILE_ATTRIBUTION-}"
     image: app-web-prod
     pull_policy: build
     # ports:

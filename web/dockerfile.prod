@@ -34,6 +34,11 @@ ARG VITE_API_URL
 ENV VITE_API_URL=$VITE_API_URL
 ARG VITE_WEBSITE_ORIGINS
 ENV VITE_WEBSITE_ORIGINS=$VITE_WEBSITE_ORIGINS
+# The map's tile host and its credit line; empty means OpenStreetMap's.
+ARG VITE_MAP_TILE_URL
+ENV VITE_MAP_TILE_URL=$VITE_MAP_TILE_URL
+ARG VITE_MAP_TILE_ATTRIBUTION
+ENV VITE_MAP_TILE_ATTRIBUTION=$VITE_MAP_TILE_ATTRIBUTION
 RUN --mount=type=bind,source=.git,target=/tmp/.git,readonly \
     export GIT_COMMIT="$(GIT_COMMIT="$GIT_COMMIT" GIT_DIR=/tmp/.git sh /app/scripts/resolve-git-commit.sh)" && \
     pnpm run build

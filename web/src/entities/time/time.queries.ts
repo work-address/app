@@ -285,3 +285,38 @@ export const recentTimeQuery = createQuery({
 })
 
 concurrency(recentTimeQuery, { strategy: 'TAKE_LATEST' })
+
+/** A day has 144 ten-minute slices on each project. */
+const TRAIL_PAGE = 500
+
+export type TimeTrailParams = {
+  userId: string
+  fromAt: string
+  toAt: string
+}
+
+/**
+ * One person's phone entries over a span, oldest first, for their trail. Read
+ * whole rather than from the list's pages, which may stop partway through.
+ * Each entry carries its fixes where the reader may see its detail.
+ */
+export const timeTrailQuery = createQuery({
+  handler: async ({ userId, fromAt, toAt }: TimeTrailParams) => {
+    const [items] = (await runApiData(
+      () =>
+        baseApi.timeControllerSearch({
+          body: {
+            filter: { fromAt, toAt, userIds: [userId], source: 'mobile' },
+            page: 0,
+            limit: TRAIL_PAGE,
+            sort: { fromAt: 'ASC' },
+          },
+        }),
+      'in-place',
+    )) as [Time[], number]
+
+    return items ?? []
+  },
+})
+
+concurrency(timeTrailQuery, { strategy: 'TAKE_LATEST' })

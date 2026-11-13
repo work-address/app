@@ -182,6 +182,8 @@ export {
   recentTimeQuery,
   timeAgentRunsQuery,
   timeQuery,
+  timeTrailQuery,
+  type TimeTrailParams,
   type TimeAgentRun,
   type TimeAgentSegment,
   type TimeQueryParams,

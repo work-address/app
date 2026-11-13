@@ -14,6 +14,7 @@ import {
 
 import { TimeDialogAgents, useEntryAgentRuns } from './time-dialog-agents'
 import { TimeDialogFooter } from './time-dialog-footer'
+import { TimeDialogLocation } from './time-dialog-location'
 import { TimeDialogMetrics } from './time-dialog-metrics'
 import { TimeDialogNav } from './time-dialog-nav'
 import { getTimeApps, TimeDialogProcesses } from './time-dialog-processes'
@@ -375,6 +376,7 @@ export const TimeDialog = ({
                 )}
               />
               {hasProcesses && row && <TimeDialogProcesses time={row} />}
+              <TimeDialogLocation time={row} />
             </DetailsColumn>
             {hasAgents && (
               <AgentsColumn>
