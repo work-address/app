@@ -187,6 +187,7 @@ export class ProjectManager {
       'trackBrowserDomains',
       'allowManualTime',
       'allowMobileTime',
+      'trackLocation',
     ] as const) {
       if (project[key] !== undefined && typeof project[key] !== 'boolean')
         throw new BadRequestError(`Invalid recording policy: ${key}`)
@@ -195,6 +196,8 @@ export class ProjectManager {
       project.trackWindowTitles = false
       project.trackBrowserDomains = false
     }
+    // Location is recorded only by the phone, so it goes off with it.
+    if (!project.allowMobileTime) project.trackLocation = false
     if (
       project.reviewWindowHours !== undefined &&
       (!Number.isInteger(project.reviewWindowHours) ||

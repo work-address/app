@@ -18,6 +18,7 @@ export interface IProject {
   trackScreenshots?: boolean | null
   trackProcesses?: boolean | null
   allowMobileTime?: boolean
+  trackLocation?: boolean
   workerAddresses?: string[]
   viewerAddresses?: string[]
 }

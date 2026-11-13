@@ -62,6 +62,14 @@ export type Time = {
     appsReason?: string | null;
     appsTruncated?: boolean | null;
     source?: string | null;
+    locationStatus?: string | null;
+    locations?: Array<{
+        at: string;
+        latitude: number | null;
+        longitude: number | null;
+        accuracy: number | null;
+        mock: boolean;
+    }>;
     publishedAt?: string | null;
     detailPendingReview?: boolean | null;
     isInvoiced?: boolean | null;
@@ -98,6 +106,7 @@ export type Project = {
     trackBrowserDomains?: boolean;
     allowManualTime?: boolean;
     allowMobileTime?: boolean;
+    trackLocation?: boolean;
     reviewWindowHours?: number;
     screenshotRetentionDays?: number | null;
     text: string;
@@ -407,6 +416,8 @@ export type TimeCreateDto = {
     appsTruncated?: unknown;
     apps?: unknown;
     source?: unknown;
+    locations?: unknown;
+    locationStatus?: unknown;
     fromIndex: number;
     toIndex: number;
     fromAt: string;
@@ -433,6 +444,7 @@ export type TimeIdsDto = {
 
 export type TimeInsertionResultDto = {
     appsAccepted?: boolean;
+    locationsAccepted?: boolean;
     id?: string;
     error?: TimeInsertionErrorDto;
     appsStatus?: unknown;
@@ -440,6 +452,8 @@ export type TimeInsertionResultDto = {
     appsTruncated?: unknown;
     apps?: unknown;
     source?: unknown;
+    locations?: unknown;
+    locationStatus?: unknown;
     fromIndex: number;
     toIndex: number;
     fromAt: string;
@@ -553,6 +567,7 @@ export type ProjectSearch = {
     trackBrowserDomains?: boolean;
     allowManualTime?: boolean;
     allowMobileTime?: boolean;
+    trackLocation?: boolean;
     reviewWindowHours?: number;
     screenshotRetentionDays?: number | null;
     text?: string;
@@ -580,6 +595,7 @@ export type ProjectCreate = {
     trackBrowserDomains?: boolean;
     allowManualTime?: boolean;
     allowMobileTime?: boolean;
+    trackLocation?: boolean;
     reviewWindowHours?: number;
     screenshotRetentionDays?: number | null;
     text?: string;
@@ -613,6 +629,7 @@ export type ProjectEdit = {
     trackBrowserDomains?: boolean;
     allowManualTime?: boolean;
     allowMobileTime?: boolean;
+    trackLocation?: boolean;
     reviewWindowHours?: number;
     screenshotRetentionDays?: number | null;
     text?: string;
@@ -637,6 +654,14 @@ export type TimeSearch = {
     appsReason?: string | null;
     appsTruncated?: boolean | null;
     source?: string | null;
+    locationStatus?: string | null;
+    locations?: Array<{
+        at: string;
+        latitude: number | null;
+        longitude: number | null;
+        accuracy: number | null;
+        mock: boolean;
+    }>;
     publishedAt?: string | null;
     detailPendingReview?: boolean | null;
     isInvoiced?: boolean | null;
@@ -780,6 +805,7 @@ export type ProjectSearchWritable = {
     trackBrowserDomains?: boolean;
     allowManualTime?: boolean;
     allowMobileTime?: boolean;
+    trackLocation?: boolean;
     reviewWindowHours?: number;
     screenshotRetentionDays?: number | null;
     text?: string;
@@ -809,6 +835,14 @@ export type TimeSearchWritable = {
     appsReason?: string | null;
     appsTruncated?: boolean | null;
     source?: string | null;
+    locationStatus?: string | null;
+    locations?: Array<{
+        at: string;
+        latitude: number | null;
+        longitude: number | null;
+        accuracy: number | null;
+        mock: boolean;
+    }>;
     publishedAt?: string | null;
     detailPendingReview?: boolean | null;
     isInvoiced?: boolean | null;

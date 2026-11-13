@@ -103,6 +103,7 @@ export const ProjectsDialog = ({
               trackBrowserDomains: row.trackBrowserDomains ?? false,
               allowManualTime: row.allowManualTime ?? false,
               allowMobileTime: row.allowMobileTime ?? false,
+              trackLocation: row.trackLocation ?? false,
               reviewWindowHours: row.reviewWindowHours ?? 24,
             }}
           />

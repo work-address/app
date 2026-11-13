@@ -128,6 +128,17 @@ export class Project extends AbstractBaseEntity implements IProject {
   @Column('timestamptz', { nullable: true })
   mobileTimeOffAt: Date | null
 
+  /**
+   * Whether the phone app records where the phone was while its timer runs.
+   * The owner's alone, off by default, and never on while `allowMobileTime`
+   * is off. Points sent while it is off are not stored.
+   */
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @Column('bool', { default: false })
+  @IsBoolean()
+  @IsOptional()
+  trackLocation: boolean
+
   @Expose({ groups: ['search', 'create', 'edit'] })
   @Column('int', { default: 24 })
   @IsInt()

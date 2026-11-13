@@ -125,6 +125,45 @@ export class Time extends AbstractBaseEntity implements ITime {
   @Column('text', { default: 'desktop' })
   source: 'desktop' | 'mobile' | 'manual' | 'web' = 'desktop'
 
+  /**
+   * What became of a phone entry's location: `ok` when it is kept, `off` when
+   * the project did not ask for it, `removed` by its author, `expired` by
+   * retention, `invalid` when the phone sent what could not be read, or what
+   * else the phone said. Null on desktop entries. Shaped as `appsStatus` is.
+   */
+  @Allow()
+  @IsOptional()
+  @JSONSchema({ type: 'string', nullable: true })
+  @Expose({ groups: ['search'] })
+  @Column('text', { nullable: true })
+  locationStatus: string | null
+
+  /** The entry's fixes in time order, where the reader may see its detail. */
+  @Allow()
+  @IsOptional()
+  @JSONSchema({
+    type: 'array',
+    items: {
+      type: 'object',
+      properties: {
+        at: { type: 'string', format: 'date-time' },
+        latitude: { type: 'number', nullable: true },
+        longitude: { type: 'number', nullable: true },
+        accuracy: { type: 'number', nullable: true },
+        mock: { type: 'boolean' },
+      },
+      required: ['at', 'latitude', 'longitude', 'accuracy', 'mock'],
+    },
+  })
+  @Expose({ groups: ['search'] })
+  locations?: {
+    at: Date
+    latitude: number | null
+    longitude: number | null
+    accuracy: number | null
+    mock: boolean
+  }[]
+
   @Allow()
   @IsOptional()
   @JSONSchema({ type: 'string', nullable: true })

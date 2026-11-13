@@ -10,7 +10,9 @@ import {
 import { fromPromise } from '@/service/effect-bridge'
 import { Time } from '@/entity/time'
 import { AppUsage } from '@/entity/app-usage'
+import { TimeLocation } from '@/entity/time-location'
 import { UsageResult } from '@/service/app-usage-policy'
+import { LocationResult, NO_LOCATION } from '@/service/location-policy'
 import { ProjectAccess } from '@/service/project-access'
 import { validate } from 'class-validator'
 import ConstraintsValidationException from '@/exception/constraints-validation-exception'
@@ -92,12 +94,17 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       }
 
       await this.loadUsage([timeEntry])
+      await this.loadLocations([timeEntry])
       await this.loadInvoiced([timeEntry])
       return this.access.redact(timeEntry, user)
     })
   }
 
-  public saveWithUsage(time: Time, usage: UsageResult): RepoEffect<Time> {
+  public saveWithUsage(
+    time: Time,
+    usage: UsageResult,
+    location: LocationResult = NO_LOCATION,
+  ): RepoEffect<Time> {
     return fromPromise(() =>
       this.getRepo().manager.transaction(async (manager) => {
         await manager.query(
@@ -153,9 +160,23 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
           time.appsReason = existing.appsReason
           time.appsTruncated = existing.appsTruncated
         }
+        // Location its author removed stays removed, published or not: the
+        // phone may send the same slice again until it hears back.
+        const keepLocation =
+          preserveUsage || existing?.locationStatus === 'removed'
+        time.locationStatus =
+          keepLocation && existing ? existing.locationStatus : location.status
         const errors = await validate(time)
         if (errors.length) throw new ConstraintsValidationException(errors)
         const saved = await manager.save(Time, time)
+        if (!keepLocation) {
+          await manager.delete(TimeLocation, { time: { id: saved.id } })
+          if (location.rows.length)
+            await manager.insert(
+              TimeLocation,
+              location.rows.map((row) => ({ ...row, time: saved })),
+            )
+        }
         if (preserveUsage) return saved
         await manager.delete(AppUsage, { time: { id: saved.id } })
         if (usage.rows.length)
@@ -233,6 +254,33 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
       }
       time.apps = [...apps.values()].sort((a, b) => b.seconds - a.seconds)
     }
+  }
+
+  /** Each entry's fixes, in the order the phone took them. */
+  public async loadLocations(times: Time[]): Promise<void> {
+    if (!times.length) return
+    const rows = await this.getRepo()
+      .manager.getRepository(TimeLocation)
+      .createQueryBuilder('location')
+      .innerJoin('location.time', 'time')
+      .addSelect('time.id')
+      .where('time.id IN (:...ids)', { ids: times.map((time) => time.id) })
+      .orderBy('location.at', 'ASC')
+      .addOrderBy('location.id', 'ASC')
+      .getMany()
+    const byTime = new Map<string, NonNullable<Time['locations']>>()
+    for (const row of rows) {
+      const points = byTime.get(row.time.id) ?? []
+      points.push({
+        at: row.at,
+        latitude: row.latitude,
+        longitude: row.longitude,
+        accuracy: row.accuracy,
+        mock: row.mock,
+      })
+      byTime.set(row.time.id, points)
+    }
+    for (const time of times) time.locations = byTime.get(time.id) ?? []
   }
 
   /** The order to run, sorting Detail by what this reader may see of it. */
@@ -423,6 +471,7 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         .take(limit)
         .getManyAndCount()
       await this.loadUsage(times)
+      await this.loadLocations(times)
       await this.loadInvoiced(times)
       return [times.map((time) => this.access.redact(time, user)), count] as [
         Time[],

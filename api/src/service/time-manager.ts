@@ -5,6 +5,7 @@ import moment from 'moment'
 
 import { Time } from '@/entity/time'
 import { AppUsagePolicy } from '@/service/app-usage-policy'
+import { LocationPolicy, NO_LOCATION } from '@/service/location-policy'
 import { User } from '@/entity/user'
 import { TimeRepository } from '@/repository/time-repository'
 import { ProjectRepository } from '@/repository/project-repository'
@@ -157,9 +158,14 @@ export class TimeManager {
           const usage = mobile
             ? AppUsagePolicy.fromPhone(project)
             : AppUsagePolicy.normalize(item, project)
+          // Only a phone records location, and only where the owner asks.
+          const location = mobile
+            ? LocationPolicy.normalize(item, project)
+            : NO_LOCATION
           const savedTime = yield* this.timeRepository.saveWithUsage(
             time,
             usage,
+            location,
           )
 
           return {
@@ -168,9 +174,13 @@ export class TimeManager {
             appsAccepted:
               savedTime.appsStatus !== null &&
               savedTime.appsStatus !== undefined,
+            ...(mobile && {
+              locationsAccepted: savedTime.locationStatus === 'ok',
+            }),
             apps: undefined,
             screenshot: undefined,
             processes: undefined,
+            locations: undefined,
           }
         })
 
@@ -188,9 +198,11 @@ export class TimeManager {
                 ...item,
                 error: this.reportEntryFailure(Cause.squash(cause)),
                 appsAccepted: undefined,
+                locationsAccepted: undefined,
                 apps: undefined,
                 screenshot: undefined,
                 processes: undefined,
+                locations: undefined,
               }),
             ),
           ),

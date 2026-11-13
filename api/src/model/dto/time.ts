@@ -173,6 +173,19 @@ export class TimeCreateDto {
   @Allow()
   @IsOptional()
   source?: unknown
+  /**
+   * A phone's fixes over the slice, `{ at, latitude, longitude, accuracy,
+   * mock }` in time order, with null coordinates for an attempt that found
+   * none. Read only from a `"mobile"` item, and like app data checked apart,
+   * so a malformed point never costs the time.
+   */
+  @Allow()
+  @IsOptional()
+  locations?: unknown
+  /** `"ok"` when the phone recorded location for the slice, `"off"` if not. */
+  @Allow()
+  @IsOptional()
+  locationStatus?: unknown
 
   @IsNumber()
   fromIndex: number
@@ -234,6 +247,14 @@ export class TimeInsertionResultDto extends TimeCreateDto {
   @IsBoolean()
   @IsOptional()
   appsAccepted?: boolean
+
+  /**
+   * On a phone item only: whether the server keeps location for this slice,
+   * which it does only while the project asks for it.
+   */
+  @IsBoolean()
+  @IsOptional()
+  locationsAccepted?: boolean
 
   @IsUUID()
   @IsOptional()

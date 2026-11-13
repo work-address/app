@@ -57,6 +57,7 @@ export type MockProject = {
   trackBrowserDomains: boolean
   allowManualTime: boolean
   allowMobileTime: boolean
+  trackLocation: boolean
   reviewWindowHours: number
   screenshotRetentionDays: number | null
   deletedAt: string | null
@@ -503,6 +504,7 @@ function makeProjects(
       trackBrowserDomains: false,
       allowManualTime: i % 2 === 0,
       allowMobileTime: i % 3 === 0,
+      trackLocation: i % 6 === 0,
       reviewWindowHours: 24,
       screenshotRetentionDays: null,
       deletedAt: null,

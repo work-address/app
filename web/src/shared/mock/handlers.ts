@@ -234,6 +234,7 @@ const PROJECT_FIELDS = [
   'trackBrowserDomains',
   'allowManualTime',
   'allowMobileTime',
+  'trackLocation',
   'reviewWindowHours',
   'screenshotRetentionDays',
 ] as const
@@ -250,6 +251,10 @@ function applyProjectBody(
   }
   if (typeof project.rateHour === 'number') {
     project.rateHour = Number(project.rateHour).toFixed(2)
+  }
+  // As the API: location is recorded only by the phone, so it goes off with it.
+  if (!project.allowMobileTime) {
+    project.trackLocation = false
   }
   if ('workerAddresses' in body) {
     project.workerIds = idsForAddresses(db, body.workerAddresses)
@@ -693,6 +698,7 @@ export const handlers: HttpHandler[] = [
         trackBrowserDomains: false,
         allowManualTime: false,
         allowMobileTime: false,
+        trackLocation: false,
         reviewWindowHours: 24,
         screenshotRetentionDays: null,
         deletedAt: null,

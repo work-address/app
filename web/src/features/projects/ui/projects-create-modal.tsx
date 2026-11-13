@@ -67,6 +67,7 @@ export const ProjectsCreateModal = ({
       trackBrowserDomains: false,
       allowManualTime: false,
       allowMobileTime: false,
+      trackLocation: false,
       reviewWindowHours: DEFAULT_REVIEW_WINDOW_HOURS,
     },
   })
@@ -90,6 +91,7 @@ export const ProjectsCreateModal = ({
       trackBrowserDomains: data.trackBrowserDomains,
       allowManualTime: data.allowManualTime,
       allowMobileTime: data.allowMobileTime,
+      trackLocation: data.trackLocation,
       reviewWindowHours: data.reviewWindowHours,
       screenshotRetentionDays: null,
     })

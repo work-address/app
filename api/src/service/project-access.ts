@@ -165,6 +165,7 @@ export class ProjectAccess {
       time.processes = null
       time.apps = undefined
       time.appsReason = null
+      time.locations = undefined
       time.detailPendingReview =
         time.project?.user?.id === user.id && !this.published(time)
     }

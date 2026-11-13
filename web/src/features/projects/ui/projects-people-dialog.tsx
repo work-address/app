@@ -70,6 +70,7 @@ export const ProjectsPeopleDialog = ({ projectId }: Props) => {
       trackBrowserDomains: project?.trackBrowserDomains ?? false,
       allowManualTime: project?.allowManualTime ?? false,
       allowMobileTime: project?.allowMobileTime ?? false,
+      trackLocation: project?.trackLocation ?? false,
       reviewWindowHours: project?.reviewWindowHours ?? 24,
     }),
     [project],
