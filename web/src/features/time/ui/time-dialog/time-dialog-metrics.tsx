@@ -3,6 +3,8 @@ import { type ReactNode } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
+import { isPhoneTime, TimeSourceMark } from '../common'
+
 import type { Time } from '@/entities/time'
 
 import { formatCount, formatDurationFromMinutes, Hint, Text } from '@/shared'
@@ -26,32 +28,42 @@ export const TimeDialogMetrics = ({ row, range }: TimeDialogMetricsProps) => {
           {range}
         </Text>
       </Heading>
-      <MetricsGrid>
-        <Metric
-          label={t('dashboard.worklogsTable.head.timeActive')}
-          description={t('common.metricDesc.timeActive')}
-        >
-          {formatDurationFromMinutes(row.minutesActive, t)}
-        </Metric>
-        <Metric
-          label={t('dashboard.worklogsTable.head.keyboard')}
-          description={t('common.metricDesc.keyboard')}
-        >
-          {formatCount(row.keyboardKeys)}
-        </Metric>
-        <Metric
-          label={t('dashboard.worklogsTable.head.mouse')}
-          description={t('common.metricDesc.mouse')}
-        >
-          {formatCount(row.mouseKeys)}
-        </Metric>
-        <Metric
-          label={t('dashboard.worklogsTable.head.mouseDistance')}
-          description={t('common.metricDesc.mouseDistance')}
-        >
-          {formatCount(row.mouseDistance)}
-        </Metric>
-      </MetricsGrid>
+      {isPhoneTime(row) ? (
+        // A phone records the time and nothing the desktop measures.
+        <Flex direction="column" gap="1">
+          <TimeSourceMark entry={row} />
+          <Text size="2" color="gray">
+            {t('time.source.mobileHint')}
+          </Text>
+        </Flex>
+      ) : (
+        <MetricsGrid>
+          <Metric
+            label={t('dashboard.worklogsTable.head.timeActive')}
+            description={t('common.metricDesc.timeActive')}
+          >
+            {formatDurationFromMinutes(row.minutesActive, t)}
+          </Metric>
+          <Metric
+            label={t('dashboard.worklogsTable.head.keyboard')}
+            description={t('common.metricDesc.keyboard')}
+          >
+            {formatCount(row.keyboardKeys)}
+          </Metric>
+          <Metric
+            label={t('dashboard.worklogsTable.head.mouse')}
+            description={t('common.metricDesc.mouse')}
+          >
+            {formatCount(row.mouseKeys)}
+          </Metric>
+          <Metric
+            label={t('dashboard.worklogsTable.head.mouseDistance')}
+            description={t('common.metricDesc.mouseDistance')}
+          >
+            {formatCount(row.mouseDistance)}
+          </Metric>
+        </MetricsGrid>
+      )}
     </Root>
   )
 }

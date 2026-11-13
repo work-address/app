@@ -251,7 +251,10 @@ export type RecentDesktopTimeParams = RecentTimeParams & {
   userId: string
 }
 
-/** One person's newest desktop-app entries in a period, on these projects. */
+/**
+ * One person's newest entries in a period, on these projects. The session
+ * model keeps the desktop app's and the phone's: the filter takes one source.
+ */
 export const recentTimeQuery = createQuery({
   handler: async ({
     fromAt,
@@ -268,7 +271,6 @@ export const recentTimeQuery = createQuery({
               toAt,
               projectIds,
               userIds: [userId],
-              source: 'desktop',
             },
             page: 0,
             limit: RECENT_TIME_PAGE,

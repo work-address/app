@@ -1,4 +1,4 @@
-import { DesktopIcon, ListBulletIcon } from '@radix-ui/react-icons'
+import { DesktopIcon, ListBulletIcon, MobileIcon } from '@radix-ui/react-icons'
 import { Skeleton } from '@radix-ui/themes'
 import { format } from 'date-fns'
 import { useUnit } from 'effector-react'
@@ -20,9 +20,10 @@ import { Button, formatDurationFromMinutes, WorkspaceStatus } from '@/shared'
 const DAY_FORMAT = 'yyyy-MM-dd'
 
 /**
- * The reader's latest stretch of desktop-app time in the period: how long it
- * ran, when it ended, and what it was for. Always their own time, never a
- * teammate's, and a way into that day on the Time page.
+ * The reader's latest stretch of tracked time in the period, from the desktop
+ * app or the phone, and which of the two: how long it ran, when it ended, and
+ * what it was for. Always their own time, never a teammate's, and a way into
+ * that day on the Time page.
  */
 export const DashboardDesktopSession = () => {
   const { t, i18n } = useTranslation()
@@ -53,7 +54,10 @@ export const DashboardDesktopSession = () => {
   }, [session, i18n.language, t])
 
   const loading = !loaded && (pending || !failed)
-  const title = t('dashboard.session.title')
+  const phone = session?.source === 'mobile'
+  const title = t(
+    phone ? 'dashboard.session.titleMobile' : 'dashboard.session.title',
+  )
 
   // The session's day on the Time page, narrowed to its project.
   const openSession = () => {
@@ -78,7 +82,7 @@ export const DashboardDesktopSession = () => {
       title={title}
       aside={
         <Icon aria-hidden="true">
-          <DesktopIcon />
+          {phone ? <MobileIcon /> : <DesktopIcon />}
         </Icon>
       }
       failed={failed}

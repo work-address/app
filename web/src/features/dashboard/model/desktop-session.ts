@@ -15,7 +15,12 @@ export type SessionEntry = {
   project?: { id?: string; title?: string } | null
 }
 
+/** Where a session's time was tracked. */
+export type SessionSource = 'desktop' | 'mobile'
+
 export type DesktopSession = {
+  /** Which app tracked it: a session never mixes the two. */
+  source: SessionSource
   fromAt: Date
   toAt: Date
   /** Tracked minutes, overlaps counted once and gaps not at all. */
@@ -34,9 +39,17 @@ type Options = {
   projectIds: readonly string[]
 }
 
+/** An entry's tracker, or null for time added by hand or in the browser. */
+const trackedBy = (entry: SessionEntry): SessionSource | null => {
+  const source = entry.source ?? 'desktop'
+
+  return source === 'desktop' || source === 'mobile' ? source : null
+}
+
 /**
- * The signed-in person's latest stretch of desktop-app time: their newest
- * entry, joined with the earlier ones no more than ten minutes apart.
+ * The signed-in person's latest stretch of tracked time, from the desktop app
+ * or the phone: their newest such entry, joined with the earlier ones from the
+ * same app no more than ten minutes apart.
  */
 export function latestDesktopSession(
   entries: readonly SessionEntry[],
@@ -51,7 +64,7 @@ export function latestDesktopSession(
     .filter(
       (entry) =>
         entry.user?.id === userId &&
-        (entry.source ?? 'desktop') === 'desktop' &&
+        trackedBy(entry) !== null &&
         visible.has(entry.project?.id ?? ''),
     )
     .map((entry) => ({
@@ -66,12 +79,15 @@ export function latestDesktopSession(
     return null
   }
 
+  const source = trackedBy(mine[0].entry) ?? 'desktop'
+  const same = mine.filter(({ entry }) => trackedBy(entry) === source)
+
   // Newest first: each earlier entry joins while it ends within the gap of
   // the session's start so far.
-  const session = [mine[0]]
-  let start = mine[0].from
+  const session = [same[0]]
+  let start = same[0].from
 
-  for (const span of mine.slice(1)) {
+  for (const span of same.slice(1)) {
     if (span.to < start - SESSION_GAP_MS) {
       break
     }
@@ -86,6 +102,7 @@ export function latestDesktopSession(
       .find((text): text is string => Boolean(text)) ?? null
 
   return {
+    source,
     fromAt: new Date(start),
     toAt: new Date(session[0].to),
     minutes: Math.round(coveredMs(session) / 60_000),

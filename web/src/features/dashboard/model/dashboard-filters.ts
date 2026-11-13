@@ -342,9 +342,9 @@ sample({
 })
 
 /**
- * The signed-in person's latest desktop session in the period's projects:
- * always their own time, like their insights, whoever the people filter
- * selects.
+ * The signed-in person's latest session, from the desktop app or the phone,
+ * in the period's projects: always their own time, like their insights,
+ * whoever the people filter selects.
  */
 export const $dashboardDesktopSession = combine(
   recentTimeQuery.$data,

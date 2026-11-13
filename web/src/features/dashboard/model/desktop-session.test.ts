@@ -56,16 +56,37 @@ describe('latestDesktopSession', () => {
     expect(session?.toAt).toEqual(new Date(day('10:00')))
   })
 
-  it('counts only desktop time, and unmarked entries as desktop', () => {
+  it('counts only tracked time, and unmarked entries as desktop', () => {
     const session = latestDesktopSession(
       [
         entry('15:00', '16:00', { source: 'manual' }),
+        entry('14:00', '14:30', { source: 'web' }),
         entry('12:00', '13:00', { source: undefined }),
       ],
       options,
     )
 
     expect(session?.toAt).toEqual(new Date(day('13:00')))
+    expect(session?.source).toBe('desktop')
+  })
+
+  it('shows a phone session as one, without the desktop time beside it', () => {
+    const session = latestDesktopSession(
+      [
+        entry('15:00', '16:00', { source: 'mobile' }),
+        // The desktop, five minutes earlier: not part of the phone's session.
+        entry('14:00', '14:55'),
+        entry('14:30', '14:55', { source: 'mobile' }),
+      ],
+      options,
+    )
+
+    expect(session).toMatchObject({
+      source: 'mobile',
+      fromAt: new Date(day('14:30')),
+      toAt: new Date(day('16:00')),
+      minutes: 85,
+    })
   })
 
   it('keeps to the projects the dashboard shows', () => {

@@ -7,6 +7,7 @@ import {
   getEntryChanges,
   getTimeActivityPercent,
 } from '../../model'
+import { isPhoneTime, TimeSourceMark } from '../common'
 import { TimeContext } from '../time-context'
 
 import { TimePaidBadge } from './time-paid-badge'
@@ -37,10 +38,12 @@ export const TimeTableStackRow = memo(
     const canSelect = getEntryChanges(entry, reader?.id).isAuthor
 
     const range = `${timeFormatter.format(new Date(entry.fromAt))} – ${timeFormatter.format(new Date(entry.toAt))}`
+    const phone = isPhoneTime(entry)
     const hasInput =
-      entry.keyboardKeys != null ||
-      entry.mouseKeys != null ||
-      entry.mouseDistance != null
+      !phone &&
+      (entry.keyboardKeys != null ||
+        entry.mouseKeys != null ||
+        entry.mouseDistance != null)
 
     return (
       <Root data-selected={selected || undefined}>
@@ -64,11 +67,13 @@ export const TimeTableStackRow = memo(
           </Meta>
           <Figures>
             <Strong>{formatDurationFromMinutes(entry.minutesActive, t)}</Strong>
-            {' · '}
-            {t('dashboard.worklogsGrid.activity', {
-              percent: getTimeActivityPercent(entry),
-            })}
+            {phone
+              ? null
+              : ` · ${t('dashboard.worklogsGrid.activity', {
+                  percent: getTimeActivityPercent(entry),
+                })}`}
           </Figures>
+          <TimeSourceMark entry={entry} />
           {hasInput ? (
             <>
               <Figures>

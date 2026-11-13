@@ -52,6 +52,9 @@ export const InvoiceLines = () => {
         )
       }
     }
+    if (line.mobileMinutes) {
+      parts.push(`${t('invoice.lines.mobile')}: ${hours(line.mobileMinutes)}`)
+    }
     if (line.manualMinutes) {
       parts.push(`${t('invoice.lines.manual')}: ${hours(line.manualMinutes)}`)
     }

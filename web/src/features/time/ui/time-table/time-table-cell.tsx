@@ -3,6 +3,7 @@ import { memo, useContext } from 'react'
 import styled from 'styled-components'
 
 import { formatTrackedCount, getTimeActivityPercent } from '../../model'
+import { isPhoneTime, TimeSourceMark } from '../common'
 import { TimeContext } from '../time-context'
 
 import { TimePaidBadge } from './time-paid-badge'
@@ -40,11 +41,13 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
   }
 
   if (props.customKey === 'activity') {
-    // Nothing recorded at all reads as one dash, not three.
+    // Nothing recorded at all reads as one dash, not three. A phone records
+    // no input, so its zeros are not a measurement either.
     if (
-      entry.keyboardKeys == null &&
-      entry.mouseKeys == null &&
-      entry.mouseDistance == null
+      isPhoneTime(entry) ||
+      (entry.keyboardKeys == null &&
+        entry.mouseKeys == null &&
+        entry.mouseDistance == null)
     ) {
       return <Meta>—</Meta>
     }
@@ -78,6 +81,7 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
               ? null
               : ` · ${dateFormatter.format(new Date(entry.fromAt))}`}
           </Meta>
+          <TimeSourceMark entry={entry} />
           {entry.note ? (
             <Tooltip content={entry.note}>
               {/* The ellipsis has to sit on whatever directly holds the
@@ -102,11 +106,14 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
           <Figure data-strong>
             {formatDurationFromMinutes(entry.minutesActive, t)}
           </Figure>
-          <Meta>
-            {t('dashboard.worklogsGrid.activity', {
-              percent: getTimeActivityPercent(entry),
-            })}
-          </Meta>
+          {/* A phone's every minute counts: there is no share to show. */}
+          {isPhoneTime(entry) ? null : (
+            <Meta>
+              {t('dashboard.worklogsGrid.activity', {
+                percent: getTimeActivityPercent(entry),
+              })}
+            </Meta>
+          )}
         </Stack>
       )
     }

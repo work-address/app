@@ -8,6 +8,7 @@ import {
   getTimeActivityPercent,
   getTimeActivityTone,
 } from '../../model'
+import { isPhoneTime, TimeSourceMark } from '../common'
 import { TimeContext } from '../time-context'
 
 import { TimeGridTileActivity } from './time-grid-tile-activity'
@@ -37,7 +38,8 @@ export const TimeGridTile = memo(
 
     return (
       <Root
-        data-tone={tone}
+        // A phone's full minutes are not activity, so its tile has no tone.
+        data-tone={isPhoneTime(entry) ? undefined : tone}
         data-selected={selected || undefined}
         data-empty={!screenshotSrc || undefined}
       >
@@ -53,11 +55,15 @@ export const TimeGridTile = memo(
         </Media>
         <Body>
           <Range>{range}</Range>
-          <TimeGridTileActivity
-            percent={percent}
-            tone={tone}
-            label={t('dashboard.worklogsGrid.activity', { percent })}
-          />
+          {isPhoneTime(entry) ? (
+            <TimeSourceMark entry={entry} />
+          ) : (
+            <TimeGridTileActivity
+              percent={percent}
+              tone={tone}
+              label={t('dashboard.worklogsGrid.activity', { percent })}
+            />
+          )}
           <Project>{entry.project?.title ?? '—'}</Project>
           <Tooltip content={entry.note || t('dashboard.worklogsGrid.noNote')}>
             <NoteAnchor>
