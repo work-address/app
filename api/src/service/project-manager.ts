@@ -55,6 +55,7 @@ export class ProjectManager {
       delete (data as Partial<Project>).agents
       delete (data as Partial<Project>).agentAttachments
       data.agentTrackingSince = data.trackAgents ? new Date() : null
+      data.mobileTimeOffAt = null
       return yield* this.plan.aroundListChange(data.user?.id, this.save(data))
     })
   }
@@ -105,8 +106,12 @@ export class ProjectManager {
     delete editable.updatedAt
 
     delete editable.agentTrackingSince
+    delete editable.mobileTimeOffAt
     if (data.trackAgents && !project.trackAgents)
       project.agentTrackingSince = new Date()
+    // Phone time recorded while the switch was on may arrive after it goes off.
+    if (editable.allowMobileTime === false && project.allowMobileTime)
+      project.mobileTimeOffAt = new Date()
     Object.assign(project, editable)
 
     return this.plan
@@ -181,6 +186,7 @@ export class ProjectManager {
       'trackWindowTitles',
       'trackBrowserDomains',
       'allowManualTime',
+      'allowMobileTime',
     ] as const) {
       if (project[key] !== undefined && typeof project[key] !== 'boolean')
         throw new BadRequestError(`Invalid recording policy: ${key}`)

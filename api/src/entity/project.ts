@@ -109,6 +109,25 @@ export class Project extends AbstractBaseEntity implements IProject {
   @IsOptional()
   allowManualTime: boolean
 
+  /**
+   * Whether a contributor may track this project from the phone app. Off by
+   * default and the owner's alone, like the recording switches: phone time
+   * carries none of the detail a desktop project may have asked for.
+   */
+  @Expose({ groups: ['search', 'create', 'edit'] })
+  @Column('bool', { default: false })
+  @IsBoolean()
+  @IsOptional()
+  allowMobileTime: boolean
+
+  /**
+   * When `allowMobileTime` last went from on to off. A phone entry that started
+   * before it was recorded under the owner's setting and is still accepted.
+   * Only the last switch is kept. Set by the server, never by an edit.
+   */
+  @Column('timestamptz', { nullable: true })
+  mobileTimeOffAt: Date | null
+
   @Expose({ groups: ['search', 'create', 'edit'] })
   @Column('int', { default: 24 })
   @IsInt()
