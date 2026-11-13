@@ -84,6 +84,46 @@ describe('pairing page states', () => {
     expect(transient.showWayOn).toBe(false)
   })
 
+  describe('opened by the phone app', () => {
+    const connected = {
+      ...defaults,
+      phase: 'connected',
+      authenticated: true,
+    } as const
+
+    it('sends a connected phone back to the app', () => {
+      const view = buildTimeTrackerConnectView({
+        ...connected,
+        fromPhone: true,
+      })
+
+      expect(view.headingKey).toBe('connect.phone.heading.connected')
+      expect(view.descriptionKey).toBe('connect.phone.description.connected')
+      expect(view.showReturnToApp).toBe(true)
+    })
+
+    it('reads as the tracker until it is connected', () => {
+      for (const phase of ['loading', 'awaiting_auth', 'connecting'] as const) {
+        const phone = buildTimeTrackerConnectView({
+          ...defaults,
+          phase,
+          fromPhone: true,
+        })
+        const tracker = buildTimeTrackerConnectView({ ...defaults, phase })
+
+        expect(phone).toEqual(tracker)
+      }
+    })
+
+    it('offers the way back to the phone only', () => {
+      expect(buildTimeTrackerConnectView(connected).showReturnToApp).toBe(false)
+      expect(
+        buildTimeTrackerConnectView({ ...connected, fromWebsite: true })
+          .showReturnToApp,
+      ).toBe(false)
+    })
+  })
+
   describe('opened by the website', () => {
     const phases = [
       { nonce: null, phase: 'idle' },

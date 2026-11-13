@@ -133,3 +133,8 @@ export {
   leaveForWebsite,
   parseWebsiteReturn,
 } from './website-return'
+export {
+  isPhoneClient,
+  PHONE_APP_RETURN_URL,
+  returnToPhoneApp,
+} from './phone-return'

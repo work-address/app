@@ -1,7 +1,7 @@
 import { Cross1Icon } from '@radix-ui/react-icons'
 import { Skeleton } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
-import { useEffect } from 'react'
+import { useEffect, useRef } from 'react'
 import { useTranslation } from 'react-i18next'
 import { Link, useNavigate, useSearchParams } from 'react-router-dom'
 import styled, { css } from 'styled-components'
@@ -14,8 +14,11 @@ import {
   initTimeTrackerConnect,
   buildTimeTrackerConnectView,
   finishWebsiteSignIn,
+  isPhoneClient,
   leaveForWebsite,
   parseWebsiteReturn,
+  PHONE_APP_RETURN_URL,
+  returnToPhoneApp,
   resetTimeTrackerConnect,
   retryTimeTrackerConnect,
   timeTrackerConnectOpenedBy,
@@ -28,6 +31,7 @@ import { routes } from '@/routes'
 import {
   Button,
   IconButton,
+  LinkButton,
   Logo,
   LogoLabel,
   PageHelmet,
@@ -47,6 +51,9 @@ export default function ConnectPage() {
     WEBSITE_ORIGINS,
   )
   const fromWebsite = websiteReturn !== null
+  // `client=phone` from the phone app. The website's return address wins, so
+  // a link cannot be both.
+  const fromPhone = !fromWebsite && isPhoneClient(searchParams.get('client'))
 
   const {
     initConnect,
@@ -78,13 +85,13 @@ export default function ConnectPage() {
       return
     }
 
-    setOpenedBy(fromWebsite ? 'website' : 'tracker')
+    setOpenedBy(fromWebsite ? 'website' : fromPhone ? 'phone' : 'tracker')
     initConnect(nonce)
 
     return () => {
       resetConnect()
     }
-  }, [nonce, fromWebsite, initConnect, resetConnect, setOpenedBy])
+  }, [nonce, fromWebsite, fromPhone, initConnect, resetConnect, setOpenedBy])
 
   const {
     showError,
@@ -94,6 +101,7 @@ export default function ConnectPage() {
     checkingLink,
     canRetry,
     showWayOn,
+    showReturnToApp,
     headingKey,
     descriptionKey,
   } = buildTimeTrackerConnectView({
@@ -103,6 +111,7 @@ export default function ConnectPage() {
     authPending: loading,
     errorName,
     fromWebsite,
+    fromPhone,
   })
   const closeHref = authenticated
     ? routes.dashboard.build()
@@ -114,6 +123,17 @@ export default function ConnectPage() {
       finishWebsiteSignIn(window, websiteReturn)
     }
   }, [websiteReturn, showConnected])
+
+  // One automatic attempt to go back to the phone app. The button below is
+  // the way back when the browser waits for a tap.
+  const triedReturn = useRef(false)
+
+  useEffect(() => {
+    if (showReturnToApp && !triedReturn.current) {
+      triedReturn.current = true
+      returnToPhoneApp(window)
+    }
+  }, [showReturnToApp])
 
   const backToWebsite = () => {
     if (websiteReturn) {
@@ -181,10 +201,17 @@ export default function ConnectPage() {
           )
         ) : (
           <>
-            {showConnected && (
-              <Button onClick={() => navigate(routes.dashboard.build())}>
-                {t('notFound.action.dashboard')}
-              </Button>
+            {showReturnToApp ? (
+              // A plain link, so a tap leaves for the app as any link would.
+              <LinkButton to={PHONE_APP_RETURN_URL} reloadDocument>
+                {t('connect.phone.return')}
+              </LinkButton>
+            ) : (
+              showConnected && (
+                <Button onClick={() => navigate(routes.dashboard.build())}>
+                  {t('notFound.action.dashboard')}
+                </Button>
+              )
             )}
             {/* A failure nothing here can retry, such as an incomplete link,
                 still has a way on: the app, or signing in to it. */}

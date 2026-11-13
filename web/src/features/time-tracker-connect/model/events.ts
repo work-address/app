@@ -5,7 +5,9 @@ import type { TimeTrackerNonceData } from './types'
 export const initTimeTrackerConnect = createEvent<string>()
 export const resetTimeTrackerConnect = createEvent()
 /** Says who opened this page, before `initTimeTrackerConnect` starts it. */
-export const timeTrackerConnectOpenedBy = createEvent<'website' | 'tracker'>()
+export const timeTrackerConnectOpenedBy = createEvent<
+  'website' | 'tracker' | 'phone'
+>()
 /** Revalidate the same link before attempting to pair again. */
 export const retryTimeTrackerConnect = createEvent()
 

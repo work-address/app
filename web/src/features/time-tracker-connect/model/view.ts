@@ -8,6 +8,8 @@ type ConnectViewInput = {
   errorName: string | null
   /** Opened by the website's sign-in, not by the desktop time tracker. */
   fromWebsite?: boolean
+  /** Opened by the phone app, which the connected screen sends back to. */
+  fromPhone?: boolean
 }
 
 type ConnectScreen =
@@ -94,6 +96,22 @@ const WEBSITE_COPY_BY_SCREEN: typeof COPY_BY_SCREEN = {
   },
 }
 
+/** The tracker's words, but a phone is told to go back to the app. */
+const PHONE_COPY_BY_SCREEN: typeof COPY_BY_SCREEN = {
+  ...COPY_BY_SCREEN,
+  connected: {
+    headingKey: 'connect.phone.heading.connected',
+    descriptionKey: 'connect.phone.description.connected',
+  },
+}
+
+const copyFor = ({ fromWebsite, fromPhone }: ConnectViewInput) =>
+  fromWebsite
+    ? WEBSITE_COPY_BY_SCREEN
+    : fromPhone
+      ? PHONE_COPY_BY_SCREEN
+      : COPY_BY_SCREEN
+
 function getConnectScreen({
   nonce,
   phase,
@@ -141,7 +159,7 @@ export function buildTimeTrackerConnectView(input: ConnectViewInput) {
 
   return {
     screen,
-    ...(input.fromWebsite ? WEBSITE_COPY_BY_SCREEN : COPY_BY_SCREEN)[screen],
+    ...copyFor(input)[screen],
     showLoading,
     showError,
     checkingLink: screen === 'loading',
@@ -151,5 +169,8 @@ export function buildTimeTrackerConnectView(input: ConnectViewInput) {
     // signing in to it, instead of a dead end.
     showWayOn: screen === 'incomplete' || screen === 'expired',
     showConnected: screen === 'connected',
+    // The phone's way back to the app; the website's and the tracker's
+    // connected screens have their own.
+    showReturnToApp: Boolean(input.fromPhone) && screen === 'connected',
   }
 }
