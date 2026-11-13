@@ -15,6 +15,8 @@ import { TimeCreateDto } from '@/model/dto/time'
 import AccessException from '@/exception/access-exception'
 import ConstraintsValidationException from '@/exception/constraints-validation-exception'
 import RetentionExceededException from '@/exception/retention-exceeded-exception'
+import MobileTimeNotAllowedException from '@/exception/mobile-time-not-allowed-exception'
+import { Project } from '@/entity/project'
 import { ImageResizer } from '@/service/image-resizer'
 import { Plan } from '@/service/plan'
 import { FREE_PLAN_WORKERS, FREE_RETENTION_DAYS } from '@/model/plan'
@@ -104,6 +106,15 @@ export class TimeManager {
             }
           }
 
+          // The uploader names its source, so naming one grants nothing: phone
+          // time is taken only where the owner allowed it, or from before they
+          // last turned it off, and it only ever carries less detail.
+          const mobile = item.source === 'mobile'
+
+          if (mobile && !TimeManager.mobileAllowed(project, fromAt)) {
+            return yield* Effect.fail(new MobileTimeNotAllowedException())
+          }
+
           const existing = yield* this.timeRepository.findTimeSingleForProject(
             project,
             fromAt,
@@ -125,20 +136,27 @@ export class TimeManager {
             time.user = user
           }
 
+          time.source = mobile ? 'mobile' : 'desktop'
           time.fromAt = fromAt
           time.toAt = toAt
           time.note = item.note
           time.minutesActive = item.minutesActive
-          time.keyboardKeys = item.keyboardKeys
-          time.mouseKeys = item.mouseKeys
-          time.mouseDistance = item.mouseDistance
+          // A phone captures no input, screenshots or apps.
+          time.keyboardKeys = mobile ? 0 : item.keyboardKeys
+          time.mouseKeys = mobile ? 0 : item.mouseKeys
+          time.mouseDistance = mobile ? 0 : item.mouseDistance
           time.project = project
           time.screenshot = yield* fromPromise(() =>
-            this.resize(project.trackScreenshots ? item.screenshot : undefined),
+            this.resize(
+              project.trackScreenshots && !mobile ? item.screenshot : undefined,
+            ),
           )
-          time.processes = project.trackProcesses ? item.processes : null
+          time.processes =
+            project.trackProcesses && !mobile ? item.processes : null
 
-          const usage = AppUsagePolicy.normalize(item, project)
+          const usage = mobile
+            ? AppUsagePolicy.fromPhone(project)
+            : AppUsagePolicy.normalize(item, project)
           const savedTime = yield* this.timeRepository.saveWithUsage(
             time,
             usage,
@@ -196,6 +214,18 @@ export class TimeManager {
 
       return program
     })
+  }
+
+  /**
+   * Whether phone time starting at `fromAt` is taken: the owner allows it now,
+   * or it started before they last turned it off. Only that last switch is
+   * kept, so an earlier off period is not told apart.
+   */
+  public static mobileAllowed(project: Project, fromAt: Date): boolean {
+    return Boolean(
+      project.allowMobileTime ||
+        (project.mobileTimeOffAt && fromAt < project.mobileTimeOffAt),
+    )
   }
 
   /**

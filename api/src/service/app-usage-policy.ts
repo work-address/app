@@ -18,6 +18,17 @@ export interface UsageResult {
   rows: UsageRow[]
 }
 export class AppUsagePolicy {
+  /**
+   * A phone records no apps, whatever it sends. Said as unsupported, so a
+   * phone entry never reads as one from an older desktop app.
+   */
+  public static fromPhone(project: Project): UsageResult {
+    const empty = { truncated: false, rows: [] }
+    if (!project.trackProcesses)
+      return { ...empty, status: 'off', reason: null }
+    return { ...empty, status: 'unsupported', reason: 'mobile' }
+  }
+
   public static normalize(input: TimeCreateDto, project: Project): UsageResult {
     const empty = { reason: null, truncated: false, rows: [] }
     if (!project.trackProcesses) return { ...empty, status: 'off' }

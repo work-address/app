@@ -24,7 +24,7 @@ type SortDirection = Extract<OrderByCondition[string], 'ASC' | 'DESC'>
 const SORT_DIRECTIONS: SortDirection[] = ['ASC', 'DESC']
 
 type TimeSource = Time['source']
-const TIME_SOURCES: TimeSource[] = ['desktop', 'manual', 'web']
+const TIME_SOURCES: TimeSource[] = ['desktop', 'mobile', 'manual', 'web']
 
 class TimeSearchSortDto {
   @IsIn(SORT_DIRECTIONS)
@@ -166,6 +166,13 @@ export class TimeCreateDto {
   @Allow()
   @IsOptional()
   apps?: unknown
+  /**
+   * `"mobile"` from the phone app. Anything else, or nothing, is a desktop
+   * upload: no other source can be claimed by an upload.
+   */
+  @Allow()
+  @IsOptional()
+  source?: unknown
 
   @IsNumber()
   fromIndex: number

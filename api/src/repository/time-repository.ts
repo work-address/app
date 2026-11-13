@@ -137,6 +137,8 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
           // must not restore a removed screenshot, rewrite input counts, or put
           // back a note its author has since corrected.
           time.note = existing.note
+          // Which part of an invoice the time is billed in stays as published.
+          time.source = existing.source
           time.screenshot = existing.screenshot
           time.processes = existing.processes
           time.keyboardKeys = existing.keyboardKeys

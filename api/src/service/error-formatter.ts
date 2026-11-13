@@ -1,5 +1,6 @@
 import { ValidationError } from 'class-validator'
 
+import MobileTimeNotAllowedException from '@/exception/mobile-time-not-allowed-exception'
 import ProjectUnavailableException from '@/exception/project-unavailable-exception'
 import RetentionExceededException from '@/exception/retention-exceeded-exception'
 
@@ -27,7 +28,8 @@ export class ErrorFormatter {
       (typeof status === 'number' && status >= 400 && status < 500) ||
       // Refusals of one uploaded entry, reported in its row of a 200.
       error instanceof ProjectUnavailableException ||
-      error instanceof RetentionExceededException
+      error instanceof RetentionExceededException ||
+      error instanceof MobileTimeNotAllowedException
     )
   }
 

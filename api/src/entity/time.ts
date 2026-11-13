@@ -123,7 +123,7 @@ export class Time extends AbstractBaseEntity implements ITime {
   @JSONSchema({ type: 'string', nullable: true })
   @Expose({ groups: ['search'] })
   @Column('text', { default: 'desktop' })
-  source: 'desktop' | 'manual' | 'web' = 'desktop'
+  source: 'desktop' | 'mobile' | 'manual' | 'web' = 'desktop'
 
   @Allow()
   @IsOptional()
