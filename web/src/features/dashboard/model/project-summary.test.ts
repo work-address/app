@@ -20,6 +20,7 @@ const project = {
   trackProcesses: false,
   trackAgents: true,
   allowManualTime: false,
+  allowMobileTime: true,
   reviewWindowHours: 12,
   user: { id: 'owner', name: 'Olga' },
   workers: [
@@ -84,6 +85,7 @@ describe('project summary', () => {
       apps: false,
       agents: true,
       manual: false,
+      mobile: true,
       reviewWindowHours: 12,
     })
   })

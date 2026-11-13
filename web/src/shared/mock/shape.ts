@@ -186,8 +186,14 @@ const invoiceMinutes = (db: Db, invoice: MockInvoice) => {
   return {
     entries,
     minutes: spanMinutes(entries),
-    active: entries.reduce((sum, e) => sum + (e.minutesActive ?? 0), 0),
-    manual: spanMinutes(entries.filter((e) => e.source !== 'desktop')),
+    // Minutes with input: the desktop's alone, as the API counts them.
+    active: entries
+      .filter((e) => e.source === 'desktop')
+      .reduce((sum, e) => sum + (e.minutesActive ?? 0), 0),
+    manual: spanMinutes(
+      entries.filter((e) => e.source === 'manual' || e.source === 'web'),
+    ),
+    mobile: spanMinutes(entries.filter((e) => e.source === 'mobile')),
   }
 }
 
@@ -201,7 +207,10 @@ export const shapeInvoice = (
     projectOf(db, invoice.projectId) ??
     db.projects.find((p) => p.id === invoice.projectId)!
   const author = userOf(db, invoice.userId)
-  const { entries, minutes, active, manual } = invoiceMinutes(db, invoice)
+  const { entries, minutes, active, manual, mobile } = invoiceMinutes(
+    db,
+    invoice,
+  )
   const billed =
     minutes ||
     Math.round((invoice.amountCents * 60) / Math.max(1, invoice.rateHourCents))
@@ -225,6 +234,7 @@ export const shapeInvoice = (
         rateChanges: [],
         activeMinutes: active,
         manualMinutes: manual,
+        ...(mobile ? { mobileMinutes: mobile } : {}),
         rateHourCents: invoice.rateHourCents,
       },
     ],

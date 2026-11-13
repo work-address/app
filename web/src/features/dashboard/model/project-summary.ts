@@ -52,6 +52,8 @@ export type ProjectSummary = {
     apps: boolean
     agents: boolean
     manual: boolean
+    /** Whether contributors may track this project from a phone. */
+    mobile: boolean
     reviewWindowHours: number
   }
 }
@@ -120,6 +122,7 @@ export function projectSummary(
       apps: Boolean(project.trackProcesses),
       agents: Boolean(project.trackAgents),
       manual: Boolean(project.allowManualTime),
+      mobile: Boolean(project.allowMobileTime),
       reviewWindowHours: project.reviewWindowHours ?? 24,
     },
   }

@@ -23,6 +23,7 @@ export type Invoice = {
         minutes: number;
         activeMinutes?: number;
         manualMinutes?: number;
+        mobileMinutes?: number;
         assistedMinutes?: number;
         waitMinutes?: number;
         unclassifiedMinutes?: number;
@@ -96,6 +97,7 @@ export type Project = {
     trackWindowTitles?: boolean;
     trackBrowserDomains?: boolean;
     allowManualTime?: boolean;
+    allowMobileTime?: boolean;
     reviewWindowHours?: number;
     screenshotRetentionDays?: number | null;
     text: string;
@@ -132,13 +134,67 @@ export type User = {
     tz?: string;
     city?: string;
     country?: string;
-    roles?: Array<'ROLE_USER'>;
+    roles?: Array<'ROLE_USER' | 'ROLE_ADMIN'>;
     premium?: boolean;
     readonly payWallet?: string | null;
     readonly contactEmail?: string | null;
+    lastSeenAt?: unknown;
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
+};
+
+export type AdminUserSearchFilterDto = {
+    query?: string;
+    premium?: boolean;
+    ids?: Array<string>;
+};
+
+export type AdminUserSortDto = {
+    createdAt?: 'ASC' | 'DESC';
+    lastSeenAt?: 'ASC' | 'DESC';
+};
+
+export type AdminUserSearchDto = {
+    page: number;
+    limit?: number;
+    filter?: AdminUserSearchFilterDto;
+    sort?: AdminUserSortDto;
+};
+
+export type AdminUserDto = {
+    id: string;
+    address: string;
+    name?: string;
+    email?: string;
+    phone?: string;
+    title?: string;
+    company?: string;
+    city?: string;
+    country?: string;
+    roles: Array<'ROLE_USER' | 'ROLE_ADMIN'>;
+    premium: boolean;
+    createdAt: string | string;
+    lastSeenAt?: string | string;
+};
+
+export type AdminDailyCountDto = {
+    date: string;
+    count: number;
+};
+
+export type AdminUserStatsDto = {
+    total: number;
+    premium: number;
+    active1d: number;
+    active7d: number;
+    active30d: number;
+    signupsInWindow: number;
+    signups: Array<AdminDailyCountDto>;
+};
+
+export type AdminUserStatsQueryDto = {
+    days?: number;
 };
 
 export type AgentDto = {
@@ -321,7 +377,7 @@ export type TimeSearchFilterDto = {
     projectId?: string;
     projectIds?: Array<string>;
     userIds?: Array<string>;
-    source?: 'desktop' | 'manual' | 'web';
+    source?: 'desktop' | 'mobile' | 'manual' | 'web';
     fromAt?: string | string;
     toAt?: string | string;
     note?: string;
@@ -350,6 +406,7 @@ export type TimeCreateDto = {
     appsReason?: unknown;
     appsTruncated?: unknown;
     apps?: unknown;
+    source?: unknown;
     fromIndex: number;
     toIndex: number;
     fromAt: string;
@@ -382,6 +439,7 @@ export type TimeInsertionResultDto = {
     appsReason?: unknown;
     appsTruncated?: unknown;
     apps?: unknown;
+    source?: unknown;
     fromIndex: number;
     toIndex: number;
     fromAt: string;
@@ -494,6 +552,7 @@ export type ProjectSearch = {
     trackWindowTitles?: boolean;
     trackBrowserDomains?: boolean;
     allowManualTime?: boolean;
+    allowMobileTime?: boolean;
     reviewWindowHours?: number;
     screenshotRetentionDays?: number | null;
     text?: string;
@@ -520,6 +579,7 @@ export type ProjectCreate = {
     trackWindowTitles?: boolean;
     trackBrowserDomains?: boolean;
     allowManualTime?: boolean;
+    allowMobileTime?: boolean;
     reviewWindowHours?: number;
     screenshotRetentionDays?: number | null;
     text?: string;
@@ -552,6 +612,7 @@ export type ProjectEdit = {
     trackWindowTitles?: boolean;
     trackBrowserDomains?: boolean;
     allowManualTime?: boolean;
+    allowMobileTime?: boolean;
     reviewWindowHours?: number;
     screenshotRetentionDays?: number | null;
     text?: string;
@@ -625,6 +686,7 @@ export type InvoiceSearch = {
         minutes: number;
         activeMinutes?: number;
         manualMinutes?: number;
+        mobileMinutes?: number;
         assistedMinutes?: number;
         waitMinutes?: number;
         unclassifiedMinutes?: number;
@@ -663,8 +725,9 @@ export type UserWritable = {
     tz?: string;
     city?: string;
     country?: string;
-    roles?: Array<'ROLE_USER'>;
+    roles?: Array<'ROLE_USER' | 'ROLE_ADMIN'>;
     premium?: boolean;
+    lastSeenAt?: unknown;
     id?: string;
     createdAt?: string | string;
     updatedAt?: string | string;
@@ -716,6 +779,7 @@ export type ProjectSearchWritable = {
     trackWindowTitles?: boolean;
     trackBrowserDomains?: boolean;
     allowManualTime?: boolean;
+    allowMobileTime?: boolean;
     reviewWindowHours?: number;
     screenshotRetentionDays?: number | null;
     text?: string;
@@ -786,6 +850,7 @@ export type InvoiceSearchWritable = {
         minutes: number;
         activeMinutes?: number;
         manualMinutes?: number;
+        mobileMinutes?: number;
         assistedMinutes?: number;
         waitMinutes?: number;
         unclassifiedMinutes?: number;
@@ -1368,6 +1433,34 @@ export type UserControllerEditResponses = {
 };
 
 export type UserControllerEditResponse = UserControllerEditResponses[keyof UserControllerEditResponses];
+
+export type AdminControllerSearchData = {
+    body: AdminUserSearchDto;
+    path?: never;
+    query?: never;
+    url: '/api/admin/user/search';
+};
+
+export type AdminControllerSearchResponses = {
+    200: Array<Array<AdminUserDto> | number>;
+};
+
+export type AdminControllerSearchResponse = AdminControllerSearchResponses[keyof AdminControllerSearchResponses];
+
+export type AdminControllerStatsData = {
+    body?: never;
+    path?: never;
+    query?: {
+        days?: number;
+    };
+    url: '/api/admin/user/stats';
+};
+
+export type AdminControllerStatsResponses = {
+    200: AdminUserStatsDto;
+};
+
+export type AdminControllerStatsResponse = AdminControllerStatsResponses[keyof AdminControllerStatsResponses];
 
 export type ProjectControllerSearchData = {
     body: ProjectSearchDto;

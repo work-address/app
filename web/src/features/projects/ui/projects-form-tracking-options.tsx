@@ -42,6 +42,11 @@ const OPTIONS = [
     hintKey: 'project.form.hint.allowManualTime',
   },
   {
+    name: 'allowMobileTime',
+    labelKey: 'project.createModal.allowMobileTime',
+    hintKey: 'project.form.hint.allowMobileTime',
+  },
+  {
     name: 'trackProcesses',
     labelKey: 'project.createModal.trackProcesses',
     hintKey: 'project.form.hint.trackProcesses',

@@ -266,7 +266,14 @@ export function projectFigures(
       activeSeconds: Math.round(active),
       idleSeconds: Math.round(total(desktop) - active),
       manualSeconds: Math.round(
-        total(detail.filter((time) => time.source !== 'desktop')),
+        total(
+          detail.filter(
+            (time) => time.source === 'manual' || time.source === 'web',
+          ),
+        ),
+      ),
+      mobileSeconds: Math.round(
+        total(detail.filter((time) => time.source === 'mobile')),
       ),
       keyboardKeys: sum('keyboardKeys'),
       mouseKeys: sum('mouseKeys'),

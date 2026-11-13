@@ -38,5 +38,6 @@ export type ProjectFormValues = {
   trackWindowTitles: boolean
   trackBrowserDomains: boolean
   allowManualTime: boolean
+  allowMobileTime: boolean
   reviewWindowHours: number
 }

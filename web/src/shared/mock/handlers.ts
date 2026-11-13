@@ -233,6 +233,7 @@ const PROJECT_FIELDS = [
   'trackWindowTitles',
   'trackBrowserDomains',
   'allowManualTime',
+  'allowMobileTime',
   'reviewWindowHours',
   'screenshotRetentionDays',
 ] as const
@@ -691,6 +692,7 @@ export const handlers: HttpHandler[] = [
         trackWindowTitles: false,
         trackBrowserDomains: false,
         allowManualTime: false,
+        allowMobileTime: false,
         reviewWindowHours: 24,
         screenshotRetentionDays: null,
         deletedAt: null,

@@ -23,6 +23,7 @@ export type Invoice = {
         minutes: number;
         activeMinutes?: number;
         manualMinutes?: number;
+        mobileMinutes?: number;
         assistedMinutes?: number;
         waitMinutes?: number;
         unclassifiedMinutes?: number;
@@ -96,6 +97,7 @@ export type Project = {
     trackWindowTitles?: boolean;
     trackBrowserDomains?: boolean;
     allowManualTime?: boolean;
+    allowMobileTime?: boolean;
     reviewWindowHours?: number;
     screenshotRetentionDays?: number | null;
     text: string;
@@ -375,7 +377,7 @@ export type TimeSearchFilterDto = {
     projectId?: string;
     projectIds?: Array<string>;
     userIds?: Array<string>;
-    source?: 'desktop' | 'manual' | 'web';
+    source?: 'desktop' | 'mobile' | 'manual' | 'web';
     fromAt?: string | string;
     toAt?: string | string;
     note?: string;
@@ -404,6 +406,7 @@ export type TimeCreateDto = {
     appsReason?: unknown;
     appsTruncated?: unknown;
     apps?: unknown;
+    source?: unknown;
     fromIndex: number;
     toIndex: number;
     fromAt: string;
@@ -436,6 +439,7 @@ export type TimeInsertionResultDto = {
     appsReason?: unknown;
     appsTruncated?: unknown;
     apps?: unknown;
+    source?: unknown;
     fromIndex: number;
     toIndex: number;
     fromAt: string;
@@ -548,6 +552,7 @@ export type ProjectSearch = {
     trackWindowTitles?: boolean;
     trackBrowserDomains?: boolean;
     allowManualTime?: boolean;
+    allowMobileTime?: boolean;
     reviewWindowHours?: number;
     screenshotRetentionDays?: number | null;
     text?: string;
@@ -574,6 +579,7 @@ export type ProjectCreate = {
     trackWindowTitles?: boolean;
     trackBrowserDomains?: boolean;
     allowManualTime?: boolean;
+    allowMobileTime?: boolean;
     reviewWindowHours?: number;
     screenshotRetentionDays?: number | null;
     text?: string;
@@ -606,6 +612,7 @@ export type ProjectEdit = {
     trackWindowTitles?: boolean;
     trackBrowserDomains?: boolean;
     allowManualTime?: boolean;
+    allowMobileTime?: boolean;
     reviewWindowHours?: number;
     screenshotRetentionDays?: number | null;
     text?: string;
@@ -679,6 +686,7 @@ export type InvoiceSearch = {
         minutes: number;
         activeMinutes?: number;
         manualMinutes?: number;
+        mobileMinutes?: number;
         assistedMinutes?: number;
         waitMinutes?: number;
         unclassifiedMinutes?: number;
@@ -771,6 +779,7 @@ export type ProjectSearchWritable = {
     trackWindowTitles?: boolean;
     trackBrowserDomains?: boolean;
     allowManualTime?: boolean;
+    allowMobileTime?: boolean;
     reviewWindowHours?: number;
     screenshotRetentionDays?: number | null;
     text?: string;
@@ -841,6 +850,7 @@ export type InvoiceSearchWritable = {
         minutes: number;
         activeMinutes?: number;
         manualMinutes?: number;
+        mobileMinutes?: number;
         assistedMinutes?: number;
         waitMinutes?: number;
         unclassifiedMinutes?: number;

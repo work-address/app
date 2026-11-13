@@ -53,6 +53,7 @@ const mock: ContractAdapter = {
       trackWindowTitles: false,
       trackBrowserDomains: false,
       allowManualTime: true,
+      allowMobileTime: false,
       reviewWindowHours: 24,
       screenshotRetentionDays: null,
       deletedAt: null,

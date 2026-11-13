@@ -435,6 +435,14 @@ export const CONTRACT_SCENARIOS: ContractScenario[] = [
       body[0].length === 0 ? undefined : `lists ${body[0].length} entries`,
   },
   {
+    name: 'the phone is a source the search takes',
+    as: 'owner',
+    request: () => searchWhere({ source: 'mobile' }),
+    status: 200,
+    check: (body) =>
+      body[0].length === 0 ? undefined : `lists ${body[0].length} entries`,
+  },
+  {
     name: 'a viewer cannot read an entry',
     as: 'viewer',
     request: (w) => ({ method: 'get', path: `/time/${w.oldEntry}` }),

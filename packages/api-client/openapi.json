@@ -104,6 +104,9 @@
                 "manualMinutes": {
                   "type": "number"
                 },
+                "mobileMinutes": {
+                  "type": "number"
+                },
                 "assistedMinutes": {
                   "type": "number"
                 },
@@ -218,7 +221,7 @@
           "lines"
         ],
         "example": {
-          "id": "d65a9928-51de-4d74-a24f-0c1f81125786"
+          "id": "3e98870e-a7ab-4d19-9d8a-dd45c8cc3e90"
         }
       },
       "ProjectStatistics": {
@@ -279,7 +282,7 @@
           "period"
         ],
         "example": {
-          "id": "f8554178-2f2c-404d-9520-253467056f86"
+          "id": "87e4887e-db0e-4cb8-94e8-091f98325164"
         }
       },
       "Time": {
@@ -434,7 +437,7 @@
           "toAt"
         ],
         "example": {
-          "id": "5b387080-07a2-4aba-8598-ff67bda9f885"
+          "id": "150661e2-218e-4a56-9276-4f0db77ac28a"
         }
       },
       "Project": {
@@ -483,6 +486,9 @@
             "type": "boolean"
           },
           "allowManualTime": {
+            "type": "boolean"
+          },
+          "allowMobileTime": {
             "type": "boolean"
           },
           "reviewWindowHours": {
@@ -559,7 +565,7 @@
           "state"
         ],
         "example": {
-          "id": "fc9c93be-4423-4219-9c64-06c3d3bf5ed9"
+          "id": "a74845d8-ec1f-4e4b-a1aa-525020900673"
         }
       },
       "User": {
@@ -682,7 +688,7 @@
         },
         "type": "object",
         "example": {
-          "id": "4cafa11d-0003-4b67-b865-61ecb4aebc35"
+          "id": "1d53c8c6-a449-4933-a1ba-096c49cffa54"
         }
       },
       "AdminUserSearchFilterDto": {
@@ -1607,6 +1613,7 @@
             "type": "string",
             "enum": [
               "desktop",
+              "mobile",
               "manual",
               "web"
             ]
@@ -1705,6 +1712,7 @@
           "appsReason": {},
           "appsTruncated": {},
           "apps": {},
+          "source": {},
           "fromIndex": {
             "type": "number"
           },
@@ -1807,6 +1815,7 @@
           "appsReason": {},
           "appsTruncated": {},
           "apps": {},
+          "source": {},
           "fromIndex": {
             "type": "number"
           },
@@ -2199,6 +2208,9 @@
           "allowManualTime": {
             "type": "boolean"
           },
+          "allowMobileTime": {
+            "type": "boolean"
+          },
           "reviewWindowHours": {
             "maximum": 24,
             "type": "integer",
@@ -2291,6 +2303,9 @@
             "type": "boolean"
           },
           "allowManualTime": {
+            "type": "boolean"
+          },
+          "allowMobileTime": {
             "type": "boolean"
           },
           "reviewWindowHours": {
@@ -2411,6 +2426,9 @@
             "type": "boolean"
           },
           "allowManualTime": {
+            "type": "boolean"
+          },
+          "allowMobileTime": {
             "type": "boolean"
           },
           "reviewWindowHours": {
@@ -2704,6 +2722,9 @@
                   "type": "number"
                 },
                 "manualMinutes": {
+                  "type": "number"
+                },
+                "mobileMinutes": {
                   "type": "number"
                 },
                 "assistedMinutes": {
@@ -5147,7 +5168,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "86a5b144-463a-4786-a0ff-5a5fe3eb9890"
+                  "projectId": "f559cc9d-4c32-4c1a-9b8d-65c8f634a736"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -5215,8 +5236,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1794165519542,
-                "toUnix": 1794251919542
+                "fromUnix": 1794508389248,
+                "toUnix": 1794594789248
               }
             }
           },
@@ -5609,7 +5630,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "2e8db0dc-8dce-4215-8345-97ab78643ec0"
+                "nonce": "b301226d-54af-46a0-9d28-d3daa4575cc0"
               },
               "schema": {
                 "properties": {
@@ -5654,7 +5675,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "ec95eff9-404b-4271-89da-89042100855a"
+                "nonce": "771c24cc-1af0-42a8-8ef3-b7605e9966d7"
               },
               "schema": {
                 "properties": {
@@ -5695,21 +5716,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "afb35301-51d6-4c0a-bc83-1e10fb299bf9",
+                      "nonce": "f4fdc08e-39f4-4870-9dae-65d0ac40a157",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "1f921c98-ce7e-41d2-aeec-f88fda892edc",
+                      "nonce": "53259fac-9bc7-4d07-85d3-aefab81ffcfb",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "b47a19e9-5c62-4ce5-a83c-f78165003bb7",
+                      "nonce": "40e90742-9628-4bbf-8462-fd6d3df66b6e",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

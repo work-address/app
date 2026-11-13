@@ -56,6 +56,7 @@ export type MockProject = {
   trackWindowTitles: boolean
   trackBrowserDomains: boolean
   allowManualTime: boolean
+  allowMobileTime: boolean
   reviewWindowHours: number
   screenshotRetentionDays: number | null
   deletedAt: string | null
@@ -75,9 +76,9 @@ export type MockTime = {
   note: string | null
   /** Index into the drawn screenshots; null for none. */
   screenshot: number | null
-  appsStatus: 'ok' | 'off' | null
+  appsStatus: 'ok' | 'off' | 'unsupported' | null
   apps: { name: string; seconds: number }[]
-  source: 'desktop' | 'manual' | 'web'
+  source: 'desktop' | 'mobile' | 'manual' | 'web'
   publishedAt: string | null
   minutesActive: number | null
   keyboardKeys: number | null
@@ -501,6 +502,7 @@ function makeProjects(
       trackWindowTitles: false,
       trackBrowserDomains: false,
       allowManualTime: i % 2 === 0,
+      allowMobileTime: i % 3 === 0,
       reviewWindowHours: 24,
       screenshotRetentionDays: null,
       deletedAt: null,
@@ -531,10 +533,18 @@ function trackBlock(
     day +
     f.number.int({ min: 8, max: 14 }) * 3_600_000 +
     f.number.int({ min: 0, max: 5 }) * SLOT_MS
-  const source: MockTime['source'] =
+  const drawn: MockTime['source'] =
     project.allowManualTime && f.number.float() < 0.12
       ? f.helpers.arrayElement(['manual', 'web'] as const)
       : 'desktop'
+  // Every third day's tracked time on a phone project came from the phone.
+  // Decided without a draw, so the rest of the world stays as it was seeded.
+  const source: MockTime['source'] =
+    drawn === 'desktop' &&
+    project.allowMobileTime &&
+    Math.floor(day / 86_400_000) % 3 === 0
+      ? 'mobile'
+      : drawn
   for (let s = 0; s < slots; s++) {
     const from = blockStart + s * SLOT_MS
     if (from + SLOT_MS > now) {
@@ -563,10 +573,12 @@ function makeEntry(
   from: number,
   source: MockTime['source'],
 ): MockTime {
-  const desktop = source === 'desktop'
-  const active = desktop ? f.number.int({ min: 3, max: 10 }) : null
-  const tracksApps = desktop && project.trackProcesses
-  return {
+  // Phone time takes the draws desktop time takes, then drops what a phone
+  // never records, so the seeded world does not shift around it.
+  const recorded = source === 'desktop' || source === 'mobile'
+  const active = recorded ? f.number.int({ min: 3, max: 10 }) : null
+  const tracksApps = recorded && project.trackProcesses
+  const entry: MockTime = {
     id: f.string.uuid(),
     createdAt: iso(from + SLOT_MS),
     updatedAt: iso(from + SLOT_MS),
@@ -577,18 +589,32 @@ function makeEntry(
     isPaid: false,
     note: f.number.float() < 0.3 ? f.hacker.phrase() : null,
     screenshot:
-      desktop && project.trackScreenshots && f.number.float() < 0.25
+      recorded && project.trackScreenshots && f.number.float() < 0.25
         ? f.number.int({ min: 0, max: DEMO_SCREENSHOT_COUNT - 1 })
         : null,
-    appsStatus: desktop ? (tracksApps ? 'ok' : 'off') : null,
+    appsStatus: recorded ? (tracksApps ? 'ok' : 'off') : null,
     apps: tracksApps && active ? splitApps(f, active * 60) : [],
     source,
     publishedAt: null,
     minutesActive: active,
-    keyboardKeys: desktop ? f.number.int({ min: 20, max: 900 }) : null,
-    mouseKeys: desktop ? f.number.int({ min: 5, max: 260 }) : null,
-    mouseDistance: desktop ? f.number.float({ min: 200, max: 5000 }) : null,
+    keyboardKeys: recorded ? f.number.int({ min: 20, max: 900 }) : null,
+    mouseKeys: recorded ? f.number.int({ min: 5, max: 260 }) : null,
+    mouseDistance: recorded ? f.number.float({ min: 200, max: 5000 }) : null,
     invoiceId: null,
+  }
+  if (source !== 'mobile') {
+    return entry
+  }
+  // As the API stores it: every minute active, no input, screenshot or apps.
+  return {
+    ...entry,
+    screenshot: null,
+    appsStatus: project.trackProcesses ? 'unsupported' : 'off',
+    apps: [],
+    minutesActive: SLOT_MS / 60_000,
+    keyboardKeys: 0,
+    mouseKeys: 0,
+    mouseDistance: 0,
   }
 }
 

@@ -260,6 +260,10 @@ export const useDashboardProjectPopup = () => {
                 value: onOff(tracking.manual),
               },
               {
+                label: t('dashboard.projectPopup.mobile'),
+                value: onOff(tracking.mobile),
+              },
+              {
                 label: t('dashboard.projectPopup.review'),
                 value: t('dashboard.projectPopup.hours', {
                   count: tracking.reviewWindowHours,

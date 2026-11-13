@@ -69,6 +69,7 @@ export const ProjectsPeopleDialog = ({ projectId }: Props) => {
       trackWindowTitles: project?.trackWindowTitles ?? false,
       trackBrowserDomains: project?.trackBrowserDomains ?? false,
       allowManualTime: project?.allowManualTime ?? false,
+      allowMobileTime: project?.allowMobileTime ?? false,
       reviewWindowHours: project?.reviewWindowHours ?? 24,
     }),
     [project],

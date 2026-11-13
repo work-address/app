@@ -50,6 +50,7 @@ export const ProjectsDialogView = ({ data }: ProjectsDialogViewProps) => {
       trackWindowTitles: data.trackWindowTitles ?? false,
       trackBrowserDomains: data.trackBrowserDomains ?? false,
       allowManualTime: data.allowManualTime ?? false,
+      allowMobileTime: data.allowMobileTime ?? false,
       reviewWindowHours: data.reviewWindowHours ?? 24,
     },
   })
