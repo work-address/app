@@ -88,6 +88,7 @@ export class Invoice extends AbstractBaseEntity {
         minutes: { type: 'number' },
         activeMinutes: { type: 'number' },
         manualMinutes: { type: 'number' },
+        mobileMinutes: { type: 'number' },
         assistedMinutes: { type: 'number' },
         waitMinutes: { type: 'number' },
         unclassifiedMinutes: { type: 'number' },

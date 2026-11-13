@@ -210,6 +210,28 @@ export class ProjectTotalsTest extends AbstractDatabaseIntegration {
   }
 
   @test()
+  async phoneTimeIsTrackedTimeInAPartOfItsOwn() {
+    const { worker, viewer, project } = await this.world()
+    await this.hour(project, worker, { minutesActive: 45 })
+    await this.hour(project, worker, { source: 'mobile', minutesActive: 60 })
+    await this.hour(project, worker, { source: 'manual', minutesActive: null })
+
+    expect(await this.one(project, worker)).to.include({
+      trackedSeconds: 3 * HOUR,
+      earnedCents: 3 * CENTS_AN_HOUR,
+      mobileSeconds: HOUR,
+      manualSeconds: HOUR,
+      // Active and idle split the desktop's hour alone.
+      activeSeconds: 45 * 60,
+      idleSeconds: 15 * 60,
+    })
+    expect(await this.one(project, viewer)).to.deep.equal({
+      projectId: project.id,
+      trackedSeconds: 3 * HOUR,
+    })
+  }
+
+  @test()
   async aPaidInvoiceCountsForItsIssuerAndTheOwnerOnly() {
     const { owner, worker, colleague, viewer, project } = await this.world()
     const theirs = await this.hour(project, worker)

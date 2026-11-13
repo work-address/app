@@ -41,14 +41,34 @@ export class InvoiceLinesTest {
   }
 
   @test()
-  manualMinutesAreThoseNotFromTheDesktop() {
+  manualMinutesAreThoseAddedByHandOrTheWebTimer() {
     const line = InvoiceLines.human(
-      [entry(10), entry(5, { source: 'manual' as Time['source'] })],
+      [entry(10), entry(5, { source: 'manual' }), entry(3, { source: 'web' })],
       60,
     )
 
-    expect(line.minutes).to.equal(15)
+    expect(line.minutes).to.equal(18)
+    expect(line.manualMinutes).to.equal(8)
+    expect(line).not.to.have.property('mobileMinutes')
+  }
+
+  @test()
+  phoneTimeIsBilledAsTrackedTimeInAPartOfItsOwn() {
+    const line = InvoiceLines.human(
+      [
+        entry(10, { minutesActive: 4 }),
+        entry(10, { source: 'mobile', minutesActive: 10 }),
+        entry(5, { source: 'manual' }),
+      ],
+      60,
+    )
+
+    expect(line.minutes).to.equal(25)
+    expect(line.amountCents).to.equal(2500)
+    expect(line.mobileMinutes).to.equal(10)
     expect(line.manualMinutes).to.equal(5)
+    // Active minutes are minutes with input: the phone's never are.
+    expect(line.activeMinutes).to.equal(4)
   }
 
   @test()

@@ -25,6 +25,8 @@ export interface IInvoiceLine {
   minutes: number
   activeMinutes?: number
   manualMinutes?: number
+  /** Phone time: tracked, billed as the desktop's is, never manual. */
+  mobileMinutes?: number
   assistedMinutes?: number
   waitMinutes?: number
   unclassifiedMinutes?: number

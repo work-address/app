@@ -27,6 +27,8 @@ export interface IProjectFigures {
   activeSeconds?: number
   idleSeconds?: number
   manualSeconds?: number
+  /** Phone time: tracked, with no active or idle split, and never manual. */
+  mobileSeconds?: number
   keyboardKeys?: number
   mouseKeys?: number
   mouseDistance?: number
@@ -43,6 +45,7 @@ type EntrySums = Record<
   | 'active'
   | 'idle'
   | 'manual'
+  | 'mobile'
   | 'keyboard'
   | 'mouse'
   | 'distance'
@@ -56,6 +59,7 @@ const NOTHING: EntrySums = {
   active: 0,
   idle: 0,
   manual: 0,
+  mobile: 0,
   keyboard: 0,
   mouse: 0,
   distance: 0,
@@ -160,6 +164,7 @@ export class ProjectTotals {
       activeSeconds: Math.round(sums.active),
       idleSeconds: Math.round(sums.idle),
       manualSeconds: Math.round(sums.manual),
+      mobileSeconds: Math.round(sums.mobile),
       keyboardKeys: sums.keyboard,
       mouseKeys: sums.mouse,
       mouseDistance: sums.distance,
@@ -213,9 +218,10 @@ export class ProjectTotals {
         'idle',
       )
       .addSelect(
-        when(`time.source<>'desktop' AND ${detail}`, SECONDS),
+        when(`time.source IN ('manual','web') AND ${detail}`, SECONDS),
         'manual',
       )
+      .addSelect(when(`time.source='mobile' AND ${detail}`, SECONDS), 'mobile')
       .addSelect(when(detail, 'COALESCE(time."keyboardKeys",0)'), 'keyboard')
       .addSelect(when(detail, 'COALESCE(time."mouseKeys",0)'), 'mouse')
       .addSelect(when(detail, 'COALESCE(time."mouseDistance",0)'), 'distance')
@@ -246,6 +252,7 @@ export class ProjectTotals {
           active: Number(row.active),
           idle: Number(row.idle),
           manual: Number(row.manual),
+          mobile: Number(row.mobile),
           keyboard: Number(row.keyboard),
           mouse: Number(row.mouse),
           distance: Number(row.distance),

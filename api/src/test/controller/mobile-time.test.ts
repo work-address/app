@@ -287,4 +287,28 @@ export class MobileTimeTest extends BaseControllerTest {
       keyboardKeys: 4,
     })
   }
+
+  @test() async phoneTimeIsInvoicedAsTrackedTimeNotManual() {
+    const { owner, worker, project } = await this.world()
+    await this.allow(owner, project)
+    const client = this.client(worker)
+    const upload = await client.post('/time', [
+      this.item(project, 1, { source: 'mobile', minutesActive: 10 }),
+      this.item(project, 11, { minutesActive: 6 }),
+    ])
+    const ids = upload.data.map((row: { id: string }) => row.id)
+
+    const invoice = await client.post(`/invoice/project/${project.id}`, {
+      timeIds: ids,
+    })
+    expect(invoice.status).to.equal(200)
+    expect(invoice.data.amountCents).to.equal(2000)
+    expect(invoice.data.lines[0]).to.include({
+      basis: 'tracked',
+      minutes: 20,
+      mobileMinutes: 10,
+      manualMinutes: 0,
+      activeMinutes: 6,
+    })
+  }
 }
