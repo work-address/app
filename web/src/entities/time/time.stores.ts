@@ -15,6 +15,7 @@ import {
   deleteTimeMutation,
   editTimeMutation,
   removeAgentPromptMutation,
+  removeTimeLocationsMutation,
   removeTimeProcessesMutation,
   removeTimeScreenshotMutation,
   setTimePaidStatusMutation,
@@ -177,6 +178,15 @@ const $timeFeed = createStore<TimeFeed>(EMPTY_FEED)
       ...item,
       processes: [],
       apps: [],
+    })),
+  )
+  // As the server answers: a phone entry says its location was removed.
+  .on(removeTimeLocationsMutation.finished.success, (feed, { params }) =>
+    patchTimeItems(feed, params, (item) => ({
+      ...item,
+      locations: [],
+      locationStatus:
+        item.source === 'mobile' ? 'removed' : item.locationStatus,
     })),
   )
   .reset(resetTimeFilters)

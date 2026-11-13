@@ -15,6 +15,7 @@ import {
 import {
   deleteTimeMutation,
   editTimeMutation,
+  removeTimeLocationsMutation,
   removeTimeProcessesMutation,
   removeTimeScreenshotMutation,
   setTimePaidStatusMutation,
@@ -117,6 +118,7 @@ sample({
     setTimePaidStatusMutation.finished.success,
     removeTimeScreenshotMutation.finished.success,
     removeTimeProcessesMutation.finished.success,
+    removeTimeLocationsMutation.finished.success,
     timeEntriesInvoiced,
   ],
   source: $recentScreenshotsParams,
@@ -192,6 +194,7 @@ export {
   deleteTimeMutation,
   editTimeMutation,
   removeAgentPromptMutation,
+  removeTimeLocationsMutation,
   removeTimeProcessesMutation,
   removeTimeScreenshotMutation,
   setTimePaidStatusMutation,

@@ -221,6 +221,10 @@ export class TimeManager {
           [...touchedProjects],
           this.plan.screenshotLimitDays(),
         )
+        yield* this.timeRepository.purgeExpiredLocations(
+          [...touchedProjects],
+          this.plan.screenshotLimitDays(),
+        )
         return insertionResults
       })
 
@@ -293,6 +297,10 @@ export class TimeManager {
     return this.timeRepository.updateUninvoicedAsAuthor(ids, user, {
       screenshot: null,
     })
+  }
+
+  public removeLocations(ids: string[], user: User): RepoEffect<void> {
+    return this.timeRepository.clearLocationsAsAuthor(ids, user)
   }
 
   public removeProcesses(ids: string[], user: User): RepoEffect<void> {

@@ -837,6 +837,19 @@ export const handlers: HttpHandler[] = [
     }
     return { success: true }
   }),
+  route('delete', '/time/locations', ({ db, meId, body }) => {
+    const rows = editableTimes(db, meId, body.ids)
+    keepInvoiced(rows)
+    for (const time of rows) {
+      saveRow('times', {
+        ...time,
+        locations: [],
+        locationStatus:
+          time.source === 'mobile' ? 'removed' : time.locationStatus,
+      })
+    }
+    return { success: true }
+  }),
   route('delete', '/time/processes', ({ db, meId, body }) => {
     const rows = editableTimes(db, meId, body.ids)
     keepInvoiced(rows)

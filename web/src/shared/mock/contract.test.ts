@@ -78,6 +78,8 @@ const mock: ContractAdapter = {
       appsStatus: 'ok',
       apps: [{ name: 'code', seconds: 60 }],
       source: 'desktop',
+      locationStatus: null,
+      locations: [],
       publishedAt: null,
       minutesActive: 5,
       keyboardKeys: 1,

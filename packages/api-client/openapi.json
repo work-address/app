@@ -221,7 +221,7 @@
           "lines"
         ],
         "example": {
-          "id": "2bb1f0cd-71b6-4555-9526-51bdc4b35358"
+          "id": "d46149e6-9a3c-4d5c-9631-8afac67b29c4"
         }
       },
       "ProjectStatistics": {
@@ -282,7 +282,7 @@
           "period"
         ],
         "example": {
-          "id": "f280d8d1-15d7-4815-ad31-4d1359ecc83b"
+          "id": "7ecef9f5-06a1-486e-9edb-17857026338d"
         }
       },
       "Time": {
@@ -475,7 +475,7 @@
           "toAt"
         ],
         "example": {
-          "id": "11cbcfc0-07fd-4b1e-8fc0-d517750300ec"
+          "id": "80a2187d-23fb-4969-abd0-7cf0481d8d82"
         }
       },
       "Project": {
@@ -606,7 +606,7 @@
           "state"
         ],
         "example": {
-          "id": "faf3eb0f-d2ca-4341-9265-a528c9686f80"
+          "id": "021135b1-8761-4cf2-986c-deaf89e072ac"
         }
       },
       "User": {
@@ -729,7 +729,7 @@
         },
         "type": "object",
         "example": {
-          "id": "54ba251f-25c1-4899-b20c-91dac419891f"
+          "id": "088d8869-f8c2-48a6-ae6f-1821ace06b54"
         }
       },
       "AdminUserSearchFilterDto": {
@@ -4867,6 +4867,41 @@
         ]
       }
     },
+    "/api/time/locations": {
+      "delete": {
+        "operationId": "TimeController.removeLocations",
+        "requestBody": {
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TimeIdsDto"
+              },
+              "example": {
+                "ids": [
+                  "dd8a088d-00c1-499f-a75b-7ca45821a7e3"
+                ]
+              }
+            }
+          },
+          "description": "",
+          "required": true
+        },
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "summary": "Remove where the phone was from time entries (tracking worker only)",
+        "tags": [
+          "Time"
+        ],
+        "security": [
+          {
+            "bearerAuth": []
+          }
+        ]
+      }
+    },
     "/api/time/processes": {
       "delete": {
         "operationId": "TimeController.removeProcesses",
@@ -5263,7 +5298,7 @@
               },
               "example": {
                 "filter": {
-                  "projectId": "8b385d51-72e7-49d0-84f7-0a6944923c22"
+                  "projectId": "72eda3fa-91d8-4694-a143-39fbc09ace6f"
                 },
                 "sort": {
                   "fromAt": "DESC"
@@ -5331,8 +5366,8 @@
                 "$ref": "#/components/schemas/InvoiceCreateDto"
               },
               "example": {
-                "fromUnix": 1794523350790,
-                "toUnix": 1794609750790
+                "fromUnix": 1794523558899,
+                "toUnix": 1794609958899
               }
             }
           },
@@ -5725,7 +5760,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "3e64d374-ed7a-457d-94c2-aa732b7a0b7e"
+                "nonce": "beca0e7c-e503-43f8-8f97-dbda4a7aa7fe"
               },
               "schema": {
                 "properties": {
@@ -5770,7 +5805,7 @@
           "content": {
             "application/json": {
               "example": {
-                "nonce": "a10b9403-fbb0-4c3d-b36c-1ba3c5a9ab99"
+                "nonce": "359dfbf8-156a-4c2b-9655-5f65bdeaa87d"
               },
               "schema": {
                 "properties": {
@@ -5811,21 +5846,21 @@
                 "examples": {
                   "init": {
                     "value": {
-                      "nonce": "0a22c19e-d7d2-4fec-a76b-0ef8995ca338",
+                      "nonce": "e9385c8c-6181-434b-8312-21db94af0550",
                       "ip": "127.0.0.1",
                       "state": "Initialization"
                     }
                   },
                   "login": {
                     "value": {
-                      "nonce": "d9bb5191-a0e5-49b5-842b-95a302d53efe",
+                      "nonce": "7e9830a9-3020-4e23-b0ec-9255591504b7",
                       "ip": "127.0.0.1",
                       "state": "Login"
                     }
                   },
                   "connected": {
                     "value": {
-                      "nonce": "38dca4a1-2b9d-4af6-b0c9-975d1d1e50cd",
+                      "nonce": "088cd948-3f26-4a15-80a6-ed0e7c52d9a1",
                       "ip": "127.0.0.1",
                       "state": "Connected",
                       "jwt": {

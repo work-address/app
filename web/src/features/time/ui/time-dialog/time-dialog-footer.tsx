@@ -1,3 +1,4 @@
+import { SewingPinFilledIcon } from '@radix-ui/react-icons'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -9,6 +10,7 @@ type TimeDialogFooterProps = {
   canSave: boolean
   hasScreenshot: boolean
   hasProcesses: boolean
+  hasLocation: boolean
   /** The reader may delete it and remove what it recorded. */
   canRemove: boolean
   /** The reader may save a change to it; if not, only closing is offered. */
@@ -17,6 +19,7 @@ type TimeDialogFooterProps = {
   onDelete: () => void
   onRemoveScreenshot: () => void
   onRemoveProcesses: () => void
+  onRemoveLocation: () => void
   onDiscard: () => void
   onSave: () => void
 }
@@ -27,12 +30,14 @@ export const TimeDialogFooter = ({
   canSave,
   hasScreenshot,
   hasProcesses,
+  hasLocation,
   canRemove,
   canEdit,
   isInvoiced,
   onDelete,
   onRemoveScreenshot,
   onRemoveProcesses,
+  onRemoveLocation,
   onDiscard,
   onSave,
 }: TimeDialogFooterProps) => {
@@ -74,6 +79,19 @@ export const TimeDialogFooter = ({
                 aria-label={t('dashboard.worklogsTable.removeProcesses')}
               >
                 <ProcessesIcon width={16} height={16} />
+              </Button>
+            </Tooltip>
+          )}
+          {hasLocation && (
+            <Tooltip content={t('dashboard.worklogsTable.removeLocation')}>
+              <Button
+                color="danger"
+                variant="soft"
+                disabled={isPending}
+                onClick={onRemoveLocation}
+                aria-label={t('dashboard.worklogsTable.removeLocation')}
+              >
+                <SewingPinFilledIcon width={16} height={16} />
               </Button>
             </Tooltip>
           )}

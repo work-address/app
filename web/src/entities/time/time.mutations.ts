@@ -60,6 +60,16 @@ export const setTimePaidStatusMutation = createMutation({
   },
 })
 
+export const removeTimeLocationsMutation = createMutation({
+  handler: async (ids: string[]) => {
+    return runApi(() =>
+      baseApi.timeControllerRemoveLocations({
+        body: { ids },
+      }),
+    )
+  },
+})
+
 export const removeTimeProcessesMutation = createMutation({
   handler: async (ids: string[]) => {
     return runApi(() =>

@@ -60,6 +60,8 @@ export const DEMO_SCENARIOS: DemoScenario[] = [
           appsStatus: project!.trackProcesses ? 'ok' : 'off',
           apps: project!.trackProcesses ? [{ name: 'Code', seconds: 360 }] : [],
           source: 'desktop',
+          locationStatus: null,
+          locations: [],
           publishedAt: null,
           minutesActive: 7,
           keyboardKeys: 420,

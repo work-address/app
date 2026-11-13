@@ -169,11 +169,18 @@ export class ProjectAccess {
       time.detailPendingReview =
         time.project?.user?.id === user.id && !this.published(time)
     }
+    // Location is kept as long as the screenshot, and goes the same way.
     const limit = this.plan.screenshotLimitDays()
     const days = time.project?.screenshotRetentionDays ?? limit
     const kept = limit === null ? days : Math.min(days ?? limit, limit)
-    if (kept && new Date(time.toAt).getTime() + kept * 86400_000 <= Date.now())
+    if (
+      kept &&
+      new Date(time.toAt).getTime() + kept * 86400_000 <= Date.now()
+    ) {
       time.screenshot = null
+      if (time.locations) time.locations = []
+      if (time.locationStatus === 'ok') time.locationStatus = 'expired'
+    }
     return time
   }
 

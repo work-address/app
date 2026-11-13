@@ -176,6 +176,7 @@ export const shapeTime = (
     screenshot: undefined,
     processes: null,
     apps: undefined,
+    locations: undefined,
     detailPendingReview:
       project.ownerId === meId && !isPublished(time, project, now),
   }

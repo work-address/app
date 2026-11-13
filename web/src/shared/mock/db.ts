@@ -80,12 +80,23 @@ export type MockTime = {
   appsStatus: 'ok' | 'off' | 'unsupported' | null
   apps: { name: string; seconds: number }[]
   source: 'desktop' | 'mobile' | 'manual' | 'web'
+  /** Null on all but phone entries; `ok` when `locations` holds the trail. */
+  locationStatus: string | null
+  locations: MockLocation[]
   publishedAt: string | null
   minutesActive: number | null
   keyboardKeys: number | null
   mouseKeys: number | null
   mouseDistance: number | null
   invoiceId: string | null
+}
+
+export type MockLocation = {
+  at: string
+  latitude: number | null
+  longitude: number | null
+  accuracy: number | null
+  mock: boolean
 }
 
 /** Minutes an entry spans: its own times, not an assumed slot. */
@@ -597,6 +608,8 @@ function makeEntry(
     appsStatus: recorded ? (tracksApps ? 'ok' : 'off') : null,
     apps: tracksApps && active ? splitApps(f, active * 60) : [],
     source,
+    locationStatus: null,
+    locations: [],
     publishedAt: null,
     minutesActive: active,
     keyboardKeys: recorded ? f.number.int({ min: 20, max: 900 }) : null,
@@ -617,7 +630,49 @@ function makeEntry(
     keyboardKeys: 0,
     mouseKeys: 0,
     mouseDistance: 0,
+    locationStatus: project.trackLocation ? 'ok' : 'off',
+    locations: project.trackLocation ? walk(userId, from) : [],
   }
+}
+
+/**
+ * A phone's fixes over one slot, a minute apart: a slow walk around a point of
+ * the contributor's own. Computed from the time, never drawn, so the seeded
+ * world stays as it was. Every seventh minute finds no fix, and now and then
+ * a fix is one the phone says was faked.
+ */
+function walk(userId: string, from: number): MockLocation[] {
+  let seed = 0
+  for (const char of userId) {
+    seed = (seed * 31 + char.charCodeAt(0)) >>> 0
+  }
+  const home = {
+    latitude: 52.35 + (seed % 100) / 1000,
+    longitude: 4.85 + ((seed >> 8) % 100) / 1000,
+  }
+  return Array.from({ length: SLOT_MS / 60_000 }, (_, index) => {
+    const at = from + index * 60_000
+    const minute = Math.floor(at / 60_000)
+    if (minute % 7 === 0) {
+      return {
+        at: iso(at),
+        latitude: null,
+        longitude: null,
+        accuracy: null,
+        mock: false,
+      }
+    }
+    return {
+      at: iso(at),
+      latitude:
+        home.latitude +
+        0.006 * Math.sin(minute / 23) +
+        0.002 * Math.sin(minute / 5),
+      longitude: home.longitude + 0.009 * Math.cos(minute / 31),
+      accuracy: 5 + (minute % 6) * 6,
+      mock: minute % 211 === 0,
+    }
+  })
 }
 
 function splitApps(f: Faker, seconds: number) {

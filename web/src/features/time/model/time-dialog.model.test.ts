@@ -3,18 +3,19 @@ import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
   timeEntryDeleteRequested,
+  timeLocationRemoveRequested,
   timeProcessesRemoveRequested,
   timeScreenshotRemoveRequested,
 } from './time-dialog.model'
 
-const { remove, removeScreenshot, removeProcesses, confirm } = vi.hoisted(
-  () => ({
+const { remove, removeScreenshot, removeProcesses, removeLocation, confirm } =
+  vi.hoisted(() => ({
     remove: vi.fn(),
     removeScreenshot: vi.fn(),
     removeProcesses: vi.fn(),
+    removeLocation: vi.fn(),
     confirm: vi.fn(),
-  }),
-)
+  }))
 vi.mock('@/entities/time', async () => {
   const { createStore } = await import('effector')
   const { createMutation } = await import('@farfetched/core')
@@ -23,6 +24,7 @@ vi.mock('@/entities/time', async () => {
     deleteTimeMutation: createMutation({ handler: remove }),
     editTimeMutation: createMutation({ handler: vi.fn() }),
     removeTimeProcessesMutation: createMutation({ handler: removeProcesses }),
+    removeTimeLocationsMutation: createMutation({ handler: removeLocation }),
     removeTimeScreenshotMutation: createMutation({
       handler: removeScreenshot,
     }),
@@ -41,10 +43,17 @@ const flows = [
     removeScreenshot,
   ],
   ['removes the processes of', timeProcessesRemoveRequested, removeProcesses],
+  ['removes the location of', timeLocationRemoveRequested, removeLocation],
 ] as const
 
 beforeEach(() => {
-  for (const handler of [remove, removeScreenshot, removeProcesses, confirm]) {
+  for (const handler of [
+    remove,
+    removeScreenshot,
+    removeProcesses,
+    removeLocation,
+    confirm,
+  ]) {
     handler.mockReset()
     handler.mockResolvedValue({})
   }

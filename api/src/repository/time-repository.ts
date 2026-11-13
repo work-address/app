@@ -210,6 +210,39 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
   }
 
   /**
+   * Clears the fixes of entries past their project's retention, as
+   * {@link purgeExpiredScreenshots} clears screenshots and on the same days,
+   * so an expired trail does not wait for a read to hide it.
+   */
+  public purgeExpiredLocations(
+    projectIds: string[],
+    limitDays: number | null = null,
+  ): RepoEffect<void> {
+    if (!projectIds.length) return Effect.void
+    return fromPromise(() =>
+      this.getRepo().manager.transaction(async (manager) => {
+        const expired = `FROM project
+          WHERE time."projectId"=project.id AND project.id=ANY($1::uuid[])
+          AND LEAST(project."screenshotRetentionDays", $2::int) IS NOT NULL
+          AND time."toAt" + LEAST(project."screenshotRetentionDays", $2::int) * INTERVAL '1 day' <= NOW()`
+        await manager.query(
+          `DELETE FROM time_location location USING time, project
+          WHERE location."timeId"=time.id AND time."projectId"=project.id
+          AND project.id=ANY($1::uuid[])
+          AND LEAST(project."screenshotRetentionDays", $2::int) IS NOT NULL
+          AND time."toAt" + LEAST(project."screenshotRetentionDays", $2::int) * INTERVAL '1 day' <= NOW()`,
+          [projectIds, limitDays],
+        )
+        await manager.query(
+          `UPDATE time SET "locationStatus"='expired' ${expired}
+          AND time."locationStatus"='ok'`,
+          [projectIds, limitDays],
+        )
+      }),
+    )
+  }
+
+  /**
    * Brings back the entries rotation hid, on the owner's upgrade. Rotation is
    * the only soft delete of an entry, so anything marked deleted here is
    * something the free plan hid: removal by an author deletes for real. Runs
@@ -551,6 +584,27 @@ export class TimeRepository extends AbstractRepositoryTemplate<Time> {
         `NOT ${this.invoicedSql()}`,
       )
       await manager.delete(AppUsage, { time: { id: In(uniqueIds) } })
+      return changed
+    })
+  }
+
+  /**
+   * Removes where the phone was from entries, unless any is invoiced. A phone
+   * entry then says its location was removed, and an upload of the same slice
+   * does not bring it back. The time stays.
+   */
+  public clearLocationsAsAuthor(ids: string[], user: User): RepoEffect<void> {
+    return this.changeAsAuthor(ids, user, async (manager, uniqueIds) => {
+      const changed = await this.update(
+        manager,
+        uniqueIds,
+        {
+          locationStatus: () =>
+            `CASE WHEN source = 'mobile' THEN 'removed' ELSE "locationStatus" END`,
+        },
+        `NOT ${this.invoicedSql()}`,
+      )
+      await manager.delete(TimeLocation, { time: { id: In(uniqueIds) } })
       return changed
     })
   }

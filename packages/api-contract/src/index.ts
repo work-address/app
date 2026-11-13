@@ -461,6 +461,16 @@ export const CONTRACT_SCENARIOS: ContractScenario[] = [
           : 'does not list their own entry',
   },
   {
+    name: 'a worker cannot remove the location of someone else’s entry',
+    as: 'worker',
+    request: (w) => ({
+      method: 'delete',
+      path: '/time/locations',
+      body: { ids: [w.ownerEntry] },
+    }),
+    status: 403,
+  },
+  {
     name: 'a worker cannot read someone else’s entry',
     as: 'worker',
     request: (w) => ({ method: 'get', path: `/time/${w.ownerEntry}` }),

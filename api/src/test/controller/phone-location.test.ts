@@ -412,4 +412,92 @@ export class PhoneLocationTest extends BaseControllerTest {
     ).to.equal(200)
     expect(await this.points(id)).to.have.length(0)
   }
+
+  @test() async theAuthorRemovesAnEntrysLocationAndKeepsItsTime() {
+    const { owner, worker, project } = await this.world()
+    const client = this.client(worker)
+    const sent = this.slice(project, 1)
+    const [{ id }] = (await client.post('/time', [sent])).data
+
+    // Only the author may, and the owner's attempt changes nothing.
+    const byOwner = await this.client(owner).delete('/time/locations', {
+      data: { ids: [id] },
+    })
+    expect(byOwner.status).to.not.equal(200)
+    expect(await this.points(id)).to.have.length(3)
+
+    const removal = await client.delete('/time/locations', {
+      data: { ids: [id] },
+    })
+    expect(removal.status).to.equal(200)
+    expect(await this.points(id)).to.have.length(0)
+    expect(await this.entry(id)).to.include({
+      source: 'mobile',
+      minutesActive: 10,
+      locationStatus: 'removed',
+    })
+    expect(+(await this.entry(id)).toAt).to.equal(+moment(sent.toAt))
+    const read = await client.get(`/time/${id}`)
+    expect(read.data.locationStatus).to.equal('removed')
+    expect(read.data.locations).to.deep.equal([])
+
+    // The phone sending the same slice again does not bring it back.
+    const retry = await client.post('/time', [sent])
+    expect(retry.data[0].error).to.equal(undefined)
+    expect(retry.data[0].locationsAccepted).to.equal(false)
+    expect(await this.points(id)).to.have.length(0)
+    expect((await this.entry(id)).locationStatus).to.equal('removed')
+  }
+
+  @test() async removingLocationFromAnInvoicedEntryIsRefused() {
+    const { worker, project } = await this.world()
+    const client = this.client(worker)
+    const upload = await client.post('/time', [
+      this.slice(project, 1),
+      this.slice(project, 11),
+    ])
+    const [invoiced, open] = upload.data.map((row: { id: string }) => row.id)
+    const invoice = await client.post(`/invoice/project/${project.id}`, {
+      timeIds: [invoiced],
+    })
+    expect(invoice.status).to.equal(200)
+
+    // One invoiced id refuses the whole request.
+    const removal = await client.delete('/time/locations', {
+      data: { ids: [open, invoiced] },
+    })
+    expect(removal.status).to.equal(400)
+    expect(removal.data.name).to.equal('InvoicedTimeException')
+    expect(await this.points(invoiced)).to.have.length(3)
+    expect(await this.points(open)).to.have.length(3)
+    expect((await this.entry(open)).locationStatus).to.equal('ok')
+  }
+
+  @test() async locationGoesWithTheScreenshotsRetention() {
+    const { owner, worker, project } = await this.world()
+    const client = this.client(worker)
+    // Two days old, so past a one-day retention once it is set.
+    const [{ id }] = (
+      await client.post('/time', [this.slice(project, 2 * 1440)])
+    ).data
+    expect(await this.points(id)).to.have.length(3)
+    await App.conn.manager.update(Project, project.id, {
+      screenshotRetentionDays: 1,
+    })
+
+    // Hidden on read at once, by the same rule as the screenshot.
+    for (const reader of [worker, owner]) {
+      const read = await this.client(reader).get(`/time/${id}`)
+      expect(read.status).to.equal(200)
+      expect(read.data.locations).to.deep.equal([])
+      expect(read.data.locationStatus).to.equal('expired')
+    }
+
+    // And cleared for good by the project's next upload.
+    const next = await client.post('/time', [this.slice(project, 1)])
+    expect(next.data[0].locationsAccepted).to.equal(true)
+    expect(await this.points(id)).to.have.length(0)
+    expect((await this.entry(id)).locationStatus).to.equal('expired')
+    expect(await this.points(next.data[0].id)).to.have.length(3)
+  }
 }

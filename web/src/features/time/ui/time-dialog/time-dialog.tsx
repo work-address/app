@@ -6,6 +6,7 @@ import styled from 'styled-components'
 
 import {
   timeEntryDeleteRequested,
+  timeLocationRemoveRequested,
   timeProcessesRemoveRequested,
   timeScreenshotRemoveRequested,
   getEntryChanges,
@@ -23,6 +24,7 @@ import { $user } from '@/entities/profile'
 import {
   deleteTimeMutation,
   editTimeMutation,
+  removeTimeLocationsMutation,
   removeTimeProcessesMutation,
   removeTimeScreenshotMutation,
 } from '@/entities/time'
@@ -96,10 +98,12 @@ export const TimeDialog = ({
     editTimeEntry,
     requestRemoveScreenshot,
     requestRemoveProcesses,
+    requestRemoveLocation,
     isDeleting,
     isEditing,
     isRemovingScreenshot,
     isRemovingProcesses,
+    isRemovingLocation,
     reader,
   } = useUnit({
     reader: $user,
@@ -107,10 +111,12 @@ export const TimeDialog = ({
     editTimeEntry: editTimeMutation.start,
     requestRemoveScreenshot: timeScreenshotRemoveRequested,
     requestRemoveProcesses: timeProcessesRemoveRequested,
+    requestRemoveLocation: timeLocationRemoveRequested,
     isDeleting: deleteTimeMutation.$pending,
     isEditing: editTimeMutation.$pending,
     isRemovingScreenshot: removeTimeScreenshotMutation.$pending,
     isRemovingProcesses: removeTimeProcessesMutation.$pending,
+    isRemovingLocation: removeTimeLocationsMutation.$pending,
   })
 
   const {
@@ -198,10 +204,15 @@ export const TimeDialog = ({
   const changes = getEntryChanges(row ?? {}, reader?.id)
   const hasScreenshot = Boolean(row?.screenshot)
   const hasProcesses = getTimeApps(row ?? undefined).length > 0
+  const hasLocation = (row?.locations?.length ?? 0) > 0
   const agentRuns = useEntryAgentRuns(row)
   const hasAgents = agentRuns.length > 0
   const isPending =
-    isDeleting || isEditing || isRemovingScreenshot || isRemovingProcesses
+    isDeleting ||
+    isEditing ||
+    isRemovingScreenshot ||
+    isRemovingProcesses ||
+    isRemovingLocation
   const screenshotSrc = hasScreenshot
     ? toImageDataUrl(row?.screenshot)
     : undefined
@@ -221,6 +232,12 @@ export const TimeDialog = ({
   const handleRemoveProcesses = () => {
     if (row?.id) {
       requestRemoveProcesses(row.id)
+    }
+  }
+
+  const handleRemoveLocation = () => {
+    if (row?.id) {
+      requestRemoveLocation(row.id)
     }
   }
 
@@ -284,12 +301,14 @@ export const TimeDialog = ({
             canSave={isDirty}
             hasScreenshot={hasScreenshot}
             hasProcesses={hasProcesses}
+            hasLocation={hasLocation}
             canRemove={changes.canRemove}
             canEdit={changes.isAuthor}
             isInvoiced={Boolean(row.isInvoiced)}
             onDelete={handleDelete}
             onRemoveScreenshot={handleRemoveScreenshot}
             onRemoveProcesses={handleRemoveProcesses}
+            onRemoveLocation={handleRemoveLocation}
             onDiscard={handleDiscard}
             onSave={handleSubmit(onSubmit)}
           />

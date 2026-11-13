@@ -174,6 +174,35 @@ export class TimeController {
   }
 
   @OpenAPIExtended({
+    summary:
+      'Remove where the phone was from time entries (tracking worker only)',
+    body: {
+      schema: TimeIdsDto,
+      options: {
+        example: {
+          ids: ['dd8a088d-00c1-499f-a75b-7ca45821a7e3'],
+        },
+      },
+    },
+    response: {
+      schema: {},
+      options: { emptyBody: true },
+    },
+  })
+  @Delete('/locations')
+  @HttpCode(200)
+  public async removeLocations(
+    @CurrentUser() currentUser: User,
+    @Body() body: TimeIdsDto,
+    @Res() res: express.Response,
+  ): Promise<express.Response> {
+    await runPromise(this.timeManager.removeLocations(body.ids, currentUser))
+
+    res.end()
+    return res
+  }
+
+  @OpenAPIExtended({
     summary: 'Remove processes from time entries (tracking worker only)',
     body: {
       schema: TimeIdsDto,

@@ -7,6 +7,7 @@ import type { EventCallable } from 'effector'
 import {
   deleteTimeMutation,
   editTimeMutation,
+  removeTimeLocationsMutation,
   removeTimeProcessesMutation,
   removeTimeScreenshotMutation,
 } from '@/entities/time'
@@ -61,6 +62,11 @@ export const timeProcessesRemoveRequested = createEntryConfirmFlow(
   removeTimeProcessesMutation.start,
 )
 
+export const timeLocationRemoveRequested = createEntryConfirmFlow(
+  'dashboard.worklogsTable.confirmRemoveLocation',
+  removeTimeLocationsMutation.start,
+)
+
 // A successful edit closes the dialog; the feed patches the row itself, so
 // there is nothing to copy back into the form.
 sample({
@@ -76,4 +82,9 @@ sample({
 sample({
   clock: removeTimeProcessesMutation.finished.success,
   target: removeTimeProcessesMutation.reset,
+})
+
+sample({
+  clock: removeTimeLocationsMutation.finished.success,
+  target: removeTimeLocationsMutation.reset,
 })

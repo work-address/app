@@ -1710,6 +1710,17 @@ export type TimeControllerRemoveScreenshotsResponses = {
     200: unknown;
 };
 
+export type TimeControllerRemoveLocationsData = {
+    body: TimeIdsDto;
+    path?: never;
+    query?: never;
+    url: '/api/time/locations';
+};
+
+export type TimeControllerRemoveLocationsResponses = {
+    200: unknown;
+};
+
 export type TimeControllerRemoveProcessesData = {
     body: TimeIdsDto;
     path?: never;

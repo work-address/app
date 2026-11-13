@@ -25,6 +25,7 @@ export {
 } from './time-dialog-navigation.model'
 export {
   timeEntryDeleteRequested,
+  timeLocationRemoveRequested,
   timeProcessesRemoveRequested,
   timeScreenshotRemoveRequested,
 } from './time-dialog.model'
