@@ -4,6 +4,7 @@ import i18n from 'i18next'
 
 import { connectTimeTrackerFx, fetchTimeTrackerNonceFx } from './effects'
 import {
+  confirmTimeTrackerConnect,
   initTimeTrackerConnect,
   retryTimeTrackerConnect,
   timeTrackerNonceLoaded,
@@ -79,20 +80,29 @@ sample({
   target: $phase,
 })
 
+// Nothing pairs by itself: a link anyone can send must not hand over the
+// account of whoever opens it. Signed in, the page asks; a click pairs.
 sample({
-  clock: timeTrackerNonceLoaded,
-  source: $authenticated,
-  filter: (authenticated, { result }) =>
-    authenticated && result.state !== TIME_TRACKER_CONNECTED_STATE,
-  fn: (_, { params }) => params,
-  target: connectTimeTrackerFx,
+  clock: $authenticated,
+  source: $phase,
+  filter: (phase, authenticated) => authenticated && phase === 'awaiting_auth',
+  fn: () => 'awaiting_pair' as const,
+  target: $phase,
 })
 
 sample({
   clock: $authenticated,
+  source: $phase,
+  filter: (phase, authenticated) => !authenticated && phase === 'awaiting_pair',
+  fn: () => 'awaiting_auth' as const,
+  target: $phase,
+})
+
+sample({
+  clock: confirmTimeTrackerConnect,
   source: combine($authenticated, $phase, $nonce),
   filter: ([authenticated, phase, nonce]) =>
-    authenticated && phase === 'awaiting_auth' && Boolean(nonce),
+    authenticated && phase === 'awaiting_pair' && Boolean(nonce),
   fn: ([, , nonce]) => nonce!,
   target: connectTimeTrackerFx,
 })
@@ -112,6 +122,7 @@ sample({
 })
 
 export {
+  confirmTimeTrackerConnect,
   initTimeTrackerConnect,
   resetTimeTrackerConnect,
   retryTimeTrackerConnect,

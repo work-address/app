@@ -36,6 +36,35 @@ describe('pairing page states', () => {
     expect(view.showWalletProviders).toBe(false)
   })
 
+  it("asks a signed-in reader to connect, in each opener's words", () => {
+    const asked = {
+      ...defaults,
+      phase: 'awaiting_pair' as const,
+      authenticated: true,
+    }
+    const tracker = buildTimeTrackerConnectView(asked)
+    expect(tracker.showConfirm).toBe(true)
+    expect(tracker.showLoading).toBe(false)
+    expect(tracker.showWalletProviders).toBe(false)
+    expect(tracker.headingKey).toBe('connect.heading.confirm')
+    expect(tracker.confirmKey).toBe('connect.confirm')
+
+    const phone = buildTimeTrackerConnectView({ ...asked, fromPhone: true })
+    expect(phone.headingKey).toBe('connect.phone.heading.confirm')
+
+    const website = buildTimeTrackerConnectView({ ...asked, fromWebsite: true })
+    expect(website.headingKey).toBe('connect.website.heading.confirm')
+    expect(website.confirmKey).toBe('connect.website.confirm')
+
+    // signed in on the page, before the model has moved on: asked, not paired
+    const justSignedIn = buildTimeTrackerConnectView({
+      ...defaults,
+      phase: 'awaiting_auth',
+      authenticated: true,
+    })
+    expect(justSignedIn.showConfirm).toBe(true)
+  })
+
   it('distinguishes wallet authorization from nonce checking', () => {
     const view = buildTimeTrackerConnectView({
       ...defaults,

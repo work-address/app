@@ -8,6 +8,8 @@ export const resetTimeTrackerConnect = createEvent()
 export const timeTrackerConnectOpenedBy = createEvent<
   'website' | 'tracker' | 'phone'
 >()
+/** The signed-in reader's click that pairs the link: nothing pairs without it. */
+export const confirmTimeTrackerConnect = createEvent()
 /** Revalidate the same link before attempting to pair again. */
 export const retryTimeTrackerConnect = createEvent()
 

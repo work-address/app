@@ -7,6 +7,7 @@ import {
   $errorMessage,
   $openedByWebsite,
   $phase,
+  confirmTimeTrackerConnect,
   initTimeTrackerConnect,
   resetTimeTrackerConnect,
   retryTimeTrackerConnect,
@@ -111,6 +112,60 @@ describe('time-tracker pairing recovery', () => {
   })
 })
 
+// A pairing link is easy to send to someone else: opening one must never sign
+// its sender in as the reader. Only the reader's click pairs.
+describe("pairing only on the reader's click", () => {
+  it('asks a signed-in reader instead of pairing the link', async () => {
+    const pair = vi.fn()
+    const scope = fork({
+      values: [[$authenticated, true]],
+      handlers: [
+        [fetchTimeTrackerNonceFx, async () => ({ state: 'Init' })],
+        [connectTimeTrackerFx, pair],
+      ],
+    })
+
+    await allSettled(initTimeTrackerConnect, { scope, params: 'sent-link' })
+    expect(scope.getState($phase)).toBe('awaiting_pair')
+    expect(pair).not.toHaveBeenCalled()
+
+    await allSettled(confirmTimeTrackerConnect, { scope })
+    expect(pair).toHaveBeenCalledOnce()
+    expect(pair).toHaveBeenCalledWith('sent-link')
+    expect(scope.getState($phase)).toBe('connected')
+  })
+
+  it('asks after signing in on the page, and pairs nothing before', async () => {
+    const pair = vi.fn()
+    const scope = fork({
+      handlers: [
+        [fetchTimeTrackerNonceFx, async () => ({ state: 'Init' })],
+        [connectTimeTrackerFx, pair],
+      ],
+    })
+
+    await allSettled(initTimeTrackerConnect, { scope, params: 'a-link' })
+    expect(scope.getState($phase)).toBe('awaiting_auth')
+    await allSettled($authenticated, { scope, params: true })
+    expect(scope.getState($phase)).toBe('awaiting_pair')
+    expect(pair).not.toHaveBeenCalled()
+  })
+
+  it('pairs nothing on a click while signed out', async () => {
+    const pair = vi.fn()
+    const scope = fork({
+      handlers: [
+        [fetchTimeTrackerNonceFx, async () => ({ state: 'Init' })],
+        [connectTimeTrackerFx, pair],
+      ],
+    })
+
+    await allSettled(initTimeTrackerConnect, { scope, params: 'a-link' })
+    await allSettled(confirmTimeTrackerConnect, { scope })
+    expect(pair).not.toHaveBeenCalled()
+  })
+})
+
 describe('announcing a finished pairing', () => {
   // The marker the model writes after pairing needs a storage to write to.
   vi.stubGlobal('localStorage', { setItem: vi.fn(), getItem: vi.fn() })
@@ -130,6 +185,7 @@ describe('announcing a finished pairing', () => {
 
     await allSettled(timeTrackerConnectOpenedBy, { scope, params: opener })
     await allSettled(initTimeTrackerConnect, { scope, params: 'a-link' })
+    await allSettled(confirmTimeTrackerConnect, { scope })
 
     return scope
   }

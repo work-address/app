@@ -13,6 +13,7 @@ import { AuthStyles as S, AuthProviders } from '@/features/auth'
 import {
   initTimeTrackerConnect,
   buildTimeTrackerConnectView,
+  confirmTimeTrackerConnect,
   finishWebsiteSignIn,
   isPhoneClient,
   leaveForWebsite,
@@ -56,6 +57,7 @@ export default function ConnectPage() {
   const fromPhone = !fromWebsite && isPhoneClient(searchParams.get('client'))
 
   const {
+    confirmConnect,
     initConnect,
     resetConnect,
     retryConnect,
@@ -67,6 +69,7 @@ export default function ConnectPage() {
     authenticated,
     user,
   } = useUnit({
+    confirmConnect: confirmTimeTrackerConnect,
     initConnect: initTimeTrackerConnect,
     resetConnect: resetTimeTrackerConnect,
     retryConnect: retryTimeTrackerConnect,
@@ -98,6 +101,8 @@ export default function ConnectPage() {
     showConnected,
     showLoading,
     showWalletProviders,
+    showConfirm,
+    confirmKey,
     checkingLink,
     canRetry,
     showWayOn,
@@ -179,6 +184,18 @@ export default function ConnectPage() {
               <Spinner size={40} />
             )}
           </Progress>
+        )}
+        {/* Nothing pairs by itself: the reader says so, knowing which
+            account the link would sign in as. */}
+        {showConfirm && (
+          <S.Actions>
+            <ConfirmAccount>
+              {t('connect.confirmAccount', {
+                account: user?.name || user?.email || user?.address || '',
+              })}
+            </ConfirmAccount>
+            <Button onClick={confirmConnect}>{t(confirmKey)}</Button>
+          </S.Actions>
         )}
         {showWalletProviders && (
           <S.Actions>
@@ -305,6 +322,13 @@ const CloseLink = styled(Link)`
 
 const CloseButton = styled.button`
   ${closePosition}
+`
+
+const ConfirmAccount = styled.p`
+  font-size: var(--ui-small-size);
+  color: var(--ui-muted);
+  text-align: center;
+  overflow-wrap: anywhere;
 `
 
 const Progress = styled.div`

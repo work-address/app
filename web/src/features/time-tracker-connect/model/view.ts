@@ -17,6 +17,7 @@ type ConnectScreen =
   | 'loading'
   | 'awaiting_auth'
   | 'signing_in'
+  | 'confirm'
   | 'pairing'
   | 'connected'
   | 'expired'
@@ -41,6 +42,10 @@ const COPY_BY_SCREEN: Record<
   signing_in: {
     headingKey: 'connect.heading.signingIn',
     descriptionKey: 'connect.description.signingIn',
+  },
+  confirm: {
+    headingKey: 'connect.heading.confirm',
+    descriptionKey: 'connect.description.confirm',
   },
   pairing: {
     headingKey: 'connect.heading.pairing',
@@ -78,6 +83,10 @@ const WEBSITE_COPY_BY_SCREEN: typeof COPY_BY_SCREEN = {
     headingKey: 'connect.heading.signingIn',
     descriptionKey: 'connect.website.description.signingIn',
   },
+  confirm: {
+    headingKey: 'connect.website.heading.confirm',
+    descriptionKey: 'connect.website.description.confirm',
+  },
   pairing: {
     headingKey: 'connect.heading.signingIn',
     descriptionKey: 'connect.website.description.signingIn',
@@ -99,6 +108,10 @@ const WEBSITE_COPY_BY_SCREEN: typeof COPY_BY_SCREEN = {
 /** The tracker's words, but a phone is told to go back to the app. */
 const PHONE_COPY_BY_SCREEN: typeof COPY_BY_SCREEN = {
   ...COPY_BY_SCREEN,
+  confirm: {
+    headingKey: 'connect.phone.heading.confirm',
+    descriptionKey: 'connect.phone.description.confirm',
+  },
   connected: {
     headingKey: 'connect.phone.heading.connected',
     descriptionKey: 'connect.phone.description.connected',
@@ -137,13 +150,16 @@ function getConnectScreen({
     case 'loading': {
       return 'loading'
     }
-    case 'awaiting_pair':
+    // Signed in, the page asks before it pairs: see the model.
+    case 'awaiting_pair': {
+      return authenticated ? 'confirm' : 'awaiting_auth'
+    }
     case 'connecting': {
       return 'pairing'
     }
     case 'awaiting_auth': {
       if (authenticated) {
-        return 'pairing'
+        return 'confirm'
       }
       return authPending ? 'signing_in' : 'awaiting_auth'
     }
@@ -164,6 +180,11 @@ export function buildTimeTrackerConnectView(input: ConnectViewInput) {
     showError,
     checkingLink: screen === 'loading',
     showWalletProviders: screen === 'awaiting_auth',
+    // the only way a link pairs: the signed-in reader's click
+    showConfirm: screen === 'confirm',
+    confirmKey: input.fromWebsite
+      ? 'connect.website.confirm'
+      : 'connect.confirm',
     canRetry: screen === 'failed',
     // Screens nothing on the page can fix still lead somewhere: the app, or
     // signing in to it, instead of a dead end.
