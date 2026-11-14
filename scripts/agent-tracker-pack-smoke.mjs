@@ -37,14 +37,14 @@ try {
   const require = createRequire(
     resolve('packages/agent-tracking-contract/package.json'),
   )
-  run('npm', [
-    'pack',
+  // pnpm, not npm: npm pack crashes on a pnpm-linked directory in CI
+  // ("Exit handler never called").
+  run('pnpm', [
+    '--dir',
     dirname(require.resolve('zod/package.json')),
+    'pack',
     '--pack-destination',
     directory,
-    '--ignore-scripts',
-    '--loglevel',
-    'error',
   ])
   const tarballs = readdirSync(directory)
     .filter((name) => name.endsWith('.tgz'))
