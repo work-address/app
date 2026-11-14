@@ -201,16 +201,35 @@ finish() {
 run_wizard() {
 
 cd "$(dirname "$0")/.."   # the app repository's root
-TOTAL_STAGES=5
+TOTAL_STAGES=7
 REPO="work-address/app"
-VERSION=$(sed -n 's/^version = "\(.*\)"$/\1/p' packages/agent-tracker/bridges/hermes/pyproject.toml)
-TAG="work-address-hermes-v$VERSION"
+COLLECTOR=$(node -p "require('./packages/agent-tracker/package.json').version")
+HERMES=$(sed -n 's/^version = "\(.*\)"$/\1/p' packages/agent-tracker/bridges/hermes/pyproject.toml)
+NPM_TAG="agent-tracker-v$COLLECTOR"
+PYPI_TAG="work-address-hermes-v$HERMES"
 
-banner "Publish work-address-hermes $VERSION to PyPI"
+banner "Publish the agent tracker packages (npm $COLLECTOR, PyPI $HERMES)"
+
+stage "npm: sign in"
+say "npm will trust GitHub Actions to publish the three @work-address packages,"
+say "so no token is ever stored. Sign in to the npm account that owns them."
+open_url "https://www.npmjs.com/login"
+pause "Signed in? Press Enter."
+
+stage "npm: trust the publish workflow, once per package"
+for pkg in agent-tracking-contract agent-tracker agent-tracker-openclaw; do
+  open_url "https://www.npmjs.com/package/@work-address/$pkg/access"
+done
+say "On each of the three pages that opened:"
+step "Under 'Trusted Publisher', choose GitHub Actions."
+step "Organization or user: work-address"
+step "Repository: app"
+step "Workflow filename: agent-tracker-publish.yml"
+step "Environment name: npm"
+step "Save."
+pause "All three saved? Press Enter."
 
 stage "PyPI: sign in"
-say "PyPI will trust GitHub Actions to publish the Hermes Agent plugin, so no"
-say "token is ever stored. First, sign in to the PyPI account that should own it."
 open_url "https://pypi.org/account/login/"
 step "Sign in (create the account and turn on two-factor if you have none)."
 pause "Signed in? Press Enter."
@@ -227,47 +246,48 @@ step "Click 'Add'."
 note "Pending means the project is created by the first publish from that workflow."
 pause "Added? Press Enter."
 
-stage "GitHub: the pypi environment"
-say "The workflow's publish job runs in a GitHub environment named pypi."
+stage "GitHub: the npm and pypi environments"
 if command -v gh >/dev/null 2>&1 && gh auth status >/dev/null 2>&1; then
-  if confirm "Create (or keep) the pypi environment on $REPO now?"; then
-    if gh api -X PUT "repos/$REPO/environments/pypi" >/dev/null; then
-      printf '  %s✓ environment pypi ready%s\n' "$GREEN" "$RESET"
+  for env in npm pypi; do
+    if gh api -X PUT "repos/$REPO/environments/$env" >/dev/null; then
+      printf '  %s✓ environment %s ready%s\n' "$GREEN" "$env" "$RESET"
     else
-      SKIPPED+=("GitHub environment pypi on $REPO")
-      warn "couldn't create it; add it in the repository's Settings → Environments"
+      SKIPPED+=("GitHub environment $env on $REPO")
+      warn "couldn't create $env; add it in the repository's Settings → Environments"
     fi
-  fi
+  done
 else
   open_url "https://github.com/$REPO/settings/environments/new"
-  step "Name it pypi and click 'Configure environment'."
+  step "Create two environments: npm and pypi."
   pause "Created? Press Enter."
 fi
-note "You may add yourself as a required reviewer there, to approve each publish."
+note "You may add yourself as a required reviewer on each, to approve every publish."
 pause
 
-stage "GitHub: push the release tag"
-say "Pushing $TAG runs .github/workflows/hermes-publish.yml on that commit."
-note "The workflow must be on main first; it checks the tag matches pyproject.toml."
-if git rev-parse -q --verify "refs/tags/$TAG" >/dev/null; then
-  note "Tag $TAG already exists locally."
-elif confirm "Tag origin/main as $TAG?"; then
-  git fetch origin main
-  git tag "$TAG" origin/main
-fi
-if confirm "Push $TAG to origin now? This publishes to PyPI and cannot be undone."; then
-  git push origin "refs/tags/$TAG"
-else
-  SKIPPED+=("git push origin refs/tags/$TAG")
-fi
+stage "GitHub: push the release tags"
+say "Pushing $NPM_TAG publishes the npm packages; $PYPI_TAG publishes the Hermes plugin."
+note "Both workflows run from main and check that the tag matches the package version."
+git fetch origin main
+for tag in "$NPM_TAG" "$PYPI_TAG"; do
+  if git rev-parse -q --verify "refs/tags/$tag" >/dev/null; then
+    note "Tag $tag already exists locally."
+  elif confirm "Tag origin/main as $tag?"; then
+    git tag "$tag" origin/main
+  fi
+  if confirm "Push $tag now? This publishes and cannot be undone."; then
+    git push origin "refs/tags/$tag"
+  else
+    SKIPPED+=("git push origin refs/tags/$tag")
+  fi
+done
 
-stage "Check the release"
-open_url "https://github.com/$REPO/actions/workflows/hermes-publish.yml"
-step "Wait for the run to finish (approve the pypi environment if you set a reviewer)."
+stage "Check the releases"
+open_url "https://github.com/$REPO/actions"
+step "Wait for both publish runs (approve the environments if you set reviewers)."
+open_url "https://www.npmjs.com/package/@work-address/agent-tracker"
 open_url "https://pypi.org/project/work-address-hermes/"
-step "Check $VERSION is listed."
-note "Then tell Claude it is published: the install line in agent-tracking-contract"
-note "src/support.ts and the website switch to 'pip install work-address-hermes'."
+step "Check npm shows $COLLECTOR and PyPI shows $HERMES."
+note "Then tell Claude they are published: it marks the checked agents Available."
 pause "Done? Press Enter."
 
 finish

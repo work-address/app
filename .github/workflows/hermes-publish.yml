@@ -3,7 +3,7 @@ name: Publish work-address-hermes
 # Pushing the tag work-address-hermes-v<version> publishes the Hermes Agent
 # plugin to PyPI. The version in the tag must be the one in pyproject.toml.
 # PyPI trusts this workflow, in the `pypi` environment, as the project's
-# publisher; no token is stored (scripts/hermes-pypi-wizard.sh sets it up).
+# publisher; no token is stored (scripts/publish-wizard.sh sets it up).
 on:
   push:
     tags:

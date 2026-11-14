@@ -1,0 +1,55 @@
+name: Publish agent tracker packages
+
+# Pushing the tag agent-tracker-v<version> publishes, in order,
+# @work-address/agent-tracking-contract, @work-address/agent-tracker and
+# @work-address/agent-tracker-openclaw at the versions in their package.json,
+# skipping any version npm already has. npm trusts this workflow, in the `npm`
+# environment, as each package's publisher; no token is stored
+# (scripts/publish-wizard.sh sets it up).
+on:
+  push:
+    tags:
+      - 'agent-tracker-v*'
+
+permissions:
+  contents: read
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    environment:
+      name: npm
+      url: https://www.npmjs.com/org/work-address
+    permissions:
+      contents: read
+      id-token: write
+    steps:
+      - uses: actions/checkout@v4
+      # The version comes from packageManager in package.json.
+      - uses: pnpm/action-setup@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+          registry-url: 'https://registry.npmjs.org'
+      # Trusted publishing needs npm 11.5.1 or later.
+      - run: npm install -g npm@11
+      - run: pnpm install --frozen-lockfile --ignore-scripts --filter '@work-address/*'
+      - run: pnpm agent-tracker:test
+      - name: Tag matches the collector version
+        run: |
+          version=$(node -p "require('./packages/agent-tracker/package.json').version")
+          test "agent-tracker-v$version" = "$GITHUB_REF_NAME" || {
+            echo "Tag $GITHUB_REF_NAME does not match agent-tracker $version"; exit 1; }
+      - name: Publish what npm does not have yet
+        run: |
+          mkdir -p /tmp/packs
+          for name in agent-tracking-contract agent-tracker agent-tracker-openclaw; do
+            pkg="@work-address/$name"
+            version=$(node -p "require('./packages/$name/package.json').version")
+            if npm view "$pkg@$version" version >/dev/null 2>&1; then
+              echo "$pkg@$version is already on npm"; continue
+            fi
+            # pnpm pack turns workspace: ranges into the published versions.
+            tarball=$(pnpm --dir "packages/$name" pack --pack-destination /tmp/packs | tail -1)
+            npm publish "$tarball" --access public
+          done
