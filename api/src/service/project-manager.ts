@@ -196,8 +196,9 @@ export class ProjectManager {
       project.trackWindowTitles = false
       project.trackBrowserDomains = false
     }
-    // Location is recorded only by the phone, so it goes off with it.
-    if (!project.allowMobileTime) project.trackLocation = false
+    // Phone tracking always records location: one switch, whatever is sent.
+    // Both fields stay so the tracker's project list keeps its shape.
+    project.trackLocation = project.allowMobileTime === true
     if (
       project.reviewWindowHours !== undefined &&
       (!Number.isInteger(project.reviewWindowHours) ||

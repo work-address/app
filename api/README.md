@@ -39,6 +39,17 @@ pnpm run schema:drop
 pnpm run schema:sync
 ```
 
+### One-off data fixes
+
+The schema has no migrations, so a data change that `schema:sync` cannot make
+ships as a dated SQL file in `api/scripts/`. Run each once against every
+database after deploying the API that needs it; each file says why and is safe
+to run again.
+
+| File | What it does |
+| --- | --- |
+| `2026-11-14-phone-tracking-records-location.sql` | Turns location on for every project that allows phone tracking, now that one switch covers both |
+
 ## Scripts
 
 | Script                                      | Purpose                                               |

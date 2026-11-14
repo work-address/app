@@ -130,8 +130,10 @@ export class Project extends AbstractBaseEntity implements IProject {
 
   /**
    * Whether the phone app records where the phone was while its timer runs.
-   * The owner's alone, off by default, and never on while `allowMobileTime`
-   * is off. Points sent while it is off are not stored.
+   * Always equal to `allowMobileTime`: phone tracking records location, and
+   * the server sets this on every save, whatever the client sends. Kept so the
+   * tracker's project list is unchanged. Points sent while it is off are not
+   * stored.
    */
   @Expose({ groups: ['search', 'create', 'edit'] })
   @Column('bool', { default: false })

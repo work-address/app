@@ -26,8 +26,8 @@ export class PhoneLocationTest extends BaseControllerTest {
     })
   }
 
-  /** A project that takes phone time and asks for location. */
-  private async world({ trackLocation = true } = {}) {
+  /** A project that takes phone time, and with it location. */
+  private async world() {
     const owner = await this.userFixture.createPremiumUser()
     const worker = await this.userFixture.createUser()
     const viewer = await this.userFixture.createUser()
@@ -37,7 +37,6 @@ export class PhoneLocationTest extends BaseControllerTest {
     await App.conn.manager.save(project)
     const edit = await this.client(owner).put(`/project/${project.id}`, {
       allowMobileTime: true,
-      trackLocation,
     })
     expect(edit.status).to.equal(200)
 
@@ -112,39 +111,54 @@ export class PhoneLocationTest extends BaseControllerTest {
     return App.conn.manager.findOneByOrFail(Time, { id })
   }
 
-  @test() async locationIsOffUntilTheOwnerAsksForIt() {
-    const { owner, worker, project } = await this.world({
+  @test() async phoneTrackingAlwaysRecordsLocation() {
+    const owner = await this.userFixture.createPremiumUser()
+    const worker = await this.userFixture.createUser()
+
+    // Created with phone time on and location off: location is on.
+    const created = await this.client(owner).post('/project', {
+      title: 'Phone project',
+      text: 'Deliveries',
+      state: 'Active',
+      allowMobileTime: true,
       trackLocation: false,
+      workerAddresses: [worker.address],
     })
-
-    expect((await this.stored(project)).trackLocation).to.equal(false)
-    expect((await this.listed(project, worker))?.trackLocation).to.equal(false)
-
-    const edit = await this.client(owner).put(`/project/${project.id}`, {
-      trackLocation: true,
-    })
-    expect(edit.status).to.equal(200)
+    expect(created.status).to.equal(201)
+    const id = String(created.headers.location).split('/').pop()
+    const project = await App.conn.manager.findOneByOrFail(Project, { id })
+    expect(project).to.include({ allowMobileTime: true, trackLocation: true })
     expect((await this.listed(project, worker))?.trackLocation).to.equal(true)
 
-    const byWorker = await this.client(worker).put(`/project/${project.id}`, {
+    // An edit cannot turn location off while phone time is on.
+    const edit = await this.client(owner).put(`/project/${project.id}`, {
+      allowMobileTime: true,
       trackLocation: false,
+    })
+    expect(edit.status).to.equal(200)
+    expect(await this.stored(project)).to.include({
+      allowMobileTime: true,
+      trackLocation: true,
+    })
+
+    const byWorker = await this.client(worker).put(`/project/${project.id}`, {
+      allowMobileTime: false,
     })
     expect(byWorker.status).to.equal(403)
     expect((await this.stored(project)).trackLocation).to.equal(true)
   }
 
-  @test() async locationIsNeverOnWithoutPhoneTime() {
+  @test() async locationFollowsThePhoneSwitch() {
     const owner = await this.userFixture.createPremiumUser()
     const project = await this.projectFixture.createPersonal(owner, 60)
     const set = (body: object) =>
       this.client(owner).put(`/project/${project.id}`, body)
 
+    // Location alone turns nothing on.
     expect((await set({ trackLocation: true })).status).to.equal(200)
     expect((await this.stored(project)).trackLocation).to.equal(false)
 
-    expect(
-      (await set({ allowMobileTime: true, trackLocation: true })).status,
-    ).to.equal(200)
+    expect((await set({ allowMobileTime: true })).status).to.equal(200)
     expect((await this.stored(project)).trackLocation).to.equal(true)
 
     // Turning phone time off turns location off in the same write.
@@ -153,13 +167,13 @@ export class PhoneLocationTest extends BaseControllerTest {
     expect(off.allowMobileTime).to.equal(false)
     expect(off.trackLocation).to.equal(false)
 
-    // And turning phone time back on does not bring location back.
+    // And turning it back on brings location back with it.
     expect((await set({ allowMobileTime: true })).status).to.equal(200)
-    expect((await this.stored(project)).trackLocation).to.equal(false)
+    expect((await this.stored(project)).trackLocation).to.equal(true)
   }
 
   @test() async theSwitchMustBeABoolean() {
-    const { owner, project } = await this.world({ trackLocation: false })
+    const { owner, project } = await this.world()
 
     for (const trackLocation of ['true', null, 1]) {
       const edit = await this.client(owner).put(`/project/${project.id}`, {
@@ -227,8 +241,14 @@ export class PhoneLocationTest extends BaseControllerTest {
     expect(listed.data[0][0].locations).to.have.length(3)
   }
 
-  @test() async pointsAProjectDidNotAskForAreNotStored() {
-    const { worker, project } = await this.world({ trackLocation: false })
+  @test() async aSliceFromBeforePhoneTimeWentOffKeepsNoLocation() {
+    const { owner, worker, project } = await this.world()
+    // The slice started before the switch went off, so its time is kept, but
+    // the project no longer records location.
+    const off = await this.client(owner).put(`/project/${project.id}`, {
+      allowMobileTime: false,
+    })
+    expect(off.status).to.equal(200)
 
     const upload = await this.client(worker).post('/time', [
       this.slice(project, 1),
