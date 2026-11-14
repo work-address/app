@@ -326,10 +326,17 @@ const RunPrompt = ({ label, text }: { label: string; text: string }) => {
   )
 }
 
+// Scrolls on its own and never runs past the window, however many runs
+// fall inside the entry: 240px leaves room for the overlay's margins, the
+// dialog's padding and header, and this section's title.
 const List = styled.div`
   display: grid;
+  align-content: start;
   gap: var(--ui-space-2);
   width: 100%;
+  max-height: calc(100dvh - 240px);
+  overflow-y: auto;
+  overscroll-behavior: contain;
 `
 
 const Card = styled.div`
