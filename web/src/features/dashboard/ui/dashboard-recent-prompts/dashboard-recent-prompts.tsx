@@ -14,7 +14,11 @@ import { DashboardWidget } from '../dashboard-widget'
 
 import { $user } from '@/entities/profile'
 import { $removedPromptRunKeys, recentAgentRunsQuery } from '@/entities/time'
-import { AgentPromptRemoveButton, canRemoveAgentPrompt } from '@/features/time'
+import {
+  AgentPromptRemoveButton,
+  canRemoveAgentPrompt,
+  PRODUCT_NAMES,
+} from '@/features/time'
 import { routes } from '@/routes'
 import {
   formatCompactDurationFromMinutes,
@@ -24,11 +28,6 @@ import {
 } from '@/shared'
 
 const VISIBLE_PROMPTS = 8
-
-const PRODUCT_NAMES: Record<string, string> = {
-  'claude-code': 'Claude Code',
-  codex: 'Codex',
-}
 
 /**
  * The last prompts that started agent runs in the period. Another worker's
@@ -104,10 +103,12 @@ export const DashboardRecentPrompts = () => {
             <Row key={run.runKey}>
               <Item
                 data-removable={removable || undefined}
-                to={`${routes.time.build()}?${new URLSearchParams({
+                // The run itself, among that day's runs on its project.
+                to={`${routes.agents.build()}?${new URLSearchParams({
                   from: day,
                   to: day,
-                  projects: run.projectId,
+                  project: run.projectId,
+                  run: run.runKey,
                 })}`}
               >
                 <Icon aria-hidden="true">

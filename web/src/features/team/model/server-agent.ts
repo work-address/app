@@ -123,10 +123,13 @@ export const serverCredentialRows = (
 
       return {
         id: credential.id,
+        instanceId: credential.instanceId,
         label: credential.label,
         prefix: credential.prefix,
         expiresAt: credential.expiresAt,
         lastUsedAt: credential.lastUsedAt,
         state,
+        health: credential.health ?? null,
+        lastHealthAt: credential.lastHealthAt ?? null,
       }
     })

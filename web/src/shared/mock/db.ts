@@ -150,6 +150,10 @@ export type MockRun = {
   isPaid: boolean
   /** Its author's review window has been let pass (the demo scenario). */
   released?: boolean
+  /** Where it ran; the run key decides when unset (shape.ts). */
+  mode?: 'timer' | 'fixed'
+  /** Its source's session; a day's runs share one when unset. */
+  sessionId?: string
 }
 
 /** An agent someone set up by hand, beside the ones their runs imply. */

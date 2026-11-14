@@ -2,61 +2,27 @@ import { Badge, Flex } from '@radix-ui/themes'
 import { useUnit } from 'effector-react'
 import { useEffect, useState } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
 import { canRemoveAgentPrompt } from '../../model/agent-prompt.model'
 import { AgentPromptRemoveButton } from '../agent-prompt-remove-button'
+import {
+  agentRunStatus,
+  AgentRunTimeline,
+  type AgentRunSummary,
+  PRODUCT_NAMES,
+  STATUS_COLORS,
+  summarizeAgentRun,
+  SURFACE_NAMES,
+  useAgentMinutes,
+} from '../agent-run-parts'
 
-import type { Time, TimeAgentRun, TimeAgentSegment } from '@/entities/time'
+import type { Time, TimeAgentRun } from '@/entities/time'
 
 import { $removedPromptRunKeys, timeAgentRunsQuery } from '@/entities/time'
-import { formatDurationFromMinutes, Text } from '@/shared'
-
-// The names the desktop tracker and server collectors report products by.
-export const PRODUCT_NAMES: Record<string, string> = {
-  'claude-code': 'Claude Code',
-  codex: 'Codex',
-  cursor: 'Cursor',
-  'gemini-cli': 'Gemini CLI',
-  copilot: 'Copilot',
-  windsurf: 'Windsurf',
-  cline: 'Cline',
-  minimax: 'MiniMax',
-  'devin-local': 'Devin Local',
-  'claude-cowork': 'Claude Cowork',
-  'kimi-code': 'Kimi Code',
-  'kimi-cli': 'Kimi CLI',
-  openclaw: 'OpenClaw',
-  hermes: 'Hermes',
-  opencode: 'OpenCode',
-}
-
-const SURFACE_NAMES: Record<string, string> = {
-  cli: 'CLI',
-  ide: 'IDE',
-  desktop: 'Desktop',
-  web: 'Web',
-  cloud: 'Cloud',
-}
-
-const STATUS_COLORS = {
-  running: 'blue',
-  completed: 'green',
-  cancelled: 'gray',
-  failed: 'red',
-} as const
-
-type SegmentState = TimeAgentSegment['state']
-
-// Legend and timeline order: what bills first, the paused timer last.
-const STATES: SegmentState[] = ['running', 'human_wait', 'unknown', 'untracked']
-
-const STATE_COLORS: Record<SegmentState, string> = {
-  running: 'var(--ui-blue)',
-  human_wait: 'var(--amber-9)',
-  unknown: 'var(--ui-muted)',
-  untracked: 'var(--ui-line)',
-}
+import { routes } from '@/routes'
+import { Text, toDay } from '@/shared'
 
 type TimeDialogAgentsProps = {
   items: EntryAgentRun[]
@@ -64,61 +30,7 @@ type TimeDialogAgentsProps = {
   userId?: string
 }
 
-export type EntryAgentRun = {
-  run: TimeAgentRun
-  /** Billable minutes inside the entry: every state but `untracked`. */
-  minutes: number
-  minutesByState: Record<SegmentState, number>
-  /** The run's segments clipped to the entry, as shares of its period. */
-  spans: { state: SegmentState; left: number; width: number }[]
-}
-
-/**
- * A run's timeline clipped to the entry. A run without segments is one
- * unclassified span, which is what the server bills it as.
- */
-const summarize = (
-  run: TimeAgentRun,
-  from: number,
-  to: number,
-): EntryAgentRun => {
-  const period = to - from
-  const segments: Pick<TimeAgentSegment, 'fromAt' | 'toAt' | 'state'>[] = run
-    .segments?.length
-    ? run.segments
-    : [{ fromAt: run.fromAt, toAt: run.toAt, state: 'unknown' }]
-  const minutesByState: Record<SegmentState, number> = {
-    running: 0,
-    human_wait: 0,
-    unknown: 0,
-    untracked: 0,
-  }
-  const spans: EntryAgentRun['spans'] = []
-
-  for (const segment of segments) {
-    const start = Math.max(Date.parse(segment.fromAt), from)
-    const end = Math.min(Date.parse(segment.toAt), to)
-    if (end <= start) {
-      continue
-    }
-    minutesByState[segment.state] += (end - start) / 60_000
-    spans.push({
-      state: segment.state,
-      left: ((start - from) / period) * 100,
-      width: ((end - start) / period) * 100,
-    })
-  }
-
-  return {
-    run,
-    minutes:
-      minutesByState.running +
-      minutesByState.human_wait +
-      minutesByState.unknown,
-    minutesByState,
-    spans,
-  }
-}
+export type EntryAgentRun = AgentRunSummary
 
 /**
  * The runs that belong to an entry, by its author on its project,
@@ -140,7 +52,7 @@ export const getEntryAgentRuns = (
   return runs
     .filter((run) => !authorId || run.userId === authorId)
     .filter((run) => !projectId || run.projectId === projectId)
-    .map((run) => summarize(run, from, to))
+    .map((run) => summarizeAgentRun(run, from, to))
     .filter(({ spans }) => spans.length > 0)
     .sort((a, b) => Date.parse(a.run.fromAt) - Date.parse(b.run.fromAt))
 }
@@ -179,6 +91,7 @@ export const useEntryAgentRuns = (time: Time | null): EntryAgentRun[] => {
 export const TimeDialogAgents = ({ items, userId }: TimeDialogAgentsProps) => {
   const { t, i18n } = useTranslation()
   const removed = useUnit($removedPromptRunKeys)
+  const formatDuration = useAgentMinutes()
 
   if (items.length === 0) {
     return null
@@ -189,12 +102,6 @@ export const TimeDialogAgents = ({ items, userId }: TimeDialogAgentsProps) => {
     minute: '2-digit',
     hour12: false,
   })
-  const formatDuration = (minutes: number) =>
-    minutes > 0 && minutes < 1
-      ? t('common.duration.underMinute')
-      : formatDurationFromMinutes(Math.round(minutes), t)
-  const stateLabel = (state: SegmentState) =>
-    t(`dashboard.worklogsTable.agents.state.${state}`)
 
   return (
     <Flex direction="column" gap="2" width="100%">
@@ -207,12 +114,8 @@ export const TimeDialogAgents = ({ items, userId }: TimeDialogAgentsProps) => {
           const surface = run.surface
             ? (SURFACE_NAMES[run.surface] ?? run.surface)
             : null
-          const statusKey =
-            run.status in STATUS_COLORS
-              ? (run.status as keyof typeof STATUS_COLORS)
-              : null
+          const statusKey = agentRunStatus(run.status)
           const range = `${clock.format(new Date(run.fromAt))}–${clock.format(new Date(run.toAt))}`
-          const legend = STATES.filter((state) => minutesByState[state] > 0)
 
           return (
             <Card key={run.runKey}>
@@ -270,38 +173,17 @@ export const TimeDialogAgents = ({ items, userId }: TimeDialogAgentsProps) => {
                   )}
                 </PromptRow>
               )}
-              <Timeline
-                role="img"
-                aria-label={legend
-                  .map(
-                    (state) =>
-                      `${stateLabel(state)} ${formatDuration(minutesByState[state])}`,
-                  )
-                  .join(', ')}
+              <AgentRunTimeline summary={{ minutesByState, spans }} />
+              <RunLink
+                to={`${routes.agents.build()}?${new URLSearchParams({
+                  from: toDay(new Date(run.fromAt)),
+                  to: toDay(new Date(run.fromAt)),
+                  project: run.projectId,
+                  run: run.runKey,
+                })}`}
               >
-                {spans.map((span, index) => (
-                  <Span
-                    key={index}
-                    data-state={span.state}
-                    style={{
-                      left: `${span.left}%`,
-                      width: `${span.width}%`,
-                      background: STATE_COLORS[span.state],
-                    }}
-                  />
-                ))}
-              </Timeline>
-              <Legend>
-                {legend.map((state) => (
-                  <LegendItem key={state}>
-                    <Dot style={{ background: STATE_COLORS[state] }} />
-                    {stateLabel(state)}
-                    <LegendValue>
-                      {formatDuration(minutesByState[state])}
-                    </LegendValue>
-                  </LegendItem>
-                ))}
-              </Legend>
+                {t('time.dialog.agents.openRun')}
+              </RunLink>
             </Card>
           )
         })}
@@ -407,55 +289,10 @@ const PromptText = styled.span`
   }
 `
 
-// The entry's whole period; each span sits where the run was in it.
-const Timeline = styled.div`
-  position: relative;
-  height: 6px;
-  border-radius: 999px;
-  background: var(--ui-inset);
-  overflow: hidden;
-`
-
-const Span = styled.span`
-  position: absolute;
-  top: 0;
-  bottom: 0;
-  min-width: 2px;
-
-  /* A paused timer is a gap in the billing, drawn as one. */
-  &[data-state='untracked'] {
-    background-image: repeating-linear-gradient(
-      -45deg,
-      transparent 0 2px,
-      var(--ui-line) 2px 4px
-    ) !important;
-  }
-`
-
-const Legend = styled.div`
-  display: flex;
-  flex-wrap: wrap;
-  gap: var(--ui-space-1) var(--ui-space-3);
-`
-
-const LegendItem = styled.span`
-  display: inline-flex;
-  align-items: center;
-  gap: var(--ui-space-1);
-  color: var(--ui-muted);
+// Everything else about the run is on the Agents page.
+const RunLink = styled(Link)`
+  justify-self: start;
+  color: var(--ui-blue);
   font-size: var(--ui-small-size);
   line-height: var(--ui-small-line-height);
-`
-
-const LegendValue = styled.span`
-  color: var(--ui-ink);
-  font-weight: 500;
-  font-variant-numeric: tabular-nums;
-`
-
-const Dot = styled.span`
-  width: 8px;
-  height: 8px;
-  border-radius: 50%;
-  flex-shrink: 0;
 `

@@ -290,17 +290,31 @@ export const shapeRun = (
     !run.invoiceId &&
     !run.released &&
     Date.parse(run.toAt) + window > now
+  // The demo's agent is the product a person's runs used (team.ts), and a
+  // quarter of its runs came from a server: the run key says which, so the
+  // seed's other data stays as it was.
+  const agentId = `${run.userId}:${run.product}`
+  const mode = run.mode ?? (parseInt(run.runKey[0], 16) < 4 ? 'fixed' : 'timer')
   return {
     deletedAt: null,
     ...run,
+    agentId,
+    agentName: run.product,
+    agentRateHourCents: project?.agentRates?.[agentId] ?? 0,
     sourceInstanceId: run.agentId,
-    sourceSessionId: 'demo',
+    // A day's runs are one session, so a run has neighbours to show.
+    sourceSessionId: run.sessionId ?? `demo-${run.fromAt.slice(0, 10)}`,
     sourceRunId: run.runKey,
-    sourceAgentId: 'demo',
+    sourceAgentId: 'root',
     measurement: {
-      mode: 'timer',
+      mode,
       coverage: 'run',
       qualification: 'unqualified',
+      liveness: false,
+      provisional: false,
+      adapterVersion: 'demo',
+      runtimeVersion: 'demo',
+      schemaVersion: 1,
     },
     manual: false,
     prompt: held ? null : run.prompt,

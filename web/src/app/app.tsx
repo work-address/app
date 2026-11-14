@@ -12,6 +12,7 @@ import { bindNavigate, ErrorBoundary } from '@/shared'
 const DashboardPage = lazy(() => import('@/pages/dashboard'))
 const TimePage = lazy(() => import('@/pages/time'))
 const TeamPage = lazy(() => import('@/pages/team'))
+const AgentsPage = lazy(() => import('@/pages/agents'))
 const ProfilePage = lazy(() => import('@/pages/profile'))
 const OwnProfilePage = lazy(() => import('@/pages/own-profile'))
 const ProfileEditPage = lazy(() => import('@/pages/profile-edit'))
@@ -68,6 +69,10 @@ const router = createBrowserRouter([
       {
         path: routes.team.schema,
         element: <TeamPage />,
+      },
+      {
+        path: routes.agents.schema,
+        element: <AgentsPage />,
       },
       {
         path: routes.profile.children.edit.schema,

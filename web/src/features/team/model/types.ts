@@ -42,6 +42,8 @@ export type OwnAgent = {
   slug: string
   product: string
   removedAt: string | null
+  /** The machines whose runs go to this agent: a server's own id among them. */
+  bindings?: string[]
 }
 
 /** A machine's upload credential, as `GET /agent-tracking/credentials` lists it. */
@@ -55,17 +57,32 @@ export type AgentCredential = {
   expiresAt: string
   revokedAt: string | null
   lastUsedAt: string | null
+  /** What the collector last said of itself; null until it has. */
+  health?: CollectorHealth | null
+  lastHealthAt?: string | null
+}
+
+/** A collector's own account of its queue, sent with its uploads. */
+export type CollectorHealth = {
+  queued: number
+  rejected: number
+  lost: number
+  heldRuns: number
+  lastSuccessfulUploadAt?: string
 }
 
 export type ServerCredentialState = 'active' | 'expiring' | 'expired'
 
 export type ServerCredentialRow = {
   id: string
+  instanceId: string
   label: string
   prefix: string
   expiresAt: string
   lastUsedAt: string | null
   state: ServerCredentialState
+  health: CollectorHealth | null
+  lastHealthAt: string | null
 }
 
 /** What the setup dialog asks for. */

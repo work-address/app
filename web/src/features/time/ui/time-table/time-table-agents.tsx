@@ -2,11 +2,9 @@ import { useUnit } from 'effector-react'
 import { createContext, useContext, useEffect, useMemo } from 'react'
 import styled from 'styled-components'
 
+import { PRODUCT_NAMES } from '../agent-run-parts'
 import { TimeContext } from '../time-context'
-import {
-  getEntryAgentRuns,
-  PRODUCT_NAMES,
-} from '../time-dialog/time-dialog-agents'
+import { getEntryAgentRuns } from '../time-dialog/time-dialog-agents'
 
 import {
   tableAgentRunsQuery,

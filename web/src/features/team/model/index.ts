@@ -36,6 +36,7 @@ export {
 export type { ServerProduct } from './server-agent'
 export type {
   AgentCredential,
+  CollectorHealth,
   ServerAgentForm,
   ServerCredentialRow,
   ServerCredentialState,

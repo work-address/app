@@ -187,9 +187,12 @@ bound to the machines it runs on, with at most one default per product. The defa
 agent's hourly rate for that project, from zero. The owner sees every agent,
 rate and run on the project but cannot add, change or remove any of them; the
 owner's levers are rejecting an invoice and removing the worker. Agent runs
-carry timings, tokens, model, tools and commits, and the prompt that started
-the run, up to 4,000 characters, so the owner sees what the billed time was
-asked to do. The worker can keep prompts on their machine; response text is
+carry their timing, a timeline of working, waiting and unclassified stretches,
+the product, where it ran (a computer or a server), how it ended, the source's
+session and run ids, and the prompt that started the run, up to 4,000
+characters, so the owner sees what the billed time was asked to do. Tokens,
+model, tools and commits are not collected yet. The AI agents page shows all of
+it, run by run. The worker can keep prompts on their machine; response text is
 never sent.
 
 **A worker can erase a run's prompt until the run is invoiced.** It goes for

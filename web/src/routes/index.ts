@@ -2,6 +2,7 @@ import {
   ClockIcon,
   DashboardIcon,
   FileTextIcon,
+  MagicWandIcon,
   MixerHorizontalIcon,
   PersonIcon,
   QuestionMarkCircledIcon,
@@ -11,30 +12,56 @@ import type { Route, IdRouteParams, NoChildRoutes, MappingRoute } from './types'
 
 import { PeopleIcon } from '@/shared/icons'
 
-/* eslint-disable */
-type MainRoutes =
-  & Route<'/', 'dashboard'>
-  & Route<'/time', 'time'>
-  & Route<'/team', 'team'>
-  & Route<'/sign-in', 'signIn'>
-  & Route<'/profile/:id', 'profile', ProfileRoutes, IdRouteParams>
-  & Route<'https://address.work/docs', 'docs'>
-  & Route<'/connect', 'connect', NoChildRoutes, { nonce?: string }>
-  & Route<'/download', 'download'>
-  & Route<'/invoice/:id', 'invoice', NoChildRoutes, IdRouteParams>
-  & Route<'/invoice', 'invoices'>
-  & Route<'/settings', 'settings'>
-  & Route<'https://facebook.com/:userId', 'facebook', NoChildRoutes, { userId: string }>
-  & Route<'https://t.me/:userId', 'telegram', NoChildRoutes, { userId: string }>
-  & Route<'https://linkedin.com/in/:userId', 'linkedin', NoChildRoutes, { userId: string }>
-  & Route<'https://twitter.com/:userId', 'twitter', NoChildRoutes, { userId: string }>
-  & Route<'https://instagram.com/:userId', 'instagram', NoChildRoutes, { userId: string }>
-  & Route<'https://youtube.com/:userId', 'youtube', NoChildRoutes, { userId: string }>
+type MainRoutes = Route<'/', 'dashboard'> &
+  Route<'/time', 'time'> &
+  Route<'/team', 'team'> &
+  Route<'/agents', 'agents'> &
+  Route<'/sign-in', 'signIn'> &
+  Route<'/profile/:id', 'profile', ProfileRoutes, IdRouteParams> &
+  Route<'https://address.work/docs', 'docs'> &
+  Route<'/connect', 'connect', NoChildRoutes, { nonce?: string }> &
+  Route<'/download', 'download'> &
+  Route<'/invoice/:id', 'invoice', NoChildRoutes, IdRouteParams> &
+  Route<'/invoice', 'invoices'> &
+  Route<'/settings', 'settings'> &
+  Route<
+    'https://facebook.com/:userId',
+    'facebook',
+    NoChildRoutes,
+    { userId: string }
+  > &
+  Route<'https://t.me/:userId', 'telegram', NoChildRoutes, { userId: string }> &
+  Route<
+    'https://linkedin.com/in/:userId',
+    'linkedin',
+    NoChildRoutes,
+    { userId: string }
+  > &
+  Route<
+    'https://twitter.com/:userId',
+    'twitter',
+    NoChildRoutes,
+    { userId: string }
+  > &
+  Route<
+    'https://instagram.com/:userId',
+    'instagram',
+    NoChildRoutes,
+    { userId: string }
+  > &
+  Route<
+    'https://youtube.com/:userId',
+    'youtube',
+    NoChildRoutes,
+    { userId: string }
+  >
 
-type ProfileRoutes =
-  & Route<'/profile/:id/edit', 'edit', NoChildRoutes, IdRouteParams>
-
-/* eslint-enable */
+type ProfileRoutes = Route<
+  '/profile/:id/edit',
+  'edit',
+  NoChildRoutes,
+  IdRouteParams
+>
 
 export const routes: MainRoutes = {
   dashboard: {
@@ -74,6 +101,19 @@ export const routes: MainRoutes = {
     translateKeyDesktop: 'header.nav.team',
     translateKeyMobile: 'header.nav.team',
     icon: PeopleIcon,
+  },
+
+  agents: {
+    schema: '/agents',
+    build: () => '/agents',
+
+    desktopOrder: 1.7,
+    mobileOrder: 1.7,
+
+    showInMenu: true,
+    translateKeyDesktop: 'header.nav.agents',
+    translateKeyMobile: 'header.nav.agents',
+    icon: MagicWandIcon,
   },
 
   profile: {
@@ -197,6 +237,7 @@ export const AUTH_REQUIRED_ROUTES = new Set<string>([
   routes.dashboard.schema,
   routes.time.schema,
   routes.team.schema,
+  routes.agents.schema,
   routes.profile.schema,
   routes.invoices.schema,
   routes.settings.schema,

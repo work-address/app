@@ -148,6 +148,8 @@ export type TimeAgentSegment = {
   fromAt: string
   toAt: string
   state: 'running' | 'human_wait' | 'unknown' | 'untracked'
+  /** What the segment's state was judged on, as the normalizer names it. */
+  evidence?: string
 }
 
 export type TimeAgentRunsParams = {

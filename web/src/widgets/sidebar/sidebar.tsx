@@ -156,7 +156,12 @@ export const Sidebar = () => {
       return null
     }
 
-    if (route.schema === routes.team.schema && !canSeeTeam) {
+    // A viewer sees no agent runs, as no team: the API refuses them both.
+    if (
+      (route.schema === routes.team.schema ||
+        route.schema === routes.agents.schema) &&
+      !canSeeTeam
+    ) {
       return null
     }
 

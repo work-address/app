@@ -1,15 +1,19 @@
 import { useUnit } from 'effector-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
+import { Link } from 'react-router-dom'
 import styled from 'styled-components'
 
 import {
   $credentialRevoking,
   credentialRevokeRequested,
   credentialsQuery,
+  ownAgentsQuery,
   serverCredentialRows,
+  type CollectorHealth,
 } from '../model'
 
+import { routes } from '@/routes'
 import { Button, WorkspaceStatus } from '@/shared'
 
 const date = (value: string) => new Date(value).toLocaleDateString()
@@ -20,8 +24,9 @@ const date = (value: string) => new Date(value).toLocaleDateString()
  */
 export const TeamServers = () => {
   const { t } = useTranslation()
-  const { credentials, revoking, revoke } = useUnit({
+  const { credentials, agents, revoking, revoke } = useUnit({
     credentials: credentialsQuery.$data,
+    agents: ownAgentsQuery.$data,
     revoking: $credentialRevoking,
     revoke: credentialRevokeRequested,
   })
@@ -34,6 +39,29 @@ export const TeamServers = () => {
   if (rows.length === 0) {
     return null
   }
+
+  // A server's runs: its agent's, which the setup bound to the server's id.
+  const runsOf = (instanceId: string) => {
+    const agent = agents?.find((item) => item.bindings?.includes(instanceId))
+    const query = new URLSearchParams({ mode: 'fixed' })
+    if (agent) {
+      query.set('agent', agent.id)
+    }
+
+    return `${routes.agents.build()}?${query}`
+  }
+
+  const healthText = (health: CollectorHealth) =>
+    [
+      t('team.servers.health.queued', { count: health.queued }),
+      health.heldRuns > 0 &&
+        t('team.servers.health.held', { count: health.heldRuns }),
+      health.rejected > 0 &&
+        t('team.servers.health.rejected', { count: health.rejected }),
+      health.lost > 0 && t('team.servers.health.lost', { count: health.lost }),
+    ]
+      .filter(Boolean)
+      .join(' · ')
 
   return (
     <Root>
@@ -55,6 +83,27 @@ export const TeamServers = () => {
                       })
                     : t('team.servers.neverUsed')}
                 </Meta>
+                {row.health ? (
+                  <Meta
+                    data-warn={
+                      row.health.rejected > 0 ||
+                      row.health.lost > 0 ||
+                      undefined
+                    }
+                    title={
+                      row.lastHealthAt
+                        ? t('team.servers.health.reported', {
+                            date: new Date(row.lastHealthAt).toLocaleString(),
+                          })
+                        : undefined
+                    }
+                  >
+                    {healthText(row.health)}
+                  </Meta>
+                ) : null}
+                <RunsLink to={runsOf(row.instanceId)}>
+                  {t('team.servers.runs')}
+                </RunsLink>
               </Identity>
               {row.state === 'active' ? (
                 <Meta>
@@ -141,4 +190,16 @@ const Name = styled.span`
 const Meta = styled.span`
   color: var(--ui-muted);
   font-size: var(--ui-meta-size);
+
+  /* Runs the collector could not deliver need someone to look. */
+  &[data-warn] {
+    color: var(--red-11);
+  }
+`
+
+const RunsLink = styled(Link)`
+  justify-self: start;
+  color: var(--ui-blue);
+  font-size: var(--ui-meta-size);
+  line-height: var(--ui-meta-line-height);
 `

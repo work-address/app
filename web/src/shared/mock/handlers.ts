@@ -1020,11 +1020,23 @@ export const handlers: HttpHandler[] = [
           !body.toAt || Date.parse(run.fromAt) < Date.parse(String(body.toAt)),
       )
       .sort((a, b) => b.fromAt.localeCompare(a.fromAt))
-    const offset = Number(body.offset) || 0
-    return [
-      rows.slice(offset, offset + 100).map((run) => shapeRun(db, run, meId)),
-      rows.length,
+    const filters: [string, (run: ReturnType<typeof shapeRun>) => string][] = [
+      ['userId', (run) => run.userId],
+      ['agentId', (run) => run.agentId],
+      ['mode', (run) => run.measurement.mode],
+      ['status', (run) => run.status],
+      ['sessionId', (run) => run.sourceSessionId],
+      ['runKey', (run) => run.runKey],
     ]
+    const shaped = rows
+      .map((run) => shapeRun(db, run, meId))
+      .filter((run) =>
+        filters.every(
+          ([key, value]) => body[key] == null || value(run) === body[key],
+        ),
+      )
+    const offset = Number(body.offset) || 0
+    return [shaped.slice(offset, offset + 100), shaped.length]
   }),
   route(
     'delete',
