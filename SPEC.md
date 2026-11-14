@@ -230,6 +230,26 @@ everyone on the project's lists and the agents they run, and a worker sets their
 own agents' rates there. It adds no rule: it shows what "Who can see what" allows.
 A person who is only ever a viewer does not get the page.
 
+**Every recorded agent is supported the same way, and its label says how far.**
+Claude Code, Codex, OpenClaw, Hermes Agent and Kimi Code are recorded; each has,
+for each place it runs (a computer, a server), a status: available,
+experimental, or not recorded. An agent is available in a place only when all
+four hold:
+
+1. what it installs there is published (npm, PyPI);
+2. a live check on a named release of the agent passed: a successful, a failed,
+   an interrupted run and two runs at once reached the API as runs, and the
+   events collected are kept as fixtures that CI replays;
+3. the dashboard shows that agent's own install and setup steps;
+4. an API test uses its product id.
+
+Until then it is experimental. Known limits, such as waits not being recorded,
+are stated beside the label and do not block it. The dashboard, the collector and
+address.work read the one list in `@work-address/agent-tracking-contract`
+(`src/support.ts`); a server adapter runs without the experimental switch once
+its agent is available on servers. The check's steps are in
+`packages/agent-tracker/SERVER-RUNTIMES.md`, "Live check".
+
 The build order and the measurement rules are in `docs/agent-time-tracking.md`.
 
 ## Phone time and location

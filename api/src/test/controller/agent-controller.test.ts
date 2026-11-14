@@ -2,6 +2,7 @@ import { suite, test } from '@testdeck/mocha'
 import { expect } from 'chai'
 import axios from 'axios'
 import { randomUUID } from 'crypto'
+import { AGENT_SUPPORT } from '@work-address/agent-tracking-contract/support'
 import { BaseControllerTest } from '@/test/controller/base-controller.test'
 import { App } from '@/app/app'
 import { User } from '@/entity/user'
@@ -343,6 +344,60 @@ export class AgentControllerTest extends BaseControllerTest {
         })
       ).status,
     ).to.equal(400)
+  }
+  @test() async everyRecordedAgentIsAcceptedOnServers() {
+    const s = await this.scenario('fixed')
+    const products = AGENT_SUPPORT.filter(
+      (agent) => agent.servers.status !== 'none',
+    ).map((agent) => agent.product)
+    for (const [index, product] of products.entries()) {
+      // The worker runs each, attached to the project like their Codex.
+      if (product !== 'codex') {
+        const agent = await s.client.post('/agents', {
+          name: `My ${product}`,
+          slug: `my-${product}`,
+          product,
+          isDefault: true,
+          bindings: [],
+        })
+        expect(agent.status, product).to.equal(201)
+        expect(
+          (
+            await s.client.put(
+              `/project/${s.project.id}/agents/${agent.data.id}`,
+              { rateHourCents: 100 },
+            )
+          ).status,
+          product,
+        ).to.equal(200)
+      }
+      // Each agent is its own source with its own run.
+      const epoch = randomUUID()
+      const events = [
+        s.event('run.started', 0, index * 1000),
+        s.event('run.completed', 1, index * 1000 + 60000),
+      ].map((event) => ({
+        ...event,
+        source: { ...event.source, product, epoch },
+        sessionId: `session-${product}`,
+        runId: `run-${product}`,
+      }))
+      const uploaded = await s.uploader.post('/agent-tracking/events', {
+        events,
+      })
+      expect(uploaded.status, product).to.equal(200)
+      expect(
+        uploaded.data.results.map((r: { status: string }) => r.status),
+        product,
+      ).to.deep.equal(['accepted', 'accepted'])
+    }
+    const runs = await s.client.post('/agent-tracking/search', {
+      projectId: s.project.id,
+    })
+    expect(runs.status).to.equal(200)
+    expect(
+      runs.data[0].map((run: { product: string }) => run.product).sort(),
+    ).to.deep.equal([...products].sort())
   }
   @test() async searchFiltersRunsAndNamesTheirAgent() {
     const s = await this.scenario('fixed')
