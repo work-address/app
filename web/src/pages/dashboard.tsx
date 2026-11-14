@@ -13,7 +13,7 @@ import {
   $projects,
 } from '@/entities/projects'
 import { statisticsOverviewQuery } from '@/entities/statistics'
-import { $recentScreenshotsShown } from '@/entities/time'
+import { $recentLocationsShown, $recentScreenshotsShown } from '@/entities/time'
 import {
   DashboardAgents,
   DashboardApplicationsUsage,
@@ -30,6 +30,7 @@ import {
   DashboardProjectsSearchInput,
   DashboardSummary,
   $dashboardCanTrack,
+  $dashboardLocations,
   $dashboardProjectIds,
   $dashboardScreenshots,
   $isDashboardOwner,
@@ -42,7 +43,7 @@ import {
   ProjectsTable,
   type ProjectsTablePeriodTotals,
 } from '@/features/projects'
-import { TimeScreenshotStrip } from '@/features/time'
+import { TimeLocationsMap, TimeScreenshotStrip } from '@/features/time'
 import {
   Button,
   IconButton,
@@ -77,6 +78,8 @@ export default function DashboardPage() {
     selectedProjectIds,
     screenshots,
     screenshotsLoaded,
+    locations,
+    locationsLoaded,
     isOwner,
     canTrack,
   } = useUnit({
@@ -92,6 +95,8 @@ export default function DashboardPage() {
     selectedProjectIds: $dashboardProjectIds,
     screenshots: $dashboardScreenshots,
     screenshotsLoaded: $recentScreenshotsShown,
+    locations: $dashboardLocations,
+    locationsLoaded: $recentLocationsShown,
     isOwner: $isDashboardOwner,
     canTrack: $dashboardCanTrack,
   })
@@ -307,6 +312,15 @@ export default function DashboardPage() {
               <Tile variants={reveal.item} data-wide>
                 <DashboardWidget title={t('dashboard.screenshots.title')}>
                   <TimeScreenshotStrip entries={screenshots} />
+                </DashboardWidget>
+              </Tile>
+            )}
+            {/* Only where the filter holds phone time with a location the
+                reader may see: the server leaves the rest out. */}
+            {locationsLoaded && locations.length > 0 && (
+              <Tile variants={reveal.item} data-wide>
+                <DashboardWidget title={t('dashboard.locations.title')}>
+                  <TimeLocationsMap entries={locations} />
                 </DashboardWidget>
               </Tile>
             )}

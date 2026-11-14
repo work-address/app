@@ -774,6 +774,8 @@
   "dashboard.prompts.remove.success": "Промпт удалён",
   "dashboard.prompts.remove.failed": "Не удалось удалить промпт",
   "dashboard.screenshots.title": "Последние скриншоты",
+  "dashboard.locations.title": "Местоположения",
+  "dashboard.locations.mapLabel": "Где были телефоны участников за этот период",
   "dashboard.team.title": "Команда",
   "dashboard.team.person": "Человек",
   "dashboard.team.tracked": "Учтено",

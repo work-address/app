@@ -243,6 +243,40 @@ export const recentScreenshotsQuery = createQuery({
 
 concurrency(recentScreenshotsQuery, { strategy: 'TAKE_LATEST' })
 
+/** As many phone slices as a day's trail reads, the newest of the period. */
+const RECENT_LOCATIONS_PAGE = 500
+
+/**
+ * The newest phone entries matching the filter, for the dashboard's map. Each
+ * carries its fixes only where the reader may see its detail: the search
+ * holds them back under review, past retention, and from viewers.
+ */
+export const recentLocationsQuery = createQuery({
+  handler: async ({
+    fromAt,
+    toAt,
+    projectIds,
+    userIds,
+  }: RecentEntriesParams) => {
+    const [items] = (await runApiData(
+      () =>
+        baseApi.timeControllerSearch({
+          body: {
+            filter: { fromAt, toAt, projectIds, userIds, source: 'mobile' },
+            page: 0,
+            limit: RECENT_LOCATIONS_PAGE,
+            sort: { fromAt: 'DESC' },
+          },
+        }),
+      'in-place',
+    )) as [Time[], number]
+
+    return items ?? []
+  },
+})
+
+concurrency(recentLocationsQuery, { strategy: 'TAKE_LATEST' })
+
 /** Enough of someone's newest entries to hold their latest session. */
 const RECENT_TIME_PAGE = 100
 

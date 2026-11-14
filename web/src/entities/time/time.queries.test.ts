@@ -3,6 +3,7 @@ import { allSettled, fork } from 'effector'
 import { beforeEach, describe, expect, it, vi } from 'vitest'
 
 import {
+  recentLocationsQuery,
   recentScreenshotsQuery,
   timeAgentRunsQuery,
   timeQuery,
@@ -14,10 +15,11 @@ import {
   $timeLoading,
 } from './time.stores'
 
-const { search, agentSearch, remove } = vi.hoisted(() => ({
+const { search, agentSearch, remove, removeLocations } = vi.hoisted(() => ({
   search: vi.fn(),
   agentSearch: vi.fn(),
   remove: vi.fn(),
+  removeLocations: vi.fn(),
 }))
 vi.mock('./ui', () => ({ TimeEmptyState: () => null }))
 vi.mock('@/shared', async () => {
@@ -30,6 +32,7 @@ vi.mock('@/shared', async () => {
     baseApi: {
       timeControllerSearch: search,
       timeControllerDelete: remove,
+      timeControllerRemoveLocations: removeLocations,
       agentControllerSearch: agentSearch,
     },
     runApi,
@@ -41,6 +44,7 @@ vi.mock('@/shared', async () => {
 beforeEach(() => {
   search.mockReset()
   remove.mockReset()
+  removeLocations.mockReset()
 })
 
 describe('time search reliability', () => {
@@ -213,5 +217,60 @@ describe('the screenshot strip after an entry changes', () => {
     await allSettled(deleteTimeMutation.start, { scope, params: ['a'] })
 
     expect(search).not.toHaveBeenCalled()
+  })
+})
+
+describe("the dashboard's map", () => {
+  const asked = {
+    fromAt: 'from',
+    toAt: 'to',
+    projectIds: ['p'],
+    userIds: ['u'],
+  }
+  const phone = (id: string) => ({ id, source: 'mobile', locations: [] })
+
+  it('asks for the newest phone time under the same filter', async () => {
+    const scope = fork()
+    search.mockResolvedValueOnce({ data: [[phone('a')], 1] })
+
+    await allSettled(recentLocationsQuery.start, { scope, params: asked })
+
+    expect(search.mock.calls[0][0].body).toMatchObject({
+      filter: { ...asked, source: 'mobile' },
+      sort: { fromAt: 'DESC' },
+    })
+    expect(scope.getState(recentLocationsQuery.$data)).toEqual([phone('a')])
+  })
+
+  it("is read again after an entry's location is removed, and stays shown meanwhile", async () => {
+    const { removeTimeLocationsMutation, $recentLocationsShown } = await import(
+      './index'
+    )
+    const scope = fork()
+    search.mockResolvedValueOnce({ data: [[phone('a'), phone('b')], 2] })
+    await allSettled(recentLocationsQuery.start, { scope, params: asked })
+
+    let answer!: (value: unknown) => void
+    search.mockReturnValueOnce(
+      new Promise((resolve) => {
+        answer = resolve
+      }),
+    )
+    removeLocations.mockResolvedValueOnce({ data: {} })
+    const settled = allSettled(removeTimeLocationsMutation.start, {
+      scope,
+      params: ['a'],
+    })
+    await new Promise((resolve) => setTimeout(resolve, 0))
+
+    expect(search.mock.calls[1][0].body.filter).toMatchObject({
+      ...asked,
+      source: 'mobile',
+    })
+    expect(scope.getState($recentLocationsShown)).toBe(true)
+
+    answer({ data: [[phone('b')], 1] })
+    await settled
+    expect(scope.getState(recentLocationsQuery.$data)).toEqual([phone('b')])
   })
 })

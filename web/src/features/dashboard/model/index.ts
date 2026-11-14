@@ -19,6 +19,7 @@ export {
   $dashboardInstants,
   $dashboardPeople,
   $dashboardScreenshots,
+  $dashboardLocations,
   $dashboardProjectIds,
   $dashboardProjects,
   $dashboardRange,

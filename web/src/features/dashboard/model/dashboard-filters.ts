@@ -20,6 +20,7 @@ import {
 } from '@/entities/statistics'
 import {
   recentAgentRunsQuery,
+  recentLocationsQuery,
   recentScreenshotsQuery,
   recentTimeQuery,
   type RecentTimeParams,
@@ -27,6 +28,7 @@ import {
 import {
   DEFAULT_DATE_RANGE_PRESET,
   fromDay,
+  hasFix,
   rangeLengthDays,
   toDay,
   parseDateRange,
@@ -300,7 +302,8 @@ sample({
     projectIds,
     userIds,
   }),
-  target: recentScreenshotsQuery.start,
+  // The map follows the same filter as the screenshots, phone time only.
+  target: [recentScreenshotsQuery.start, recentLocationsQuery.start],
 })
 
 // Ownership is only known once the projects arrive, which can be after the
@@ -316,6 +319,14 @@ sample({
 /** The newest screenshots matching the filter. */
 export const $dashboardScreenshots = recentScreenshotsQuery.$data.map(
   (entries) => entries ?? [],
+)
+
+/**
+ * The newest phone entries matching the filter that the reader may see a
+ * location on: the search leaves the fixes off the others.
+ */
+export const $dashboardLocations = recentLocationsQuery.$data.map((entries) =>
+  (entries ?? []).filter((entry) => hasFix(entry.locations)),
 )
 
 /** Asks again for the reader's latest session, after a failure. */

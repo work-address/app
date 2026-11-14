@@ -767,6 +767,8 @@
   "dashboard.prompts.remove.success": "Prompt eliminado",
   "dashboard.prompts.remove.failed": "No se pudo eliminar el prompt",
   "dashboard.screenshots.title": "Capturas recientes",
+  "dashboard.locations.title": "Ubicaciones",
+  "dashboard.locations.mapLabel": "Dónde estaban los teléfonos de los colaboradores en este periodo",
   "dashboard.team.title": "Equipo",
   "dashboard.team.person": "Persona",
   "dashboard.team.tracked": "Registrado",

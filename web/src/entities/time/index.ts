@@ -21,6 +21,7 @@ import {
   setTimePaidStatusMutation,
 } from './time.mutations'
 import {
+  recentLocationsQuery,
   recentScreenshotsQuery,
   timeQuery,
   type RecentEntriesParams,
@@ -99,43 +100,56 @@ sample({
 })
 
 /**
- * The dashboard's screenshot strip is a query result, kept as it arrived, so
- * a change to an entry does not reach it by itself. After any such change it
- * is read again with what it was last asked.
+ * The dashboard's screenshot strip and map are query results, kept as they
+ * arrived, so a change to an entry does not reach them by themselves. After
+ * any such change each is read again with what it was last asked.
+ *
+ * Returns whether the widget has something to show: loaded, or loaded before
+ * and being read again. A widget that vanished during its own refresh would
+ * take the open entry with it.
  */
-const $recentScreenshotsParams = createStore<RecentEntriesParams | null>(
-  null,
-).on(recentScreenshotsQuery.start, (_, params) => params)
-const recentScreenshotsRefreshed = createEvent()
-const $recentScreenshotsRefreshing = createStore(false)
-  .on(recentScreenshotsRefreshed, () => true)
-  .on(recentScreenshotsQuery.finished.finally, () => false)
+const keepFreshAfterEntryChanges = (
+  query: typeof recentScreenshotsQuery | typeof recentLocationsQuery,
+) => {
+  const $params = createStore<RecentEntriesParams | null>(null).on(
+    query.start,
+    (_, params) => params,
+  )
+  const refreshed = createEvent()
+  const $refreshing = createStore(false)
+    .on(refreshed, () => true)
+    .on(query.finished.finally, () => false)
 
-sample({
-  clock: [
-    deleteTimeMutation.finished.success,
-    editTimeMutation.finished.success,
-    setTimePaidStatusMutation.finished.success,
-    removeTimeScreenshotMutation.finished.success,
-    removeTimeProcessesMutation.finished.success,
-    removeTimeLocationsMutation.finished.success,
-    timeEntriesInvoiced,
-  ],
-  source: $recentScreenshotsParams,
-  filter: (params): params is RecentEntriesParams => params !== null,
-  target: [recentScreenshotsRefreshed, recentScreenshotsQuery.start],
-})
+  sample({
+    clock: [
+      deleteTimeMutation.finished.success,
+      editTimeMutation.finished.success,
+      setTimePaidStatusMutation.finished.success,
+      removeTimeScreenshotMutation.finished.success,
+      removeTimeProcessesMutation.finished.success,
+      removeTimeLocationsMutation.finished.success,
+      timeEntriesInvoiced,
+    ],
+    source: $params,
+    filter: (params): params is RecentEntriesParams => params !== null,
+    target: [refreshed, query.start],
+  })
 
-/**
- * Whether the strip has screenshots to show: loaded, or loaded before and
- * being read again. A strip that vanished during its own refresh would take
- * the open entry with it.
- */
-export const $recentScreenshotsShown = combine(
-  recentScreenshotsQuery.$succeeded,
-  $recentScreenshotsRefreshing,
-  (succeeded, refreshing) => succeeded || refreshing,
+  return combine(
+    query.$succeeded,
+    $refreshing,
+    (succeeded, refreshing) => succeeded || refreshing,
+  )
+}
+
+/** Whether the dashboard's screenshot strip has screenshots to show. */
+export const $recentScreenshotsShown = keepFreshAfterEntryChanges(
+  recentScreenshotsQuery,
 )
+
+/** Whether the dashboard's map has phone entries to show. */
+export const $recentLocationsShown =
+  keepFreshAfterEntryChanges(recentLocationsQuery)
 
 sample({
   clock: [resetTimeSort, appendTimeSort, resetTimeFilters],
@@ -178,6 +192,7 @@ export {
 
 export {
   recentAgentRunsQuery,
+  recentLocationsQuery,
   recentScreenshotsQuery,
   recentTimeQuery,
   timeAgentRunsQuery,

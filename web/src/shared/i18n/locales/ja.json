@@ -761,6 +761,8 @@
   "dashboard.prompts.remove.success": "プロンプトを削除しました",
   "dashboard.prompts.remove.failed": "プロンプトを削除できませんでした",
   "dashboard.screenshots.title": "最近のスクリーンショット",
+  "dashboard.locations.title": "位置情報",
+  "dashboard.locations.mapLabel": "この期間にコントリビューターのスマートフォンがあった場所",
   "dashboard.team.title": "チーム",
   "dashboard.team.person": "メンバー",
   "dashboard.team.tracked": "記録",

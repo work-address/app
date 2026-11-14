@@ -761,6 +761,8 @@
   "dashboard.prompts.remove.success": "提示词已移除",
   "dashboard.prompts.remove.failed": "无法移除提示词",
   "dashboard.screenshots.title": "最近的截图",
+  "dashboard.locations.title": "位置",
+  "dashboard.locations.mapLabel": "此期间贡献者手机所在的位置",
   "dashboard.team.title": "团队",
   "dashboard.team.person": "人员",
   "dashboard.team.tracked": "记录",

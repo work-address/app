@@ -35,6 +35,12 @@ export {
   stripEntryOpened,
 } from './time-screenshot-strip.model'
 export {
+  $mapEntryId,
+  mapEntryClosed,
+  mapEntryOpened,
+} from './time-locations-map.model'
+export { getTimeLocations, type TimeLocations } from './time-locations'
+export {
   $isTimeDialogOpen,
   $selectedTimeEntry,
   $selectedTimeId,

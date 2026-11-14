@@ -5,6 +5,7 @@ export {
   $dashboardDesktopSession,
   $dashboardProjectIds,
   $dashboardScreenshots,
+  $dashboardLocations,
   $isDashboardOwner,
   dashboardStatisticsRequested,
 } from './model/dashboard-filters'
