@@ -125,6 +125,9 @@ export class AgentControllerTest extends BaseControllerTest {
     const metadata = (await s.client.get('/agent-tracking/credentials')).data
     expect(JSON.stringify(metadata)).not.to.contain(s.issued.credential)
     expect(metadata[0]).not.to.have.property('secretHash')
+    // The id is what revoking it takes.
+    expect(metadata[0].id).to.equal(s.issued.id)
+    expect(metadata[0].createdAt).to.be.a('string')
     expect((await s.uploader.post('/project/search', {})).status).to.equal(401)
     expect(
       (

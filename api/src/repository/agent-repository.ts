@@ -162,8 +162,13 @@ export class AgentRepository {
     }
   }
 
+  /**
+   * Plain objects, not entities: the base entity exposes `id` and `createdAt`
+   * only to some serialization groups, and an entity returned as is would
+   * reach the client without the id that revoking it takes.
+   */
   public async credentials(user: User) {
-    return getDataSource()
+    const credentials = await getDataSource()
       .getRepository(AgentCredential)
       .find({
         where: { userId: user.id },
@@ -183,6 +188,7 @@ export class AgentRepository {
         order: { createdAt: 'DESC' },
         take: 100,
       })
+    return credentials.map((credential) => ({ ...credential }))
   }
 
   public async revoke(user: User, id: string): Promise<void> {
