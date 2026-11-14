@@ -1,4 +1,3 @@
-import { CodeIcon, LightningBoltIcon } from '@radix-ui/react-icons'
 import { useUnit } from 'effector-react'
 import { useMemo } from 'react'
 import { useTranslation } from 'react-i18next'
@@ -15,6 +14,7 @@ import { DashboardWidget } from '../dashboard-widget'
 import { $user } from '@/entities/profile'
 import { $removedPromptRunKeys, recentAgentRunsQuery } from '@/entities/time'
 import {
+  AgentMark,
   AgentPromptRemoveButton,
   canRemoveAgentPrompt,
   PRODUCT_NAMES,
@@ -24,7 +24,6 @@ import {
   formatCompactDurationFromMinutes,
   formatDurationFromMinutes,
   toDay,
-  workspaceDesign,
 } from '@/shared'
 
 const VISIBLE_PROMPTS = 8
@@ -112,17 +111,7 @@ export const DashboardRecentPrompts = () => {
                 })}`}
               >
                 <Icon aria-hidden="true">
-                  {run.product === 'codex' ? (
-                    <LightningBoltIcon
-                      width={workspaceDesign.icon.size}
-                      height={workspaceDesign.icon.size}
-                    />
-                  ) : (
-                    <CodeIcon
-                      width={workspaceDesign.icon.size}
-                      height={workspaceDesign.icon.size}
-                    />
-                  )}
+                  <AgentMark product={run.product} size={20} />
                 </Icon>
                 <Body>
                   <Product>{PRODUCT_NAMES[run.product] ?? run.product}</Product>
@@ -209,8 +198,6 @@ const Icon = styled.span`
   width: var(--ui-space-7);
   height: var(--ui-space-7);
   border-radius: var(--ui-icon-radius);
-  color: var(--ui-blue);
-  background: var(--ui-glow);
 `
 
 const Body = styled.div`

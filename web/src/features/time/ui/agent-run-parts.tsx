@@ -1,3 +1,8 @@
+import { Badge } from '@radix-ui/themes'
+import {
+  AGENT_SUPPORT,
+  type AgentSupportStatus,
+} from '@work-address/agent-tracking-contract/support'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
 
@@ -26,9 +31,137 @@ export const PRODUCT_NAMES: Record<string, string> = {
   'kimi-code': 'Kimi Code',
   'kimi-cli': 'Kimi CLI',
   openclaw: 'OpenClaw',
-  hermes: 'Hermes',
+  hermes: 'Hermes Agent',
   opencode: 'OpenCode',
+  // The shared support list names the agents it records.
+  ...Object.fromEntries(
+    AGENT_SUPPORT.map((agent) => [agent.product, agent.name]),
+  ),
 }
+
+/** Where a run was recorded: a server's collector or the desktop app. */
+export type AgentRunPlace = 'fixed' | 'timer'
+
+const supportOf = (product: string) =>
+  AGENT_SUPPORT.find((agent) => agent.product === product)
+
+/** How far recording this agent in this place is supported; null if it is not listed. */
+export const agentSupportStatus = (
+  product: string,
+  place: AgentRunPlace,
+): AgentSupportStatus | null => {
+  const agent = supportOf(product)
+
+  if (!agent) {
+    return null
+  }
+
+  return place === 'fixed' ? agent.servers.status : agent.computer.status
+}
+
+/** The agent's collector never sends a prompt from servers, so none is missing. */
+export const agentSendsNoPrompt = (
+  product: string,
+  place: AgentRunPlace,
+): boolean => place === 'fixed' && supportOf(product)?.servers.prompts === false
+
+/**
+ * "Available" or "Experimental" for an agent in one place, with its known
+ * limits on hover. Nothing for an agent the list does not record there.
+ */
+export const AgentSupportBadge = ({
+  product,
+  place,
+}: {
+  product: string
+  place: AgentRunPlace
+}) => {
+  const { t } = useTranslation()
+  const status = agentSupportStatus(product, place)
+
+  if (!status || status === 'none') {
+    return null
+  }
+
+  const agent = supportOf(product)
+  const name = agent?.name ?? product
+  const limits =
+    place === 'fixed'
+      ? (agent?.servers.limits ?? []).map((limit) =>
+          t(`agents.support.limit.${limit}`, {
+            product: name,
+            versions: agent?.servers.versions.join(', '),
+          }),
+        )
+      : []
+  const title = [
+    status === 'experimental'
+      ? t('agents.support.experimentalHint', { product: name })
+      : null,
+    ...limits,
+  ]
+    .filter(Boolean)
+    .join(' ')
+
+  return (
+    <Badge
+      color={status === 'available' ? 'green' : 'amber'}
+      variant="soft"
+      size="1"
+      title={title || undefined}
+    >
+      {t(`agents.support.${status}`)}
+    </Badge>
+  )
+}
+
+// Two letters each, so the agents tell apart without their makers' logos.
+const AGENT_MARKS: Record<string, { text: string; color: string }> = {
+  'claude-code': { text: 'CC', color: 'var(--orange-9)' },
+  codex: { text: 'Cx', color: 'var(--gray-12)' },
+  openclaw: { text: 'OC', color: 'var(--red-9)' },
+  hermes: { text: 'HA', color: 'var(--violet-9)' },
+  'kimi-code': { text: 'KC', color: 'var(--blue-9)' },
+}
+
+/** A small square mark for an agent; others get the first letters of their name. */
+export const AgentMark = ({
+  product,
+  size = 16,
+}: {
+  product: string
+  size?: number
+}) => {
+  const mark = AGENT_MARKS[product] ?? {
+    text: (PRODUCT_NAMES[product] ?? product).slice(0, 2),
+    color: 'var(--gray-9)',
+  }
+
+  return (
+    <Mark
+      aria-hidden="true"
+      style={{
+        width: size,
+        height: size,
+        fontSize: Math.round(size * 0.5),
+        background: mark.color,
+      }}
+    >
+      {mark.text}
+    </Mark>
+  )
+}
+
+const Mark = styled.span`
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  border-radius: 4px;
+  color: var(--gray-1);
+  font-weight: var(--ui-weight-medium);
+  line-height: 1;
+  letter-spacing: -0.02em;
+`
 
 export const SURFACE_NAMES: Record<string, string> = {
   cli: 'CLI',

@@ -1,3 +1,10 @@
+import {
+  AGENT_SUPPORT,
+  type AgentLimit,
+  type AgentServerSupport,
+  type AgentSupportStatus,
+} from '@work-address/agent-tracking-contract/support'
+
 import type {
   AgentCredential,
   ServerCredentialRow,
@@ -6,40 +13,62 @@ import type {
 
 /**
  * Runtimes whose collector adapter records run boundaries, in the order
- * offered. OpenCode's reports session status only, which bills nothing, so it
- * is not offered a rate here.
+ * offered: every agent the shared support list records on servers. OpenCode's
+ * reports session status only, which bills nothing, so it is not listed.
  */
 export const SERVER_PRODUCTS = [
-  'openclaw',
-  'hermes',
   'claude-code',
   'codex',
+  'openclaw',
+  'hermes',
   'kimi-code',
 ] as const
 
 export type ServerProduct = (typeof SERVER_PRODUCTS)[number]
 
-/** Brand names, so they are not translated. */
-export const SERVER_PRODUCT_NAMES: Record<ServerProduct, string> = {
-  openclaw: 'OpenClaw',
-  hermes: 'Hermes',
-  'claude-code': 'Claude Code',
-  codex: 'Codex',
-  'kimi-code': 'Kimi Code',
+const support = (product: ServerProduct): AgentServerSupport => {
+  const found = AGENT_SUPPORT.find((agent) => agent.product === product)
+
+  if (!found) {
+    throw new Error(`No support entry for ${product}`)
+  }
+
+  return found.servers
 }
+
+/** Brand names, so they are not translated. */
+export const SERVER_PRODUCT_NAMES = Object.fromEntries(
+  SERVER_PRODUCTS.map((product) => [
+    product,
+    AGENT_SUPPORT.find((agent) => agent.product === product)?.name ?? product,
+  ]),
+) as Record<ServerProduct, string>
 
 /** Runtimes whose collector sends the prompt that starts a run. */
 export const sendsPrompts = (product: ServerProduct): boolean =>
-  product === 'claude-code' || product === 'codex'
+  support(product).prompts
 
-// `dev` is the repository's default branch.
-const REPOSITORY = 'https://github.com/work-address/app/blob/dev/packages'
+/** Available once the agent passed its live check on servers; else experimental. */
+export const serverStatus = (product: ServerProduct): AgentSupportStatus =>
+  support(product).status
+
+/** The gaps the agent's server recording is known to have. */
+export const serverLimits = (product: ServerProduct): AgentLimit[] =>
+  support(product).limits
+
+/** Agent releases the live check passed on; empty until one did. */
+export const serverVersions = (product: ServerProduct): string[] =>
+  support(product).versions
+
+/** What to run on the server before the setup command, one line per step. */
+export const installCommand = (product: ServerProduct): string =>
+  support(product).install.join('\n')
+
+const REPOSITORY = 'https://github.com/work-address/app/blob/main'
 
 /** Where the collector's install steps for a runtime are written down. */
 export const setupGuideUrl = (product: ServerProduct): string =>
-  product === 'openclaw'
-    ? `${REPOSITORY}/agent-tracker-openclaw/README.md`
-    : `${REPOSITORY}/agent-tracker/SERVER-RUNTIMES.md`
+  `${REPOSITORY}/${support(product).guide}`
 
 /** What the API takes as a name: 1 to 60 characters, no markup, no control codes. */
 export const isAgentName = (name: string): boolean =>
@@ -133,3 +162,8 @@ export const serverCredentialRows = (
         lastHealthAt: credential.lastHealthAt ?? null,
       }
     })
+
+export {
+  type AgentLimit,
+  type AgentSupportStatus,
+} from '@work-address/agent-tracking-contract/support'

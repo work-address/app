@@ -4,6 +4,7 @@ import styled from 'styled-components'
 
 import {
   eventsEndpoint,
+  installCommand,
   SERVER_PRODUCT_NAMES,
   setupCommand,
   setupGuideUrl,
@@ -81,7 +82,12 @@ export const TeamServerSetupResult = ({ setup }: Props) => {
       <List>
         <Item>
           <Step>
-            <Label>{t('team.serverSetup.step.install')}</Label>
+            <Label>{t('team.serverSetup.step.install', { product })}</Label>
+            <Copyable
+              text={installCommand(setup.product)}
+              action={t('team.serverSetup.copyInstall')}
+              copied={t('team.serverSetup.installCopied')}
+            />
             <Guide
               href={setupGuideUrl(setup.product)}
               target="_blank"
@@ -178,6 +184,7 @@ const Guide = styled.a`
 
 const Code = styled.code`
   display: block;
+  white-space: pre-wrap;
   padding: var(--ui-space-3);
   border: var(--ui-border-width) solid var(--ui-line);
   border-radius: var(--ui-row-radius);

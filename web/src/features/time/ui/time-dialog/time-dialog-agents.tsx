@@ -8,6 +8,7 @@ import styled from 'styled-components'
 import { canRemoveAgentPrompt } from '../../model/agent-prompt.model'
 import { AgentPromptRemoveButton } from '../agent-prompt-remove-button'
 import {
+  AgentMark,
   agentRunStatus,
   AgentRunTimeline,
   type AgentRunSummary,
@@ -120,7 +121,7 @@ export const TimeDialogAgents = ({ items, userId }: TimeDialogAgentsProps) => {
           return (
             <Card key={run.runKey}>
               <Flex align="center" gap="2" minWidth="0">
-                <Avatar aria-hidden>{name.slice(0, 1)}</Avatar>
+                <AgentMark product={run.product} size={24} />
                 <Flex direction="column" minWidth="0" flexGrow="1">
                   <Text size="2" weight="medium" truncate>
                     {name}
@@ -230,20 +231,6 @@ const Card = styled.div`
   border: 1px solid var(--ui-line);
   border-radius: var(--ui-filter-radius);
   background: var(--ui-surface);
-`
-
-const Avatar = styled.span`
-  display: inline-flex;
-  align-items: center;
-  justify-content: center;
-  flex-shrink: 0;
-  width: var(--ui-space-6);
-  height: var(--ui-space-6);
-  border-radius: var(--ui-row-radius);
-  background: var(--ui-glow);
-  color: var(--ui-blue);
-  font-size: var(--ui-meta-size);
-  font-weight: 600;
 `
 
 const PromptRow = styled.div`

@@ -12,8 +12,11 @@ import { agentRunName, type AgentRunNames } from './agent-run-list'
 
 import { $removedPromptRunKeys } from '@/entities/time'
 import {
+  AgentMark,
   AgentPromptRemoveButton,
   agentRunStatus,
+  agentSendsNoPrompt,
+  AgentSupportBadge,
   AgentRunTimeline,
   canRemoveAgentPrompt,
   Dot,
@@ -173,10 +176,11 @@ export const AgentRunDialog = ({
     >
       <Body>
         <Heading>
-          <Meta>
+          <ProductLine>
+            <AgentMark product={run.product} />
             {product}
             {surface ? ` · ${surface}` : null}
-          </Meta>
+          </ProductLine>
           <Badge
             color={mode === 'fixed' ? 'violet' : 'gray'}
             variant="soft"
@@ -191,6 +195,7 @@ export const AgentRunDialog = ({
           >
             {t(`dashboard.worklogsTable.agents.status.${status ?? 'unknown'}`)}
           </Badge>
+          <AgentSupportBadge product={run.product} place={mode} />
         </Heading>
         <Facts>
           {facts.map(([label, value]) => (
@@ -213,7 +218,9 @@ export const AgentRunDialog = ({
             <Meta>
               {run.promptPendingReview
                 ? t('dashboard.prompts.held')
-                : t('agents.list.noPrompt')}
+                : agentSendsNoPrompt(run.product, mode)
+                  ? t('agents.list.noPromptFromAgent')
+                  : t('agents.list.noPrompt')}
             </Meta>
           )}
         </Section>
@@ -440,4 +447,10 @@ const NeighbourPrompt = styled.span`
   white-space: nowrap;
   color: var(--ui-text);
   font-size: var(--ui-meta-size);
+`
+
+const ProductLine = styled(Meta)`
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-1);
 `

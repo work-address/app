@@ -1,11 +1,15 @@
+import { AGENT_SUPPORT } from '@work-address/agent-tracking-contract/support'
 import { describe, expect, it } from 'vitest'
 
 import {
   agentSlug,
   eventsEndpoint,
+  installCommand,
   isAgentName,
   sendsPrompts,
+  SERVER_PRODUCT_NAMES,
   SERVER_PRODUCTS,
+  serverStatus,
   serverCredentialRows,
   setupCommand,
   setupGuideUrl,
@@ -53,6 +57,37 @@ describe('SERVER_PRODUCTS', () => {
   it('leaves out OpenCode, whose adapter records nothing billable', () => {
     expect(SERVER_PRODUCTS).not.toContain('opencode')
   })
+
+  it('offers every agent the support list records on servers, in its order', () => {
+    expect(SERVER_PRODUCTS).toEqual(
+      AGENT_SUPPORT.filter((agent) => agent.servers.status !== 'none').map(
+        (agent) => agent.product,
+      ),
+    )
+  })
+
+  it('names Hermes as its makers do', () => {
+    expect(SERVER_PRODUCT_NAMES.hermes).toBe('Hermes Agent')
+  })
+})
+
+describe('serverStatus', () => {
+  it('says experimental until an agent passed its live check', () => {
+    expect(SERVER_PRODUCTS.map(serverStatus)).toEqual(
+      SERVER_PRODUCTS.map(() => 'experimental'),
+    )
+  })
+})
+
+describe('installCommand', () => {
+  it('installs the collector, and the plugin an agent needs', () => {
+    for (const product of SERVER_PRODUCTS) {
+      expect(installCommand(product)).toContain('@work-address/agent-tracker')
+    }
+    expect(installCommand('openclaw')).toContain('agent-tracker-openclaw')
+    expect(installCommand('hermes')).toContain('pip install')
+    expect(installCommand('kimi-code')).toContain('~/.kimi-code/config.toml')
+  })
 })
 
 describe('sendsPrompts', () => {
@@ -60,6 +95,7 @@ describe('sendsPrompts', () => {
     expect(SERVER_PRODUCTS.filter(sendsPrompts)).toEqual([
       'claude-code',
       'codex',
+      'kimi-code',
     ])
   })
 })
@@ -94,9 +130,11 @@ describe('setupCommand', () => {
 })
 
 describe('setupGuideUrl', () => {
-  it('sends OpenClaw to its own plugin guide', () => {
+  it('sends each agent to its own section on the default branch', () => {
     expect(setupGuideUrl('openclaw')).toContain('agent-tracker-openclaw')
-    expect(setupGuideUrl('codex')).toContain('SERVER-RUNTIMES.md')
+    expect(setupGuideUrl('codex')).toContain('SERVER-RUNTIMES.md#')
+    expect(setupGuideUrl('hermes')).toContain('#hermes-agent')
+    expect(setupGuideUrl('kimi-code')).toContain('/blob/main/')
   })
 })
 

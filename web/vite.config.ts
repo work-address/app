@@ -80,6 +80,10 @@ export default defineConfig(({ command, mode }) => {
           __dirname,
           '../packages/statistics-core/src/index.ts',
         ),
+        '@work-address/agent-tracking-contract/support': path.resolve(
+          __dirname,
+          '../packages/agent-tracking-contract/src/support.ts',
+        ),
       },
     },
     optimizeDeps: {

@@ -25,13 +25,19 @@ export {
 } from './server-setup.model'
 export {
   eventsEndpoint,
+  installCommand,
   isAgentName,
   SERVER_PRODUCT_NAMES,
   SERVER_PRODUCTS,
   sendsPrompts,
   serverCredentialRows,
+  serverLimits,
+  serverStatus,
+  serverVersions,
   setupCommand,
   setupGuideUrl,
+  type AgentLimit,
+  type AgentSupportStatus,
 } from './server-agent'
 export type { ServerProduct } from './server-agent'
 export type {

@@ -25,6 +25,9 @@
       "@/*": ["./src/*"],
       "@work-address/statistics-core": [
         "../packages/statistics-core/src/index.ts"
+      ],
+      "@work-address/agent-tracking-contract/support": [
+        "../packages/agent-tracking-contract/src/support.ts"
       ]
     }
   },
@@ -32,7 +35,8 @@
     "src/**/*.ts",
     "src/**/*.tsx",
     ".storybook/preview.tsx",
-    "../packages/statistics-core/src/**/*.ts"
+    "../packages/statistics-core/src/**/*.ts",
+    "../packages/agent-tracking-contract/src/support.ts"
   ],
   "exclude": ["node_modules"]
 }

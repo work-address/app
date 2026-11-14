@@ -272,7 +272,12 @@ const APPS = [
   'Zoom',
   'Linear',
 ]
-const PRODUCTS = ['claude-code', 'codex', 'cursor']
+/** The agents the shared support list records; the last three on servers only. */
+const PRODUCTS = ['claude-code', 'codex', 'openclaw', 'hermes', 'kimi-code']
+const SERVER_ONLY = new Set(['openclaw', 'hermes', 'kimi-code'])
+/** Their server collectors send no prompt (agent-tracking-contract support). */
+const NO_PROMPT = new Set(['openclaw', 'hermes'])
+const NO_WAITS = SERVER_ONLY
 const PROMPTS = [
   'Fix the flaky login test and explain the race',
   'Add pagination to the invoices endpoint',
@@ -710,12 +715,16 @@ function makeRun(
     casing: 'lower',
     prefix: '',
   })
+  const product = f.helpers.arrayElement(PRODUCTS)
+  const prompt =
+    f.number.float() < 0.85 ? f.helpers.arrayElement(PROMPTS) : null
   return {
     runKey,
     userId,
     projectId,
     agentId: f.string.uuid(),
-    product: f.helpers.arrayElement(PRODUCTS),
+    product,
+    ...(SERVER_ONLY.has(product) ? { mode: 'fixed' as const } : {}),
     surface: 'cli',
     fromAt: iso(start),
     toAt: iso(end),
@@ -732,7 +741,8 @@ function makeRun(
         evidence: 'demo',
       },
       {
-        state: 'human_wait',
+        // These collectors record no waits: the pause shows as running.
+        state: NO_WAITS.has(product) ? 'running' : 'human_wait',
         fromAt: iso(start + running),
         toAt: iso(start + running + wait),
         evidence: 'demo',
@@ -744,7 +754,7 @@ function makeRun(
         evidence: 'demo',
       },
     ].filter((s) => Date.parse(s.toAt) > Date.parse(s.fromAt)) as MockSegment[],
-    prompt: f.number.float() < 0.85 ? f.helpers.arrayElement(PROMPTS) : null,
+    prompt: NO_PROMPT.has(product) ? null : prompt,
     invoiceId: null,
     isPaid: false,
   }

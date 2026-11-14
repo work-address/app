@@ -1,3 +1,4 @@
+import { Badge } from '@radix-ui/themes'
 import { useState, type FormEvent } from 'react'
 import { useTranslation } from 'react-i18next'
 import styled from 'styled-components'
@@ -8,6 +9,9 @@ import {
   SERVER_PRODUCT_NAMES,
   SERVER_PRODUCTS,
   sendsPrompts,
+  serverLimits,
+  serverStatus,
+  serverVersions,
   type ServerAgentForm,
   type ServerProduct,
   type TeamProjectData,
@@ -40,13 +44,21 @@ export const TeamServerSetupForm = ({
   onSubmit,
 }: Props) => {
   const { t } = useTranslation()
-  const [product, setProduct] = useState<ServerProduct>('openclaw')
+  const [product, setProduct] = useState<ServerProduct>(SERVER_PRODUCTS[0])
   const productName = SERVER_PRODUCT_NAMES[product]
   // Null until typed: the suggested name then follows the runtime.
   const [typedName, setTypedName] = useState<string | null>(null)
   const [projectId, setProjectId] = useState(projects[0]?.id ?? '')
   const [rate, setRate] = useState('0')
   const [submitted, setSubmitted] = useState(false)
+
+  const status = serverStatus(product)
+  const limits = serverLimits(product).map((limit) =>
+    t(`agents.support.limit.${limit}`, {
+      product: productName,
+      versions: serverVersions(product).join(', '),
+    }),
+  )
 
   const name =
     typedName ?? t('team.serverSetup.defaultName', { product: productName })
@@ -78,6 +90,25 @@ export const TeamServerSetupForm = ({
         onChange={(value) => setProduct(String(value) as ServerProduct)}
         inputProps={{ ...STACKED, disabled: disabled || agentSettled }}
       />
+      <Support>
+        <Badge
+          color={status === 'available' ? 'green' : 'amber'}
+          variant="soft"
+          size="1"
+        >
+          {t(`agents.support.${status}`)}
+        </Badge>
+        <Notice>
+          {[
+            status === 'experimental'
+              ? t('agents.support.experimentalHint', { product: productName })
+              : null,
+            ...limits,
+          ]
+            .filter(Boolean)
+            .join(' ')}
+        </Notice>
+      </Support>
       <Input
         {...STACKED}
         label={t('team.serverSetup.name')}
@@ -151,4 +182,11 @@ const Notice = styled.p`
   color: var(--ui-muted);
   font-size: var(--ui-meta-size);
   line-height: var(--ui-meta-line-height);
+`
+
+const Support = styled.div`
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: start;
+  gap: var(--ui-space-2);
 `

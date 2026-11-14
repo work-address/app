@@ -6,6 +6,8 @@ import { agentRunMode, type AgentRun } from '../model/agent-runs'
 
 import {
   agentRunStatus,
+  AgentMark,
+  agentSendsNoPrompt,
   PRODUCT_NAMES,
   STATUS_COLORS,
   summarizeAgentRun,
@@ -83,10 +85,11 @@ export const AgentRunList = ({ runs, names, userId, onOpen }: Props) => {
             </When>
             <Agent>
               <Strong>{agentRunName(run)}</Strong>
-              <Meta>
+              <ProductLine>
+                <AgentMark product={run.product} size={14} />
                 {product}
                 {surface ? ` · ${surface}` : null}
-              </Meta>
+              </ProductLine>
               <Badge
                 color={mode === 'fixed' ? 'violet' : 'gray'}
                 variant="soft"
@@ -106,7 +109,9 @@ export const AgentRunList = ({ runs, names, userId, onOpen }: Props) => {
                 <Meta>
                   {run.promptPendingReview
                     ? t('time.list.agents.held')
-                    : t('agents.list.noPrompt')}
+                    : agentSendsNoPrompt(run.product, mode)
+                      ? t('agents.list.noPromptFromAgent')
+                      : t('agents.list.noPrompt')}
                 </Meta>
               )}
             </PromptCell>
@@ -295,4 +300,10 @@ const Prompt = styled.span`
     white-space: normal;
     overflow-wrap: anywhere;
   }
+`
+
+const ProductLine = styled(Meta)`
+  display: inline-flex;
+  align-items: center;
+  gap: var(--ui-space-1);
 `
