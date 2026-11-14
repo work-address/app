@@ -252,10 +252,8 @@ function applyProjectBody(
   if (typeof project.rateHour === 'number') {
     project.rateHour = Number(project.rateHour).toFixed(2)
   }
-  // As the API: location is recorded only by the phone, so it goes off with it.
-  if (!project.allowMobileTime) {
-    project.trackLocation = false
-  }
+  // As the API: phone tracking always records location, whatever is sent.
+  project.trackLocation = project.allowMobileTime === true
   if ('workerAddresses' in body) {
     project.workerIds = idsForAddresses(db, body.workerAddresses)
   }

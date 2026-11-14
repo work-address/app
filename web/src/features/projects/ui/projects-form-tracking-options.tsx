@@ -24,8 +24,7 @@ type ProjectsFormTrackingOptionsProps = {
 const ID_PREFIX = 'project-form-'
 const REVIEW_WINDOW_SELECT_WIDTH = '96px'
 
-// Titles and domains need apps, and location a phone, so each follows the
-// switch it needs, nested beneath it.
+// Titles and domains need apps, so each follows that switch, nested beneath it.
 const OPTIONS = [
   {
     name: 'trackScreenshots',
@@ -46,11 +45,6 @@ const OPTIONS = [
     name: 'allowMobileTime',
     labelKey: 'project.createModal.allowMobileTime',
     hintKey: 'project.form.hint.allowMobileTime',
-  },
-  {
-    name: 'trackLocation',
-    labelKey: 'project.createModal.trackLocation',
-    hintKey: 'project.form.hint.trackLocation',
   },
   {
     name: 'trackProcesses',
@@ -79,23 +73,18 @@ export const ProjectsFormTrackingOptions = ({
 }: ProjectsFormTrackingOptionsProps) => {
   const { t } = useTranslation()
   const apps = useWatch({ control, name: 'trackProcesses' })
-  const phone = useWatch({ control, name: 'allowMobileTime' })
-  // Titles and domains require apps, and location a phone. They are held
-  // here, outside the loop, so switching what they need off can switch them
-  // off too: the form then shows exactly what the server will store instead
-  // of a checked box that cannot be used.
+  // Titles and domains require apps. They are held here, outside the loop, so
+  // switching apps off can switch them off too: the form then shows exactly
+  // what the server will store instead of a checked box that cannot be used.
   const titles = useController({ control, name: 'trackWindowTitles' })
   const domains = useController({ control, name: 'trackBrowserDomains' })
-  const location = useController({ control, name: 'trackLocation' })
   const detailFields: Partial<Record<SwitchName, SwitchField>> = {
     trackWindowTitles: titles.field,
     trackBrowserDomains: domains.field,
-    trackLocation: location.field,
   }
   const needed: Partial<Record<SwitchName, boolean>> = {
     trackWindowTitles: apps,
     trackBrowserDomains: apps,
-    trackLocation: phone,
   }
 
   const renderSwitch = (name: SwitchName, id: string, field: SwitchField) => (
@@ -109,9 +98,6 @@ export const ProjectsFormTrackingOptions = ({
         if (name === 'trackProcesses' && !on) {
           titles.field.onChange(false)
           domains.field.onChange(false)
-        }
-        if (name === 'allowMobileTime' && !on) {
-          location.field.onChange(false)
         }
       }}
     />
@@ -146,9 +132,11 @@ export const ProjectsFormTrackingOptions = ({
               <Text as="label" htmlFor={id} size={'2'}>
                 <LabelWithHint label={t(labelKey)} hint={t(hintKey)} />
               </Text>
-              {name === 'trackLocation' && (
+              {/* Phone tracking always records location, so the owner's
+                  duty stands under it whether it is on or only offered. */}
+              {name === 'allowMobileTime' && (
                 <Notice role="note">
-                  {t('project.form.trackLocationNotice')}
+                  {t('project.form.allowMobileTimeNotice')}
                 </Notice>
               )}
             </Row>
@@ -250,7 +238,7 @@ const Row = styled.div`
   }
 `
 
-// The owner's duty, said where they turn location on, under its label.
+// The owner's duty, said where they turn phone tracking on, under its label.
 const Notice = styled.p`
   grid-column: 2;
   margin: 0;

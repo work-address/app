@@ -69,7 +69,6 @@ export const ProjectsDialogForm = ({
       trackBrowserDomains: values.trackBrowserDomains,
       allowManualTime: values.allowManualTime,
       allowMobileTime: values.allowMobileTime,
-      trackLocation: values.trackLocation,
       reviewWindowHours: values.reviewWindowHours,
       // Screenshots are kept; saving clears a retention set before it was dropped.
       screenshotRetentionDays: null,

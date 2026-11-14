@@ -515,7 +515,7 @@ function makeProjects(
       trackBrowserDomains: false,
       allowManualTime: i % 2 === 0,
       allowMobileTime: i % 3 === 0,
-      trackLocation: i % 6 === 0,
+      trackLocation: i % 3 === 0,
       reviewWindowHours: 24,
       screenshotRetentionDays: null,
       deletedAt: null,

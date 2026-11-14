@@ -39,6 +39,5 @@ export type ProjectFormValues = {
   trackBrowserDomains: boolean
   allowManualTime: boolean
   allowMobileTime: boolean
-  trackLocation: boolean
   reviewWindowHours: number
 }
