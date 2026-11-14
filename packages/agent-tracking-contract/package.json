@@ -1,6 +1,6 @@
 {
   "name": "@work-address/agent-tracking-contract",
-  "version": "0.1.1",
+  "version": "0.2.0",
   "description": "Versioned Work Address agent event contract",
   "type": "module",
   "license": "MIT",
@@ -9,13 +9,26 @@
   },
   "main": "./dist/index.js",
   "types": "./dist/index.d.ts",
+  "typesVersions": {
+    "*": {
+      "support": [
+        "./dist/support.d.ts"
+      ]
+    }
+  },
   "exports": {
     ".": {
       "types": "./dist/index.d.ts",
       "import": "./dist/index.js",
       "require": "./dist-cjs/index.js"
     },
-    "./schema": "./schema/agent-event-v1.json"
+    "./schema": "./schema/agent-event-v1.json",
+    "./support": {
+      "types": "./dist/support.d.ts",
+      "import": "./dist/support.js",
+      "require": "./dist-cjs/support.js"
+    },
+    "./support.json": "./schema/agent-support.json"
   },
   "files": [
     "dist",

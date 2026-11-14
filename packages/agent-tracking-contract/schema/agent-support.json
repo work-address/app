@@ -1,0 +1,109 @@
+{
+  "checkedOn": "2026-11-14",
+  "agents": [
+    {
+      "product": "claude-code",
+      "name": "Claude Code",
+      "computer": {
+        "status": "available",
+        "since": "2.1.286"
+      },
+      "servers": {
+        "status": "experimental",
+        "versions": [],
+        "prompts": true,
+        "limits": [
+          "stop-provisional"
+        ],
+        "install": [
+          "npm install -g @work-address/agent-tracker"
+        ],
+        "guide": "packages/agent-tracker/SERVER-RUNTIMES.md#claude-code-and-codex"
+      }
+    },
+    {
+      "product": "codex",
+      "name": "Codex",
+      "computer": {
+        "status": "available",
+        "since": "0.162.0"
+      },
+      "servers": {
+        "status": "experimental",
+        "versions": [],
+        "prompts": true,
+        "limits": [
+          "stop-provisional"
+        ],
+        "install": [
+          "npm install -g @work-address/agent-tracker"
+        ],
+        "guide": "packages/agent-tracker/SERVER-RUNTIMES.md#claude-code-and-codex"
+      }
+    },
+    {
+      "product": "openclaw",
+      "name": "OpenClaw",
+      "computer": {
+        "status": "none"
+      },
+      "servers": {
+        "status": "experimental",
+        "versions": [
+          "2026.10.4"
+        ],
+        "prompts": false,
+        "limits": [
+          "no-waits",
+          "pinned-version"
+        ],
+        "install": [
+          "npm install -g @work-address/agent-tracker @work-address/agent-tracker-openclaw"
+        ],
+        "guide": "packages/agent-tracker-openclaw/README.md#connect-to-work-address"
+      }
+    },
+    {
+      "product": "hermes",
+      "name": "Hermes Agent",
+      "computer": {
+        "status": "none"
+      },
+      "servers": {
+        "status": "experimental",
+        "versions": [],
+        "prompts": false,
+        "limits": [
+          "no-waits",
+          "root-turns-only"
+        ],
+        "install": [
+          "npm install -g @work-address/agent-tracker",
+          "pip install \"$(npm root -g)/@work-address/agent-tracker/bridges/hermes\""
+        ],
+        "guide": "packages/agent-tracker/SERVER-RUNTIMES.md#hermes-agent"
+      }
+    },
+    {
+      "product": "kimi-code",
+      "name": "Kimi Code",
+      "computer": {
+        "status": "none"
+      },
+      "servers": {
+        "status": "experimental",
+        "versions": [],
+        "prompts": true,
+        "limits": [
+          "no-waits",
+          "stop-provisional"
+        ],
+        "install": [
+          "npm install -g @work-address/agent-tracker",
+          "cat \"$(npm root -g)/@work-address/agent-tracker/bridges/hooks/kimi-code.toml\" >> ~/.kimi-code/config.toml"
+        ],
+        "guide": "packages/agent-tracker/SERVER-RUNTIMES.md#kimi-code"
+      }
+    }
+  ]
+}
