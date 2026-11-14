@@ -5,13 +5,20 @@ import { createRequire } from 'node:module'
 import { execFileSync } from 'node:child_process'
 
 const directory = mkdtempSync(join(tmpdir(), 'wa-pack-smoke-'))
-const run = (command, args, cwd = process.cwd()) =>
-  execFileSync(command, args, {
-    cwd,
-    stdio: 'pipe',
-    encoding: 'utf8',
-    env: { ...process.env, npm_config_cache: join(directory, 'npm-cache') },
-  })
+const run = (command, args, cwd = process.cwd()) => {
+  try {
+    return execFileSync(command, args, {
+      cwd,
+      stdio: 'pipe',
+      encoding: 'utf8',
+      env: { ...process.env, npm_config_cache: join(directory, 'npm-cache') },
+    })
+  } catch (error) {
+    // Say what failed: a bare exit status leaves CI with nothing to read.
+    console.error(`${command} ${args.join(' ')}\n${error.stdout}${error.stderr}`)
+    throw error
+  }
+}
 try {
   const names = [
     'agent-tracking-contract',
@@ -36,7 +43,8 @@ try {
     '--pack-destination',
     directory,
     '--ignore-scripts',
-    '--silent',
+    '--loglevel',
+    'error',
   ])
   const tarballs = readdirSync(directory)
     .filter((name) => name.endsWith('.tgz'))
