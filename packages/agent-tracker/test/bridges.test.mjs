@@ -106,3 +106,16 @@ test('OpenCode plugin forwards status to real Node collector and fails open with
     event: { type: 'session.idle', properties: { sessionID: 's' } },
   })
 })
+
+test('the Hermes bridge needs the opt-in exactly while Hermes is experimental', async () => {
+  const { serverAdapterQualified } = await import(
+    '@work-address/agent-tracking-contract/support'
+  )
+  const { readFileSync } = await import('node:fs')
+  const source = readFileSync(
+    'bridges/hermes/work_address_hermes/__init__.py',
+    'utf8',
+  )
+  const flag = /^_QUALIFIED = (True|False)$/m.exec(source)?.[1]
+  assert.equal(flag, serverAdapterQualified('hermes') ? 'True' : 'False')
+})

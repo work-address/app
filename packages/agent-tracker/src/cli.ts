@@ -12,6 +12,15 @@ import {
   emitEvent,
 } from './adapters.js'
 import { EventQueue, readProcessScope, setup, stateDirectory } from './index.js'
+import { serverAdapterQualified } from '@work-address/agent-tracking-contract/support'
+
+/** An agent that passed its live check needs no opt-in; the rest stay experimental. */
+function adapterEnabled(product: string | undefined): boolean {
+  return (
+    process.env.WORK_ADDRESS_EXPERIMENTAL_ADAPTERS === '1' ||
+    (product !== undefined && serverAdapterQualified(product))
+  )
+}
 
 /** `sync` waits out backoff this long; 0 (the default) exits on the first failure. */
 function syncWaitMs(): number {
@@ -41,7 +50,7 @@ async function main(): Promise<void> {
         if (
           args.length !== 1 ||
           args[0] !== 'codex' ||
-          process.env.WORK_ADDRESS_EXPERIMENTAL_ADAPTERS !== '1'
+          !adapterEnabled('codex')
         )
           throw new Error('STREAM_CONFIGURATION')
         const scoped = readProcessScope(directory)
@@ -62,10 +71,7 @@ async function main(): Promise<void> {
     return
   }
   if (command === 'hook' || command === 'emit') {
-    if (
-      command !== 'emit' &&
-      process.env.WORK_ADDRESS_EXPERIMENTAL_ADAPTERS !== '1'
-    )
+    if (command !== 'emit' && !adapterEnabled(args[0]))
       throw new Error('EXPERIMENTAL_ADAPTER_DISABLED')
     const scoped = readProcessScope(directory)
     const config = scoped.config

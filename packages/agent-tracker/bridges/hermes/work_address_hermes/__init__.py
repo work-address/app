@@ -7,6 +7,9 @@ import sys
 _FIELDS = ("session_id", "turn_id", "parent_session_id", "telemetry_schema_version",
            "completed", "failed", "interrupted")
 _DEFAULT_TIMEOUT = 5.0
+# True once Hermes Agent passed its live check (servers.status "available" in
+# @work-address/agent-tracking-contract); until then the bridge needs the opt-in.
+_QUALIFIED = False
 _warned = False
 
 
@@ -22,7 +25,7 @@ def _timeout():
 def _observe(name, **kwargs):
     global _warned
     try:
-        if os.environ.get("WORK_ADDRESS_EXPERIMENTAL_ADAPTERS") != "1":
+        if not _QUALIFIED and os.environ.get("WORK_ADDRESS_EXPERIMENTAL_ADAPTERS") != "1":
             return None
         if kwargs.get("telemetry_schema_version") != "hermes.observer.v1":
             raise ValueError("unsupported schema")

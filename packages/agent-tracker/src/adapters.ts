@@ -37,7 +37,7 @@ export const serverAdapters = {
     status: 'partial',
     transport: 'command hooks',
     limitation:
-      'TurnStarted includes system turns; Stop is provisional; no waits',
+      'System-triggered turns left out; Stop is provisional; no waits',
   },
   'kimi-server': {
     status: 'unavailable',
@@ -86,6 +86,18 @@ export function isHookProduct(value: string): value is HookProduct {
   return ['hermes', 'claude-code', 'codex', 'kimi-code', 'opencode'].includes(
     value,
   )
+}
+/**
+ * Kimi Code's TurnStarted also fires for turns it starts itself. A turn the
+ * person typed (`user`) or a task they launched (`task`) is work; a
+ * `system_trigger` or any other origin is left out, with its Stop. Releases
+ * that send no origin are read as the person's.
+ */
+function kimiRecorded(origin: unknown): boolean {
+  return origin === undefined || origin === 'user' || origin === 'task'
+}
+function kimiPersonTurn(origin: unknown): boolean {
+  return origin === undefined || origin === 'user'
 }
 export function opaque(value: string): string {
   return createHash('sha256').update(value).digest('hex')
@@ -160,7 +172,7 @@ function envelope(
       surface,
       instanceId: config.instanceId,
       ...(state.assignment ? { agent: state.assignment } : {}),
-      adapterVersion: '0.1.0',
+      adapterVersion: '0.2.0',
       runtimeVersion: options.runtimeVersion,
       epoch: state.epoch,
       sequence: state.sequence++,
@@ -250,6 +262,13 @@ export function captureHook(
             ? name === 'busy'
             : name === 'UserPromptSubmit'
     if (start) {
+      if (product === 'kimi-code') {
+        // A new turn ID is a new run, even after a turn that was left out.
+        const run = nativeId(e.turn_id)
+        if (previous && state.run !== run) state = fresh(run)
+        else if (!previous) state.run = run
+        if (!kimiRecorded(e.origin_kind)) state.suppressed = true
+      }
       if (product === 'hermes' && e.parent_session_id) state.suppressed = true
       // Child identity is not root identity. Never bill both without proven lineage.
       if (product !== 'hermes' && e.agent_id) state.suppressed = true
@@ -261,18 +280,19 @@ export function captureHook(
             emit('run.observed')
           state = fresh()
         } else if (product === 'kimi-code') {
-          const run = nativeId(e.turn_id)
-          if (previous && state.run !== run) state = fresh(run)
-          else if (!previous) state.run = run
+          // Its run was settled above.
         } else if (!stableTurn && previous && (state.closed || state.stopped))
           state = fresh()
         if (!state.started) {
           emit(
             product === 'opencode' ? 'run.observed' : 'run.started',
             'running',
-            // Claude Code and Codex pass the submitted text on UserPromptSubmit.
+            // Claude Code and Codex pass the submitted text on UserPromptSubmit,
+            // Kimi Code on the TurnStarted of a turn the person started.
             options.prompts !== false &&
-              (product === 'claude-code' || product === 'codex')
+              (product === 'claude-code' ||
+                product === 'codex' ||
+                (product === 'kimi-code' && kimiPersonTurn(e.origin_kind)))
               ? promptText(e.prompt)
               : undefined,
           )

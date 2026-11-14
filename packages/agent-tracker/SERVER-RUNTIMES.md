@@ -19,7 +19,7 @@ Node collector rather than loading Node's SQLite module into Bun.
 | Claude Code headless | Separate provisional records per `UserPromptSubmit`, provisional `Stop`, definitive `StopFailure` | Partial; successful Stop cannot finalize because other hooks may continue. Transcript reconciliation and interruption fixtures required |
 | Codex headless hooks | Native turn IDs, provisional `Stop`, `Interrupt` cancellation | Partial; successful Stop needs authoritative completion evidence |
 | Codex `exec --json` | Live `thread.started`, `turn.started/completed/failed`; per-launch run identity; disconnect remains unknown | Partial; receipt-time measurement, no replay/native timestamps or wait accounting |
-| Current Kimi Code | `TurnStarted` includes scheduled/system turns; provisional `Stop`; `StopFailure` and `Interrupt` | Partial; no waits, replay or child attribution; terminals without a turn ID rely on serial hook ordering |
+| Current Kimi Code | `TurnStarted` of `user` and `task` turns (the prompt of a `user` turn); system-triggered turns left out; provisional `Stop`; `StopFailure` and `Interrupt` | Partial; no waits, replay or child attribution; terminals without a turn ID rely on serial hook ordering |
 | Kimi Code Server API | Explicit unavailable registry entry; hook transport above is available | Installed `/openapi.json` and `/asyncapi.json` and replay/epoch fixtures required. Collector does not poll APIs that might resume work |
 | OpenCode server | JS plugin forwards allowlisted status; busy/idle/error become running/unknown observations | Partial **observation only**, no qualified run boundaries and no billable elapsed-time claim; no replay/child attribution |
 | Claude Cowork | Explicit unavailable registry entry | Its cloud hook payload, executable deployment, credentials and delivery at VM teardown need qualification. Use the existing manual timer; Claude Code payloads are not assumed interchangeable |
@@ -28,8 +28,11 @@ Node collector rather than loading Node's SQLite module into Bun.
 | Optional OTel | Explicit unavailable registry entry | No receiver/span mapping implemented. Organisation-wide Cowork OTel remains out of scope |
 
 `agent-tracker adapters` exposes the same statuses without requiring credentials.
-All native hook/stream adapters require explicit
-`WORK_ADDRESS_EXPERIMENTAL_ADAPTERS=1`. Set `WORK_ADDRESS_RUNTIME_VERSION` to the
+The label each agent shows, "Available" or "Experimental", comes from the shared
+support list in `@work-address/agent-tracking-contract` (`src/support.ts`), which
+the dashboard and address.work read too. Native hook/stream adapters require
+explicit `WORK_ADDRESS_EXPERIMENTAL_ADAPTERS=1` until their agent is `available`
+on servers in that list; see [Live check](#live-check). Set `WORK_ADDRESS_RUNTIME_VERSION` to the
 installed runtime version (or source commit); absent values are recorded as
 `unqualified`. This label is operator-supplied, not automatic version attestation.
 Schema matching and fixture tests do **not** establish compatibility with every
@@ -53,17 +56,52 @@ export WORK_ADDRESS_EXPERIMENTAL_ADAPTERS=1
 export WORK_ADDRESS_RUNTIME_VERSION=your-runtime-version
 ```
 
-For **Claude Code/Codex**, merge the appropriate `bridges/hooks/*.json` hooks into
-runtime configuration. For **Kimi Code**, merge `bridges/hooks/kimi-code.toml` into
-`~/.kimi-code/config.toml`. Resolve `agent-tracker` through the runtime's PATH or
+Each agent's own steps follow. The dashboard shows the same install line when a
+server agent is added.
+
+### Claude Code and Codex
+
+Merge `bridges/hooks/claude-code.json` into the `hooks` of Claude Code's
+`~/.claude/settings.json`, or `bridges/hooks/codex.json` into Codex's hook
+configuration. The files are in the installed package:
+`"$(npm root -g)/@work-address/agent-tracker/bridges/hooks"`. Both send the prompt
+that starts a run unless `WORK_ADDRESS_PROMPTS=off`.
+
+### Kimi Code
+
+Append the shipped rules to Kimi Code's user configuration (hooks are read only
+from there and from local plugins):
+
+```sh
+cat "$(npm root -g)/@work-address/agent-tracker/bridges/hooks/kimi-code.toml" >> ~/.kimi-code/config.toml
+```
+
+Only turns whose `origin_kind` is `user` or `task` are recorded, with the
+prompt of a user turn. `system_trigger` and any other origin are left out, along
+with their `Stop`; a release that sends no origin is read as `user`.
+
+### Shared rules
+
+Resolve `agent-tracker` through the runtime's PATH or
 replace it with an absolute executable path. Hooks are synchronous, return neutral
 JSON and exit zero on capture failure. Codex additionally requires its own hook
 trust review. These examples are configuration templates, not automatically
 installed plugins or a published marketplace.
 
-For **Hermes**, install the shipped `bridges/hermes` directory with pip in the same
-Python environment as Hermes, then add `work-address` to `plugins.enabled` in
-Hermes configuration. The pip entry point registers two callbacks accepting
+### Hermes Agent
+
+Install the plugin with pip in the same Python environment as Hermes. Until
+`work-address-hermes` is on PyPI, install the copy the collector ships:
+
+```sh
+pip install "$(npm root -g)/@work-address/agent-tracker/bridges/hermes"
+```
+
+Once it is published, `pip install work-address-hermes` does the same. It is
+published by pushing the tag `work-address-hermes-v<version>`
+(`.github/workflows/hermes-publish.yml`, PyPI trusted publishing);
+`scripts/hermes-pypi-wizard.sh` walks through the PyPI side the first time. Then add
+`work-address` to `plugins.enabled` in Hermes configuration. The pip entry point registers two callbacks accepting
 `**kwargs` and returning `None`; the bridge never returns context or directives.
 Set `WORK_ADDRESS_COLLECTOR_BIN` to an absolute collector executable if needed.
 Only session/turn/parent identity, schema version and three boolean outcome flags
@@ -72,12 +110,16 @@ cross the Python-to-Node boundary. The subprocess has a five-second timeout
 loss before reaching SQLite cannot be counted durably and requires host-log
 monitoring. Collector failures after queue opening increment `status.lost`.
 
-For **OpenCode**, copy `bridges/opencode/work-address.mjs` into
+### OpenCode
+
+Copy `bridges/opencode/work-address.mjs` into
 `.opencode/plugins/` or `~/.config/opencode/plugins/`. The host plugin passes only
 session ID and status to a bounded Node subprocess. Status events are ephemeral;
 this integration never reconstructs missed activity from process uptime.
 
-For **Codex exec**, consume one live invocation (not a saved transcript):
+### Codex exec
+
+Consume one live invocation (not a saved transcript):
 
 ```sh
 set -o pipefail
@@ -131,6 +173,39 @@ being attached to an interrupted earlier task. Follow-ups, autonomous submission
 and duplicate hook invocations cannot be classified as distinct logical tasks with
 these signals alone; run-boundary capability remains false. Prompt text is never
 used to guess identity. See the [UserPromptSubmit contract](https://code.claude.com/docs/en/hooks#userpromptsubmit).
+
+## Live check
+
+An agent becomes "Available" on servers when all four hold (app `SPEC.md`,
+"Agent support"): what it installs is published; this live check passed on a
+named release of the agent; the dashboard shows its own install steps; and an API
+test uses its product id. Then set its `servers.status` to `available` and add
+the release to `servers.versions` in `agent-tracking-contract/src/support.ts`,
+rebuild the contract so `schema/agent-support.json` follows, and copy that file to
+the website (`web/web/src/features/agents/agent-support.json`).
+
+The check runs by hand before a release, because it needs the agent's own account
+and model key. `scripts/live-check.mjs` in this package drives it:
+
+```sh
+node packages/agent-tracker/scripts/live-check.mjs <product> -- <command that runs one agent turn>
+```
+
+It starts the loopback receiver (`examples/mock-ingest.mjs`), sets up a fresh
+collector state directory against it, and asks for four scenarios in turn:
+
+1. **success**: a turn that ends normally;
+2. **failure**: a turn that fails (an invalid model or a tool that exits non-zero);
+3. **interruption**: a turn stopped by the person (Ctrl+C or Esc);
+4. **concurrency**: two turns in two sessions at the same time.
+
+For each it records the events that reached the receiver, checks that each
+scenario produced a run with the expected ending, and writes them to
+`test/live/<product>/<version>/<scenario>.json`. CI replays these fixtures
+(`test/live-replay.test.mjs`): each must still parse against the contract and
+end as its scenario says, so a later change that breaks a real agent's events
+fails in CI. Note the agent release and
+OS in the fixture directory's `README.md`.
 
 ## Evidence and validation
 

@@ -171,19 +171,54 @@ for (const product of ['claude-code', 'codex', 'kimi-code'])
       product === 'claude-code' ? 'run.failed' : 'run.cancelled',
     )
   })
-test('Kimi scheduled starts and late turn terminals do not close a different run', (t) => {
+test('Kimi late turn terminals do not close a different run', (t) => {
   const c = context(t)
   c.capture('kimi-code', 'UserPromptSubmit', { prompt: 'PRIVATE' })
-  c.capture('kimi-code', 'TurnStarted', {
-    turn_id: 't1',
-    origin_kind: 'system_trigger',
-  })
+  c.capture('kimi-code', 'TurnStarted', { turn_id: 't1', origin_kind: 'task' })
   c.capture('kimi-code', 'TurnStarted', { turn_id: 't2' })
   c.capture('kimi-code', 'StopFailure', { turn_id: 't1' })
   assert.deepEqual(
     c.queue.batch().map((e) => e.eventType),
     ['run.started', 'run.started'],
   )
+})
+test('Kimi system-triggered turns are left out, with their Stop', (t) => {
+  const c = context(t)
+  c.capture('kimi-code', 'TurnStarted', {
+    turn_id: 't1',
+    origin_kind: 'system_trigger',
+    prompt: 'PRIVATE',
+  })
+  c.capture('kimi-code', 'Stop', { turn_id: 't1' })
+  c.capture('kimi-code', 'TurnStarted', {
+    turn_id: 't2',
+    origin_kind: 'user',
+    prompt: '  Fix the build\n',
+  })
+  c.capture('kimi-code', 'Stop', {})
+  c.capture('kimi-code', 'TurnStarted', {
+    turn_id: 't3',
+    origin_kind: 'scheduled',
+  })
+  c.capture('kimi-code', 'Interrupt', { reason: 'esc' })
+  const events = c.queue.batch()
+  assert.deepEqual(
+    events.map((e) => e.eventType),
+    ['run.started', 'run.observed'],
+  )
+  assert.equal(events[0].prompt, 'Fix the build')
+  assert.equal(JSON.stringify(events).includes('PRIVATE'), false)
+})
+test('Kimi task turns are recorded without a prompt', (t) => {
+  const c = context(t)
+  c.capture('kimi-code', 'TurnStarted', {
+    turn_id: 't1',
+    origin_kind: 'task',
+    prompt: 'Background task',
+  })
+  const [start] = c.queue.batch()
+  assert.equal(start.eventType, 'run.started')
+  assert.equal('prompt' in start, false)
 })
 for (const product of ['claude-code', 'codex'])
   test(`${product}: the run start carries the submitted prompt`, (t) => {

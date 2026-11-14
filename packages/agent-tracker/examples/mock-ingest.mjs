@@ -8,7 +8,12 @@ import {
   MAX_BATCH_EVENTS,
 } from '@work-address/agent-tracking-contract'
 
-export function createMockReceiver({ credential, database = ':memory:' }) {
+/** `onEvent` sees each newly accepted event; the live check keeps them as fixtures. */
+export function createMockReceiver({
+  credential,
+  database = ':memory:',
+  onEvent,
+}) {
   if (!credential || credential.length < 16)
     throw new Error(
       'Provide a development credential of at least 16 characters',
@@ -65,6 +70,7 @@ export function createMockReceiver({ credential, database = ':memory:' }) {
                   code: 'EVENT_ID_CONFLICT',
                 }
           db.prepare('INSERT INTO events VALUES(?,?)').run(event.eventId, hash)
+          onEvent?.(event)
           return { eventId: event.eventId, status: 'accepted' }
         })
         db.exec('COMMIT')
