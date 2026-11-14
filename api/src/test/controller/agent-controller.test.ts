@@ -344,6 +344,52 @@ export class AgentControllerTest extends BaseControllerTest {
       ).status,
     ).to.equal(400)
   }
+  @test() async searchFiltersRunsAndNamesTheirAgent() {
+    const s = await this.scenario('fixed')
+    const uploaded = await s.uploader.post('/agent-tracking/events', {
+      events: [
+        s.event('run.started', 0, 0, { prompt: 'Tidy the logs' }),
+        s.event('run.completed', 1, 120000),
+      ],
+    })
+    for (const result of uploaded.data.results)
+      expect(result.status).to.equal('accepted')
+    const search = (filters: object) =>
+      s.client.post('/agent-tracking/search', {
+        projectId: s.project.id,
+        ...filters,
+      })
+
+    const [[run], count] = (await search({})).data
+    expect(count).to.equal(1)
+    expect(run.agentName).to.equal('My Codex')
+    expect(run.agentRateHourCents).to.equal(600)
+    expect(run.measurement.mode).to.equal('fixed')
+    expect(run.sourceSessionId).to.equal('session')
+    // the owner sees the worker's agent by name too
+    const owners = (
+      await this.client(s.owner).post('/agent-tracking/search', {
+        projectId: s.project.id,
+      })
+    ).data[0]
+    expect(owners[0].agentName).to.equal('My Codex')
+
+    const matches = async (filters: object) => (await search(filters)).data[1]
+    expect(await matches({ mode: 'fixed' })).to.equal(1)
+    expect(await matches({ mode: 'timer' })).to.equal(0)
+    expect(await matches({ status: run.status })).to.equal(1)
+    expect(await matches({ status: 'failed' })).to.equal(0)
+    expect(await matches({ sessionId: 'session' })).to.equal(1)
+    expect(await matches({ sessionId: 'another' })).to.equal(0)
+    expect(await matches({ userId: s.worker.id })).to.equal(1)
+    expect(await matches({ userId: s.owner.id })).to.equal(0)
+    expect(await matches({ agentId: run.agentId })).to.equal(1)
+    expect(await matches({ agentId: randomUUID() })).to.equal(0)
+    expect(await matches({ runKey: run.runKey })).to.equal(1)
+    expect(await matches({ runKey: 'f'.repeat(64) })).to.equal(0)
+    expect((await search({ mode: 'server' })).status).to.equal(400)
+  }
+
   @test() async healthCannotExtendRunsAndIsRateLimited() {
     const s = await this.scenario()
     const health = { queued: 0, rejected: 1, lost: 2, heldRuns: 3 }

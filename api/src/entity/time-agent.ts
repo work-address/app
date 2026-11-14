@@ -36,6 +36,10 @@ export class TimeAgent extends AbstractBaseEntity {
    * their review window passes or the run is invoiced.
    */
   promptPendingReview?: boolean
+  /** Set on search results: the worker's name for the agent. */
+  agentName?: string | null
+  /** Set on search results: the agent's rate on the project now, in cents an hour. */
+  agentRateHourCents?: number | null
   /**
    * When the run's author erased its prompt. Never selected by default, since
    * a removal leaves no trace for anyone reading the run.

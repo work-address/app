@@ -234,6 +234,12 @@ export type AgentSearchDto = {
     fromAt?: string | string;
     toAt?: string | string;
     offset?: number;
+    userId?: string;
+    agentId?: string;
+    mode?: 'timer' | 'fixed';
+    status?: string;
+    sessionId?: string;
+    runKey?: string;
 };
 
 export type StatisticsQueryDto = {

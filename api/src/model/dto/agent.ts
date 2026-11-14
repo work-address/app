@@ -49,4 +49,15 @@ export class AgentSearchDto {
   @IsOptional() @IsISO8601() fromAt?: string
   @IsOptional() @IsISO8601() toAt?: string
   @IsOptional() @IsInt() @Min(0) @Max(1000000) offset?: number
+  /** One person's runs, within what the caller may see. */
+  @IsOptional() @IsUUID() userId?: string
+  /** One of the worker's agents. */
+  @IsOptional() @IsUUID() agentId?: string
+  /** `fixed` for a server's runs, `timer` for a computer's. */
+  @IsOptional() @IsIn(['timer', 'fixed']) mode?: 'timer' | 'fixed'
+  @IsOptional() @IsString() @MaxLength(32) status?: string
+  /** The runs of one agent session, as its source named it. */
+  @IsOptional() @IsString() @MaxLength(256) sessionId?: string
+  /** One run. */
+  @IsOptional() @Matches(/^[0-9a-f]{64}$/) runKey?: string
 }

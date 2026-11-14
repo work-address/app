@@ -782,6 +782,20 @@ export class AgentRunRecord {
       if (query.fromAt)
         qb.andWhere('run.toAt >= :fromAt', { fromAt: query.fromAt })
       if (query.toAt) qb.andWhere('run.fromAt < :toAt', { toAt: query.toAt })
+      if (query.userId)
+        qb.andWhere('run.userId = :author', { author: query.userId })
+      if (query.agentId)
+        qb.andWhere('run.agentId = :agentId', { agentId: query.agentId })
+      if (query.mode)
+        qb.andWhere("run.measurement->>'mode' = :mode", { mode: query.mode })
+      if (query.status)
+        qb.andWhere('run.status = :status', { status: query.status })
+      if (query.sessionId)
+        qb.andWhere('run.sourceSessionId = :sessionId', {
+          sessionId: query.sessionId,
+        })
+      if (query.runKey)
+        qb.andWhere('run.runKey = :runKey', { runKey: query.runKey })
       const [runs, count] = await qb
         .orderBy('run.fromAt', 'DESC')
         .addOrderBy('run.id', 'ASC')
@@ -790,6 +804,7 @@ export class AgentRunRecord {
         .getManyAndCount()
       const windows = new Map(projects.map((p) => [p.id, p.reviewWindowHours]))
       for (const run of runs) this.holdPrompt(run, user, windows, now)
+      await this.nameAgents(tx, runs, projects)
       return [runs, count]
     })
   }
@@ -859,6 +874,39 @@ export class AgentRunRecord {
     const copy: AgentEventV1 & { prompt?: string } = { ...event }
     delete copy.prompt
     return copy
+  }
+
+  /**
+   * Each run's agent as its worker named it, and its rate on the project now.
+   * The caller already sees these on /team for every run search returns.
+   */
+  private async nameAgents(
+    tx: EntityManager,
+    runs: TimeAgent[],
+    projects: Project[],
+  ): Promise<void> {
+    if (!runs.length) return
+    const workers = await tx.find(User, {
+      where: { id: In([...new Set(runs.map((run) => run.userId))]) },
+      select: { id: true, agents: true },
+    })
+    const names = new Map<string, string>()
+    for (const worker of workers)
+      for (const agent of worker.agents ?? [])
+        names.set(`${worker.id}/${agent.id}`, agent.name)
+    const byProject = new Map(projects.map((p) => [p.id, p]))
+    for (const run of runs) {
+      run.agentName = names.get(`${run.userId}/${run.agentId}`) ?? null
+      const attachment = byProject
+        .get(run.projectId)
+        ?.agentAttachments?.find(
+          (a) =>
+            a.agentId === run.agentId &&
+            a.workerId === run.userId &&
+            !a.detachedAt,
+        )
+      run.agentRateHourCents = attachment ? attachment.rateHourCents : null
+    }
   }
 
   /** Every live project `user` owns or works on. */
