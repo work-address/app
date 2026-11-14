@@ -74,7 +74,7 @@ try {
     (event, metadata) => {
       if (metadata.trusted) events.push(adapter.normalize(event))
     },
-    { include: ['run.started', 'run.completed'] },
+    { include: ['run.started', 'run.completed', 'model.call.error'] },
   )
   try {
     sdk.emitDiagnosticEvent({ type: 'run.started', runId: 'spoofed' })

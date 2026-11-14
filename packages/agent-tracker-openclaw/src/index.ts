@@ -5,7 +5,7 @@ import {
 } from '@work-address/agent-tracking-contract'
 
 export const OPENCLAW_VERSION = '2026.10.4'
-export const ADAPTER_VERSION = '0.1.0'
+export const ADAPTER_VERSION = '0.2.0'
 export interface AdapterOptions {
   instanceId: string
   projectId: string
@@ -26,6 +26,8 @@ function eventUuid(value: string): string {
 export class OpenClawAdapter {
   private readonly epoch: string
   private readonly now: () => number
+  /** Runs whose model call was aborted: OpenClaw 2026.10.4 then ends them as `error`. */
+  private readonly aborted = new Set<string>()
   constructor(private readonly options: AdapterOptions) {
     this.options = { ...options }
     this.epoch = options.epoch ?? randomUUID()
@@ -35,6 +37,15 @@ export class OpenClawAdapter {
   normalize(input: unknown): AgentEventV1 | undefined {
     if (!input || typeof input !== 'object') return undefined
     const e = input as Record<string, unknown>
+    // An aborted stream reaches run.completed as a prompt error, so its
+    // outcome says error; the model call's failureKind says aborted.
+    if (e.type === 'model.call.error') {
+      if (e.failureKind === 'aborted' && typeof e.runId === 'string') {
+        if (this.aborted.size >= 1000) this.aborted.clear()
+        this.aborted.add(e.runId)
+      }
+      return undefined
+    }
     if (e.type !== 'run.started' && e.type !== 'run.completed') return undefined
     if (typeof e.runId !== 'string' || !e.runId.length || e.runId.length > 4096)
       throw new Error('MISSING_RUN_ID')
@@ -55,10 +66,14 @@ export class OpenClawAdapter {
         )
       )
         throw new Error('UNKNOWN_OUTCOME')
+      const aborted =
+        e.outcome === 'aborted' ||
+        (e.outcome === 'error' && this.aborted.has(e.runId))
+      this.aborted.delete(e.runId)
       eventType =
         e.outcome === 'completed'
           ? 'run.completed'
-          : e.outcome === 'aborted'
+          : aborted
             ? 'run.cancelled'
             : 'run.failed'
     }

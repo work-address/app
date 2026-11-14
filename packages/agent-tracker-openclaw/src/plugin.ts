@@ -21,7 +21,9 @@ export interface DiagnosticSdk {
   areDiagnosticsEnabledForProcess(): boolean
   onInternalDiagnosticEvent(
     listener: (event: unknown, metadata: { trusted: boolean }) => void,
-    filter: { include: ('run.started' | 'run.completed')[] },
+    filter: {
+      include: ('run.started' | 'run.completed' | 'model.call.error')[]
+    },
   ): () => void
 }
 
@@ -90,7 +92,7 @@ export function register(api: PluginApi, sdkLoader = loadSdk): void {
               warn()
             }
           },
-          { include: ['run.started', 'run.completed'] },
+          { include: ['run.started', 'run.completed', 'model.call.error'] },
         )
         stopped = false
         timer = setInterval(flush, 30_000)

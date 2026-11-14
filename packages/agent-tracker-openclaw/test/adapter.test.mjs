@@ -151,3 +151,38 @@ test('unsupported host version is fail-open and never subscribes', async () => {
   assert.equal(subscribed, false)
   assert.equal(warnings.length, 1)
 })
+test('a run whose model call was aborted is cancelled, as OpenClaw 2026.10.4 reports it', () => {
+  // OpenClaw 2026.10.4 ends an aborted stream with outcome "error"; the
+  // model call carries failureKind "aborted" (seen on a live gateway).
+  const adapter = new OpenClawAdapter(options)
+  const base = { runId: 'r1', ts: 1792231200000, seq: 1 }
+  adapter.normalize({ ...base, type: 'run.started' })
+  assert.equal(
+    adapter.normalize({
+      ...base,
+      type: 'model.call.error',
+      callId: 'c',
+      failureKind: 'aborted',
+      errorCategory: 'Error',
+      seq: 2,
+    }),
+    undefined,
+  )
+  const end = adapter.normalize({
+    ...base,
+    type: 'run.completed',
+    outcome: 'error',
+    durationMs: 6900,
+    seq: 3,
+  })
+  assert.equal(end.eventType, 'run.cancelled')
+  const other = adapter.normalize({
+    ...base,
+    runId: 'r2',
+    type: 'run.completed',
+    outcome: 'error',
+    durationMs: 10,
+    seq: 4,
+  })
+  assert.equal(other.eventType, 'run.failed')
+})
