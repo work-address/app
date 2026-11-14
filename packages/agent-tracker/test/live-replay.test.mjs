@@ -53,6 +53,7 @@ test('an agent available on servers has a passing live check for each release', 
 test('the judge tells the scenarios apart', () => {
   const run = (runId, ...types) =>
     types.map((eventType, sequence) => ({
+      sessionId: 's',
       runId,
       eventType,
       source: { epoch: runId, sequence },
@@ -83,4 +84,12 @@ test('the judge tells the scenarios apart', () => {
     true,
   )
   assert.equal(judge('concurrency', run('a', 'run.started')).ok, false)
+  // Kimi Code numbers turns per session: two sessions' turn 0 are two runs.
+  const turn0 = (sessionId) =>
+    run('0', 'run.started', 'run.observed').map((e) => ({ ...e, sessionId }))
+  assert.equal(
+    judge('concurrency', [...turn0('a'), ...turn0('b')], ['stop-provisional'])
+      .ok,
+    true,
+  )
 })

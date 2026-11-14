@@ -1,0 +1,95 @@
+{
+  "product": "kimi-code",
+  "release": "0.38.0",
+  "model": "emulated",
+  "scenario": "success",
+  "events": [
+    {
+      "schemaVersion": 1,
+      "eventId": "c76820af-114f-4cc1-8527-3966267126fc",
+      "source": {
+        "product": "kimi-code",
+        "surface": "server-hooks",
+        "instanceId": "d42132d6-61c0-4719-83b5-bd727079020f",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.38.0",
+        "epoch": "f483309f-6644-4b81-9a07-c7b33e7dfdb7",
+        "sequence": 0
+      },
+      "projectId": "6ed020a0-014a-44b4-ace8-c8de909b65f9",
+      "sessionId": "108b8efd62b0adc5e3347a7b473cf26c261398b029d93c1368daa0fb7240a719",
+      "runId": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:06:10.317Z",
+      "observedAt": "2026-11-14T20:06:10.317Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started",
+      "prompt": "Reply with ok"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "cbba3987-36d1-4412-a940-1c19facc40b7",
+      "source": {
+        "product": "kimi-code",
+        "surface": "server-hooks",
+        "instanceId": "d42132d6-61c0-4719-83b5-bd727079020f",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.38.0",
+        "epoch": "f483309f-6644-4b81-9a07-c7b33e7dfdb7",
+        "sequence": 1
+      },
+      "projectId": "6ed020a0-014a-44b4-ace8-c8de909b65f9",
+      "sessionId": "108b8efd62b0adc5e3347a7b473cf26c261398b029d93c1368daa0fb7240a719",
+      "runId": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:06:11.013Z",
+      "observedAt": "2026-11-14T20:06:11.013Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.observed",
+      "observedState": "unknown",
+      "evidenceKind": "lifecycle"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "348e5795-f3ac-4c18-a5d6-55752e39bf6b",
+      "source": {
+        "product": "kimi-code",
+        "surface": "server-hooks",
+        "instanceId": "d42132d6-61c0-4719-83b5-bd727079020f",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.38.0",
+        "epoch": "f483309f-6644-4b81-9a07-c7b33e7dfdb7",
+        "sequence": 2
+      },
+      "projectId": "6ed020a0-014a-44b4-ace8-c8de909b65f9",
+      "sessionId": "108b8efd62b0adc5e3347a7b473cf26c261398b029d93c1368daa0fb7240a719",
+      "runId": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:06:11.023Z",
+      "observedAt": "2026-11-14T20:06:11.023Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.completed"
+    }
+  ]
+}

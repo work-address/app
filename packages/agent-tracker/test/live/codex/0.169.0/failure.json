@@ -1,0 +1,65 @@
+{
+  "product": "codex",
+  "release": "0.169.0",
+  "model": "emulated",
+  "scenario": "failure",
+  "events": [
+    {
+      "schemaVersion": 1,
+      "eventId": "35d02eb6-15e3-4a1d-8cd1-3ece682ab54f",
+      "source": {
+        "product": "codex",
+        "surface": "server-hooks",
+        "instanceId": "0b2b3955-bd41-4957-a7fd-cb5d0af04891",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.169.0",
+        "epoch": "0f6cd07e-8477-49c1-9b04-88287d0a28c3",
+        "sequence": 0
+      },
+      "projectId": "cf13b543-6267-4afb-b1e1-642dabc288dd",
+      "sessionId": "a05a778a2389ab9fe4ddf11ec93c66f73d1ee622da94e05a0f79de8edb71561a",
+      "runId": "ae535bb378fd7f37ddb5ecaf13c387e9b369239dd753f6dae563d6f87412d906",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:32:13.593Z",
+      "observedAt": "2026-11-14T19:32:13.593Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started",
+      "prompt": "WA_FAIL"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "be6db81c-9317-4200-911f-3f5ac1f06bac",
+      "source": {
+        "product": "codex",
+        "surface": "server-hooks",
+        "instanceId": "0b2b3955-bd41-4957-a7fd-cb5d0af04891",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.169.0",
+        "epoch": "0f6cd07e-8477-49c1-9b04-88287d0a28c3",
+        "sequence": 1
+      },
+      "projectId": "cf13b543-6267-4afb-b1e1-642dabc288dd",
+      "sessionId": "a05a778a2389ab9fe4ddf11ec93c66f73d1ee622da94e05a0f79de8edb71561a",
+      "runId": "ae535bb378fd7f37ddb5ecaf13c387e9b369239dd753f6dae563d6f87412d906",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:32:13.671Z",
+      "observedAt": "2026-11-14T19:32:13.671Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.failed"
+    }
+  ]
+}

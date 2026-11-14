@@ -1,0 +1,126 @@
+{
+  "product": "claude-code",
+  "release": "2.1.211",
+  "model": "emulated",
+  "scenario": "concurrency",
+  "events": [
+    {
+      "schemaVersion": 1,
+      "eventId": "b3aa6eb7-e6d2-48ee-b924-74aaffb05033",
+      "source": {
+        "product": "claude-code",
+        "surface": "server-hooks",
+        "instanceId": "ae30c001-6f30-422c-a082-bc3401dac36e",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2.1.211",
+        "epoch": "ea554dba-76ae-4c61-a1b7-d04a1af19721",
+        "sequence": 0
+      },
+      "projectId": "57e8f635-4bad-4645-8aca-0aa5ff67a0f2",
+      "sessionId": "5bb9418c22bb37d659d16c671ea4f0611ebb858b16a4bfc7075f872edffeb042",
+      "runId": "d4735a8f-cb8b-4336-8f40-5e7006492c0e",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:23:51.893Z",
+      "observedAt": "2026-11-14T19:23:51.893Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started",
+      "prompt": "Reply with ok"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "45ab124b-81e1-4b33-a1e4-23b4e8e3a194",
+      "source": {
+        "product": "claude-code",
+        "surface": "server-hooks",
+        "instanceId": "ae30c001-6f30-422c-a082-bc3401dac36e",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2.1.211",
+        "epoch": "d51ba6cd-3b5b-497a-b614-00c4c5b4b3cc",
+        "sequence": 0
+      },
+      "projectId": "57e8f635-4bad-4645-8aca-0aa5ff67a0f2",
+      "sessionId": "33e649b80610e35cd34fb9735f6e555685ed724f41e948c8817dba2c751154ba",
+      "runId": "317835c7-e146-40c0-b204-1b069396c2d9",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:23:51.900Z",
+      "observedAt": "2026-11-14T19:23:51.900Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started",
+      "prompt": "Reply with ok"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "0660fd77-646c-4b91-9ca3-e2d36412ebe8",
+      "source": {
+        "product": "claude-code",
+        "surface": "server-hooks",
+        "instanceId": "ae30c001-6f30-422c-a082-bc3401dac36e",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2.1.211",
+        "epoch": "d51ba6cd-3b5b-497a-b614-00c4c5b4b3cc",
+        "sequence": 1
+      },
+      "projectId": "57e8f635-4bad-4645-8aca-0aa5ff67a0f2",
+      "sessionId": "33e649b80610e35cd34fb9735f6e555685ed724f41e948c8817dba2c751154ba",
+      "runId": "317835c7-e146-40c0-b204-1b069396c2d9",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:23:55.388Z",
+      "observedAt": "2026-11-14T19:23:55.388Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.observed",
+      "observedState": "unknown",
+      "evidenceKind": "lifecycle"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "e410c07a-d2f8-4505-ad1a-2f1ee51b06d9",
+      "source": {
+        "product": "claude-code",
+        "surface": "server-hooks",
+        "instanceId": "ae30c001-6f30-422c-a082-bc3401dac36e",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2.1.211",
+        "epoch": "ea554dba-76ae-4c61-a1b7-d04a1af19721",
+        "sequence": 1
+      },
+      "projectId": "57e8f635-4bad-4645-8aca-0aa5ff67a0f2",
+      "sessionId": "5bb9418c22bb37d659d16c671ea4f0611ebb858b16a4bfc7075f872edffeb042",
+      "runId": "d4735a8f-cb8b-4336-8f40-5e7006492c0e",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:23:55.444Z",
+      "observedAt": "2026-11-14T19:23:55.444Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.observed",
+      "observedState": "unknown",
+      "evidenceKind": "lifecycle"
+    }
+  ]
+}

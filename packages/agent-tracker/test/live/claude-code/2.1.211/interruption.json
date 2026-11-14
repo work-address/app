@@ -1,0 +1,65 @@
+{
+  "product": "claude-code",
+  "release": "2.1.211",
+  "model": "emulated",
+  "scenario": "interruption",
+  "events": [
+    {
+      "schemaVersion": 1,
+      "eventId": "33a4deed-6bba-4c0f-9d26-b98952082a8e",
+      "source": {
+        "product": "claude-code",
+        "surface": "server-hooks",
+        "instanceId": "ae30c001-6f30-422c-a082-bc3401dac36e",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2.1.211",
+        "epoch": "620ad412-04d0-4ce3-9885-362be35f8661",
+        "sequence": 0
+      },
+      "projectId": "57e8f635-4bad-4645-8aca-0aa5ff67a0f2",
+      "sessionId": "1090f6cf0a51938261db70b2ec2c983443ac8f24cbf525510069da37bc357f5f",
+      "runId": "10971fa7-eba2-4adb-9484-1880ceeb972c",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:23:40.997Z",
+      "observedAt": "2026-11-14T19:23:40.997Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started",
+      "prompt": "WA_SLOW"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "64e91f3e-e3de-42f9-b538-09e232b98da9",
+      "source": {
+        "product": "claude-code",
+        "surface": "server-hooks",
+        "instanceId": "ae30c001-6f30-422c-a082-bc3401dac36e",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2.1.211",
+        "epoch": "620ad412-04d0-4ce3-9885-362be35f8661",
+        "sequence": 1
+      },
+      "projectId": "57e8f635-4bad-4645-8aca-0aa5ff67a0f2",
+      "sessionId": "1090f6cf0a51938261db70b2ec2c983443ac8f24cbf525510069da37bc357f5f",
+      "runId": "10971fa7-eba2-4adb-9484-1880ceeb972c",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:23:46.654Z",
+      "observedAt": "2026-11-14T19:23:46.654Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.cancelled"
+    }
+  ]
+}

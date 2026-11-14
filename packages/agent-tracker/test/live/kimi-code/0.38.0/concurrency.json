@@ -1,0 +1,182 @@
+{
+  "product": "kimi-code",
+  "release": "0.38.0",
+  "model": "emulated",
+  "scenario": "concurrency",
+  "events": [
+    {
+      "schemaVersion": 1,
+      "eventId": "ebe9990b-02ff-4d11-8c7c-54f14cb5dcf4",
+      "source": {
+        "product": "kimi-code",
+        "surface": "server-hooks",
+        "instanceId": "d42132d6-61c0-4719-83b5-bd727079020f",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.38.0",
+        "epoch": "ddd82d81-782e-46ca-a485-35313a54653e",
+        "sequence": 0
+      },
+      "projectId": "6ed020a0-014a-44b4-ace8-c8de909b65f9",
+      "sessionId": "5d4017bf6e50dfe98dc2cc5065526e25480dcf44e427c642431320d7f0406f8e",
+      "runId": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:06:56.894Z",
+      "observedAt": "2026-11-14T20:06:56.894Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started",
+      "prompt": "Reply with ok"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "98738ef7-eaea-40b5-a828-1950ef43f1fb",
+      "source": {
+        "product": "kimi-code",
+        "surface": "server-hooks",
+        "instanceId": "d42132d6-61c0-4719-83b5-bd727079020f",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.38.0",
+        "epoch": "206fbc49-65fb-4b17-b62e-ddfe96531d97",
+        "sequence": 0
+      },
+      "projectId": "6ed020a0-014a-44b4-ace8-c8de909b65f9",
+      "sessionId": "7240ef9ee3394d2cdbf2d362cfc55c940d4aec04c685a172931a76f1ccbff050",
+      "runId": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:06:56.906Z",
+      "observedAt": "2026-11-14T20:06:56.906Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started",
+      "prompt": "Reply with ok"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "f4f3083f-7ef7-482a-90c4-9b929e64237a",
+      "source": {
+        "product": "kimi-code",
+        "surface": "server-hooks",
+        "instanceId": "d42132d6-61c0-4719-83b5-bd727079020f",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.38.0",
+        "epoch": "ddd82d81-782e-46ca-a485-35313a54653e",
+        "sequence": 1
+      },
+      "projectId": "6ed020a0-014a-44b4-ace8-c8de909b65f9",
+      "sessionId": "5d4017bf6e50dfe98dc2cc5065526e25480dcf44e427c642431320d7f0406f8e",
+      "runId": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:06:57.920Z",
+      "observedAt": "2026-11-14T20:06:57.920Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.observed",
+      "observedState": "unknown",
+      "evidenceKind": "lifecycle"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "e4b7369e-8a44-4c0f-8fb5-06bf0aaf546f",
+      "source": {
+        "product": "kimi-code",
+        "surface": "server-hooks",
+        "instanceId": "d42132d6-61c0-4719-83b5-bd727079020f",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.38.0",
+        "epoch": "206fbc49-65fb-4b17-b62e-ddfe96531d97",
+        "sequence": 1
+      },
+      "projectId": "6ed020a0-014a-44b4-ace8-c8de909b65f9",
+      "sessionId": "7240ef9ee3394d2cdbf2d362cfc55c940d4aec04c685a172931a76f1ccbff050",
+      "runId": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:06:57.927Z",
+      "observedAt": "2026-11-14T20:06:57.927Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.observed",
+      "observedState": "unknown",
+      "evidenceKind": "lifecycle"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "7206158f-24ee-4ba5-8f0d-de0ff12f2bcc",
+      "source": {
+        "product": "kimi-code",
+        "surface": "server-hooks",
+        "instanceId": "d42132d6-61c0-4719-83b5-bd727079020f",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.38.0",
+        "epoch": "ddd82d81-782e-46ca-a485-35313a54653e",
+        "sequence": 2
+      },
+      "projectId": "6ed020a0-014a-44b4-ace8-c8de909b65f9",
+      "sessionId": "5d4017bf6e50dfe98dc2cc5065526e25480dcf44e427c642431320d7f0406f8e",
+      "runId": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:06:57.930Z",
+      "observedAt": "2026-11-14T20:06:57.930Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.completed"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "30b83f80-a7d0-41ea-b6fa-a2f8f946c706",
+      "source": {
+        "product": "kimi-code",
+        "surface": "server-hooks",
+        "instanceId": "d42132d6-61c0-4719-83b5-bd727079020f",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.38.0",
+        "epoch": "206fbc49-65fb-4b17-b62e-ddfe96531d97",
+        "sequence": 2
+      },
+      "projectId": "6ed020a0-014a-44b4-ace8-c8de909b65f9",
+      "sessionId": "7240ef9ee3394d2cdbf2d362cfc55c940d4aec04c685a172931a76f1ccbff050",
+      "runId": "5feceb66ffc86f38d952786c6d696c79c2dbc239dd4e91b46729d73a27fb57e9",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:06:57.939Z",
+      "observedAt": "2026-11-14T20:06:57.939Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.completed"
+    }
+  ]
+}

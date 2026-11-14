@@ -21,10 +21,12 @@ function endings(events) {
       a.source.epoch.localeCompare(b.source.epoch) ||
       a.source.sequence - b.source.sequence,
   )) {
-    const run = runs.get(event.runId) ?? { started: false, end: null }
+    // A run is its session's: the API keys runs by session and run id too.
+    const key = JSON.stringify([event.sessionId, event.runId])
+    const run = runs.get(key) ?? { started: false, end: null }
     if (event.eventType === 'run.started') run.started = true
     else if (TERMINALS.has(event.eventType)) run.end = event.eventType
-    runs.set(event.runId, run)
+    runs.set(key, run)
   }
   return [...runs.values()].filter((run) => run.started)
 }

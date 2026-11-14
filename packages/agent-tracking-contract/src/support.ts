@@ -32,7 +32,11 @@ export type AgentLimit =
 
 export type AgentServerSupport = {
   status: AgentSupportStatus
-  /** Agent releases the live check passed on, oldest first; empty until one passed. */
+  /**
+   * Agent releases the live check passed on, oldest first; empty until one
+   * passed. A release here is not yet `available`: that also needs the
+   * collector that passed it published.
+   */
   versions: string[]
   /** The collector sends the prompt that starts a run. */
   prompts: boolean
@@ -70,7 +74,7 @@ export const AGENT_SUPPORT: AgentSupport[] = [
     computer: { status: 'available', since: '2.1.286' },
     servers: {
       status: 'experimental',
-      versions: [],
+      versions: ['2.1.211'],
       prompts: true,
       limits: ['stop-provisional'],
       install: [COLLECTOR],
@@ -83,7 +87,7 @@ export const AGENT_SUPPORT: AgentSupport[] = [
     computer: { status: 'available', since: '0.162.0' },
     servers: {
       status: 'experimental',
-      versions: [],
+      versions: ['0.169.0'],
       prompts: true,
       limits: ['stop-provisional'],
       install: [COLLECTOR],
@@ -111,7 +115,7 @@ export const AGENT_SUPPORT: AgentSupport[] = [
     servers: {
       status: 'experimental',
       versions: [],
-      prompts: false,
+      prompts: true,
       limits: ['no-waits', 'root-turns-only'],
       // From the collector's own copy until work-address-hermes is on PyPI.
       install: [COLLECTOR, `pip install ${BRIDGES}/hermes"`],
@@ -124,9 +128,9 @@ export const AGENT_SUPPORT: AgentSupport[] = [
     computer: { status: 'none' },
     servers: {
       status: 'experimental',
-      versions: [],
+      versions: ['0.38.0', '2.6.2'],
       prompts: true,
-      limits: ['no-waits', 'stop-provisional'],
+      limits: ['no-waits'],
       install: [
         COLLECTOR,
         `cat ${BRIDGES}/hooks/kimi-code.toml" >> ~/.kimi-code/config.toml`,

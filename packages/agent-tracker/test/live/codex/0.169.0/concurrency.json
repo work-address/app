@@ -1,0 +1,126 @@
+{
+  "product": "codex",
+  "release": "0.169.0",
+  "model": "emulated",
+  "scenario": "concurrency",
+  "events": [
+    {
+      "schemaVersion": 1,
+      "eventId": "0c883615-0847-4eb9-a2a6-3c5764ccdbb1",
+      "source": {
+        "product": "codex",
+        "surface": "server-hooks",
+        "instanceId": "0b2b3955-bd41-4957-a7fd-cb5d0af04891",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.169.0",
+        "epoch": "223ca837-a9b6-4cc8-9532-7a26d94f6cff",
+        "sequence": 0
+      },
+      "projectId": "cf13b543-6267-4afb-b1e1-642dabc288dd",
+      "sessionId": "7f2f3188a223b4037d4d2a67a4aca72fb8135a93d96b6658b73ea1e122f95168",
+      "runId": "ef0d9ce008a53297d03637467b8cc1e5b166b19c67077c92d351ecc703642f41",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:32:28.296Z",
+      "observedAt": "2026-11-14T19:32:28.296Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started",
+      "prompt": "Reply with ok"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "2994e71f-a2c9-4da9-b898-aff5a7125bdc",
+      "source": {
+        "product": "codex",
+        "surface": "server-hooks",
+        "instanceId": "0b2b3955-bd41-4957-a7fd-cb5d0af04891",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.169.0",
+        "epoch": "d765cf15-8e2a-4dce-8ae0-fe78965e0288",
+        "sequence": 0
+      },
+      "projectId": "cf13b543-6267-4afb-b1e1-642dabc288dd",
+      "sessionId": "2602b5bbd2a681579f27687668d49e1e8a09edb2fcfbb8d01a7a9ed9a2bcab76",
+      "runId": "3b8f7d1e186dd53ce3d14a5f2f0501179b27cdfe12c42a9a5cf13e0ceba2d2ef",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:32:28.336Z",
+      "observedAt": "2026-11-14T19:32:28.336Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started",
+      "prompt": "Reply with ok"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "188e59a9-e351-4672-9bec-1c6520b4423a",
+      "source": {
+        "product": "codex",
+        "surface": "server-hooks",
+        "instanceId": "0b2b3955-bd41-4957-a7fd-cb5d0af04891",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.169.0",
+        "epoch": "223ca837-a9b6-4cc8-9532-7a26d94f6cff",
+        "sequence": 1
+      },
+      "projectId": "cf13b543-6267-4afb-b1e1-642dabc288dd",
+      "sessionId": "7f2f3188a223b4037d4d2a67a4aca72fb8135a93d96b6658b73ea1e122f95168",
+      "runId": "ef0d9ce008a53297d03637467b8cc1e5b166b19c67077c92d351ecc703642f41",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:32:29.412Z",
+      "observedAt": "2026-11-14T19:32:29.412Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.observed",
+      "observedState": "unknown",
+      "evidenceKind": "lifecycle"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "3f2f0dfd-14a2-4d41-bb14-06852021370c",
+      "source": {
+        "product": "codex",
+        "surface": "server-hooks",
+        "instanceId": "0b2b3955-bd41-4957-a7fd-cb5d0af04891",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.169.0",
+        "epoch": "d765cf15-8e2a-4dce-8ae0-fe78965e0288",
+        "sequence": 1
+      },
+      "projectId": "cf13b543-6267-4afb-b1e1-642dabc288dd",
+      "sessionId": "2602b5bbd2a681579f27687668d49e1e8a09edb2fcfbb8d01a7a9ed9a2bcab76",
+      "runId": "3b8f7d1e186dd53ce3d14a5f2f0501179b27cdfe12c42a9a5cf13e0ceba2d2ef",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:32:29.434Z",
+      "observedAt": "2026-11-14T19:32:29.434Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.observed",
+      "observedState": "unknown",
+      "evidenceKind": "lifecycle"
+    }
+  ]
+}

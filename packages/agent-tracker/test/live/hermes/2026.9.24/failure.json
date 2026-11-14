@@ -1,0 +1,65 @@
+{
+  "product": "hermes",
+  "release": "2026.9.24",
+  "model": "emulated",
+  "scenario": "failure",
+  "events": [
+    {
+      "schemaVersion": 1,
+      "eventId": "2d99684a-4e4e-43d7-8449-3fe34c944fd1",
+      "source": {
+        "product": "hermes",
+        "surface": "server-hooks",
+        "instanceId": "ee1cecd1-e325-4478-b210-0523dc0b3726",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2026.9.24",
+        "epoch": "d9d8c001-1add-4982-a097-e5c94479fcad",
+        "sequence": 0
+      },
+      "projectId": "0a9557a4-4896-43a7-93af-765b53175528",
+      "sessionId": "e8d4d4c43f0dea86763cc1b4653bf7e6e2bbd88ea9c10f33eb578077a8629d7e",
+      "runId": "2016d7ec481a556e8a5737874bd418a13662811265c7fe041ae6784b7356ab52",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:19:03.015Z",
+      "observedAt": "2026-11-14T20:19:03.015Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": true,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started",
+      "prompt": "WA_FAIL"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "a8f335a9-00a8-4f11-9df1-dbda7ec04ab6",
+      "source": {
+        "product": "hermes",
+        "surface": "server-hooks",
+        "instanceId": "ee1cecd1-e325-4478-b210-0523dc0b3726",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2026.9.24",
+        "epoch": "d9d8c001-1add-4982-a097-e5c94479fcad",
+        "sequence": 1
+      },
+      "projectId": "0a9557a4-4896-43a7-93af-765b53175528",
+      "sessionId": "e8d4d4c43f0dea86763cc1b4653bf7e6e2bbd88ea9c10f33eb578077a8629d7e",
+      "runId": "2016d7ec481a556e8a5737874bd418a13662811265c7fe041ae6784b7356ab52",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:19:03.231Z",
+      "observedAt": "2026-11-14T20:19:03.231Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": true,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.failed"
+    }
+  ]
+}

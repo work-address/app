@@ -1,0 +1,65 @@
+{
+  "product": "claude-code",
+  "release": "2.1.211",
+  "model": "emulated",
+  "scenario": "failure",
+  "events": [
+    {
+      "schemaVersion": 1,
+      "eventId": "008be01a-6f51-491f-9f4b-b4bb4f9c370a",
+      "source": {
+        "product": "claude-code",
+        "surface": "server-hooks",
+        "instanceId": "ae30c001-6f30-422c-a082-bc3401dac36e",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2.1.211",
+        "epoch": "b0e4569c-41db-407e-b123-66c73f76d9a7",
+        "sequence": 0
+      },
+      "projectId": "57e8f635-4bad-4645-8aca-0aa5ff67a0f2",
+      "sessionId": "2d3950fa038182c560e88e8c8e6e592452eb25545144ceb1df5b6d68d4b90208",
+      "runId": "fab0a00b-06d4-4dd6-9637-e07da169358a",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:23:35.443Z",
+      "observedAt": "2026-11-14T19:23:35.443Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started",
+      "prompt": "WA_FAIL"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "54223b99-f666-4d54-a075-22ad825c1d6d",
+      "source": {
+        "product": "claude-code",
+        "surface": "server-hooks",
+        "instanceId": "ae30c001-6f30-422c-a082-bc3401dac36e",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2.1.211",
+        "epoch": "b0e4569c-41db-407e-b123-66c73f76d9a7",
+        "sequence": 1
+      },
+      "projectId": "57e8f635-4bad-4645-8aca-0aa5ff67a0f2",
+      "sessionId": "2d3950fa038182c560e88e8c8e6e592452eb25545144ceb1df5b6d68d4b90208",
+      "runId": "fab0a00b-06d4-4dd6-9637-e07da169358a",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:23:35.914Z",
+      "observedAt": "2026-11-14T19:23:35.914Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.failed"
+    }
+  ]
+}

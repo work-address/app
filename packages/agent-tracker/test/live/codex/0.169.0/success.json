@@ -1,0 +1,67 @@
+{
+  "product": "codex",
+  "release": "0.169.0",
+  "model": "emulated",
+  "scenario": "success",
+  "events": [
+    {
+      "schemaVersion": 1,
+      "eventId": "946b6e56-503c-4ab9-a76b-1a24c968117e",
+      "source": {
+        "product": "codex",
+        "surface": "server-hooks",
+        "instanceId": "0b2b3955-bd41-4957-a7fd-cb5d0af04891",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.169.0",
+        "epoch": "8299a4c4-245a-49d4-abb1-97d97da5a327",
+        "sequence": 0
+      },
+      "projectId": "cf13b543-6267-4afb-b1e1-642dabc288dd",
+      "sessionId": "9023f35c69a1a2070322798f1a74ecbf6238a3f3f2a1df6730b9ec2f32a82d41",
+      "runId": "e36ed1f56531d9107f5cf470238c7fad0f1e46822534b06108e05dc8b9d78a5e",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:32:06.973Z",
+      "observedAt": "2026-11-14T19:32:06.973Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started",
+      "prompt": "Reply with ok"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "7a98bc12-25fa-48cf-b387-7caf873d8ec5",
+      "source": {
+        "product": "codex",
+        "surface": "server-hooks",
+        "instanceId": "0b2b3955-bd41-4957-a7fd-cb5d0af04891",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.169.0",
+        "epoch": "8299a4c4-245a-49d4-abb1-97d97da5a327",
+        "sequence": 1
+      },
+      "projectId": "cf13b543-6267-4afb-b1e1-642dabc288dd",
+      "sessionId": "9023f35c69a1a2070322798f1a74ecbf6238a3f3f2a1df6730b9ec2f32a82d41",
+      "runId": "e36ed1f56531d9107f5cf470238c7fad0f1e46822534b06108e05dc8b9d78a5e",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:32:08.087Z",
+      "observedAt": "2026-11-14T19:32:08.087Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.observed",
+      "observedState": "unknown",
+      "evidenceKind": "lifecycle"
+    }
+  ]
+}

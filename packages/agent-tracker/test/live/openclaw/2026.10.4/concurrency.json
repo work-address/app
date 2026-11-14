@@ -1,0 +1,122 @@
+{
+  "product": "openclaw",
+  "release": "2026.10.4",
+  "model": "emulated",
+  "scenario": "concurrency",
+  "events": [
+    {
+      "schemaVersion": 1,
+      "eventId": "2a4d85f3-1d15-590d-a5d9-9dcf90f78470",
+      "source": {
+        "product": "openclaw",
+        "surface": "gateway",
+        "instanceId": "0f41a0de-d930-4141-bf99-605fc6527989",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2026.10.4",
+        "epoch": "44352d2b-ce8b-445d-9df1-6e7c9b060df1",
+        "sequence": 203
+      },
+      "projectId": "6ccb856c-0cc0-4972-9c78-64ae77c3a124",
+      "sessionId": "run-2012719347b4365a771c5f984a494e142bf5eb533c93ee51795058c07499a9a7",
+      "runId": "2012719347b4365a771c5f984a494e142bf5eb533c93ee51795058c07499a9a7",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:05:01.165Z",
+      "observedAt": "2026-11-14T20:05:01.165Z",
+      "clock": {
+        "basis": "source_wall"
+      },
+      "capabilities": {
+        "runBoundaries": true,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "52061351-cd11-5825-ab39-7578a722987f",
+      "source": {
+        "product": "openclaw",
+        "surface": "gateway",
+        "instanceId": "0f41a0de-d930-4141-bf99-605fc6527989",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2026.10.4",
+        "epoch": "44352d2b-ce8b-445d-9df1-6e7c9b060df1",
+        "sequence": 205
+      },
+      "projectId": "6ccb856c-0cc0-4972-9c78-64ae77c3a124",
+      "sessionId": "run-c16e90710aa4bb5fc3de4d3791ebb2926d7dfca17eeb35b6bc7d33a91ca2fdaa",
+      "runId": "c16e90710aa4bb5fc3de4d3791ebb2926d7dfca17eeb35b6bc7d33a91ca2fdaa",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:05:01.203Z",
+      "observedAt": "2026-11-14T20:05:01.203Z",
+      "clock": {
+        "basis": "source_wall"
+      },
+      "capabilities": {
+        "runBoundaries": true,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "8fc0af16-662c-5017-aa94-4668fabdbcc4",
+      "source": {
+        "product": "openclaw",
+        "surface": "gateway",
+        "instanceId": "0f41a0de-d930-4141-bf99-605fc6527989",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2026.10.4",
+        "epoch": "44352d2b-ce8b-445d-9df1-6e7c9b060df1",
+        "sequence": 222
+      },
+      "projectId": "6ccb856c-0cc0-4972-9c78-64ae77c3a124",
+      "sessionId": "run-2012719347b4365a771c5f984a494e142bf5eb533c93ee51795058c07499a9a7",
+      "runId": "2012719347b4365a771c5f984a494e142bf5eb533c93ee51795058c07499a9a7",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:05:02.412Z",
+      "observedAt": "2026-11-14T20:05:02.412Z",
+      "clock": {
+        "basis": "source_wall"
+      },
+      "capabilities": {
+        "runBoundaries": true,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.completed",
+      "sourceDurationMs": 1246
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "05d8322e-8eb5-5273-ac08-6dcc9b1706a9",
+      "source": {
+        "product": "openclaw",
+        "surface": "gateway",
+        "instanceId": "0f41a0de-d930-4141-bf99-605fc6527989",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2026.10.4",
+        "epoch": "44352d2b-ce8b-445d-9df1-6e7c9b060df1",
+        "sequence": 224
+      },
+      "projectId": "6ccb856c-0cc0-4972-9c78-64ae77c3a124",
+      "sessionId": "run-c16e90710aa4bb5fc3de4d3791ebb2926d7dfca17eeb35b6bc7d33a91ca2fdaa",
+      "runId": "c16e90710aa4bb5fc3de4d3791ebb2926d7dfca17eeb35b6bc7d33a91ca2fdaa",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:05:02.452Z",
+      "observedAt": "2026-11-14T20:05:02.452Z",
+      "clock": {
+        "basis": "source_wall"
+      },
+      "capabilities": {
+        "runBoundaries": true,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.completed",
+      "sourceDurationMs": 1249
+    }
+  ]
+}

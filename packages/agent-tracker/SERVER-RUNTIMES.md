@@ -14,12 +14,12 @@ Node collector rather than loading Node's SQLite module into Bun.
 
 | Runtime / transport | Implemented behavior | Qualification / remaining limitation |
 | --- | --- | --- |
-| OpenClaw | Separate pinned plugin: trusted diagnostic run start and terminal | Partial, SDK 2026.10.4 dispatcher tested; live host requires Node >=24.16 <25 or >=26.1. No waits/replay/lineage |
+| OpenClaw | Separate pinned plugin: trusted diagnostic run start and terminal; a run whose model call was aborted is cancelled (2026.10.4 reports it as `error`) | Pinned to 2026.10.4, checked live on a gateway with an emulated model; host needs Node >=24.16 <25 or >=26.1. A model error is answered as a completed run, as OpenClaw reports it. No waits/replay/lineage |
 | Hermes Agent | Python `hermes_agent.plugins` entry point, `pre_llm_call` and `on_session_end`; outcome flags distinguish success/failure/interruption | Partial, observer v1 schema enforced; root turns only; start follows compression; ambiguous outcome stays unknown |
-| Claude Code headless | Separate provisional records per `UserPromptSubmit`, provisional `Stop`, definitive `StopFailure` | Partial; successful Stop cannot finalize because other hooks may continue. Transcript reconciliation and interruption fixtures required |
-| Codex headless hooks | Native turn IDs, provisional `Stop`, `Interrupt` cancellation | Partial; successful Stop needs authoritative completion evidence |
+| Claude Code headless | Separate provisional records per `UserPromptSubmit`, provisional `Stop`, definitive `StopFailure`; `SessionEnd` inside a turn cancels it (Claude Code has no interrupt hook) | Checked live on 2.1.211 with an emulated model; successful Stop stays provisional because other hooks may continue |
+| Codex headless hooks | Native turn IDs, provisional `Stop`, `Interrupt` cancellation; `SessionEnd` inside a turn fails it (an API error sends nothing else) | Checked live on 0.169.0 with an emulated model; successful Stop stays provisional |
 | Codex `exec --json` | Live `thread.started`, `turn.started/completed/failed`; per-launch run identity; disconnect remains unknown | Partial; receipt-time measurement, no replay/native timestamps or wait accounting |
-| Current Kimi Code | `TurnStarted` of `user` and `task` turns (the prompt of a `user` turn); system-triggered turns left out; provisional `Stop`; `StopFailure` and `Interrupt` | Partial; no waits, replay or child attribution; terminals without a turn ID rely on serial hook ordering |
+| Current Kimi Code | `TurnStarted` of `user` and `task` turns (the prompt of a `user` turn; turn ids are numbers per session); system-triggered turns left out; `StopFailure` and `Interrupt`; the end of every turn read from Kimi's own session store (`turn.ended`), since 2.x fires no `Stop` | Checked live on 0.38.0 and 2.6.2 with an emulated model; no waits or child attribution; a headless `kimi -p` killed by a signal leaves its turn open |
 | Kimi Code Server API | Explicit unavailable registry entry; hook transport above is available | Installed `/openapi.json` and `/asyncapi.json` and replay/epoch fixtures required. Collector does not poll APIs that might resume work |
 | OpenCode server | JS plugin forwards allowlisted status; busy/idle/error become running/unknown observations | Partial **observation only**, no qualified run boundaries and no billable elapsed-time claim; no replay/child attribution |
 | Claude Cowork | Explicit unavailable registry entry | Its cloud hook payload, executable deployment, credentials and delivery at VM teardown need qualification. Use the existing manual timer; Claude Code payloads are not assumed interchangeable |
@@ -62,10 +62,16 @@ server agent is added.
 ### Claude Code and Codex
 
 Merge `bridges/hooks/claude-code.json` into the `hooks` of Claude Code's
-`~/.claude/settings.json`, or `bridges/hooks/codex.json` into Codex's hook
-configuration. The files are in the installed package:
-`"$(npm root -g)/@work-address/agent-tracker/bridges/hooks"`. Both send the prompt
-that starts a run unless `WORK_ADDRESS_PROMPTS=off`.
+`~/.claude/settings.json` (or pass it with `claude --settings`). For Codex, copy
+`bridges/hooks/codex.json` to `~/.codex/hooks.json`, set `hooks = true` under
+`[features]` in `~/.codex/config.toml`, and trust the hooks once when Codex asks
+(a throwaway run can pass `--dangerously-bypass-hook-trust`). The files are in
+the installed package: `"$(npm root -g)/@work-address/agent-tracker/bridges/hooks"`.
+Both send the prompt that starts a run unless `WORK_ADDRESS_PROMPTS=off`.
+
+Claude Code has no interrupt hook: a session that ends inside a turn (Ctrl+C, a
+killed `claude -p`) cancels the turn. Codex ends a turn that failed on an API
+error with `SessionEnd` alone, which records it as failed.
 
 ### Kimi Code
 
@@ -79,6 +85,16 @@ cat "$(npm root -g)/@work-address/agent-tracker/bridges/hooks/kimi-code.toml" >>
 Only turns whose `origin_kind` is `user` or `task` are recorded, with the
 prompt of a user turn. `system_trigger` and any other origin are left out, along
 with their `Stop`; a release that sends no origin is read as `user`.
+
+Kimi Code 2.x fires no hook when a turn ends normally. The collector reads the
+end from Kimi's own session store
+(`~/.kimi-code/sessions/*/<session>/agents/main/wire.jsonl`, `turn.ended`, its
+reason and time): on the next Kimi hook, on every `agent-tracker sync`, and in
+a detached uploader that `TurnStarted` starts, which waits up to 30 minutes for
+the turn to end. Set `WORK_ADDRESS_KIMI_HOME` when Kimi's home is not
+`~/.kimi-code`. In CI, run `agent-tracker sync` after Kimi Code exits. Kimi runs a
+session's hooks in parallel, so on a quick turn `Stop` may arrive before
+`TurnStarted`; it is held for that turn.
 
 ### Shared rules
 
@@ -100,7 +116,7 @@ pip install "$(npm root -g)/@work-address/agent-tracker/bridges/hermes"
 Once it is published, `pip install work-address-hermes` does the same. It is
 published by pushing the tag `work-address-hermes-v<version>`
 (`.github/workflows/hermes-publish.yml`, PyPI trusted publishing);
-`scripts/hermes-pypi-wizard.sh` walks through the PyPI side the first time. Then add
+`scripts/publish-wizard.sh` walks through the PyPI and npm side the first time. Then add
 `work-address` to `plugins.enabled` in Hermes configuration. The pip entry point registers two callbacks accepting
 `**kwargs` and returning `None`; the bridge never returns context or directives.
 Set `WORK_ADDRESS_COLLECTOR_BIN` to an absolute collector executable if needed.
@@ -174,6 +190,15 @@ and duplicate hook invocations cannot be classified as distinct logical tasks wi
 these signals alone; run-boundary capability remains false. Prompt text is never
 used to guess identity. See the [UserPromptSubmit contract](https://code.claude.com/docs/en/hooks#userpromptsubmit).
 
+## Publishing
+
+The npm packages are published by pushing the tag `agent-tracker-v<version>`
+(`.github/workflows/agent-tracker-publish.yml`, npm trusted publishing): it
+publishes the contract, the collector and the OpenClaw plugin at the versions in
+their `package.json`, skipping versions npm already has. The Hermes plugin is
+published by `work-address-hermes-v<version>`. `scripts/publish-wizard.sh` sets
+up both registries' trust the first time and pushes the tags.
+
 ## Live check
 
 An agent becomes "Available" on servers when all four hold (app `SPEC.md`,
@@ -190,6 +215,15 @@ and model key. `scripts/live-check.mjs` in this package drives it:
 ```sh
 node packages/agent-tracker/scripts/live-check.mjs <product> -- <command that runs one agent turn>
 ```
+
+Add `--emulate-model` to answer from a stand-in model API (`scripts/mock-model.mjs`)
+instead of a real model, so no model account is needed; the agent release and its
+hooks or plugin still run for real. Point the agent at the printed base URL. The
+prompt decides the answer: `WA_FAIL` returns a model error, `WA_SLOW` streams for a
+minute so the turn can be interrupted, `WA_DROP` cuts the connection. OpenClaw
+answers model errors as completed runs, so its failure is a turn past its time
+limit (`openclaw agent --timeout 4 -m WA_SLOW`), and its interruption is
+`openclaw gateway call chat.abort`. Fixtures say whether the model was emulated.
 
 It starts the loopback receiver (`examples/mock-ingest.mjs`), sets up a fresh
 collector state directory against it, and asks for four scenarios in turn:

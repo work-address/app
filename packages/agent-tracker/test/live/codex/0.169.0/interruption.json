@@ -1,0 +1,65 @@
+{
+  "product": "codex",
+  "release": "0.169.0",
+  "model": "emulated",
+  "scenario": "interruption",
+  "events": [
+    {
+      "schemaVersion": 1,
+      "eventId": "292324f3-69a0-4664-92b6-2205d00e7eda",
+      "source": {
+        "product": "codex",
+        "surface": "server-hooks",
+        "instanceId": "0b2b3955-bd41-4957-a7fd-cb5d0af04891",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.169.0",
+        "epoch": "4431d76b-fe31-456b-bbff-93925255c440",
+        "sequence": 0
+      },
+      "projectId": "cf13b543-6267-4afb-b1e1-642dabc288dd",
+      "sessionId": "f4e8f8fae4e670172cdec8d8e3456177c23620e798ebab2cd200f33735b05f2a",
+      "runId": "89bacc0da1e925afb554e44eccb60f8fffa14a075bc9cc121f5ccf8303ca3926",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:32:18.005Z",
+      "observedAt": "2026-11-14T19:32:18.005Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started",
+      "prompt": "WA_SLOW"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "1087789d-5a51-468e-892f-91d688565707",
+      "source": {
+        "product": "codex",
+        "surface": "server-hooks",
+        "instanceId": "0b2b3955-bd41-4957-a7fd-cb5d0af04891",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "0.169.0",
+        "epoch": "4431d76b-fe31-456b-bbff-93925255c440",
+        "sequence": 1
+      },
+      "projectId": "cf13b543-6267-4afb-b1e1-642dabc288dd",
+      "sessionId": "f4e8f8fae4e670172cdec8d8e3456177c23620e798ebab2cd200f33735b05f2a",
+      "runId": "89bacc0da1e925afb554e44eccb60f8fffa14a075bc9cc121f5ccf8303ca3926",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:32:23.858Z",
+      "observedAt": "2026-11-14T19:32:23.858Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.cancelled"
+    }
+  ]
+}

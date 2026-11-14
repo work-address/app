@@ -11,6 +11,12 @@
  * while you run the agent in another terminal, uploads what was queued, judges
  * it, and keeps the events as fixtures in test/live/<product>/<release>/.
  * Use throwaway prompts: a prompt the agent sends is kept in the fixture.
+ *
+ * With --emulate-model, a stand-in model API (mock-model.mjs) answers instead
+ * of a real model, so no model account is needed: the agent and its hooks or
+ * plugin still run for real. Point the agent at the printed base URL; the
+ * prompt decides the answer (WA_FAIL fails, WA_SLOW streams for a minute).
+ * The fixtures say the model was emulated.
  */
 import { execFile, spawnSync } from 'node:child_process'
 import { promisify } from 'node:util'
@@ -22,7 +28,17 @@ import { createInterface } from 'node:readline/promises'
 import { fileURLToPath } from 'node:url'
 import { findAgentSupport } from '@work-address/agent-tracking-contract/support'
 import { createMockReceiver } from '../examples/mock-ingest.mjs'
+import { createMockModel } from './mock-model.mjs'
 import { SCENARIOS, judge } from './live-scenarios.mjs'
+
+const ASK_EMULATED = {
+  success: 'Run one turn with the prompt "Reply with ok".',
+  failure: 'Run one turn with the prompt "WA_FAIL".',
+  interruption:
+    'Run one turn with the prompt "WA_SLOW" and stop it yourself (Ctrl+C or Esc) after a few seconds.',
+  concurrency:
+    'Run two turns with the prompt "Reply with ok" at the same time, in two sessions.',
+}
 
 const ASK = {
   success: 'Run one turn that ends normally.',
@@ -32,11 +48,14 @@ const ASK = {
   concurrency: 'Run two turns at the same time, in two sessions.',
 }
 
-const [product, release] = process.argv.slice(2)
+const emulate = process.argv.includes('--emulate-model')
+const [product, release] = process.argv
+  .slice(2)
+  .filter((arg) => arg !== '--emulate-model')
 const support = product && findAgentSupport(product)
 if (!support || !release || !/^[\w.+-]{1,64}$/.test(release)) {
   console.error(
-    'Usage: live-check.mjs <claude-code|codex|openclaw|hermes|kimi-code> <agent-release>',
+    'Usage: live-check.mjs <claude-code|codex|openclaw|hermes|kimi-code> <agent-release> [--emulate-model]',
   )
   process.exit(1)
 }
@@ -52,6 +71,13 @@ const server = createMockReceiver({
 })
 await new Promise((done) => server.listen(0, '127.0.0.1', done))
 const endpoint = `http://127.0.0.1:${server.address().port}/api/agent-tracking/events`
+
+let model
+if (emulate) {
+  model = createMockModel()
+  await new Promise((done) => model.listen(0, '127.0.0.1', done))
+}
+const modelUrl = model && `http://127.0.0.1:${model.address().port}`
 
 const env = {
   ...process.env,
@@ -87,7 +113,15 @@ for (const name of [
   'WORK_ADDRESS_RUNTIME_VERSION',
 ])
   console.log(`export ${name}=${JSON.stringify(env[name])}`)
-console.log(`export PATH=${JSON.stringify(bin)}:"$PATH"\n`)
+console.log(`export PATH=${JSON.stringify(bin)}:"$PATH"`)
+if (modelUrl) {
+  console.log('\nThe model is emulated. Point the agent at it:\n')
+  console.log(`export ANTHROPIC_BASE_URL=${JSON.stringify(modelUrl)}`)
+  console.log('export ANTHROPIC_API_KEY="sk-ant-emulated"')
+  console.log(`export OPENAI_BASE_URL=${JSON.stringify(`${modelUrl}/v1`)}`)
+  console.log('export OPENAI_API_KEY="sk-emulated"')
+}
+console.log('')
 
 const out = join(root, 'test', 'live', product, release)
 mkdirSync(out, { recursive: true })
@@ -97,7 +131,7 @@ try {
   for (const scenario of SCENARIOS) {
     events = []
     await prompt.question(
-      `${scenario}: ${ASK[scenario]} Press Enter when done. `,
+      `${scenario}: ${(emulate ? ASK_EMULATED : ASK)[scenario]} Press Enter when done. `,
     )
     // Not spawnSync: the receiver runs in this process and must answer.
     await promisify(execFile)(process.execPath, [cli, 'sync'], { env }).catch(
@@ -110,19 +144,30 @@ try {
     )
     writeFileSync(
       join(out, `${scenario}.json`),
-      JSON.stringify({ product, release, scenario, events }, null, 2) + '\n',
+      JSON.stringify(
+        {
+          product,
+          release,
+          model: emulate ? 'emulated' : 'live',
+          scenario,
+          events,
+        },
+        null,
+        2,
+      ) + '\n',
     )
   }
 } finally {
   prompt.close()
   server.close()
+  model?.close()
   rmSync(state, { recursive: true, force: true })
 }
 
 const passed = results.every((result) => result.ok)
 writeFileSync(
   join(out, 'README.md'),
-  `# ${support.name} ${release}\n\nLive check of ${new Date().toISOString().slice(0, 10)} on ${process.platform}/${process.arch}, Node ${process.version}.\n\n${results
+  `# ${support.name} ${release}\n\nLive check of ${new Date().toISOString().slice(0, 10)} on ${process.platform}/${process.arch}, Node ${process.version}. ${emulate ? 'The model was emulated by scripts/mock-model.mjs; the agent and its Work Address integration ran for real.' : 'A real model answered.'}\n\n${results
     .map(
       (r) =>
         `- ${r.scenario}: ${r.ok ? 'ok' : 'not ok'} (${r.verdict}) — ${r.reason}`,

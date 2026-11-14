@@ -95,6 +95,7 @@ describe('sendsPrompts', () => {
     expect(SERVER_PRODUCTS.filter(sendsPrompts)).toEqual([
       'claude-code',
       'codex',
+      'hermes',
       'kimi-code',
     ])
   })

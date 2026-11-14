@@ -275,8 +275,8 @@ const APPS = [
 /** The agents the shared support list records; the last three on servers only. */
 const PRODUCTS = ['claude-code', 'codex', 'openclaw', 'hermes', 'kimi-code']
 const SERVER_ONLY = new Set(['openclaw', 'hermes', 'kimi-code'])
-/** Their server collectors send no prompt (agent-tracking-contract support). */
-const NO_PROMPT = new Set(['openclaw', 'hermes'])
+/** Its server collector sends no prompt (agent-tracking-contract support). */
+const NO_PROMPT = new Set(['openclaw'])
 const NO_WAITS = SERVER_ONLY
 const PROMPTS = [
   'Fix the flaky login test and explain the race',

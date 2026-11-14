@@ -1,0 +1,67 @@
+{
+  "product": "claude-code",
+  "release": "2.1.211",
+  "model": "emulated",
+  "scenario": "success",
+  "events": [
+    {
+      "schemaVersion": 1,
+      "eventId": "4c74d4af-0bf4-43b4-881f-d6759c574b66",
+      "source": {
+        "product": "claude-code",
+        "surface": "server-hooks",
+        "instanceId": "ae30c001-6f30-422c-a082-bc3401dac36e",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2.1.211",
+        "epoch": "4abd17df-ad84-4526-b09b-8bcf0ed4c7bf",
+        "sequence": 0
+      },
+      "projectId": "57e8f635-4bad-4645-8aca-0aa5ff67a0f2",
+      "sessionId": "321364ba9a58d72855bbef3faae5a4c674e8334998476ac78cc583acad29ee02",
+      "runId": "055abc49-f3ad-40fd-be5f-2d5e3fcf00d8",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:23:26.813Z",
+      "observedAt": "2026-11-14T19:23:26.813Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started",
+      "prompt": "Reply with ok"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "27d6dbfa-fb45-4f07-9ed3-e9a6f36aef2c",
+      "source": {
+        "product": "claude-code",
+        "surface": "server-hooks",
+        "instanceId": "ae30c001-6f30-422c-a082-bc3401dac36e",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2.1.211",
+        "epoch": "4abd17df-ad84-4526-b09b-8bcf0ed4c7bf",
+        "sequence": 1
+      },
+      "projectId": "57e8f635-4bad-4645-8aca-0aa5ff67a0f2",
+      "sessionId": "321364ba9a58d72855bbef3faae5a4c674e8334998476ac78cc583acad29ee02",
+      "runId": "055abc49-f3ad-40fd-be5f-2d5e3fcf00d8",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T19:23:30.253Z",
+      "observedAt": "2026-11-14T19:23:30.253Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": false,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.observed",
+      "observedState": "unknown",
+      "evidenceKind": "lifecycle"
+    }
+  ]
+}

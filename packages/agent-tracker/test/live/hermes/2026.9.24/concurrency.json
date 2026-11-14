@@ -1,0 +1,122 @@
+{
+  "product": "hermes",
+  "release": "2026.9.24",
+  "model": "emulated",
+  "scenario": "concurrency",
+  "events": [
+    {
+      "schemaVersion": 1,
+      "eventId": "7a2219af-6860-41a6-bcec-2bbbc1971161",
+      "source": {
+        "product": "hermes",
+        "surface": "server-hooks",
+        "instanceId": "ee1cecd1-e325-4478-b210-0523dc0b3726",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2026.9.24",
+        "epoch": "897c6193-299c-4543-ad1a-d5c8f2778a5d",
+        "sequence": 0
+      },
+      "projectId": "0a9557a4-4896-43a7-93af-765b53175528",
+      "sessionId": "4fc840282f12d22787edf7c1c54c1bcd574fefda34378aa9bbbe4165af5ccdb1",
+      "runId": "17c92f6dd9c3796eecd4da23461488eb61bd1fba81eb4a33cdff4d4890c68686",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:19:24.006Z",
+      "observedAt": "2026-11-14T20:19:24.006Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": true,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started",
+      "prompt": "Reply with ok"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "1b330826-c0f4-4cf1-bde9-7062b57aa82b",
+      "source": {
+        "product": "hermes",
+        "surface": "server-hooks",
+        "instanceId": "ee1cecd1-e325-4478-b210-0523dc0b3726",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2026.9.24",
+        "epoch": "55e5facc-18fb-44f7-b451-27a816a8e535",
+        "sequence": 0
+      },
+      "projectId": "0a9557a4-4896-43a7-93af-765b53175528",
+      "sessionId": "3a31d45583e7ba25c44200a7b621c3a8c9785181713f8bd44a7295a2d64148b3",
+      "runId": "ed4c7fdd1d8d5a4d57dc343e97168b5f407ea436e294a2cdb7464184bb7c6cd7",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:19:24.016Z",
+      "observedAt": "2026-11-14T20:19:24.016Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": true,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started",
+      "prompt": "Reply with ok"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "eeec40ce-1251-4b85-b0f6-22f278c5290c",
+      "source": {
+        "product": "hermes",
+        "surface": "server-hooks",
+        "instanceId": "ee1cecd1-e325-4478-b210-0523dc0b3726",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2026.9.24",
+        "epoch": "55e5facc-18fb-44f7-b451-27a816a8e535",
+        "sequence": 1
+      },
+      "projectId": "0a9557a4-4896-43a7-93af-765b53175528",
+      "sessionId": "3a31d45583e7ba25c44200a7b621c3a8c9785181713f8bd44a7295a2d64148b3",
+      "runId": "ed4c7fdd1d8d5a4d57dc343e97168b5f407ea436e294a2cdb7464184bb7c6cd7",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:19:25.281Z",
+      "observedAt": "2026-11-14T20:19:25.281Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": true,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.completed"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "657166dd-c8cf-4edc-b22a-c4cbbe9c8793",
+      "source": {
+        "product": "hermes",
+        "surface": "server-hooks",
+        "instanceId": "ee1cecd1-e325-4478-b210-0523dc0b3726",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2026.9.24",
+        "epoch": "897c6193-299c-4543-ad1a-d5c8f2778a5d",
+        "sequence": 1
+      },
+      "projectId": "0a9557a4-4896-43a7-93af-765b53175528",
+      "sessionId": "4fc840282f12d22787edf7c1c54c1bcd574fefda34378aa9bbbe4165af5ccdb1",
+      "runId": "17c92f6dd9c3796eecd4da23461488eb61bd1fba81eb4a33cdff4d4890c68686",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:19:25.290Z",
+      "observedAt": "2026-11-14T20:19:25.290Z",
+      "clock": {
+        "basis": "collector_wall"
+      },
+      "capabilities": {
+        "runBoundaries": true,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.completed"
+    }
+  ]
+}

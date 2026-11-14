@@ -1,0 +1,65 @@
+{
+  "product": "openclaw",
+  "release": "2026.10.4",
+  "model": "emulated",
+  "scenario": "interruption",
+  "events": [
+    {
+      "schemaVersion": 1,
+      "eventId": "b9080132-56fc-5e4b-a3be-4d795d73f4b4",
+      "source": {
+        "product": "openclaw",
+        "surface": "gateway",
+        "instanceId": "0f41a0de-d930-4141-bf99-605fc6527989",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2026.10.4",
+        "epoch": "44352d2b-ce8b-445d-9df1-6e7c9b060df1",
+        "sequence": 164
+      },
+      "projectId": "6ccb856c-0cc0-4972-9c78-64ae77c3a124",
+      "sessionId": "run-7cd296c61c3b5e5d2c4d61d0ae9890f0c53f1cda984e73f4cf91956f5188c9ef",
+      "runId": "7cd296c61c3b5e5d2c4d61d0ae9890f0c53f1cda984e73f4cf91956f5188c9ef",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:04:47.409Z",
+      "observedAt": "2026-11-14T20:04:47.409Z",
+      "clock": {
+        "basis": "source_wall"
+      },
+      "capabilities": {
+        "runBoundaries": true,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.started"
+    },
+    {
+      "schemaVersion": 1,
+      "eventId": "0276f7ea-bb66-58f9-a6bd-549bce7935ba",
+      "source": {
+        "product": "openclaw",
+        "surface": "gateway",
+        "instanceId": "0f41a0de-d930-4141-bf99-605fc6527989",
+        "adapterVersion": "0.2.0",
+        "runtimeVersion": "2026.10.4",
+        "epoch": "44352d2b-ce8b-445d-9df1-6e7c9b060df1",
+        "sequence": 175
+      },
+      "projectId": "6ccb856c-0cc0-4972-9c78-64ae77c3a124",
+      "sessionId": "run-7cd296c61c3b5e5d2c4d61d0ae9890f0c53f1cda984e73f4cf91956f5188c9ef",
+      "runId": "7cd296c61c3b5e5d2c4d61d0ae9890f0c53f1cda984e73f4cf91956f5188c9ef",
+      "agentId": "root",
+      "occurredAt": "2026-11-14T20:04:54.792Z",
+      "observedAt": "2026-11-14T20:04:54.792Z",
+      "clock": {
+        "basis": "source_wall"
+      },
+      "capabilities": {
+        "runBoundaries": true,
+        "externalWaits": "none",
+        "replay": false
+      },
+      "eventType": "run.cancelled",
+      "sourceDurationMs": 7381
+    }
+  ]
+}
