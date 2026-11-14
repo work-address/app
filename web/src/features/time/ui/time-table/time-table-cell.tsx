@@ -8,6 +8,7 @@ import { TimeContext } from '../time-context'
 
 import { TimePaidBadge } from './time-paid-badge'
 import { TimeScreenshotThumb } from './time-screenshot-thumb'
+import { TimeTableAgents } from './time-table-agents'
 
 import type { Time } from '@/entities/time'
 
@@ -30,6 +31,10 @@ export const TimeTableCell = memo((props: DesktopBodyCellRenderProps<Time>) => {
 
   if (props.customKey === 'paidStatus') {
     return <TimePaidBadge entry={entry} />
+  }
+
+  if (props.customKey === 'agents') {
+    return <TimeTableAgents entry={entry} />
   }
 
   if (props.customKey === 'open') {

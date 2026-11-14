@@ -12,6 +12,7 @@ import {
 } from '../../model'
 import { TimeDayHeading } from '../common'
 
+import { TableAgentsContext, useTableAgentSummaries } from './time-table-agents'
 import { TimeTableCell } from './time-table-cell'
 
 import { $user } from '@/entities/profile'
@@ -37,6 +38,17 @@ const COLUMN_WIDTHS = {
   screenshot: 120,
   payment: 136,
   open: 48,
+} as const
+
+/* With the AI agents column the others give it room, so the list still fits
+   a 1280px window. */
+const COLUMN_WIDTHS_WITH_AGENTS = {
+  timeActive: 112,
+  activity: 168,
+  screenshot: 104,
+  agents: 192,
+  payment: 120,
+  open: 40,
 } as const
 
 /** The list presentation of the worklogs feed. */
@@ -93,6 +105,12 @@ export const TimeTable = () => {
     [groupsByDay],
   )
 
+  // The column is there only while a loaded entry has agent runs.
+  const agentSummaries = useTableAgentSummaries(entries)
+  const hasAgents = agentSummaries.size > 0
+
+  const widths = hasAgents ? COLUMN_WIDTHS_WITH_AGENTS : COLUMN_WIDTHS
+
   const config = useMemo(
     (): DataTableConfig<Time> => [
       {
@@ -104,26 +122,36 @@ export const TimeTable = () => {
         dataKey: 'minutesActive',
         headerText: t('dashboard.worklogsTable.head.timeActive'),
         description: t('common.metricDesc.timeActive'),
-        width: COLUMN_WIDTHS.timeActive,
+        width: widths.timeActive,
         sortable: true,
       },
       {
         customKey: 'activity',
         headerText: t('dashboard.worklogsTable.head.activeMetrics'),
-        width: COLUMN_WIDTHS.activity,
+        width: widths.activity,
       },
       {
         dataKey: 'screenshot',
         headerText: t('dashboard.worklogsTable.head.screenshot'),
         description: t('common.metricDesc.screenshot'),
-        width: COLUMN_WIDTHS.screenshot,
+        width: widths.screenshot,
         sortable: true,
       },
+      ...(hasAgents
+        ? [
+            {
+              customKey: 'agents',
+              headerText: t('dashboard.worklogsTable.agents.title'),
+              description: t('time.list.agents.description'),
+              width: COLUMN_WIDTHS_WITH_AGENTS.agents,
+            },
+          ]
+        : []),
       {
         customKey: 'paidStatus',
         headerText: t('dashboard.worklogsTable.head.paymentStatus'),
         description: t('common.metricDesc.paymentStatus'),
-        width: COLUMN_WIDTHS.payment,
+        width: widths.payment,
         sortable: true,
       },
       {
@@ -131,10 +159,10 @@ export const TimeTable = () => {
         customKey: 'open',
         headerText: '',
         horizontalAlign: 'end',
-        width: COLUMN_WIDTHS.open,
+        width: widths.open,
       },
     ],
-    [t],
+    [t, hasAgents, widths],
   )
 
   const readerId = reader?.id
@@ -144,27 +172,29 @@ export const TimeTable = () => {
   )
 
   return (
-    <DataTable<Time>
-      shadow={false}
-      rounded={false}
-      data={entries}
-      config={config}
-      getRowId={(row) => row.id ?? ''}
-      BodyComponent={TimeTableCell}
-      allowSelection
-      canSelectRow={canSelectRow}
-      selectedIds={selection}
-      onSelectedIdsChange={changeSelection}
-      loading={loading}
-      isFiltering={isFiltering}
-      sort={sort}
-      onSortChange={resetSort}
-      onRowClick={rowClicked}
-      onReachEnd={loadMore}
-      isLoadingMore={isLoadingMore}
-      skeletonHeight="40px"
-      getGroupKey={dayGroups.length > 0 ? getTimeDayKey : undefined}
-      renderGroupHeader={renderGroupHeader}
-    />
+    <TableAgentsContext.Provider value={agentSummaries}>
+      <DataTable<Time>
+        shadow={false}
+        rounded={false}
+        data={entries}
+        config={config}
+        getRowId={(row) => row.id ?? ''}
+        BodyComponent={TimeTableCell}
+        allowSelection
+        canSelectRow={canSelectRow}
+        selectedIds={selection}
+        onSelectedIdsChange={changeSelection}
+        loading={loading}
+        isFiltering={isFiltering}
+        sort={sort}
+        onSortChange={resetSort}
+        onRowClick={rowClicked}
+        onReachEnd={loadMore}
+        isLoadingMore={isLoadingMore}
+        skeletonHeight="40px"
+        getGroupKey={dayGroups.length > 0 ? getTimeDayKey : undefined}
+        renderGroupHeader={renderGroupHeader}
+      />
+    </TableAgentsContext.Provider>
   )
 }

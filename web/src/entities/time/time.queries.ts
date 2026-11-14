@@ -172,6 +172,44 @@ export const timeAgentRunsQuery = createQuery({
 
 concurrency(timeAgentRunsQuery, { strategy: 'TAKE_LATEST' })
 
+export type TableAgentRunsParams = {
+  fromAt: string
+  toAt: string
+}
+
+/** The search's page size, which the API fixes. */
+const AGENT_RUNS_PAGE = 100
+/** A runaway range stops here rather than asking page after page. */
+const AGENT_RUNS_MAX_PAGES = 20
+
+/**
+ * Every agent run the reader may see across the time list's loaded range, on
+ * every project: the list matches them to its rows itself. The search answers
+ * a hundred at a time, so this follows the pages.
+ */
+export const tableAgentRunsQuery = createQuery({
+  handler: async (params: TableAgentRunsParams) => {
+    const runs: TimeAgentRun[] = []
+    for (let page = 0; page < AGENT_RUNS_MAX_PAGES; page += 1) {
+      const [items, total] = (await runApiData(
+        () =>
+          baseApi.agentControllerSearch({
+            body: { ...params, offset: page * AGENT_RUNS_PAGE },
+          }),
+        'in-place',
+      )) as [TimeAgentRun[], number]
+      runs.push(...items)
+      if (items.length < AGENT_RUNS_PAGE || runs.length >= total) {
+        break
+      }
+    }
+
+    return runs
+  },
+})
+
+concurrency(tableAgentRunsQuery, { strategy: 'TAKE_LATEST' })
+
 export type RecentTimeParams = {
   fromAt: string
   toAt: string

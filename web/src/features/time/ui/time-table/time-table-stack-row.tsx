@@ -12,6 +12,7 @@ import { TimeContext } from '../time-context'
 
 import { TimePaidBadge } from './time-paid-badge'
 import { TimeScreenshotThumb } from './time-screenshot-thumb'
+import { TimeTableAgents } from './time-table-agents'
 
 import type { Time } from '@/entities/time'
 
@@ -89,6 +90,7 @@ export const TimeTableStackRow = memo(
             </>
           ) : null}
           {entry.note ? <Note>{entry.note}</Note> : null}
+          <TimeTableAgents entry={entry} hideEmpty />
         </Body>
         {/* The screenshot and the payment toggle share the trailing column,
             so the facts beside them keep the row short. */}

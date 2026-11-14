@@ -16,6 +16,7 @@ import {
 import { TimeDayHeading } from '../common'
 import { TimeContext } from '../time-context'
 
+import { TableAgentsContext, useTableAgentSummaries } from './time-table-agents'
 import { TimeTableStackRow } from './time-table-stack-row'
 
 import { $user } from '@/entities/profile'
@@ -90,6 +91,8 @@ export const TimeTableStack = () => {
   )
   const allSelected = getTimeSelectAllState(ids, selection)
 
+  const agentSummaries = useTableAgentSummaries(entries)
+
   if (loading && entries.length === 0) {
     return (
       <Root aria-hidden="true">
@@ -105,54 +108,56 @@ export const TimeTableStack = () => {
   }
 
   return (
-    <Root data-filtering={isFiltering || undefined}>
-      {ids.length > 0 && (
-        <Header>
-          <Checkbox
-            checked={allSelected}
-            aria-label={t('ui.table.selectAll')}
-            onCheckedChange={() =>
-              changeSelection(toggleTimeSelectAll(ids, selection))
-            }
-          />
-          <Caption>{t('time.list.selectAll')}</Caption>
-        </Header>
-      )}
-      <List>
-        {entries.map((entry, index) => {
-          const day = getTimeDayKey(entry)
-          const group =
-            groupsByDay &&
-            (index === 0 || getTimeDayKey(entries[index - 1]) !== day)
-              ? groupsByDay.get(day)
-              : undefined
+    <TableAgentsContext.Provider value={agentSummaries}>
+      <Root data-filtering={isFiltering || undefined}>
+        {ids.length > 0 && (
+          <Header>
+            <Checkbox
+              checked={allSelected}
+              aria-label={t('ui.table.selectAll')}
+              onCheckedChange={() =>
+                changeSelection(toggleTimeSelectAll(ids, selection))
+              }
+            />
+            <Caption>{t('time.list.selectAll')}</Caption>
+          </Header>
+        )}
+        <List>
+          {entries.map((entry, index) => {
+            const day = getTimeDayKey(entry)
+            const group =
+              groupsByDay &&
+              (index === 0 || getTimeDayKey(entries[index - 1]) !== day)
+                ? groupsByDay.get(day)
+                : undefined
 
-          return (
-            <Fragment key={entry.id ?? index}>
-              {group && (
-                <Day>
-                  <TimeDayHeading group={group} />
-                </Day>
-              )}
-              <TimeTableStackRow
-                entry={entry}
-                selected={Boolean(entry.id && selection[entry.id])}
-                onOpen={openEntry}
-                onSelectedChange={(id) =>
-                  changeSelection({ ...selection, [id]: !selection[id] })
-                }
-              />
-            </Fragment>
-          )
-        })}
-      </List>
-      {isLoadingMore && (
-        <Footer>
-          <Spinner size={32} />
-        </Footer>
-      )}
-      <Sentinel ref={sentinelRef} />
-    </Root>
+            return (
+              <Fragment key={entry.id ?? index}>
+                {group && (
+                  <Day>
+                    <TimeDayHeading group={group} />
+                  </Day>
+                )}
+                <TimeTableStackRow
+                  entry={entry}
+                  selected={Boolean(entry.id && selection[entry.id])}
+                  onOpen={openEntry}
+                  onSelectedChange={(id) =>
+                    changeSelection({ ...selection, [id]: !selection[id] })
+                  }
+                />
+              </Fragment>
+            )
+          })}
+        </List>
+        {isLoadingMore && (
+          <Footer>
+            <Spinner size={32} />
+          </Footer>
+        )}
+        <Sentinel ref={sentinelRef} />
+      </Root>
+    </TableAgentsContext.Provider>
   )
 }
 

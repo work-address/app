@@ -13,7 +13,7 @@ import { $removedPromptRunKeys, timeAgentRunsQuery } from '@/entities/time'
 import { formatDurationFromMinutes, Text } from '@/shared'
 
 // The names the desktop tracker and server collectors report products by.
-const PRODUCT_NAMES: Record<string, string> = {
+export const PRODUCT_NAMES: Record<string, string> = {
   'claude-code': 'Claude Code',
   codex: 'Codex',
   cursor: 'Cursor',
@@ -121,8 +121,8 @@ const summarize = (
 }
 
 /**
- * The runs that belong to an entry, summarized inside its period, oldest
- * first. The previous entry's answer stays until this one's lands, so only
+ * The runs that belong to an entry, by its author on its project,
+ * summarized inside its period, oldest first. The previous entry's answer stays until this one's lands, so only
  * runs inside this period, by this entry's author, are kept.
  */
 export const getEntryAgentRuns = (
@@ -130,6 +130,7 @@ export const getEntryAgentRuns = (
   time: Time,
 ): EntryAgentRun[] => {
   const authorId = time.user?.id
+  const projectId = time.project?.id
   const from = Date.parse(time.fromAt)
   const to = Date.parse(time.toAt)
   if (to <= from) {
@@ -138,6 +139,7 @@ export const getEntryAgentRuns = (
 
   return runs
     .filter((run) => !authorId || run.userId === authorId)
+    .filter((run) => !projectId || run.projectId === projectId)
     .map((run) => summarize(run, from, to))
     .filter(({ spans }) => spans.length > 0)
     .sort((a, b) => Date.parse(a.run.fromAt) - Date.parse(b.run.fromAt))
