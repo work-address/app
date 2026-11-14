@@ -229,9 +229,11 @@ A person who is only ever a viewer does not get the page.
 
 The build order and the measurement rules are in `docs/agent-time-tracking.md`.
 
-## Phone time and location (planned)
+## Phone time and location
 
-Decided on 13 November 2026 and not built. The rules and the build order are in
+Decided on 13 November 2026 and built: the server, the web app's switch, the
+entry's map, the day's trail and the dashboard's Locations map. The rules and
+the build order are in
 [android-server.md](../time-tracker/docs/android-server.md). The phone app
 itself is in [android.md](../time-tracker/docs/android.md).
 
@@ -253,15 +255,23 @@ active and idle split and has no app breakdown. Where totals and invoice lines
 split the desktop's time from manual time, phone time is a part of its own,
 never manual. A worker on a phone counts against the plan as any worker does.
 
-**Where the phone was is detail, and follows every rule detail follows.** A
-second switch, under the first and never on without it, asks for it. The author
-sees it at once, the owner once the entry is published, and a viewer never. The
-author may remove it until the entry is invoiced, and the time stays. It is
-kept only as long as the project keeps screenshots. It is not stored for a
-project that did not ask for it, and an upload never puts it back. A position
-the phone says was faked is kept and marked, never refused. Nothing turns a
-position into a street address or an on-site verdict: the owner reads the
-trail.
+**Phone tracking always records where the phone was.** The owner turns both on
+with one switch, "Allow tracking from a phone (records location)", with a note
+under it to tell the people tracked and follow local law. The server keeps
+`trackLocation` equal to `allowMobileTime` on every save, whatever a client
+sends; both fields stay so the phone's project list keeps its shape.
+
+**Where the phone was is detail, and follows every rule detail follows.** The
+author sees it at once, the owner once the entry is published, and a viewer
+never. The author may remove it until the entry is invoiced, and the time stays.
+It is kept only as long as the project keeps screenshots. It is not stored for a
+project that no longer allows phone tracking, where a slice from before the
+switch went off still arrives, and an upload never puts it back. A position the
+phone says was faked is kept and marked, never refused. Nothing turns a position
+into a street address or an on-site verdict: the owner reads the trail, on an
+entry, over a person's day, or on the dashboard's Locations map, which draws
+the phone entries under the dashboard's filter and opens an entry from any of
+its points.
 
 ## Who can see what
 
@@ -271,7 +281,7 @@ trail.
 | Who is tracking now | **every worker** | **own only** | **no** |
 | The rate, money, paid and unpaid time | **every worker** | **own only** | **no** |
 | Screenshots, apps, window titles, domains, idle and the day timeline | **every worker, after review** | **own only** | **project totals by app name** |
-| Where the phone was (planned) | **every worker, after review** | **own only** | **no** |
+| Where the phone was | **every worker, after review** | **own only** | **no** |
 | Time by the owner's categories and labels | **every worker, after review** | **own, and the published set** | **project totals by category, no labels** |
 | A person's own categories, labels and goals | **no** | **own only** | **no** |
 | Agents: runs and rates | **all workers'** | **own only** | **no** |
@@ -312,8 +322,8 @@ invoice publishes what it bills. The person recorded sees the record first.
 
 **Nothing is recorded in secret.** The desktop shows when it is recording and
 what the project records, and a worker sees everything about them that the
-owner sees. The phone app, once built, keeps a notification up while its timer
-runs, and asks the worker before it first records location.
+owner sees. The phone app keeps a notification up while its timer runs, and
+asks the worker before it first records location.
 
 **A worker sees only their own agents.** The same reason covers agents, and
 more: an agent's runs show how a contractor works, not only what they charge.
