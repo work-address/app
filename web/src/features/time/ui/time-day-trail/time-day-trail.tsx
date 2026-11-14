@@ -123,6 +123,7 @@ const TimeDayTrailDialog = ({
     () => (data ?? []).flatMap((entry): TrailPoint[] => entry.locations ?? []),
     [data],
   )
+  const trails = useMemo(() => [points], [points])
   const underReview = entries.some((entry) => entry.detailPendingReview)
   const person = people.find(({ id }) => id === personId) ?? people[0]
   const dayLabel = new Intl.DateTimeFormat(i18n.language, {
@@ -163,7 +164,7 @@ const TimeDayTrailDialog = ({
           </Text>
         ) : hasFix(points) ? (
           <TrailMap
-            points={points}
+            trails={trails}
             label={t('time.trail.mapLabel', {
               person: person.label,
               day: dayLabel,

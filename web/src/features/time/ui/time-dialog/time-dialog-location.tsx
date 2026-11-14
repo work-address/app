@@ -34,12 +34,12 @@ export const TimeDialogLocation = ({ time }: Props) => {
     })
     return (at: string) => formatter.format(new Date(at))
   }, [i18n.language])
+  const points = time.locations
+  const trails = useMemo(() => [points ?? []], [points])
 
   if (!isPhoneTime(time) || time.detailPendingReview) {
     return null
   }
-
-  const points = time.locations ?? []
 
   return (
     <Root>
@@ -51,7 +51,7 @@ export const TimeDialogLocation = ({ time }: Props) => {
       </Heading>
       {hasFix(points) ? (
         <TrailMap
-          points={points}
+          trails={trails}
           label={t('time.location.mapLabel')}
           fakedLabel={t('time.location.faked')}
           formatTime={formatTime}
