@@ -25,13 +25,13 @@ export const serverAdapters = {
     status: 'partial',
     transport: 'command hooks',
     limitation:
-      'Stop is provisional; no transcript reconciliation or interruption boundary',
+      'Stop is provisional; SessionEnd inside a turn cancels it; no transcript reconciliation',
   },
   codex: {
     status: 'partial',
     transport: 'command hooks or live exec JSONL',
     limitation:
-      'Hook Stop is provisional; exec stream has no native timestamps or replay',
+      'Hook Stop is provisional; SessionEnd inside a turn fails it; exec stream has no native timestamps or replay',
   },
   'kimi-code': {
     status: 'partial',
@@ -108,6 +108,9 @@ function object(value: unknown): Record<string, unknown> {
   return value as Record<string, unknown>
 }
 function nativeId(value: unknown): string {
+  // Kimi Code numbers its turns (0, 1, …) within a session.
+  if (typeof value === 'number' && Number.isSafeInteger(value) && value >= 0)
+    value = String(value)
   if (typeof value !== 'string' || !value.length || value.length > 4096)
     throw new Error('MISSING_ID')
   return opaque(value)
@@ -121,6 +124,8 @@ interface State {
   stopped: boolean
   suppressed: boolean
   started: boolean
+  /** Kimi Code: a terminal that ran before the session's first TurnStarted. */
+  early?: 'Stop' | 'StopFailure' | 'Interrupt'
 }
 function fresh(run: string = randomUUID()): State {
   return {
@@ -208,12 +213,12 @@ export function captureHook(
   input: unknown,
   options: CaptureOptions,
 ): number {
-  const e = object(input)
+  let e = object(input)
   const name = e.hook_event_name
   const allowed: Record<HookProduct, string[]> = {
-    hermes: ['pre_llm_call', 'on_session_end'],
-    'claude-code': ['UserPromptSubmit', 'Stop', 'StopFailure'],
-    codex: ['UserPromptSubmit', 'Stop', 'Interrupt'],
+    hermes: ['pre_llm_call', 'on_session_end', 'api_request_error'],
+    'claude-code': ['UserPromptSubmit', 'Stop', 'StopFailure', 'SessionEnd'],
+    codex: ['UserPromptSubmit', 'Stop', 'Interrupt', 'SessionEnd'],
     'kimi-code': ['TurnStarted', 'Stop', 'StopFailure', 'Interrupt'],
     opencode: ['busy', 'idle', 'error'],
   }
@@ -224,12 +229,29 @@ export function captureHook(
     e.telemetry_schema_version !== 'hermes.observer.v1'
   )
     throw new Error('UNSUPPORTED_HERMES_SCHEMA')
+  if (product === 'codex') {
+    // Codex ends a failed turn with SessionEnd alone, and SessionEnd names no
+    // turn: remember the session's latest turn so it can be closed.
+    const latest = opaque(JSON.stringify([product, session, 'latest-turn']))
+    if (name === 'UserPromptSubmit' && typeof e.turn_id === 'string') {
+      const turn = e.turn_id
+      queue.capture(latest, () => ({ state: turn, events: [] }))
+    } else if (name === 'SessionEnd') {
+      let turn: string | undefined
+      queue.capture(latest, (previous) => {
+        turn = previous || undefined
+        return { state: previous ?? '', events: [] }
+      })
+      if (!turn) return 0
+      e = { ...e, turn_id: turn }
+    }
+  }
   const stableTurn = product === 'hermes' || product === 'codex'
   // Legacy Hermes CLI shutdown has no turn ID. It is not a turn terminal.
   if (stableTurn && typeof e.turn_id !== 'string') return 0
   const turn = stableTurn ? nativeId(e.turn_id) : undefined
   const key = opaque(JSON.stringify([product, session, turn ?? 'session']))
-  return queue.capture(key, (previous) => {
+  const count = queue.capture(key, (previous) => {
     let state: State = previous ? JSON.parse(previous) : fresh(turn)
     if (previous && state.assignment === undefined) state.assignment = null
     const events: AgentEventV1[] = []
@@ -265,8 +287,8 @@ export function captureHook(
       if (product === 'kimi-code') {
         // A new turn ID is a new run, even after a turn that was left out.
         const run = nativeId(e.turn_id)
-        if (previous && state.run !== run) state = fresh(run)
-        else if (!previous) state.run = run
+        if (!previous || (state.early && !state.started)) state.run = run
+        else if (state.run !== run) state = fresh(run)
         if (!kimiRecorded(e.origin_kind)) state.suppressed = true
       }
       if (product === 'hermes' && e.parent_session_id) state.suppressed = true
@@ -294,20 +316,50 @@ export function captureHook(
                 product === 'codex' ||
                 (product === 'kimi-code' && kimiPersonTurn(e.origin_kind)))
               ? promptText(e.prompt)
-              : undefined,
+              : // Hermes Agent passes it to pre_llm_call as user_message.
+                options.prompts !== false && product === 'hermes'
+                ? promptText(e.user_message)
+                : undefined,
           )
           state.started = true
+          // Kimi Code runs a session's hooks in parallel: on a quick turn its
+          // Stop may land first. Nothing came before it, so it is this turn's.
+          if (state.early) {
+            const early = state.early
+            delete state.early
+            if (early === 'Stop') {
+              emit('run.observed')
+              state.stopped = true
+            } else {
+              emit(early === 'Interrupt' ? 'run.cancelled' : 'run.failed')
+              state.closed = true
+            }
+          }
         }
         // Native turn IDs deduplicate starts; Claude submissions remain provisional.
       }
     } else if (
       product === 'kimi-code' &&
-      e.turn_id &&
+      previous &&
+      e.turn_id !== undefined &&
+      e.turn_id !== null &&
       nativeId(e.turn_id) !== state.run
     ) {
       // A late terminal for another turn must not close the current turn.
+    } else if (
+      product === 'kimi-code' &&
+      !previous &&
+      (name === 'Stop' || name === 'StopFailure' || name === 'Interrupt')
+    ) {
+      state.early = name
     } else if (!state.suppressed && (previous || stableTurn) && !state.closed) {
-      if (product === 'hermes' && name === 'on_session_end') {
+      if (product === 'hermes' && name === 'api_request_error') {
+        // Sent only when the request will not be retried: the turn failed.
+        if (e.retryable === false) {
+          emit('run.failed')
+          state.closed = true
+        }
+      } else if (product === 'hermes' && name === 'on_session_end') {
         const flags = [e.completed, e.failed, e.interrupted].filter(
           (v) => v === true,
         ).length
@@ -327,6 +379,17 @@ export function captureHook(
       ) {
         emit('run.observed') // Another hook can continue the turn. Never infer success.
         state.stopped = true
+      } else if (product === 'codex' && name === 'SessionEnd') {
+        // No Stop and no Interrupt came: the turn ended without completing,
+        // as an API error ends it.
+        if (!state.stopped) emit('run.failed')
+        state.closed = true
+      } else if (product === 'claude-code' && name === 'SessionEnd') {
+        // Claude Code has no Interrupt hook: a session that ends inside a
+        // turn (Ctrl+C, a killed process) ends it unfinished. After Stop the
+        // turn already has its provisional end.
+        if (!state.stopped) emit('run.cancelled')
+        state.closed = true
       } else if (
         (product === 'codex' || product === 'kimi-code') &&
         name === 'Interrupt'
@@ -342,6 +405,106 @@ export function captureHook(
       }
     }
     return { state: JSON.stringify(state), events }
+  })
+  if (
+    product === 'kimi-code' &&
+    name === 'TurnStarted' &&
+    kimiRecorded(e.origin_kind) &&
+    !e.agent_id
+  )
+    rememberKimiTurn(queue, e.session_id, e.turn_id)
+  return count
+}
+
+const KIMI_OPEN = opaque(JSON.stringify(['kimi-code', 'open-turns']))
+const KIMI_OPEN_MAX = 20
+export interface KimiOpenTurn {
+  /** Kimi's own session id: its session store is found by it. Local only. */
+  session: string
+  turn: number | string
+  at: number
+}
+
+function readKimiOpen(value: string | undefined): KimiOpenTurn[] {
+  try {
+    const list = JSON.parse(value ?? '[]')
+    return Array.isArray(list) ? list : []
+  } catch {
+    return []
+  }
+}
+
+/**
+ * Kimi Code 2.x fires no hook when a turn ends normally, so the turns this
+ * collector started are listed until Kimi's session store says how they
+ * ended (kimi-store.ts).
+ */
+function rememberKimiTurn(
+  queue: EventQueue,
+  session: unknown,
+  turn: unknown,
+): void {
+  if (typeof session !== 'string' || !/^[\w.-]{1,200}$/.test(session)) return
+  if (typeof turn !== 'number' && typeof turn !== 'string') return
+  queue.capture(KIMI_OPEN, (previous) => {
+    const list = readKimiOpen(previous).filter((t) => t.session !== session)
+    list.push({ session, turn, at: Date.now() })
+    return { state: JSON.stringify(list.slice(-KIMI_OPEN_MAX)), events: [] }
+  })
+}
+
+/** The Kimi turns still open, oldest first; `keep` decides which stay listed. */
+export function kimiOpenTurns(
+  queue: EventQueue,
+  keep: (turn: KimiOpenTurn) => boolean = () => true,
+): KimiOpenTurn[] {
+  let open: KimiOpenTurn[] = []
+  queue.capture(KIMI_OPEN, (previous) => {
+    open = readKimiOpen(previous)
+    return { state: JSON.stringify(open.filter(keep)), events: [] }
+  })
+  return open
+}
+
+/**
+ * Ends an open Kimi turn as its session store recorded it. The store is
+ * Kimi's own account, so a completed turn is completed, not provisional.
+ */
+export function captureKimiEnd(
+  queue: EventQueue,
+  config: CollectorConfig,
+  open: KimiOpenTurn,
+  ending: 'completed' | 'failed' | 'cancelled' | string,
+  at: number,
+  options: CaptureOptions,
+): number {
+  const session = nativeId(open.session)
+  const key = opaque(JSON.stringify(['kimi-code', session, 'session']))
+  return queue.capture(key, (previous) => {
+    if (!previous) return { state: '', events: [] }
+    const state: State = JSON.parse(previous)
+    if (state.suppressed || state.closed || state.run !== nativeId(open.turn))
+      return { state: previous, events: [] }
+    const type: AgentEventV1['eventType'] =
+      ending === 'completed'
+        ? 'run.completed'
+        : ending === 'failed'
+          ? 'run.failed'
+          : ending === 'cancelled'
+            ? 'run.cancelled'
+            : 'run.observed'
+    const event = envelope(
+      config,
+      'kimi-code',
+      'server-hooks',
+      session,
+      state,
+      { ...options, now: () => at },
+      type,
+      false,
+    )
+    state.closed = true
+    return { state: JSON.stringify(state), events: [event] }
   })
 }
 

@@ -51,8 +51,11 @@ export class EventQueue {
     }
     this.db = new DatabaseSync(path)
     chmodSync(path, 0o600)
+    // Hooks of parallel sessions start together and each takes the write lock
+    // briefly; 25 ms lost the slower one's event. A second stays well inside
+    // the shortest hook timeout (2 s).
     this.db
-      .exec(`PRAGMA busy_timeout = 25; PRAGMA journal_mode = DELETE; PRAGMA synchronous = FULL;
+      .exec(`PRAGMA busy_timeout = 1000; PRAGMA journal_mode = DELETE; PRAGMA synchronous = FULL;
       CREATE TABLE IF NOT EXISTS metadata (key TEXT PRIMARY KEY, value TEXT NOT NULL);
       CREATE TABLE IF NOT EXISTS events (
         id TEXT PRIMARY KEY, payload TEXT NOT NULL, bytes INTEGER NOT NULL,

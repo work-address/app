@@ -33,6 +33,8 @@ const set = (value: string | undefined) =>
 export const MIN_REQUEST_MS = 1000
 /** How long the detached uploader waits out backoff before leaving the rest to the next hook. */
 export const DETACHED_WAIT_MS = 5 * 60_000
+/** How long a detached uploader waits for open Kimi Code turns to end in Kimi's session store. */
+export const KIMI_WAIT_MS = 30 * 60_000
 
 /**
  * The upload a hook event starts. Session boundaries and stops start a
@@ -56,13 +58,17 @@ export function uploadTrigger(
 }
 
 /** No resident service: one `sync` that drains, waits out backoff and exits. The queue lease keeps it single. */
-export function startUploader(cli: string): void {
+export function startUploader(
+  cli: string,
+  extra: NodeJS.ProcessEnv = {},
+): void {
   spawn(process.execPath, [cli, 'sync'], {
     detached: true,
     stdio: 'ignore',
     windowsHide: true,
     env: {
       WORK_ADDRESS_SYNC_WAIT_MS: String(DETACHED_WAIT_MS),
+      ...extra,
       ...process.env,
       NODE_NO_WARNINGS: '1',
     },

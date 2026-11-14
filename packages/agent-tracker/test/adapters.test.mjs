@@ -58,11 +58,11 @@ function context(t) {
 }
 const hermes = { turn_id: 't', telemetry_schema_version: 'hermes.observer.v1' }
 
-test('Hermes root turns survive restart, retain no content, and deduplicate repeated callbacks', (t) => {
+test('Hermes root turns survive restart, keep only the prompt, and deduplicate repeated callbacks', (t) => {
   const c = context(t)
   c.capture('hermes', 'pre_llm_call', {
     ...hermes,
-    user_message: 'PRIVATE',
+    user_message: 'Fix the build',
     conversation_history: ['PRIVATE'],
     model: 'PRIVATE',
   })
@@ -83,6 +83,7 @@ test('Hermes root turns survive restart, retain no content, and deduplicate repe
   assert.equal(events[0].runId, events[1].runId)
   assert.equal(events[0].source.epoch, events[1].source.epoch)
   assert.equal(events[0].clock.basis, 'collector_wall')
+  assert.equal(events[0].prompt, 'Fix the build')
   assert.equal(JSON.stringify(events).includes('PRIVATE'), false)
   assert.equal(
     readFileSync(join(c.dir, 'queue.sqlite')).includes(Buffer.from('PRIVATE')),
@@ -388,4 +389,163 @@ test('Codex source sequence increases across successful, failed and disconnected
   )
   assert.equal(new Set(events.map((e) => e.source.epoch)).size, 1)
   assert.equal(new Set(events.map((e) => e.runId)).size, 3)
+})
+
+test('Claude Code: a session that ends inside a turn cancels it, and not after Stop', (t) => {
+  const c = context(t)
+  c.capture('claude-code', 'UserPromptSubmit', { prompt: 'x' })
+  c.capture('claude-code', 'SessionEnd', { reason: 'other' })
+  assert.deepEqual(
+    c.queue.batch().map((e) => e.eventType),
+    ['run.started', 'run.cancelled'],
+  )
+  const d = context(t)
+  d.capture('claude-code', 'UserPromptSubmit', { prompt: 'x' })
+  d.capture('claude-code', 'Stop', {})
+  d.capture('claude-code', 'SessionEnd', { reason: 'prompt_input_exit' })
+  assert.deepEqual(
+    d.queue.batch().map((e) => e.eventType),
+    ['run.started', 'run.observed'],
+  )
+})
+
+test('Kimi Code 0.38 payloads: numbered turns, Stop and StopFailure without one', (t) => {
+  // As Kimi Code 0.38.0 sent them to a hook (session ids shortened).
+  const c = context(t)
+  const turn = (turn_id, prompt) => ({
+    session_id: 'session_a',
+    client_type: 'kimi_code_cli',
+    turn_id,
+    origin_kind: 'user',
+    prompt,
+  })
+  c.capture('kimi-code', 'TurnStarted', turn(0, 'Reply with ok'))
+  c.capture('kimi-code', 'Stop', {
+    session_id: 'session_a',
+    stop_hook_active: false,
+  })
+  c.capture('kimi-code', 'TurnStarted', turn(1, 'WA_FAIL'))
+  c.capture('kimi-code', 'StopFailure', {
+    session_id: 'session_a',
+    error_type: 'APIStatusError',
+    error_message: '400 PRIVATE',
+  })
+  const events = c.queue.batch()
+  assert.deepEqual(
+    events.map((e) => e.eventType),
+    ['run.started', 'run.observed', 'run.started', 'run.failed'],
+  )
+  assert.notEqual(events[0].runId, events[2].runId)
+  assert.equal(events[0].prompt, 'Reply with ok')
+  assert.equal(JSON.stringify(events).includes('PRIVATE'), false)
+})
+
+test('hooks of parallel sessions all reach the queue', async (t) => {
+  const c = context(t)
+  const { spawn } = await import('node:child_process')
+  const hook = (session) =>
+    new Promise((done) => {
+      const child = spawn(
+        process.execPath,
+        [resolve('dist/cli.js'), 'hook', 'kimi-code'],
+        {
+          env: {
+            ...process.env,
+            NODE_NO_WARNINGS: '1',
+            WORK_ADDRESS_STATE_DIR: c.dir,
+            WORK_ADDRESS_EXPERIMENTAL_ADAPTERS: '1',
+            WORK_ADDRESS_HOOK_UPLOAD: '0',
+          },
+        },
+      )
+      child.on('exit', done)
+      child.stdin.end(
+        JSON.stringify({
+          session_id: session,
+          hook_event_name: 'TurnStarted',
+          turn_id: 0,
+          origin_kind: 'user',
+          prompt: 'x',
+        }),
+      )
+    })
+  await Promise.all(['a', 'b', 'c', 'd', 'e', 'f'].map(hook))
+  c.reopen()
+  assert.equal(c.queue.batch().length, 6)
+  assert.equal(c.queue.status().lost, 0)
+})
+
+test('Kimi Code: a Stop that lands before its TurnStarted still ends the turn', (t) => {
+  for (const [terminal, extra, ending] of [
+    ['Stop', {}, 'run.observed'],
+    ['StopFailure', { error_type: 'APIStatusError' }, 'run.failed'],
+    ['Interrupt', { turn_id: 0, reason: 'cancelled' }, 'run.cancelled'],
+  ]) {
+    const c = context(t)
+    c.capture('kimi-code', terminal, extra)
+    c.capture('kimi-code', 'TurnStarted', {
+      turn_id: 0,
+      origin_kind: 'user',
+      prompt: 'x',
+    })
+    c.capture('kimi-code', 'Stop', {})
+    assert.deepEqual(
+      c.queue.batch().map((e) => e.eventType),
+      terminal === 'Stop'
+        ? ['run.started', ending, 'run.observed']
+        : ['run.started', ending],
+      terminal,
+    )
+  }
+  const s = context(t)
+  s.capture('kimi-code', 'Stop', {})
+  s.capture('kimi-code', 'TurnStarted', {
+    turn_id: 0,
+    origin_kind: 'system_trigger',
+  })
+  assert.equal(s.queue.batch().length, 0)
+})
+
+test('Codex 0.169 payloads: a turn that ends with SessionEnd alone failed', (t) => {
+  // As Codex 0.169.0 sent them: success, an API error, an interruption.
+  const c = context(t)
+  const at = (session, name, turn_id) =>
+    c.capture('codex', name, {
+      session_id: session,
+      ...(turn_id ? { turn_id } : {}),
+    })
+  at('ok', 'UserPromptSubmit', 't1')
+  at('ok', 'Stop', 't1')
+  at('ok', 'SessionEnd')
+  at('fail', 'UserPromptSubmit', 't2')
+  at('fail', 'SessionEnd')
+  at('stop', 'UserPromptSubmit', 't3')
+  at('stop', 'Interrupt', 't3')
+  at('stop', 'SessionEnd')
+  at('none', 'SessionEnd')
+  assert.deepEqual(
+    c.queue.batch().map((e) => e.eventType),
+    [
+      'run.started',
+      'run.observed',
+      'run.started',
+      'run.failed',
+      'run.started',
+      'run.cancelled',
+    ],
+  )
+})
+
+test('Hermes: a request error that will not be retried fails the turn', (t) => {
+  const c = context(t)
+  c.capture('hermes', 'pre_llm_call', { ...hermes, user_message: 'Fix it' })
+  c.capture('hermes', 'api_request_error', { ...hermes, retryable: true })
+  c.capture('hermes', 'api_request_error', { ...hermes, retryable: false })
+  c.capture('hermes', 'on_session_end', { ...hermes, completed: true })
+  const events = c.queue.batch()
+  assert.deepEqual(
+    events.map((e) => e.eventType),
+    ['run.started', 'run.failed'],
+  )
+  assert.equal(events[0].prompt, 'Fix it')
 })

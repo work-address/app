@@ -3,7 +3,9 @@ import { randomUUID } from 'node:crypto'
 import { fileURLToPath } from 'node:url'
 import { collectCodexStream } from './stream.js'
 import { readInput } from './input.js'
-import { drain, startUploader, uploadTrigger } from './upload.js'
+import { drain, KIMI_WAIT_MS, startUploader, uploadTrigger } from './upload.js'
+import { kimiOpenTurns, reconcileKimi } from './index.js'
+import { setTimeout as sleep } from 'node:timers/promises'
 import {
   captureHook,
   isHookProduct,
@@ -88,7 +90,25 @@ async function main(): Promise<void> {
           throw new Error('UNKNOWN_ADAPTER')
         const input = JSON.parse(await readInput())
         captureHook(queue, config, args[0], input, options)
+        if (args[0] === 'kimi-code') {
+          try {
+            reconcileKimi(queue, config, options)
+          } catch {
+            // Kimi's store is read again by the next hook or sync.
+          }
+        }
         const trigger = uploadTrigger(input?.hook_event_name)
+        // Kimi Code 2.x fires nothing when a turn ends: a detached uploader
+        // waits for the end to appear in Kimi's own session store.
+        if (
+          args[0] === 'kimi-code' &&
+          input?.hook_event_name === 'TurnStarted' &&
+          process.env.WORK_ADDRESS_HOOK_UPLOAD !== '0' &&
+          kimiOpenTurns(queue).length
+        )
+          startUploader(fileURLToPath(import.meta.url), {
+            WORK_ADDRESS_KIMI_WAIT_MS: String(KIMI_WAIT_MS),
+          })
         try {
           if (trigger === 'flush') {
             // Inside the hook's budget; the rest goes to the detached uploader.
@@ -128,6 +148,21 @@ async function main(): Promise<void> {
   const queue = new EventQueue(scoped.directory, config)
   try {
     if (command === 'sync') {
+      const options = {
+        runtimeVersion:
+          process.env.WORK_ADDRESS_RUNTIME_VERSION ?? 'unqualified',
+      }
+      const kimiWait = Number(process.env.WORK_ADDRESS_KIMI_WAIT_MS ?? 0)
+      const kimiUntil = Date.now() + (Number.isFinite(kimiWait) ? kimiWait : 0)
+      for (;;) {
+        try {
+          reconcileKimi(queue, config, options)
+        } catch {
+          break
+        }
+        if (!kimiOpenTurns(queue).length || Date.now() >= kimiUntil) break
+        await sleep(3000)
+      }
       // Finite drain, so a producer cannot keep this command alive indefinitely.
       const result = await drain(queue, config, {
         waitUntil: Date.now() + syncWaitMs(),
